@@ -47,7 +47,6 @@ import org.apache.james.webadmin.dto.UserResponse;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
@@ -228,7 +227,7 @@ public class UserRoutes implements Routes {
         return Constants.EMPTY_BODY;
     }
 
-    private HaltException upsertUser(Request request, Response response) throws JsonExtractException {
+    private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
         try {
             boolean isForced = request.queryParams().contains(FORCE_PARAM);
@@ -250,8 +249,8 @@ public class UserRoutes implements Routes {
             LOGGER.info(e.getMessage());
             throw ErrorResponder.builder()
                     .statusCode(HttpStatus.CONFLICT_409)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("User already exists")
+                    .type(ErrorType.WRONG_STATE)
+                    .message(e.getMessage())
                     .cause(e)
                     .haltError();
         } catch (UsersRepositoryException e) {

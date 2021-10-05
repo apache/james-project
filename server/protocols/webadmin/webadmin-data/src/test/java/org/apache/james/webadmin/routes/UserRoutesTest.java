@@ -55,6 +55,9 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.service.DefaultUserEntityValidator;
+import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -118,7 +121,7 @@ class UserRoutesTest {
 
         @Override
         public void beforeEach(ExtensionContext extensionContext) {
-            webAdminServer = startServer(usersRepository);
+            webAdminServer = startServer(usersRepository, recipientRewriteTable);
         }
 
         @Override
@@ -145,8 +148,11 @@ class UserRoutesTest {
             throw new RuntimeException("Unknown parameter type: " + parameterType);
         }
 
-        private WebAdminServer startServer(UsersRepository usersRepository) {
-            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer()))
+        private WebAdminServer startServer(UsersRepository usersRepository, RecipientRewriteTable recipientRewriteTable) {
+            UserEntityValidator validator = UserEntityValidator.aggregate(
+                new DefaultUserEntityValidator(usersRepository),
+                new RecipientRewriteTableUserEntityValidator(recipientRewriteTable));
+            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository, validator), canSendFrom, new JsonTransformer()))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -409,7 +415,7 @@ class UserRoutesTest {
 
             @Test
             default void putShouldFailOnRepositoryExceptionOnGetUserByName(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.getUserByName(USERNAME_WITH_DOMAIN)).thenThrow(new UsersRepositoryException("message"));
+                when(usersRepository.contains(USERNAME_WITH_DOMAIN)).thenThrow(new UsersRepositoryException("message"));
 
                 given()
                     .body("{\"password\":\"password\"}")
@@ -469,7 +475,7 @@ class UserRoutesTest {
 
             @Test
             default void putShouldFailOnUnknownExceptionOnGetUserByName(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.getUserByName(USERNAME_WITH_DOMAIN)).thenThrow(new RuntimeException());
+                when(usersRepository.contains(USERNAME_WITH_DOMAIN)).thenThrow(new RuntimeException());
 
                 given()
                     .body("{\"password\":\"password\"}")
@@ -512,6 +518,8 @@ class UserRoutesTest {
     private static final Username USERNAME_WITHOUT_DOMAIN = Username.of("username");
     private static final Username USERNAME_WITH_DOMAIN =
         Username.fromLocalPartWithDomain(USERNAME_WITHOUT_DOMAIN.asString(), DOMAIN);
+    private static final Username OTHER_USERNAME_WITH_DOMAIN =
+        Username.fromLocalPartWithDomain("other", DOMAIN);
     private static final String PASSWORD = "password";
 
     @Nested
@@ -574,6 +582,38 @@ class UserRoutesTest {
         }
 
         @Test
+        void putShouldFailWhenConflictWithAlias(RecipientRewriteTable recipientRewriteTable) throws Exception {
+            recipientRewriteTable.addAliasMapping(MappingSource.fromUser(USERNAME_WITH_DOMAIN),
+                OTHER_USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .body("statusCode", is(HttpStatus.CONFLICT_409))
+                .body("type", is(ErrorResponder.ErrorType.WRONG_STATE.getType()))
+                .body("message", is("'username@domain' already have associated mappings: alias:other@domain"));
+        }
+
+        @Test
+        void putShouldFailWhenConflictWithGroup(RecipientRewriteTable recipientRewriteTable) throws Exception {
+            recipientRewriteTable.addGroupMapping(MappingSource.fromUser(USERNAME_WITH_DOMAIN),
+                OTHER_USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .body("statusCode", is(HttpStatus.CONFLICT_409))
+                .body("type", is(ErrorResponder.ErrorType.WRONG_STATE.getType()))
+                .body("message", is("'username@domain' already have associated mappings: group:other@domain"));
+        }
+
+        @Test
         void putWithDomainPartInUsernameShouldReturnOkWhenWithA255LongUsername() {
             String usernameTail = "@" + DOMAIN.name();
             given()
@@ -631,8 +671,8 @@ class UserRoutesTest {
             .then()
                 .statusCode(HttpStatus.CONFLICT_409)
                 .body("statusCode", is(HttpStatus.CONFLICT_409))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is("User already exists"));
+                .body("type", is(ErrorResponder.ErrorType.WRONG_STATE.getType()))
+                .body("message", is("'username@domain' user already exist"));
         }
 
         @Test
@@ -838,8 +878,8 @@ class UserRoutesTest {
             .then()
                 .statusCode(HttpStatus.CONFLICT_409)
                 .body("statusCode", is(HttpStatus.CONFLICT_409))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is("User already exists"));
+                .body("type", is(ErrorResponder.ErrorType.WRONG_STATE.getType()))
+                .body("message", is("'username' user already exist"));
         }
 
         @Test

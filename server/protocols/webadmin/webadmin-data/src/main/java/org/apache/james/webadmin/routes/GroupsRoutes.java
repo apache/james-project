@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.service.UserEntityValidator.EntityType.GROUP;
 import static spark.Spark.halt;
 
 import java.util.List;
@@ -44,9 +45,10 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.service.UserEntityValidator;
+import org.apache.james.webadmin.service.UserEntityValidator.ValidationFailure;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -54,6 +56,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import io.swagger.annotations.Api;
@@ -84,14 +87,16 @@ public class GroupsRoutes implements Routes {
     private static final String USER_ADDRESS_TYPE = "group member";
 
     private final UsersRepository usersRepository;
+    private final UserEntityValidator userEntityValidator;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
     GroupsRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository,
-                 JsonTransformer jsonTransformer) {
+                 UserEntityValidator userEntityValidator, JsonTransformer jsonTransformer) {
         this.usersRepository = usersRepository;
+        this.userEntityValidator = userEntityValidator;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }
@@ -143,7 +148,7 @@ public class GroupsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addToGroup(Request request, Response response) throws UsersRepositoryException {
+    public HaltException addToGroup(Request request, Response response) throws Exception {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
         ensureNotShadowingAnotherAddress(groupAddress);
@@ -179,12 +184,14 @@ public class GroupsRoutes implements Routes {
         }
     }
 
-    private void ensureNotShadowingAnotherAddress(MailAddress groupAddress) throws UsersRepositoryException {
-        if (usersRepository.contains(usersRepository.getUsername(groupAddress))) {
+    private void ensureNotShadowingAnotherAddress(MailAddress groupAddress) throws Exception {
+        Username username = usersRepository.getUsername(groupAddress);
+        Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(GROUP));
+        if (validationFailure.isPresent()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.CONFLICT_409)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Requested group address is already used for another purpose")
+                .type(ErrorType.WRONG_STATE)
+                .message(validationFailure.get().errorMessage())
                 .haltError();
         }
     }
