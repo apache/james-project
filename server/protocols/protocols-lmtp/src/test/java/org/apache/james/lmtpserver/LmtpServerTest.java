@@ -37,6 +37,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -157,7 +158,8 @@ class LmtpServerTest {
             .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
             .put(binder -> binder.bind(DNSService.class).toInstance(dnsService))
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
-            .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class));
+            .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP));
     }
 
     private LMTPServerFactory createLMTPServer(MockProtocolHandlerLoader loader, String configuration) throws Exception {
