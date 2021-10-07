@@ -20,7 +20,7 @@
 package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.CoreDataModule;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
@@ -56,6 +56,7 @@ public class MemoryDataModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new SieveFileRepositoryModule());
+        install(new CoreDataModule());
 
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
@@ -93,12 +94,6 @@ public class MemoryDataModule extends AbstractModule {
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.setValidator(validator);
         return usersRepository;
-    }
-
-    @Provides
-    @Singleton
-    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
-        return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
     }
 
     @ProvidesIntoSet

@@ -19,12 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import java.util.Set;
-
-import org.apache.james.AggregateUserEntityValidator;
-import org.apache.james.DefaultUserEntityValidator;
-import org.apache.james.RecipientRewriteTableUserEntityValidator;
-import org.apache.james.UserEntityValidator;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.mdc.RequestLogger;
@@ -41,8 +35,6 @@ import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class DataRoutesModules extends AbstractModule {
@@ -64,14 +56,5 @@ public class DataRoutesModules extends AbstractModule {
         jsonTransformerModuleMultibinder.addBinding().to(MappingSourceModule.class);
 
         Multibinder.newSetBinder(binder(), RequestLogger.class).addBinding().to(UserCreationRequestLogger.class);
-
-        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(DefaultUserEntityValidator.class);
-        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(RecipientRewriteTableUserEntityValidator.class);
-    }
-
-    @Provides
-    @Singleton
-    UserEntityValidator userEntityValidator(Set<UserEntityValidator> validatorSet) {
-        return new AggregateUserEntityValidator(validatorSet);
     }
 }

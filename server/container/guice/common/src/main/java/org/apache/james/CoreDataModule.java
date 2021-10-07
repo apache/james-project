@@ -16,29 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.JPADomainList;
+package org.apache.james;
+
+import java.util.Set;
+
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
-public class JPADomainListModule extends AbstractModule {
+public class CoreDataModule extends AbstractModule {
     @Override
-    public void configure() {
-        bind(JPADomainList.class).in(Scopes.SINGLETON);
-        bind(DomainList.class).to(JPADomainList.class);
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(DefaultUserEntityValidator.class);
+        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(RecipientRewriteTableUserEntityValidator.class);
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
-        return InitilizationOperationBuilder
-            .forClass(JPADomainList.class)
-            .init(() -> jpaDomainList.configure(configuration));
+    @Provides
+    @Singleton
+    UserEntityValidator userEntityValidator(Set<UserEntityValidator> validatorSet) {
+        return new AggregateUserEntityValidator(validatorSet);
+    }
+
+    @Provides
+    @Singleton
+    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
     }
 }
