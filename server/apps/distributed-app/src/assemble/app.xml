@@ -54,6 +54,16 @@ limitations under the License.
                 <include>*.jar</include>
             </includes>
         </fileSet>
+        <!-- include the documentation -->
+        <fileSet>
+            <directory>docs</directory>
+            <outputDirectory>/docs</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0600</fileMode>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
     </fileSets>
     <files>
         <file>
