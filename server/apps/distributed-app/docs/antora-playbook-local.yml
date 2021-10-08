@@ -1,14 +1,27 @@
 #
 # Use this configuration for local testing / docs develop.
 #
+# Note: Executing Antora can only be done from within a git repository.
+# When UNZIPPING the application, you will need to initialize the git repository:
+#
+# $ git init
+# $ git add .
+# $ git commit -m "First commit"
+#
+# You may want to update paths below too...
 site:
   title: Apache James Distributed Server
   url: https://james.apache.org/
   start_page: james-distributed-app::index.adoc
 content:
   sources:
+    # url should match the relative position for your git repository. A value for a git repo located in the docs folder would be:
+    # - url: ./
     - url: ./../../../../
       branches: HEAD
+      # Must match the relative position of the Antora docs files within the git repository stated above.
+      # A value for a git repo located in the docs folder would be:
+      # start_path: ./
       start_path: server/apps/distributed-app/docs
 ui:
   bundle:

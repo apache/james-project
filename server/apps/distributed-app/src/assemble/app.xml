@@ -62,6 +62,7 @@ limitations under the License.
             <fileMode>0600</fileMode>
             <includes>
                 <include>*</include>
+                <include>**/*</include>
             </includes>
         </fileSet>
     </fileSets>
