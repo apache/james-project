@@ -29,4 +29,6 @@
 
     <bean id="authenticator" class="org.apache.james.adapter.mailbox.UserRepositoryAuthenticator"/>
 
+    <bean id="user-entity-validator" class="org.apache.james.container.spring.resource.SpringUserEntityValidator"/>
+
 </beans>

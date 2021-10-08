@@ -38,6 +38,7 @@ import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.commons.net.pop3.POP3SClient;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
@@ -915,7 +916,9 @@ public class POP3ServerTest {
             .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
             .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
             .put(binder -> binder.bind(MetricFactory.class).toInstance(new RecordingMetricFactory()))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .put(binder -> binder.bind(MailboxAdapterFactory.class).to(DefaultMailboxAdapterFactory.class))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .build();
     }
 

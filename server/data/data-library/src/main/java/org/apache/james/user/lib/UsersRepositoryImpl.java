@@ -27,6 +27,8 @@ import javax.inject.Inject;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.DefaultUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -50,11 +52,18 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     protected final T usersDAO;
     private boolean virtualHosting;
     private Optional<Username> administratorId;
+    private UserEntityValidator validator;
 
     @Inject
     public UsersRepositoryImpl(DomainList domainList, T usersDAO) {
         this.domainList = domainList;
         this.usersDAO = usersDAO;
+        this.validator = new DefaultUserEntityValidator(this);
+    }
+
+    @Inject
+    public void setValidator(UserEntityValidator validator) {
+        this.validator = validator;
     }
 
     @Override
@@ -108,11 +117,22 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-        if (!contains(username)) {
-            assertValid(username);
-            usersDAO.addUser(username, password);
-        } else {
-            throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exists!");
+        ensureNoConflict(username);
+        assertValid(username);
+        usersDAO.addUser(username, password);
+    }
+
+    private void ensureNoConflict(Username username) throws UsersRepositoryException {
+        try {
+            Optional<UserEntityValidator.ValidationFailure> validationFailure = validator.canCreate(username);
+            if (validationFailure.isPresent()) {
+                throw new AlreadyExistInUsersRepositoryException(validationFailure.get().errorMessage());
+            }
+        } catch (Exception e) {
+            if (e instanceof UsersRepositoryException) {
+                throw (UsersRepositoryException) e;
+            }
+            throw new UsersRepositoryException("Unexpected exception", e);
         }
     }
 

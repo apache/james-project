@@ -16,29 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.JPADomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+package org.apache.james;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import java.util.Optional;
+import java.util.Set;
 
-public class JPADomainListModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(JPADomainList.class).in(Scopes.SINGLETON);
-        bind(DomainList.class).to(JPADomainList.class);
+import javax.inject.Inject;
+
+import org.apache.james.core.Username;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
+
+public class DefaultUserEntityValidator implements UserEntityValidator {
+    private final UsersRepository usersRepository;
+
+    @Inject
+    public DefaultUserEntityValidator(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
-        return InitilizationOperationBuilder
-            .forClass(JPADomainList.class)
-            .init(() -> jpaDomainList.configure(configuration));
+    @Override
+    public Optional<ValidationFailure> canCreate(Username username, Set<EntityType> ignoredTypes) throws UsersRepositoryException {
+        if (ignoredTypes.contains(EntityType.USER)) {
+            return Optional.empty();
+        }
+        if (usersRepository.contains(username)) {
+            return Optional.of(new ValidationFailure("'" + username.asString() + "' user already exist"));
+        }
+        return Optional.empty();
     }
 }

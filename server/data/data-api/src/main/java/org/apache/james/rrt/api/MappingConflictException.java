@@ -16,29 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
+package org.apache.james.rrt.api;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.JPADomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+public class MappingConflictException extends RecipientRewriteTableException {
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
-
-public class JPADomainListModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(JPADomainList.class).in(Scopes.SINGLETON);
-        bind(DomainList.class).to(JPADomainList.class);
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
-        return InitilizationOperationBuilder
-            .forClass(JPADomainList.class)
-            .init(() -> jpaDomainList.configure(configuration));
+    public MappingConflictException(String msg) {
+        super(msg);
     }
 }

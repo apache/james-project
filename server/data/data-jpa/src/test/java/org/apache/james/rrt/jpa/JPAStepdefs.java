@@ -23,6 +23,7 @@ import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.user.jpa.JPAUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -52,6 +53,7 @@ public class JPAStepdefs {
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        localVirtualUserTable.setUsersRepository(new JPAUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests()));
         localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return localVirtualUserTable;
     }

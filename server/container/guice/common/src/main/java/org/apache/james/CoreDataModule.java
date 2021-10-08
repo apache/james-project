@@ -17,33 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james;
 
-import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 
-import org.apache.james.core.Username;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
-public class DefaultUserEntityValidator implements UserEntityValidator {
-    private final UsersRepository usersRepository;
-
-    @Inject
-    public DefaultUserEntityValidator(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+public class CoreDataModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(DefaultUserEntityValidator.class);
+        Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(RecipientRewriteTableUserEntityValidator.class);
     }
 
-    @Override
-    public Optional<ValidationFailure> canCreate(Username username, Set<EntityType> ignoredTypes) throws UsersRepositoryException {
-        if (ignoredTypes.contains(EntityType.USER)) {
-            return Optional.empty();
-        }
-        if (usersRepository.contains(username)) {
-            return Optional.of(new ValidationFailure("'" + username.asString() + "' user already exist"));
-        }
-        return Optional.empty();
+    @Provides
+    @Singleton
+    UserEntityValidator userEntityValidator(Set<UserEntityValidator> validatorSet) {
+        return new AggregateUserEntityValidator(validatorSet);
+    }
+
+    @Provides
+    @Singleton
+    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
     }
 }

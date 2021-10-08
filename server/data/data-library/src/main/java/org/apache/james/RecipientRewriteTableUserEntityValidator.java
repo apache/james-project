@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james;
 
 import java.util.Map;
 import java.util.Optional;

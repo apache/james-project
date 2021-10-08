@@ -24,8 +24,13 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.apache.james.user.cassandra.CassandraUsersDAO;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,6 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContract {
     static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraRRTModule.MODULE,
+        CassandraUsersRepositoryModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
 
     @RegisterExtension
@@ -60,6 +66,8 @@ class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContrac
     @Override
     public void createRecipientRewriteTable() {
         recipientRewriteTable = new CassandraRecipientRewriteTable(recipientRewriteTableDAO, mappingsSourcesDAO);
+        recipientRewriteTable.setUsersRepository(new UsersRepositoryImpl<>(new SimpleDomainList(),
+            new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandraCluster.getCassandraCluster().getConf())));
     }
 
     @Override

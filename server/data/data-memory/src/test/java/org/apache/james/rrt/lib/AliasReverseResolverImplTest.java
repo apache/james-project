@@ -21,6 +21,7 @@ package org.apache.james.rrt.lib;
 
 import static org.mockito.Mockito.mock;
 
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -29,6 +30,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.BeforeEach;
 
 public class AliasReverseResolverImplTest implements AliasReverseResolverContract {
@@ -46,6 +48,8 @@ public class AliasReverseResolverImplTest implements AliasReverseResolverContrac
         domainList.addDomain(DOMAIN);
         domainList.addDomain(OTHER_DOMAIN);
         recipientRewriteTable.setDomainList(domainList);
+        recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
 
         this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james;
 
 import java.util.Objects;
 import java.util.Optional;

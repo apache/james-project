@@ -21,6 +21,7 @@ package org.apache.james.rrt.lib;
 import static org.mockito.Mockito.mock;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -30,6 +31,7 @@ import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.BeforeEach;
 
 public class CanSendFromImplTest implements CanSendFromContract {
@@ -48,6 +50,8 @@ public class CanSendFromImplTest implements CanSendFromContract {
         domainList.addDomain(OTHER_DOMAIN);
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
+        recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
 
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
         canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);

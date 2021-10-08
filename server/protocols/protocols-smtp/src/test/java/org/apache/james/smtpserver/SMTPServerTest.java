@@ -48,6 +48,7 @@ import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -300,6 +301,7 @@ public class SMTPServerTest {
             .put(binder -> binder.bind(DNSService.class).toInstance(dnsServer))
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
             .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .build();
     }
 

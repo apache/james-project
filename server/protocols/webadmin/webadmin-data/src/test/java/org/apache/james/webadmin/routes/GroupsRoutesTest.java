@@ -35,6 +35,9 @@ import static org.mockito.Mockito.spy;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.DefaultUserEntityValidator;
+import org.apache.james.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -52,9 +55,6 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.MappingSourceModule;
-import org.apache.james.webadmin.service.DefaultUserEntityValidator;
-import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -119,7 +119,9 @@ class GroupsRoutesTest {
             UserEntityValidator validator = UserEntityValidator.aggregate(
                 new DefaultUserEntityValidator(usersRepository),
                 new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, validator, new JsonTransformer(mappingSourceModule)),
+            memoryRecipientRewriteTable.setUserEntityValidator(validator);
+            memoryRecipientRewriteTable.setUsersRepository(usersRepository);
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(mappingSourceModule)),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -498,7 +500,9 @@ class GroupsRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, UserEntityValidator.NOOP, new JsonTransformer()),
+            memoryRecipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
+            memoryRecipientRewriteTable.setUsersRepository(userRepository);
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 

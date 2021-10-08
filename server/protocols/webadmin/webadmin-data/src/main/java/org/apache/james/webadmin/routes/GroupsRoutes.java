@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.service.UserEntityValidator.EntityType.GROUP;
 import static spark.Spark.halt;
 
 import java.util.List;
@@ -38,17 +37,15 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
+import org.apache.james.rrt.api.MappingConflictException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.service.UserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator.ValidationFailure;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -56,7 +53,6 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import io.swagger.annotations.Api;
@@ -86,17 +82,12 @@ public class GroupsRoutes implements Routes {
     private static final String GROUP_ADDRESS_TYPE = "group";
     private static final String USER_ADDRESS_TYPE = "group member";
 
-    private final UsersRepository usersRepository;
-    private final UserEntityValidator userEntityValidator;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
-    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository,
-                 UserEntityValidator userEntityValidator, JsonTransformer jsonTransformer) {
-        this.usersRepository = usersRepository;
-        this.userEntityValidator = userEntityValidator;
+    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) {
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }
@@ -151,7 +142,6 @@ public class GroupsRoutes implements Routes {
     public HaltException addToGroup(Request request, Response response) throws Exception {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
-        ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);
         MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
         addGroupMember(source, userAddress);
@@ -163,16 +153,16 @@ public class GroupsRoutes implements Routes {
             recipientRewriteTable.addGroupMapping(source, userAddress.asString());
         } catch (MappingAlreadyExistsException e) {
             // do nothing
+        } catch (MappingConflictException | LoopDetectedException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorType.WRONG_STATE)
+                .message(e.getMessage())
+                .haltError();
         } catch (SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(e.getMessage())
-                .haltError();
-        } catch (LoopDetectedException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.CONFLICT_409)
-                .type(ErrorResponder.ErrorType.WRONG_STATE)
                 .message(e.getMessage())
                 .haltError();
         } catch (RecipientRewriteTableException e) {
@@ -183,19 +173,6 @@ public class GroupsRoutes implements Routes {
                 .haltError();
         }
     }
-
-    private void ensureNotShadowingAnotherAddress(MailAddress groupAddress) throws Exception {
-        Username username = usersRepository.getUsername(groupAddress);
-        Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(GROUP));
-        if (validationFailure.isPresent()) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.CONFLICT_409)
-                .type(ErrorType.WRONG_STATE)
-                .message(validationFailure.get().errorMessage())
-                .haltError();
-        }
-    }
-
 
     @DELETE
     @Path(ROOT_PATH + "/{" + GROUP_ADDRESS + "}/{" + USER_ADDRESS + "}")

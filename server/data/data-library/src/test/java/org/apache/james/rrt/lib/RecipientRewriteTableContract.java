@@ -54,7 +54,8 @@ public interface RecipientRewriteTableContract {
     Domain NOT_SUPPORTED_DOMAIN = Domain.of("notAManagedDomain");
     MappingSource SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST = MappingSource.fromUser(USER, NOT_SUPPORTED_DOMAIN);
 
-    void createRecipientRewriteTable();
+    void createRecipientRewriteTable() throws Exception;
+
     AbstractRecipientRewriteTable virtualUserTable();
 
     default void setUp() throws Exception {

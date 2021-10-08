@@ -42,6 +42,7 @@ class DataCommandsIntegrationTest {
     public static final String DOMAIN = "domain.com";
     public static final String USER = "chibenwa";
     public static final String MAIL_ADDRESS = USER + "@" + DOMAIN;
+    public static final String OTHER_MAIL_ADDRESS = USER + "other@" + DOMAIN;
     public static final String PASSWORD = "12345";
     private OutputCapture outputCapture;
 
@@ -102,6 +103,26 @@ class DataCommandsIntegrationTest {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "ADDUSER", MAIL_ADDRESS, PASSWORD});
 
         assertThat(dataProbe.listUsers()).contains(MAIL_ADDRESS);
+    }
+
+    @Test
+    void addUserShouldFailWhenGroupConflict() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+        dataProbe.addUser(OTHER_MAIL_ADDRESS, "pass");
+        dataProbe.addGroupAliasMapping(MAIL_ADDRESS, OTHER_MAIL_ADDRESS);
+
+        assertThatThrownBy(() -> ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "ADDUSER", MAIL_ADDRESS, PASSWORD}))
+            .hasMessageContaining("'chibenwa@domain.com' already have associated mappings: group:chibenwaother@domain.com");
+    }
+
+    @Test
+    void addUserShouldFailWhenAliasConflict() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+        dataProbe.addUser(OTHER_MAIL_ADDRESS, "pass");
+        dataProbe.addUserAliasMapping(USER, DOMAIN, OTHER_MAIL_ADDRESS);
+
+        assertThatThrownBy(() -> ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "ADDUSER", MAIL_ADDRESS, PASSWORD}))
+            .hasMessageContaining("'chibenwa@domain.com' already have associated mappings: alias:chibenwaother@domain.com");
     }
 
     @Test
