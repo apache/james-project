@@ -95,6 +95,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -164,7 +165,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.endProcessingRequest(session);
     }
 
-    @Test
+    @RepeatedTest(10)
     protected void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
         String mailboxName = "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z";
@@ -186,6 +187,21 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         assertThat(mailboxId.isPresent()).isTrue();
         assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+    }
+
+    @Test
+    void createShouldSucceedWhenSubFolderExists() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxId parentId = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "name"), session).get();
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "name.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+        MessageManager retrievedMailbox = mailboxManager.getMailbox(mailboxPath, session);
+
+        assertThat(mailboxId.isPresent()).isTrue();
+        assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+        assertThat(mailboxManager.getMailbox(MailboxPath.forUser(USER_1, "name"), session).getId()).isEqualTo(parentId);
     }
 
     @Nested
