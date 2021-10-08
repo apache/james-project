@@ -4108,6 +4108,16 @@ trait EmailGetMethodContract {
          |                                "size": 20,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
+         |                            },
+         |                            {
+         |                                "charset": "iso-8859-1",
+         |                                "disposition": "inline",
+         |                                "size": 19,
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "name": "avertissement.txt",
+         |                                "type": "text/plain",
+         |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
          |                        ]
          |                    }
@@ -4173,6 +4183,16 @@ trait EmailGetMethodContract {
          |                                "size": 30,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
+         |                            },
+         |                            {
+         |                                "charset": "iso-8859-1",
+         |                                "disposition": "inline",
+         |                                "size": 19,
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "name": "avertissement.txt",
+         |                                "type": "text/plain",
+         |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
          |                        ]
          |                    }
@@ -4433,6 +4453,11 @@ trait EmailGetMethodContract {
          |                                "value": "/blabla/\\r\\n*bloblo*\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
+         |                            },
+         |                            "5":{
+         |                                "value": "inline attachment\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
          |                            }
          |                        }
          |                    }
@@ -4495,6 +4520,11 @@ trait EmailGetMethodContract {
          |                        "bodyValues": {
          |                            "4": {
          |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "5": {
+         |                                "value": "inline attachment\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4566,6 +4596,11 @@ trait EmailGetMethodContract {
          |                            },
          |                            "4": {
          |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "5":{
+         |                                "value": "inline attachment\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
