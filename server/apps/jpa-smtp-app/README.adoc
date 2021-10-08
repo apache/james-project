@@ -27,7 +27,11 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -javaagent:james-server-jpa-smtp-guice.lib/openjpa-3.1.2.jar -Dworking.directory=. -Djdk.tls.ephemeralDHKeySize=2048 -Dlogback.configurationFile=conf/logback.xml -jar james-server-jpa-smtp-app.jar
+$ java -javaagent:james-server-jpa-smtp-app.lib/openjpa-3.1.2.jar \
+  -Dworking.directory=. \
+  -Djdk.tls.ephemeralDHKeySize=2048 \
+  -Dlogback.configurationFile=conf/logback.xml \
+  -jar james-server-jpa-smtp-app.jar
 ----
 
 Note that binding ports below 1024 requires administrative rights.
@@ -90,6 +94,26 @@ Note that you can create a domain via an environment variable. This domain will 
 
 
 === Using alternative JDBC drivers
+
+==== Using alternative JDBC drivers with the ZIP package
+
+We will need to add the driver JAR on the classpath.
+
+This can be done with the following command:
+
+....
+java \
+   -javaagent:james-server-jpa-smtp-app.lib/openjpa-3.1.2.jar \
+   -Dworking.directory=. \
+   -Djdk.tls.ephemeralDHKeySize=2048 \
+   -Dlogback.configurationFile=conf/logback.xml \
+   -cp "james-server-jpa-smtp-app.jar:james-server-jpa-app.lib/*:jdbc-driver.jar" \
+   org.apache.james.JPAJamesServerMain
+....
+
+With `jdbc-driver.jar` being the JAR file of your driver, placed in the current directory.
+
+==== Using alternative JDBC drivers with docker
 
 In `james-database.properties`, one can specify any JDBC driver on the class path.
 
