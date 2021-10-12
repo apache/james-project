@@ -55,7 +55,7 @@ public class LocalResourcesImpl implements LocalResources {
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
-    LocalResourcesImpl(UsersRepository localUsers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
+    public LocalResourcesImpl(UsersRepository localUsers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
         this.localUsers = localUsers;
         this.domains = domains;
         this.recipientRewriteTable = recipientRewriteTable;
