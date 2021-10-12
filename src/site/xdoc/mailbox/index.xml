@@ -39,7 +39,7 @@
        <a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>RFC 2060 IMAP4rev1</a>
        definitions and requirements but can perfectly be used in any other (non mail server) context. 
     </p>
-    <p>The mailbox library supports different persistence mechanisms: MailDir and SQL Database via Apache OpenJPA.
+    <p>The mailbox library supports different persistence mechanisms: SQL Database via Apache OpenJPA or in-memory implementation.
     </p>
     <p>You can <a href="http://james.apache.org/download.cgi">download</a> current 0.4 release. 
        The <a href="apidocs/">API</a> as the schemas for the different implementations are susceptible to evolve.
@@ -47,7 +47,6 @@
       <ul>Here are the different implementations of the mailbox we propose :
           <li><a href="mailbox-memory.html">Memory</a> for testing purposes</li>
           <li><a href="mailbox-cassandra.html">Cassandra</a></li>
-          <li><a href="mailbox-maildir.html">Maildir</a></li>
           <li><a href="mailbox-jpa.html">JPA</a> </li>
       </ul>
   </section>

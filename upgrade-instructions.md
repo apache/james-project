@@ -23,6 +23,23 @@ Change list:
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
 
+### MailDir removal
+
+Date 19/09/2021
+
+Mailing list vote: https://www.mail-archive.com/server-dev@james.apache.org/msg71060.html
+
+Concerned product: Spring configured with MailDir
+
+The maildir implementation, deprecated in 3.6.1 release, following a non-interoperable James naming scheme, suffering
+from numerous bugs and unmaintained for several years had been removed for the 3.7.0 release. 
+
+We encourage maildir users to switch to the JPA implementation (relying on an embedded
+database by default). Tools like [imapsync](https://imapsync.lamiral.info/) or 
+[pop2imap](http://www.linux-france.org/prj/pop2imap/) can be used for this
+migration. This [link](https://james.staged.apache.org/james-project/3.7.0/servers/distributed/operate/migrating.html) 
+explains how to use IMAP Sync.
+
 ### Change defaults for JPA UsersRepository hash function
 
 Date 27/08/2021

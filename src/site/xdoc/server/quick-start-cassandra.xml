@@ -281,7 +281,6 @@ Step 9: Monitor
     +-spam
 
     store
-    +-maildir
     +-derby
     +-jackrabbit
     +-activemq
@@ -398,7 +397,6 @@ Step 6: Monitor
     +-spam
 
     store
-    +-maildir
     +-derby
     +-jackrabbit
     +-activemq

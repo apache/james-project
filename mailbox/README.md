@@ -15,7 +15,6 @@ Apache James Mailbox has the following project (Maven) structure:
 |-- api             -- Mailbox API
 |-- jpa             -- Database Mailbox implementation using Java Persistence API
 |-- lucene          -- Email indexing module with Apache Lucene
-|-- maildir         -- Email storage using Maildir format http://en.wikipedia.org/wiki/Maildir
 |-- memory          -- In memory Mailbox implementation - good for testing
 |-- spring          -- Spring module - starts a specific mailbox implementation
 |-- store           -- Common base/utility classes used in all mailbox implementations
@@ -33,13 +32,6 @@ Mailbox 'In memory' message store
 
 In module **memory**, does not persist emails. It just keeps them in memory. Fast, and good for testing.
 **Note:** Not to be used in production.
-
-
-Mailbox Maildir
-===============
-
-Implements the Maildir standard for email storage (http://en.wikipedia.org/wiki/Maildir). Works only on GNU/Linux and other
-*Nix systems.
 
 
 Building
