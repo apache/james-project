@@ -14,7 +14,7 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
- * under the License.                                           *
+ * under the License.                   *
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
@@ -2807,6 +2807,24 @@ trait EmailSetMethodContract {
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
+           |    },
+           |    {
+           |        "charset": "UTF-8",
+           |        "disposition": "inline",
+           |        "size": 11,
+           |        "partId": "6",
+           |        "blobId": "${messageId}_6",
+           |        "type": "text/plain",
+           |        "cid": "abc"
+           |    },
+           |    {
+           |        "charset": "UTF-8",
+           |        "disposition": "inline",
+           |        "size": 11,
+           |        "partId": "7",
+           |        "blobId": "${messageId}_7",
+           |        "type": "text/plain",
+           |        "cid": "def"
            |    }
            |  ],
            |  "bodyValues": {
@@ -2814,6 +2832,16 @@ trait EmailSetMethodContract {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
+           |    },
+           |    "6": {
+           |        "value": "123456789\\r\\n",
+           |        "isEncodingProblem": false,
+           |        "isTruncated": false
+           |    },
+           |    "7": {
+           |        "value": "123456789\\r\\n",
+           |        "isEncodingProblem": false,
+           |        "isTruncated": false
            |    }
            |  }
            |}]""".stripMargin)

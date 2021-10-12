@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import java.io.OutputStream
+
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
@@ -271,8 +272,9 @@ case class EmailBodyPart(partId: PartId,
   }
 
   private val hasTextMediaType: Boolean = `type`.equals(TEXT_PLAIN) || `type`.equals(TEXT_HTML)
-  private val shouldBeDisplayedAsBody: Boolean = hasTextMediaType && disposition.isEmpty && cid.isEmpty
-  private val shouldBeDisplayedAsAttachment: Boolean = !shouldBeDisplayedAsBody && subParts.isEmpty
+  private val shouldBeDisplayedAsBody: Boolean = hasTextMediaType && !disposition.contains(Disposition.ATTACHMENT )
+  private val shouldBeDisplayedAsBodyStrict: Boolean = hasTextMediaType && disposition.isEmpty && cid.isEmpty
+  private val shouldBeDisplayedAsAttachment: Boolean = !shouldBeDisplayedAsBodyStrict && subParts.isEmpty
 
   private def textBodyOfMultipart: List[EmailBodyPart] = `type` match {
     case MULTIPART_ALTERNATIVE => getBodyParts(subParts.getOrElse(Nil), TEXT_PLAIN)
