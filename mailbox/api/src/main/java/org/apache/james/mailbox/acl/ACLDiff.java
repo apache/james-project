@@ -20,6 +20,7 @@ package org.apache.james.mailbox.acl;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.MailboxACL;
@@ -71,7 +72,7 @@ public class ACLDiff {
     }
 
     public Stream<MailboxACL.ACLCommand> commands() {
-        return Stream.concat(
+        return Stream.of(
             addedEntries()
                 .map(entry -> MailboxACL.command()
                     .mode(MailboxACL.EditMode.ADD)
@@ -83,7 +84,14 @@ public class ACLDiff {
                     .mode(MailboxACL.EditMode.REMOVE)
                     .key(entry.getKey())
                     .rights(entry.getValue())
-                    .build()));
+                    .build()),
+            changedEntries()
+                .map(entry -> MailboxACL.command()
+                .mode(MailboxACL.EditMode.REPLACE)
+                .key(entry.getKey())
+                .rights(entry.getValue())
+                .build()))
+            .flatMap(Function.identity());
     }
 
     public MailboxACL getOldACL() {

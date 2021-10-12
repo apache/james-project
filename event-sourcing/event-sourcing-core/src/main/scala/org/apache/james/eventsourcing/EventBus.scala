@@ -32,15 +32,15 @@ class EventBus @Inject() (eventStore: EventStore, subscribers: Set[Subscriber]) 
   @throws[EventStoreFailedException]
   def publish(events: Iterable[Event]): SMono[Void] =
     SMono(eventStore.appendAll(events))
-        .`then`(runHandlers(events, subscribers))
+        .`then`(runHandlers(events))
 
-  def runHandlers(events: Iterable[Event], subscribers: Set[Subscriber]): SMono[Void] =
+  private def runHandlers(events: Iterable[Event]): SMono[Void] =
     SFlux.fromIterable(events.flatMap((event: Event) => subscribers.map(subscriber => (event, subscriber))))
       .concatMap(infos => runHandler(infos._1, infos._2))
       .`then`()
       .`then`(SMono.empty)
 
-  def runHandler(event: Event, subscriber: Subscriber): Publisher[Void] =
+  private def runHandler(event: Event, subscriber: Subscriber): Publisher[Void] =
     SMono(ReactiveSubscriber.asReactiveSubscriber(subscriber).handleReactive(event))
       .onErrorResume(e => {
         EventBus.LOGGER.error("Error while calling {} for {}", subscriber, event, e)

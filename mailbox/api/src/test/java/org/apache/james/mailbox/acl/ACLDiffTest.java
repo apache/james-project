@@ -233,4 +233,62 @@ class ACLDiffTest {
             .containsOnly(new MailboxACL.Entry(ENTRY_KEY, new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup)));
     }
 
+    @Test
+    void commandsShouldReturnChangedEntries() throws Exception {
+        ACLDiff aclDiff = ACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(ENTRY_KEY)
+                    .rights(MailboxACL.Right.Administer)
+                    .asAddition()),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(ENTRY_KEY)
+                    .rights(MailboxACL.Right.Lookup)
+                    .asAddition()));
+
+        assertThat(aclDiff.commands())
+            .containsOnly(MailboxACL.command()
+                .mode(MailboxACL.EditMode.REPLACE)
+                .key(ENTRY_KEY)
+                .rights(MailboxACL.Right.Lookup)
+                .build());
+    }
+
+    @Test
+    void commandsShouldReturnAddedEntries() throws Exception {
+        ACLDiff aclDiff = ACLDiff.computeDiff(
+            MailboxACL.EMPTY,
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(ENTRY_KEY)
+                    .rights(MailboxACL.Right.Lookup)
+                    .asAddition()));
+
+        assertThat(aclDiff.commands())
+            .containsOnly(MailboxACL.command()
+                .mode(MailboxACL.EditMode.ADD)
+                .key(ENTRY_KEY)
+                .rights(MailboxACL.Right.Lookup)
+                .build());
+    }
+
+    @Test
+    void commandsShouldReturnRemovedEntries() throws Exception {
+        ACLDiff aclDiff = ACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(ENTRY_KEY)
+                    .rights(MailboxACL.Right.Lookup)
+                    .asAddition()),
+            MailboxACL.EMPTY);
+
+        assertThat(aclDiff.commands())
+            .containsOnly(MailboxACL.command()
+                .mode(MailboxACL.EditMode.REMOVE)
+                .key(ENTRY_KEY)
+                .rights(MailboxACL.Right.Lookup)
+                .build());
+    }
+
 }
