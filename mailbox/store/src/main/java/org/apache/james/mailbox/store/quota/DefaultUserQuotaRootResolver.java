@@ -56,7 +56,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
             return QuotaRoot.quotaRoot(serializedQuotaRoot, username.getDomainPart());
         }
 
-        private List<String> toParts(String serializedQuotaRoot) throws MailboxException {
+        public List<String> toParts(String serializedQuotaRoot) throws MailboxException {
             List<String> parts = Splitter.on(SEPARATOR).splitToList(serializedQuotaRoot);
             if (parts.size() != 2) {
                 throw new MailboxException(serializedQuotaRoot + " used as QuotaRoot should contain exactly one \"" + SEPARATOR + "\"");
@@ -66,7 +66,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     public static final String SEPARATOR = "&"; // Character illegal for mailbox naming in regard of RFC 3501 section 5.1
-    private static final DefaultQuotaRootDeserializer QUOTA_ROOT_DESERIALIZER = new DefaultQuotaRootDeserializer();
+    protected static final DefaultQuotaRootDeserializer QUOTA_ROOT_DESERIALIZER = new DefaultQuotaRootDeserializer();
 
     private final SessionProvider sessionProvider;
     private final MailboxSessionMapperFactory factory;
@@ -119,8 +119,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         return factory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
             .map(Mailbox::generateAssociatedPath)
-            .map(MailboxPath::getUser)
-            .map(this::forUser);
+            .flatMap(path -> Mono.from(getQuotaRootReactive(path)));
     }
 
     @Override
@@ -144,15 +143,19 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
             List<String> parts = QUOTA_ROOT_DESERIALIZER.toParts(quotaRoot.getValue());
             String namespace = parts.get(0);
             String user = parts.get(1);
-            return factory.getMailboxMapper(mailboxSession)
-                .findMailboxWithPathLike(MailboxQuery.builder()
-                    .namespace(namespace)
-                    .user(Username.of(user))
-                    .matchesAllMailboxNames()
-                    .build()
-                    .asUserBound());
+            return retrieveAssociatedMailboxes(mailboxSession, namespace, user);
         } catch (MailboxException e) {
             return Flux.error(e);
         }
+    }
+
+    protected Flux<Mailbox> retrieveAssociatedMailboxes(MailboxSession mailboxSession, String namespace, String user) {
+        return factory.getMailboxMapper(mailboxSession)
+            .findMailboxWithPathLike(MailboxQuery.builder()
+                .namespace(namespace)
+                .user(Username.of(user))
+                .matchesAllMailboxNames()
+                .build()
+                .asUserBound());
     }
 }
