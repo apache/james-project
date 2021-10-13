@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft.crypto;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -30,12 +32,15 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
+import org.apache.james.jwt.PublicKeyReader;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
+import nl.altindag.ssl.exception.CertificateParseException;
 import nl.altindag.ssl.util.KeyStoreUtils;
 import nl.altindag.ssl.util.PemUtils;
 
@@ -84,15 +89,26 @@ public class SecurityKeyLoader {
         Preconditions.checkState(jmapDraftConfiguration.getCertificates().isPresent());
         Preconditions.checkState(jmapDraftConfiguration.getPrivateKey().isPresent());
 
-        X509Certificate certificate = PemUtils.loadCertificate(
-            fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()))
-            .get(0);
         PrivateKey privateKey = PemUtils.loadPrivateKey(
             fileSystem.getResource(jmapDraftConfiguration.getPrivateKey().get()),
             jmapDraftConfiguration.getSecret()
                 .map(String::toCharArray)
                 .orElse(null));
 
-        return new AsymmetricKeys(privateKey, certificate.getPublicKey());
+        return new AsymmetricKeys(privateKey, loadPublicKey());
+    }
+
+    private PublicKey loadPublicKey() throws IOException {
+        try {
+            X509Certificate certificate = PemUtils.loadCertificate(
+                fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()))
+                .get(0);
+            return certificate.getPublicKey();
+        } catch (CertificateParseException e) {
+            String publicKeyAsString = IOUtils.toString(fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()), StandardCharsets.US_ASCII);
+            return new PublicKeyReader()
+                .fromPEM(Optional.of(publicKeyAsString))
+                .orElseThrow(() -> new IllegalArgumentException("Key must either be a valid certificate or a public key"));
+        }
     }
 }
