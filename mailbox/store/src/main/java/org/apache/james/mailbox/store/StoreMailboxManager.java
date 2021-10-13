@@ -89,6 +89,7 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
+import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -396,7 +397,9 @@ public class StoreMailboxManager implements MailboxManager {
         List<MailboxId> mailboxIds = new ArrayList<>();
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         locker.executeWithLock(mailboxPath, () ->
-            block(mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
+            block(mapper.pathExists(mailboxPath)
+                .filter(FunctionalUtils.identityPredicate().negate())
+                .flatMap(any -> mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
                     .doOnNext(mailbox -> mailboxIds.add(mailbox.getMailboxId()))
                     .flatMap(mailbox ->
                         // notify listeners
@@ -413,7 +416,8 @@ public class StoreMailboxManager implements MailboxManager {
                             return Mono.error(e);
                         }
                         return Mono.empty();
-                    })), MailboxPathLocker.LockType.Write);
+                    }))
+                .then()), MailboxPathLocker.LockType.Write);
 
         return mailboxIds;
     }
