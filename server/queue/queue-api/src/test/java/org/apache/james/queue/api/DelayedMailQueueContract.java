@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.time.Year;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
@@ -83,7 +84,8 @@ public interface DelayedMailQueueContract {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
-            ChronoUnit.FOREVER.getDuration());
+           ChronoUnit.YEARS.getDuration().multipliedBy(291)
+           );
 
         Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
@@ -104,7 +106,7 @@ public interface DelayedMailQueueContract {
 
     @Test
     default void delayShouldAtLeastBeTheOneSpecified() throws Exception {
-        long delay = 1L;
+        long delay = 3L;
         TimeUnit unit = TimeUnit.SECONDS;
 
         Stopwatch started = Stopwatch.createStarted();
@@ -117,8 +119,9 @@ public interface DelayedMailQueueContract {
 
         MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         assertThat(mailQueueItem).isNotNull();
-        assertThat(started.elapsed(TimeUnit.MILLISECONDS))
-            .isGreaterThanOrEqualTo(unit.toMillis(delay));
+        int epsilon = 1;
+        assertThat(started.elapsed())
+            .isGreaterThan(Duration.ofSeconds(delay - epsilon));
     }
 
 }

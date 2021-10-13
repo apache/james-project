@@ -19,11 +19,12 @@
 
 package org.apache.james.queue.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import javax.mail.MessagingException;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public interface ManageableMailQueueFactoryContract<T extends ManageableMailQueue> {
 
@@ -39,7 +40,7 @@ public interface ManageableMailQueueFactoryContract<T extends ManageableMailQueu
         firstCreation.enQueue(Mails.defaultMail().name("name").build());
 
         ManageableMailQueue secondCreation = mailQueueFactory.createQueue(NAME_1);
-        assertThat(secondCreation.getSize()).isEqualTo(1);
+        Awaitility.await().untilAsserted(() -> assertThat(secondCreation.getSize()).isEqualTo(1));
     }
 
 }

@@ -34,6 +34,8 @@ import javax.mail.MessagingException;
 
 import org.apache.james.metrics.api.Gauge;
 import org.apache.mailet.base.test.FakeMail;
+import org.awaitility.Awaitility;
+import org.awaitility.Durations;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -85,24 +87,26 @@ public interface MailQueueMetricContract extends MailQueueContract {
     default void enqueueShouldIncreaseEnQueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(2);
 
-        assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
-            .hasSize(1)
-            .satisfies(values -> {
-                assertThat(values.values()).hasSize(1);
-                assertThat(values.values()).element(0).isEqualTo(2);
-            });
+        Awaitility.await().atMost(Durations.FIVE_SECONDS).untilAsserted(() ->
+            assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
+                .hasSize(1)
+                .satisfies(values -> {
+                    assertThat(values.values()).hasSize(1);
+                    assertThat(values.values()).element(0).isEqualTo(2);
+                }));
     }
 
     @Test
-    default void enqueueShouldNotTouchDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
+    default void enqueueShouldNotTouchDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws InterruptedException {
         enQueueMail(2);
 
-        assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
-            .hasSize(1)
-            .satisfies(values -> {
-                assertThat(values.values()).hasSize(1);
-                assertThat(values.values()).element(0).isEqualTo(2);
-            });
+        Awaitility.await().atMost(Durations.FIVE_SECONDS).untilAsserted(() ->
+            assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
+                .hasSize(1)
+                .satisfies(values -> {
+                    assertThat(values.values()).hasSize(1);
+                    assertThat(values.values()).element(0).isEqualTo(2);
+                }));
         assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
             .hasSize(1)
             .satisfies(values -> {
@@ -129,12 +133,13 @@ public interface MailQueueMetricContract extends MailQueueContract {
         enQueueMail(2);
         deQueueMail(2);
 
-        assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
-            .hasSize(1)
-            .satisfies(values -> {
-                assertThat(values.values()).hasSize(1);
-                assertThat(values.values()).element(0).isEqualTo(2);
-            });
+        Awaitility.await().atMost(Durations.FIVE_SECONDS).untilAsserted(() ->
+            assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
+                .hasSize(1)
+                .satisfies(values -> {
+                    assertThat(values.values()).hasSize(1);
+                    assertThat(values.values()).element(0).isEqualTo(2);
+                }));
         assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
             .hasSize(1)
             .satisfies(values -> {
