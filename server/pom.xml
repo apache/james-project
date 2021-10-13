@@ -111,6 +111,7 @@
         <module>queue/queue-api</module>
         <module>queue/queue-jms</module>
         <module>queue/queue-memory</module>
+        <module>queue/queue-pulsar</module>
         <module>queue/queue-rabbitmq</module>
 
         <module>task/task-api</module>
