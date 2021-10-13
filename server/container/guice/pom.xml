@@ -73,6 +73,7 @@
         <module>protocols/webadmin-rabbitmq-mailqueue</module>
         <module>queue/activemq</module>
         <module>queue/memory</module>
+        <module>queue/pulsar</module>
         <module>queue/rabbitmq</module>
         <module>sieve-file</module>
         <module>sieve-jpa</module>
@@ -268,6 +269,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>queue-memory-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-pulsar-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
