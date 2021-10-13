@@ -81,7 +81,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
         }
     }
 
-    private AppendResult appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
+    protected AppendResult appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
         MessageManager mailbox = createMailboxIfNotExist(session, path);
         if (mailbox == null) {
             throw new MessagingException("Mailbox " + path + " for user " + session.getUser().asString() + " was not found on this server.");
