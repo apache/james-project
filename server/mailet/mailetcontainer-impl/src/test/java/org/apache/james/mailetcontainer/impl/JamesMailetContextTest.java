@@ -95,3 +95,4 @@ public class JamesMailetContextTest implements JamesMailetContextContract {
         mailAddress = new MailAddress(USERMAIL.asString());
     }
 }
+
