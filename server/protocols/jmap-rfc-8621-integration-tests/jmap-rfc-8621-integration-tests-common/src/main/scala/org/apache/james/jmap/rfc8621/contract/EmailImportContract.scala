@@ -267,8 +267,9 @@ trait EmailImportContract {
          |            }, "c2"]
          |    ]""".stripMargin)
   }
+
   @Test
-  def createShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
+  def importShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(0L))
     val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
