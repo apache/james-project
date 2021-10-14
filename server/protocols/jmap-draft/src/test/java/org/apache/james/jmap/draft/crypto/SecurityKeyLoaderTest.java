@@ -108,7 +108,7 @@ class SecurityKeyLoaderTest {
     }
 
     @Test
-    void test() throws Exception {
+    void loadShouldReturnAsymmetricKeysWhenRawPublicKey() throws Exception {
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
