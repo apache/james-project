@@ -95,7 +95,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -165,7 +164,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.endProcessingRequest(session);
     }
 
-    @RepeatedTest(10)
+    @Test
     protected void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
         String mailboxName = "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z";
