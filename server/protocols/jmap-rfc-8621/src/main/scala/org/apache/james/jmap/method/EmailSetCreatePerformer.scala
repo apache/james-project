@@ -21,8 +21,8 @@ package org.apache.james.jmap.method
 
 import java.time.ZonedDateTime
 import java.util.Date
-import eu.timepit.refined.auto._
 
+import eu.timepit.refined.auto._
 import javax.inject.Inject
 import javax.mail.Flags
 import org.apache.james.jmap.JMAPConfiguration
@@ -34,7 +34,7 @@ import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationRequest
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mime4j.dom.Message
@@ -69,6 +69,7 @@ object EmailSetCreatePerformer {
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
       case e: BlobNotFoundException => SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }

@@ -32,6 +32,7 @@ object SetError {
   val serverFailValue: SetErrorType = "serverFail"
   val invalidPatchValue: SetErrorType = "invalidPatch"
   val notFoundValue: SetErrorType = "notFound"
+  val overQuotaValue: SetErrorType = "overQuota"
   val forbiddenValue: SetErrorType = "forbidden"
   val stateMismatchValue: SetErrorType = "stateMismatch"
   val mdnAlreadySentValue: SetErrorType = "mdnAlreadySent"
@@ -57,6 +58,9 @@ object SetError {
 
   def mdnAlreadySent(description: SetErrorDescription): SetError =
     SetError(SetError.mdnAlreadySentValue,description, None)
+
+  def overQuota(description: SetErrorDescription): SetError =
+    SetError(SetError.overQuotaValue, description, None)
 
   def forbiddenFrom(description: SetErrorDescription): SetError =
     SetError(SetError.forbiddenFromValue,description, None)

@@ -35,6 +35,7 @@ import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.quota.QuotaCountLimit
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
@@ -49,7 +50,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxConstants, MailboxId, MailboxPath, MessageId}
 import org.apache.james.mailbox.probe.MailboxProbe
 import org.apache.james.mime4j.dom.Message
-import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
+import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
@@ -6943,6 +6944,127 @@ trait EmailSetMethodContract {
           .statusCode(SC_OK)
           .body("methodResponses[0][1].oldState", not(equalTo(state)))
     }
+  }
+
+  @Test
+  def createShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(2L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .getMessageId.serialize()
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .getMessageId.serialize()
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "create": {
+         |        "K39": {
+         |          "mailboxIds": {"$id1":true}
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when()
+      .post()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		["Email/set", {
+           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"notCreated": {
+           |				"K39": {
+           |					"type": "overQuota",
+           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |				}
+           |			}
+           |		}, "c1"]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def copyShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(2L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB)).serialize()
+    val id2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "aBox")).serialize()
+
+    val message1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .getMessageId.serialize()
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .getMessageId.serialize()
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "$message1": {
+         |          "mailboxIds": {"$id1":true, "$id2":true}
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when()
+      .post()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		["Email/set", {
+           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"notUpdated": {
+           |				"$message1": {
+           |					"type": "overQuota",
+           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |				}
+           |			}
+           |		}, "c1"]
+           |	]
+           |}""".stripMargin)
   }
 
   private def buildTestMessage = {
