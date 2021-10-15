@@ -23,7 +23,6 @@ import static org.apache.james.jmap.draft.crypto.JamesSignatureHandlerFixture.JW
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.security.KeyStoreException;
 import java.util.Optional;
 
@@ -98,6 +97,23 @@ class SecurityKeyLoaderTest {
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("james72laBalle")
+            .build();
+
+        SecurityKeyLoader loader = new SecurityKeyLoader(
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
+            jmapDraftConfiguration);
+
+        assertThat(loader.load())
+            .isNotNull();
+    }
+
+    @Test
+    void loadShouldReturnAsymmetricKeysWhenRawPublicKey() throws Exception {
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
+            .enable()
+            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .certificates("key.pub")
+            .privateKey("private.nopass.key")
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(

@@ -34,7 +34,7 @@ public class PublicKeyReader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublicKeyReader.class);
 
-    Optional<PublicKey> fromPEM(Optional<String> pemKey) {
+    public Optional<PublicKey> fromPEM(Optional<String> pemKey) {
         return pemKey
                 .map(k -> new PEMParser(new PemReader(new StringReader(k))))
                 .flatMap(this::publicKeyFrom);
