@@ -4576,26 +4576,24 @@ trait EmailGetMethodContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
-      .inPath(s"methodResponses[0][1].list")
+      .inPath(s"methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |  "htmlBody": [
-         |    {
-         |      "charset": "UTF-8",
-         |      "size": 66,
-         |      "partId": "3",
-         |      "blobId": "1_3",
-         |       "type": "text/plain"
-         |     }
-         |    ],
-         |    "id": "1",
-         |    "bodyValues": {
-         |       "3": {
-         |         "value": "J <j@linagora.com> a accepté votre invitation.\\r\\n\\r\\n",
-         |         "isEncodingProblem": false,
-         |         "isTruncated": false
-         |       }
-         |    }
+         |	"htmlBody": [{
+         |		"charset": "UTF-8",
+         |		"size": 47,
+         |		"partId": "3",
+         |		"blobId": "${messageId.serialize()}_3",
+         |		"type": "text/plain"
+         |	}],
+         |	"id": "${messageId.serialize()}",
+         |	"bodyValues": {
+         |		"3": {
+         |			"value": "J <j@linagora.com> a accepté votre invitation.",
+         |			"isEncodingProblem": false,
+         |			"isTruncated": false
+         |		}
+         |	}
          |}""".stripMargin)
   }
 
