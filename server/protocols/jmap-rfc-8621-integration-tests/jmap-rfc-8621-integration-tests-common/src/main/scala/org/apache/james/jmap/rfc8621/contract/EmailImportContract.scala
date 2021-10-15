@@ -29,6 +29,7 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.quota.QuotaCountLimit
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
@@ -37,7 +38,7 @@ import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
-import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
+import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
@@ -265,6 +266,81 @@ trait EmailImportContract {
          |                ]
          |            }, "c2"]
          |    ]""".stripMargin)
+  }
+
+  @Test
+  def importShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(0L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+    val receivedAt = ZonedDateTime.now().minusDays(1)
+    val receivedAtString = UTCDate(receivedAt).asUTC.format(UTC_DATE_FORMAT)
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [["Email/import", {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "emails": {
+         |           "C42": {
+         |             "blobId": "$blobId",
+         |             "mailboxIds": {
+         |               "${id1.serialize()}": true
+         |             },
+         |             "keywords": {
+         |               "toto": true
+         |             },
+         |             "receivedAt": "$receivedAtString"
+         |           }
+         |         }
+         |      }, "c1"]]
+         |}""".stripMargin
+
+    val response: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when()
+      .post()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		["Email/import", {
+           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"notCreated": {
+           |				"C42": {
+           |					"type": "overQuota",
+           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |				}
+           |			}
+           |		}, "c1"]
+           |	]
+           |}""".stripMargin)
   }
 
   @Test
