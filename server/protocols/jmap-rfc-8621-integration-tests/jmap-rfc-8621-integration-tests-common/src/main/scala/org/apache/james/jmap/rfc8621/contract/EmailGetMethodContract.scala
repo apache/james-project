@@ -4539,6 +4539,67 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def htmlBodyValuesShouldFallBackToPlainTextWhenNoHtmlPart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.cal.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["bodyValues", "htmlBody"],
+         |      "fetchHTMLBodyValues": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .inPath(s"methodResponses[0][1].list")
+      .isEqualTo(
+      s"""{
+         |  "htmlBody": [
+         |    {
+         |      "charset": "UTF-8",
+         |      "size": 66,
+         |      "partId": "3",
+         |      "blobId": "1_3",
+         |       "type": "text/plain"
+         |     }
+         |    ],
+         |    "id": "1",
+         |    "bodyValues": {
+         |       "3": {
+         |         "value": "J <j@linagora.com> a accepté votre invitation.\\r\\n\\r\\n",
+         |         "isEncodingProblem": false,
+         |         "isTruncated": false
+         |       }
+         |    }
+         |}""".stripMargin)
+  }
+
+  @Test
   def textAndHtmlBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)

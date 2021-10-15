@@ -1,0 +1,57 @@
+Return-Path: <j@linagora.com>
+MIME-version: 1.0
+X-LINAGORA-Copy-Delivery-Done: 1
+From: J <j@linagora.com>
+Message-ID: <00ecbe90-cdbc-7222-75c4-0e297c5a8eef@linagora.com>
+To: B <b@linagora.com>
+Date: Thu, 14 Oct 2021 16:04:30 +0200
+Subject: A little explanation
+Content-type: multipart/mixed; boundary="Boundary_(ID_qyG4ZdjoAsiZ+Jo19dCbWQ)"
+
+
+--Boundary_(ID_qyG4ZdjoAsiZ+Jo19dCbWQ)
+Content-type: multipart/alternative;
+ boundary="Boundary_(ID_ryU4ZdJoASiZ+Jo21dCbwA)"
+
+
+--Boundary_(ID_ryU4ZdJoASiZ+Jo21dCbwA)
+Content-type: text/plain; charset=UTF-8
+Content-transfer-encoding: 8BIT
+
+J <j@linagora.com> a accepté votre invitation.
+
+
+--Boundary_(ID_ryU4ZdJoASiZ+Jo21dCbwA)
+Content-type: text/calendar; method=REPLY; charset=UTF-8
+Content-transfer-encoding: 8BIT
+
+BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:REPLY
+BEGIN:VTIMEZONE
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:08985ae5-8e62-4f3e-971d-27c8b40cf838
+END:VEVENT
+END:VCALENDAR
+
+
+--Boundary_(ID_ryU4ZdJoASiZ+Jo21dCbwA)--
+
+--Boundary_(ID_qyG4ZdjoAsiZ+Jo19dCbWQ)
+Content-type: application/ics; name=invite.ics
+Content-transfer-encoding: 8BIT
+Content-disposition: attachment; filename=invite.ics
+
+BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:REPLY
+BEGIN:VTIMEZONE
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:08985ae5-8e62-4f3e-971d-27c8b40cf838
+END:VEVENT
+END:VCALENDAR
+
+
+--Boundary_(ID_qyG4ZdjoAsiZ+Jo19dCbWQ)--
