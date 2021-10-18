@@ -107,7 +107,7 @@ public class SecurityKeyLoader {
         } catch (CertificateParseException e) {
             String publicKeyAsString = IOUtils.toString(fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()), StandardCharsets.US_ASCII);
             return new PublicKeyReader()
-                .fromPEM(Optional.of(publicKeyAsString))
+                .fromPEM(publicKeyAsString)
                 .orElseThrow(() -> new IllegalArgumentException("Key must either be a valid certificate or a public key"));
         }
     }

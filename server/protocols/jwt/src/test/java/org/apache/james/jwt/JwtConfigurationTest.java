@@ -22,9 +22,9 @@ package org.apache.james.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 class JwtConfigurationTest {
     private static final String INVALID_PUBLIC_KEY = "invalidPublicKey";
@@ -40,9 +40,9 @@ class JwtConfigurationTest {
 
     @Test
     void getJwtPublicKeyPemShouldReturnEmptyWhenEmptyPublicKey() {
-        JwtConfiguration jwtConfiguration = new JwtConfiguration(Optional.empty());
+        JwtConfiguration jwtConfiguration = new JwtConfiguration(ImmutableList.of());
 
-        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isNotPresent();
+        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isEmpty();
     }
 
     @Test
@@ -53,20 +53,20 @@ class JwtConfigurationTest {
 
     @Test
     void constructorShouldThrowWhenNonePublicKey() {
-        assertThatThrownBy(() -> new JwtConfiguration(Optional.of("")))
+        assertThatThrownBy(() -> new JwtConfiguration(ImmutableList.of("")))
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void constructorShouldThrowWhenInvalidPublicKey() {
-        assertThatThrownBy(() -> new JwtConfiguration(Optional.of(INVALID_PUBLIC_KEY)))
+        assertThatThrownBy(() -> new JwtConfiguration(ImmutableList.of(INVALID_PUBLIC_KEY)))
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void getJwtPublicKeyPemShouldReturnWhenValidPublicKey() {
-        JwtConfiguration jwtConfiguration = new JwtConfiguration(Optional.of(VALID_PUBLIC_KEY));
+        JwtConfiguration jwtConfiguration = new JwtConfiguration(ImmutableList.of(VALID_PUBLIC_KEY));
 
-        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isPresent();
+        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isNotEmpty();
     }
 }

@@ -23,11 +23,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.Security;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Optional;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 class PublicKeyProviderTest {
 
@@ -49,16 +50,16 @@ class PublicKeyProviderTest {
     @Test
     void getShouldNotThrowWhenPEMKeyProvided() {
 
-        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.of(PUBLIC_PEM_KEY));
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY));
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
-        assertThat(sut.get()).isInstanceOf(RSAPublicKey.class);
+        assertThat(sut.get()).allSatisfy(key -> assertThat(key).isInstanceOf(RSAPublicKey.class));
     }
 
     @Test
     void getShouldThrowWhenPEMKeyNotProvided() {
-        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.empty());
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of());
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 

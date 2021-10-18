@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -203,7 +204,7 @@ public class JMAPModule extends AbstractModule {
                 .certificates(configuration.getString("tls.certificates", null))
                 .keystoreType(configuration.getString("tls.keystoreType", null))
                 .secret(configuration.getString("tls.secret", null))
-                .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
+                .jwtPublicKeyPem(loadPublicKey(fileSystem, ImmutableList.copyOf(configuration.getStringArray("jwt.publickeypem.url"))))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
@@ -221,8 +222,10 @@ public class JMAPModule extends AbstractModule {
         return JwtTokenVerifier.create(jwtConfiguration);
     }
 
-    private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
-        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), StandardCharsets.US_ASCII)));
+    private List<String> loadPublicKey(FileSystem fileSystem, List<String> jwtPublickeyPemUrl) {
+        return jwtPublickeyPemUrl.stream()
+            .map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), StandardCharsets.US_ASCII)))
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Singleton

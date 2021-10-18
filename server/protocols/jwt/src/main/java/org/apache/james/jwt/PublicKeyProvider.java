@@ -19,6 +19,9 @@
 package org.apache.james.jwt;
 
 import java.security.PublicKey;
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 public class PublicKeyProvider {
 
@@ -30,9 +33,15 @@ public class PublicKeyProvider {
         this.reader = reader;
     }
 
-    public PublicKey get() throws MissingOrInvalidKeyException {
-        return reader.fromPEM(jwtConfiguration.getJwtPublicKeyPem())
-                .orElseThrow(MissingOrInvalidKeyException::new);
+    public List<PublicKey> get() throws MissingOrInvalidKeyException {
+        ImmutableList<PublicKey> keys = jwtConfiguration.getJwtPublicKeyPem()
+            .stream()
+            .flatMap(s -> reader.fromPEM(s).stream())
+            .collect(ImmutableList.toImmutableList());
+        if (keys.isEmpty()) {
+            throw new MissingOrInvalidKeyException();
+        }
+        return keys;
     }
 
 }
