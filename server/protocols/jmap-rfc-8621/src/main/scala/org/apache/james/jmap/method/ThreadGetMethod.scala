@@ -27,6 +27,7 @@ import org.apache.james.jmap.core.{AccountId, Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
 import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.mailbox.exception.ThreadNotFoundException
 import org.apache.james.mailbox.model.{ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
@@ -92,6 +93,9 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
               .collectSeq()
               .map(seq => Thread(id = unparsedThreadId.id, emailIds = seq.toList))
               .map(ThreadGetResult.found)
-              .onErrorResume((_ => SMono.just(ThreadGetResult.notFound(unparsedThreadId)))))
+              .onErrorResume({
+                case _: ThreadNotFoundException => SMono.just(ThreadGetResult.notFound(unparsedThreadId))
+                case e => SMono.error(e)
+              }))
       })
 }
