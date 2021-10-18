@@ -47,7 +47,7 @@ We also decided to allow a single push subscription per devideId (which includes
 
 ## Consequences
 
-The notification traffic transit by some third party infrastructure which can both be a security and privacy risk. 
+The notification traffic transits by some third party infrastructure which can both be a security and privacy risk. 
 [RFC-8291](https://datatracker.ietf.org/doc/html/rfc8291) `Message Encryption for Web Push` introduces encryption 
 for web push messages and is integrated to JMAP web push mechanisms. This SHOULD be implemented. `google/tink` library
 provides utilities to easily do this.
