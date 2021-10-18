@@ -6,6 +6,8 @@ Date: 2020-10-05
 
 Accepted (lazy consensus).
 
+Partially implemented.
+
 ## Context
 
 James servers offer a command-line interface in order to interact with the server. However, it relies on the JMX protocol, which is known to be insecure. The JMX server embedded in Apache James, also used by the command line client is exposed to a java de-serialization issue according to [NVD-CVE-2017-12628 Detail](https://nvd.nist.gov/vuln/detail/CVE-2017-12628), and thus can be used to execute arbitrary commands. 

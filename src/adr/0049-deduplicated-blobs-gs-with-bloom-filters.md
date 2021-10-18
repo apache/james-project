@@ -6,7 +6,7 @@ Date: 2021-07-21
 
 Accepted (lazy consensus).
 
-Not yet implemented.
+Implemented.
 
 Proposes a simple way to implement an alternative to  [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md)
 

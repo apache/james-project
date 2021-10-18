@@ -8,6 +8,8 @@ Accepted (lazy consensus).
 
 Scope: Distributed James
 
+Implemented.
+
 ## Context
 
 As any kind of server James needs to provide some level of consistencies.
