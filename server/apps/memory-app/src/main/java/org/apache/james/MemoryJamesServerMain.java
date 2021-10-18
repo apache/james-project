@@ -19,8 +19,6 @@
 
 package org.apache.james;
 
-import java.util.Optional;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -64,6 +62,7 @@ import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -82,7 +81,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new SwaggerRoutesModule());
 
 
-    public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(Optional.empty());
+    public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(ImmutableList.of());
 
     public static final Module WEBADMIN_NO_AUTH_MODULE = Modules.combine(binder -> binder.bind(JwtConfiguration.class).toInstance(NO_JWT_CONFIGURATION),
         binder -> binder.bind(AuthenticationFilter.class).to(NoAuthenticationFilter.class),
