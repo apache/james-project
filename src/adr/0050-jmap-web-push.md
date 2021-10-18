@@ -11,7 +11,7 @@ Not yet implemented.
 ## Context
 
 **Notification for newly received emails** is a common feature of modern mail applications. Furthermore,
-**real time** updates across devices is a common feature. We wish to provide support for this on top
+**real time** updates across devices are a common feature. We wish to provide support for this on top
 of Apache James JMAP implementation for a large variety of devices.
 
 Dealing with mobile devices yield a unique set of challenges at the protocol level, including 
@@ -52,7 +52,7 @@ The notification traffic transit by some third party infrastructure which can bo
 for web push messages and is integrated to JMAP web push mechanisms. This SHOULD be implemented. `google/tink` library
 provides utilities to easily do this.
 
-Our testing strategy will rely on a [mock HTTP server](https://www.mock-server.com/) mimicking the behaviour of a push 
+Our testing strategy will rely on a [mock HTTP server](https://www.mock-server.com/) mimicking the behavior of a push 
 gateway.
 
 The push gateway can support rate limiting and might reject some of the messages pushed to it (HTTP `429` too many
