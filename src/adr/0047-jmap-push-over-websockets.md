@@ -6,6 +6,8 @@ Date: 2021-01-26
 
 Accepted (lazy consensus).
 
+Implemented.
+
 Relates to [45. Support JMAP Push with Mailbox/changes implementation](0045-support-jmap-push-with-mailbox-changes-implementation.md)
 
 Requires [46. Generalize EventBus](0046-generalize-event-bus.md)
