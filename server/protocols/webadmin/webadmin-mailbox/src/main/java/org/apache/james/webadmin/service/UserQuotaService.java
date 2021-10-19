@@ -80,7 +80,10 @@ public class UserQuotaService {
     }
 
     public QuotaDetailsDTO getQuota(Username username) throws MailboxException {
-        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
+        return getQuota(userQuotaRootResolver.forUser(username));
+    }
+
+    private QuotaDetailsDTO getQuota(QuotaRoot quotaRoot) throws MailboxException {
         QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
         QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder()
             .occupation(quotas.getStorageQuota(),
@@ -144,7 +147,7 @@ public class UserQuotaService {
             .stream()
             .map(Throwing.function(user -> UsersQuotaDetailsDTO.builder()
                 .user(user)
-                .detail(getQuota(user))
+                .detail(getQuota(userQuotaRootResolver.forMailAddress(user)))
                 .build()))
             .collect(ImmutableList.toImmutableList());
     }

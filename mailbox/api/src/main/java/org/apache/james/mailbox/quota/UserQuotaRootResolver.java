@@ -25,4 +25,11 @@ public interface UserQuotaRootResolver extends QuotaRootResolver {
 
     QuotaRoot forUser(Username username);
 
+    /**
+     * When the username might not point to a user entity, and an extra translation step is required
+     * for the quota root.
+     */
+    default QuotaRoot forMailAddress(Username username) {
+        return forUser(username);
+    }
 }
