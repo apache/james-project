@@ -22,8 +22,10 @@ package org.apache.james.jmap;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -33,9 +35,11 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
+import io.netty.handler.codec.http.HttpMethod;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
@@ -46,6 +50,7 @@ public class JMAPServer implements Startable {
     private final JMAPConfiguration configuration;
     private final VersionParser versionParser;
     private final Multimap<Version, JMAPRoute> routes;
+    private final List<JMAPRoute> corsRoutes;
     private Optional<DisposableServer> server;
 
     @Inject
@@ -59,9 +64,16 @@ public class JMAPServer implements Startable {
             .flatMap(version -> jmapRoutesHandlers.stream()
                 .flatMap(handler -> handler.routes(version)
                     .map(route -> Pair.of(version, route))))
+            .filter(route -> !route.getRight().getEndpoint().getMethod().equals(HttpMethod.OPTIONS))
             .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
                 Pair::getValue));
+        this.corsRoutes = versionParser.getSupportedVersions()
+            .stream()
+            .flatMap(version -> jmapRoutesHandlers.stream()
+                .flatMap(handler -> handler.routes(version)))
+            .filter(route -> route.getEndpoint().getMethod().equals(HttpMethod.OPTIONS))
+            .collect(ImmutableList.toImmutableList());
     }
 
     public Port getPort() {
@@ -87,17 +99,24 @@ public class JMAPServer implements Startable {
     }
 
     private JMAPRoute.Action handleVersionRoute(HttpServerRequest request) {
+        if (request.method().equals(HttpMethod.OPTIONS)) {
+            return retrieveMatchingAction(request, corsRoutes.stream());
+        }
         try {
             Version version = versionParser.parseRequestVersionHeader(request);
 
-            return routes.get(version).stream()
-                .filter(jmapRoute -> jmapRoute.matches(request))
-                .map(JMAPRoute::getAction)
-                .findFirst()
-                .orElse((req, res) -> res.status(NOT_FOUND).send());
+            return retrieveMatchingAction(request, routes.get(version).stream());
         } catch (IllegalArgumentException e) {
             return (req, res) -> res.status(BAD_REQUEST).send();
         }
+    }
+
+    private JMAPRoute.Action retrieveMatchingAction(HttpServerRequest request, Stream<JMAPRoute> routeStream) {
+        return routeStream
+            .filter(jmapRoute -> jmapRoute.matches(request))
+            .map(JMAPRoute::getAction)
+            .findFirst()
+            .orElse((req, res) -> res.status(NOT_FOUND).send());
     }
 
     @PreDestroy

@@ -22,6 +22,7 @@ package org.apache.james.jmap;
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8;
@@ -37,8 +38,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -80,6 +79,14 @@ class JMAPServerTest {
             Version.RFC8621,
             new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.RFC8621))
     );
+
+    private static final ImmutableSet<JMAPRoutesHandler> CORS_ROUTES = ImmutableSet.of(
+        new JMAPRoutesHandler(
+            Version.DRAFT,
+            new FakeJMAPRoutes(ImmutableSet.of(new Endpoint(HttpMethod.OPTIONS, "/a")), Version.DRAFT)),
+        new JMAPRoutesHandler(
+            Version.RFC8621,
+            new FakeJMAPRoutes(ImmutableSet.of(new Endpoint(HttpMethod.OPTIONS, "/b")), Version.RFC8621)));
 
     private static final ImmutableSet<Version> SUPPORTED_VERSIONS = ImmutableSet.of(
         Version.DRAFT,
@@ -222,9 +229,50 @@ class JMAPServerTest {
         }
     }
 
-    private static class FakeJMAPRoutes implements JMAPRoutes {
-        private static final Logger LOGGER = LoggerFactory.getLogger(FakeJMAPRoutes.class);
+    @Nested
+    class CorsRouteVersioningTest {
+        JMAPServer server;
 
+        @BeforeEach
+        void setUp() {
+            VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
+            server = new JMAPServer(TEST_CONFIGURATION, CORS_ROUTES, versionParser);
+            server.start();
+
+            RestAssured.requestSpecification = new RequestSpecBuilder()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+                .setPort(server.getPort().getValue())
+                .build();
+        }
+
+        @AfterEach
+        void tearDown() {
+            server.stop();
+        }
+
+        @Test
+        void corsRoutesOfAllVersionsShouldBeExposed() {
+            when()
+                .options("/b")
+            .then()
+                .statusCode(200)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+
+            when()
+                .options("/a")
+            .then()
+                .statusCode(200)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+        }
+    }
+
+    private static class FakeJMAPRoutes implements JMAPRoutes {
         private final Set<Endpoint> endpoints;
         private final Version version;
 
@@ -238,7 +286,12 @@ class JMAPServerTest {
             return endpoints.stream()
                 .map(endpoint -> JMAPRoute.builder()
                     .endpoint(endpoint)
-                    .action((request, response) -> sendVersionResponse(response))
+                    .action((request, response) -> {
+                        if (endpoint.getMethod().equals(HttpMethod.OPTIONS)) {
+                            return JMAPRoutes.CORS_CONTROL.handleRequest(request, response);
+                        }
+                        return sendVersionResponse(response);
+                    })
                     .noCorsHeaders());
         }
 
