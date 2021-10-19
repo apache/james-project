@@ -283,8 +283,10 @@ case class EmailBodyPart(partId: PartId,
   }
 
   private def htmlBodyOfMultipart: List[EmailBodyPart] = `type` match {
-    case MULTIPART_ALTERNATIVE => getBodyParts(subParts.getOrElse(Nil), TEXT_HTML)
-      .flatMap(subPart => subPart.htmlBody)
+    case MULTIPART_ALTERNATIVE => Some(getBodyParts(subParts.getOrElse(Nil), TEXT_HTML)
+      .flatMap(subPart => subPart.htmlBody))
+      .filter(_.nonEmpty)
+      .getOrElse(textBodyOfMultipart)
     case _ => subParts.getOrElse(Nil)
       .flatMap(subPart => subPart.htmlBody)
   }
