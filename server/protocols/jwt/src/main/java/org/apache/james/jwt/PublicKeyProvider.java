@@ -38,7 +38,7 @@ public class PublicKeyProvider {
             .stream()
             .flatMap(s -> reader.fromPEM(s).stream())
             .collect(ImmutableList.toImmutableList());
-        if (keys.isEmpty()) {
+        if (keys.size() != jwtConfiguration.getJwtPublicKeyPem().size()) {
             throw new MissingOrInvalidKeyException();
         }
         return keys;

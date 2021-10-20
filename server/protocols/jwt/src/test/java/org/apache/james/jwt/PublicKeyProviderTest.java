@@ -49,7 +49,6 @@ class PublicKeyProviderTest {
 
     @Test
     void getShouldNotThrowWhenPEMKeyProvided() {
-
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY));
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
@@ -58,11 +57,11 @@ class PublicKeyProviderTest {
     }
 
     @Test
-    void getShouldThrowWhenPEMKeyNotProvided() {
+    void getShouldNotThrowWhenPEMKeyNotProvided() {
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of());
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
-        assertThatThrownBy(sut::get).isExactlyInstanceOf(MissingOrInvalidKeyException.class);
+        assertThat(sut.get()).isEmpty();
     }
 }
