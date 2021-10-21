@@ -45,11 +45,14 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraUsersDAO implements UsersDAO {
     private static final String DEFAULT_ALGO_VALUE = "SHA-512";
@@ -113,12 +116,16 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public Optional<DefaultUser> getUserByName(Username name) {
-        return executor.executeSingleRow(
-                getUserStatement.bind()
-                    .setString(NAME, name.asString()))
-            .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
-                algorithmFactory.of(row.getString(ALGORITHM))))
+        return getUserByNameReactive(name)
             .blockOptional();
+    }
+
+    private Mono<DefaultUser> getUserByNameReactive(Username name) {
+        return executor.executeSingleRow(
+            getUserStatement.bind()
+                .setString(NAME, name.asString()))
+            .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
+                algorithmFactory.of(row.getString(ALGORITHM))));
     }
 
     @Override
@@ -153,6 +160,11 @@ public class CassandraUsersDAO implements UsersDAO {
     @Override
     public boolean contains(Username name) {
         return getUserByName(name).isPresent();
+    }
+
+    @Override
+    public Publisher<Boolean> containsReactive(Username name) {
+        return getUserByNameReactive(name).hasElement();
     }
 
     @Override

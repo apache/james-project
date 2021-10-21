@@ -40,6 +40,7 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.CharMatcher;
@@ -166,6 +167,11 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
         return usersDAO.contains(name);
+    }
+
+    @Override
+    public Publisher<Boolean> containsReactive(Username name) {
+        return usersDAO.containsReactive(name);
     }
 
     @Override
