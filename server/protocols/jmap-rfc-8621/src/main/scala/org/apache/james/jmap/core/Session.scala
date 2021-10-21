@@ -29,6 +29,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.string.Uuid
 import org.apache.james.core.Username
 import org.apache.james.jmap.api.change.{EmailChanges, MailboxChanges, State => JavaState}
+import org.apache.james.jmap.api.model.State
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UuidState.INSTANCE
@@ -102,10 +103,6 @@ object UuidState {
     .toEither
     .map(UuidState(_))
     .left.map(new IllegalArgumentException(_))
-}
-
-trait State {
-  def serialize: String
 }
 
 case class UuidState(value: UUID) extends State {

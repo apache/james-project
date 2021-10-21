@@ -20,6 +20,8 @@
 package org.apache.james.jmap.change
 
 import javax.inject.Inject
+import org.apache.james.jmap.api.model.TypeName
+
 import scala.jdk.CollectionConverters._
 
 case class TypeStateFactory @Inject()(setTypeName: java.util.Set[TypeName]) {

@@ -37,13 +37,13 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
-import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.api.model.{AccountId, State, TypeName}
 import org.apache.james.jmap.api.model.Size.Size
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, TypeName}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{Capability, CapabilityProperties, State}
+import org.apache.james.jmap.core.{Capability, CapabilityProperties}
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.mail
