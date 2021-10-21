@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
 import static spark.Spark.halt;
 
 import java.util.List;
@@ -28,11 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -50,20 +44,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Domain Mappings")
-@Path(DOMAIN_MAPPINGS)
-@Produces("application/json")
 public class DomainMappingsRoutes implements Routes {
     public static final String DOMAIN_MAPPINGS = "/domainMappings";
     private static final String FROM_DOMAIN = "fromDomain";
@@ -93,19 +78,6 @@ public class DomainMappingsRoutes implements Routes {
         service.delete(SPECIFIC_MAPPING, this::removeDomainMapping);
     }
 
-    @PUT
-    @Path(SPECIFIC_MAPPING_PATH)
-    @ApiOperation(value = "Creating domain mapping between source and destination domains.")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FROM_DOMAIN, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Ok"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain name is invalid"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException addDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
         MappingSource mappingSource = mappingSourceFrom(request);
         Domain destinationDomain = extractDomain(request.body());
@@ -125,18 +97,6 @@ public class DomainMappingsRoutes implements Routes {
         }
     }
 
-    @DELETE
-    @Path(SPECIFIC_MAPPING_PATH)
-    @ApiOperation(value = "Removes domain mapping between source and destination domains.")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FROM_DOMAIN, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Ok"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain name is invalid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException removeDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
         MappingSource mappingSource = mappingSourceFrom(request);
         Domain destinationDomain = extractDomain(request.body());
@@ -145,14 +105,6 @@ public class DomainMappingsRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    @GET
-    @Path(DOMAIN_MAPPINGS)
-    @ApiOperation(value = "Lists all domain mappings.")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "Domain mappings.", responseContainer = "Map"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public Map<String, List<String>> getAllMappings(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getAllMappings()
             .entrySet()
@@ -164,19 +116,6 @@ public class DomainMappingsRoutes implements Routes {
             ));
     }
 
-    @GET
-    @Path(SPECIFIC_MAPPING_PATH)
-    @ApiOperation(value = "Lists mappings for specific domain.")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FROM_DOMAIN, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "Domain mappings.", responseContainer = "List"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain name is invalid"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not existing mappings."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public List<String> getMapping(Request request, Response response) throws RecipientRewriteTableException {
         MappingSource mappingSource = mappingSourceFrom(request);
 

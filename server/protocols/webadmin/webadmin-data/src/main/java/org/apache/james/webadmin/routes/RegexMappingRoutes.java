@@ -26,35 +26,23 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Regex Mapping")
-@Path(RegexMappingRoutes.BASE_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class RegexMappingRoutes implements Routes {
 
     static final String BASE_PATH = "/mappings/regex";
@@ -84,13 +72,6 @@ public class RegexMappingRoutes implements Routes {
         service.delete(REMOVE_ADDRESS_MAPPING_PATH, this::removeRegexMapping);
     }
 
-    @POST
-    @Path(ADD_ADDRESS_MAPPING_PATH)
-    @ApiOperation(value = "adding address-regex mappings to RecipientRewriteTable")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Mapping successfully added"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid parameter")
-    })
     private HaltException addRegexMapping(Request request, Response response) throws Exception {
         try {
             MappingSource mappingSource = extractMappingSource(request);
@@ -106,13 +87,6 @@ public class RegexMappingRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    @DELETE
-    @Path(REMOVE_ADDRESS_MAPPING_PATH)
-    @ApiOperation(value = "removing a regex mapping")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Mapping deleted successfully"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request path parameter")
-    })
     private HaltException removeRegexMapping(Request request, Response response) throws Exception {
         try {
             MappingSource mappingSource = MappingSource.parse(request.params(MAPPING_SOURCE_PARAM));

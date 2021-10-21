@@ -24,9 +24,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -43,7 +40,6 @@ import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -51,19 +47,10 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Strings;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "Mailboxes")
-@Path("/mailboxes")
-@Produces("application/json")
 public class MailboxesRoutes implements Routes {
     public static class ReIndexAllMailboxesTaskRegistration extends TaskRegistration {
         @Inject
@@ -71,40 +58,6 @@ public class MailboxesRoutes implements Routes {
             super(RE_INDEX, wrap(request -> reIndexAll(previousReIndexingService, reIndexer, request)));
         }
 
-        @POST
-        @Path("/")
-        @ApiOperation(value = "Re-indexes all the mails on this server")
-        @ApiImplicitParams({
-            @ApiImplicitParam(
-                required = true,
-                name = "task",
-                paramType = "query parameter",
-                dataType = "String",
-                defaultValue = "none",
-                example = "?task=reIndex",
-                value = "Compulsory. Only supported value is `reIndex`"),
-            @ApiImplicitParam(
-                required = false,
-                name = "messagesPerSecond",
-                paramType = "query parameter",
-                dataType = "Integer",
-                defaultValue = "none",
-                example = "?messagesPerSecond=100",
-                value = "If present, determine the number of messages being processed in one second."),
-            @ApiImplicitParam(
-                name = "reIndexFailedMessagesOf",
-                paramType = "query parameter",
-                dataType = "String",
-                defaultValue = "none",
-                example = "?reIndexFailedMessagesOf=3294a976-ce63-491e-bd52-1b6f465ed7a2",
-                value = "optional. References a previously run reIndexing task. if present, the messages that this previous " +
-                    "task failed to index will be reIndexed.")
-        })
-        @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-        })
         private static Task reIndexAll(PreviousReIndexingService previousReIndexingService, ReIndexer reIndexer, Request request) throws MailboxException {
             boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
             if (indexingCorrection) {
@@ -157,39 +110,6 @@ public class MailboxesRoutes implements Routes {
             super(RE_INDEX, toTask(reIndexer, mailboxIdFactory));
         }
 
-        @POST
-        @Path("/{mailboxId}")
-        @ApiOperation(value = "Re-indexes all the mails in a mailbox")
-        @ApiImplicitParams({
-            @ApiImplicitParam(
-                required = true,
-                name = "task",
-                paramType = "query parameter",
-                dataType = "String",
-                defaultValue = "none",
-                example = "?task=reIndex",
-                value = "Compulsory. Only supported value is `reIndex`"),
-            @ApiImplicitParam(
-                required = false,
-                name = "messagesPerSecond",
-                paramType = "query parameter",
-                dataType = "Integer",
-                defaultValue = "none",
-                example = "?messagesPerSecond=100",
-                value = "If present, determine the number of messages being processed in one second."),
-            @ApiImplicitParam(
-                required = true,
-                name = "mailboxId",
-                paramType = "path parameter",
-                dataType = "String",
-                defaultValue = "none",
-                value = "Compulsory. Needs to be a valid mailbox ID")
-        })
-        @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-        })
         private static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
             return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), ReindexingRunningOptionsParser.parse(request)));
         }
@@ -201,41 +121,6 @@ public class MailboxesRoutes implements Routes {
             super(RE_INDEX, toTask(reIndexer, mailboxIdFactory));
         }
 
-        @POST
-        @Path("/{mailboxId}/mails/{uid}")
-        @ApiOperation(value = "Re-indexes a single email")
-        @ApiImplicitParams({
-            @ApiImplicitParam(
-                required = true,
-                name = "task",
-                paramType = "query parameter",
-                dataType = "String",
-                defaultValue = "none",
-                example = "?task=reIndex",
-                value = "Compulsory. Only supported value is `reIndex`"),
-            @ApiImplicitParam(
-                required = true,
-                name = "user",
-                paramType = "path parameter",
-                dataType = "String",
-                defaultValue = "none",
-                example = "benoit@apache.org",
-                value = "Compulsory. Needs to be a valid username"),
-            @ApiImplicitParam(
-                required = true,
-                name = "mailboxId",
-                paramType = "path parameter",
-                dataType = "String",
-                defaultValue = "none",
-                value = "Compulsory. Needs to be a valid mailbox ID"),
-            @ApiImplicitParam(
-                required = true,
-                name = "uid",
-                paramType = "path parameter",
-                dataType = "Integer",
-                defaultValue = "none",
-                value = "Compulsory. Needs to be a valid UID")
-        })
         public static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
             return wrap(request -> reIndexer.reIndex(
                 extractMailboxId(mailboxIdFactory, request),

@@ -24,7 +24,6 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.GuiceJamesServer;
@@ -36,7 +35,6 @@ import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -118,28 +116,6 @@ public abstract class WebAdminServerIntegrationImmutableTest {
                 "var/mail/error",
                 "var/mail/relay-denied",
                 "var/mail/address-error"));
-    }
-
-    @Test
-    void getSwaggerShouldReturnJsonDataForSwagger() {
-        when()
-            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body(containsString("\"swagger\":\"2.0\""))
-            .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
-            .body(containsString("\"tags\":[\"User's Mailbox\"]"))
-            .body(containsString("\"tags\":[\"GlobalQuota\"]"))
-            .body(containsString("\"tags\":[\"DomainQuota\"]"))
-            .body(containsString("\"tags\":[\"UserQuota\"]"))
-            .body(containsString("\"tags\":[\"Domains\"]"))
-            .body(containsString("\"tags\":[\"Users\"]"))
-            .body(containsString("\"tags\":[\"MailRepositories\"]"))
-            .body(containsString("\"tags\":[\"MailQueues\"]"))
-            .body(containsString("\"tags\":[\"Address Forwards\"]"))
-            .body(containsString("\"tags\":[\"Address Aliases\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"))
-            .body(containsString("{\"name\":\"Mailboxes\"}"));
     }
 
     @Test

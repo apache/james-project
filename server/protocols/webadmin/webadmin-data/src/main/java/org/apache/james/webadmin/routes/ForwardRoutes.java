@@ -25,11 +25,6 @@ import static spark.Spark.halt;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -43,7 +38,6 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForwardDestinationResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -55,20 +49,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Address Forwards")
-@Path(ForwardRoutes.ROOT_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class ForwardRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/forwards";
@@ -118,38 +103,10 @@ public class ForwardRoutes implements Routes {
             .haltError();
     }
 
-    @GET
-    @Path(ROOT_PATH)
-    @ApiOperation(value = "getting forwards list")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public List<MappingSource> listForwards(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward).collect(ImmutableList.toImmutableList());
     }
 
-    @PUT
-    @Path(ROOT_PATH + "/{" + FORWARD_BASE_ADDRESS + "}/targets/{" + FORWARD_DESTINATION_ADDRESS + "}")
-    @ApiOperation(value = "adding a destination address into a forward")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FORWARD_BASE_ADDRESS, paramType = "path",
-            value = "Base mail address of the forward. Sending a mail to that address will send it to all forward destinations.\n" +
-            MAILADDRESS_ASCII_DISCLAIMER),
-        @ApiImplicitParam(required = true, dataType = "string", name = FORWARD_DESTINATION_ADDRESS, paramType = "path",
-            value = "A destination mail address of the forward. Sending a mail to the base address will send an email to " +
-                "that email address (as well as other destinations).\n" +
-                MAILADDRESS_ASCII_DISCLAIMER)
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = FORWARD_BASE_ADDRESS + " or forward structure format is not valid"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "requested base forward address does not match a user"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException addToForwardDestinations(Request request, Response response) throws RecipientRewriteTableException, UsersRepositoryException {
         MailAddress forwardBaseAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_BASE_ADDRESS), FORWARD_BASE_ADDRESS_TYPE);
         ensureUserExist(forwardBaseAddress);
@@ -189,21 +146,6 @@ public class ForwardRoutes implements Routes {
         }
     }
 
-
-    @DELETE
-    @Path(ROOT_PATH + "/{" + FORWARD_BASE_ADDRESS + "}/targets/{" + FORWARD_DESTINATION_ADDRESS + "}")
-    @ApiOperation(value = "remove a destination address from a forward")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FORWARD_BASE_ADDRESS, paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = FORWARD_DESTINATION_ADDRESS, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400,
-            message = FORWARD_BASE_ADDRESS + " or forward structure format is not valid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException removeFromForwardDestination(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress baseAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_BASE_ADDRESS), FORWARD_BASE_ADDRESS_TYPE);
         MailAddress destinationAddressToBeRemoved = MailAddressParser.parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS), FORWARD_DESTINATION_ADDRESS_TYPE);
@@ -212,19 +154,6 @@ public class ForwardRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    @GET
-    @Path(ROOT_PATH + "/{" + FORWARD_BASE_ADDRESS + "}")
-    @ApiOperation(value = "listing forward destinations")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = FORWARD_BASE_ADDRESS, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The base forward is not an address"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The base forward does not exist"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public ImmutableSet<ForwardDestinationResponse> listForwardDestinations(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress baseAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_BASE_ADDRESS), FORWARD_BASE_ADDRESS_TYPE);
         Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(baseAddress))

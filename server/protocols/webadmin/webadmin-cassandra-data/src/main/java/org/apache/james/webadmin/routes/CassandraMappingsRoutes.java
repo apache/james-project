@@ -20,33 +20,17 @@
 package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.task.TaskManager;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.CassandraMappingsService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ResponseHeader;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "Cassandra Mappings Operations")
-@Path(CassandraMappingsRoutes.ROOT_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class CassandraMappingsRoutes implements Routes {
     public static final String ROOT_PATH = "cassandra/mappings";
     private static final TaskRegistrationKey SOLVE_INCONSISTENCIES = TaskRegistrationKey.of("SolveInconsistencies");
@@ -75,27 +59,6 @@ public class CassandraMappingsRoutes implements Routes {
         service.post(ROOT_PATH, performActionOnMappings(), jsonTransformer);
     }
 
-    @POST
-    @Path(ROOT_PATH)
-    @ApiOperation(value = "Performing operations on cassandra data mappings")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=SolveInconsistencies",
-            value = "Specify the action to perform on mappings. For now only 'SolveInconsistencies' is supported as an action, "
-                + "and its purpose is to clean 'mappings_sources' projection table and repopulate it."),
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-            }),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = INVALID_ACTION_ARGUMENT_REQUEST),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = ACTION_REQUEST_CAN_NOT_BE_DONE)
-    })
     public Route performActionOnMappings() {
         return TaskFromRequestRegistry.of(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
             .asRoute(taskManager);

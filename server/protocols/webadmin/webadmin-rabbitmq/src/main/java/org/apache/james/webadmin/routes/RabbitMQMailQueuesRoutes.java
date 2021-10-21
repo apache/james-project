@@ -32,9 +32,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
@@ -53,18 +50,9 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "MailQueues")
-@Path(BASE_URL)
-@Produces("application/json")
 public class RabbitMQMailQueuesRoutes implements Routes {
 
     private static final TaskRegistrationKey REPUBLISH_NOT_PROCESSED_MAILS_REGISTRATION_KEY = TaskRegistrationKey.of("RepublishNotProcessedMails");
@@ -95,34 +83,6 @@ public class RabbitMQMailQueuesRoutes implements Routes {
         republishNotProcessedMails(service);
     }
 
-
-    @POST
-    @Path("/{mailQueueName}")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=RepublishNotProcessedMails",
-            value = "Specify the action to perform on a RabbitMQ mail queue."),
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "olderThan",
-            paramType = "query",
-            example = "?olderThan=1w",
-            value = "Specify the messages minimum age to republish")
-    })
-    @ApiOperation(
-        value = "republish the not processed mails of the RabbitMQ MailQueue using the cassandra mail queue view"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "OK, the task for rebuilding the queue is created"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for rebuilding the mail queue."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void republishNotProcessedMails(Service service) {
         TaskFromRequest taskFromRequest = this::republishNotProcessedMails;
         service.post(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME,

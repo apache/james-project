@@ -1892,11 +1892,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-webadmin-swagger</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>javax-mail-extension</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2070,11 +2065,6 @@
                 <groupId>com.github.fge</groupId>
                 <artifactId>throwing-lambdas</artifactId>
                 <version>0.5.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.kongchen</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
-                <version>3.1.8</version>
             </dependency>
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
@@ -2806,18 +2796,6 @@
                             <phase>none</phase>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <groupId>com.github.kongchen</groupId>
-                    <artifactId>swagger-maven-plugin</artifactId>
-                    <version>3.1.7</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>javax.xml.bind</groupId>
-                            <artifactId>jaxb-api</artifactId>
-                            <version>${jaxb.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>com.google.cloud.tools</groupId>

@@ -21,13 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static spark.Spark.halt;
 
-import java.util.List;
-
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.LoopDetectedException;
@@ -37,24 +31,15 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-
-@Api(tags = "AddressMappings")
-@Path(MappingRoutes.BASE_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class AddressMappingRoutes implements Routes {
 
     static final String BASE_PATH = "/mappings/address/";
@@ -78,13 +63,6 @@ public class AddressMappingRoutes implements Routes {
         service.delete(ADDRESS_MAPPING_PATH, this::removeAddressMapping);
     }
 
-    @POST
-    @Path(ADDRESS_MAPPING_PATH)
-    @ApiOperation(value = "Getting all user mappings in RecipientRewriteTable")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No body on created", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid parameter values.")
-    })
     public HaltException addAddressMapping(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress source = MailAddressParser.parseMailAddress(
             request.params("mappingSource"),"address");
@@ -114,13 +92,6 @@ public class AddressMappingRoutes implements Routes {
         }
     }
 
-    @DELETE
-    @Path(ADDRESS_MAPPING_PATH)
-    @ApiOperation(value = "Remove a mapping from a mapping source in RecipientRewriteTable")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No body on deleted", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid parameter values.")
-    })
     public HaltException removeAddressMapping(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress source = MailAddressParser.parseMailAddress(
             request.params("mappingSource"),"address");

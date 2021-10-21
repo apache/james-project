@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -44,12 +42,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import spark.HaltException;
@@ -57,8 +49,6 @@ import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Healthchecks")
-@Path(HealthCheckRoutes.HEALTHCHECK)
 public class HealthCheckRoutes implements PublicRoutes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
@@ -89,13 +79,6 @@ public class HealthCheckRoutes implements PublicRoutes {
         service.get(HEALTHCHECK + CHECKS, this::getHealthChecks, jsonTransformer);
     }
 
-    @GET
-    @ApiOperation(value = "Validate all health checks")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - When one check has failed.")
-    })
     public Object validateHealthChecks(Request request, Response response) {
         List<Result> results = executeHealthChecks().collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
@@ -103,19 +86,6 @@ public class HealthCheckRoutes implements PublicRoutes {
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
 
-    @GET
-    @Path("/checks/{" + PARAM_COMPONENT_NAME + "}")
-    @ApiOperation(value = "Perform the component's health check")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            name = PARAM_COMPONENT_NAME,
-            required = true,
-            paramType = "path",
-            dataType = "String",
-            defaultValue = "None",
-            example = "/checks/Cassandra%20Backend",
-            value = "The URL encoded name of the component to check.")
-    })
     public Object performHealthCheckForComponent(Request request, Response response) {
         String componentName = request.params(PARAM_COMPONENT_NAME);
         HealthCheck healthCheck = healthChecks.stream()
@@ -129,11 +99,6 @@ public class HealthCheckRoutes implements PublicRoutes {
         return new HealthCheckExecutionResultDto(result);
     }
 
-    @GET
-    @Path(CHECKS)
-    @ApiOperation(value = "List all health checks")
-    @ApiResponse(code = HttpStatus.OK_200, message = "List of all health checks",
-            response = HealthCheckDto.class, responseContainer = "List")
     public Object getHealthChecks(Request request, Response response) {
         return healthChecks.stream()
                 .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))

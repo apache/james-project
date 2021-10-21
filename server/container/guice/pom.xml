@@ -71,7 +71,6 @@
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-rabbitmq-mailqueue</module>
-        <module>protocols/webadmin-swagger</module>
         <module>queue/activemq</module>
         <module>queue/memory</module>
         <module>queue/rabbitmq</module>
@@ -238,11 +237,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-rabbitmq-mailqueue</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-webadmin-swagger</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

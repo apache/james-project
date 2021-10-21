@@ -27,12 +27,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -49,7 +43,6 @@ import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -60,19 +53,10 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "User's Mailbox")
-@Path("/users/{username}/mailboxes")
-@Produces("application/json")
 public class UserMailboxesRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesRoutes.class);
@@ -146,17 +130,6 @@ public class UserMailboxesRoutes implements Routes {
         service.delete(MESSAGES_PATH, clearMailboxContentTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @GET
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
-    })
-    @ApiOperation(value = "Listing all mailboxes of user.")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "The list of mailboxes", response = String.class),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform", response = String.class),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetUserMailboxes() {
         service.get(USER_MAILBOXES_BASE, (request, response) -> {
             response.status(HttpStatus.OK_200);
@@ -174,24 +147,6 @@ public class UserMailboxesRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @POST
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-        @ApiImplicitParam(
-            required = true,
-            name = "task",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?task=reIndex",
-            value = "Compulsory. Only supported value is `reIndex`")
-    })
-    @ApiOperation(value = "Perform an action on a user mailbox")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-    })
     public Optional<Route> reIndexMailboxesRoute() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
@@ -199,20 +154,6 @@ public class UserMailboxesRoutes implements Routes {
             .buildAsRouteOptional(taskManager);
     }
 
-    @DELETE
-    @Path("/{mailboxName}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-            @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiOperation(value = "Deleting a mailbox and its children")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The mailbox now does not exist on the server", response = String.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteUserMailbox() {
         service.delete(SPECIFIC_MAILBOX, (request, response) -> {
             try {
@@ -246,17 +187,6 @@ public class UserMailboxesRoutes implements Routes {
         });
     }
 
-    @DELETE
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
-    })
-    @ApiOperation(value = "Deleting user mailboxes.")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The user does not have any mailbox", response = String.class),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteUserMailboxes() {
         service.delete(USER_MAILBOXES_BASE, (request, response) -> {
             try {
@@ -274,20 +204,6 @@ public class UserMailboxesRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/{mailboxName}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-            @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiOperation(value = "Testing existence of a mailbox.")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The mailbox exists", response = String.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineMailboxExists() {
         service.get(SPECIFIC_MAILBOX, (request, response) -> {
             try {
@@ -320,20 +236,6 @@ public class UserMailboxesRoutes implements Routes {
         });
     }
 
-    @PUT
-    @Path("/{mailboxName}")
-    @ApiOperation(value = "Create a mailbox of the selected user.", nickname = "CreateUserMailbox")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-            @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The mailbox now exists on the server.", response = String.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineCreateUserMailbox() {
         service.put(SPECIFIC_MAILBOX, (request, response) -> {
             try {
@@ -359,20 +261,6 @@ public class UserMailboxesRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/{mailboxName}/messageCount")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiOperation(value = "Counting emails in a given mailbox.")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The number of emails in a given mailbox", response = Long.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-        @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void messageCount() {
         service.get(MESSAGE_COUNT_PATH, (request, response) -> {
             try {
@@ -397,20 +285,6 @@ public class UserMailboxesRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/{mailboxName}/unseenMessageCount")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiOperation(value = "Counting unseen emails in a given mailbox.")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The number of unseen emails in a given mailbox", response = Long.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-        @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void unseenMessageCount() {
         service.get(UNSEEN_MESSAGE_COUNT_PATH, (request, response) -> {
             try {
@@ -434,21 +308,6 @@ public class UserMailboxesRoutes implements Routes {
             }
         });
     }
-
-    @DELETE
-    @Path("/{mailboxName}/messages")
-    @ApiOperation(value = "Clearing content of a given mailbox.", nickname = "ClearMailboxContent")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
-    })
-    @ApiResponses(
-        {
-            @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes. The `username` or `mailboxName` does not exit"),
-        })
 
     public Task clearMailboxContent(Request request) throws UsersRepositoryException, MailboxException {
         Username username = getUsernameParam(request);

@@ -24,11 +24,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -39,7 +34,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.dto.QuotaDomainDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.DomainQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -52,18 +46,9 @@ import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "DomainQuota")
-@Path(DomainQuotaRoutes.QUOTA_ENDPOINT)
-@Produces("application/json")
 public class DomainQuotaRoutes implements Routes {
 
     private static final String DOMAIN = "domain";
@@ -119,18 +104,6 @@ public class DomainQuotaRoutes implements Routes {
         }
     }
 
-    @PUT
-    @ApiOperation(value = "Updating count and size at the same time")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataTypeClass = QuotaDTO.class, paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer or not unlimited value (-1)."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
             try {
@@ -150,17 +123,6 @@ public class DomainQuotaRoutes implements Routes {
         }));
     }
 
-    @GET
-    @ApiOperation(
-        value = "Reading count and size at the same time",
-        notes = "If there is no limitation for count and/or size, the returned value will be -1"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDomainDTO.class),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -168,15 +130,6 @@ public class DomainQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @Path("/size")
-    @ApiOperation(value = "Removing per domain mail size limitation by updating to unlimited value")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -185,19 +138,6 @@ public class DomainQuotaRoutes implements Routes {
         });
     }
 
-    @PUT
-    @Path("/size")
-    @ApiOperation(value = "Updating per domain mail size limitation")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -207,16 +147,6 @@ public class DomainQuotaRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/size")
-    @ApiOperation(value = "Reading per domain mail size limitation")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No value defined"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -228,15 +158,6 @@ public class DomainQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @Path("/count")
-    @ApiOperation(value = "Removing per domain mail count limitation by updating to unlimited value")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -245,19 +166,6 @@ public class DomainQuotaRoutes implements Routes {
         });
     }
 
-    @PUT
-    @Path("/count")
-    @ApiOperation(value = "Updating per domain mail count limitation")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
@@ -267,15 +175,6 @@ public class DomainQuotaRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/count")
-    @ApiOperation(value = "Reading per domain mail count limitation")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
-            @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);

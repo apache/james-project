@@ -25,9 +25,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
@@ -39,24 +36,13 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Preconditions;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "Blobs")
-@Path("/blobs")
-@Produces("application/json")
 public class BlobRoutes implements Routes {
 
     public static final String BASE_PATH = "/blobs";
@@ -102,22 +88,6 @@ public class BlobRoutes implements Routes {
         service.delete(BASE_PATH, gcUnreferencedTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @DELETE
-    @Path("/blobs")
-    @ApiOperation(value = "Create a task to run blob deduplicate garbage collection", nickname = "BlobGC")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "scope", paramType = "query", example = "scope=unreferenced"),
-        @ApiImplicitParam(required = false, dataType = "double", name = "associatedProbability", paramType = "query",
-            defaultValue = "1_000_000", example = "associatedProbability=1000"),
-        @ApiImplicitParam(required = false, dataType = "integer", name = "expectedBlobCount", paramType = "query",
-            defaultValue = "0.8", example = "expectedBlobCount=0.7")
-    })
-    @ApiResponses(
-        {
-            @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid arguments supplied in the user request"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-        })
     public Task gcUnreferenced(Request request) {
         Preconditions.checkArgument(Optional.ofNullable(request.queryParams("scope"))
             .filter("unreferenced"::equals)

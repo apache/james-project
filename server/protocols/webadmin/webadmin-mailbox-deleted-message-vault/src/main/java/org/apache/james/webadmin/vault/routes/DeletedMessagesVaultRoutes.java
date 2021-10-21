@@ -25,10 +25,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
@@ -42,11 +38,9 @@ import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.dto.query.QueryElement;
 import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -56,19 +50,10 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "Deleted Messages Vault")
-@Path(DeletedMessagesVaultRoutes.ROOT_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class DeletedMessagesVaultRoutes implements Routes {
     private static final TaskRegistrationKey EXPORT_REGISTRATION_KEY = TaskRegistrationKey.of("export");
     private static final TaskRegistrationKey RESTORE_REGISTRATION_KEY = TaskRegistrationKey.of("restore");
@@ -124,40 +109,6 @@ public class DeletedMessagesVaultRoutes implements Routes {
         service.delete(DELETE_PATH, deleteTaskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @POST
-    @Path("users/{user}")
-    @ApiOperation(value = "Restore deleted emails from a specified user to his new restore mailbox" +
-        " or export their content to a destination mail address")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "user",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "user@james.org",
-            value = "Compulsory. Needs to be a valid username represent for an user had requested to restore deleted emails"),
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=restore",
-            value = "Compulsory. Needs to be a valid action represent for an operation to perform on the Deleted Message Vault, " +
-                "valid action should be in the list (restore, export)"),
-        @ApiImplicitParam(
-            dataType = "String",
-            name = "exportTo",
-            paramType = "query",
-            example = "?exportTo=user@james.org",
-            value = "Compulsory if action is export. Needs to be a valid mail address. The content of the vault matching the query will be sent to that address")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - requested user does not exist"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     private Route userActions() {
         return TaskFromRequestRegistry.builder()
             .register(EXPORT_REGISTRATION_KEY, this::export)
@@ -177,22 +128,6 @@ public class DeletedMessagesVaultRoutes implements Routes {
         return new DeletedMessagesVaultRestoreTask(vaultRestore, username, extractQuery(request));
     }
 
-    @DELETE
-    @ApiOperation(value = "Purge all expired messages based on retentionPeriod of deletedMessageVault configuration")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "scope",
-            dataType = "String",
-            paramType = "query",
-            example = "?scope=expired",
-            value = "Compulsory. Needs to be a purge action")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - action is invalid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     private Route deleteWithScope() {
         return TaskFromRequestRegistry.builder()
             .parameterName(SCOPE_QUERY_PARAM)
@@ -200,32 +135,6 @@ public class DeletedMessagesVaultRoutes implements Routes {
             .buildAsRoute(taskManager);
     }
 
-    @DELETE
-    @Path("users/{user}/messages/{messageId}")
-    @ApiOperation(value = "Delete message with messageId")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "user",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "user0@james.org",
-            value = "Compulsory. Needs to be a valid username represent for an user had requested to restore deleted emails"),
-        @ApiImplicitParam(
-            required = true,
-            name = "messageId",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory, Need to be a valid messageId")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - messageId param is invalid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     private Task deleteMessage(Request request) {
         Username username = extractUser(request);
         validateUserExist(username);
