@@ -21,6 +21,7 @@ package org.apache.james.jmap.change
 
 import org.apache.james.events.Event
 import org.apache.james.events.EventListener.ReactiveEventListener
+import org.apache.james.jmap.api.model.TypeName
 import org.apache.james.jmap.core.OutboundMessage
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Sinks

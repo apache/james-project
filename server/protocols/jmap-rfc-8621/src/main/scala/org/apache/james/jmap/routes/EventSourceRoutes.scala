@@ -33,7 +33,8 @@ import javax.inject.{Inject, Named}
 import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName, TypeStateFactory}
+import org.apache.james.jmap.api.model.TypeName
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeStateFactory}
 import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys

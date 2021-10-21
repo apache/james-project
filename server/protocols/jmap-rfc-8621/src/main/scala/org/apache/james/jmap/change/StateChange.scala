@@ -22,17 +22,9 @@ package org.apache.james.jmap.change
 import org.apache.james.core.Username
 import org.apache.james.events.Event
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.{AccountId, PushState, State, StateChange, UuidState}
+import org.apache.james.jmap.api.model.{State, TypeName}
+import org.apache.james.jmap.core.{AccountId, PushState, StateChange, UuidState}
 
-trait TypeName {
-  def asMap(maybeState: Option[State]): Map[TypeName, State] =
-    maybeState.map(state => Map[TypeName, State](this -> state))
-      .getOrElse(Map())
-
-  def asString(): String
-  def parse(string: String): Option[TypeName]
-  def parseState(string: String): Either[IllegalArgumentException, State]
-}
 case object MailboxTypeName extends TypeName {
   override val asString: String = "Mailbox"
 

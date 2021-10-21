@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.method
 
-import java.util.UUID
-
 import eu.timepit.refined.auto._
 import javax.inject.{Inject, Named}
 import org.apache.james.events.Event.EventId
@@ -30,9 +28,9 @@ import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, VacationResponseTypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
