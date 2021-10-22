@@ -25,6 +25,10 @@ import java.util.Optional;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface UsersDAO {
     default boolean getDefaultVirtualHostingValue() {
@@ -38,6 +42,11 @@ public interface UsersDAO {
     void removeUser(Username name) throws UsersRepositoryException;
 
     boolean contains(Username name) throws UsersRepositoryException;
+
+    default Publisher<Boolean> containsReactive(Username name) {
+        return Mono.fromCallable(() -> contains(name))
+            .subscribeOn(Schedulers.elastic());
+    }
 
     int countUsers() throws UsersRepositoryException;
 
