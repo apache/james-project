@@ -34,6 +34,7 @@ public class JMAPConfiguration {
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
         private Optional<Boolean> emailQueryViewEnabled = Optional.empty();
+        private Optional<Boolean> userProvisioningEnabled = Optional.empty();
         private Optional<Port> port = Optional.empty();
         private Optional<Version> defaultVersion = Optional.empty();
         private Optional<Long> maximumSendSize = Optional.empty();
@@ -64,12 +65,29 @@ public class JMAPConfiguration {
             return this;
         }
 
+        public Builder userProvisioningEnabled(boolean enabled) {
+            return userProvisioningEnabled(Optional.of(enabled));
+        }
+
+        public Builder userProvisioningEnabled(Optional<Boolean> enabled) {
+            this.userProvisioningEnabled = enabled;
+            return this;
+        }
+
         public Builder enableEmailQueryView() {
             return enableEmailQueryView(true);
         }
 
         public Builder disableEmailQueryView() {
             return enableEmailQueryView(false);
+        }
+
+        public Builder enableUserProvisioning() {
+            return userProvisioningEnabled(true);
+        }
+
+        public Builder disableUserProvisioning() {
+            return userProvisioningEnabled(false);
         }
 
         public Builder port(Port port) {
@@ -99,7 +117,8 @@ public class JMAPConfiguration {
         public JMAPConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false),
-                    defaultVersion.orElse(Version.DRAFT), maximumSendSize);
+                userProvisioningEnabled.orElse(true),
+                defaultVersion.orElse(Version.DRAFT), maximumSendSize);
         }
     }
 
@@ -108,14 +127,16 @@ public class JMAPConfiguration {
     private final boolean enabled;
     private final Optional<Port> port;
     private final boolean emailQueryViewEnabled;
+    private final boolean userProvisioningEnabled;
     private final Version defaultVersion;
     private final Optional<Long> maximumSendSize;
 
     @VisibleForTesting
-    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, Version defaultVersion, Optional<Long> maximumSendSize) {
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, boolean userProvisioningEnabled, Version defaultVersion, Optional<Long> maximumSendSize) {
         this.enabled = enabled;
         this.port = port;
         this.emailQueryViewEnabled = emailQueryViewEnabled;
+        this.userProvisioningEnabled = userProvisioningEnabled;
         this.defaultVersion = defaultVersion;
         this.maximumSendSize = maximumSendSize;
     }
@@ -130,6 +151,10 @@ public class JMAPConfiguration {
 
     public boolean isEmailQueryViewEnabled() {
         return emailQueryViewEnabled;
+    }
+
+    public boolean isUserProvisioningEnabled() {
+        return userProvisioningEnabled;
     }
 
     public Version getDefaultVersion() {

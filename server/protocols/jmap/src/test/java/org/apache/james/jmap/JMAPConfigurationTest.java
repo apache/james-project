@@ -41,7 +41,7 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenRandomPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.empty(), ENABLED, Version.DRAFT, Optional.empty());
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.empty(), ENABLED, ENABLED, Version.DRAFT, Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -53,12 +53,13 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenFixedPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.of(Port.of(80)), ENABLED, Version.DRAFT, Optional.empty());
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.of(Port.of(80)), ENABLED, ENABLED, Version.DRAFT, Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
             .port(Port.of(80))
             .enableEmailQueryView()
+            .enableUserProvisioning()
             .build();
 
         assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
@@ -66,11 +67,12 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenDisabled() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, Optional.empty(), DISABLED, Version.DRAFT, Optional.empty());
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, Optional.empty(), DISABLED, DISABLED, Version.DRAFT, Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .disable()
             .disableEmailQueryView()
+            .disableUserProvisioning()
             .build();
         assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
     }

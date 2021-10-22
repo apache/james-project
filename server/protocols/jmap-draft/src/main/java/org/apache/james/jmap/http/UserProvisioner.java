@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -36,18 +37,20 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class UserProvisioner {
+    private final JMAPConfiguration jmapConfiguration;
     private final UsersRepository usersRepository;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    UserProvisioner(UsersRepository usersRepository, MetricFactory metricFactory) {
+    UserProvisioner(JMAPConfiguration jmapConfiguration, UsersRepository usersRepository, MetricFactory metricFactory) {
+        this.jmapConfiguration = jmapConfiguration;
         this.usersRepository = usersRepository;
         this.metricFactory = metricFactory;
     }
 
     public Mono<Void> provisionUser(MailboxSession session) {
-        if (session != null && !usersRepository.isReadOnly()) {
+        if (session != null && !usersRepository.isReadOnly() && jmapConfiguration.isUserProvisioningEnabled()) {
             return createAccountIfNeeded(session);
         }
         return Mono.empty();

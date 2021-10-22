@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -47,7 +48,7 @@ public class UserProvisionerTest {
     @Before
     public void setup() throws Exception {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
-        testee = new UserProvisioner(usersRepository, new RecordingMetricFactory());
+        testee = new UserProvisioner(JMAPConfiguration.DEFAULT, usersRepository, new RecordingMetricFactory());
     }
 
     @Test
@@ -82,7 +83,7 @@ public class UserProvisionerTest {
     public void filterShouldNotTryToAddUserWhenReadOnlyUsersRepository() {
         UsersRepository usersRepository = mock(UsersRepository.class);
         when(usersRepository.isReadOnly()).thenReturn(true);
-        testee = new UserProvisioner(usersRepository, new RecordingMetricFactory());
+        testee = new UserProvisioner(JMAPConfiguration.DEFAULT, usersRepository, new RecordingMetricFactory());
 
         MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
 
