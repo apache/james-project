@@ -30,6 +30,7 @@ import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
 import org.apache.james.modules.mailbox.FastRetryBackoffModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
@@ -103,7 +104,7 @@ public class TestJMAPServerModule extends AbstractModule {
                 .keystore("keystore")
                 .keystoreType("JKS")
                 .secret("james72laBalle")
-                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY));
+                .jwtPublicKeyPem(ImmutableList.of(PUBLIC_PEM_KEY));
     }
 
     @Override

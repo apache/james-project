@@ -27,7 +27,8 @@ This should not be the same keystore than the ones used by TLS based protocols.
 | Password used to read the keystore
 
 | jwt.publickeypem.url
-| Optional. JWT tokens allow request to bypass authentication
+| Optional. Coma separated list of RSA public keys URLs to validate JWT tokens allowing requests to bypass authentication.
+Defaults to an empty list.
 
 | url.prefix
 | Optional. Configuration urlPrefix for JMAP routes.

@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -39,6 +38,7 @@ import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.inject.name.Names;
 
@@ -55,7 +55,7 @@ public class JwtOptionTest {
 
     protected static JwtConfiguration jwtConfiguration() {
         return new JwtConfiguration(
-            Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
+            ImmutableList.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
     }
 
     private static final String VALID_TOKEN_ADMIN_TRUE = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBvcGVuL" +

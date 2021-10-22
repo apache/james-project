@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jwt;
 
+import java.security.PublicKey;
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -43,15 +45,22 @@ public class JwtTokenVerifier {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
-    private final PublicKeyProvider pubKeyProvider;
+
+    private final List<PublicKey> publicKeys;
 
     public JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
-        this.pubKeyProvider = pubKeyProvider;
+        this.publicKeys = pubKeyProvider.get();
     }
 
     public Optional<String> verifyAndExtractLogin(String token) {
+        return publicKeys.stream()
+            .flatMap(key -> verifyAndExtractLogin(token, key).stream())
+            .findFirst();
+    }
+
+    public Optional<String> verifyAndExtractLogin(String token, PublicKey key) {
         try {
-            String subject = extractLogin(token);
+            String subject = extractLogin(token, key);
             if (Strings.isNullOrEmpty(subject)) {
                 throw new MalformedJwtException("'subject' field in token is mandatory");
             }
@@ -62,19 +71,24 @@ public class JwtTokenVerifier {
         }
     }
 
-    private String extractLogin(String token) throws JwtException {
-        Jws<Claims> jws = parseToken(token);
+    private String extractLogin(String token, PublicKey publicKey) throws JwtException {
+        Jws<Claims> jws = parseToken(token, publicKey);
         return jws
                 .getBody()
                 .getSubject();
     }
 
     public boolean hasAttribute(String attributeName, Object expectedValue, String token) {
+       return publicKeys.stream()
+           .anyMatch(key -> hasAttribute(attributeName, expectedValue, token, key));
+    }
+
+    private boolean hasAttribute(String attributeName, Object expectedValue, String token, PublicKey publicKey) {
         try {
             Jwts
                 .parser()
                 .require(attributeName, expectedValue)
-                .setSigningKey(pubKeyProvider.get())
+                .setSigningKey(publicKey)
                 .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
@@ -83,10 +97,10 @@ public class JwtTokenVerifier {
         }
     }
 
-    private Jws<Claims> parseToken(String token) throws JwtException {
+    private Jws<Claims> parseToken(String token, PublicKey publicKey) throws JwtException {
         return Jwts
                 .parser()
-                .setSigningKey(pubKeyProvider.get())
+                .setSigningKey(publicKey)
                 .parseClaimsJws(token);
     }
 }

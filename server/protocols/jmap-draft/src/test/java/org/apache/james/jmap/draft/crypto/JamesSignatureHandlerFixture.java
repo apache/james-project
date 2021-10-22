@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.draft.crypto;
 
-import java.util.Optional;
-
 import org.apache.james.filesystem.api.FileSystemFixture;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
+
+import com.google.common.collect.ImmutableList;
 
 class JamesSignatureHandlerFixture {
 
@@ -40,7 +40,7 @@ class JamesSignatureHandlerFixture {
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("james72laBalle")
             .build();

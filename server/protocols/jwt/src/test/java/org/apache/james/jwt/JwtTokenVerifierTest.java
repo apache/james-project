@@ -21,12 +21,13 @@ package org.apache.james.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.Security;
-import java.util.Optional;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 class JwtTokenVerifierTest {
 
@@ -38,6 +39,13 @@ class JwtTokenVerifierTest {
             "GQur1tPGZDl9mvCoRHjFrD5M/yypIPlfMGWFVEvV5jClNMLAQ9bYFuOc7H1fEWw6\n" +
             "U1LZUUbJW9/CH45YXz82CYqkrfbnQxqRb2iVbVjs/sHopHd1NTiCfUtwvcYJiBVj\n" +
             "kwIDAQAB\n" +
+            "-----END PUBLIC KEY-----";
+    public static final String PUBLIC_PEM_KEY_2 =
+        "-----BEGIN PUBLIC KEY-----\n" +
+            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCVnxAOpup/rtGzn+xUaBRFSe34\n" +
+            "H7YyiM6YBD1bh5rkoi9pB6fvs1vDlXzBmR0Zl6kn3g+2ChW0lqMkmv73Y2Lv3WZK\n" +
+            "NZ3DUR3lfBFbvYGQyFyib+e4MY1yWkj3sumMl1wdUB4lKLHLIRv9X1xCqvbSHEtq\n" +
+            "zoZF4vgBYx0VmuJslwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
     
     private static final String VALID_TOKEN_WITHOUT_ADMIN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
@@ -70,12 +78,8 @@ class JwtTokenVerifierTest {
 
     @BeforeEach
     void setup() {
-        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(getJWTConfiguration(), new PublicKeyReader());
+        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)), new PublicKeyReader());
         sut = new JwtTokenVerifier(pubKeyProvider);
-    }
-
-    private JwtConfiguration getJWTConfiguration() {
-        return new JwtConfiguration(Optional.of(PUBLIC_PEM_KEY));
     }
 
     @Test
@@ -84,10 +88,29 @@ class JwtTokenVerifierTest {
     }
 
     @Test
+    void shouldReturnTrueOnValidSignatureWithMultipleKeys() {
+        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
+        JwtTokenVerifier sut = new JwtTokenVerifier(pubKeyProvider);
+        assertThat(sut.verifyAndExtractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isPresent();
+    }
+
+    @Test
     void shouldReturnFalseOnMismatchingSigningKey() {
         String invalidToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Pd6t82" +
                 "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
                 "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
+
+        assertThat(sut.verifyAndExtractLogin(invalidToken)).isEmpty();
+    }
+
+    @Test
+    void shouldReturnFalseOnMismatchingSigningKeyWithMultipleKeys() {
+        String invalidToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Pd6t82" +
+                "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
+                "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
+
+        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
+        JwtTokenVerifier sut = new JwtTokenVerifier(pubKeyProvider);
 
         assertThat(sut.verifyAndExtractLogin(invalidToken)).isEmpty();
     }

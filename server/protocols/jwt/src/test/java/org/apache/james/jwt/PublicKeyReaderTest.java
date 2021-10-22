@@ -22,7 +22,6 @@ package org.apache.james.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.Security;
-import java.util.Optional;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,17 +45,12 @@ class PublicKeyReaderTest {
     }
 
     @Test
-    void fromPEMShouldReturnEmptyWhenEmptyProvided() {
-        assertThat(new PublicKeyReader().fromPEM(Optional.empty())).isEmpty();
-    }
-
-    @Test
     void fromPEMShouldReturnEmptyWhenInvalidPEMKey() {
-        assertThat(new PublicKeyReader().fromPEM(Optional.of("blabla"))).isEmpty();
+        assertThat(new PublicKeyReader().fromPEM("blabla")).isEmpty();
     }
 
     @Test
     void fromPEMShouldReturnRSAPublicKeyWhenValidPEMKey() {
-        assertThat(new PublicKeyReader().fromPEM(Optional.of(PUBLIC_PEM_KEY))).isPresent();
+        assertThat(new PublicKeyReader().fromPEM(PUBLIC_PEM_KEY)).isPresent();
     }
 }

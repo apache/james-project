@@ -19,26 +19,24 @@
 
 package org.apache.james.jwt;
 
-import java.util.Optional;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 
 public class JwtConfiguration {
-    private static final boolean DEFAULT_VALUE = true;
-    private final Optional<String> jwtPublicKeyPem;
+    private final List<String> jwtPublicKeyPem;
 
-    public JwtConfiguration(Optional<String> jwtPublicKeyPem) {
-        Preconditions.checkState(validPublicKey(jwtPublicKeyPem), "The provided public key is not valid");
+    public JwtConfiguration(List<String> jwtPublicKeyPem) {
+        Preconditions.checkState(validPublicKey(jwtPublicKeyPem), "One of the provided public key is not valid");
         this.jwtPublicKeyPem = jwtPublicKeyPem;
     }
 
-    private boolean validPublicKey(Optional<String> jwtPublicKeyPem) {
+    private boolean validPublicKey(List<String> jwtPublicKeyPem) {
         PublicKeyReader reader = new PublicKeyReader();
-        return jwtPublicKeyPem.map(value -> reader.fromPEM(Optional.of(value)).isPresent())
-            .orElse(DEFAULT_VALUE);
+        return jwtPublicKeyPem.stream().allMatch(value -> reader.fromPEM(value).isPresent());
     }
 
-    public Optional<String> getJwtPublicKeyPem() {
+    public List<String> getJwtPublicKeyPem() {
         return jwtPublicKeyPem;
     }
 }
