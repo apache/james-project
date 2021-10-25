@@ -109,4 +109,11 @@ public class MemoryDataModule extends AbstractModule {
             .forClass(MemoryRecipientRewriteTable.class)
             .init(() -> memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable")));
     }
+
+    @ProvidesIntoSet
+    InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, MemoryUsersRepository usersRepository) {
+        return InitilizationOperationBuilder
+            .forClass(MemoryRecipientRewriteTable.class)
+            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
+    }
 }
