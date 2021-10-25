@@ -51,6 +51,10 @@ Defaults to an empty list.
 | Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
 This enables a higher resilience, but the projection needs to be correctly populated.
 
+| user.provisioning.enabled
+| Optional boolean. Defaults to true.
+| Governs whether authenticated users that do not exist locally should be created in the users repository.
+
 | jmap.version.default
 | Optional string. Defaults to draft. Allowed values: draft, rfc-8621.
 | Which version of the JMAP protocol should be served when none supplied in the Accept header.

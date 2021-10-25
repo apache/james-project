@@ -23,15 +23,16 @@ import java.util.UUID
 
 import javax.inject.Inject
 import org.apache.james.core.Username
+import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.user.api.{AlreadyExistInUsersRepositoryException, UsersRepository}
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 
-class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactory: MetricFactory) {
+class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactory: MetricFactory, jmapConfiguration: JMAPConfiguration = JMAPConfiguration.DEFAULT) {
   def provisionUser(session: MailboxSession): SMono[Unit] =
-    if (session != null && !usersRepository.isReadOnly) {
+    if (session != null && !usersRepository.isReadOnly && jmapConfiguration.isUserProvisioningEnabled) {
       createAccountIfNeeded(session)
     } else {
       SMono.empty
