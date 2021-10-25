@@ -113,7 +113,7 @@ public class MemoryDataModule extends AbstractModule {
     @ProvidesIntoSet
     InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, MemoryUsersRepository usersRepository) {
         return InitilizationOperationBuilder
-            .forClass(MemoryRecipientRewriteTable.class)
+            .forClass(MemoryUsersRepository.class)
             .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
     }
 }
