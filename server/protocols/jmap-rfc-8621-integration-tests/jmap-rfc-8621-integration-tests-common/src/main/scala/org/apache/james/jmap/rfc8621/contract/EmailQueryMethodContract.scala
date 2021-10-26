@@ -1511,7 +1511,7 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def test(server: GuiceJamesServer): Unit = {
+  def inMailboxAfterSortedByReceivedAtShouldYieldExpectedResult(server: GuiceJamesServer): Unit = {
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val beforeRequestDate2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val requestDate = ZonedDateTime.now().minusDays(1)
@@ -1519,14 +1519,14 @@ trait EmailQueryMethodContract {
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId =mailboxProbe
+    val messageId1: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
-    val messageId2: MessageId =mailboxProbe
+    val messageId2: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
           .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
@@ -1539,7 +1539,7 @@ trait EmailQueryMethodContract {
           .build(buildTestMessage))
       .getMessageId
 
-    val messageId4: MessageId =mailboxProbe
+    val messageId4: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
@@ -1571,7 +1571,7 @@ trait EmailQueryMethodContract {
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -1599,7 +1599,7 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def test2(server: GuiceJamesServer): Unit = {
+  def inMailboxSortedByReceivedAtShouldYieldExpectedResult(server: GuiceJamesServer): Unit = {
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val beforeRequestDate2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val requestDate = ZonedDateTime.now().minusDays(1)
@@ -1607,14 +1607,14 @@ trait EmailQueryMethodContract {
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId =mailboxProbe
+    val messageId1: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
-    val messageId2: MessageId =mailboxProbe
+    val messageId2: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
           .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
@@ -1627,7 +1627,7 @@ trait EmailQueryMethodContract {
           .build(buildTestMessage))
       .getMessageId
 
-    val messageId4: MessageId =mailboxProbe
+    val messageId4: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
@@ -1658,7 +1658,7 @@ trait EmailQueryMethodContract {
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
