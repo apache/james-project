@@ -199,6 +199,7 @@ case class Collation(value: String) extends AnyVal
 
 object Comparator {
   val SENT_AT_DESC: Comparator = Comparator(SentAtSortProperty, Some(IsAscending.DESCENDING), None)
+  val RECEIVED_AT_DESC: Comparator = Comparator(ReceivedAtSortProperty, Some(IsAscending.DESCENDING), None)
 }
 
 case class Comparator(property: SortProperty,

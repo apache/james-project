@@ -97,6 +97,10 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         queryViewForListingSortedBySentAt(session, position, limit, request)
       case request: EmailQueryRequest if matchesInMailboxAfterSortedBySentAt(request) =>
         queryViewForContentAfterSortedBySentAt(session, position, limit, request)
+      case request: EmailQueryRequest if matchesInMailboxSortedByReceivedAt(request) =>
+        queryViewForListingSortedByReceivedAt(session, position, limit, request)
+      case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
+        queryViewForContentAfterSortedByReceivedAt(session, position, limit, request)
       case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit)
     }
 
@@ -110,6 +114,22 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .`then`(SFlux.fromPublisher(
         emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+        .drop(position.value)
+        .take(limitToUse.value)
+        .collectSeq())
+      .onErrorResume({
+        case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
+        case e => SMono.error[Seq[MessageId]](e)
+      })
+  }
+
+  private def queryViewForContentAfterSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
+    val mailboxId: MailboxId = condition.inMailbox.get
+    val after: ZonedDateTime = condition.after.get.asUTC
+    SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
+      .`then`(SFlux.fromPublisher(
+        emailQueryView.listMailboxContentSinceReceivedAtSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
@@ -133,15 +153,39 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       })
   }
 
+  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+    val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
+    SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
+      .`then`(SFlux.fromPublisher(
+        emailQueryView.listMailboxContentSortedByReceivedAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
+        .drop(position.value)
+        .take(limitToUse.value)
+        .collectSeq())
+      .onErrorResume({
+        case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
+        case e => SMono.error[Seq[MessageId]](e)
+      })
+  }
+
   private def matchesInMailboxSortedBySentAt(request: EmailQueryRequest): Boolean =
     configuration.isEmailQueryViewEnabled &&
       request.filter.exists(_.inMailboxFilterOnly) &&
       request.sort.contains(Set(Comparator.SENT_AT_DESC))
 
+  private def matchesInMailboxSortedByReceivedAt(request: EmailQueryRequest): Boolean =
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxFilterOnly) &&
+      request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
+
   private def matchesInMailboxAfterSortedBySentAt(request: EmailQueryRequest): Boolean =
     configuration.isEmailQueryViewEnabled &&
       request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
       request.sort.contains(Set(Comparator.SENT_AT_DESC))
+
+  private def matchesInMailboxAfterSortedByReceivedAt(request: EmailQueryRequest): Boolean =
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
+      request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def toResponse(request: EmailQueryRequest, position: Position, limitToUse: Limit, ids: Seq[MessageId]): EmailQueryResponse =
     EmailQueryResponse(accountId = request.accountId,
