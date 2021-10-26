@@ -164,5 +164,6 @@ public class SieveExecutor {
             .build();
 
         mailetContext.sendMail(errorMail);
+        errorMail.dispose();
     }
 }
