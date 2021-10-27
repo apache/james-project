@@ -39,6 +39,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.MailetContext;
 
@@ -147,7 +148,11 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
                 .mimeMessage(mimeMessage)
                 .build();
 
-            mailetContext.sendMail(mail);
+            try {
+                mailetContext.sendMail(mail);
+            } finally {
+                LifecycleUtil.dispose(mail);
+            }
         } catch (Exception e) {
             throw new BlobExportException("Error while sending email", e);
         }

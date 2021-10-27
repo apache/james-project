@@ -39,6 +39,7 @@ import org.apache.james.core.healthcheck.Result;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -254,8 +255,8 @@ public class MailReceptionCheck implements HealthCheck {
         Content content = Content.generate();
 
         return Mono.fromCallable(() -> usersRepository.getMailAddressFor(username))
-            .flatMap(address -> Mono.fromRunnable(Throwing.runnable(() ->
-                mailetContext.sendMail(MailImpl.builder()
+            .flatMap(address ->
+                Mono.using(() -> MailImpl.builder()
                     .name(content.asString())
                     .sender(address)
                     .addRecipient(address)
@@ -264,7 +265,9 @@ public class MailReceptionCheck implements HealthCheck {
                         .addToRecipient(address.asString())
                         .setSubject(content.asString())
                         .setText(content.asString()))
-                    .build()))))
+                    .build(),
+                    mail -> Mono.fromRunnable(Throwing.runnable(() -> mailetContext.sendMail(mail))),
+                    LifecycleUtil::dispose))
             .thenReturn(content);
     }
 }

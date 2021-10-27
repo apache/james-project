@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -114,6 +115,7 @@ public class MailDispatcher {
                 .state(Mail.ERROR)
                 .build();
             mailetContext.sendMail(newMail);
+            LifecycleUtil.dispose(newMail);
         }
         if (consume) {
             // Consume this message
