@@ -90,7 +90,7 @@ public interface EmailQueryView {
      *       "filter: {
      *           "inMailbox":"abcd"
      *       }
-     *       "comparator": [{
+     *       "sort": [{
      *         "property":"sentAt",
      *         "isAscending": false
      *       }]
@@ -106,6 +106,29 @@ public interface EmailQueryView {
     Flux<MessageId> listMailboxContent(MailboxId mailboxId, Limit limit);
 
     /**
+     *
+     * Sample JMAP requests:
+     *
+     *    - RFC-8621:
+     *
+     *    ["Email/query",
+     *     {
+     *       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+     *       "filter: {
+     *           "inMailbox":"abcd"
+     *       }
+     *       "sort": [{
+     *         "property":"receivedAt",
+     *         "isAscending": false
+     *       }]
+     *     },
+     *     "c1"]
+     *
+     * @return messageIds of the messages in this mailbox, sorted by sentAt.
+     */
+    Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit);
+
+    /**
      *  Sample JMAP requests:
      *
      *      - RFC-8621:
@@ -117,7 +140,7 @@ public interface EmailQueryView {
      *           "inMailbox":"abcd",
      *           "after":"aDate"
      *       }
-     *       "comparator": [{
+     *       "sort": [{
      *         "property":"sentAt",
      *         "isAscending": false
      *       }]
@@ -127,6 +150,29 @@ public interface EmailQueryView {
      * @return messageIds of the messages in this mailbox, since being receivedAt. Sorted by sentAt.
      */
     Flux<MessageId> listMailboxContentSinceReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
+
+    /**
+     *  Sample JMAP requests:
+     *
+     *      - RFC-8621:
+     *
+     *    ["Email/query",
+     *     {
+     *       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+     *       "filter: {
+     *           "inMailbox":"abcd",
+     *           "after":"aDate"
+     *       }
+     *       "sort": [{
+     *         "property":"receivedAt",
+     *         "isAscending": false
+     *       }]
+     *     },
+     *     "c1"]
+     *
+     * @return messageIds of the messages in this mailbox, since being receivedAt. Sorted by sentAt.
+     */
+    Flux<MessageId> listMailboxContentSinceReceivedAtSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
 
     /**
      *  Sample JMAP requests:

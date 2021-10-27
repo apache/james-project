@@ -45,7 +45,7 @@ public class CassandraEmailQueryViewTest implements EmailQueryViewContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraEmailQueryView(MESSAGE_ID_FACTORY, cassandra.getConf());
+        testee = new CassandraEmailQueryView(cassandra.getConf());
     }
 
     @Override
