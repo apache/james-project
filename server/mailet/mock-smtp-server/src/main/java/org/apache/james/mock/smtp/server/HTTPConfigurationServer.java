@@ -216,8 +216,16 @@ public class HTTPConfigurationServer {
     }
 
     private Publisher<Void> deleteMails(HttpServerRequest req, HttpServerResponse res) {
-        receivedMailRepository.clear();
-        return res.status(NO_CONTENT).send();
+        Mails mailsRemoved = new Mails(receivedMailRepository.clear());
+
+        try {
+            return res.status(OK)
+                    .header(CONTENT_TYPE, APPLICATION_JSON)
+                    .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mailsRemoved)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Could not serialize JSON", e);
+            return res.status(INTERNAL_SERVER_ERROR).send();
+        }
     }
 
     private Publisher<Void> getMails(HttpServerRequest req, HttpServerResponse res) {
