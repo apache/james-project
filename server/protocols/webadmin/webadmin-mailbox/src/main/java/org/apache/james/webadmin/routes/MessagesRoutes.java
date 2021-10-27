@@ -26,33 +26,20 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "MessageIdReIndexing")
-@Path("/messages")
-@Produces("application/json")
 public class MessagesRoutes implements Routes {
     private static final String MESSAGE_ID_PARAM = ":messageId";
     private static final String BASE_PATH = "/messages";
@@ -88,31 +75,6 @@ public class MessagesRoutes implements Routes {
             .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
     }
 
-    @POST
-    @Path("/{messageId}")
-    @ApiOperation(value = "Re-indexes one email in the different mailboxes containing it")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "task",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?task=reIndex",
-            value = "Compulsory. Only supported value is `reIndex`"),
-        @ApiImplicitParam(
-            required = true,
-            name = "messageId",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid messageId (format depends on the mailbox implementation)")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-    })
     private Route reIndexMessage() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
@@ -133,24 +95,6 @@ public class MessagesRoutes implements Routes {
         }
     }
 
-    @POST
-    @Path("/")
-    @ApiOperation(value = "Operation on messages")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "task",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?task=SolveInconsistencies",
-            value = "Compulsory. Depends on the tasks handled by the product")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-    })
     private Optional<Route> allMessagesOperations() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)

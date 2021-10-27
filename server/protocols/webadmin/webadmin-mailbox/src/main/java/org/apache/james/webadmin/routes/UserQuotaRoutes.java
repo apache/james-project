@@ -30,12 +30,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
@@ -53,11 +47,9 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.dto.QuotaDetailsDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -71,19 +63,10 @@ import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "UserQuota")
-@Path(UserQuotaRoutes.USERS_QUOTA_ENDPOINT)
-@Produces("application/json")
 public class UserQuotaRoutes implements Routes {
 
     public static final String USER_QUOTAS_OPERATIONS_INJECTION_KEY = "userQuotasOperations";
@@ -174,23 +157,6 @@ public class UserQuotaRoutes implements Routes {
             .ifPresent(route -> service.post(USERS_QUOTA_ENDPOINT, route, jsonTransformer));
     }
 
-    @POST
-    @ApiOperation(value = "Recomputing current quotas of users")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "task",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?task=RecomputeCurrentQuotas",
-            value = "Compulsory. Only supported value is `RecomputeCurrentQuotas`")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-    })
     public Optional<Route> definePostUsersQuota() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
@@ -198,17 +164,6 @@ public class UserQuotaRoutes implements Routes {
             .buildAsRouteOptional(taskManager);
     }
 
-    @PUT
-    @ApiOperation(value = "Updating count and size at the same time")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataTypeClass = QuotaDTO.class, paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer or not unlimited value (-1)."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
             try {
@@ -228,16 +183,6 @@ public class UserQuotaRoutes implements Routes {
         }));
     }
 
-    @GET
-    @ApiOperation(
-        value = "Reading count and size at the same time",
-        notes = "If there is no limitation for count and/or size, the returned value will be -1"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDetailsDTO.class),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -245,53 +190,6 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @GET
-    @ApiOperation(
-        value = "Reading count and size at the same time",
-        notes = "If there is no limitation for count and/or size, the returned value will be -1"
-    )
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-                required = false,
-                name = "minOccuptationRatio",
-                paramType = "query parameter",
-                dataType = "Double",
-                example = "?minOccuptationRatio=0.8",
-                value = "If present, filter the users with occupation ratio lesser than this value."),
-        @ApiImplicitParam(
-                required = false,
-                name = "maxOccupationRatio",
-                paramType = "query parameter",
-                dataType = "Double",
-                example = "?maxOccupationRatio=0.99",
-                value = "If present, filter the users with occupation ratio greater than this value."),
-        @ApiImplicitParam(
-                required = false,
-                paramType = "query parameter",
-                name = "limit",
-                dataType = "Integer",
-                example = "?limit=100",
-                value = "If present, fixes the maximal number of key returned in that call. Must be more than zero if specified."),
-        @ApiImplicitParam(
-                required = false,
-                name = "offset",
-                paramType = "query parameter",
-                dataType = "Integer",
-                example = "?offset=100",
-                value = "If present, skips the given number of key in the output."),
-        @ApiImplicitParam(
-                required = false,
-                name = "domain",
-                paramType = "query parameter",
-                dataType = "String",
-                example = "?domain=james.org",
-                value = "If present, filter the users by this domain.")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDetailsDTO.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Validation issues with parameters"),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetUsersQuota() {
         service.get(USERS_QUOTA_ENDPOINT, (request, response) -> {
             QuotaQuery quotaQuery = QuotaQuery.builder()
@@ -327,14 +225,6 @@ public class UserQuotaRoutes implements Routes {
             .getOffset());
     }
 
-    @DELETE
-    @Path("/size")
-    @ApiOperation(value = "Removing per user mail size limitation by updating to unlimited value")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -343,18 +233,6 @@ public class UserQuotaRoutes implements Routes {
         });
     }
 
-    @PUT
-    @Path("/size")
-    @ApiOperation(value = "Updating per user mail size limitation")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer nor -1."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -364,15 +242,6 @@ public class UserQuotaRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/size")
-    @ApiOperation(value = "Reading per user mail size limitation")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No value defined"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -384,14 +253,6 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @Path("/count")
-    @ApiOperation(value = "Removing per user mail count limitation by updating to unlimited value")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -400,18 +261,6 @@ public class UserQuotaRoutes implements Routes {
         });
     }
 
-    @PUT
-    @Path("/count")
-    @ApiOperation(value = "Updating per user mail count limitation")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer nor -1."),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
@@ -421,15 +270,6 @@ public class UserQuotaRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path("/count")
-    @ApiOperation(value = "Reading per user mail count limitation")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No value defined"),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);

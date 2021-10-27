@@ -26,7 +26,6 @@ import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -51,7 +50,6 @@ import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
-import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -311,29 +309,6 @@ public abstract class WebAdminServerIntegrationTest {
             .jsonPath()
             .getList(".");
         assertThat(members).containsOnly(USERNAME, USERNAME_2);
-    }
-
-    // Immutable
-    @Test
-    void getSwaggerShouldReturnJsonDataForSwagger() {
-        when()
-            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body(containsString("\"swagger\":\"2.0\""))
-            .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
-            .body(containsString("\"tags\":[\"User's Mailbox\"]"))
-            .body(containsString("\"tags\":[\"GlobalQuota\"]"))
-            .body(containsString("\"tags\":[\"DomainQuota\"]"))
-            .body(containsString("\"tags\":[\"UserQuota\"]"))
-            .body(containsString("\"tags\":[\"Domains\"]"))
-            .body(containsString("\"tags\":[\"Users\"]"))
-            .body(containsString("\"tags\":[\"MailRepositories\"]"))
-            .body(containsString("\"tags\":[\"MailQueues\"]"))
-            .body(containsString("\"tags\":[\"Address Forwards\"]"))
-            .body(containsString("\"tags\":[\"Address Aliases\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"))
-            .body(containsString("{\"name\":\"Mailboxes\"}"));
     }
 
     // Immutable

@@ -26,11 +26,6 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -44,7 +39,6 @@ import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -55,20 +49,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Address Groups")
-@Path(GroupsRoutes.ROOT_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class GroupsRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/groups";
@@ -107,38 +92,10 @@ public class GroupsRoutes implements Routes {
         service.delete(USER_IN_GROUP_ADDRESS_PATH, this::removeFromGroup);
     }
 
-    @GET
-    @Path(ROOT_PATH)
-    @ApiOperation(value = "getting groups list")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
     }
 
-    @PUT
-    @Path(ROOT_PATH + "/{" + GROUP_ADDRESS + "}/{" + USER_ADDRESS + "}")
-    @ApiOperation(value = "adding a member into a group")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path",
-            value = "Mail address of the group. Sending a mail to that address will send it to all group members.\n" +
-            MAILADDRESS_ASCII_DISCLAIMER),
-        @ApiImplicitParam(required = true, dataType = "string", name = USER_ADDRESS, paramType = "path",
-            value = "Mail address of the group. Sending a mail to the group mail address will send an email to " +
-                "that email address (as well as other members).\n" +
-                MAILADDRESS_ASCII_DISCLAIMER)
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = GROUP_ADDRESS + " or " + USER_ADDRESS + " format is not valid"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
-        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "requested group address is already used for another purpose"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException addToGroup(Request request, Response response) throws Exception {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
@@ -174,20 +131,6 @@ public class GroupsRoutes implements Routes {
         }
     }
 
-    @DELETE
-    @Path(ROOT_PATH + "/{" + GROUP_ADDRESS + "}/{" + USER_ADDRESS + "}")
-    @ApiOperation(value = "remove a member from a group")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = USER_ADDRESS, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400,
-            message = GROUP_ADDRESS + " or " + USER_ADDRESS + " format is not valid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException removeFromGroup(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);
@@ -198,19 +141,6 @@ public class GroupsRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    @GET
-    @Path(ROOT_PATH + "/{" + GROUP_ADDRESS + "}")
-    @ApiOperation(value = "listing group members")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The group is not an address"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The group does not exist"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))

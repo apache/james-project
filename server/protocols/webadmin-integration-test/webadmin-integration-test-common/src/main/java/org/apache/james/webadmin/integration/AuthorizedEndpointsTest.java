@@ -26,7 +26,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
-import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,14 +54,6 @@ public abstract class AuthorizedEndpointsTest {
     void getMetricsShouldNotNeedAuthentication() {
         when()
             .get("/metrics")
-        .then()
-            .statusCode(not(HttpStatus.UNAUTHORIZED_401));
-    }
-
-    @Test
-    void getSwaggerShouldNotNeedAuthentication() {
-        when()
-            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
         .then()
             .statusCode(not(HttpStatus.UNAUTHORIZED_401));
     }

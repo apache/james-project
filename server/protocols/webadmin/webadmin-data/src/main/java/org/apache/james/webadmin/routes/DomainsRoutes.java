@@ -24,15 +24,9 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
@@ -53,20 +47,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Domains")
-@Path(DomainsRoutes.DOMAINS)
-@Produces("application/json")
 public class DomainsRoutes implements Routes {
 
     public static final String DOMAINS = "/domains";
@@ -112,60 +97,18 @@ public class DomainsRoutes implements Routes {
         defineRemoveAlias(service);
     }
 
-    @DELETE
-    @Path("/{domainName}")
-    @ApiOperation(value = "Deleting a domain")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. Domain is removed."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDeleteDomain() {
         service.delete(SPECIFIC_DOMAIN, this::removeDomain);
     }
 
-    @PUT
-    @Path("/{domainName}")
-    @ApiOperation(value = "Creating new domain")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New domain is created."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for domain creation"),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineAddDomain() {
         service.put(SPECIFIC_DOMAIN, this::addDomain);
     }
 
-    @GET
-    @Path("/{domainName}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
-    })
-    @ApiOperation(value = "Testing existence of a domain.")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The domain exists", response = String.class),
-            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineDomainExists() {
         service.get(SPECIFIC_DOMAIN, this::exists);
     }
 
-    @GET
-    @ApiOperation(value = "Getting all domains")
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetDomains() {
         service.get(DOMAINS,
             (request, response) ->
@@ -173,52 +116,14 @@ public class DomainsRoutes implements Routes {
             jsonTransformer);
     }
 
-    @GET
-    @Path("/{domainName}/aliases")
-    @ApiOperation(value = "Getting all aliases for a domain")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineListAliases(Service service) {
         service.get(DOMAIN_ALIASES, this::listDomainAliases, jsonTransformer);
     }
 
-    @DELETE
-    @Path("/{destinationDomain}/aliases/{sourceDomain}")
-    @ApiOperation(value = "Remove an alias for a specific domain")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "sourceDomain", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = "destinationDomain", paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineRemoveAlias(Service service) {
         service.delete(SPECIFIC_ALIAS, this::removeDomainAlias, jsonTransformer);
     }
 
-    @PUT
-    @Path("/{destinationDomain}/aliases/{sourceDomain}")
-    @ApiOperation(value = "Add an alias for a specific domain")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "sourceDomain", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = "destinationDomain", paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineAddAlias(Service service) {
         service.put(SPECIFIC_ALIAS, this::addDomainAlias, jsonTransformer);
     }

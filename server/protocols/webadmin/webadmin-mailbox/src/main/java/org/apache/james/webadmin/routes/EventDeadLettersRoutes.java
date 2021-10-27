@@ -19,16 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.util.List;
-
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
-import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.Group;
@@ -36,28 +28,17 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ResponseHeader;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 import spark.Service;
 
-@Api(tags = "EventDeadLetter")
-@Path("/events/deadLetter")
-@Produces("application/json")
 public class EventDeadLettersRoutes implements Routes {
     public static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
@@ -96,123 +77,25 @@ public class EventDeadLettersRoutes implements Routes {
         service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, performActionOnSingleEvent(), jsonTransformer);
     }
 
-    @POST
-    @Path("")
-    @ApiOperation(value = "Performing action on all events")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=reDeliver",
-            value = "Specify the action to perform on all events. 'reDeliver' is supported as an action, "
-                + "and its purpose is to attempt a redelivery of all events present in dead letter."),
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-            }),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid action argument"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     public Route performActionOnAllEvents() {
         return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
             .asRoute(taskManager);
     }
 
-    @GET
-    @Path("/groups")
-    @ApiOperation(value = "List groups")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK - list group names", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     private Iterable<String> listGroups(Request request, Response response) {
         return eventDeadLettersService.listGroupsAsStrings();
     }
 
-    @GET
-    @Path("/groups/" + GROUP_PARAM)
-    @ApiOperation(value = "List failed events for a given group")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "group",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid group name")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK - list of insertionIds of failed event for a given group", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     private Iterable<String> listFailedEvents(Request request, Response response) {
         Group group = parseGroup(request);
         return eventDeadLettersService.listGroupsInsertionIdsAsStrings(group);
     }
 
-    @POST
-    @Path("/groups/" + GROUP_PARAM)
-    @ApiOperation(value = "Performing action on events of a particular group")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "group",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid group name"),
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=reDeliver",
-            value = "Specify the action to perform on all events of a particular group. 'reDeliver' is supported as an action, "
-                + "and its purpose is to attempt a redelivery of all events present in dead letter for the specified group."),
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-            }),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or action argument"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     public Route performActionOnGroupEvents() {
         return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
             .asRoute(taskManager);
     }
 
-    @GET
-    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
-    @ApiOperation(value = "Returns an event detail")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "group",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid group name"),
-        @ApiImplicitParam(
-            required = true,
-            name = "insertionId",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid insertionId")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK - returns an event detail", response = Event.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or insertion id"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this insertionId"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     private String getEventDetails(Request request, Response response) {
         Group group = parseGroup(request);
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
@@ -222,30 +105,6 @@ public class EventDeadLettersRoutes implements Routes {
             .block();
     }
 
-    @DELETE
-    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
-    @ApiOperation(value = "Deletes an event")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "group",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid group name"),
-        @ApiImplicitParam(
-            required = true,
-            name = "insertionId",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid insertionId")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK - Event deleted"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or insertion id"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     private String deleteEvent(Request request, Response response) {
         Group group = parseGroup(request);
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
@@ -254,42 +113,6 @@ public class EventDeadLettersRoutes implements Routes {
         return Responses.returnNoContent(response);
     }
 
-    @POST
-    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
-    @ApiOperation(value = "Performing action on an event")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "group",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid group name"),
-        @ApiImplicitParam(
-            required = true,
-            name = "insertionId",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            value = "Compulsory. Needs to be a valid insertionId"),
-        @ApiImplicitParam(
-            required = true,
-            dataType = "String",
-            name = "action",
-            paramType = "query",
-            example = "?action=reDeliver",
-            value = "Specify the action to perform on an unique event. 'reDeliver' is supported as an action, "
-                + "and its purpose is to attempt a redelivery of the specified event."),
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-            }),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name, insertion id or action argument"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this insertionId"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
-    })
     public Route performActionOnSingleEvent() {
         return TaskFromRequestRegistry.of(RE_DELIVER,
                 request -> eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request)))

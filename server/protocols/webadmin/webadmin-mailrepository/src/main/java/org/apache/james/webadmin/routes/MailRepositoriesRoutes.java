@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Clock;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -32,11 +31,6 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.mailrepository.api.MailKey;
@@ -60,7 +54,6 @@ import org.apache.james.webadmin.service.ReprocessingOneMailTask;
 import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -73,20 +66,10 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.jaxrs.PATCH;
 import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "MailRepositories", consumes = "application/json")
-@Path("/mailRepositories")
-@Produces("application/json")
 public class MailRepositoriesRoutes implements Routes {
 
     public static final String MAIL_REPOSITORIES = "mailRepositories";
@@ -135,22 +118,6 @@ public class MailRepositoriesRoutes implements Routes {
         defineReprocessOne();
     }
 
-    @PUT
-    @Path("/{encodedPath}")
-    @ApiOperation(value = "Create a repository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-                required = true, 
-                dataType = "String", 
-                name = "protocol", 
-                paramType = "query",
-                example = "?protocol=file",
-                value = "Specify the storage protocol to use"),
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The repository is created"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-    })
     public void definePutMailRepository() {
         service.put(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
             MailRepositoryPath path = decodedRepositoryPath(request);
@@ -176,33 +143,6 @@ public class MailRepositoriesRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @GET
-    @Path("/{encodedPath}/mails")
-    @ApiOperation(value = "Listing all mails in a repository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = false,
-            name = "offset",
-            paramType = "query parameter",
-            dataType = "Integer",
-            defaultValue = "0",
-            example = "?offset=100",
-            value = "If present, skips the given number of key in the output."),
-        @ApiImplicitParam(
-            required = false,
-            paramType = "query parameter",
-            name = "limit",
-            dataType = "Integer",
-            defaultValue = "absent",
-            example = "?limit=100",
-            value = "If present, fixes the maximal number of key returned in that call. Must be more than zero if specified.")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - invalid parameter"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The repository does not exist", response = ErrorResponder.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineListMails() {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
             Offset offset = ParametersExtractor.extractOffset(request);
@@ -223,27 +163,12 @@ public class MailRepositoriesRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @GET
-    @ApiOperation(value = "Listing all mail repositories URLs")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "Listing all mail repositories URLs", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetMailRepositories() {
         service.get(MAIL_REPOSITORIES,
             (request, response) -> repositoryStoreService.listMailRepositories().collect(ImmutableList.toImmutableList()),
             jsonTransformer);
     }
 
-    @GET
-    @Produces("application/json, message/rfc822")
-    @Path("/{encodedPath}/mails/{mailKey}")
-    @ApiOperation(value = "Retrieving a specific mail details (this endpoint can accept both \"application/json\" or \"message/rfc822\")")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - Could not retrieve the given mail.")
-    })
     public void defineGetMail() {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
             (request, response) ->
@@ -336,14 +261,6 @@ public class MailRepositoriesRoutes implements Routes {
             .haltError();
     }
 
-    @GET
-    @Path("/{encodedPath}")
-    @ApiOperation(value = "Reading the information of a repository, such as size (can take some time to compute)")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The repository information", response = List.class),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The repository does not exist", response = ErrorResponder.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-    })
     public void defineGetMailRepository() {
         service.get(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
             MailRepositoryPath path = decodedRepositoryPath(request);
@@ -362,13 +279,6 @@ public class MailRepositoriesRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @Path("/{encodedPath}/mails/{mailKey}")
-    @ApiOperation(value = "Deleting a specific mail from that mailRepository")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "Mail is no more stored in the repository", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-    })
     public void defineDeleteMail() {
         service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", (request, response) -> {
             MailRepositoryPath path = decodedRepositoryPath(request);
@@ -387,14 +297,6 @@ public class MailRepositoriesRoutes implements Routes {
         });
     }
 
-    @DELETE
-    @Path("/{encodedPath}/mails")
-    @ApiOperation(value = "Deleting all mails in that mailRepository")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "All mails are deleted", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
-    })
     public void defineDeleteAll() {
         TaskFromRequest taskFromRequest = request -> {
             MailRepositoryPath path = decodedRepositoryPath(request);
@@ -412,40 +314,6 @@ public class MailRepositoriesRoutes implements Routes {
         service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails", taskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @PATCH
-    @Path("/{encodedPath}/mails")
-    @ApiOperation(value = "Reprocessing all mails in that mailRepository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "action",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?action=reprocess",
-            value = "Compulsory. Only supported value is `reprocess`"),
-        @ApiImplicitParam(
-            required = false,
-            name = "queue",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "spool",
-            example = "?queue=outgoing",
-            value = "Indicates in which queue the mails stored in the repository should be re-enqueued"),
-        @ApiImplicitParam(
-            required = false,
-            paramType = "query parameter",
-            name = "processor",
-            dataType = "String",
-            defaultValue = "absent",
-            example = "?processor=transport",
-            value = "If present, modifies the state property of the mail to allow their processing by a specific mail container processor.")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
-    })
     public void defineReprocessAll() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails",
             TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessAll)
@@ -462,40 +330,6 @@ public class MailRepositoriesRoutes implements Routes {
         return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, targetQueue, targetProcessor);
     }
 
-    @PATCH
-    @Path("/{encodedPath}/mails/{key}")
-    @ApiOperation(value = "Reprocessing a single mail in that mailRepository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "action",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?action=reprocess",
-            value = "Compulsory. Only supported value is `reprocess`"),
-        @ApiImplicitParam(
-            required = false,
-            name = "queue",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "spool",
-            example = "?queue=outgoing",
-            value = "Indicates in which queue the mails stored in the repository should be re-enqueued"),
-        @ApiImplicitParam(
-            required = false,
-            paramType = "query parameter",
-            name = "processor",
-            dataType = "String",
-            defaultValue = "absent",
-            example = "?processor=transport",
-            value = "If present, modifies the state property of the mail to allow their processing by a specific mail container processor.")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
-    })
     public void defineReprocessOne() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails/:key",
             TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessOne)

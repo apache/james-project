@@ -24,7 +24,6 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
@@ -42,7 +41,6 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -118,15 +116,5 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
             .body("additionalInformation.runningOptions.messagesPerSecond", is(100))
             .body("additionalInformation.fixedInconsistencies", hasSize(0))
             .body("additionalInformation.errors", hasSize(0));
-    }
-
-    @Test
-    void getSwaggerShouldContainDistributedEndpoints() {
-        when()
-            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
-            .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 }

@@ -22,16 +22,12 @@ package org.apache.james.webadmin.routes;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MappingValueDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -41,17 +37,10 @@ import org.eclipse.jetty.http.HttpStatus;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Mappings")
-@Path(MappingRoutes.BASE_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class MappingRoutes implements Routes {
 
     static final String BASE_PATH = "/mappings";
@@ -78,12 +67,6 @@ public class MappingRoutes implements Routes {
         service.get(USER_MAPPING_PATH + ":" + USER, this::getUserMappings, jsonTransformer);
     }
 
-    @GET
-    @Path(BASE_PATH)
-    @ApiOperation(value = "Getting all mappings in RecipientRewriteTable")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class)
-    })
     private ImmutableListMultimap<String, MappingValueDTO> getMappings(Request request, Response response) {
         try {
             return recipientRewriteTable.getAllMappings()
@@ -103,13 +86,6 @@ public class MappingRoutes implements Routes {
         }
     }
 
-    @GET
-    @Path(USER_MAPPING_PATH + "{" + USER + "}")
-    @ApiOperation(value = "Getting all user mappings in RecipientRewriteTable")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid user parameter values.")
-    })
     private List<MappingValueDTO> getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
         Username username = Username.of(request.params(USER).toLowerCase());
 

@@ -22,9 +22,6 @@ package org.apache.james.webadmin.data.jmap;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.task.Task;
@@ -32,26 +29,15 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.data.jmap.UploadRepositoryCleanupTask.CleanupScope;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "Jmap Upload")
-@Path("/jmap/uploads")
-@Produces("application/json")
 public class JmapUploadRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JmapUploadRoutes.class);
@@ -80,18 +66,6 @@ public class JmapUploadRoutes implements Routes {
         service.delete(BASE_PATH, cleanupUploadRepositoryTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @DELETE
-    @Path("/jmap/uploads")
-    @ApiOperation(value = "Create a task to remove stale uploads.", nickname = "CleanupUploadRepository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "scope", paramType = "query parameter", example = "scope=expired")
-    })
-    @ApiResponses(
-        {
-            @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Scope invalid"),
-            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
-        })
     public Task cleanupUploadRepository(Request request) {
         Optional<CleanupScope> scope = Optional.ofNullable(request.queryParams("scope"))
             .flatMap(CleanupScope::from);

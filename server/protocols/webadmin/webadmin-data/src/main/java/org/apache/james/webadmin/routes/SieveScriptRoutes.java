@@ -25,8 +25,6 @@ import static spark.Spark.halt;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
 
 import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -43,20 +41,12 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Joiner;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 import spark.utils.StringUtils;
 
-@Api(tags = "SieveScript")
-@Path(value = "/sieve")
 public class SieveScriptRoutes implements Routes {
 
     public static final String ROOT_PATH = "/sieve";
@@ -86,39 +76,6 @@ public class SieveScriptRoutes implements Routes {
         defineAddActiveSieveScript(service);
     }
 
-    @PUT
-    @ApiOperation(value = "Upload a new Sieve Script")
-    @Path(value = ROOT_PATH + "/{" + USER_NAME + "}/" + SCRIPTS + "/{" + SCRIPT_NAME + "}")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid username"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid Sieve script name"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Empty script is not accepted"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "User not found")
-    })
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            name = USER_NAME,
-            required = true,
-            paramType = "path",
-            dataType = "String",
-            example = ROOT_PATH + "/userNameA/" + SCRIPTS + "/scriptName1",
-            value = "Username"),
-        @ApiImplicitParam(
-            name = SCRIPT_NAME,
-            required = true,
-            paramType = "path",
-            dataType = "String",
-            example = ROOT_PATH + "/userNameA/" + SCRIPTS + "/scriptName1",
-            value = "Script name"),
-        @ApiImplicitParam(
-            required = false,
-            paramType = "query parameter",
-            dataType = "Boolean",
-            defaultValue = "False",
-            example = "?activate=true",
-            value = "If present, automatically activating the script.")
-    })
     public void defineAddActiveSieveScript(Service service) {
         service.put(USER_SCRIPT_PATH, this::addActiveSieveScript);
     }
