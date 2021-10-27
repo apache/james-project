@@ -20,6 +20,7 @@
 package org.apache.james.mock.smtp.server;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
@@ -257,11 +258,11 @@ class HTTPConfigurationServerTest {
         }
 
         @Test
-        void deleteShouldReturnNoContent() {
+        void deleteShouldReturnContent() {
             when()
                 .delete()
             .then()
-                .statusCode(NO_CONTENT.code());
+                .statusCode(OK.code());
         }
 
         @Test
