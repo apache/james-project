@@ -30,6 +30,8 @@ import com.google.crypto.tink.subtle.EllipticCurves
 
 import scala.util.Try
 
+import scala.util.Try
+
 object PushSubscriptionId {
   def generate(): PushSubscriptionId = PushSubscriptionId(UUID.randomUUID)
 }

@@ -23,7 +23,7 @@ import java.net.URL
 import java.time.{Clock, Instant, ZoneId, ZonedDateTime}
 
 import org.apache.james.core.Username
-import org.apache.james.jmap.api.model.{DeviceClientId, DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscription, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionNotFoundException, PushSubscriptionServerURL, State, TypeName}
+import org.apache.james.jmap.api.model.{DeviceClientId, DeviceClientIdInvalidException, ExpireTimeInvalidException, InvalidPushSubscriptionKeys, PushSubscription, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionNotFoundException, PushSubscriptionServerURL, State, TypeName}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepositoryContract.{ALICE, INVALID_EXPIRE, MAX_EXPIRE, VALID_EXPIRE}
 import org.apache.james.utils.UpdatableTickingClock
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
@@ -61,6 +61,7 @@ case class CustomState(value: String) extends State {
 }
 
 object PushSubscriptionRepositoryContract {
+  val TYPE_NAME_SET: Set[TypeName] = Set(CustomTypeName1, CustomTypeName2)
   val NOW: Instant = Instant.parse("2021-10-25T07:05:39.160Z")
   val ZONE_ID: ZoneId = ZoneId.of("UTC")
   val CLOCK: Clock = Clock.fixed(NOW, ZONE_ID)
@@ -370,5 +371,65 @@ trait PushSubscriptionRepositoryContract {
     assertThatThrownBy(() => SMono.fromPublisher(testee.validateVerificationCode(ALICE, randomId)).block())
       .isInstanceOf(classOf[PushSubscriptionNotFoundException])
   }
+
+  @Test
+  def saveSubscriptionWithFullKeyPairShouldSucceed(): Unit = {
+    val fullKeyPair = Some(PushSubscriptionKeys.apply(p256dh = "p256h", auth = "auth"))
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1),
+      keys = fullKeyPair)
+
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1).asJava)).collectSeq().block()
+
+    assertThat(pushSubscriptions.map(_.keys).toList.asJava).containsExactlyInAnyOrder(fullKeyPair)
+  }
+
+  @Test
+  def saveSubscriptionWithNoneKeyPairShouldSucceed(): Unit = {
+    val emptyKeyPair = None
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1),
+      keys = emptyKeyPair)
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1).asJava)).collectSeq().block()
+
+    assertThat(pushSubscriptions.map(_.keys).toList.asJava).containsExactlyInAnyOrder(emptyKeyPair)
+  }
+
+  @Test
+  def saveSubscriptionWithEmptyP256hKeyShouldFail(): Unit = {
+    val emptyP256hKey = Some(PushSubscriptionKeys.apply(p256dh = "", auth = "auth"))
+
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1),
+      keys = emptyP256hKey)
+
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
+      .isInstanceOf(classOf[InvalidPushSubscriptionKeys])
+  }
+
+  @Test
+  def saveSubscriptionWithEmptyAuthKeyShouldFail(): Unit = {
+    val emptyAuthKey = Some(PushSubscriptionKeys.apply(p256dh = "p256dh", auth = ""))
+
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1),
+      keys = emptyAuthKey)
+
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
+      .isInstanceOf(classOf[InvalidPushSubscriptionKeys])
+  }
+
 }
 
