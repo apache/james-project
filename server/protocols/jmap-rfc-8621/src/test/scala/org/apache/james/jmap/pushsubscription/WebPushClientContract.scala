@@ -17,10 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription
+package org.apache.james.jmap.pushsubscription
+
+import java.net.URL
+import java.nio.charset.StandardCharsets
 
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
-import org.apache.james.jmap.push_subscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
+import org.apache.james.jmap.pushsubscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
 import org.assertj.core.api.Assertions.{assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,9 +34,6 @@ import org.mockserver.model.HttpResponse.response
 import org.mockserver.verify.VerificationTimes
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-
-import java.net.URL
-import java.nio.charset.StandardCharsets
 
 object WebPushClientTestFixture {
   val PUSH_CLIENT_CONFIGURATION: PushClientConfiguration =

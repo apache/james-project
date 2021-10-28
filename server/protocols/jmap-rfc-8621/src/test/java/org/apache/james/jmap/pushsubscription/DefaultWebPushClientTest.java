@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription;
+package org.apache.james.jmap.pushsubscription;
 
 import java.net.URL;
 

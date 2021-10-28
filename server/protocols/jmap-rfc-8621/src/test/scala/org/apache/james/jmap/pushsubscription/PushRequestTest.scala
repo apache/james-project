@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription
+package org.apache.james.jmap.pushsubscription
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

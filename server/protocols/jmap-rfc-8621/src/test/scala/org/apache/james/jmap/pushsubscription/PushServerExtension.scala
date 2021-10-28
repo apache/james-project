@@ -17,7 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription
+package org.apache.james.jmap.pushsubscription
+
+import java.net.URL
+import java.time.Clock
+import java.util.UUID
 
 import org.junit.jupiter.api.extension.{AfterEachCallback, BeforeEachCallback, ExtensionContext, ParameterContext, ParameterResolver}
 import org.mockserver.configuration.ConfigurationProperties
@@ -26,10 +30,6 @@ import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.NottableString.{not, string}
-
-import java.net.URL
-import java.time.Clock
-import java.util.UUID
 
 class PushServerExtension extends BeforeEachCallback with AfterEachCallback with ParameterResolver {
   var mockServer: ClientAndServer = _
