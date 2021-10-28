@@ -71,15 +71,20 @@ object PushTopic {
 object PushTTL {
   type PushTTL = Long Refined PushTTLConstraint
 
+  private val MAX_INT = 2147483647L
+
   implicit val validateTTL: Validate.Plain[Long, PushTTLConstraint] =
-    Validate.fromPredicate(s => s >= 0 && s < 2147483648L,
+    Validate.fromPredicate(s => s >= 0 && s <= MAX_INT,
       s => s"'$s' invalid. Should be non-negative numeric and no greater than 2^31",
       PushTTLConstraint())
+
 
   def validate(value: Long): Either[IllegalArgumentException, PushTTL] =
     refined.refineV[PushTTLConstraint](value)
       .left
       .map(new IllegalArgumentException(_))
+
+  val MAX: PushTTL = validate(MAX_INT).toOption.get
 }
 
 case class PushTopicConstraint()
