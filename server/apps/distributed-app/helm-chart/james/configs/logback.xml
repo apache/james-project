@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+                <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                    <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                        <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
+                        <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+
+                        <!-- Importance for handling multiple lines log -->
+                        <appendLineSeparator>true</appendLineSeparator>
+
+                        <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                            <prettyPrint>false</prettyPrint>
+                        </jsonFormatter>
+                    </layout>
+                </encoder>
+        </appender>
+
+        <root level="INFO">
+                <appender-ref ref="CONSOLE" />
+        </root>
+
+        <logger name="http.jmap" level="INFO" />
+        <logger name="org.apache.james.smtpserver" level="DEBUG" />
+        <logger name="org.apache.mailet.base.MailetPipelineLogging" level="DEBUG" />
+        <logger name="org.apache.james.mailetcontainer" level="DEBUG" />
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
+        <logger name="org.apache.james.mailetcontainer" level="DEBUG" />
+        <logger name="org.apache.james" level="DEBUG" />
+        <logger name="org.apache.james.backends.es" level="INFO" />
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
+        <logger name="com.datastax.driver.core.QueryLogger.ERROR" level="TRACE" />
+        <logger name="http.jmap" level="DEBUG" />
+
+</configuration>
