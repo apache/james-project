@@ -58,11 +58,17 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
     stateChangeEvent
       .asStateChange
       .filter(pushSubscription.types.toSet)
-      .fold(SMono.empty[Unit])(stateChange => SMono(webPushClient.push(pushSubscription.url, asPushRequest(stateChange))))
+      .fold(SMono.empty[Unit])(stateChange => SMono(webPushClient.push(pushSubscription.url, asPushRequest(stateChange, pushSubscription))))
 
-  private def asPushRequest(stateChange: StateChange): PushRequest =
-    PushRequest(ttl = PushTTL.MAX, payload = asBytes(stateChange))
+  private def asPushRequest(stateChange: StateChange, pushSubscription: PushSubscription): PushRequest =
+    PushRequest(ttl = PushTTL.MAX,
+      contentCoding = pushSubscription.keys.map(_ => Aes128gcm),
+      payload = asBytes(stateChange, pushSubscription))
 
-  private def asBytes(stateChange: StateChange) =
-    Json.stringify(pushSerializer.serializeSSE(stateChange)).getBytes(StandardCharsets.UTF_8)
+  private def asBytes(stateChange: StateChange, pushSubscription: PushSubscription) = {
+    val clearTextPayload = Json.stringify(pushSerializer.serializeSSE(stateChange)).getBytes(StandardCharsets.UTF_8)
+    pushSubscription.keys
+      .map(keys => keys.encrypt(clearTextPayload))
+      .getOrElse(clearTextPayload)
+  }
 }
