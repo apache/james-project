@@ -26,6 +26,7 @@ import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
