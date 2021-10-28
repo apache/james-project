@@ -21,6 +21,7 @@ package org.apache.james.jmap.push_subscription
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
+import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.push_subscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
 import org.apache.james.jmap.push_subscription.WebPushClientHeader.{DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
 import org.reactivestreams.Publisher
@@ -30,11 +31,9 @@ import reactor.netty.ByteBufMono
 import reactor.netty.http.client.{HttpClient, HttpClientResponse}
 import reactor.netty.resources.ConnectionProvider
 
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import scala.util.Try
 
 trait WebPushClient {
   def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit]
@@ -52,12 +51,6 @@ object WebPushClientHeader {
   val TOPIC: String = "Topic"
   val DEFAULT_TIMEOUT: Duration = Duration.of(30, ChronoUnit.SECONDS)
 }
-
-object PushSubscriptionServerURL {
-  def from(value: String): Try[PushSubscriptionServerURL] = Try(PushSubscriptionServerURL(new URL(value)))
-}
-
-case class PushSubscriptionServerURL(value: URL)
 
 sealed abstract class WebPushException(message: String) extends RuntimeException(message)
 

@@ -22,6 +22,7 @@ package org.apache.james.jmap.api.model
 import java.net.URL
 import java.time.{Clock, ZonedDateTime}
 import java.util.UUID
+import scala.util.Try
 
 object PushSubscriptionId {
   def generate(): PushSubscriptionId = PushSubscriptionId(UUID.randomUUID)
@@ -36,6 +37,10 @@ object VerificationCode {
 }
 
 case class VerificationCode(value: String) extends AnyVal
+
+object PushSubscriptionServerURL {
+  def from(value: String): Try[PushSubscriptionServerURL] = Try(PushSubscriptionServerURL(new URL(value)))
+}
 
 case class PushSubscriptionServerURL(value: URL)
 

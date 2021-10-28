@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.push_subscription
 
+import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.push_subscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
 import org.assertj.core.api.Assertions.{assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.Test
