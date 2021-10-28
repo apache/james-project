@@ -112,6 +112,10 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
             <groupId>eu.timepit</groupId>
             <artifactId>refined_${scala.base}</artifactId>
             <version>0.9.20</version>

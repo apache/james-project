@@ -19,16 +19,17 @@
 
 package org.apache.james.jmap.api.model
 
+import org.apache.james.jmap.api.model.ExpireTimeInvalidException.TIME_FORMATTER
+
 import java.net.URL
 import java.security.interfaces.ECPublicKey
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.{Base64, UUID}
 
 import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.apps.webpush.WebPushHybridEncrypt
 import com.google.crypto.tink.subtle.EllipticCurves
-
-import scala.util.Try
 
 import scala.util.Try
 
@@ -79,7 +80,15 @@ case class PushSubscriptionCreationRequest(deviceClientId: DeviceClientId,
                                            url: PushSubscriptionServerURL,
                                            keys: Option[PushSubscriptionKeys] = None,
                                            expires: Option[PushSubscriptionExpiredTime] = None,
-                                           types: Seq[TypeName])
+                                           types: Seq[TypeName]) {
+
+  def validate: Either[IllegalArgumentException, PushSubscriptionCreationRequest] =
+    if (types.isEmpty) {
+      scala.Left(new IllegalArgumentException("types must not be empty"))
+    } else {
+      Right(this)
+    }
+}
 
 object PushSubscription {
   val VALIDATED: Boolean = true
@@ -114,8 +123,10 @@ case class PushSubscription(id: PushSubscriptionId,
 
 case class PushSubscriptionNotFoundException(id: PushSubscriptionId) extends RuntimeException
 
-case class ExpireTimeInvalidException(expires: ZonedDateTime, message: String) extends RuntimeException
+object ExpireTimeInvalidException {
+  val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
+}
+case class ExpireTimeInvalidException(expires: ZonedDateTime, message: String) extends RuntimeException(s"`${expires.format(TIME_FORMATTER)}` $message")
 
-case class DeviceClientIdInvalidException(deviceClientId: DeviceClientId, message: String) extends RuntimeException
-
+case class DeviceClientIdInvalidException(deviceClientId: DeviceClientId, message: String) extends RuntimeException(s"`${deviceClientId.value}` $message")
 case class InvalidPushSubscriptionKeys(keys: PushSubscriptionKeys) extends RuntimeException

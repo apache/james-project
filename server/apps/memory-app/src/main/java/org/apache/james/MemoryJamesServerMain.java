@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
@@ -100,6 +101,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new JmapEventBusModule(),
         new JmapTasksModule(),
         new MemoryDataJmapModule(),
+        new MemoryPushSubscriptionModule(),
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(

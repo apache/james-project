@@ -60,6 +60,7 @@ import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
+import org.apache.james.jmap.method.PushSubscriptionSetMethod;
 import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.ThreadChangesMethod;
 import org.apache.james.jmap.method.ThreadGetMethod;
@@ -118,6 +119,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(MailboxSetMethod.class);
         methods.addBinding().to(MDNParseMethod.class);
         methods.addBinding().to(MDNSendMethod.class);
+        methods.addBinding().to(PushSubscriptionSetMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
