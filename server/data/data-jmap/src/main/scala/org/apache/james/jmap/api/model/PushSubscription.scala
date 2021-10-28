@@ -117,3 +117,5 @@ case class PushSubscriptionNotFoundException(id: PushSubscriptionId) extends Run
 case class ExpireTimeInvalidException(expires: ZonedDateTime, message: String) extends RuntimeException
 
 case class DeviceClientIdInvalidException(deviceClientId: DeviceClientId, message: String) extends RuntimeException
+
+case class InvalidPushSubscriptionKeys(keys: PushSubscriptionKeys) extends RuntimeException
