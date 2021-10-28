@@ -20,13 +20,18 @@
 package org.apache.james.jmap.pushsubscription
 
 import java.nio.charset.StandardCharsets
+import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.time.Clock
-import java.util.UUID
+import java.util.{Base64, UUID}
 
 import com.google.common.collect.ImmutableSet
+import com.google.common.hash.Hashing
+import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
+import com.google.crypto.tink.subtle.EllipticCurves.CurveType
+import com.google.crypto.tink.subtle.{EllipticCurves, Random}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionServerURL, TypeName}
+import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, MailboxTypeName, StateChangeEvent, TypeStateFactory}
 import org.apache.james.jmap.core.UuidState
@@ -143,6 +148,49 @@ class PushListenerTest {
       softly.assertThat(argumentCaptor.getValue.urgency.toJava).isEmpty
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}","Mailbox":"${state2.value.toString}"}}}""")
+    })
+  }
+
+  @Test
+  def pushShouldEncryptMessages(): Unit = {
+    val uaKeyPair = EllipticCurves.generateKeyPair(CurveType.NIST_P256)
+    val uaPrivateKey: ECPrivateKey = uaKeyPair.getPrivate.asInstanceOf[ECPrivateKey]
+    val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
+    val authSecret = Random.randBytes(16)
+
+    val hybridDecrypt = new WebPushHybridDecrypt.Builder()
+      .withAuthSecret(authSecret)
+      .withRecipientPublicKey(uaPublicKey)
+      .withRecipientPrivateKey(uaPrivateKey)
+      .build
+
+    val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit"),
+      keys = Some(PushSubscriptionKeys(p256dh = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded),
+        auth = Base64.getEncoder.encodeToString(authSecret))),
+      url = url,
+      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    val state2 = UuidState(UUID.randomUUID())
+    val state3 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
+      Map(EmailTypeName -> state1, MailboxTypeName -> state2, EmailDeliveryTypeName -> state3)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    val decryptedPayload = s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}","Mailbox":"${state2.value.toString}"}}}"""
+    val encryptedPayload = argumentCaptor.getValue.payload
+    SoftAssertions.assertSoftly(softly => {
+      // We positionned well the Content-Encoding header
+      softly.assertThat(argumentCaptor.getValue.contentCoding.toJava).contains(Aes128gcm)
+      // We are able to decrypt the payload
+      softly.assertThat(new String(hybridDecrypt.decrypt(encryptedPayload, null), StandardCharsets.UTF_8))
+        .isEqualTo(decryptedPayload)
+      // The content had been well modified by the encryption
+      softly.assertThat(Hashing.sha256().hashBytes(encryptedPayload))
+        .isNotEqualTo(Hashing.sha256().hashBytes(decryptedPayload.getBytes(StandardCharsets.UTF_8)))
     })
   }
 }
