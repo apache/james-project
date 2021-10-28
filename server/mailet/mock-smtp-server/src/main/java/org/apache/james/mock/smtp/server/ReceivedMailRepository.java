@@ -42,6 +42,10 @@ public class ReceivedMailRepository {
         return ImmutableList.copyOf(mails);
     }
 
+    public int count() {
+        return mails.size();
+    }
+
     public List<Mail> clear() {
         Mail mail;
         ArrayList<Mail> result = new ArrayList<>();
