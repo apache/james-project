@@ -17,7 +17,7 @@
  * under the License.                                           *
  * ************************************************************** */
 
-package org.apache.james.jmap.change
+package org.apache.james.jmap.api.change
 
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.TypeName
@@ -33,4 +33,3 @@ case class TypeStateFactory @Inject()(setTypeName: java.util.Set[TypeName]) {
       .map(Right(_))
       .getOrElse(Left(new IllegalArgumentException(s"Unknown typeName $string")))
 }
-

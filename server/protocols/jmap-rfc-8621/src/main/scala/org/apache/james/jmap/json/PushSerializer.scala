@@ -20,8 +20,9 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
-import org.apache.james.jmap.change.{TypeState, TypeStateFactory}
+import org.apache.james.jmap.change.TypeState
 import org.apache.james.jmap.core.{AccountId, OutboundMessage, PingMessage, PushState, RequestId, StateChange, WebSocketError, WebSocketInboundMessage, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
 import play.api.libs.json.{Format, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
