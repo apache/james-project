@@ -32,10 +32,12 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.DeviceClientIdInvalidException;
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException;
+import org.apache.james.jmap.api.model.InvalidPushSubscriptionKeys;
 import org.apache.james.jmap.api.model.PushSubscription;
 import org.apache.james.jmap.api.model.PushSubscriptionCreationRequest;
 import org.apache.james.jmap.api.model.PushSubscriptionExpiredTime;
 import org.apache.james.jmap.api.model.PushSubscriptionId;
+import org.apache.james.jmap.api.model.PushSubscriptionKeys;
 import org.apache.james.jmap.api.model.PushSubscriptionNotFoundException;
 import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
@@ -69,6 +71,9 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
                 }
                 if (!isUniqueDeviceClientId(username, req.deviceClientId())) {
                     sink.error(new DeviceClientIdInvalidException(req.deviceClientId(), "deviceClientId must be unique"));
+                }
+                if (isInvalidPushSubscriptionKey(req.keys())) {
+                    sink.error(new InvalidPushSubscriptionKeys(req.keys().get()));
                 }
             })
             .thenReturn(PushSubscription.from(request,
@@ -157,5 +162,11 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
     private boolean isUniqueDeviceClientId(Username username, String deviceClientId) {
         return table.row(username).values().stream()
             .noneMatch(subscription -> subscription.deviceClientId().equals(deviceClientId));
+    }
+
+    private boolean isInvalidPushSubscriptionKey(Option<PushSubscriptionKeys> keysOption) {
+        return OptionConverters.toJava(keysOption)
+            .map(key -> key.p256dh().isEmpty() || key.auth().isEmpty())
+            .orElse(false);
     }
 }
