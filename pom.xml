@@ -641,6 +641,7 @@
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>5.0.1</guice.version>
         <logback.version>1.2.5</logback.version>
+        <tink.version>1.6.1</tink.version>
 
         <bouncycastle.version>1.69</bouncycastle.version>
 
@@ -2075,6 +2076,16 @@
                 <groupId>com.github.stefanbirkner</groupId>
                 <artifactId>system-lambda</artifactId>
                 <version>1.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.crypto.tink</groupId>
+                <artifactId>apps-webpush</artifactId>
+                <version>${tink.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.crypto.tink</groupId>
+                <artifactId>tink</artifactId>
+                <version>${tink.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
