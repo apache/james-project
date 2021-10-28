@@ -91,7 +91,18 @@ case class PushTopicConstraint()
 
 case class PushTTLConstraint()
 
+// Follows https://datatracker.ietf.org/doc/html/rfc8188
+// Encrypted Content-Encoding for HTTP
+trait ContentCodingType {
+  def value: String
+}
+case object Aes128gcm extends ContentCodingType {
+  val value: String = "aes128gcm"
+}
+case class ContentCoding(`type`: ContentCodingType)
+
 case class PushRequest(ttl: PushTTL,
+                       contentCoding: Option[ContentCodingType] = None,
                        topic: Option[PushTopic] = None,
                        urgency: Option[PushUrgency] = None,
                        payload: Array[Byte])
