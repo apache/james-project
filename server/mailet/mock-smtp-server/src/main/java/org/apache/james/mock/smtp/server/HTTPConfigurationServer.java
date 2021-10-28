@@ -244,7 +244,7 @@ public class HTTPConfigurationServer {
     }
 
     private Publisher<Void> getMailsCount(HttpServerRequest req, HttpServerResponse res) {
-        var count = receivedMailRepository.list().stream().count();
+        int count = receivedMailRepository.count();
 
         try {
             return res.status(OK)
