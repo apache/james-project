@@ -79,6 +79,21 @@ trait WebPushClientContract {
       VerificationTimes.atLeast(1))
   }
 
+  @Test
+  def pushShouldSpecifyContentCoding(pushServer: ClientAndServer): Unit = {
+    SMono.fromPublisher(testee.push(getPushSubscriptionServerURL, PushRequest(
+      ttl = PushTTL.validate(15).toOption.get,
+      contentCoding = Some(Aes128gcm),
+      payload = "Content123".getBytes(StandardCharsets.UTF_8))))
+      .block()
+    pushServer.verify(request()
+      .withPath("/push")
+      .withHeader("TTL", "15")
+      .withHeader("Content-Encoding", "aes128gcm")
+      .withBody(new String(PUSH_REQUEST_SAMPLE.payload, StandardCharsets.UTF_8)),
+      VerificationTimes.atLeast(1))
+  }
+
   @ParameterizedTest
   @ValueSource(ints = Array(500, 501, 502, 503, 504))
   def pushRequestShouldThrowWhenPushServerReturnFailHTTPStatus(httpErrorCode: Int, pushServer: ClientAndServer): Unit = {

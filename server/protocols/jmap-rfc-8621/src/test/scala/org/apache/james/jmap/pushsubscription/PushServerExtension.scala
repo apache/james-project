@@ -71,6 +71,7 @@ object MockPushServer {
         .withMethod("POST")
         .withHeader(string("Content-type"), string("application/json charset=utf-8"))
         .withHeader(string("Urgency"))
+        .withHeader(string("Content-Encoding"))
         .withHeader(string("Topic"))
         .withHeader(string("TTL")))
       .respond(response

@@ -26,8 +26,8 @@ import java.time.temporal.ChronoUnit
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
-import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.buildHttpClient
-import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
+import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
+import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
@@ -47,6 +47,7 @@ case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
 
 object WebPushClientHeader {
   val TIME_TO_LIVE: String = "TTL"
+  val CONTENT_ENCODING: String = "Content-Encoding"
   val MESSAGE_URGENCY: String = "Urgency"
   val TOPIC: String = "Topic"
   val DEFAULT_TIMEOUT: Duration = Duration.of(30, ChronoUnit.SECONDS)
@@ -88,6 +89,7 @@ class DefaultWebPushClient(configuration: PushClientConfiguration) extends WebPu
         builder.add(TIME_TO_LIVE, request.ttl.value)
         builder.add(MESSAGE_URGENCY, request.urgency.getOrElse(PushUrgency.default).value)
         request.topic.foreach(t => builder.add(TOPIC, t.value))
+        request.contentCoding.foreach(f => builder.add(CONTENT_ENCODING, f.value))
       })
       .post()
       .uri(pushServerUrl.value.toString)
