@@ -20,8 +20,14 @@
 package org.apache.james.jmap.api.model
 
 import java.net.URL
-import java.time.{Clock, ZonedDateTime}
-import java.util.UUID
+import java.security.interfaces.ECPublicKey
+import java.time.ZonedDateTime
+import java.util.{Base64, UUID}
+
+import com.google.crypto.tink.HybridEncrypt
+import com.google.crypto.tink.apps.webpush.WebPushHybridEncrypt
+import com.google.crypto.tink.subtle.EllipticCurves
+
 import scala.util.Try
 
 object PushSubscriptionId {
@@ -49,7 +55,23 @@ case class PushSubscriptionExpiredTime(value: ZonedDateTime) {
   def isBefore(date: ZonedDateTime): Boolean = value.isBefore(date)
 }
 
-case class PushSubscriptionKeys(p256dh: String, auth: String)
+object PushSubscriptionKeys {
+  def validate(keys: PushSubscriptionKeys): Try[PushSubscriptionKeys] = Try(keys.asHybridEncrypt()).map(_ => keys)
+}
+
+case class PushSubscriptionKeys(p256dh: String, auth: String) {
+  // Follows https://datatracker.ietf.org/doc/html/rfc8291
+  // Message Encryption for Web Push
+  def encrypt(payload: Array[Byte]): Array[Byte] = asHybridEncrypt()
+    .encrypt(payload, null)
+
+  private def asHybridEncrypt(): HybridEncrypt =  new WebPushHybridEncrypt.Builder()
+    .withAuthSecret(Base64.getDecoder().decode(auth))
+    .withRecipientPublicKey(asECPublicKey())
+    .build()
+
+  private def asECPublicKey(): ECPublicKey = EllipticCurves.getEcPublicKey(Base64.getDecoder.decode(p256dh))
+}
 
 case class PushSubscriptionCreationRequest(deviceClientId: DeviceClientId,
                                            url: PushSubscriptionServerURL,
