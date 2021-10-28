@@ -20,6 +20,7 @@ package org.apache.james.jmap.http;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE;
 import static org.apache.james.jmap.JMAPUrls.JMAP;
@@ -57,7 +58,6 @@ import com.google.common.collect.ImmutableList;
 import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
@@ -103,9 +103,8 @@ public class JMAPApiRoutes implements JMAPRoutes {
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-            .onErrorResume(e -> handleInternalError(response, LOGGER, e))
-            .subscriberContext(jmapContext(request))
-            .subscribeOn(Schedulers.elastic());
+            .onErrorResume(e -> response.status(INTERNAL_SERVER_ERROR).send())
+            .subscriberContext(jmapContext(request));
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, MailboxSession session) {

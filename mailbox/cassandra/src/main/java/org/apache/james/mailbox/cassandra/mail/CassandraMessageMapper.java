@@ -346,13 +346,18 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+        return block(addReactive(mailbox, message));
+    }
+
+    @Override
+    public Mono<MessageMetaData> addReactive(Mailbox mailbox, MailboxMessage message) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return block(addUidAndModseq(message, mailboxId)
+        return addUidAndModseq(message, mailboxId)
             .flatMap(Throwing.function((MailboxMessage messageWithUidAndModSeq) ->
                 save(mailbox, messageWithUidAndModSeq)
                     .thenReturn(messageWithUidAndModSeq)))
-            .map(MailboxMessage::metaData));
+            .map(MailboxMessage::metaData);
     }
 
     private Mono<MailboxMessage> addUidAndModseq(MailboxMessage message, CassandraId mailboxId) {
