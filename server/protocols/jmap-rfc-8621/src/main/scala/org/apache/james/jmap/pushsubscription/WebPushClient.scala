@@ -17,23 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription
+package org.apache.james.jmap.pushsubscription
+
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
-import org.apache.james.jmap.push_subscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
-import org.apache.james.jmap.push_subscription.WebPushClientHeader.{DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
+import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.buildHttpClient
+import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.netty.ByteBufMono
 import reactor.netty.http.client.{HttpClient, HttpClientResponse}
 import reactor.netty.resources.ConnectionProvider
-
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 trait WebPushClient {
   def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit]

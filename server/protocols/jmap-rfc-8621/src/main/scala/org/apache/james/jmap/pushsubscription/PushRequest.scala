@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.push_subscription
+package org.apache.james.jmap.pushsubscription
 
 import com.google.common.base.CharMatcher
 import eu.timepit.refined
 import eu.timepit.refined.api.{Refined, Validate}
-import org.apache.james.jmap.push_subscription.PushTTL.PushTTL
-import org.apache.james.jmap.push_subscription.PushTopic.PushTopic
+import org.apache.james.jmap.pushsubscription.PushTTL.PushTTL
+import org.apache.james.jmap.pushsubscription.PushTopic.PushTopic
 
 object PushUrgency {
   def default: PushUrgency = Normal
