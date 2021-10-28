@@ -34,6 +34,7 @@ import org.apache.james.user.api.UsersRepository
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.jdk.CollectionConverters._
@@ -115,7 +116,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
     SMono.fromCallable(() => authHeaders(httpRequest))
       .map(parseUserCredentials)
       .handle(publishNext)
-      .filter(isValid)
+      .filterWhen(isValid)
       .map(_.username)
       .map(mailboxManager.createSystemSession)
       .asJava()
@@ -127,6 +128,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
   private def publishNext[T]: (Option[T], reactor.core.publisher.SynchronousSink[T]) => Unit =
     (maybeT, sink) => maybeT.foreach(t => sink.next(t))
 
-  private def isValid(userCredential: UserCredential): Boolean =
-    usersRepository.test(userCredential.username, userCredential.password)
+  private def isValid(userCredential: UserCredential): SMono[Boolean] =
+    SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password))
+      .subscribeOn(Schedulers.elastic())
 }
