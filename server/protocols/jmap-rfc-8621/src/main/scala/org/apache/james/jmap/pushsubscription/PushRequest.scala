@@ -80,7 +80,6 @@ object PushTTL {
       s => s"'$s' invalid. Should be non-negative numeric and no greater than 2^31",
       PushTTLConstraint())
 
-
   def validate(value: Long): Either[IllegalArgumentException, PushTTL] =
     refined.refineV[PushTTLConstraint](value)
       .left

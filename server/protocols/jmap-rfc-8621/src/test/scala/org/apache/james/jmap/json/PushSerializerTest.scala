@@ -17,24 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rfc8621.memory;
+package org.apache.james.jmap.json
 
-import org.apache.james.JamesServerBuilder;
-import org.apache.james.JamesServerExtension;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
-import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.apache.james.jmap.pushsubscription.PushServerExtension;
+import org.apache.james.jmap.api.model.{PushSubscriptionId, VerificationCode}
+import org.apache.james.jmap.method.PushVerification
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.{JsValue, Json}
 
-public class MemoryPushSubscriptionSetMethodTest implements PushSubscriptionSetMethodContract {
-    @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule()))
-        .build();
+import java.util.UUID
 
-    @RegisterExtension
-    static PushServerExtension pushServerExtension = new PushServerExtension();
+class PushSerializerTest extends AnyWordSpec with Matchers {
+
+  "Serialize PushVerification" should {
+    "PushVerification should be success" in {
+      val pushVerification: PushVerification = PushVerification(
+        PushSubscriptionId(UUID.fromString("44111166-affc-4187-b974-0672e312b72e")),
+        VerificationCode("2b295d19-b37a-4865-b93e-bbb59f76ffc0"))
+
+      val actualValue: JsValue = PushSerializer.serializePushVerification(pushVerification)
+
+      val expectedValue: JsValue = Json.parse(
+        """{
+          |	"@type": "PushVerification",
+          |	"pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
+          |	"verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
+          |}""".stripMargin)
+
+      actualValue should equal(expectedValue)
+    }
+  }
 }
