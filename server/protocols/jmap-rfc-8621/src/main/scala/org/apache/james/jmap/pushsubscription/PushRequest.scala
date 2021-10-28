@@ -92,6 +92,6 @@ case class PushTopicConstraint()
 case class PushTTLConstraint()
 
 case class PushRequest(ttl: PushTTL,
-                       topic: Option[PushTopic],
-                       urgency: Option[PushUrgency],
+                       topic: Option[PushTopic] = None,
+                       urgency: Option[PushUrgency] = None,
                        payload: Array[Byte])
