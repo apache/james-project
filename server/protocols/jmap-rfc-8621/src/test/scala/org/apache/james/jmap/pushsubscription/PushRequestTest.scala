@@ -52,16 +52,15 @@ class PushRequestTest {
 
   @ParameterizedTest
   @ValueSource(strings = Array("/", "@", "#", "$", "%", "^", "&", "*", "(", ")",
-    "{", "}", ":", ";", "?", "<", ">", ".",
-    "1", "9"))
+    "{", "}", ":", ";", "?", "<", ">", ".", "+"))
   def topicShouldNotAcceptSpecialCharacters(value: String): Unit = {
     assertThat(PushTopic.validate(value).isRight)
       .isFalse
   }
 
   @Test
-  def topicShouldAcceptAlphabetValue(): Unit = {
-    assertThat(PushTopic.validate("value").isRight)
+  def topicShouldAcceptBase64URLSafeAlphabet(): Unit = {
+    assertThat(PushTopic.validate("value-_=19VALUE").isRight)
       .isTrue
   }
 
