@@ -23,6 +23,7 @@ import java.net.{URI, URL}
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
 
 object JmapRfc8621Configuration {
@@ -41,15 +42,22 @@ object JmapRfc8621Configuration {
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
-        .getOrElse(UPLOAD_LIMIT_30_MB))
+        .getOrElse(UPLOAD_LIMIT_30_MB),
+      maxTimeoutSeconds = Option(configuration.getInteger("webpush.maxTimeoutSeconds", null)),
+      maxConnections = Option(configuration.getInteger("webpush.maxConnections", null)))
   }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixString: String, maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB) {
+case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixString: String,
+                                    maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB,
+                                    maxTimeoutSeconds: Option[Int] = None,
+                                    maxConnections: Option[Int] = None) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
   val downloadUrl: URL = new URL(urlPrefixString + "/download/{accountId}/{blobId}?type={type}&name={name}")
   val uploadUrl: URL = new URL(s"$urlPrefixString/upload/{accountId}")
   val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
   val webSocketUrl: URI = new URI(s"$websocketPrefixString/jmap/ws")
+
+  val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(maxTimeoutSeconds, maxTimeoutSeconds)
 }

@@ -66,6 +66,9 @@ import org.apache.james.jmap.method.ThreadGetMethod;
 import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
 import org.apache.james.jmap.method.ZoneIdProvider;
+import org.apache.james.jmap.pushsubscription.DefaultWebPushClient;
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
+import org.apache.james.jmap.pushsubscription.WebPushClient;
 import org.apache.james.jmap.routes.AttachmentBlobResolver;
 import org.apache.james.jmap.routes.BlobResolver;
 import org.apache.james.jmap.routes.DownloadRoutes;
@@ -102,6 +105,9 @@ public class RFC8621MethodsModule extends AbstractModule {
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);
         bind(MDNSendMethod.class).in(Scopes.SINGLETON);
+
+        bind(DefaultWebPushClient.class).in(Scopes.SINGLETON);
+        bind(WebPushClient.class).to(DefaultWebPushClient.class);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
@@ -165,6 +171,12 @@ public class RFC8621MethodsModule extends AbstractModule {
         return Authenticator.of(
             metricFactory,
             authenticationStrategies);
+    }
+
+    @Provides
+    @Singleton
+    PushClientConfiguration providePushClientConfiguration(JmapRfc8621Configuration configuration) {
+        return configuration.webPushConfiguration();
     }
 
     @Provides
