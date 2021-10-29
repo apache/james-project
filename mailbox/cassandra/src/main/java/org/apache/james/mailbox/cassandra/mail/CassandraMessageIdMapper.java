@@ -134,7 +134,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .switchIfEmpty(messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType))
+            .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
     }
