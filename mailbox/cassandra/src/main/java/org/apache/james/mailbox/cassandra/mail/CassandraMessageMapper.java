@@ -265,7 +265,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .switchIfEmpty(messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType))
+            .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
     }
@@ -313,7 +313,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData) {
         return delete(metaData)
             .then(messageDAOV3.retrieveMessage(metaData, FetchType.Metadata)
-                .switchIfEmpty(messageDAO.retrieveMessage(metaData, FetchType.Metadata)))
+                .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metaData, FetchType.Metadata))))
             .map(pair -> pair.toMailboxMessage(metaData, ImmutableList.of()));
     }
 
