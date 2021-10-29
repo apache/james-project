@@ -26,7 +26,7 @@ import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, Group}
 import org.apache.james.jmap.api.model.PushSubscription
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
-import org.apache.james.jmap.change.StateChangeEvent
+import org.apache.james.jmap.change.{EmailDeliveryTypeName, StateChangeEvent}
 import org.apache.james.jmap.core.StateChange
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.util.ReactorUtils
@@ -62,6 +62,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
 
   private def asPushRequest(stateChange: StateChange, pushSubscription: PushSubscription): PushRequest =
     PushRequest(ttl = PushTTL.MAX,
+      urgency = Some(urgency(stateChange)),
       contentCoding = pushSubscription.keys.map(_ => Aes128gcm),
       payload = asBytes(stateChange, pushSubscription))
 
@@ -71,4 +72,15 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
       .map(keys => keys.encrypt(clearTextPayload))
       .getOrElse(clearTextPayload)
   }
+
+  private def urgency(stateChange: StateChange): PushUrgency =
+    if (stateChange.changes
+      .values
+      .flatMap(ts => ts.changes.keys)
+      .toList
+      .contains(EmailDeliveryTypeName)) {
+      High
+    } else {
+      Low
+    }
 }
