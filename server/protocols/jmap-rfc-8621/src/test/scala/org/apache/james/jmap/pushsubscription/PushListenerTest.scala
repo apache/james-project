@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.time.Clock
 import java.util.{Base64, UUID}
+
 import com.google.common.collect.ImmutableSet
 import com.google.common.hash.Hashing
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
@@ -33,13 +34,13 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
-import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, MailboxTypeName, StateChangeEvent}
-import org.apache.james.jmap.core.UuidState
+import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, MailboxTypeName, StateChangeEvent, TypeState}
+import org.apache.james.jmap.core.{AccountId, PushState, StateChange, UuidState}
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, verify, verifyNoInteractions, when}
 import org.mockito.{ArgumentCaptor, ArgumentMatchers}
@@ -49,6 +50,7 @@ import scala.jdk.OptionConverters._
 
 class PushListenerTest {
   val bob: Username = Username.of("bob@localhost")
+  val alice: Username = Username.of("alice@localhost")
   val bobAccountId: String = "405010d6c16c16dec36f3d7a7596c2d757ba7b57904adc4801a63e40914fd5c9"
   val url: PushSubscriptionServerURL = PushSubscriptionServerURL.from("http://localhost:9999/push").get
 
@@ -186,6 +188,25 @@ class PushListenerTest {
   }
 
   @Test
+  def topicShouldBeSpecified(): Unit = {
+    val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit"),
+      url = url,
+      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    val state2 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
+      Map(EmailTypeName -> state1, MailboxTypeName -> state2)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    assertThat(argumentCaptor.getValue.topic.toJava)
+      .contains(PushTopic.validate("j2HKoW6BCasQ1URmX6SRjg==").toOption.get)
+  }
+
+  @Test
   def pushShouldEncryptMessages(): Unit = {
     val uaKeyPair = EllipticCurves.generateKeyPair(CurveType.NIST_P256)
     val uaPrivateKey: ECPrivateKey = uaKeyPair.getPrivate.asInstanceOf[ECPrivateKey]
@@ -226,5 +247,71 @@ class PushListenerTest {
       softly.assertThat(Hashing.sha256().hashBytes(encryptedPayload))
         .isNotEqualTo(Hashing.sha256().hashBytes(decryptedPayload.getBytes(StandardCharsets.UTF_8)))
     })
+  }
+
+  @Nested
+  class ExtractPushTopic {
+    private val bobAccount: AccountId = AccountId.from(bob).toOption.get
+    private val aliceAccount: AccountId = AccountId.from(alice).toOption.get
+
+    @Test
+    def extractTopicShouldBeIndependentFromState(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+      assertThat(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("j2HKoW6BCasQ1URmX6SRjg==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldDependOnTypeName(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+      assertThat(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailDeliveryTypeName -> state1))), None)))
+        .isNotEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("jCtTpf_BO3ZG03loJXHRPQ==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldDependOnExtraTypeName(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+      assertThat(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1, EmailDeliveryTypeName -> state1))), None)))
+        .isNotEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("oA4xCCqJhc98SKLJOa-ndA==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldNotDependOnExtraTypeNameOrdering(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+
+      assertThat(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailDeliveryTypeName -> state1, EmailTypeName -> state1))), None)))
+        .isEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1, EmailDeliveryTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("oA4xCCqJhc98SKLJOa-ndA==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldNotDependOnPushState(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+
+      assertThat(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailDeliveryTypeName -> state1, EmailTypeName -> state1))), Some(PushState("whatever")))))
+        .isEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1, EmailDeliveryTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("oA4xCCqJhc98SKLJOa-ndA==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldDependOnAccountId(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+      assertThat(PushListener.extractTopic(StateChange(Map(aliceAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isNotEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("PQSgEID7KHXJ6AbqipDETQ==").toOption.get)
+    }
+
+    @Test
+    def extractTopicShouldDependOnExtraAccountId(): Unit = {
+      val state1 = UuidState(UUID.randomUUID())
+      assertThat(PushListener.extractTopic(StateChange(Map(
+          aliceAccount -> TypeState(Map(EmailTypeName -> state1)),
+          bobAccount -> TypeState(Map(EmailTypeName -> state1))),
+        None)))
+        .isNotEqualTo(PushListener.extractTopic(StateChange(Map(bobAccount -> TypeState(Map(EmailTypeName -> state1))), None)))
+        .isEqualTo(PushTopic.validate("C4Q8cdY9ja_dkMGE7xZomQ==").toOption.get)
+    }
   }
 }

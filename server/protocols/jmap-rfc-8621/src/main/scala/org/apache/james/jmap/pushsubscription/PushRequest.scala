@@ -51,8 +51,10 @@ case object High extends PushUrgency {
 
 object PushTopic {
   type PushTopic = String Refined PushTopicConstraint
+  // Base 64 URL safe alphabet definition: https://datatracker.ietf.org/doc/html/rfc4648#section-5
   private val charMatcher: CharMatcher = CharMatcher.inRange('a', 'z')
     .or(CharMatcher.inRange('A', 'Z'))
+    .or(CharMatcher.inRange('0', '9'))
     .or(CharMatcher.is('_'))
     .or(CharMatcher.is('-'))
     .or(CharMatcher.is('='))

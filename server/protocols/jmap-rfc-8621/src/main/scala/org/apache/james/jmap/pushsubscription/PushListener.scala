@@ -20,7 +20,10 @@
 package org.apache.james.jmap.pushsubscription
 
 import java.nio.charset.StandardCharsets
+import java.util.Base64
 
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.hash.Hashing
 import javax.inject.Inject
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, Group}
@@ -29,12 +32,30 @@ import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.change.{EmailDeliveryTypeName, StateChangeEvent}
 import org.apache.james.jmap.core.StateChange
 import org.apache.james.jmap.json.PushSerializer
+import org.apache.james.jmap.pushsubscription.PushListener.extractTopic
+import org.apache.james.jmap.pushsubscription.PushTopic.PushTopic
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import play.api.libs.json.Json
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 case class PushListenerGroup() extends Group {}
+
+object PushListener {
+  @VisibleForTesting
+  def extractTopic(stateChange: StateChange): PushTopic =
+    PushTopic.validate(
+      Base64.getUrlEncoder()
+        .encodeToString(
+          Hashing.murmur3_128()
+            .hashString(stateChange.changes
+              .toList
+              .map {
+                case (accountId, typeState) => accountId.id.value + "@" + typeState.changes.keys.hashCode()
+              }.mkString("&"), StandardCharsets.UTF_8)
+            .asBytes()))
+      .toOption.get
+}
 
 class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
                    webPushClient: WebPushClient,
@@ -63,6 +84,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
   private def asPushRequest(stateChange: StateChange, pushSubscription: PushSubscription): PushRequest =
     PushRequest(ttl = PushTTL.MAX,
       urgency = Some(urgency(stateChange)),
+      topic = Some(extractTopic(stateChange)),
       contentCoding = pushSubscription.keys.map(_ => Aes128gcm),
       payload = asBytes(stateChange, pushSubscription))
 
@@ -76,7 +98,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
   private def urgency(stateChange: StateChange): PushUrgency =
     if (stateChange.changes
       .values
-      .flatMap(ts => ts.changes.keys)
+      .flatMap(_.changes.keys)
       .toList
       .contains(EmailDeliveryTypeName)) {
       High
