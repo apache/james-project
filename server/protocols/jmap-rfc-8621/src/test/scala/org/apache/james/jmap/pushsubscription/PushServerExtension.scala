@@ -71,8 +71,20 @@ object MockPushServer {
         .withMethod("POST")
         .withHeader(string("Content-type"), string("application/json charset=utf-8"))
         .withHeader(string("Urgency"))
-        .withHeader(string("Content-Encoding"))
         .withHeader(string("Topic"))
+        .withHeader(string("TTL")))
+      .respond(response
+        .withStatusCode(201)
+        .withHeader("Location", String.format("https://push.example.net/message/%s", UUID.randomUUID))
+        .withHeader("Date", Clock.systemUTC.toString)
+        .withBody(UUID.randomUUID.toString))
+
+    mockServer
+      .when(request
+        .withPath("/push")
+        .withMethod("POST")
+        .withHeader(string("Content-type"), string("application/json charset=utf-8"))
+        .withHeader(string("Content-Encoding"))
         .withHeader(string("TTL")))
       .respond(response
         .withStatusCode(201)
