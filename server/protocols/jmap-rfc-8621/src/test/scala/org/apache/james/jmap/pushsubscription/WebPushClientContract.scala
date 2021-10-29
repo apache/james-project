@@ -22,6 +22,9 @@ package org.apache.james.jmap.pushsubscription
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
+import java.net.URL
+import java.nio.charset.StandardCharsets
+
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
 import org.assertj.core.api.Assertions.{assertThatCode, assertThatThrownBy}
@@ -40,8 +43,6 @@ object WebPushClientTestFixture {
     PushClientConfiguration(
       maxTimeoutSeconds = Some(10),
       maxConnections = Some(10),
-      maxRetryTimes = Some(10),
-      requestPerSeconds = Some(10),
       scheduler = Schedulers.elastic())
 
   val PUSH_REQUEST_SAMPLE: PushRequest = PushRequest(

@@ -23,6 +23,10 @@ import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
@@ -41,8 +45,6 @@ trait WebPushClient {
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
                                    maxConnections: Option[Int],
-                                   maxRetryTimes: Option[Int],
-                                   requestPerSeconds: Option[Int],
                                    scheduler: reactor.core.scheduler.Scheduler)
 
 object WebPushClientHeader {
@@ -65,7 +67,6 @@ object DefaultWebPushClient {
   private def buildHttpClient(configuration: PushClientConfiguration): HttpClient = {
     val connectionProviderBuilder: ConnectionProvider.Builder = ConnectionProvider.builder(DefaultWebPushClient.getClass.getName)
     configuration.maxConnections.foreach(configValue => connectionProviderBuilder.maxConnections(configValue))
-    configuration.maxTimeoutSeconds.foreach(configValue => connectionProviderBuilder.pendingAcquireMaxCount(configValue))
 
     val responseTimeout: Duration = configuration.maxTimeoutSeconds
       .map(configValue => Duration.of(configValue, ChronoUnit.SECONDS))
