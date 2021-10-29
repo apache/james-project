@@ -73,6 +73,7 @@ object DefaultWebPushClient {
       .getOrElse(DEFAULT_TIMEOUT)
 
     HttpClient.create(connectionProviderBuilder.build())
+      .disableRetry(true)
       .responseTimeout(responseTimeout)
       .headers(builder => {
         builder.add("Content-Type", "application/json charset=utf-8")
