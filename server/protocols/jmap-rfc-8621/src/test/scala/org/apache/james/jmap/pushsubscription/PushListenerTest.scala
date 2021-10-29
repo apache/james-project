@@ -37,6 +37,7 @@ import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, Mailb
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionRepository
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockito.ArgumentMatchers.any
@@ -118,8 +119,6 @@ class PushListenerTest {
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.MAX)
-      softly.assertThat(argumentCaptor.getValue.topic.toJava).isEmpty
-      softly.assertThat(argumentCaptor.getValue.urgency.toJava).isEmpty
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}"}}}""")
     })
@@ -144,11 +143,46 @@ class PushListenerTest {
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.MAX)
-      softly.assertThat(argumentCaptor.getValue.topic.toJava).isEmpty
-      softly.assertThat(argumentCaptor.getValue.urgency.toJava).isEmpty
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}","Mailbox":"${state2.value.toString}"}}}""")
     })
+  }
+
+  @Test
+  def emailDeliveryUrgencyShouldBeHigh(): Unit = {
+    val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit"),
+      url = url,
+      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    val state2 = UuidState(UUID.randomUUID())
+    val state3 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
+      Map(EmailTypeName -> state1, MailboxTypeName -> state2, EmailDeliveryTypeName -> state3)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    assertThat(argumentCaptor.getValue.urgency.toJava).contains(High)
+  }
+
+  @Test
+  def nonEmailDeliveryUrgencyShouldBeLow(): Unit = {
+    val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit"),
+      url = url,
+      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    val state2 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
+      Map(EmailTypeName -> state1, MailboxTypeName -> state2)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    assertThat(argumentCaptor.getValue.urgency.toJava).contains(Low)
   }
 
   @Test
