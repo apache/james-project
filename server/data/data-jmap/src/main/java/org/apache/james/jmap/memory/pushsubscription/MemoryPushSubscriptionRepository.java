@@ -19,7 +19,10 @@
 
 package org.apache.james.jmap.memory.pushsubscription;
 
-import static org.apache.james.jmap.api.model.PushSubscription.EXPIRES_TIME_MAX_DAY;
+import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.evaluateExpiresTime;
+import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isInThePast;
+import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isInvalidPushSubscriptionKey;
+import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isNotOutdatedSubscription;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -37,7 +40,6 @@ import org.apache.james.jmap.api.model.PushSubscription;
 import org.apache.james.jmap.api.model.PushSubscriptionCreationRequest;
 import org.apache.james.jmap.api.model.PushSubscriptionExpiredTime;
 import org.apache.james.jmap.api.model.PushSubscriptionId;
-import org.apache.james.jmap.api.model.PushSubscriptionKeys;
 import org.apache.james.jmap.api.model.PushSubscriptionNotFoundException;
 import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
@@ -48,7 +50,6 @@ import com.google.common.collect.Table;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import scala.Option;
 import scala.jdk.javaapi.CollectionConverters;
 import scala.jdk.javaapi.OptionConverters;
 
@@ -66,7 +67,7 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
     public Publisher<PushSubscription> save(Username username, PushSubscriptionCreationRequest request) {
         return Mono.just(request)
             .handle((req, sink) -> {
-                if (isInThePast(req.expires())) {
+                if (isInThePast(req.expires(), clock)) {
                     sink.error(new ExpireTimeInvalidException(req.expires().get().value(), "expires must be greater than now"));
                 }
                 if (!isUniqueDeviceClientId(username, req.deviceClientId())) {
@@ -77,7 +78,8 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
                 }
             })
             .thenReturn(PushSubscription.from(request,
-                evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)))))
+                evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)),
+                    clock)))
             .doOnNext(pushSubscription -> table.put(username, pushSubscription.id(), pushSubscription));
     }
 
@@ -91,7 +93,7 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
             })
             .then(Mono.justOrEmpty(table.get(username, id))
                 .doOnNext(pushSubscription -> table.put(username, id,
-                    pushSubscription.withExpires(evaluateExpiresTime(Optional.of(newExpire)))))
+                    pushSubscription.withExpires(evaluateExpiresTime(Optional.of(newExpire), clock))))
                 .switchIfEmpty(Mono.error(() -> new PushSubscriptionNotFoundException(id)))
                 .then());
     }
@@ -140,33 +142,9 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
             .then();
     }
 
-    private boolean isInThePast(PushSubscriptionExpiredTime expire) {
-        return expire.isBefore(ZonedDateTime.now(clock));
-    }
-
-    private boolean isInThePast(Option<PushSubscriptionExpiredTime> expire) {
-        return expire.map(this::isInThePast).getOrElse(() -> false);
-    }
-
-    private PushSubscriptionExpiredTime evaluateExpiresTime(Optional<ZonedDateTime> inputTime) {
-        ZonedDateTime now = ZonedDateTime.now(clock);
-        ZonedDateTime maxExpiresTime = now.plusDays(EXPIRES_TIME_MAX_DAY());
-        return PushSubscriptionExpiredTime.apply(inputTime.filter(input -> input.isBefore(maxExpiresTime))
-            .orElse(maxExpiresTime));
-    }
-
-    private boolean isNotOutdatedSubscription(PushSubscription subscription, Clock clock) {
-        return subscription.expires().isAfter(ZonedDateTime.now(clock));
-    }
-
     private boolean isUniqueDeviceClientId(Username username, String deviceClientId) {
         return table.row(username).values().stream()
             .noneMatch(subscription -> subscription.deviceClientId().equals(deviceClientId));
     }
 
-    private boolean isInvalidPushSubscriptionKey(Option<PushSubscriptionKeys> keysOption) {
-        return OptionConverters.toJava(keysOption)
-            .map(key -> key.p256dh().isEmpty() || key.auth().isEmpty())
-            .orElse(false);
-    }
 }
