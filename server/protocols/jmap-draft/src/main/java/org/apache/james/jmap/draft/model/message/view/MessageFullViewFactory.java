@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
@@ -158,7 +159,8 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     }
 
     private Mono<MessageFastViewPrecomputedProperties> computeProjection(MessageContent messageContent, Supplier<Boolean> hasAttachments) {
-        return Mono.justOrEmpty(mainTextContent(messageContent))
+        return Mono.fromCallable(() -> mainTextContent(messageContent))
+            .handle(ReactorUtils.publishIfPresent())
             .map(Preview::compute)
             .defaultIfEmpty(Preview.EMPTY)
             .map(extractedPreview -> MessageFastViewPrecomputedProperties.builder()
