@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
 import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
@@ -44,8 +45,7 @@ trait WebPushClient {
 }
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
-                                   maxConnections: Option[Int],
-                                   scheduler: reactor.core.scheduler.Scheduler)
+                                   maxConnections: Option[Int])
 
 object WebPushClientHeader {
   val TIME_TO_LIVE: String = "TTL"
@@ -81,7 +81,7 @@ object DefaultWebPushClient {
   }
 }
 
-class DefaultWebPushClient(configuration: PushClientConfiguration) extends WebPushClient {
+class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) extends WebPushClient {
 
   val httpClient: HttpClient = buildHttpClient(configuration)
 

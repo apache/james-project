@@ -36,14 +36,12 @@ import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.verify.VerificationTimes
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 object WebPushClientTestFixture {
   val PUSH_CLIENT_CONFIGURATION: PushClientConfiguration =
     PushClientConfiguration(
       maxTimeoutSeconds = Some(10),
-      maxConnections = Some(10),
-      scheduler = Schedulers.elastic())
+      maxConnections = Some(10))
 
   val PUSH_REQUEST_SAMPLE: PushRequest = PushRequest(
     ttl = PushTTL.validate(15).toOption.get,
