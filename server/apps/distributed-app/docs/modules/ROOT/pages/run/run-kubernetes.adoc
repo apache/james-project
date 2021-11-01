@@ -161,9 +161,9 @@ A summary of different resources that could be interesting to have in hand.
 
 * link:https://james.apache.org/[James Official Website]
 * link:https://github.com/apache/james-project[James Github Project]
-* link:https://james.staged.apache.org/james-distributed-app/3.7.0/operate/webadmin.html[Webadmin]
-* link:https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-cli.md[James CLI]
-* link:https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-guice-distributed-james.md[Manage Guice Distributed James]
+* link:https://james.apache.org/server/manage-webadmin.html[WebAdmin]
+* link:https://james.apache.org/server/manage-cli.html[James CLI]
+* link:https://james.apache.org/server/manage-guice-distributed-james.html[Manage Guice Distributed James]
 
 ### Kubernetes
 

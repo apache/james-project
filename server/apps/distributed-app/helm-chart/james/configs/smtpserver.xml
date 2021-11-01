@@ -64,5 +64,27 @@
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
     </smtpserver>
+    <smtpserver enabled="${env:JAMES_IMAP_SMTP_ENABLED}">
+        <jmxName>smtpserver-authenticated</jmxName>
+        <bind>0.0.0.0:587</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="false" startTLS="true">
+            <privateKey>file://secrets/tls.key</privateKey>
+            <certificates>file://secrets/tls.crt</certificates>
+        </tls>
+        <helloName autodetect="false">${env:JAMES_SMTP_HOSTNAME}</helloName>
+        <connectiontimeout>360</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <authRequired>true</authRequired>
+        <verifyIdentity>true</verifyIdentity>
+        <maxmessagesize>${env:JAMES_MESSAGE_SIZE}</maxmessagesize>
+        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+        <smtpGreeting>${env:JAMES_SMTP_MESSAGE}</smtpGreeting>
+        <handlerchain>
+            <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
+            <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+        </handlerchain>
+    </smtpserver>
 </smtpservers>
 

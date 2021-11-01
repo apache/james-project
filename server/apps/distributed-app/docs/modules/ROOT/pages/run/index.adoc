@@ -1,5 +1,5 @@
 = Distributed James Server &mdash; Run 
-:navtitle: Architecture
+:navtitle: Run
 
 This sections presents guidance to all current deployment types of Distributed James Server.
 

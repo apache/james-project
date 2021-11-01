@@ -3,7 +3,7 @@
 === Logs
 
 James exposes its logs on the console. Then a fluentbit instance scraps
-and collect them, before being indexed and used by Kibana, with nice
+and collects them, before being indexed and used by Kibana, with nice
 search possibilities.
 
 The way James exposes its logs on the console is defined in the
@@ -16,7 +16,7 @@ James exposes its metrics over an HTTP Webadmin endpoint, something like
 `https://james-web-admin/metrics`. Those metrics can be scraped by
 Prometheus before being visualized on Grafana.
 
-This Helm chart support exposes James metrics through Prometheus
+This Helm chart exposes James metrics through Prometheus
 https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/getting-started.md#include-servicemonitors[ServiceMonitor].
 
 You can import the dashboards for James metrics in Grafana defined

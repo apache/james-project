@@ -40,4 +40,4 @@ When all of this is working, normally your chain mail should be able to work. To
 * Send a mail internally from one test account to an other.
 * Send a mail from James to an external mail provider (your Gmail, Yahoo account for example).
 * Send a mail from an external provider to James.
-* Use link:https://www.mail-tester.com/[mail-tester] to check your score.
+* Use services like link:https://www.mail-tester.com/[mail-tester] to check your score.

@@ -21,8 +21,6 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <!-- File based repositories.  These repositories store all message data -->
-        <!-- in the file system. -->
         <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
             <protocols>
                 <protocol>cassandra</protocol>
