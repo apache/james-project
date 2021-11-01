@@ -19,11 +19,6 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.net.URL
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
-
 import com.google.common.collect.ImmutableSet
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
@@ -59,11 +54,13 @@ import org.mockserver.model.NottableString.string
 import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.mockserver.verify.VerificationTimes
 
+import java.net.URL
 import java.security.KeyPair
 import java.security.interfaces.ECPublicKey
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Base64
+import java.util.UUID
 
 object PushSubscriptionSetMethodContract {
   val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
@@ -89,7 +86,6 @@ class PushSubscriptionProbeModule extends AbstractModule {
 }
 
 trait PushSubscriptionSetMethodContract {
-
   @BeforeEach
   def setUp(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -1284,7 +1280,7 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenInvalidId(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenInvalidId(): Unit = {
     val request: String =
       s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
@@ -1336,7 +1332,7 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenNotFound(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenNotFound(): Unit = {
     val id = UUID.randomUUID().toString
     val request: String =
       s"""{
@@ -1695,4 +1691,213 @@ trait PushSubscriptionSetMethodContract {
       VerificationTimes.atLeast(1))
   }
 
+  @Test
+  def destroyShouldSucceed(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "destroy": ["${pushSubscription.id.value.toString}"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "destroyed": ["${pushSubscription.id.value.toString}"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id)).isNull()
+  }
+
+  @Test
+  def destroyShouldFailWhenInvalidId(): Unit = {
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "destroy": ["invalid"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notDestroyed": {
+           |                    "invalid": {
+           |                        "type": "invalidArguments",
+           |                        "description": "invalid is not a PushSubscriptionId: Invalid UUID string: invalid"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldNotFailWhenUnknownId(): Unit = {
+    val id = UUID.randomUUID().toString
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "destroy": ["$id"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "destroyed":["$id"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+    val pushSubscription2 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d087")),
+        deviceId = DeviceClientId("12c6d087"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "destroy": ["${pushSubscription1.id.value.toString}", "${pushSubscription2.id.value.toString}", "invalid"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "destroyed": [
+           |                    "${pushSubscription1.id.value.toString}",
+           |                    "${pushSubscription2.id.value.toString}"
+           |                ],
+           |                "notDestroyed": {
+           |                    "invalid": {
+           |                        "type": "invalidArguments",
+           |                        "description": "invalid is not a PushSubscriptionId: Invalid UUID string: invalid"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
 }
