@@ -22,14 +22,17 @@ package org.apache.james.jmap.method
 import com.google.common.collect.ImmutableSet
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.api.model.{PushSubscription, PushSubscriptionId, PushSubscriptionNotFoundException, VerificationCode}
+import org.apache.james.jmap.api.change.TypeStateFactory
+import org.apache.james.jmap.api.model.{PushSubscription, PushSubscriptionId, PushSubscriptionNotFoundException, TypeName, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, PushSubscriptionPatchObject, PushSubscriptionSetRequest, PushSubscriptionUpdateResponse, SetError, UnparsedPushSubscriptionId, ValidatedPushSubscriptionPatchObject}
-import org.apache.james.jmap.mail.{InvalidPropertyException, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.method.PushSubscriptionSetUpdatePerformer.{PushSubscriptionUpdateFailure, PushSubscriptionUpdateResult, PushSubscriptionUpdateResults, PushSubscriptionUpdateSuccess, WrongVerificationCodeException}
 import org.apache.james.mailbox.MailboxSession
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.jdk.CollectionConverters._
 
 object PushSubscriptionSetUpdatePerformer {
   case class WrongVerificationCodeException() extends RuntimeException()
@@ -40,6 +43,7 @@ object PushSubscriptionSetUpdatePerformer {
       case _: WrongVerificationCodeException => SetError.invalidProperties(SetErrorDescription("Wrong verification code"), Some(Properties("verificationCode")))
       case e: UnsupportedPropertyUpdatedException => SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
       case e: InvalidPropertyException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+      case e: InvalidUpdateException => SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
       case e: PushSubscriptionNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
@@ -58,7 +62,8 @@ object PushSubscriptionSetUpdatePerformer {
   }
 }
 
-class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository) {
+class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository,
+                                               typeStateFactory: TypeStateFactory) {
   def update(pushSubscriptionSetRequest: PushSubscriptionSetRequest,
              mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResults] =
     SFlux.fromIterable(pushSubscriptionSetRequest.update.getOrElse(Map()))
@@ -66,7 +71,7 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
         case (unparsedId: UnparsedPushSubscriptionId, patch: PushSubscriptionPatchObject) =>
           val either = for {
             id <- unparsedId.parse
-            validatedPatch <- patch.validate()
+            validatedPatch <- patch.validate(typeStateFactory)
           } yield {
             updatePushSubscription(id, validatedPatch, mailboxSession)
           }
@@ -83,10 +88,14 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
     if (validatedPatch.shouldUpdate) {
       SMono(pushSubscriptionRepository.get(mailboxSession.getUser, ImmutableSet.of(id)))
         .switchIfEmpty(SMono.error(PushSubscriptionNotFoundException(id)))
-        .flatMap(pushSubscription => SFlux(
+        .flatMap(pushSubscription => SFlux.concat(
           validatedPatch.verificationCodeUpdate
             .map(verificationCode => updateVerificationCode(pushSubscription, verificationCode, mailboxSession))
-            .getOrElse(SMono.empty)).last())
+            .getOrElse(SMono.empty),
+          validatedPatch.typesUpdate
+            .map(types => updateTypes(pushSubscription, types, mailboxSession))
+            .getOrElse(SMono.empty))
+          .last())
     } else {
       SMono.empty
     }
@@ -98,4 +107,8 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
     } else {
       SMono.error[PushSubscriptionUpdateResult](WrongVerificationCodeException())
     }
+
+  private def updateTypes(pushSubscription: PushSubscription, types: Set[TypeName], mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] =
+    SMono(pushSubscriptionRepository.updateTypes(mailboxSession.getUser, pushSubscription.id, types.asJava))
+      .`then`(SMono.just(PushSubscriptionUpdateSuccess(pushSubscription.id)))
 }

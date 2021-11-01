@@ -21,17 +21,19 @@ package org.apache.james.jmap.core
 
 import java.util.UUID
 
+import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.api.model.{PushSubscriptionExpiredTime, PushSubscriptionId, VerificationCode}
+import org.apache.james.jmap.api.change.TypeStateFactory
+import org.apache.james.jmap.api.model.{PushSubscriptionExpiredTime, PushSubscriptionId, TypeName, VerificationCode}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, PatchUpdateValidationException, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.method.WithoutAccountId
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.{JsArray, JsObject, JsString, JsValue}
 
 import scala.util.Try
 
@@ -71,14 +73,16 @@ object PushSubscriptionPatchObject {
 }
 
 case class PushSubscriptionPatchObject(value: Map[String, JsValue]) {
-  val updates: Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  def computeUpdates(typeStateFactory: TypeStateFactory): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "verificationCode" => VerificationCodeUpdate.parse(newValue)
+      case "types" => TypesUpdate.parse(newValue, typeStateFactory)
       case property => PushSubscriptionPatchObject.notFound(property)
     }
   })
 
-  def validate(): Either[PatchUpdateValidationException, ValidatedPushSubscriptionPatchObject] = {
+  def validate(typeStateFactory: TypeStateFactory): Either[PatchUpdateValidationException, ValidatedPushSubscriptionPatchObject] = {
+    val updates = computeUpdates(typeStateFactory)
     val maybeParseException: Option[PatchUpdateValidationException] = updates
       .flatMap(x => x match {
         case Left(e) => Some(e)
@@ -91,10 +95,17 @@ case class PushSubscriptionPatchObject(value: Map[String, JsValue]) {
         case _ => None
       }).headOption
 
+    val typesUpdate: Option[TypesUpdate] = updates
+      .flatMap(x => x match {
+        case Right(TypesUpdate(newTypes)) => Some(TypesUpdate(newTypes))
+        case _ => None
+      }).headOption
+
     maybeParseException
       .map(e => Left(e))
       .getOrElse(scala.Right(ValidatedPushSubscriptionPatchObject(
-        verificationCodeUpdate = verificationCodeUpdate.map(_.newVerificationCode))))
+        verificationCodeUpdate = verificationCodeUpdate.map(_.newVerificationCode),
+        typesUpdate = typesUpdate.map(_.types))))
   }
 }
 
@@ -105,18 +116,37 @@ object VerificationCodeUpdate {
   }
 }
 
+object TypesUpdate {
+  def parse(jsValue: JsValue, typeStateFactory: TypeStateFactory): Either[PatchUpdateValidationException, Update] = jsValue match {
+    case JsArray(aArray) => aArray.toList
+      .map(js => parseType(js, typeStateFactory))
+      .sequence
+      .map(_.toSet)
+      .map(TypesUpdate(_))
+    case _ => Left(InvalidUpdateException("types", "Expecting an array of JSON strings as an argument"))
+  }
+  def parseType(jsValue: JsValue, typeStateFactory: TypeStateFactory): Either[PatchUpdateValidationException, TypeName] = jsValue match {
+    case JsString(aString) => typeStateFactory.parse(aString).left.map(e => InvalidUpdateException("types", e.getMessage))
+    case _ => Left(InvalidUpdateException("types", "Expecting an array of JSON strings as an argument"))
+  }
+}
+
 sealed trait Update
 case class VerificationCodeUpdate(newVerificationCode: VerificationCode) extends Update
+case class TypesUpdate(types: Set[TypeName]) extends Update
 
 object ValidatedPushSubscriptionPatchObject {
   val verificationCodeProperty: NonEmptyString = "verificationCode"
+  val typesProperty: NonEmptyString = "types"
 }
 
-case class ValidatedPushSubscriptionPatchObject(verificationCodeUpdate: Option[VerificationCode]) {
-  val shouldUpdate: Boolean = verificationCodeUpdate.isDefined
+case class ValidatedPushSubscriptionPatchObject(verificationCodeUpdate: Option[VerificationCode],
+                                                typesUpdate: Option[Set[TypeName]]) {
+  val shouldUpdate: Boolean = verificationCodeUpdate.isDefined || typesUpdate.isDefined
 
   val updatedProperties: Properties = Properties(Set(
-    verificationCodeUpdate.map(_ => ValidatedPushSubscriptionPatchObject.verificationCodeProperty))
+    verificationCodeUpdate.map(_ => ValidatedPushSubscriptionPatchObject.verificationCodeProperty),
+    typesUpdate.map(_ => ValidatedPushSubscriptionPatchObject.typesProperty))
     .flatMap(_.toList))
 }
 
