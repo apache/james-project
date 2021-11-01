@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.time.Clock
 import java.util.{Base64, UUID}
-
 import com.google.common.collect.ImmutableSet
 import com.google.common.hash.Hashing
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
@@ -31,9 +30,10 @@ import com.google.crypto.tink.subtle.EllipticCurves.CurveType
 import com.google.crypto.tink.subtle.{EllipticCurves, Random}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
-import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, MailboxTypeName, StateChangeEvent, TypeStateFactory}
+import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, MailboxTypeName, StateChangeEvent}
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionRepository
