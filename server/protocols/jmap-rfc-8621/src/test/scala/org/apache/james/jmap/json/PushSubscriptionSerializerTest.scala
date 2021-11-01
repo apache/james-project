@@ -19,17 +19,20 @@
 
 package org.apache.james.jmap.json
 
+import java.time.ZonedDateTime
+import java.util.UUID
+
+import com.google.common.collect.ImmutableSet
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId}
+import org.apache.james.jmap.change.{EmailTypeName, MailboxTypeName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{PushSubscriptionCreationId, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SetError}
 import org.apache.james.jmap.json.PushSubscriptionSerializerTest.{PUSH_SUBSCRIPTION_CREATED_ID_1, PUSH_SUBSCRIPTION_CREATED_ID_2, PUSH_SUBSCRIPTION_NOT_CREATED_ID_1, PUSH_SUBSCRIPTION_NOT_CREATED_ID_2}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsResult, Json}
-
-import java.time.ZonedDateTime
-import java.util.UUID
 
 object PushSubscriptionSerializerTest {
   lazy val PUSH_SUBSCRIPTION_CREATED_ID_1: PushSubscriptionCreationId = PushSubscriptionCreationId("created1")
@@ -39,10 +42,11 @@ object PushSubscriptionSerializerTest {
 }
 
 class PushSubscriptionSerializerTest extends AnyWordSpec with Matchers {
+  val serializer = new PushSubscriptionSerializer(TypeStateFactory(ImmutableSet.of(MailboxTypeName, EmailTypeName)))
 
   "Deserialize PushSubscriptionSetRequest" should {
     "Request should be success" in {
-      val setRequestActual: JsResult[PushSubscriptionSetRequest] = PushSubscriptionSerializer.deserializePushSubscriptionSetRequest(
+      val setRequestActual: JsResult[PushSubscriptionSetRequest] = serializer.deserializePushSubscriptionSetRequest(
         Json.parse(
           """{
             |    "create": {
@@ -60,7 +64,7 @@ class PushSubscriptionSerializerTest extends AnyWordSpec with Matchers {
 
   "Deserialize PushSubscriptionCreationRequest" should {
     "Request should be success" in {
-      val setRequestActual: JsResult[PushSubscriptionCreationRequest] = PushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(
+      val setRequestActual: JsResult[PushSubscriptionCreationRequest] = serializer.deserializePushSubscriptionCreationRequest(
         Json.parse(
           """{
             |    "deviceClientId": "a889-ffea-910",
@@ -72,7 +76,7 @@ class PushSubscriptionSerializerTest extends AnyWordSpec with Matchers {
     }
 
     "Request should accept expires property" in {
-      val setRequestActual: JsResult[PushSubscriptionCreationRequest] = PushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(
+      val setRequestActual: JsResult[PushSubscriptionCreationRequest] = serializer.deserializePushSubscriptionCreationRequest(
         Json.parse(
           """{
             |    "deviceClientId": "a889-ffea-910",
@@ -100,9 +104,10 @@ class PushSubscriptionSerializerTest extends AnyWordSpec with Matchers {
         PUSH_SUBSCRIPTION_NOT_CREATED_ID_1 -> SetError.serverFail(SetErrorDescription("error1")),
         PUSH_SUBSCRIPTION_NOT_CREATED_ID_2 -> SetError.serverFail(SetErrorDescription("error2")))
 
-      val response: PushSubscriptionSetResponse = PushSubscriptionSetResponse(created = Some(createdMap), notCreated = Some(notCreatedMap))
+      val response: PushSubscriptionSetResponse = PushSubscriptionSetResponse(created = Some(createdMap), notCreated = Some(notCreatedMap),
+        updated = None, notUpdated = None)
 
-      val actualValue: JsObject = PushSubscriptionSerializer.serialize(response)
+      val actualValue: JsObject = serializer.serialize(response)
 
       val expectedValue: JsObject = Json.parse(
         """{
