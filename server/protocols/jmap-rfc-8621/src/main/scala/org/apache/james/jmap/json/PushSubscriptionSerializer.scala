@@ -19,7 +19,9 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
 import eu.timepit.refined.refineV
+
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName}
@@ -38,6 +40,15 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
     case _ => JsError()
   }
   private implicit val patchObject: Reads[PushSubscriptionPatchObject] = Json.valueReads[PushSubscriptionPatchObject]
+
+  private implicit val unparsedPushSubscriptionIdReads: Reads[UnparsedPushSubscriptionId] = {
+    case JsString(string) =>
+      refined.refineV[IdConstraint](string)
+        .fold(
+          e => JsError(s"pushSubscriptionId does not match Id constraints: $e"),
+          id => JsSuccess(UnparsedPushSubscriptionId(id)))
+    case _ => JsError("pushSubscriptionId needs to be represented by a JsString")
+  }
 
   private implicit val pushSubscriptionKeysReads: Reads[PushSubscriptionKeys] = (
       (JsPath \ "p256dh").read[String] and

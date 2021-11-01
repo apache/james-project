@@ -34,6 +34,7 @@ import reactor.core.scala.publisher.SMono
 
 class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCreatePerformer,
                                           updatePerformer: PushSubscriptionUpdatePerformer,
+                                          deletePerformer: PushSubscriptionSetDeletePerformer,
                                           pushSubscriptionSerializer: PushSubscriptionSerializer,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodWithoutAccountId[PushSubscriptionSetRequest] with Startable {
@@ -50,6 +51,7 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
     for {
       created <- createPerformer.create(request, mailboxSession)
       updated <- updatePerformer.update(request, mailboxSession)
+      destroyed <- deletePerformer.deletePushSubscriptions(request, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = methodName,
@@ -57,7 +59,9 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
           created = created.created.filter(_.nonEmpty),
           notCreated = created.notCreated.filter(_.nonEmpty),
           updated = Some(updated.updated).filter(_.nonEmpty),
-          notUpdated = Some(updated.notUpdated).filter(_.nonEmpty)))),
+          notUpdated = Some(updated.notUpdated).filter(_.nonEmpty),
+          destroyed = Some(destroyed.destroyed).filter(_.nonEmpty),
+          notDestroyed = Some(destroyed.retrieveErrors).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
       processingContext = invocation.processingContext)
 }

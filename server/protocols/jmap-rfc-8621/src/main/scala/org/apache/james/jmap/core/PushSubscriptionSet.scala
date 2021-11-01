@@ -36,7 +36,8 @@ import play.api.libs.json.{JsObject, JsString, JsValue}
 import scala.util.Try
 
 case class PushSubscriptionSetRequest(create: Option[Map[PushSubscriptionCreationId, JsObject]],
-                                      update: Option[Map[UnparsedPushSubscriptionId, PushSubscriptionPatchObject]]) extends WithoutAccountId
+                                      update: Option[Map[UnparsedPushSubscriptionId, PushSubscriptionPatchObject]],
+                                      destroy: Option[Seq[UnparsedPushSubscriptionId]]) extends WithoutAccountId
 
 case class PushSubscriptionCreationId(id: Id) {
   def serialise: String = id.value
@@ -152,4 +153,6 @@ case class PushSubscriptionCreationResponse(id: PushSubscriptionId,
 case class PushSubscriptionSetResponse(created: Option[Map[PushSubscriptionCreationId, PushSubscriptionCreationResponse]],
                                        notCreated: Option[Map[PushSubscriptionCreationId, SetError]],
                                        updated: Option[Map[PushSubscriptionId, PushSubscriptionUpdateResponse]],
-                                       notUpdated: Option[Map[UnparsedPushSubscriptionId, SetError]])
+                                       notUpdated: Option[Map[UnparsedPushSubscriptionId, SetError]],
+                                       destroyed: Option[Seq[PushSubscriptionId]],
+                                       notDestroyed: Option[Map[UnparsedPushSubscriptionId, SetError]])

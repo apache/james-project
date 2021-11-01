@@ -105,7 +105,7 @@ class PushSubscriptionSerializerTest extends AnyWordSpec with Matchers {
         PUSH_SUBSCRIPTION_NOT_CREATED_ID_2 -> SetError.serverFail(SetErrorDescription("error2")))
 
       val response: PushSubscriptionSetResponse = PushSubscriptionSetResponse(created = Some(createdMap), notCreated = Some(notCreatedMap),
-        updated = None, notUpdated = None)
+        updated = None, notUpdated = None, destroyed = None, notDestroyed = None)
 
       val actualValue: JsObject = serializer.serialize(response)
 
