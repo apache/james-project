@@ -1,5 +1,6 @@
 package org.apache.james.jmap.method
 
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -10,8 +11,6 @@ import org.apache.james.mailbox.MailboxSession
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
-
-import javax.inject.Inject
 
 object PushSubscriptionSetCreatePerformer {
   trait CreationResult
@@ -47,7 +46,8 @@ object PushSubscriptionSetCreatePerformer {
   }
 }
 
-class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository) {
+class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository,
+                                                  pushSubscriptionSerializer: PushSubscriptionSerializer) {
   def create(request: PushSubscriptionSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
       .concatMap {
@@ -59,7 +59,7 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
 
   private def parseCreate(jsObject: JsObject): Either[PushSubscriptionCreationParseException, PushSubscriptionCreationRequest] =
     PushSubscriptionCreation.validateProperties(jsObject)
-      .flatMap(validJsObject => PushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(validJsObject) match {
+      .flatMap(validJsObject => pushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(validJsObject) match {
         case JsSuccess(creationRequest, _) =>
           creationRequest.validate match {
             case Left(e) => Left(PushSubscriptionCreationParseException(SetError.invalidArguments(SetErrorDescription(e.getMessage))))

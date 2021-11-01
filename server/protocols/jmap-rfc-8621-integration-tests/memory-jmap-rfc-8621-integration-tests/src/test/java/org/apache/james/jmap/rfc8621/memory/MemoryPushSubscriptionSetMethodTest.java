@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621.memory;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -30,6 +31,6 @@ public class MemoryPushSubscriptionSetMethodTest implements PushSubscriptionSetM
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule()))
         .build();
 }

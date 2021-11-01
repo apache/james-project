@@ -29,6 +29,7 @@ object SetError {
   case class SetErrorDescription(description: String) extends AnyVal
 
   val invalidArgumentValue: SetErrorType = "invalidArguments"
+  val invalidPropertiesValue: SetErrorType = "invalidProperties"
   val serverFailValue: SetErrorType = "serverFail"
   val invalidPatchValue: SetErrorType = "invalidPatch"
   val notFoundValue: SetErrorType = "notFound"
@@ -40,6 +41,9 @@ object SetError {
 
   def invalidArguments(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
     SetError(invalidArgumentValue, description, properties)
+
+  def invalidProperties(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
+    SetError(invalidPropertiesValue, description, properties)
 
   def serverFail(description: SetErrorDescription): SetError =
     SetError(serverFailValue, description, None)

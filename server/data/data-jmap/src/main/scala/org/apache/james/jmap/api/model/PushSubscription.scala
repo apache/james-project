@@ -37,7 +37,9 @@ object PushSubscriptionId {
   def generate(): PushSubscriptionId = PushSubscriptionId(UUID.randomUUID)
 }
 
-case class PushSubscriptionId(value: UUID)
+case class PushSubscriptionId(value: UUID) {
+  def serialise: String = value.toString
+}
 
 case class DeviceClientId(value: String) extends AnyVal
 
