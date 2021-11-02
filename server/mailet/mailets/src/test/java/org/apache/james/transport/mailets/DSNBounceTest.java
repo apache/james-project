@@ -216,6 +216,7 @@ public class DSNBounceTest {
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
+            mail.getMessage().removeHeader(RFC2822Headers.DATE);
 
             dsnBounce.service(mail);
 
