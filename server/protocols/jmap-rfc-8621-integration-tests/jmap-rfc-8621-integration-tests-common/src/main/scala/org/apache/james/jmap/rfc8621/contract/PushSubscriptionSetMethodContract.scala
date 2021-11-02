@@ -938,6 +938,122 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
+  def setMethodShouldRejectInvalidKey(): Unit = {
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [
+        |      [
+        |        "PushSubscription/set",
+        |        {
+        |            "create": {
+        |                "4f29": {
+        |                  "deviceClientId": "a889-ffea-910",
+        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "types": ["Mailbox"],
+        |                  "keys": {
+        |                    "p256dh": "QmFkIGtleQo",
+        |                    "auth": "YXV0aCBzZWNyZXQK"
+        |                  }
+        |                }
+        |              }
+        |        },
+        |        "c1"
+        |      ]
+        |    ]
+        |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notCreated": {
+           |                    "4f29": {
+           |                        "type": "invalidArguments",
+           |                        "description": "java.security.spec.InvalidKeySpecException: java.security.InvalidKeyException: IOException: null"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def setMethodShouldAcceptValidKey(): Unit = {
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [
+        |      [
+        |        "PushSubscription/set",
+        |        {
+        |            "create": {
+        |                "4f29": {
+        |                  "deviceClientId": "a889-ffea-910",
+        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "types": ["Mailbox"],
+        |                  "keys": {
+        |                    "p256dh": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5ozzvKUAB7GIfJ44eG-sxEcjT1O2jtk9QVD-MzFOH988CAPlSdkitm16NsMxUWksq6qGwu-r6zT7GCM9oGPXtQ==",
+        |                    "auth": "Z7B0LmM6iTZD85EWtNRwIg=="
+        |                  }
+        |                }
+        |              }
+        |        },
+        |        "c1"
+        |      ]
+        |    ]
+        |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "created": {
+           |                    "4f29": {
+           |                        "id": "$${json-unit.ignore}",
+           |                        "expires": "$${json-unit.ignore}"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
   def updateMixed(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe

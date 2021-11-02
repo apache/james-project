@@ -221,8 +221,8 @@ class PushListenerTest {
 
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
-      keys = Some(PushSubscriptionKeys(p256dh = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded),
-        auth = Base64.getEncoder.encodeToString(authSecret))),
+      keys = Some(PushSubscriptionKeys(p256dh = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded),
+        auth = Base64.getUrlEncoder.encodeToString(authSecret))),
       url = url,
       types = Seq(EmailTypeName, MailboxTypeName)))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
