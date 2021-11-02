@@ -71,7 +71,6 @@ class PushSubscriptionSetCreateProcessorTest {
   @Test
   def pushVerificationShouldSuccess(pushServer: ClientAndServer): Unit = {
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, None).block()
-    print(Json.stringify(PushSerializer.serializePushVerification(PUSH_VERIFICATION_SAMPLE)))
     pushServer.verify(request()
       .withPath("/subscribe")
       .withBody(json("""{
