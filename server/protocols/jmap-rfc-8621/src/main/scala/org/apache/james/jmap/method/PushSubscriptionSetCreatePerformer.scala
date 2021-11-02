@@ -1,16 +1,19 @@
 package org.apache.james.jmap.method
 
-import javax.inject.Inject
-import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime}
+import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
-import org.apache.james.jmap.json.PushSubscriptionSerializer
+import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
+import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
-import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, JsonValidationError}
+import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
+
+import java.nio.charset.StandardCharsets
+import javax.inject.Inject
 
 object PushSubscriptionSetCreatePerformer {
   trait CreationResult
@@ -47,7 +50,8 @@ object PushSubscriptionSetCreatePerformer {
 }
 
 class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository,
-                                                  pushSubscriptionSerializer: PushSubscriptionSerializer) {
+                                                   pushSubscriptionSerializer: PushSubscriptionSerializer,
+                                                   verificationCreateProcessor: PushSubscriptionSetCreateProcessor) {
   def create(request: PushSubscriptionSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
       .concatMap {
@@ -70,6 +74,12 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
 
   private def create(clientId: PushSubscriptionCreationId, request: PushSubscriptionCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
     SMono.fromPublisher(pushSubscriptionRepository.save(mailboxSession.getUser, request))
+      .flatMap(subscription => verificationCreateProcessor.pushVerificationToPushServer(subscription.url,
+        PushVerification(subscription.id, subscription.verificationCode), request.keys)
+        .onErrorResume(error =>
+          SMono.fromPublisher(pushSubscriptionRepository.revoke(mailboxSession.getUser, subscription.id))
+            .`then`(SMono.error(error)))
+        .`then`(SMono.just(subscription)))
       .map(subscription => CreationSuccess(clientId, PushSubscriptionCreationResponse(subscription.id, showExpires(subscription.expires, request))))
       .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
       .subscribeOn(Schedulers.elastic)
@@ -87,3 +97,17 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
       case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
     }
 }
+
+class PushSubscriptionSetCreateProcessor @Inject()(webPushClient: WebPushClient) {
+
+  def pushVerificationToPushServer(pushSubscriptionServerURL: PushSubscriptionServerURL,
+                                   pushVerification: PushVerification,
+                                   keys: Option[PushSubscriptionKeys]): SMono[Unit] =
+
+    SMono.fromCallable(() => Json.stringify(PushSerializer.serializePushVerification(pushVerification)).getBytes(StandardCharsets.UTF_8))
+      .map(clearPayload => keys.map(keysValue => keysValue.encrypt(clearPayload)).getOrElse(clearPayload))
+      .flatMap(payload => SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL, PushRequest(PushTTL.MAX, payload = payload))))
+}
+
+case class PushVerification(pushSubscriptionId: PushSubscriptionId,
+                            verificationCode: VerificationCode)

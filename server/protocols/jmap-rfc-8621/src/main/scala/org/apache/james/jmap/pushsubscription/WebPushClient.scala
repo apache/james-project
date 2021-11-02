@@ -19,17 +19,8 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
-import javax.inject.Inject
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
 import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
@@ -39,6 +30,11 @@ import reactor.core.scala.publisher.SMono
 import reactor.netty.ByteBufMono
 import reactor.netty.http.client.{HttpClient, HttpClientResponse}
 import reactor.netty.resources.ConnectionProvider
+
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
 trait WebPushClient {
   def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit]

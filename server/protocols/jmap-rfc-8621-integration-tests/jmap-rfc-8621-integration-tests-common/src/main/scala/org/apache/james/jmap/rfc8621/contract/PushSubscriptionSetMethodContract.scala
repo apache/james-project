@@ -27,6 +27,8 @@ import java.util.UUID
 import com.google.common.collect.ImmutableSet
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
+import com.google.crypto.tink.subtle.EllipticCurves.CurveType
+import com.google.crypto.tink.subtle.{EllipticCurves, Random}
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -48,6 +50,20 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
+import org.mockserver.integration.ClientAndServer
+import org.mockserver.model.HttpRequest.request
+import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.JsonBody.json
+import org.mockserver.model.Not.not
+import org.mockserver.model.NottableString.string
+import org.mockserver.model.{HttpRequest, HttpResponse}
+import org.mockserver.verify.VerificationTimes
+
+import java.security.KeyPair
+import java.security.interfaces.ECPublicKey
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Base64
 
 object PushSubscriptionSetMethodContract {
   val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
@@ -74,9 +90,8 @@ class PushSubscriptionProbeModule extends AbstractModule {
 
 trait PushSubscriptionSetMethodContract {
 
-
   @BeforeEach
-  def setUp(server: GuiceJamesServer): Unit = {
+  def setUp(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
@@ -86,7 +101,18 @@ trait PushSubscriptionSetMethodContract {
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build()
+
+    pushServer
+      .when(request
+        .withPath("/subscribe")
+        .withMethod("POST")
+        .withHeader(string("Content-type"), string("application/json charset=utf-8")))
+      .respond(response
+        .withStatusCode(201))
   }
+
+  private def getPushServerUrl(pushServer: ClientAndServer) : String =
+    s"http://127.0.0.1:${pushServer.getLocalPort}/subscribe"
 
   @Test
   def setMethodShouldNotRequireAccountId(): Unit = {
@@ -329,7 +355,6 @@ trait PushSubscriptionSetMethodContract {
            |}""".stripMargin)
   }
 
-
   @Test
   def setMethodShouldNotCreatedWhenCreationRequestHasVerificationCodeProperty(): Unit = {
     val request: String =
@@ -557,9 +582,9 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldNotCreatedWhenDeviceClientIdExists(): Unit = {
+  def setMethodShouldNotCreatedWhenDeviceClientIdExists(pushServer: ClientAndServer): Unit = {
     val request: String =
-      """{
+      s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
         |    "methodCalls": [
         |      [
@@ -568,7 +593,7 @@ trait PushSubscriptionSetMethodContract {
         |            "create": {
         |                "4f29": {
         |                  "deviceClientId": "a889-ffea-910",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Mailbox"]
         |                }
         |              }
@@ -618,7 +643,7 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldAcceptValidExpiresProperty(): Unit = {
+  def setMethodShouldAcceptValidExpiresProperty(pushServer: ClientAndServer): Unit = {
     val request: String =
       s"""{
          |    "using": ["urn:ietf:params:jmap:core"],
@@ -629,7 +654,7 @@ trait PushSubscriptionSetMethodContract {
          |            "create": {
          |                "4f29": {
          |                  "deviceClientId": "a889-ffea-910",
-         |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+         |                  "url": "${getPushServerUrl(pushServer)}",
          |                  "expires": "${UTCDate(ZonedDateTime.now().plusDays(1)).asUTC.format(TIME_FORMATTER)}",
          |                  "types": ["Mailbox"]
          |                }
@@ -673,9 +698,9 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldCreatedWhenValidRequest(): Unit = {
+  def setMethodShouldCreatedWhenValidRequest(pushServer: ClientAndServer): Unit = {
     val request: String =
-      """{
+      s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
         |    "methodCalls": [
         |      [
@@ -684,7 +709,7 @@ trait PushSubscriptionSetMethodContract {
         |            "create": {
         |                "4f29": {
         |                  "deviceClientId": "a889-ffea-910",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Mailbox"]
         |                }
         |              }
@@ -727,9 +752,9 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldCreatedSeveralValidCreationRequest(): Unit = {
+  def setMethodShouldCreatedSeveralValidCreationRequest(pushServer: ClientAndServer): Unit = {
     val request: String =
-      """{
+      s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
         |    "methodCalls": [
         |      [
@@ -738,12 +763,12 @@ trait PushSubscriptionSetMethodContract {
         |            "create": {
         |                "4f28": {
         |                  "deviceClientId": "a889-ffea-910",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Mailbox"]
         |                },
         |                "4f29": {
         |                  "deviceClientId": "a889-ffea-912",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Email"]
         |                }
         |              }
@@ -790,9 +815,9 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldSuccessWhenMixCase(): Unit = {
+  def setMethodShouldSuccessWhenMixCase(pushServer: ClientAndServer): Unit = {
     val request: String =
-      """{
+      s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
         |    "methodCalls": [
         |      [
@@ -801,12 +826,12 @@ trait PushSubscriptionSetMethodContract {
         |            "create": {
         |                "4f28": {
         |                  "deviceClientId": "a889-ffea-910",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Mailbox"]
         |                },
         |                "4f29": {
         |                  "deviceClientId": "a889-ffea-912",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["invalid"]
         |                }
         |              }
@@ -1246,4 +1271,312 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
   }
+
+  @Test
+  def setMethodCreateShouldCallVerificationToPushServer(pushServer: ClientAndServer): Unit = {
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "create": {
+         |                "4f29": {
+         |                  "deviceClientId": "a889-ffea-910",
+         |                  "url": "${getPushServerUrl(pushServer)}",
+         |                  "types": ["Mailbox"]
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val pushSubscriptionId: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].created.4f29.id")
+
+    pushServer.verify(HttpRequest.request()
+      .withPath("/subscribe")
+      .withBody(json(s"""{
+                        |    "@type": "PushVerification",
+                        |    "pushSubscriptionId": "$pushSubscriptionId",
+                        |    "verificationCode": "$${json-unit.any-string}"
+                        |}""".stripMargin)),
+      VerificationTimes.atLeast(1))
+  }
+
+  @Test
+  def setMethodCreateShouldNotCreatedWhenCallVerificationToPushServerHasError(pushServer: ClientAndServer): Unit = {
+    pushServer
+      .when(HttpRequest.request
+        .withPath("/invalid")
+        .withMethod("POST"))
+      .respond(HttpResponse.response
+        .withStatusCode(500))
+
+    val pushServerUrl = s"http://127.0.0.1:${pushServer.getLocalPort}/invalid"
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "create": {
+         |                "4f29": {
+         |                  "deviceClientId": "a889-ffea-910",
+         |                  "url": "$pushServerUrl",
+         |                  "types": ["Mailbox"]
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notCreated": {
+           |                    "4f29": {
+           |                        "type": "serverFail",
+           |                        "description": "Error when call to Push Server. "
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def setMethodCreateShouldNotSaveSubscriptionEntryWhenCallVerificationToPushServerHasError(pushServer: ClientAndServer): Unit = {
+    pushServer
+      .when(HttpRequest.request
+        .withPath("/invalid")
+        .withMethod("POST"))
+      .respond(HttpResponse.response
+        .withStatusCode(500))
+
+    val deviceId: String = "a889-ffea-910"
+    val invalidPushServerUrl: String = s"http://127.0.0.1:${pushServer.getLocalPort}/invalid"
+
+    `given`
+      .body(
+        s"""{
+           |    "using": ["urn:ietf:params:jmap:core"],
+           |    "methodCalls": [
+           |      [
+           |        "PushSubscription/set",
+           |        {
+           |            "create": {
+           |                "4f29": {
+           |                  "deviceClientId": "$deviceId",
+           |                  "url": "$invalidPushServerUrl",
+           |                  "types": ["Mailbox"]
+           |                }
+           |              }
+           |        },
+           |        "c1"
+           |      ]
+           |    ]
+           |  }""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": ["urn:ietf:params:jmap:core"],
+           |    "methodCalls": [
+           |      [
+           |        "PushSubscription/set",
+           |        {
+           |            "create": {
+           |                "4f29": {
+           |                  "deviceClientId": "$deviceId",
+           |                  "url": "${getPushServerUrl(pushServer)}",
+           |                  "types": ["Mailbox"]
+           |                }
+           |              }
+           |        },
+           |        "c1"
+           |      ]
+           |    ]
+           |  }""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "created": {
+           |                    "4f29": {
+           |                        "id": "$${json-unit.ignore}",
+           |                        "expires": "$${json-unit.ignore}"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def setMethodShouldAcceptValidKeys(pushServer: ClientAndServer) : Unit = {
+    val uaKeyPair: KeyPair = EllipticCurves.generateKeyPair(CurveType.NIST_P256)
+    val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
+    val authSecret: Array[Byte] = Random.randBytes(16)
+
+    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "create": {
+         |                "4f29": {
+         |                  "deviceClientId": "a889-ffea-910",
+         |                  "url": "${getPushServerUrl(pushServer)}",
+         |                  "types": ["Mailbox"],
+         |                  "keys": {
+         |                    "p256dh": "$p256dh",
+         |                    "auth": "$auth"
+         |                  }
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "created": {
+           |                    "4f29": {
+           |                        "id": "$${json-unit.ignore}",
+           |                        "expires": "$${json-unit.ignore}"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def bodyRequestToPushServerShouldBeEncryptedWhenClientAssignEncryptionKeys(pushServer: ClientAndServer) : Unit = {
+    val uaKeyPair: KeyPair = EllipticCurves.generateKeyPair(CurveType.NIST_P256)
+    val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
+    val authSecret: Array[Byte] = "secret123secret1".getBytes
+
+    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "create": {
+         |                "4f29": {
+         |                  "deviceClientId": "a889-ffea-910",
+         |                  "url": "${getPushServerUrl(pushServer)}",
+         |                  "types": ["Mailbox"],
+         |                  "keys": {
+         |                    "p256dh": "$p256dh",
+         |                    "auth": "$auth"
+         |                  }
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    pushServer.verify(HttpRequest.request()
+      .withPath("/subscribe")
+      .withBody(not(json(
+        s"""{
+           |    "@type": "PushVerification",
+           |    "pushSubscriptionId": "$${json-unit.any-string}",
+           |    "verificationCode": "$${json-unit.any-string}"
+           |}""".stripMargin))),
+      VerificationTimes.atLeast(1))
+  }
+
 }
