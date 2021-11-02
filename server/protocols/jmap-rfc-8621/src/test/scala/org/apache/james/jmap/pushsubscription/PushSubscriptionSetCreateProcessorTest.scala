@@ -92,7 +92,6 @@ class PushSubscriptionSetCreateProcessorTest {
     val auth: String = Base64.getEncoder.encodeToString(authSecret)
 
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, Some(PushSubscriptionKeys(p256dh, auth))).block()
-    print(Json.stringify(PushSerializer.serializePushVerification(PUSH_VERIFICATION_SAMPLE)))
     pushServer.verify(request()
       .withPath("/subscribe")
       .withBody(not(json("""{
