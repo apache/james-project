@@ -23,7 +23,6 @@ import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVER
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -361,7 +360,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private String getDateHeader(Mail originalMail) throws MessagingException {
         String[] date = originalMail.getMessage().getHeader(RFC2822Headers.DATE);
         if (date == null) {
-            return dateFormatter.format(LocalDateTime.now());
+            return dateFormatter.format(ZonedDateTime.now());
         }
         return date[0];
     }
