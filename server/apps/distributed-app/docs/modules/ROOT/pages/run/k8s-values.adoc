@@ -122,8 +122,10 @@ mode are:
 |===
 |Field |Default value |Description
 |replicaCount |1 |The number of Cassandra pods
-|image |cassandra:4.0.1 |The container image used for Cassandra
+|namespace |change-me | Namespace of Cassandra deployment
 |===
+
+NOTE: Pod name must match template format: `cassandra-01.namespace:9042,cassandra-02.namespace:9042`
 
 ==== as-ref
 
@@ -149,19 +151,20 @@ this mode are:
 [cols="<,<,<",options="header",]
 |===
 |Field |Default value |Description
-|replicaCount |1 |The number of Elasticsearch pods
+|replicaCount |1 |The number of ElasticSearch pods
 
-|image |docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2 |The
-container image used for Elasticsearch
+|namespace | change-me | Namespace of ElasticSearch deployment
 |===
+
+NOTE: Pod name must match template format: `elasticsearch-01.namespace:9200,elasticsearch-02.namespace:9200`
 
 ==== as-ref
 
-Elasticsearch has been deployed in VMs and the nodes can be accessed
+ElasticSearch has been deployed in VMs and the nodes can be accessed
 through their IP addresses. Parameters for this mode are:
 
 [cols="<,<,<",options="header",]
 |===
 |Field |Default value |Description
-|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of Elasticsearch IP nodes.
+|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of ElasticSearch IP nodes.
 |===

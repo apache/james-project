@@ -1,6 +1,6 @@
 dns:
   ## Default domain for all emailing components
-  emailDomain: "mail.example.com"
+  emailDomain: "example.com"
   jmapUrl: "jmap.example.com"
   adminUrl: "admin.example.com"
   smtpHostname: "smtp.example.com"
@@ -66,8 +66,8 @@ ingress:
 ###
 cassandra:
   deploy: "as-pod"
+  namespace: change-me
   replicaCount: 1
-  image: "cassandra:4.0.1"
 # deploy: as-ref
 # ips:
 #   - "1.2.3.4"
@@ -80,8 +80,8 @@ cassandra:
 ###
 elasticsearch:
   deploy: "as-pod"
+  namespace: change-me
   replicaCount: 1
-  image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2"
 # deploy: as-ref
 # ips:
 #   - "1.2.3.4"

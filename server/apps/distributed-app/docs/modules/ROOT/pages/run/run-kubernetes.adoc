@@ -112,6 +112,7 @@ Run the command when you think you are good to go:
 
     $ helm secrets install james james/ -f james/values.yaml -f james/secrets.yaml
 
+image::apache-james-lens.png[ Distributed Apache James in Kubernetes ]
 You can also wait for the deployment to be complete by adding a --wait flag, that is based on the readiness probe located inside the James pod.
 
 However sometimes things might not always go well at the start of James. Usually it is good to look at the logs. If it goes without issues until you start to see some successful health check logs, then you are likely good.
