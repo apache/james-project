@@ -1,13 +1,11 @@
 package org.apache.james.jmap.method
 
-import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionServerURL, VerificationCode}
+import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
 import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
-import org.apache.james.jmap.method.PushSubscriptionSetCreateProcessor.PUSH_VERIFICATION_TO_PUSH_SERVER_TTL_DEFAULT
-import org.apache.james.jmap.pushsubscription.PushTTL.PushTTL
 import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
@@ -77,7 +75,10 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
   private def create(clientId: PushSubscriptionCreationId, request: PushSubscriptionCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
     SMono.fromPublisher(pushSubscriptionRepository.save(mailboxSession.getUser, request))
       .flatMap(subscription => verificationCreateProcessor.pushVerificationToPushServer(subscription.url,
-        PushVerification(subscription.id, subscription.verificationCode))
+        PushVerification(subscription.id, subscription.verificationCode), request.keys)
+        .onErrorResume(error =>
+          SMono.fromPublisher(pushSubscriptionRepository.revoke(mailboxSession.getUser, subscription.id))
+            .`then`(SMono.error(error)))
         .`then`(SMono.just(subscription)))
       .map(subscription => CreationSuccess(clientId, PushSubscriptionCreationResponse(subscription.id, showExpires(subscription.expires, request))))
       .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
@@ -97,18 +98,15 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
     }
 }
 
-object PushSubscriptionSetCreateProcessor {
-  val PUSH_VERIFICATION_TO_PUSH_SERVER_TTL_DEFAULT: PushTTL = PushTTL.validate(15).toOption.get
-}
-
 class PushSubscriptionSetCreateProcessor @Inject()(webPushClient: WebPushClient) {
 
-  def pushVerificationToPushServer(pushSubscriptionServerURL: PushSubscriptionServerURL, pushVerification: PushVerification): SMono[Unit] = {
-    SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL,
-      PushRequest(
-        ttl = PUSH_VERIFICATION_TO_PUSH_SERVER_TTL_DEFAULT,
-        payload = Json.stringify(PushSerializer.serializePushVerification(pushVerification)).getBytes(StandardCharsets.UTF_8))))
-  }
+  def pushVerificationToPushServer(pushSubscriptionServerURL: PushSubscriptionServerURL,
+                                   pushVerification: PushVerification,
+                                   keys: Option[PushSubscriptionKeys]): SMono[Unit] =
+
+    SMono.fromCallable(() => Json.stringify(PushSerializer.serializePushVerification(pushVerification)).getBytes(StandardCharsets.UTF_8))
+      .map(clearPayload => keys.map(keysValue => keysValue.encrypt(clearPayload)).getOrElse(clearPayload))
+      .flatMap(payload => SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL, PushRequest(PushTTL.MAX, payload = payload))))
 }
 
 case class PushVerification(pushSubscriptionId: PushSubscriptionId,
