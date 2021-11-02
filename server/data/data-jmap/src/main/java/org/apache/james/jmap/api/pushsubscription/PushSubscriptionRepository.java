@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.PushSubscription;
 import org.apache.james.jmap.api.model.PushSubscriptionCreationRequest;
+import org.apache.james.jmap.api.model.PushSubscriptionExpiredTime;
 import org.apache.james.jmap.api.model.PushSubscriptionId;
 import org.apache.james.jmap.api.model.TypeName;
 import org.reactivestreams.Publisher;
@@ -32,7 +33,7 @@ import org.reactivestreams.Publisher;
 public interface PushSubscriptionRepository {
     Publisher<PushSubscription> save(Username username, PushSubscriptionCreationRequest pushSubscriptionCreationRequest);
 
-    Publisher<Void> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire);
+    Publisher<PushSubscriptionExpiredTime> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire);
 
     Publisher<Void> updateTypes(Username username, PushSubscriptionId id, Set<TypeName> types);
 

@@ -188,6 +188,18 @@ trait PushSubscriptionRepositoryContract {
   }
 
   @Test
+  def updateWithExpiresBiggerThanMaxExpiresShouldReturnServerFixedExpires(): Unit = {
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1))
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val fixedExpires = SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
+
+    assertThat(fixedExpires).isEqualTo(PushSubscriptionExpiredTime(MAX_EXPIRE))
+  }
+
+  @Test
   def updateWithValidTypesShouldSucceed(): Unit = {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),

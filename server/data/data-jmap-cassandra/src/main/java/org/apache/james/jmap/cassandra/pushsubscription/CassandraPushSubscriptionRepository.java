@@ -79,7 +79,7 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
     }
 
     @Override
-    public Publisher<Void> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire) {
+    public Publisher<PushSubscriptionExpiredTime> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire) {
         return Mono.just(newExpire)
             .handle((inputTime, sink) -> {
                 if (newExpire.isBefore(ZonedDateTime.now(clock))) {
@@ -89,8 +89,8 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
             .then(retrieveByPushSubscriptionId(username, id)
                 .flatMap(subscription -> dao.insert(username,
                     subscription.withExpires(evaluateExpiresTime(Optional.of(newExpire), clock))))
-                .switchIfEmpty(Mono.error(() -> new PushSubscriptionNotFoundException(id)))
-                .then());
+                .map(PushSubscription::expires)
+                .switchIfEmpty(Mono.error(() -> new PushSubscriptionNotFoundException(id))));
     }
 
     @Override

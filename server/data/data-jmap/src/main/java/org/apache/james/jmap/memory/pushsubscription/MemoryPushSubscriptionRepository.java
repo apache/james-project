@@ -84,7 +84,7 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
     }
 
     @Override
-    public Publisher<Void> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire) {
+    public Publisher<PushSubscriptionExpiredTime> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire) {
         return Mono.just(newExpire)
             .handle((inputTime, sink) -> {
                 if (newExpire.isBefore(ZonedDateTime.now(clock))) {
@@ -92,10 +92,13 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
                 }
             })
             .then(Mono.justOrEmpty(table.get(username, id))
-                .doOnNext(pushSubscription -> table.put(username, id,
-                    pushSubscription.withExpires(evaluateExpiresTime(Optional.of(newExpire), clock))))
-                .switchIfEmpty(Mono.error(() -> new PushSubscriptionNotFoundException(id)))
-                .then());
+                .mapNotNull(pushSubscription -> {
+                    PushSubscription value = pushSubscription.withExpires(evaluateExpiresTime(Optional.of(newExpire), clock));
+                    table.put(username, id, value);
+                    return value;
+                })
+                .map(PushSubscription::expires)
+                .switchIfEmpty(Mono.error(() -> new PushSubscriptionNotFoundException(id))));
     }
 
     @Override
