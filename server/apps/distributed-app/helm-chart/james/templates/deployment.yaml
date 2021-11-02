@@ -79,8 +79,6 @@ spec:
               key: password
         - name: JAMES_ES_NODES_URLS
           value: "{{ $elasticsearchUrl | trimSuffix "," }}"
-        - name: JAMES_ALLOWED_RELAY_URLS
-          value: "{{ $relayAllowedUrl | trimSuffix "," }}"
         - name: JAMES_AMQP_HOST
           value: {{ .Values.james.env.jamesRabbitHost }}
         - name: JAMES_AMQP_PORT
@@ -175,8 +173,10 @@ spec:
         - name: all-in-one-config
           mountPath: "/root/conf"
           readOnly: true
+        {{- if .Values.james.tls.secretName }}
         - name: james-secrets
           mountPath: /root/secrets
+        {{- end }}
         - name: james-jwt-secrets
           mountPath: /root/secrets-jwt
 
@@ -188,6 +188,7 @@ spec:
               name: james-configs
           - secret:
               name: james-jwt-key
+      {{- if .Values.james.tls.secretName }}        
       - name: james-secrets
         projected:
           sources:
@@ -202,7 +203,8 @@ spec:
               name: james-secrets
               items:
               - key: keystore-ssl
-                path: keystore    
+                path: keystore
+        {{- end }}    
       - name: james-jwt-secrets
         secret:
           secretName: james-jwt-secrets
@@ -289,8 +291,6 @@ spec:
               key: password
         - name: JAMES_ES_NODES_URLS
           value: "{{ $elasticsearchUrl | trimSuffix "," }}"
-        - name: JAMES_ALLOWED_RELAY_URLS
-          value: "{{ $relayAllowedUrl | trimSuffix "," }}"
         - name: JAMES_AMQP_HOST
           value: {{ .Values.james.env.jamesRabbitHost }}
         - name: JAMES_AMQP_PORT
@@ -388,8 +388,10 @@ spec:
         - name: all-in-one-config
           mountPath: "/root/conf"
           readOnly: true
+        {{- if .Values.james.tls.secretName }}
         - name: james-secrets
           mountPath: /root/secrets
+        {{- end }}
         - name: james-jwt-secrets
           mountPath: /root/secrets-jwt
 
@@ -401,6 +403,7 @@ spec:
               name: james-configs
           - secret:
               name: james-jwt-key
+      {{- if .Values.james.tls.secretName }}        
       - name: james-secrets
         projected:
           sources:
@@ -415,7 +418,8 @@ spec:
               name: james-secrets
               items:
               - key: keystore-ssl
-                path: keystore              
+                path: keystore
+        {{- end }}              
       - name: james-jwt-secrets
         secret:
           secretName: james-jwt-secrets

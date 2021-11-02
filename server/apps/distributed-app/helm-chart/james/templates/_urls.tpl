@@ -34,5 +34,3 @@ Contruct a temporary URLfor Elastic Search. This URL ends with a comma
     {{- end }}
   {{- end }}
 {{- end -}}
-
-{{/*

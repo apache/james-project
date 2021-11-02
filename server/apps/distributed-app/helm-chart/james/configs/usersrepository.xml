@@ -18,14 +18,8 @@
   under the License.                                           
  -->
 
-<usersrepository name="LocalUsers"
-    class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository"
-    ldapHost="${env:JAMES_LDAP_URI}"
-    userBase="${env:JAMES_LDAP_BASE_DN}"
-    principal="${env:JAMES_LDAP_PRINCIPAL_DN}"
-    credentials="${env:JAMES_LDAP_BIND_PW}"
-    userIdAttribute="mail"
-    userObjectClass="person"
-    administratorId="${env:JAMES_ADMINISTRATOR_ID}" >
-    <supportsVirtualHosting>true</supportsVirtualHosting>
+<usersrepository name="LocalUsers">
+    <algorithm>SHA-512</algorithm>
+    <enableVirtualHosting>true</enableVirtualHosting>    
+    <enableForwarding>true</enableForwarding>
 </usersrepository>
