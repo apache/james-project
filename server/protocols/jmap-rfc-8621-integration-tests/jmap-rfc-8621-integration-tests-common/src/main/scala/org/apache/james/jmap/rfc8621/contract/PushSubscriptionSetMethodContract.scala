@@ -1109,7 +1109,8 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "`$invalidExpire` expires must be greater than now"
+           |                        "description": "`$invalidExpire` expires must be greater than now",
+           |                        "properties": ["expires"]
            |                    }
            |                }
            |            },
@@ -1811,6 +1812,251 @@ trait PushSubscriptionSetMethodContract {
            |}""".stripMargin)
 
     assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).validated).isFalse
+  }
+
+  @Test
+  def updateValidExpiresShouldSucceed(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val validExpiresString = UTCDate(ZonedDateTime.now().plusDays(1)).asUTC.format(TIME_FORMATTER)
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                 "expires": "$validExpiresString"
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "updated": {
+           |                    "${pushSubscription.id.serialise}": {}
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id)
+      .expires.value.format(TIME_FORMATTER))
+      .isEqualTo(validExpiresString)
+  }
+
+  @Test
+  def updateInvalidExpiresStringShouldFail(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val invalidExpiresString = "whatever"
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                 "expires": "$invalidExpiresString"
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "${SESSION_STATE.value}",
+           |	"methodResponses": [
+           |		[
+           |			"PushSubscription/set",
+           |			{
+           |				"notUpdated": {
+           |					"${pushSubscription.id.serialise}": {
+           |						"type": "invalidArguments",
+           |						"description": "This string can not be parsed to UTCDate",
+           |						"properties": ["expires"]
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateWithBiggerExpiresThanServerLimitShouldSetToServerLimitAndExplicitlyReturned(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val biggerExpiresString = UTCDate(ZonedDateTime.now().plusDays(10)).asUTC.format(TIME_FORMATTER)
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                 "expires": "$biggerExpiresString"
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val fixedExpires = probe.retrievePushSubscription(BOB, pushSubscription.id)
+      .expires.value.format(TIME_FORMATTER)
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "updated": {
+           |                    "${pushSubscription.id.serialise}": {
+           |                        "expires": "$fixedExpires"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateOutdatedExpiresShouldFail(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
+
+    val invalidExpiresString = UTCDate(ZonedDateTime.now().minusDays(1)).asUTC.format(TIME_FORMATTER)
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                 "expires": "$invalidExpiresString"
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "${SESSION_STATE.value}",
+           |	"methodResponses": [
+           |		[
+           |			"PushSubscription/set",
+           |			{
+           |				"notUpdated": {
+           |					"${pushSubscription.id.serialise}": {
+           |						"type": "invalidArguments",
+           |						"description": "`$invalidExpiresString` expires must be greater than now",
+           |						"properties": ["expires"]
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
   }
 
   @Test

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.core
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import cats.implicits._
@@ -35,7 +36,7 @@ import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateExcept
 import org.apache.james.jmap.method.WithoutAccountId
 import play.api.libs.json.{JsArray, JsObject, JsString, JsValue}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 case class PushSubscriptionSetRequest(create: Option[Map[PushSubscriptionCreationId, JsObject]],
                                       update: Option[Map[UnparsedPushSubscriptionId, PushSubscriptionPatchObject]],
@@ -57,11 +58,7 @@ case class UnparsedPushSubscriptionId(id: Id) {
     }).map(uuid => PushSubscriptionId(uuid))
 }
 
-object PushSubscriptionUpdateResponse {
-  def empty: PushSubscriptionUpdateResponse = PushSubscriptionUpdateResponse(JsObject(Map[String, JsValue]()))
-}
-
-case class PushSubscriptionUpdateResponse(value: JsObject)
+case class PushSubscriptionUpdateResponse(expires: Option[UTCDate])
 
 object PushSubscriptionPatchObject {
   type KeyConstraint = NonEmpty
@@ -80,6 +77,7 @@ case class PushSubscriptionPatchObject(value: Map[String, JsValue]) {
     case (property, newValue) => property match {
       case "verificationCode" => VerificationCodeUpdate.parse(newValue)
       case "types" => TypesUpdate.parse(newValue, typeStateFactory)
+      case "expires" => ExpiresUpdate.parse(newValue)
       case property => PushSubscriptionPatchObject.notFound(property)
     }
   })
@@ -98,6 +96,12 @@ case class PushSubscriptionPatchObject(value: Map[String, JsValue]) {
         case _ => None
       }).headOption
 
+    val expiresUpdate: Option[ExpiresUpdate] = updates
+      .flatMap(x => x match {
+        case Right(ExpiresUpdate(newExpires)) => Some(ExpiresUpdate(newExpires))
+        case _ => None
+      }).headOption
+
     val typesUpdate: Option[TypesUpdate] = updates
       .flatMap(x => x match {
         case Right(TypesUpdate(newTypes)) => Some(TypesUpdate(newTypes))
@@ -108,7 +112,8 @@ case class PushSubscriptionPatchObject(value: Map[String, JsValue]) {
       .map(e => Left(e))
       .getOrElse(scala.Right(ValidatedPushSubscriptionPatchObject(
         verificationCodeUpdate = verificationCodeUpdate.map(_.newVerificationCode),
-        typesUpdate = typesUpdate.map(_.types))))
+        typesUpdate = typesUpdate.map(_.types),
+        expiresUpdate = expiresUpdate.map(expiresUpdate => PushSubscriptionExpiredTime(expiresUpdate.newExpires.asUTC)))))
   }
 }
 
@@ -134,22 +139,38 @@ object TypesUpdate {
   }
 }
 
+object ExpiresUpdate {
+  def parse(jsValue: JsValue): Either[PatchUpdateValidationException, Update] = jsValue match {
+    case JsString(aString) => toZonedDateTime(aString) match {
+      case Success(value) => Right(ExpiresUpdate(UTCDate(value)))
+      case Failure(e) => Left(InvalidUpdateException("expires", "This string can not be parsed to UTCDate"))
+    }
+    case _ => Left(InvalidUpdateException("expires", "Expecting a JSON string as an argument"))
+  }
+
+  private def toZonedDateTime(string: String): Try[ZonedDateTime] = Try(ZonedDateTime.parse(string))
+}
+
 sealed trait Update
 case class VerificationCodeUpdate(newVerificationCode: VerificationCode) extends Update
 case class TypesUpdate(types: Set[TypeName]) extends Update
+case class ExpiresUpdate(newExpires: UTCDate) extends Update
 
 object ValidatedPushSubscriptionPatchObject {
   val verificationCodeProperty: NonEmptyString = "verificationCode"
   val typesProperty: NonEmptyString = "types"
+  val expiresUpdate: NonEmptyString = "expires"
 }
 
 case class ValidatedPushSubscriptionPatchObject(verificationCodeUpdate: Option[VerificationCode],
-                                                typesUpdate: Option[Set[TypeName]]) {
-  val shouldUpdate: Boolean = verificationCodeUpdate.isDefined || typesUpdate.isDefined
+                                                typesUpdate: Option[Set[TypeName]],
+                                                expiresUpdate: Option[PushSubscriptionExpiredTime]) {
+  val shouldUpdate: Boolean = verificationCodeUpdate.isDefined || typesUpdate.isDefined || expiresUpdate.isDefined
 
   val updatedProperties: Properties = Properties(Set(
     verificationCodeUpdate.map(_ => ValidatedPushSubscriptionPatchObject.verificationCodeProperty),
-    typesUpdate.map(_ => ValidatedPushSubscriptionPatchObject.typesProperty))
+    typesUpdate.map(_ => ValidatedPushSubscriptionPatchObject.typesProperty),
+    expiresUpdate.map(_ => ValidatedPushSubscriptionPatchObject.expiresUpdate))
     .flatMap(_.toList))
 }
 
