@@ -23,10 +23,10 @@ import com.google.common.collect.ImmutableSet
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
-import org.apache.james.jmap.api.model.{PushSubscription, PushSubscriptionId, PushSubscriptionNotFoundException, TypeName, VerificationCode}
+import org.apache.james.jmap.api.model.{ExpireTimeInvalidException, PushSubscription, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionNotFoundException, TypeName, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Properties, PushSubscriptionPatchObject, PushSubscriptionSetRequest, PushSubscriptionUpdateResponse, SetError, UnparsedPushSubscriptionId, ValidatedPushSubscriptionPatchObject}
+import org.apache.james.jmap.core.{Properties, PushSubscriptionPatchObject, PushSubscriptionSetRequest, PushSubscriptionUpdateResponse, SetError, UTCDate, UnparsedPushSubscriptionId, ValidatedPushSubscriptionPatchObject}
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.method.PushSubscriptionSetUpdatePerformer.{PushSubscriptionUpdateFailure, PushSubscriptionUpdateResult, PushSubscriptionUpdateResults, PushSubscriptionUpdateSuccess, WrongVerificationCodeException}
 import org.apache.james.mailbox.MailboxSession
@@ -37,7 +37,7 @@ import scala.jdk.CollectionConverters._
 object PushSubscriptionSetUpdatePerformer {
   case class WrongVerificationCodeException() extends RuntimeException()
   sealed trait PushSubscriptionUpdateResult
-  case class PushSubscriptionUpdateSuccess(id: PushSubscriptionId) extends PushSubscriptionUpdateResult
+  case class PushSubscriptionUpdateSuccess(id: PushSubscriptionId, serverExpires: Option[UTCDate] = None) extends PushSubscriptionUpdateResult
   case class PushSubscriptionUpdateFailure(id: UnparsedPushSubscriptionId, exception: Throwable) extends PushSubscriptionUpdateResult {
     def asSetError: SetError = exception match {
       case _: WrongVerificationCodeException => SetError.invalidProperties(SetErrorDescription("Wrong verification code"), Some(Properties("verificationCode")))
@@ -46,13 +46,14 @@ object PushSubscriptionSetUpdatePerformer {
       case e: InvalidUpdateException => SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
       case e: PushSubscriptionNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
+      case e: ExpireTimeInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
   case class PushSubscriptionUpdateResults(results: Seq[PushSubscriptionUpdateResult]) {
     def updated: Map[PushSubscriptionId, PushSubscriptionUpdateResponse] =
       results.flatMap(result => result match {
-        case success: PushSubscriptionUpdateSuccess => Some((success.id, PushSubscriptionUpdateResponse.empty))
+        case success: PushSubscriptionUpdateSuccess => Some((success.id, PushSubscriptionUpdateResponse(success.serverExpires)))
         case _ => None
       }).toMap
     def notUpdated: Map[UnparsedPushSubscriptionId, SetError] = results.flatMap(result => result match {
@@ -94,6 +95,9 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
             .getOrElse(SMono.empty),
           validatedPatch.typesUpdate
             .map(types => updateTypes(pushSubscription, types, mailboxSession))
+            .getOrElse(SMono.empty),
+          validatedPatch.expiresUpdate
+            .map(expires => updateExpires(pushSubscription, expires, mailboxSession))
             .getOrElse(SMono.empty))
           .last())
     } else {
@@ -111,4 +115,14 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
   private def updateTypes(pushSubscription: PushSubscription, types: Set[TypeName], mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] =
     SMono(pushSubscriptionRepository.updateTypes(mailboxSession.getUser, pushSubscription.id, types.asJava))
       .`then`(SMono.just(PushSubscriptionUpdateSuccess(pushSubscription.id)))
+
+  private def updateExpires(pushSubscription: PushSubscription, inputExpires: PushSubscriptionExpiredTime, mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] =
+    SMono(pushSubscriptionRepository.updateExpireTime(mailboxSession.getUser, pushSubscription.id, inputExpires.value))
+      .map(toPushSubscriptionUpdate(pushSubscription, inputExpires, _))
+
+  private def toPushSubscriptionUpdate(pushSubscription: PushSubscription, inputExpires: PushSubscriptionExpiredTime, updatedExpires: PushSubscriptionExpiredTime): PushSubscriptionUpdateResult =
+    PushSubscriptionUpdateSuccess(pushSubscription.id, Some(updatedExpires)
+      .filter(updatedExpires => !updatedExpires.equals(inputExpires))
+      .map(_.value)
+      .map(UTCDate(_)))
 }

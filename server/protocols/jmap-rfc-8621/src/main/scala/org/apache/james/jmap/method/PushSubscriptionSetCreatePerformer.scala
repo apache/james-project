@@ -2,11 +2,12 @@ package org.apache.james.jmap.method
 
 import java.nio.charset.StandardCharsets
 
+import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
+import org.apache.james.jmap.core.{Properties, PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
 import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
@@ -23,7 +24,7 @@ object PushSubscriptionSetCreatePerformer {
   case class CreationFailure(clientId: PushSubscriptionCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
       case e: PushSubscriptionCreationParseException => e.setError
-      case e: ExpireTimeInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: ExpireTimeInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
       case e: DeviceClientIdInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))

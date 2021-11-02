@@ -85,7 +85,7 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
   private implicit val pushSubscriptionGetResponseWrites: OWrites[PushSubscriptionGetResponse] = Json.writes[PushSubscriptionGetResponse]
 
   private implicit val pushSubscriptionCreationResponseWrites: Writes[PushSubscriptionCreationResponse] = Json.writes[PushSubscriptionCreationResponse]
-  private implicit val pushSubscriptionUpdateResponseWrites: Writes[PushSubscriptionUpdateResponse] = Json.valueWrites[PushSubscriptionUpdateResponse]
+  private implicit val pushSubscriptionUpdateResponseWrites: Writes[PushSubscriptionUpdateResponse] = Json.writes[PushSubscriptionUpdateResponse]
 
   private implicit val pushSubscriptionMapSetErrorForCreationWrites: Writes[Map[PushSubscriptionCreationId, SetError]] =
     mapWrites[PushSubscriptionCreationId, SetError](_.serialise, setErrorWrites)

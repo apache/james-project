@@ -150,7 +150,7 @@ case class PushSubscriptionNotFoundException(id: PushSubscriptionId) extends Run
 object ExpireTimeInvalidException {
   val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 }
-case class ExpireTimeInvalidException(expires: ZonedDateTime, message: String) extends RuntimeException(s"`${expires.format(TIME_FORMATTER)}` $message")
+case class ExpireTimeInvalidException(expires: ZonedDateTime, message: String) extends IllegalStateException(s"`${expires.format(TIME_FORMATTER)}` $message")
 
-case class DeviceClientIdInvalidException(deviceClientId: DeviceClientId, message: String) extends RuntimeException(s"`${deviceClientId.value}` $message")
-case class InvalidPushSubscriptionKeys(keys: PushSubscriptionKeys) extends RuntimeException
+case class DeviceClientIdInvalidException(deviceClientId: DeviceClientId, message: String) extends IllegalArgumentException(s"`${deviceClientId.value}` $message")
+case class InvalidPushSubscriptionKeys(keys: PushSubscriptionKeys) extends IllegalArgumentException
