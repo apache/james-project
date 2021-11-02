@@ -77,6 +77,9 @@ class PushSubscriptionProbe @Inject()(pushSubscriptionRepository: PushSubscripti
 
   def retrievePushSubscription(username: Username, id: PushSubscriptionId): PushSubscription =
     SMono(pushSubscriptionRepository.get(username, ImmutableSet.of(id))).block()
+
+  def validatePushSubscription(username: Username, id: PushSubscriptionId): Void =
+    SMono(pushSubscriptionRepository.validateVerificationCode(username, id)).block()
 }
 
 class PushSubscriptionProbeModule extends AbstractModule {
@@ -537,6 +540,358 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
   }
+
+  @Test
+  def getShouldReturnEmptyWhenNone(): Unit = {
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [ [ "PushSubscription/get", { }, "c1" ] ]
+        |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": []
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getShouldReturnAllRecords(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+    val pushSubscription2 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d087"),
+        types = Seq(EmailTypeName))
+
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [ [ "PushSubscription/get", { }, "c1" ] ]
+        |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": [
+           |                    {
+           |                        "id": "${pushSubscription1.id.serialise}",
+           |                        "deviceClientId": "12c6d086",
+           |                        "expires": "${UTCDate(pushSubscription1.expires.value).asUTC.format(TIME_FORMATTER)}",
+           |                        "types": ["Mailbox"]
+           |                    },
+           |                    {
+           |                        "id": "${pushSubscription2.id.serialise}",
+           |                        "deviceClientId": "12c6d087",
+           |                        "expires": "${UTCDate(pushSubscription2.expires.value).asUTC.format(TIME_FORMATTER)}",
+           |                        "types": ["Email"]
+           |                    }
+           |                ]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getShouldReturnValidatedVerificationCode(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+    probe.validatePushSubscription(BOB, pushSubscription1.id)
+
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [ [ "PushSubscription/get", { }, "c1" ] ]
+        |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": [
+           |                    {
+           |                        "id": "${pushSubscription1.id.serialise}",
+           |                        "deviceClientId": "12c6d086",
+           |                        "expires": "${UTCDate(pushSubscription1.expires.value).asUTC.format(TIME_FORMATTER)}",
+           |                        "verificationCode": "${pushSubscription1.verificationCode.value}",
+           |                        "types": ["Mailbox"]
+           |                    }
+           |                ]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getByIdShouldReturnRecords(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+    val pushSubscription2 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d087"),
+        types = Seq(EmailTypeName))
+    val pushSubscription3 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d088"),
+        types = Seq(EmailTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [ [ "PushSubscription/get", {
+         |       "ids": ["${pushSubscription1.id.serialise}", "${pushSubscription2.id.serialise}"]
+         |     }, "c1" ] ]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": [
+           |                    {
+           |                        "id": "${pushSubscription1.id.serialise}",
+           |                        "deviceClientId": "12c6d086",
+           |                        "expires": "${UTCDate(pushSubscription1.expires.value).asUTC.format(TIME_FORMATTER)}",
+           |                        "types": ["Mailbox"]
+           |                    },
+           |                    {
+           |                        "id": "${pushSubscription2.id.serialise}",
+           |                        "deviceClientId": "12c6d087",
+           |                        "expires": "${UTCDate(pushSubscription2.expires.value).asUTC.format(TIME_FORMATTER)}",
+           |                        "types": ["Email"]
+           |                    }
+           |                ]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getByIdShouldReturnEmptyWhenEmpty(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [ [ "PushSubscription/get", {
+         |       "ids": []
+         |     }, "c1" ] ]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": []
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getByIdShouldReturnNotFound(): Unit = {
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [ [ "PushSubscription/get", {
+         |       "ids": ["notFound"]
+         |     }, "c1" ] ]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "notFound": ["notFound"],
+           |                "list": []
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getShouldFilterProperties(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+    val pushSubscription2 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d087"),
+        types = Seq(EmailTypeName))
+
+    val request: String =
+      """{
+        |    "using": ["urn:ietf:params:jmap:core"],
+        |    "methodCalls": [ [ "PushSubscription/get", { "properties": ["types"] }, "c1" ] ]
+        |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/get",
+           |            {
+           |                "list": [
+           |                    {
+           |                        "id": "${pushSubscription1.id.serialise}",
+           |                        "types": ["Mailbox"]
+           |                    },
+           |                    {
+           |                        "id": "${pushSubscription2.id.serialise}",
+           |                        "types": ["Email"]
+           |                    }
+           |                ]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
 
   @Test
   def setMethodShouldNotCreatedWhenInvalidURLProperty(): Unit = {

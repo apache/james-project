@@ -34,6 +34,13 @@ import scala.util.Try
 
 object PushSubscriptionId {
   def generate(): PushSubscriptionId = PushSubscriptionId(UUID.randomUUID)
+
+  def parse(string: String): Either[IllegalArgumentException, PushSubscriptionId] = Try(UUID.fromString(string)).toEither
+    .map(PushSubscriptionId(_))
+    .left.map {
+    case e: IllegalArgumentException => e
+    case e => new IllegalArgumentException(e)
+  }
 }
 
 case class PushSubscriptionId(value: UUID) {

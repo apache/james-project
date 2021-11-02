@@ -24,17 +24,18 @@ import eu.timepit.refined.refineV
 
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
-import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName}
+import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName, VerificationCode}
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{PushSubscriptionCreationId, PushSubscriptionCreationResponse, PushSubscriptionPatchObject, PushSubscriptionSetRequest, PushSubscriptionSetResponse, PushSubscriptionUpdateResponse, SetError, UnparsedPushSubscriptionId}
+import org.apache.james.jmap.core.{Ids, Properties, PushSubscriptionCreationId, PushSubscriptionCreationResponse, PushSubscriptionDTO, PushSubscriptionGetRequest, PushSubscriptionGetResponse, PushSubscriptionPatchObject, PushSubscriptionSetRequest, PushSubscriptionSetResponse, PushSubscriptionUpdateResponse, SetError, UnparsedPushSubscriptionId}
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
+import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
-  private implicit val pushSubscriptionIdWrites: Writes[PushSubscriptionId] = Json.valueWrites[PushSubscriptionId]
+  private implicit val pushSubscriptionIdFormat: Format[PushSubscriptionId] = Json.valueFormat[PushSubscriptionId]
 
   private implicit val pushSubscriptionExpiredTimeFormat: Format[PushSubscriptionExpiredTime] = Json.valueFormat[PushSubscriptionExpiredTime]
-  private implicit val deviceClientIdReads: Reads[DeviceClientId] = Json.valueReads[DeviceClientId]
+  private implicit val deviceClientIdFormat: Format[DeviceClientId] = Json.valueFormat[DeviceClientId]
+  private implicit val verificationCodeFormat: Format[VerificationCode] = Json.valueFormat[VerificationCode]
   private implicit val pushSubscriptionServerURLReads: Reads[PushSubscriptionServerURL] = {
     case JsString(serializeURL) => PushSubscriptionServerURL.from(serializeURL).map(JsSuccess(_)).getOrElse(JsError())
     case _ => JsError()
@@ -60,6 +61,7 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
       .fold(e => JsError(e.getMessage), v => JsSuccess(v))
     case _ => JsError()
   }
+  private implicit val typeNameWrites: Writes[TypeName] = typeName => JsString(typeName.asString())
 
   implicit val pushSubscriptionCreationRequest: Reads[PushSubscriptionCreationRequest] = Json.reads[PushSubscriptionCreationRequest]
 
@@ -75,7 +77,12 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
         id => JsSuccess(UnparsedPushSubscriptionId(id)))
     }
 
+  private implicit val idFormat: Format[UnparsedPushSubscriptionId] = Json.valueFormat[UnparsedPushSubscriptionId]
+  private implicit val idsFormat: Format[Ids] = Json.valueFormat[Ids]
   private implicit val pushSubscriptionSetRequestReads: Reads[PushSubscriptionSetRequest] = Json.reads[PushSubscriptionSetRequest]
+  private implicit val pushSubscriptionGetRequestReads: Reads[PushSubscriptionGetRequest] = Json.reads[PushSubscriptionGetRequest]
+  private implicit val pushSubscriptionWrites: Writes[PushSubscriptionDTO] = Json.writes[PushSubscriptionDTO]
+  private implicit val pushSubscriptionGetResponseWrites: OWrites[PushSubscriptionGetResponse] = Json.writes[PushSubscriptionGetResponse]
 
   private implicit val pushSubscriptionCreationResponseWrites: Writes[PushSubscriptionCreationResponse] = Json.writes[PushSubscriptionCreationResponse]
   private implicit val pushSubscriptionUpdateResponseWrites: Writes[PushSubscriptionUpdateResponse] = Json.valueWrites[PushSubscriptionUpdateResponse]
@@ -96,7 +103,19 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
 
   def deserializePushSubscriptionSetRequest(input: JsValue): JsResult[PushSubscriptionSetRequest] = Json.fromJson[PushSubscriptionSetRequest](input)
 
+  def deserializePushSubscriptionGetRequest(input: JsValue): JsResult[PushSubscriptionGetRequest] = Json.fromJson[PushSubscriptionGetRequest](input)
+
   def deserializePushSubscriptionCreationRequest(input: JsValue): JsResult[PushSubscriptionCreationRequest] = Json.fromJson[PushSubscriptionCreationRequest](input)
 
   def serialize(response: PushSubscriptionSetResponse): JsObject = Json.toJsObject(response)
+
+  def serialize(response: PushSubscriptionGetResponse, properties: Properties): JsObject =
+    Json.toJsObject(response)
+      .transform((__ \ "list").json.update {
+        case JsArray(underlying) => JsSuccess(JsArray(underlying.map {
+          case jsonObject: JsObject =>
+            properties.filter(jsonObject)
+          case jsValue => jsValue
+        }))
+      }).get
 }
