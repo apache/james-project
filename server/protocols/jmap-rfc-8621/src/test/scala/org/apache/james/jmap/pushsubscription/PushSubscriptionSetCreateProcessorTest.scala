@@ -19,7 +19,9 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import org.apache.james.jmap.api.model.{PushSubscriptionId, PushSubscriptionServerURL, VerificationCode}
+import com.google.crypto.tink.subtle.EllipticCurves
+import com.google.crypto.tink.subtle.EllipticCurves.CurveType
+import org.apache.james.jmap.api.model.{PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.method.{PushSubscriptionSetCreateProcessor, PushVerification}
 import org.apache.james.jmap.pushsubscription.PushSubscriptionSetCreateProcessorTest.PUSH_VERIFICATION_SAMPLE
@@ -28,12 +30,16 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.JsonBody.json
+import org.mockserver.model.Not.not
 import org.mockserver.model.NottableString.string
 import org.mockserver.verify.VerificationTimes
 import play.api.libs.json.Json
 
 import java.net.URL
-import java.util.UUID
+import java.security.KeyPair
+import java.security.interfaces.ECPublicKey
+import java.util.{Base64, UUID}
 
 object PushSubscriptionSetCreateProcessorTest {
   val PUSH_VERIFICATION_SAMPLE: PushVerification = PushVerification(
@@ -65,9 +71,35 @@ class PushSubscriptionSetCreateProcessorTest {
   @Test
   def pushVerificationShouldSuccess(pushServer: ClientAndServer): Unit = {
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, None).block()
+    print(Json.stringify(PushSerializer.serializePushVerification(PUSH_VERIFICATION_SAMPLE)))
     pushServer.verify(request()
       .withPath("/subscribe")
-      .withBody(Json.stringify(PushSerializer.serializePushVerification(PUSH_VERIFICATION_SAMPLE))),
+      .withBody(json("""{
+                       |    "@type": "PushVerification",
+                       |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
+                       |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
+                       |}""".stripMargin)),
+      VerificationTimes.atLeast(1))
+  }
+
+  @Test
+  def pushVerificationShouldEncryptedPayloadWhenAssignKeys(pushServer: ClientAndServer): Unit = {
+    val uaKeyPair: KeyPair = EllipticCurves.generateKeyPair(CurveType.NIST_P256)
+    val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
+    val authSecret: Array[Byte] = "secret123secret1".getBytes
+
+    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+
+    testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, Some(PushSubscriptionKeys(p256dh, auth))).block()
+    print(Json.stringify(PushSerializer.serializePushVerification(PUSH_VERIFICATION_SAMPLE)))
+    pushServer.verify(request()
+      .withPath("/subscribe")
+      .withBody(not(json("""{
+                       |    "@type": "PushVerification",
+                       |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
+                       |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
+                       |}""".stripMargin))),
       VerificationTimes.atLeast(1))
   }
 }
