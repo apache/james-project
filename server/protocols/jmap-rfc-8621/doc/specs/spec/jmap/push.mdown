@@ -1,8 +1,9 @@
 # Push
 
-> :warning:
-> Partially implemented.
-
+> :information_source:
+> Implemented.
+>
+> Some limitations for event source are described below.
 
 Push notifications allow clients to efficiently update (almost) instantly to stay in sync with data changes on the server. The general model for push is simple and sends minimal data over the push channel: just enough for the client to know whether it needs to resync. The format allows multiple changes to be coalesced into a single push update and the frequency of pushes to be rate limited by the server. It doesn't matter if some push events are dropped before they reach the client; the next time it gets/sets any records of a changed type, it will discover the data has changed and still sync all changes.
 
@@ -45,9 +46,6 @@ The client can compare the state strings with its current state for the Email, C
 If the client is itself making changes, it may receive a StateChange object while the /set API call is in flight. It can wait until the call completes and then compare if the new state string after the /set is the same as was pushed in the StateChange object; if so, and the old state of the /set response matches the client's previous state, it does not need to waste a request asking for changes it already knows.
 
 ## PushSubscription
-
-> :warning:
-> Not implemented.
 
 Clients may create a *PushSubscription* to register a URL with the JMAP server. The JMAP server will then make an HTTP POST request to this URL for each push notification it wishes to send to the client.
 
@@ -226,9 +224,6 @@ The server extends the expiry time, but only again to its maximum limit of 7 day
 
 ## Event Source
 
-
-> :information_source:
-> Implemented.
 
 Clients that can hold transport connections open can connect directly to the JMAP server to receive push notifications via a `text/event-stream` resource, as described in [EventSource](https://www.w3.org/TR/eventsource/). This is a long running HTTP request, where the server can push data to the client by appending data without ending the response.
 
