@@ -20,11 +20,14 @@
 package org.apache.james.jmap.core
 
 import java.net.{URI, URL}
+import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
+
+import scala.jdk.OptionConverters._
 
 object JmapRfc8621Configuration {
   val LOCALHOST_URL_PREFIX: String = "http://localhost"
@@ -43,8 +46,8 @@ object JmapRfc8621Configuration {
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
         .getOrElse(UPLOAD_LIMIT_30_MB),
-      maxTimeoutSeconds = Option(configuration.getInteger("webpush.maxTimeoutSeconds", null)),
-      maxConnections = Option(configuration.getInteger("webpush.maxConnections", null)))
+      maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger("webpush.maxTimeoutSeconds", null)).map(Integer2int).toScala,
+      maxConnections = Optional.ofNullable(configuration.getInteger("webpush.maxConnections", null)).map(Integer2int).toScala)
   }
 }
 
@@ -59,5 +62,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixStri
   val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
   val webSocketUrl: URI = new URI(s"$websocketPrefixString/jmap/ws")
 
-  val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(maxTimeoutSeconds, maxTimeoutSeconds)
+  val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
+    maxTimeoutSeconds = maxTimeoutSeconds,
+    maxConnections = maxConnections)
 }
