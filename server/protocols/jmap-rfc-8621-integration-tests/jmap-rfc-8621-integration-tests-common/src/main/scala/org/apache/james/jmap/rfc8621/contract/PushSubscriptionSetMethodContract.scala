@@ -996,9 +996,9 @@ trait PushSubscriptionSetMethodContract {
   }
 
   @Test
-  def setMethodShouldAcceptValidKey(): Unit = {
+  def setMethodShouldAcceptValidKey(pushServer: ClientAndServer): Unit = {
     val request: String =
-      """{
+      s"""{
         |    "using": ["urn:ietf:params:jmap:core"],
         |    "methodCalls": [
         |      [
@@ -1007,7 +1007,7 @@ trait PushSubscriptionSetMethodContract {
         |            "create": {
         |                "4f29": {
         |                  "deviceClientId": "a889-ffea-910",
-        |                  "url": "https://example.com/push/?device=X8980fc&client=12c6d086",
+        |                  "url": "${getPushServerUrl(pushServer)}",
         |                  "types": ["Mailbox"],
         |                  "keys": {
         |                    "p256dh": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5ozzvKUAB7GIfJ44eG-sxEcjT1O2jtk9QVD-MzFOH988CAPlSdkitm16NsMxUWksq6qGwu-r6zT7GCM9oGPXtQ==",
@@ -1585,8 +1585,8 @@ trait PushSubscriptionSetMethodContract {
     val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
     val authSecret: Array[Byte] = Random.randBytes(16)
 
-    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
-    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+    val p256dh: String = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getUrlEncoder.encodeToString(authSecret)
 
     val request: String =
       s"""{
@@ -1650,8 +1650,8 @@ trait PushSubscriptionSetMethodContract {
     val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
     val authSecret: Array[Byte] = "secret123secret1".getBytes
 
-    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
-    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+    val p256dh: String = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getUrlEncoder.encodeToString(authSecret)
 
     val request: String =
       s"""{
