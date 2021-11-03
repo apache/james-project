@@ -7,7 +7,7 @@
 *** xref:run/run-java.adoc[Run with Java]
 *** xref:run/run-docker.adoc[Run with Docker]
 *** xref:run/run-kubernetes.adoc[Run with Kubernetes]
-**** xref:run/k8s0-checklist.adoc[Deployment Checklist]
+**** xref:run/k8s-checklist.adoc[Deployment Checklist]
 **** xref:run/k8s-logsMetrics.adoc[Logs & Metrics]
 **** xref:run/k8s-values.adoc[values.yaml]
 **** xref:run/k8s-secrets.adoc[secrets.yaml]

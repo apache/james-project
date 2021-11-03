@@ -72,11 +72,6 @@ spec:
             secretKeyRef:
               name: db-cassandra-account-james
               key: james-password
-        - name: JAMES_KEYSTORE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: james-keystore-password
-              key: password
         - name: JAMES_ES_NODES_URLS
           value: "{{ $elasticsearchUrl | trimSuffix "," }}"
         - name: JAMES_AMQP_HOST
@@ -177,9 +172,6 @@ spec:
         - name: james-secrets
           mountPath: /root/secrets
         {{- end }}
-        - name: james-jwt-secrets
-          mountPath: /root/secrets-jwt
-
       volumes:
       - name: all-in-one-config
         projected:
@@ -199,18 +191,7 @@ spec:
                 path: tls.key
               - key: tls.crt
                 path: tls.crt
-          - secret:
-              name: james-secrets
-              items:
-              - key: keystore-ssl
-                path: keystore
-        {{- end }}    
-      - name: james-jwt-secrets
-        secret:
-          secretName: james-jwt-secrets
-          items:
-            - key: keystore-jwt
-              path: keystore
+        {{- end }}
       priorityClassName: application-scope-medium
 ---
 apiVersion: apps/v1
@@ -284,11 +265,6 @@ spec:
             secretKeyRef:
               name: db-cassandra-account-james
               key: james-password
-        - name: JAMES_KEYSTORE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: james-keystore-password
-              key: password
         - name: JAMES_ES_NODES_URLS
           value: "{{ $elasticsearchUrl | trimSuffix "," }}"
         - name: JAMES_AMQP_HOST
@@ -392,9 +368,6 @@ spec:
         - name: james-secrets
           mountPath: /root/secrets
         {{- end }}
-        - name: james-jwt-secrets
-          mountPath: /root/secrets-jwt
-
       volumes:
       - name: all-in-one-config
         projected:
@@ -414,16 +387,5 @@ spec:
                 path: tls.key
               - key: tls.crt
                 path: tls.crt
-          - secret:
-              name: james-secrets
-              items:
-              - key: keystore-ssl
-                path: keystore
-        {{- end }}              
-      - name: james-jwt-secrets
-        secret:
-          secretName: james-jwt-secrets
-          items:
-            - key: keystore-jwt
-              path: keystore
+        {{- end }}
       priorityClassName: application-scope-medium
