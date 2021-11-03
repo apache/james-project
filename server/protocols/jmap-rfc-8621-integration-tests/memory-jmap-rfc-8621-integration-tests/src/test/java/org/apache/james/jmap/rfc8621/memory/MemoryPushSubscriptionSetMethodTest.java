@@ -22,11 +22,11 @@ package org.apache.james.jmap.rfc8621.memory;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.apache.james.jmap.pushsubscription.PushServerExtension;
 
 public class MemoryPushSubscriptionSetMethodTest implements PushSubscriptionSetMethodContract {
     @RegisterExtension
