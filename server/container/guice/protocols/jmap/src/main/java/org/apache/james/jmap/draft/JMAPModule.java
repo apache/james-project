@@ -46,6 +46,7 @@ import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
+import org.apache.james.jmap.pushsubscription.PushListener;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
@@ -129,6 +130,7 @@ public class JMAPModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(PropagateLookupRightListener.class);
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(MailboxChangeListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(PushListener.class);
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);
