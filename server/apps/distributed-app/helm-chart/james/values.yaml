@@ -12,7 +12,6 @@ james:
   image: apache/james:distributed-3.7.0
   ## Environment for James
   env:
-    jamesAdminID: admin@example.com
     jamesCassandraKeyspace: sandbox_james
     jamesCassandraCacheKeyspace: sandbox_james_cache
     jamesEsMailboxIndex: "mailbox_v1"

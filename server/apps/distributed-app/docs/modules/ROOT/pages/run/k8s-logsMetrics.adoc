@@ -25,3 +25,5 @@ https://github.com/apache/james-project/tree/master/server/grafana-reporting/pro
 Be aware that those dashboards still need more work, as we used to
 export metrics to Elasticsearch not long ago, which required to redo all
 dashboards. Some enhancements are highly possible and encouraged.
+
+Read more about xref:operate/metrics.adoc[Metrics in James].

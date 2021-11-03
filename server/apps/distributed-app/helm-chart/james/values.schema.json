@@ -39,9 +39,6 @@
                 "env": {
                     "type": "object",
                     "properties": {
-                        "jamesAdminID": {
-                            "type": "string"
-                        },
                         "jamesCassandraKeyspace": {
                             "type": "string"
                         },
@@ -142,7 +139,6 @@
                         }
                     },
                     "required": [
-                        "jamesAdminID",
                         "jamesCassandraKeyspace",
                         "jamesCassandraCacheKeyspace",
                         "jamesEsMailboxIndex",

@@ -39,8 +39,6 @@ deployment (Cassandra - RabbitMQ - LDAP distributed James flavor)
 [cols="<,<,<",options="header",]
 |===
 |Field |Default value |Description
-|jamesAdminID |admin@mail.example.com |The James admin account (mainly
-used for imapsync)
 
 |jamesCassandraKeyspace |sandbox_james |The keyspace used for Cassandra
 James data

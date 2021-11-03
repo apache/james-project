@@ -22,9 +22,7 @@ With those you should be able to startup James for first tests without having it
 - [ ] Have an appropriate email domain (Contact your Domain Service Provider)
 - [ ] Create your Domain SPF and DKIM Record. See document [here](https://james.apache.org/howTo/)
 - [ ] ElasticSearch nodes deployed.
-- [ ] LDAP deployed.
 - [ ] DNS registered entries for JMAP, IMAP, SMTP, Webadmin.
-- [ ] change James admin ID to a user we can use for imapsync (to check with the person responsible of the imapsync).
 - [ ] Enable Ingress and create the secret for TLS certificate used by Ingress.
  * Preproduction: Usually, we use link:https://github.com/jetstack/cert-manager[cert-manager] to request a Let's Encrypt Certificate. Remember to use the full chain certificate. You can verify that your certificate works well with `openssl` before adding 
     the name of that secret to your James values.

@@ -119,8 +119,6 @@ spec:
         {{- end }}
         - name: JAMES_DEFAULT_DOMAIN
           value: {{ .Values.dns.emailDomain }}
-        - name: JAMES_ADMINISTRATOR_ID
-          value: "{{ .Values.james.env.jamesAdminID }}"
         - name: JAMES_SMTP_HOSTNAME
           value: "{{ .Values.dns.smtpHostname }}"
         - name: JAMES_SMTP_MESSAGE
@@ -312,8 +310,6 @@ spec:
         {{- end }}
         - name: JAMES_DEFAULT_DOMAIN
           value: {{ .Values.dns.emailDomain }}
-        - name: JAMES_ADMINISTRATOR_ID
-          value: "{{ .Values.james.env.jamesAdminID }}"
         - name: JAMES_SMTP_HOSTNAME
           value: "{{ .Values.dns.smtpHostname }}"
         - name: JAMES_SMTP_MESSAGE
