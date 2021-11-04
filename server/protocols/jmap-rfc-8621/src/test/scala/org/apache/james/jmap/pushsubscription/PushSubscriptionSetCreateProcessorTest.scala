@@ -19,10 +19,14 @@
 
 package org.apache.james.jmap.pushsubscription
 
+import java.net.URL
+import java.security.KeyPair
+import java.security.interfaces.ECPublicKey
+import java.util.{Base64, UUID}
+
 import com.google.crypto.tink.subtle.EllipticCurves
 import com.google.crypto.tink.subtle.EllipticCurves.CurveType
 import org.apache.james.jmap.api.model.{PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
-import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.method.{PushSubscriptionSetCreateProcessor, PushVerification}
 import org.apache.james.jmap.pushsubscription.PushSubscriptionSetCreateProcessorTest.PUSH_VERIFICATION_SAMPLE
 import org.junit.jupiter.api.extension.ExtendWith
@@ -34,12 +38,6 @@ import org.mockserver.model.JsonBody.json
 import org.mockserver.model.Not.not
 import org.mockserver.model.NottableString.string
 import org.mockserver.verify.VerificationTimes
-import play.api.libs.json.Json
-
-import java.net.URL
-import java.security.KeyPair
-import java.security.interfaces.ECPublicKey
-import java.util.{Base64, UUID}
 
 object PushSubscriptionSetCreateProcessorTest {
   val PUSH_VERIFICATION_SAMPLE: PushVerification = PushVerification(
@@ -87,8 +85,8 @@ class PushSubscriptionSetCreateProcessorTest {
     val uaPublicKey: ECPublicKey = uaKeyPair.getPublic.asInstanceOf[ECPublicKey]
     val authSecret: Array[Byte] = "secret123secret1".getBytes
 
-    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
-    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+    val p256dh: String = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getUrlEncoder.encodeToString(authSecret)
 
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, Some(PushSubscriptionKeys(p256dh, auth))).block()
     pushServer.verify(request()
