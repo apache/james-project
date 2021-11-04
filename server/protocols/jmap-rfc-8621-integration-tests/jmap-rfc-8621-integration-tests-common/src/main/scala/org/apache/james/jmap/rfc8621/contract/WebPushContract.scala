@@ -171,6 +171,7 @@ trait WebPushContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def correctBehaviourShouldSuccess(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     // Setup mock-server for callback
     val bodyRequestOnPushServer: AtomicReference[String] = setupPushServerCallback(pushServer)
