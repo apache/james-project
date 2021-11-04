@@ -154,7 +154,8 @@ trait WebPushContract {
     awaitAtMostTenSeconds.until(() => server.getProbe(classOf[SpoolerProbe]).processingFinished())
   }
 
-  private def setupPushServerCallback(pushServer: ClientAndServer, bodyRequestOnPushServer: AtomicReference[String]): Unit =
+  private def setupPushServerCallback(pushServer: ClientAndServer): AtomicReference[String] = {
+    val bodyRequestOnPushServer: AtomicReference[String] = new AtomicReference("")
     pushServer
       .when(request
         .withPath(PUSH_URL_PATH)
@@ -166,12 +167,13 @@ trait WebPushContract {
             .withStatusCode(HttpStatus.SC_CREATED)
         }
       })
+    bodyRequestOnPushServer
+  }
 
   @Test
   def correctBehaviourShouldSuccess(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     // Setup mock-server for callback
-    val bodyRequestOnPushServer: AtomicReference[String] = new AtomicReference("")
-    setupPushServerCallback(pushServer, bodyRequestOnPushServer)
+    val bodyRequestOnPushServer: AtomicReference[String] = setupPushServerCallback(pushServer)
 
     // WHEN bob creates a push subscription
     val pushSubscriptionId: String = createPushSubscription(pushServer)
@@ -236,8 +238,7 @@ trait WebPushContract {
   @Test
   def webPushShouldNotPushToPushServerWhenExpiredSubscription(server: GuiceJamesServer, pushServer: ClientAndServer, clock: UpdatableTickingClock): Unit = {
     // Setup mock-server for callback
-    val bodyRequestOnPushServer: AtomicReference[String] = new AtomicReference("")
-    setupPushServerCallback(pushServer, bodyRequestOnPushServer)
+    val bodyRequestOnPushServer: AtomicReference[String] = setupPushServerCallback(pushServer)
 
     // WHEN bob creates a push subscription
     val pushSubscriptionId: String = createPushSubscription(pushServer)
@@ -305,8 +306,7 @@ trait WebPushContract {
   @Test
   def webPushShouldNotPushToPushServerWhenDeletedSubscription(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     // Setup mock-server for callback
-    val bodyRequestOnPushServer: AtomicReference[String] = new AtomicReference("")
-    setupPushServerCallback(pushServer, bodyRequestOnPushServer)
+    val bodyRequestOnPushServer: AtomicReference[String] = setupPushServerCallback(pushServer)
 
     // WHEN bob creates a push subscription
     val pushSubscriptionId: String = createPushSubscription(pushServer)
@@ -393,7 +393,7 @@ trait WebPushContract {
   @Test
   def webPushShouldNotPushToPushServerWhenNotValidatedCode(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     // Setup mock-server for callback
-    setupPushServerCallback(pushServer, new AtomicReference(""))
+    setupPushServerCallback(pushServer)
 
     // WHEN bob creates a push subscription [no code validation]
     createPushSubscription(pushServer)

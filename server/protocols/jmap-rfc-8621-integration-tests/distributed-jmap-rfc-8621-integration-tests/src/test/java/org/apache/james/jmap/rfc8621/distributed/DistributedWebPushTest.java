@@ -17,25 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rfc8621.memory;
+package org.apache.james.jmap.rfc8621.distributed;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.ClockExtension;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.WebPushContract;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryWebPushTest implements WebPushContract {
+class DistributedWebPushTest implements WebPushContract {
+    public static final DockerElasticSearchExtension ELASTIC_SEARCH_EXTENSION = new DockerElasticSearchExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule()))
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.builder()
+                .s3()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
+            .build())
+        .extension(ELASTIC_SEARCH_EXTENSION)
+        .extension(new CassandraExtension())
+        .extension(new RabbitMQExtension())
+        .extension(new AwsS3BlobStoreExtension())
         .extension(new ClockExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule()))
         .build();
 
     @RegisterExtension

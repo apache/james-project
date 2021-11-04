@@ -17,21 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.protocols;
+package org.apache.james;
 
-import org.apache.james.events.EventBus;
-import org.apache.james.events.EventListener;
-import org.apache.james.jmap.InjectionKeys;
-import org.apache.james.jmap.pushsubscription.PushListener;
+import java.time.Clock;
+import java.time.Instant;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+import org.apache.james.utils.UpdatableTickingClock;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 
-public class JmapEventBusModule extends AbstractModule {
+import com.google.inject.Module;
+
+public class ClockExtension implements GuiceModuleTestExtension {
+    private UpdatableTickingClock clock;
+
     @Override
-    protected void configure() {
-        bind(EventBus.class).annotatedWith(Names.named(InjectionKeys.JMAP)).to(EventBus.class);
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(PushListener.class);
+    public void beforeEach(ExtensionContext extensionContext) {
+        clock = new UpdatableTickingClock(Instant.now());
+    }
+
+    @Override
+    public Module getModule() {
+        return binder -> binder.bind(Clock.class).toInstance(clock);
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return parameterContext.getParameter().getType() == UpdatableTickingClock.class;
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return clock;
     }
 }
