@@ -1,0 +1,63 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: james-client
+spec:
+  selector:
+    instance: james-imap-smtp
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 465
+      name: "smtp-ssl"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: james-imap
+spec:
+  selector:
+    instance: james-imap-smtp
+  ports:
+    - protocol: TCP
+      port: 993
+      name : "imap-ssl"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: james-admin
+spec:
+  selector:
+    app: james
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      name: "web"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jmap
+spec:
+  selector:
+    instance: james-jmap
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: "web"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: james
+spec:
+  selector:
+    instance: james-imap-smtp
+  ports:
+    - protocol: TCP
+      port: 25
+      targetPort: 25
+      name: "smtp-open"

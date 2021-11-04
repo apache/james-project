@@ -1,0 +1,168 @@
+== Values for Helm James template
+
+Helm James has many visible values to configure before being able to use
+it correctly. Values are injected into the deployment template as
+environment variables. An example with default values can be found in
+the `+values.yaml+` file.
+
+This document presents a quick description of each value field.
+
+=== DNS values
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|emailDomain |mail.example.com |The domain name for your tenant’s email
+addresses
+
+|jmapUrl |jmap.example.com |The url for the ingress jmap endpoint
+
+|adminUrl |admin.example.com |The url for the ingress admin endpoint
+
+|smtpHostname |smtp.example.com |The SMTP Ehlo hostname
+|===
+
+=== James values
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|replicaJmapInstanceCount |1 |The number of pods we deploy for James
+JMAP instance in the cluster
+
+|replicaImapSmtpInstanceCount |1 |The number of pods we deploy for James
+IMAP/SMTP instance in the cluster
+
+|image |apache/james:distributed-3.7.0 |The James image used for
+deployment (Cassandra - RabbitMQ - LDAP distributed James flavor)
+|===
+
+=== James environment values
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+
+|jamesCassandraKeyspace |sandbox_james |The keyspace used for Cassandra
+James data
+
+|jamesCassandraCacheKeyspace |sandbox_james_cache |The keyspace used for
+the Cassandra cache
+
+|jamesEsMailboxIndex |mailbox_v1 |The index used for mailbox in
+Elasticsearch. The default value should be enough, but in case you had
+issues and needed to create a new index, this will allow you to point
+James to it
+
+|jamesEsClusterName |change-me |Name of the cluster
+
+|jamesEsHostScheme |http |Only http or https are accepted
+
+|jamesEsSslValidationStrategy |ignore |Choosing the SSL check strategy
+when using https scheme: `+default+` (use the default SSL TrustStore of
+the system), `+ignore+` (Ignore SSL Validation check (not recommended)),
+`+override+` (override the SSL Context to use a custom TrustStore
+containing ES server’s certificate)
+
+|jamesEsHostNameVerifier |default |Configure Elasticsearch rest client
+to use host name verifier during SSL handshake: `+default+` (using the
+default hostname verifier provided by apache http client),
+`+accept_any_hostname+` (accept any host (not recommended))
+
+|jamesRabbitHost |change-me |The host url for RabbitMQ used by James for
+mail processing
+
+|jamesMessageSize |25M |The default maximum size for each email is 25MB,
+Must be a positive integer, optionally with a unit: B, K, M, G.
+
+|jamesDkimSignSmtp |dkimselector |SMTP signature for DKIM, also called
+DKIM Selector
+
+|jamesDkimSignDomain |mail.example.com |Domain signature for DKIM
+
+|cassandraReplicationFactor |3 |The replication factor for Cassandra
+configuration
+
+|jamesHELOMessage |change-me |The SMTP Ehlo message
+
+|jvmOpts |-Xms4g -Xmx4g |Add the JVM_OPTIONS flag for the JVM resource
+allocation when starting James
+
+|jamesResources.limits.cpu |2000m |Limit of cpu allowed to James pod
+
+|jamesResources.limits.memory |6Gi |Limit of memory allowed to James pod
+
+|jamesResources.requests.cpu |1000m |Request of cpu allowed to James pod
+
+|jamesResources.requests.memory |3Gi |Request of memory allowed to James
+pod
+
+|glowroot.enabled |true |Enabling or disabling Glowroot usage with
+James. It’s better to disable it for prod environments
+
+|ingress.enabled |false |Enabling or disabling Nginx Ingress. We are
+using it to expose JMAP and attach our SSL certificates for
+SMTP/IMAP/JMAP. Default is false
+
+|james.tls.secretName |the-name-of-a-secret |The name of the secret
+created separately contening the SSL certificate for JMAP, IMAPS and
+SMTPS
+|===
+
+=== Cassandra values
+
+There is two ways to deploy Cassandra in our Helm packages, defined by
+the `+deploy+` field.
+
+==== as-pod
+
+Cassandra can be deployed as pods in the cluster. Parameters for this
+mode are:
+
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|replicaCount |1 |The number of Cassandra pods
+|namespace |change-me | Namespace of Cassandra deployment
+|===
+
+NOTE: Pod name must match template format: `cassandra-01.namespace:9042,cassandra-02.namespace:9042`
+
+==== as-ref
+
+Cassandra has been deployed in VMs and the nodes can be accessed through
+their IP addresses. Parameters for this mode are:
+
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of Cassandra IP nodes.
+|===
+
+=== Elasticsearch values
+
+There is two ways to deploy Elasticsearch in our Helm packages, defined
+by the `+deploy+` field.
+
+==== as-pod
+
+Elasticsearch has been deployed as pods in the cluster. Parameters for
+this mode are:
+
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|replicaCount |1 |The number of ElasticSearch pods
+
+|namespace | change-me | Namespace of ElasticSearch deployment
+|===
+
+NOTE: Pod name must match template format: `elasticsearch-01.namespace:9200,elasticsearch-02.namespace:9200`
+
+==== as-ref
+
+ElasticSearch has been deployed in VMs and the nodes can be accessed
+through their IP addresses. Parameters for this mode are:
+
+[cols="<,<,<",options="header",]
+|===
+|Field |Default value |Description
+|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of ElasticSearch IP nodes.
+|===

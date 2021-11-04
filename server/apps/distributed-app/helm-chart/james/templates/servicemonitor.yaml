@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: james-service-monitor
+  labels:
+    {{- toYaml .Values.serviceMonitor.additionalLabels | nindent 4 }}
+spec:
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      app: james
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+  - port: web
+    path: /metrics
+{{- end }}

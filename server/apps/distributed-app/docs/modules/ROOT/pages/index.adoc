@@ -19,8 +19,7 @@ In this section of the documentation, we will introduce you to:
 
 * xref:objectives.adoc[Objectives and motivation of the Distributed Server]
 * xref:architecture/index.adoc[Overview of architecture]
-* xref:run.adoc[Running the Distributed Server]
-* xref:run-docker.adoc[Run the Distributed Server with Docker]
+* xref:run/index.adoc[Run the Distributed Server]
 * xref:configure/index.adoc[Configure the Distributed Server]
 * xref:operate/index.adoc[Operation of the Distributed Server]
 * xref:extending/index.adoc[How to extend the server]
