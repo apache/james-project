@@ -1,5 +1,8 @@
 package org.apache.james.jmap.method
 
+import java.nio.charset.StandardCharsets
+
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.{DeviceClientIdInvalidException, ExpireTimeInvalidException, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -8,12 +11,9 @@ import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
-import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
+import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
-
-import java.nio.charset.StandardCharsets
-import javax.inject.Inject
 
 object PushSubscriptionSetCreatePerformer {
   trait CreationResult
@@ -61,16 +61,15 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
       }.collectSeq()
       .map(CreationResults)
 
-  private def parseCreate(jsObject: JsObject): Either[PushSubscriptionCreationParseException, PushSubscriptionCreationRequest] =
-    PushSubscriptionCreation.validateProperties(jsObject)
-      .flatMap(validJsObject => pushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(validJsObject) match {
-        case JsSuccess(creationRequest, _) =>
-          creationRequest.validate match {
-            case Left(e) => Left(PushSubscriptionCreationParseException(SetError.invalidArguments(SetErrorDescription(e.getMessage))))
-            case Right(validSuccess) => Right(validSuccess)
-          }
-        case JsError(errors) => Left(PushSubscriptionCreationParseException(pushSubscriptionSetError(errors)))
-      })
+  private def parseCreate(jsObject: JsObject): Either[Exception, PushSubscriptionCreationRequest] = for {
+      validJsObject <- PushSubscriptionCreation.validateProperties(jsObject)
+      parsedRequest <-  pushSubscriptionSerializer.deserializePushSubscriptionCreationRequest(validJsObject).asEither
+        .left.map(errors => PushSubscriptionCreationParseException(pushSubscriptionSetError(errors)))
+      validatedRequest <- parsedRequest.validate
+        .left.map(e => PushSubscriptionCreationParseException(SetError.invalidArguments(SetErrorDescription(e.getMessage))))
+    } yield {
+      validatedRequest
+    }
 
   private def create(clientId: PushSubscriptionCreationId, request: PushSubscriptionCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
     SMono.fromPublisher(pushSubscriptionRepository.save(mailboxSession.getUser, request))
