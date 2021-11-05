@@ -62,6 +62,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Base64
 import java.util.UUID
 
+import scala.jdk.CollectionConverters._
+
 object PushSubscriptionSetMethodContract {
   val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 }
@@ -183,6 +185,245 @@ trait PushSubscriptionSetMethodContract {
            |            {
            |                "type": "unknownMethod",
            |                "description": "Missing capability(ies): urn:ietf:params:jmap:core"
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldModifyTypes(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                  "types": ["Mailbox", "Email"]
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "updated": {
+           |                    "${pushSubscription.id.serialise}": {}
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).types.asJava)
+      .containsExactlyInAnyOrder(MailboxTypeName, EmailTypeName)
+  }
+
+  @Test
+  def updateShouldRejectUnknownTypes(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                  "types": ["Mailbox", "Unknown"]
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notUpdated":{
+           |                    "${pushSubscription.id.serialise}":{
+           |                        "type":"invalidArguments",
+           |                        "description":"Unknown typeName Unknown",
+           |                        "properties":["types"]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldRejectBadTypes(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                  "types": 36
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notUpdated":{
+           |                    "${pushSubscription.id.serialise}":{
+           |                        "type":"invalidArguments",
+           |                        "description":"Expecting an array of JSON strings as an argument",
+           |                        "properties":["types"]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldRejectBadType(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URL("https://example.com/push/?device=X8980fc&client=12c6d086")),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+
+    val request: String =
+      s"""{
+         |    "using": ["urn:ietf:params:jmap:core"],
+         |    "methodCalls": [
+         |      [
+         |        "PushSubscription/set",
+         |        {
+         |            "update": {
+         |                "${pushSubscription.id.serialise}": {
+         |                  "types": ["Email", 36]
+         |                }
+         |              }
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "notUpdated":{
+           |                    "${pushSubscription.id.serialise}":{
+           |                        "type":"invalidArguments",
+           |                        "description":"Expecting an array of JSON strings as an argument",
+           |                        "properties":["types"]
+           |                    }
+           |                }
            |            },
            |            "c1"
            |        ]
