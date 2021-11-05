@@ -448,8 +448,8 @@ trait WebPushContract {
     val uaPrivateKey: ECPrivateKey = uaKeyPair.getPrivate.asInstanceOf[ECPrivateKey]
     val authSecret: Array[Byte] = "secret123secret1".getBytes
 
-    val p256dh: String = Base64.getEncoder.encodeToString(uaPublicKey.getEncoded)
-    val auth: String = Base64.getEncoder.encodeToString(authSecret)
+    val p256dh: String = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded)
+    val auth: String = Base64.getUrlEncoder.encodeToString(authSecret)
 
     val pushSubscriptionId: String = `given`
       .body(
