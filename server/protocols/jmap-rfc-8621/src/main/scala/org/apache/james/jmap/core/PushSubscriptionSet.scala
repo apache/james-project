@@ -44,6 +44,9 @@ case class PushSubscriptionSetRequest(create: Option[Map[PushSubscriptionCreatio
 case class PushSubscriptionCreationId(id: Id) {
   def serialise: String = id.value
 }
+object UnparsedPushSubscriptionId {
+  def of(id: PushSubscriptionId): UnparsedPushSubscriptionId = UnparsedPushSubscriptionId(Id.validate(id.serialise).toOption.get)
+}
 case class UnparsedPushSubscriptionId(id: Id) {
   def serialise: String = id.value
   def parse: Either[IllegalArgumentException, PushSubscriptionId] = Try(UUID.fromString(id.value))
