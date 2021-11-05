@@ -230,7 +230,9 @@ trait WebPushContract {
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
-             |        "$ACCOUNT_ID": "$${json-unit.ignore-element}"
+             |        "$ACCOUNT_ID": {
+             |          "Mailbox": "$${json-unit.any-string}"
+             |        }
              |    }
              |}""".stripMargin)),
         VerificationTimes.atLeast(1))
@@ -299,7 +301,9 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": "$${json-unit.ignore-element}"
+           |        "$ACCOUNT_ID": {
+           |          "Mailbox": "$${json-unit.any-string}"
+           |        }
            |    }
            |}""".stripMargin)),
       VerificationTimes.exactly(0))
@@ -386,7 +390,9 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": "$${json-unit.ignore-element}"
+           |        "$ACCOUNT_ID": {
+           |          "Mailbox": "$${json-unit.any-string}"
+           |        }
            |    }
            |}""".stripMargin)),
       VerificationTimes.exactly(0))
@@ -412,7 +418,9 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": "$${json-unit.ignore-element}"
+           |        "$ACCOUNT_ID": {
+           |          "Mailbox": "$${json-unit.any-string}"
+           |        }
            |    }
            |}""".stripMargin)),
       VerificationTimes.exactly(0))
@@ -467,9 +475,9 @@ trait WebPushContract {
            |      ]
            |    ]
            |  }""".stripMargin)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .extract()
       .jsonPath()
@@ -520,7 +528,9 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": "$${json-unit.ignore}"
+           |        "$ACCOUNT_ID": {
+           |          "Mailbox": "$${json-unit.ignore}"
+           |        }
            |    }
            |}""".stripMargin)
   }
