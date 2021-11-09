@@ -168,6 +168,8 @@ public class CassandraJamesServerMain implements JamesServerMain {
     );
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         CassandraJamesServerConfiguration configuration = CassandraJamesServerConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

@@ -137,6 +137,8 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new DKIMMailetModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         Configuration configuration = Configuration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

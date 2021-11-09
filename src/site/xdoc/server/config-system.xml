@@ -151,6 +151,23 @@
 
             </subsection>
 
+            <subsection name="jvm.properties">
+
+                <p>This configuration file is only relevant when using Guice.</p>
+
+                <p>It may contain any additional system properties for tweaking JVM execution.
+                    When you normally would add a command line option <code>-Dmy.property=whatever</code>,
+                    you can put it in this file as <code>my.property=whatever</code> instead.
+                    These properties will be added as system properties on server start.</p>
+
+                <p>Note that in some rare cases this might not work,
+                    when a property affects very early JVM start behaviour.</p>
+
+                <p>For testing purposes, you may specify a different file path via the
+                    command line option <code>-Dextra.props=/some/other/jvm.properties</code>.</p>
+
+            </subsection>
+
         </section>
 
     </body>
