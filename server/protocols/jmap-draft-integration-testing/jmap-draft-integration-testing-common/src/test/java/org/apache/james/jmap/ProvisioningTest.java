@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -95,7 +96,7 @@ public abstract class ProvisioningTest {
         .when()
             .post("/jmap")
         .then()
-            .header("Content-Length", "2735")
+            .header("Content-Length", notNullValue())
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(6))
