@@ -22,6 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
@@ -88,6 +89,15 @@ public class ManageSieveProcessor {
             return argumentParser.authenticate(session, arguments);
         }
         if (command.equalsIgnoreCase(AUTHENTICATE)) {
+            if (StringUtils.countMatches(arguments, "\"") == 4) {
+                argumentParser.chooseMechanism(session, arguments);
+                int bracket1 = arguments.indexOf('\"');
+                int bracket2 = arguments.indexOf('\"', bracket1 + 1);
+                int bracket3 = arguments.indexOf('\"', bracket2 + 1);
+                int bracket4 = arguments.indexOf('\"', bracket3 + 1);
+
+                return argumentParser.authenticate(session, arguments.substring(bracket3 + 1, bracket4));
+            }
             return argumentParser.chooseMechanism(session, arguments);
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);

@@ -41,9 +41,9 @@ S: NO
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK
 
-C: PUTSCRIPT "mysievescript" {110+}
+C: PUTSCRIPT "mysievescript" {97+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {
@@ -55,5 +55,5 @@ C: PUTSCRIPT "foo" {31+}
 C: #comment
 C: InvalidSieveCommand
 C:
-S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 19.
+S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 21.
 

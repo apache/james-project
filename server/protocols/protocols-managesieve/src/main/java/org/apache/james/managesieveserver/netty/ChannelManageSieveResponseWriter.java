@@ -20,24 +20,53 @@
 package org.apache.james.managesieveserver.netty;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.protocols.api.CommandDetectionSession;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.stream.ChunkedStream;
 
-public class ChannelManageSieveResponseWriter {
+public class ChannelManageSieveResponseWriter implements CommandDetectionSession {
     private final Channel channel;
+    private String cumulation = null;
 
     public ChannelManageSieveResponseWriter(Channel channel) {
         this.channel = channel;
     }
 
-    public void write(String response) throws IOException {
+    public void write(String response) {
         if (channel.isConnected()) {
             InputStream in = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8));
             channel.write(new ChunkedStream(in));
         }
+    }
+
+    @Override
+    public boolean needsCommandInjectionDetection() {
+        return false;
+    }
+
+    @Override
+    public void startDetectingCommandInjection() {
+
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+
+    }
+
+    public void resetCumulation() {
+        cumulation = null;
+    }
+
+    public String cumulate(String s) {
+        if (cumulation == null || cumulation.equals("\r\n")) {
+            cumulation = s;
+        } else {
+            cumulation += s;
+        }
+        return cumulation;
     }
 }

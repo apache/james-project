@@ -109,11 +109,12 @@ public class ArgumentParser {
         Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
         Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
 
+        long size;
         if (! arguments.hasNext()) {
             return "NO : Missing argument: script size";
         } else {
             try {
-                ParserUtils.getSize(arguments.next());
+                size = ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
                 return "NO \"" + e.getMessage() + "\"";
             }
@@ -121,7 +122,10 @@ public class ArgumentParser {
         if (arguments.hasNext()) {
             return "NO \"Extra arguments not supported\"";
         } else {
-            String content = Joiner.on("\r\n").join(firstLine);
+            String content = Joiner.on("\r\n").join(firstLine) + "\r\n";
+            if (content.length() < size) {
+                throw new NotEnoughDataException();
+            }
             if (Strings.isNullOrEmpty(content)) {
                 return "NO \"Missing argument: script content\"";
             }
@@ -162,6 +166,7 @@ public class ArgumentParser {
         Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
 
         String scriptName;
+        long size;
         if (! arguments.hasNext()) {
              return "NO \"Missing argument: script name\"";
         } else {
@@ -174,7 +179,7 @@ public class ArgumentParser {
             return "NO \"Missing argument: script size\"";
         } else {
             try {
-                ParserUtils.getSize(arguments.next());
+                size = ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
                 return "NO \"" + e.getMessage() + "\"";
             }
@@ -182,7 +187,10 @@ public class ArgumentParser {
         if (arguments.hasNext()) {
             return "NO \"Extra arguments not supported\"";
         } else {
-            String content = Joiner.on("\r\n").join(firstLine);
+            String content = Joiner.on("\r\n").join(firstLine) + "\r\n";
+            if (content.length() < size) {
+                throw new NotEnoughDataException();
+            }
             return core.putScript(session, ParserUtils.unquote(scriptName), content);
         }
     }

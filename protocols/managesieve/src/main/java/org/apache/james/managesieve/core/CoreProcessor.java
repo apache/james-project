@@ -216,7 +216,7 @@ public class CoreProcessor implements CoreCommands {
             if (Strings.isNullOrEmpty(mechanism)) {
                 return "NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command";
             }
-            String unquotedMechanism = ParserUtils.unquote(mechanism);
+            String unquotedMechanism = ParserUtils.unquoteFirst(mechanism);
             SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
 
             session.setChoosedAuthenticationMechanism(supportedMechanism);
@@ -237,7 +237,7 @@ public class CoreProcessor implements CoreCommands {
             if (authenticatedUsername != null) {
                 session.setUser(authenticatedUsername);
                 session.setState(Session.State.AUTHENTICATED);
-                return "OK authentication successfull";
+                return "OK";
             } else {
                 session.setState(Session.State.UNAUTHENTICATED);
                 session.setUser(null);
