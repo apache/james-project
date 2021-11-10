@@ -28,7 +28,6 @@ import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
-import org.apache.james.jmap.api.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
@@ -55,6 +54,7 @@ import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistryModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
+import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
