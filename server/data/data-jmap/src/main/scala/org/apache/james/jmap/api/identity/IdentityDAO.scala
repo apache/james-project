@@ -3,7 +3,7 @@ package org.apache.james.jmap.api.identity
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-import com.google.common.collect.ImmutableList
+import com.google.common.collect.{HashBasedTable, ImmutableList, Table}
 import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
@@ -83,7 +83,7 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom) {
     Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
       .toEither
       .toOption
-      .map(IdentityId)
+      .map(IdentityId(_))
 }
 
 // This class is intended to merge default (server-set0 identities with (user defined) custom identities
@@ -102,12 +102,24 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = customIdentityDao.delete(username, ids)
 }
 
+case class IdentityNotFound(id: IdentityId) extends RuntimeException(s"$id could not be found")
+
 class MemoryCustomIdentityDAO extends CustomIdentityDAO {
-  override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = SMono.empty
+  private val table: Table[Username, IdentityId, Identity] = HashBasedTable.create
 
-  override def list(user: Username): Publisher[Identity] = SMono.empty
+  override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
+    SMono.fromCallable(() => IdentityId.generate)
+      .map(creationRequest.asIdentity)
+      .doOnNext(identity => table.put(user, identity.id, identity))
 
-  override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] = SMono.empty
+  override def list(user: Username): Publisher[Identity] = SFlux.fromIterable(table.row(user).values().asScala)
 
-  override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SMono.empty
+  override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] =
+   Option(table.get(user, identityId))
+     .map(identityUpdate.update)
+     .fold(SMono.error[Unit](IdentityNotFound(identityId)))(identity => SMono.fromCallable[Unit](() => table.put(user, identityId, identity)))
+
+  override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
+    .doOnNext(id => table.remove(username, id))
+    .`then`()
 }

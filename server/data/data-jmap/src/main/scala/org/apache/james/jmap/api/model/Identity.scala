@@ -27,6 +27,10 @@ case class IdentityName(name: String) extends AnyVal
 case class TextSignature(name: String) extends AnyVal
 case class HtmlSignature(name: String) extends AnyVal
 case class MayDeleteIdentity(value: Boolean) extends AnyVal
+
+object IdentityId {
+  def generate: IdentityId = IdentityId(UUID.randomUUID())
+}
 case class IdentityId(id: UUID)
 
 case class Identity(id: IdentityId,

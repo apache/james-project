@@ -39,7 +39,7 @@ object IdentityGet {
 case class UnparsedIdentityId(id: Id) {
   def validate: Either[IllegalArgumentException, IdentityId] = Try(UUID.fromString(id.value))
     .toEither
-    .map(IdentityId)
+    .map(IdentityId(_))
     .left.map {
     case e: IllegalArgumentException => e
     case e => new IllegalArgumentException(e)
