@@ -19,18 +19,38 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import com.google.inject.AbstractModule
+import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import javax.inject.Inject
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityRepository}
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.junit.jupiter.api.{BeforeEach, Test}
+import org.reactivestreams.Publisher
+import reactor.core.scala.publisher.SMono
+
+class IdentityProbeModule extends AbstractModule{
+  override def configure(): Unit = {
+    Multibinder.newSetBinder(binder(), classOf[GuiceProbe])
+      .addBinding()
+      .to(classOf[IdentityProbe])
+  }
+}
+
+class IdentityProbe @Inject()(identityRepository: IdentityRepository) extends GuiceProbe {
+  def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = identityRepository.save(user, creationRequest)
+}
 
 trait IdentityGetContract {
   @BeforeEach
@@ -87,6 +107,63 @@ trait IdentityGetContract {
         |      }
         |  ]
         |}""".stripMargin)
+  }
+
+  @Test
+  def getIdentityShouldReturnCustomIdentity(server: GuiceJamesServer): Unit = {
+    val id = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
+        email = BOB.asMailAddress(),
+        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+        textSignature = Some(TextSignature("text signature")),
+        htmlSignature = Some(HtmlSignature("html signature")))))
+      .block()
+      .id.id.toString
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["$id"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |	"bcc": [{
+         |		"email": "boss2@domain.tld",
+         |		"name": "My Boss 2"
+         |	}],
+         |	"email": "bob@domain.tld",
+         |	"htmlSignature": "html signature",
+         |	"id": "$id",
+         |	"mayDelete": true,
+         |	"name": "Bob (custom address)",
+         |	"replyTo": [{
+         |		"email": "boss@domain.tld",
+         |		"name": "My Boss"
+         |	}],
+         |	"textSignature": "text signature"
+         |}""".stripMargin)
   }
 
   @Test
