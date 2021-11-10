@@ -20,26 +20,22 @@
 package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 import com.google.common.collect.ImmutableList
-import com.google.common.hash.Hashing
-import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
-import org.apache.james.jmap.core.Id.Id
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.rrt.api.CanSendFrom
 
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 case class IdentityName(name: String) extends AnyVal
 case class TextSignature(name: String) extends AnyVal
 case class HtmlSignature(name: String) extends AnyVal
 case class MayDeleteIdentity(value: Boolean) extends AnyVal
-case class IdentityId(id: Id)
-case class IdentityIds(ids: List[IdentityId]) {
-  def contains(identityId: IdentityId): Boolean = ids.contains(identityId)
-}
+case class IdentityId(id: UUID)
 
 case class Identity(id: IdentityId,
                     name: IdentityName,
@@ -57,7 +53,7 @@ class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
       .flatMap(address =>
         from(address).map(id =>
           Identity(
-            id = IdentityId(id),
+            id = id,
             name = IdentityName(address.asString()),
             email = address,
             replyTo = None,
@@ -66,11 +62,9 @@ class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
             htmlSignature = None,
             mayDelete = MayDeleteIdentity(false))))
 
-  private def from(address: MailAddress): Option[Id] = {
-    val sha256String = Hashing.sha256()
-      .hashString(address.asString(), StandardCharsets.UTF_8)
-      .toString
-    val refinedId: Either[String, Id] = refineV(sha256String)
-    refinedId.toOption
-  }
+  private def from(address: MailAddress): Option[IdentityId] =
+    Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
+      .toEither
+      .toOption
+      .map(IdentityId)
 }

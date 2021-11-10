@@ -76,7 +76,9 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                          invocation: InvocationWithContext,
                          mailboxSession: MailboxSession,
                          request: MDNSendRequest): SFlux[InvocationWithContext] =
-    identityResolver.resolveIdentityId(request.identityId, mailboxSession)
+    request.identityId.validate
+      .fold(e => SMono.error(new IllegalArgumentException("The IdentityId cannot be found", e)),
+      id => identityResolver.resolveIdentityId(id, mailboxSession))
       .flatMap(maybeIdentity => maybeIdentity.map(identity => create(identity, request, mailboxSession, invocation.processingContext))
         .getOrElse(SMono.error(IdentityIdNotFoundException("The IdentityId cannot be found"))))
       .flatMapMany(createdResults => {

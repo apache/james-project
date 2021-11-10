@@ -21,7 +21,7 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Base64
+import java.util.{Base64, UUID}
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.authentication.PreemptiveBasicAuthScheme
@@ -42,10 +42,6 @@ object Fixture {
   val ALICE_ACCOUNT_ID: String = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
   val ANDRE_ACCOUNT_ID: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
   val DAVID_ACCOUNT_ID: String = "a63dc794489dca3a428ae19c0632425619aa2d8551cd8dab26f4b9a87c774342"
-
-  val IDENTITY_ID: String = "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
-  val DAVID_IDENTITY_ID: String = "a63dc794489dca3a428ae19c0632425619aa2d8551cd8dab26f4b9a87c774342"
-  val ANDRE_IDENTITY_ID: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
 
 
   def createTestMessage: Message = Message.Builder
@@ -95,9 +91,13 @@ object Fixture {
   val CEDRIC: Username = Username.fromLocalPartWithDomain("cedric", DOMAIN)
   val DAVID: Username = Username.fromLocalPartWithDomain("david", DOMAIN)
   val ALICE: Username = Username.fromLocalPartWithDomain("alice", _2_DOT_DOMAIN)
+  val DAVID_IDENTITY_ID: String = UUID.nameUUIDFromBytes(ANDRE.asString().getBytes(StandardCharsets.UTF_8)).toString
+  val ANDRE_IDENTITY_ID: String = "1d684cf0-101b-300b-82c0-8e17f8d464bc"
+  val IDENTITY_ID: String = UUID.nameUUIDFromBytes(BOB.asString().getBytes(StandardCharsets.UTF_8)).toString
   val BOB_PASSWORD: String = "bobpassword"
   val ANDRE_PASSWORD: String = "andrepassword"
   val ALICE_PASSWORD: String = "alicepassword"
+
 
   val BOB_BASIC_AUTH_HEADER: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.asString}:$BOB_PASSWORD")}")
 
