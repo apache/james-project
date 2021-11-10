@@ -473,6 +473,23 @@ Response codes:
 
 This also can be used to create a new user.
 
+
+=== Verifying a user password
+
+....
+curl -XPOST http://ip:port/users/usernameToBeUsed/verify \
+  -d '{"password":"passwordToBeVerified"}' \
+  -H "Content-Type: application/json"
+....
+
+Response codes:
+
+- 204: The user's password was correct
+- 401: Wrong password or user does not exist
+- 400: The user name or the payload is invalid
+
+This intentionally treats non-existing users as unauthenticated, to prevent a username oracle attack.
+
 === Testing a user existence
 
 ....

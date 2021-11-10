@@ -776,6 +776,48 @@ class UserRoutesTest {
                 .body("message", is("Invalid arguments supplied in the user request"));
         }
 
+        @Test
+        void verifyShouldReturnOkWhenUserPasswordMatches() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .post(USERNAME_WITH_DOMAIN.asString() + "/verify")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void verifyShouldReturnUnauthorizedWhenUserPasswordDoesntMatch() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"false\"}")
+            .when()
+                .post(USERNAME_WITH_DOMAIN.asString() + "/verify")
+            .then()
+                .statusCode(HttpStatus.UNAUTHORIZED_401);
+        }
+
+        @Test
+        void verifyShouldReturnUnauthorizedWhenUserDoesNotExist() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .post("/NOTusername@domain/verify")
+            .then()
+                .statusCode(HttpStatus.UNAUTHORIZED_401);
+        }
+
         @Nested
         class IllegalCharacterErrorHandlingTest implements UserRoutesContract.IllegalCharactersErrorHandlingContract {
 
@@ -926,6 +968,48 @@ class UserRoutesTest {
                 .put(USERNAME_WITHOUT_DOMAIN.asString())
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void verifyShouldReturnOkWhenUserPasswordMatches() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .post(USERNAME_WITHOUT_DOMAIN.asString() + "/verify")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void verifyShouldReturnUnauthorizedWhenUserPasswordDoesntMatch() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"false\"}")
+            .when()
+                .post(USERNAME_WITHOUT_DOMAIN.asString() + "/verify")
+            .then()
+                .statusCode(HttpStatus.UNAUTHORIZED_401);
+        }
+
+        @Test
+        void verifyShouldReturnUnauthorizedWhenUserDoesNotExist() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .post("/NOTusername/verify")
+            .then()
+                .statusCode(HttpStatus.UNAUTHORIZED_401);
         }
 
         @Nested
