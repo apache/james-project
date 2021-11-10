@@ -20,13 +20,12 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGetRequest, IdentityGetResponse, IdentityId}
+import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGet, IdentityGetRequest, IdentityGetResponse, IdentityId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -41,13 +40,13 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentityGetRequest): SMono[InvocationWithContext] = {
-    val requestedProperties: Properties = request.properties.getOrElse(Identity.allProperties)
-    (requestedProperties -- Identity.allProperties match {
+    val requestedProperties: Properties = request.properties.getOrElse(IdentityGet.allProperties)
+    (requestedProperties -- IdentityGet.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getIdentities(request, mailboxSession)
         .subscribeOn(Schedulers.elastic())
         .map(identityGetResponse => Invocation(
           methodName = methodName,
-          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ Identity.idProperty).as[JsObject]),
+          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ IdentityGet.idProperty).as[JsObject]),
           methodCallId = invocation.invocation.methodCallId))
       case invalidProperties: Properties =>
         SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
