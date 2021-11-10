@@ -24,6 +24,7 @@ import java.time.ZoneId
 import java.util.Date
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.james.jmap.api.model.EmailAddress
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.address.{AddressList, Group, Address => Mime4jAddress, Mailbox => Mime4jMailbox}

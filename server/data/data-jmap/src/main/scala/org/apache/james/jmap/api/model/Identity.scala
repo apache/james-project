@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.api.model
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID

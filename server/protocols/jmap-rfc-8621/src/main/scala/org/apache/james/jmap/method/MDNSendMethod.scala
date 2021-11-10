@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.mail.internet.MimeMessage
+import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._

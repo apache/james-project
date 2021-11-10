@@ -22,6 +22,7 @@ package org.apache.james.jmap.mail
 import java.util.UUID
 
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, Id, Properties, UuidState}

@@ -21,11 +21,12 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.api.model.{Identity, IdentityFactory, IdentityId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGet, IdentityGetRequest, IdentityGetResponse, IdentityId}
+import org.apache.james.jmap.mail.{IdentityGet, IdentityGetRequest, IdentityGetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory

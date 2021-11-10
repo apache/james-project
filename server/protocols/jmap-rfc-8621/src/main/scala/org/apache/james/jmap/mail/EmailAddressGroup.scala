@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mail
 
+import org.apache.james.jmap.api.model.EmailAddress
 import org.apache.james.mime4j.dom.address.{Address, Group, MailboxList}
 
 import scala.jdk.CollectionConverters._

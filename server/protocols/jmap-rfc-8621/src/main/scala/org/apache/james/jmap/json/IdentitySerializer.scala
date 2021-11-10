@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.core.{Properties, UuidState}
 import org.apache.james.jmap.mail._
 import play.api.libs.json.{Format, JsArray, JsObject, JsResult, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
