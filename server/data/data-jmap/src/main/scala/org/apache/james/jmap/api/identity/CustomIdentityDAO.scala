@@ -62,13 +62,14 @@ case class IdentityHtmlSignatureUpdate(htmlSignature: Option[HtmlSignature]) ext
   override def update(identity: Identity): Identity = identity.copy(htmlSignature = htmlSignature)
 }
 
-case class IdentityUpdateRequest(name: IdentityNameUpdate,
-                                 replyTo: IdentityReplyToUpdate,
-                                 bcc: IdentityBccUpdate,
-                                 textSignature: IdentityTextSignatureUpdate,
-                                 htmlSignature: IdentityHtmlSignatureUpdate) {
+case class IdentityUpdateRequest(name: Option[IdentityNameUpdate],
+                                 replyTo: Option[IdentityReplyToUpdate],
+                                 bcc: Option[IdentityBccUpdate],
+                                 textSignature: Option[IdentityTextSignatureUpdate],
+                                 htmlSignature: Option[IdentityHtmlSignatureUpdate]) extends IdentityUpdate {
   def update(identity: Identity): Identity =
     List(name, replyTo, bcc, textSignature, htmlSignature)
+      .flatten
       .foldLeft(identity)((acc, update) => update.update(acc))
 }
 
@@ -121,4 +122,4 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = customIdentityDao.delete(username, ids)
 }
 
-case class IdentityNotFound(id: IdentityId) extends RuntimeException(s"$id could not be found")
+case class IdentityNotFoundException(id: IdentityId) extends RuntimeException(s"$id could not be found")

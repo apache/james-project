@@ -21,10 +21,12 @@ package org.apache.james.jmap.memory.identity
 
 import com.google.common.collect.{HashBasedTable, Table}
 import org.apache.james.core.Username
-import org.apache.james.jmap.api.identity.{CustomIdentityDAO, IdentityCreationRequest, IdentityNotFound, IdentityUpdate}
+import org.apache.james.jmap.api.identity.{CustomIdentityDAO, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
 import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.jdk.CollectionConverters._
 
 class MemoryCustomIdentityDAO extends CustomIdentityDAO {
   private val table: Table[Username, IdentityId, Identity] = HashBasedTable.create
@@ -39,7 +41,7 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] =
     Option(table.get(user, identityId))
       .map(identityUpdate.update)
-      .fold(SMono.error[Unit](IdentityNotFound(identityId)))(identity => SMono.fromCallable[Unit](() => table.put(user, identityId, identity)))
+      .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(identity => SMono.fromCallable[Unit](() => table.put(user, identityId, identity)))
 
   override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
     .doOnNext(id => table.remove(username, id))
