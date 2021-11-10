@@ -27,6 +27,8 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.api.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
@@ -73,6 +75,9 @@ public class CassandraJmapModule extends AbstractModule {
 
         bind(CassandraVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(CassandraVacationRepository.class);
+
+        bind(MemoryCustomIdentityDAO.class).in(Scopes.SINGLETON);
+        bind(CustomIdentityDAO.class).to(MemoryCustomIdentityDAO.class);
 
         bind(CassandraNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);

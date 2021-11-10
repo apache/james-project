@@ -19,17 +19,9 @@
 
 package org.apache.james.jmap.api.model
 
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-import com.google.common.collect.ImmutableList
-import javax.inject.Inject
 import org.apache.james.core.MailAddress
-import org.apache.james.mailbox.MailboxSession
-import org.apache.james.rrt.api.CanSendFrom
-
-import scala.jdk.CollectionConverters._
-import scala.util.Try
 
 case class IdentityName(name: String) extends AnyVal
 case class TextSignature(name: String) extends AnyVal
@@ -46,25 +38,4 @@ case class Identity(id: IdentityId,
                     htmlSignature: Option[HtmlSignature],
                     mayDelete: MayDeleteIdentity)
 
-class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
-  def listIdentities(session: MailboxSession): List[Identity] =
-    canSendFrom.allValidFromAddressesForUser(session.getUser)
-      .collect(ImmutableList.toImmutableList()).asScala.toList
-      .flatMap(address =>
-        from(address).map(id =>
-          Identity(
-            id = id,
-            name = IdentityName(address.asString()),
-            email = address,
-            replyTo = None,
-            bcc = None,
-            textSignature = None,
-            htmlSignature = None,
-            mayDelete = MayDeleteIdentity(false))))
 
-  private def from(address: MailAddress): Option[IdentityId] =
-    Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
-      .toEither
-      .toOption
-      .map(IdentityId)
-}
