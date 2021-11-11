@@ -40,10 +40,17 @@ import com.google.common.base.Strings;
 public class ArgumentParser {
     
     private final CoreCommands core;
+    private final boolean validatePutSize;
 
     @Inject
     public ArgumentParser(CoreCommands core) {
         this.core = core;
+        this.validatePutSize = true;
+    }
+
+    public ArgumentParser(CoreCommands core, boolean validatePutSize) {
+        this.core = core;
+        this.validatePutSize = validatePutSize;
     }
 
     public String getAdvertisedCapabilities() {
@@ -122,8 +129,11 @@ public class ArgumentParser {
         if (arguments.hasNext()) {
             return "NO \"Extra arguments not supported\"";
         } else {
-            String content = Joiner.on("\r\n").join(firstLine) + "\r\n";
-            if (content.length() < size) {
+            String content = Joiner.on("\r\n").join(firstLine);
+            if (validatePutSize) {
+                content += "\r\n";
+            }
+            if (content.length() < size && validatePutSize) {
                 throw new NotEnoughDataException();
             }
             if (Strings.isNullOrEmpty(content)) {
@@ -187,8 +197,11 @@ public class ArgumentParser {
         if (arguments.hasNext()) {
             return "NO \"Extra arguments not supported\"";
         } else {
-            String content = Joiner.on("\r\n").join(firstLine) + "\r\n";
-            if (content.length() < size) {
+            String content = Joiner.on("\r\n").join(firstLine);
+            if (validatePutSize) {
+                content += "\r\n";
+            }
+            if (content.length() < size && validatePutSize) {
                 throw new NotEnoughDataException();
             }
             return core.putScript(session, ParserUtils.unquote(scriptName), content);
