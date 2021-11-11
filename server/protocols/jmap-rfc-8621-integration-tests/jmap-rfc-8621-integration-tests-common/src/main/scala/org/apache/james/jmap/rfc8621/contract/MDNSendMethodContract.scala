@@ -303,7 +303,7 @@ trait MDNSendMethodContract {
       `given`
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -1036,7 +1036,7 @@ trait MDNSendMethodContract {
       `given`(buildBOBRequestSpecification(server))
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -1215,7 +1215,7 @@ trait MDNSendMethodContract {
       `given`(buildBOBRequestSpecification(server))
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -1375,7 +1375,7 @@ trait MDNSendMethodContract {
       `given`
         .body(request)
       .when
-        .post.prettyPeek()
+        .post
       .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -1889,7 +1889,7 @@ trait MDNSendMethodContract {
     `given`
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
