@@ -35,7 +35,7 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-class IdentityGetMethod @Inject() (identityFactory: IdentityRepository,
+class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
                                    val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentityGetRequest] {
   override val methodName: MethodName = MethodName("Identity/get")
@@ -65,7 +65,7 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityRepository,
 
   private def getIdentities(request: IdentityGetRequest,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =
-    SFlux(identityFactory.list(mailboxSession.getUser))
+    SFlux(identityRepository.list(mailboxSession.getUser))
       .collectSeq()
       .map(_.toList)
       .map(request.computeResponse)
