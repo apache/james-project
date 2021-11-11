@@ -71,9 +71,9 @@ class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
       .map(request.computeResponse)
 }
 
-case class IdentityResolver @Inject()(identityFactory: IdentityRepository) {
+case class IdentityResolver @Inject()(identityRepository: IdentityRepository) {
   def resolveIdentityId(identityId: IdentityId, session: MailboxSession): SMono[Option[Identity]] =
-    SFlux(identityFactory.list(session.getUser))
+    SFlux(identityRepository.list(session.getUser))
       .filter(identity => identity.id.equals(identityId))
       .map(Some(_))
       .next()
