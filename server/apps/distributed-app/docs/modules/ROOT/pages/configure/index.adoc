@@ -23,6 +23,7 @@ By omitting these files, the underlying protocols will be disabled.
 *** xref:configure/smtp-hooks.adoc[This page] list SMTP hooks that can be used out of the box with the Distributed Server.
 ** xref:configure/webadmin.adoc[*webadmin.properties*] enables configuration for the WebAdmin protocol link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/webadmin.properties[example]
 ** xref:configure/ssl.adoc[This page] details SSL & TLS configuration.
+** xref:configure/sieve.adoc[This page] details Sieve setup and how to enable ManageSieve.
 
 == For storage dependencies
 
