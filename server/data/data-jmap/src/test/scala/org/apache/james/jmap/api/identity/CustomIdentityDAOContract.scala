@@ -91,8 +91,8 @@ trait CustomIdentityDAOContract {
         email = bob.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")),
+        textSignature = TextSignature("text signature"),
+        htmlSignature = HtmlSignature("html signature"),
         mayDelete = MayDeleteIdentity(true)))
   }
 
@@ -146,8 +146,8 @@ trait CustomIdentityDAOContract {
       name = Some(IdentityNameUpdate(IdentityName("Bob (new name)"))),
       replyTo = Some(IdentityReplyToUpdate(Some(List(EmailAddress(Some(EmailerName("My Boss (updated)")), new MailAddress("boss-updated@domain.tld")))))),
       bcc = Some(IdentityBccUpdate(Some(List(EmailAddress(Some(EmailerName("My Boss 2 (updated)")), new MailAddress("boss-updated-2@domain.tld")))))),
-      textSignature = Some(IdentityTextSignatureUpdate(Some(TextSignature("text 2 signature")))),
-      htmlSignature = Some(IdentityHtmlSignatureUpdate(Some(HtmlSignature("html 2 signature")))))))
+      textSignature = Some(IdentityTextSignatureUpdate(TextSignature("text 2 signature"))),
+      htmlSignature = Some(IdentityHtmlSignatureUpdate(HtmlSignature("html 2 signature"))))))
       .block()
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
@@ -156,8 +156,8 @@ trait CustomIdentityDAOContract {
         email = bob.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss (updated)")), new MailAddress("boss-updated@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2 (updated)")), new MailAddress("boss-updated-2@domain.tld")))),
-        textSignature = Some(TextSignature("text 2 signature")),
-        htmlSignature = Some(HtmlSignature("html 2 signature")),
+        textSignature = TextSignature("text 2 signature"),
+        htmlSignature = HtmlSignature("html 2 signature"),
         mayDelete = MayDeleteIdentity(true)))
   }
 
@@ -186,8 +186,8 @@ trait CustomIdentityDAOContract {
         email = bob.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")),
+        textSignature = TextSignature("text signature"),
+        htmlSignature = HtmlSignature("html signature"),
         mayDelete = MayDeleteIdentity(true)))
   }
 

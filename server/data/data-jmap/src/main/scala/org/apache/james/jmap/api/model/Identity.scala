@@ -24,7 +24,13 @@ import java.util.UUID
 import org.apache.james.core.MailAddress
 
 case class IdentityName(name: String) extends AnyVal
+object TextSignature {
+  val DEFAULT: TextSignature = TextSignature("")
+}
 case class TextSignature(name: String) extends AnyVal
+object HtmlSignature {
+  val DEFAULT: HtmlSignature = HtmlSignature("")
+}
 case class HtmlSignature(name: String) extends AnyVal
 case class MayDeleteIdentity(value: Boolean) extends AnyVal
 
@@ -38,8 +44,8 @@ case class Identity(id: IdentityId,
                     email: MailAddress,
                     replyTo: Option[List[EmailAddress]],
                     bcc: Option[List[EmailAddress]],
-                    textSignature: Option[TextSignature],
-                    htmlSignature: Option[HtmlSignature],
+                    textSignature: TextSignature,
+                    htmlSignature: HtmlSignature,
                     mayDelete: MayDeleteIdentity)
 
 

@@ -40,7 +40,7 @@ case class IdentityCreationRequest(name: IdentityName,
                                     bcc: Option[List[EmailAddress]],
                                     textSignature: Option[TextSignature],
                                     htmlSignature: Option[HtmlSignature]) {
-  def asIdentity(id: IdentityId): Identity = Identity(id, name, email, replyTo, bcc, textSignature, htmlSignature, mayDelete = MayDeleteIdentity(true))
+  def asIdentity(id: IdentityId): Identity = Identity(id, name, email, replyTo, bcc, textSignature.getOrElse(TextSignature.DEFAULT), htmlSignature.getOrElse(HtmlSignature.DEFAULT), mayDelete = MayDeleteIdentity(true))
 }
 
 trait IdentityUpdate {
@@ -55,10 +55,10 @@ case class IdentityReplyToUpdate(replyTo: Option[List[EmailAddress]]) extends Id
 case class IdentityBccUpdate(bcc: Option[List[EmailAddress]]) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(bcc = bcc)
 }
-case class IdentityTextSignatureUpdate(textSignature: Option[TextSignature]) extends IdentityUpdate {
+case class IdentityTextSignatureUpdate(textSignature: TextSignature) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(textSignature = textSignature)
 }
-case class IdentityHtmlSignatureUpdate(htmlSignature: Option[HtmlSignature]) extends IdentityUpdate {
+case class IdentityHtmlSignatureUpdate(htmlSignature: HtmlSignature) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(htmlSignature = htmlSignature)
 }
 
@@ -95,8 +95,8 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom) {
             email = address,
             replyTo = None,
             bcc = None,
-            textSignature = None,
-            htmlSignature = None,
+            textSignature = TextSignature.DEFAULT,
+            htmlSignature = HtmlSignature.DEFAULT,
             mayDelete = MayDeleteIdentity(false))))
 
   private def from(address: MailAddress): Option[IdentityId] =

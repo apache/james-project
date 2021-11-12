@@ -103,7 +103,9 @@ trait IdentityGetContract {
         |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |          "name": "bob@domain.tld",
         |          "email": "bob@domain.tld",
-        |          "mayDelete": false
+        |          "mayDelete": false,
+        |          "textSignature":"",
+        |          "htmlSignature":""
         |      }
         |  ]
         |}""".stripMargin)
@@ -204,13 +206,17 @@ trait IdentityGetContract {
         |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |            "name": "bob@domain.tld",
         |            "email": "bob@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
         |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ]
         |}""".stripMargin)
@@ -254,7 +260,9 @@ trait IdentityGetContract {
         |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ],
         |    "notFound": ["idNotFound"]
@@ -300,25 +308,33 @@ trait IdentityGetContract {
         |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |            "name": "bob@domain.tld",
         |            "email": "bob@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
         |            "id": "b025b9f1-95c6-30fb-a9d4-0fddfcc3a92c",
         |            "name": "bob@domain-alias.tld",
         |            "email": "bob@domain-alias.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
         |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
         |            "id": "d2e1e9d2-78ef-3967-87c6-cdc2e0f1541d",
         |            "name": "bob-alias@domain-alias.tld",
         |            "email": "bob-alias@domain-alias.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ]
         |}""".stripMargin)
@@ -363,7 +379,9 @@ trait IdentityGetContract {
           |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
           |          "name": "bob@domain.tld",
           |          "email": "bob@domain.tld",
-          |          "mayDelete": false
+          |          "mayDelete": false,
+          |          "textSignature":"",
+          |          "htmlSignature":""
           |      }
           |  ]
           |}""".stripMargin)
