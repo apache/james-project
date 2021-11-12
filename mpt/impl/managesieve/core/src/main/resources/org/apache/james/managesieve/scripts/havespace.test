@@ -29,7 +29,7 @@ S: NO
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK
 
 C: HAVESPACE "scriptname" 49
 S: OK

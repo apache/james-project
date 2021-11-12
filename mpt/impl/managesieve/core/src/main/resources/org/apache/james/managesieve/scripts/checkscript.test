@@ -23,8 +23,9 @@ S: NO " is an invalid size literal : it should be at least 4 char looking like \
 C: CHECKSCRIPT unquoted
 S: NO "unquoted is an invalid size literal : it should be at least 4 char looking like .*"
 
-C: CHECKSCRIPT {31+}
-S: NO "Missing argument: script content"
+# Now waits for extra data, the expected behaviour
+#C: CHECKSCRIPT {31+}
+#S: NO "Missing argument: script content"
 
 C: CHECKSCRIPT {31+}
 C: #comment
@@ -35,9 +36,9 @@ S: NO
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK
 
-C: CHECKSCRIPT {110+}
+C: CHECKSCRIPT {99+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {
@@ -49,5 +50,5 @@ C: CHECKSCRIPT {31+}
 C: #comment
 C: InvalidSieveCommand
 C:
-S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 19.
+S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 21.
 
