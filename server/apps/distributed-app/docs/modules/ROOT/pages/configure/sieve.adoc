@@ -28,7 +28,7 @@ A user willing to manage his Sieve scripts on the server can do so via several m
 
 He can ask an admin to upload his script via the xref:operate/cli.adoc[CLI]
 
-As James support ManageSieve (link:https://datatracker.ietf.org/doc/html/rfc5804[RFC-5804]) a user
+As James supports ManageSieve (link:https://datatracker.ietf.org/doc/html/rfc5804[RFC-5804]) a user
 can thus use compatible software to manage his Sieve scripts.</p>
 
 == ManageSieve protocol
@@ -49,7 +49,7 @@ not present.
 
 The standard children of the managesieveserver tag are:
 
-.imapserver.xml content
+.managesieveserver.xml content
 |===
 | Property name | explanation
 

@@ -53,7 +53,7 @@
 
         <p>He can ask an admin to upload his script via the <a href="manage-cli.html">CLI</a></p>
 
-        <p>As James support ManageSieve (<a href="https://datatracker.ietf.org/doc/html/rfc5804">RFC-5804</a>) a user
+        <p>As James supports ManageSieve (<a href="https://datatracker.ietf.org/doc/html/rfc5804">RFC-5804</a>) a user
         can thus use compatible software to manage his Sieve scripts.</p>
     </section>
     <section name="ManageSieve protocol">
@@ -77,7 +77,7 @@
             <dt><strong>bind</strong></dt>
             <dd>Configure this to bind to a specific inetaddress. This is an optional integer value.  This value is the port on which this ManageSieve server is configured
                 to listen. If the tag or value is absent then the service
-                will bind to all network interfaces for the machine If the tag or value is omitted, the value will default to the standard ManageSieve port
+                will bind to all network interfaces for the machine. If the tag or value is omitted, the value will default to the standard ManageSieve port:<br/>
                 port 4190 is the well-known/IANA registered port for ManageSieve.</dd>
             <dt><strong>connectionBacklog</strong></dt>
             <dd>Number of connection backlog of the server (maximum number of queued connection requests)</dd>
