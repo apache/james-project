@@ -21,6 +21,7 @@
 **** xref:configure/pop3.adoc[pop3server.xml]
 **** xref:configure/webadmin.adoc[webadmin.properties]
 **** xref:configure/ssl.adoc[SSL & TLS]
+**** xref:configure/sieve.adoc[Sieve & ManageSieve]
 *** Storage dependencies
 **** xref:configure/blobstore.adoc[blobstore.properties]
 **** xref:configure/cassandra.adoc[cassandra.properties]
