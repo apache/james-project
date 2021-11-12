@@ -37,7 +37,7 @@ trait CustomIdentityDAOContract {
   }
 
   @Test
-  def listShouldReturnSavedIdentities(): Unit = {
+  def listShouldReturnSavedIdentity(): Unit = {
     val identity = SMono(testee()
       .save(bob, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
         email = bob.asMailAddress(),
@@ -49,6 +49,29 @@ trait CustomIdentityDAOContract {
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
       .containsExactlyInAnyOrder(identity)
+  }
+
+  @Test
+  def listShouldReturnSavedIdentities(): Unit = {
+    val identity1 = SMono(testee()
+      .save(bob, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
+        email = bob.asMailAddress(),
+        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+        textSignature = Some(TextSignature("text signature")),
+        htmlSignature = Some(HtmlSignature("html signature")))))
+      .block()
+    val identity2 = SMono(testee()
+      .save(bob, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
+        email = bob.asMailAddress(),
+        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss2")), new MailAddress("boss@domain.tld")))),
+        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 3")), new MailAddress("boss2@domain.tld")))),
+        textSignature = Some(TextSignature("text 2 signature")),
+        htmlSignature = Some(HtmlSignature("html 2 signature")))))
+      .block()
+
+    assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
+      .containsExactlyInAnyOrder(identity1, identity2)
   }
 
   @Test
