@@ -19,6 +19,7 @@
 
 package org.apache.james.user.lib;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.util.DurationParser;
 import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,7 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     protected final T usersDAO;
     private boolean virtualHosting;
     private Optional<Username> administratorId;
+    private long verifyFailureDelay;
     private UserEntityValidator validator;
 
     @Inject
@@ -72,6 +75,9 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         virtualHosting = configuration.getBoolean("enableVirtualHosting", usersDAO.getDefaultVirtualHostingValue());
         administratorId = Optional.ofNullable(configuration.getString("administratorId"))
             .map(Username::of);
+        verifyFailureDelay = Optional.ofNullable(configuration.getString("verifyFailureDelay"))
+            .map(string -> DurationParser.parse(string, ChronoUnit.SECONDS).toMillis())
+            .orElse(0L);
     }
 
     public void setEnableVirtualHosting(boolean virtualHosting) {
@@ -144,12 +150,22 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
 
     @Override
     public boolean test(Username name, String password) throws UsersRepositoryException {
-        return usersDAO.getUserByName(name)
+        boolean isVerified = usersDAO.getUserByName(name)
             .map(x -> x.verifyPassword(password))
             .orElseGet(() -> {
                 LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
                 return false;
             });
+
+        if (!isVerified && verifyFailureDelay > 0L) {
+            try {
+                Thread.sleep(verifyFailureDelay);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+
+        return isVerified;
     }
 
     @Override
