@@ -54,11 +54,8 @@ The standard children of the managesieveserver tag are:
 | Property name | explanation
 
 | bind
-| Configure this to bind to a specific inetaddress. This is an optional integer value.  This value is the port on which this IMAP4 server is configured
-to listen. If the tag or value is absent then the service
-will bind to all network interfaces for the machine If the tag or value is omitted, the value will default to the standard IMAP4 port
-port 143 is the well-known/IANA registered port for IMAP
-port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS
+| Configure this to bind to a specific inetaddress. This is an optional integer value.  This value is the port on which this ManageSieve server is configured to listen. If the tag or value is absent then the service
+will bind to all network interfaces for the machine If the tag or value is omitted, the value will default to the standard ManageSieve port (port 4190 is the well-known/IANA registered port for ManageSieve.)
 
 | tls
 | Set to true to support STARTTLS or SSL for the Socket.
