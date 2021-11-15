@@ -37,9 +37,11 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AddUserRequest;
+import org.apache.james.webadmin.dto.VerifyUserRequest;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
+import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
@@ -61,9 +63,11 @@ public class UserRoutes implements Routes {
 
     public static final String USERS = "/users";
     private static final String FORCE_PARAM = "force";
+    private static final String VERIFY = "verify";
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
+    private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
     private final CanSendFrom canSendFrom;
     private final JsonExtractor<AddUserRequest> jsonExtractor;
 
@@ -75,6 +79,7 @@ public class UserRoutes implements Routes {
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
         this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
+        this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
     }
 
     @Override
@@ -95,6 +100,12 @@ public class UserRoutes implements Routes {
         defineAllowedFromHeaders();
 
         defineUserExist();
+
+        defineVerifyUsers();
+    }
+
+    public void defineVerifyUsers() {
+        service.post(USERS + SEPARATOR + USER_NAME + SEPARATOR + VERIFY, this::verifyUser);
     }
 
     public void defineDeleteUser() {
@@ -181,6 +192,35 @@ public class UserRoutes implements Routes {
                 .message(errorMessage)
                 .cause(e)
                 .haltError();
+        }
+    }
+
+    private String verifyUser(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractUsername(request);
+        try {
+            if (userService.verifyUser(username,
+                    jsonExtractorVerify.parse(request.body()).getPassword())) {
+                response.status(HttpStatus.NO_CONTENT_204);
+            } else {
+                response.status(HttpStatus.UNAUTHORIZED_401);
+            }
+            return Constants.EMPTY_BODY;
+        } catch (JsonExtractException e) {
+            LOGGER.info("Error while deserializing verifyUser request", e);
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Error while deserializing verifyUser request")
+                    .cause(e)
+                    .haltError();
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Invalid user path", e);
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid user path")
+                    .cause(e)
+                    .haltError();
         }
     }
 

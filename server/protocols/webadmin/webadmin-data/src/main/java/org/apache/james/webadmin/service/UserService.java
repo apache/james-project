@@ -65,6 +65,10 @@ public class UserService {
         }
     }
 
+    public boolean verifyUser(Username username, String password) throws UsersRepositoryException {
+        return usersRepository.test(username, password);
+    }
+
     public boolean userExists(Username username) throws UsersRepositoryException {
         return usersRepository.contains(username);
     }
