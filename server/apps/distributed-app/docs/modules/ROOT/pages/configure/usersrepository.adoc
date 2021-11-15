@@ -36,6 +36,9 @@ recipient local part than as login for different protocols.
 |user's name. Allow a user to access to the https://tools.ietf.org/html/rfc4616#section-2[impersonation command],
 acting on the behalf of any user.
 
+| verifyFailureDelay
+| Delay after a failed authentication attempt with an invalid user name or password. Duration string defaulting to seconds, e.g. `2`, `2s`, `2000ms`. Default `0s` (disabled).
+
 |===
 
 == Configuring a LDAP
