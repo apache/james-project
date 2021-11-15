@@ -111,7 +111,7 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
-import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -191,14 +191,14 @@ class DeletedMessagesVaultRoutesTest {
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
-            RetentionConfiguration.DEFAULT));
+            VaultConfiguration.DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         JsonTransformer jsonTransformer = new JsonTransformer();
 
-        RestoreService vaultRestore = new RestoreService(vault, mailboxManager);
+        RestoreService vaultRestore = new RestoreService(vault, mailboxManager, VaultConfiguration.DEFAULT);
         blobExporting = spy(new NoopBlobExporting());
         zipper = new DeletedMessageZipper();
         exportService = new ExportService(blobExporting, blobStore, zipper, vault);

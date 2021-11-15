@@ -57,6 +57,13 @@
                         It can be expressed in <b>y</b> years, <b>d</b> days, <b>h</b> hours, ...
                     </dd>
                 </dl>
+                <dl>
+                    <dt><strong>restoreLocation</strong></dt>
+                    <dd>
+                        Messages restored from the Deleted Messages Vault are placed in a mailbox with this name (default: <code>Restored-Messages</code>>).
+                        The mailbox will be created if it does not exist yet.
+                    </dd>
+                </dl>
 
             </subsection>
         </section>

@@ -25,7 +25,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.utils.PropertiesProvider;
-import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.VaultConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +33,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Provides;
 
-public class DeletedMessageVaultRetentionModule extends AbstractModule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultRetentionModule.class);
+public class DeletedMessageVaultConfigurationModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultConfigurationModule.class);
 
     @Override
     protected void configure() {
@@ -43,13 +43,13 @@ public class DeletedMessageVaultRetentionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration2.ex.ConfigurationException {
+    VaultConfiguration providesVaultConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration2.ex.ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
-            return RetentionConfiguration.from(configuration);
+            return VaultConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default RetentionTime (1 year) instead.");
-            return RetentionConfiguration.DEFAULT;
+            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default RetentionTime (1 year) and RestoreLocation (Restored-Messages) instead.");
+            return VaultConfiguration.DEFAULT;
         }
     }
 }

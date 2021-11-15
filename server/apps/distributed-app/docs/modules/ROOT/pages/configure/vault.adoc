@@ -29,4 +29,7 @@ to get some examples and hints.
 
 | retentionPeriod
 | Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year). It can be expressed in *y* years, *d* days, *h* hours, ...
+
+| restoreLocation
+| Messages restored from the Deleted Messages Vault are placed in a mailbox with this name (default: ``Restored-Messages``). The mailbox will be created if it does not exist yet.
 |===

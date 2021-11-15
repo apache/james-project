@@ -47,7 +47,7 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageVaultContract;
 import org.apache.james.vault.DeletedMessageVaultSearchContract;
-import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,7 +71,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
                 .blobIdFactory(new HashBlobId.Factory())
                 .defaultBucketName()
                 .passthrough(),
-            blobStoreDAO, new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
+            blobStoreDAO, new BucketNameGenerator(clock), clock, VaultConfiguration.DEFAULT);
     }
 
     @Override
