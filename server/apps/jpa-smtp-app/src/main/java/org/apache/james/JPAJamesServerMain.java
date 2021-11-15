@@ -63,6 +63,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new ElasticSearchMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

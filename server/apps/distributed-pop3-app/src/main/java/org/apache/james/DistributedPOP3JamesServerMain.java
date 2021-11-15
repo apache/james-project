@@ -160,6 +160,8 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         DistributedPOP3JamesConfiguration configuration = DistributedPOP3JamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

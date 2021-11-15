@@ -98,6 +98,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

@@ -167,6 +167,8 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

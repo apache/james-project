@@ -1,0 +1,9 @@
+= Distributed James Server &mdash; jvm.properties
+:navtitle: jvm.properties
+
+This file may contain any additional system properties for tweaking JVM execution. When you normally would add a command line option `-Dmy.property=whatever`, you can put it in this file as `my.property=whatever` instead. These properties will be added as system properties on server start.
+
+Note that in some rare cases this might not work,
+when a property affects very early JVM start behaviour.
+
+For testing purposes, you may specify a different file path via the command line option `-Dextra.props=/some/other/jvm.properties`.
