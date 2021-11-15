@@ -120,7 +120,7 @@ class DeletedMessageVaultHookTest {
                 .blobIdFactory(new HashBlobId.Factory())
                 .defaultBucketName()
                 .passthrough(), blobStoreDAO, new BucketNameGenerator(clock), clock,
-            RetentionConfiguration.DEFAULT);
+            VaultConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 

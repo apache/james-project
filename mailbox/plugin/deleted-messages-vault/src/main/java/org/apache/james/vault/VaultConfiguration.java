@@ -25,44 +25,56 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.util.DurationParser;
 
 import com.google.common.base.Preconditions;
 
-public class RetentionConfiguration {
-    public static final RetentionConfiguration DEFAULT = new RetentionConfiguration(ChronoUnit.YEARS.getDuration());
+public class VaultConfiguration {
+    public static final VaultConfiguration DEFAULT =
+        new VaultConfiguration(ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
 
-    public static RetentionConfiguration from(Configuration propertiesConfiguration) {
-        return Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
+    public static VaultConfiguration from(Configuration propertiesConfiguration) {
+        Duration retentionPeriod = Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
             .map(string -> DurationParser.parse(string, ChronoUnit.DAYS))
-            .map(RetentionConfiguration::new)
-            .orElse(DEFAULT);
+            .orElse(DEFAULT.getRetentionPeriod());
+        String restoreLocation = Optional.ofNullable(propertiesConfiguration.getString("restoreLocation"))
+            .orElse(DEFAULT.getRestoreLocation());
+        return new VaultConfiguration(retentionPeriod, restoreLocation);
     }
 
     private final Duration retentionPeriod;
+    private final String restoreLocation;
 
-    RetentionConfiguration(Duration retentionPeriod) {
+    VaultConfiguration(Duration retentionPeriod, String restoreLocation) {
         Preconditions.checkNotNull(retentionPeriod);
+        Preconditions.checkNotNull(restoreLocation);
 
         this.retentionPeriod = retentionPeriod;
+        this.restoreLocation = restoreLocation;
     }
 
     public Duration getRetentionPeriod() {
         return retentionPeriod;
     }
 
+    public String getRestoreLocation() {
+        return restoreLocation;
+    }
+
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof RetentionConfiguration) {
-            RetentionConfiguration that = (RetentionConfiguration) o;
+        if (o instanceof VaultConfiguration) {
+            VaultConfiguration that = (VaultConfiguration) o;
 
-            return Objects.equals(this.retentionPeriod, that.retentionPeriod);
+            return Objects.equals(this.retentionPeriod, that.retentionPeriod)
+                && Objects.equals(this.restoreLocation, that.restoreLocation);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(retentionPeriod);
+        return Objects.hash(retentionPeriod, restoreLocation);
     }
 }

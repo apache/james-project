@@ -40,7 +40,7 @@ import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
-import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
@@ -72,21 +72,21 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final BlobStoreDAO blobStoreDAO;
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
-    private final RetentionConfiguration retentionConfiguration;
+    private final VaultConfiguration vaultConfiguration;
     private final BlobStoreVaultGarbageCollectionTask.Factory taskFactory;
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
                                         BlobStore blobStore, BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
                                         Clock clock,
-                                        RetentionConfiguration retentionConfiguration) {
+                                        VaultConfiguration vaultConfiguration) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
         this.blobStoreDAO = blobStoreDAO;
         this.nameGenerator = nameGenerator;
         this.clock = clock;
-        this.retentionConfiguration = retentionConfiguration;
+        this.vaultConfiguration = vaultConfiguration;
         this.taskFactory = new BlobStoreVaultGarbageCollectionTask.Factory(this);
     }
 
@@ -181,7 +181,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     ZonedDateTime getBeginningOfRetentionPeriod() {
         ZonedDateTime now = ZonedDateTime.now(clock);
-        return now.minus(retentionConfiguration.getRetentionPeriod());
+        return now.minus(vaultConfiguration.getRetentionPeriod());
     }
 
     @VisibleForTesting

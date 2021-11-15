@@ -30,7 +30,6 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,11 +64,14 @@ class RestoreService {
 
     private final DeletedMessageVault deletedMessageVault;
     private final MailboxManager mailboxManager;
+    private final VaultConfiguration vaultConfiguration;
 
     @Inject
-    RestoreService(DeletedMessageVault deletedMessageVault, MailboxManager mailboxManager) {
+    RestoreService(DeletedMessageVault deletedMessageVault, MailboxManager mailboxManager,
+                   VaultConfiguration vaultConfiguration) {
         this.deletedMessageVault = deletedMessageVault;
         this.mailboxManager = mailboxManager;
+        this.vaultConfiguration = vaultConfiguration;
     }
 
     Flux<RestoreResult> restore(Username usernameToRestore, Query searchQuery) throws MailboxException {
@@ -109,7 +112,7 @@ class RestoreService {
     }
 
     private MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {
-        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser(), DefaultMailboxes.RESTORED_MESSAGES);
+        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser(), vaultConfiguration.getRestoreLocation());
         try {
             return mailboxManager.getMailbox(restoreMailbox, session);
         } catch (MailboxNotFoundException e) {

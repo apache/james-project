@@ -23,29 +23,46 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class RetentionConfigurationTest {
+class VaultConfigurationTest {
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(RetentionConfiguration.class)
+        EqualsVerifier.forClass(VaultConfiguration.class)
             .verify();
     }
 
     @Test
-    void constructorShouldThrowWhenNull() {
-        assertThatThrownBy(() -> new RetentionConfiguration(null))
+    void constructorShouldThrowWhenRetentionPeriodIsNull() {
+        assertThatThrownBy(() -> new VaultConfiguration(null, DefaultMailboxes.RESTORED_MESSAGES))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void constructorShouldThrowWhenRestoreLocationIsNull() {
+        assertThatThrownBy(() -> new VaultConfiguration(ChronoUnit.YEARS.getDuration(), null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void fromShouldThrowWhenNull() {
-        assertThatThrownBy(() -> RetentionConfiguration.from(null))
+        assertThatThrownBy(() -> VaultConfiguration.from(null))
             .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void fromShouldReturnConfiguredRestoreLocation() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("restoreLocation", "INBOX");
+
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(
+            new VaultConfiguration(ChronoUnit.YEARS.getDuration(), DefaultMailboxes.INBOX));
     }
 
     @Test
@@ -53,7 +70,8 @@ class RetentionConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("retentionPeriod", "15d");
 
-        assertThat(RetentionConfiguration.from(configuration)).isEqualTo(new RetentionConfiguration(Duration.ofDays(15)));
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(
+            new VaultConfiguration(Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test
@@ -61,7 +79,8 @@ class RetentionConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("retentionPeriod", "15h");
 
-        assertThat(RetentionConfiguration.from(configuration)).isEqualTo(new RetentionConfiguration(Duration.ofHours(15)));
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(
+            new VaultConfiguration(Duration.ofHours(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test
@@ -69,13 +88,14 @@ class RetentionConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("retentionPeriod", "15");
 
-        assertThat(RetentionConfiguration.from(configuration)).isEqualTo(new RetentionConfiguration(Duration.ofDays(15)));
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(
+            new VaultConfiguration(Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test
-    void fromShouldReturnDefaultWhenNoRetentionTime() {
+    void fromShouldReturnDefaultWhenNoConfigurationOptions() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
-        assertThat(RetentionConfiguration.from(configuration)).isEqualTo(RetentionConfiguration.DEFAULT);
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(VaultConfiguration.DEFAULT);
     }
 }

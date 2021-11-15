@@ -29,7 +29,7 @@ import com.google.inject.Scopes;
 public class DeletedMessageVaultModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new DeletedMessageVaultRetentionModule());
+        install(new DeletedMessageVaultConfigurationModule());
         install(new VaultTaskSerializationModule());
 
         bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
