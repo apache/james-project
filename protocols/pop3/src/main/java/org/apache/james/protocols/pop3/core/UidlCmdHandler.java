@@ -31,7 +31,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
@@ -45,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles UIDL command
  */
-public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
+public class UidlCmdHandler extends AbstractPOP3CommandHandler implements CapaCapability {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidlCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("UIDL");
     private static final Set<String> CAPS = ImmutableSet.of("UIDL");

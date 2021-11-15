@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StartTlsResponse;
@@ -42,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
  * Handler which offer STARTTLS implementation for POP3. STARTTLS is started
  * with the STSL command
  */
-public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
+public class StlsCmdHandler extends AbstractPOP3CommandHandler implements CapaCapability {
     private static final Logger LOGGER = LoggerFactory.getLogger(StlsCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("STLS");
     private static final Set<String> CAPS = ImmutableSet.of("STLS");
