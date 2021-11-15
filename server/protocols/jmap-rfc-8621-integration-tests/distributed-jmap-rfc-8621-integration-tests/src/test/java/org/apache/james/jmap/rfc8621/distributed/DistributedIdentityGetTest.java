@@ -27,6 +27,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.rfc8621.contract.IdentityGetContract;
+import org.apache.james.jmap.rfc8621.contract.IdentityProbeModule;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -51,6 +52,6 @@ class DistributedIdentityGetTest implements IdentityGetContract {
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule(), new IdentityProbeModule()))
         .build();
 }

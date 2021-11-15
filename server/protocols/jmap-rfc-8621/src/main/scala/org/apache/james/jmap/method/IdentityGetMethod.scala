@@ -20,34 +20,35 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-
 import javax.inject.Inject
+import org.apache.james.jmap.api.identity.IdentityRepository
+import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGetRequest, IdentityGetResponse, IdentityId}
+import org.apache.james.jmap.mail.{IdentityGet, IdentityGetRequest, IdentityGetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
-                                  val metricFactory: MetricFactory,
-                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentityGetRequest] {
+class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
+                                   val metricFactory: MetricFactory,
+                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentityGetRequest] {
   override val methodName: MethodName = MethodName("Identity/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentityGetRequest): SMono[InvocationWithContext] = {
-    val requestedProperties: Properties = request.properties.getOrElse(Identity.allProperties)
-    (requestedProperties -- Identity.allProperties match {
+    val requestedProperties: Properties = request.properties.getOrElse(IdentityGet.allProperties)
+    (requestedProperties -- IdentityGet.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getIdentities(request, mailboxSession)
         .subscribeOn(Schedulers.elastic())
         .map(identityGetResponse => Invocation(
           methodName = methodName,
-          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ Identity.idProperty).as[JsObject]),
+          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ IdentityGet.idProperty).as[JsObject]),
           methodCallId = invocation.invocation.methodCallId))
       case invalidProperties: Properties =>
         SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
@@ -64,14 +65,17 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
 
   private def getIdentities(request: IdentityGetRequest,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =
-    SMono.fromCallable(() => identityFactory.listIdentities(mailboxSession))
+    SFlux(identityRepository.list(mailboxSession.getUser))
+      .collectSeq()
+      .map(_.toList)
       .map(request.computeResponse)
 }
 
-case class IdentityResolver @Inject()(identityFactory: IdentityFactory) {
-
+case class IdentityResolver @Inject()(identityRepository: IdentityRepository) {
   def resolveIdentityId(identityId: IdentityId, session: MailboxSession): SMono[Option[Identity]] =
-    SMono.fromCallable(() => identityFactory.listIdentities(session)
-      .find(identity => identity.id.equals(identityId)))
-      .subscribeOn(Schedulers.elastic())
+    SFlux(identityRepository.list(session.getUser))
+      .filter(identity => identity.id.equals(identityId))
+      .map(Some(_))
+      .next()
+      .switchIfEmpty(SMono.just(None))
 }

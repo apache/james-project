@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.json
 
+import javax.inject.Inject
 import org.apache.james.jmap.core.{Id, SetError}
-import org.apache.james.jmap.mail.{BlobId, BlobIds, ErrorField, ExtensionFieldName, ExtensionFieldValue, FinalRecipientField, ForEmailIdField, IdentityId, IncludeOriginalMessageField, MDNDisposition, MDNGatewayField, MDNNotFound, MDNNotParsable, MDNParseRequest, MDNParseResponse, MDNParsed, MDNSendCreateRequest, MDNSendCreateResponse, MDNSendCreationId, MDNSendRequest, MDNSendResponse, OriginalMessageIdField, OriginalRecipientField, ReportUAField, SubjectField, TextBodyField}
+import org.apache.james.jmap.mail.{BlobId, BlobIds, ErrorField, ExtensionFieldName, ExtensionFieldValue, FinalRecipientField, ForEmailIdField, IncludeOriginalMessageField, MDNDisposition, MDNGatewayField, MDNNotFound, MDNNotParsable, MDNParseRequest, MDNParseResponse, MDNParsed, MDNSendCreateRequest, MDNSendCreateResponse, MDNSendCreationId, MDNSendRequest, MDNSendResponse, OriginalMessageIdField, OriginalRecipientField, ReportUAField, SubjectField, TextBodyField, UnparsedIdentityId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json._
 
-import javax.inject.Inject
 import scala.util.Try
 
 class MDNSerializer @Inject()(messageIdFactory: MessageId.Factory) {
@@ -49,7 +49,7 @@ class MDNSerializer @Inject()(messageIdFactory: MessageId.Factory) {
   private implicit val includeOriginalMessageFieldFormat: Format[IncludeOriginalMessageField] = Json.valueFormat[IncludeOriginalMessageField]
   private implicit val mdnGatewayFieldFormat: Format[MDNGatewayField] = Json.valueFormat[MDNGatewayField]
   private implicit val mdnDispositionFormat: Format[MDNDisposition] = Json.format[MDNDisposition]
-  private implicit val identityIdFormat: Format[IdentityId] = Json.valueFormat[IdentityId]
+  private implicit val identityIdFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
   private implicit val mdnErrorFieldReads: Reads[ErrorField] = Json.reads[ErrorField]
   private implicit val mdnErrorFieldWrites: Writes[ErrorField] = Json.valueWrites[ErrorField]
   private implicit val extensionFieldNameFormat: Format[ExtensionFieldName] = Json.valueFormat[ExtensionFieldName]

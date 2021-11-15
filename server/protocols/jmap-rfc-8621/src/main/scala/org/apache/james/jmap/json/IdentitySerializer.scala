@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.core.{Properties, UuidState}
 import org.apache.james.jmap.mail._
 import play.api.libs.json.{Format, JsArray, JsObject, JsResult, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
@@ -26,6 +27,7 @@ import play.api.libs.json.{Format, JsArray, JsObject, JsResult, JsSuccess, JsVal
 object IdentitySerializer {
   private implicit val emailerNameReads: Writes[EmailerName] = Json.valueWrites[EmailerName]
   private implicit val identityIdFormat: Format[IdentityId] = Json.valueFormat[IdentityId]
+  private implicit val identityIdUnparsedFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
   private implicit val identityIdsFormat: Format[IdentityIds] = Json.valueFormat[IdentityIds]
   private implicit val emailAddressReads: Writes[EmailAddress] = Json.writes[EmailAddress]
   private implicit val nameWrites: Writes[IdentityName] = Json.valueWrites[IdentityName]

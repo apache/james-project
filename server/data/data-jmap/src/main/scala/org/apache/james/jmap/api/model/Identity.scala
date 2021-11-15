@@ -17,18 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.api.model
 
-import org.apache.james.jmap.api.model.EmailAddress
-import org.apache.james.mime4j.dom.address.{Address, Group, MailboxList}
+import java.util.UUID
 
-import scala.jdk.CollectionConverters._
+import org.apache.james.core.MailAddress
 
-case class GroupName(value: String) extends AnyVal
-
-case class EmailAddressGroup(name: Option[GroupName], addresses: List[EmailAddress]) {
-  val asAddress: List[Address] = name.map(aName => new Group(aName.value,
-    new MailboxList(addresses.map(_.asMime4JMailbox).asJava)))
-    .map(List(_))
-    .getOrElse(addresses.map(_.asMime4JMailbox))
+case class IdentityName(name: String) extends AnyVal
+object TextSignature {
+  val DEFAULT: TextSignature = TextSignature("")
 }
+case class TextSignature(name: String) extends AnyVal
+object HtmlSignature {
+  val DEFAULT: HtmlSignature = HtmlSignature("")
+}
+case class HtmlSignature(name: String) extends AnyVal
+case class MayDeleteIdentity(value: Boolean) extends AnyVal
+
+object IdentityId {
+  def generate: IdentityId = IdentityId(UUID.randomUUID())
+}
+case class IdentityId(id: UUID)
+
+case class Identity(id: IdentityId,
+                    name: IdentityName,
+                    email: MailAddress,
+                    replyTo: Option[List[EmailAddress]],
+                    bcc: Option[List[EmailAddress]],
+                    textSignature: TextSignature,
+                    htmlSignature: HtmlSignature,
+                    mayDelete: MayDeleteIdentity)
+
+

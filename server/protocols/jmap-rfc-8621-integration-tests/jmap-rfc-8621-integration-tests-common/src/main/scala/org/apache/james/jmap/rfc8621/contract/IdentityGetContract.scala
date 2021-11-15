@@ -19,18 +19,38 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import com.google.inject.AbstractModule
+import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import javax.inject.Inject
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityRepository}
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.junit.jupiter.api.{BeforeEach, Test}
+import org.reactivestreams.Publisher
+import reactor.core.scala.publisher.SMono
+
+class IdentityProbeModule extends AbstractModule{
+  override def configure(): Unit = {
+    Multibinder.newSetBinder(binder(), classOf[GuiceProbe])
+      .addBinding()
+      .to(classOf[IdentityProbe])
+  }
+}
+
+class IdentityProbe @Inject()(identityRepository: IdentityRepository) extends GuiceProbe {
+  def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = identityRepository.save(user, creationRequest)
+}
 
 trait IdentityGetContract {
   @BeforeEach
@@ -80,13 +100,72 @@ trait IdentityGetContract {
         |  "state": "${INSTANCE.value}",
         |  "list": [
         |      {
-        |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |          "name": "bob@domain.tld",
         |          "email": "bob@domain.tld",
-        |          "mayDelete": false
+        |          "mayDelete": false,
+        |          "textSignature":"",
+        |          "htmlSignature":""
         |      }
         |  ]
         |}""".stripMargin)
+  }
+
+  @Test
+  def getIdentityShouldReturnCustomIdentity(server: GuiceJamesServer): Unit = {
+    val id = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
+        email = BOB.asMailAddress(),
+        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+        textSignature = Some(TextSignature("text signature")),
+        htmlSignature = Some(HtmlSignature("html signature")))))
+      .block()
+      .id.id.toString
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["$id"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |	"bcc": [{
+         |		"email": "boss2@domain.tld",
+         |		"name": "My Boss 2"
+         |	}],
+         |	"email": "bob@domain.tld",
+         |	"htmlSignature": "html signature",
+         |	"id": "$id",
+         |	"mayDelete": true,
+         |	"name": "Bob (custom address)",
+         |	"replyTo": [{
+         |		"email": "boss@domain.tld",
+         |		"name": "My Boss"
+         |	}],
+         |	"textSignature": "text signature"
+         |}""".stripMargin)
   }
 
   @Test
@@ -124,16 +203,20 @@ trait IdentityGetContract {
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |            "name": "bob@domain.tld",
         |            "email": "bob@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4",
+        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ]
         |}""".stripMargin)
@@ -149,7 +232,7 @@ trait IdentityGetContract {
          |    "Identity/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["idNotFound", "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4"]
+         |      "ids": ["idNotFound", "3739a34e-cd8c-3a42-bf28-578ba24da9da"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -174,10 +257,12 @@ trait IdentityGetContract {
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4",
+        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ],
         |    "notFound": ["idNotFound"]
@@ -220,28 +305,36 @@ trait IdentityGetContract {
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
         |            "name": "bob@domain.tld",
         |            "email": "bob@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "725cfddc2c1905fefa6b8c3a6ab5dd9f8ba611c4d7772cf066f69cfd2ec23832",
+        |            "id": "b025b9f1-95c6-30fb-a9d4-0fddfcc3a92c",
         |            "name": "bob@domain-alias.tld",
         |            "email": "bob@domain-alias.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4",
+        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
         |            "name": "bob-alias@domain.tld",
         |            "email": "bob-alias@domain.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "62844b5cd203bcb86cb590355fc509773ef1972ce8457b13a7d55d99a308c8f6",
+        |            "id": "d2e1e9d2-78ef-3967-87c6-cdc2e0f1541d",
         |            "name": "bob-alias@domain-alias.tld",
         |            "email": "bob-alias@domain-alias.tld",
-        |            "mayDelete": false
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":""
         |        }
         |    ]
         |}""".stripMargin)
@@ -283,10 +376,12 @@ trait IdentityGetContract {
           |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
-          |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
           |          "name": "bob@domain.tld",
           |          "email": "bob@domain.tld",
-          |          "mayDelete": false
+          |          "mayDelete": false,
+          |          "textSignature":"",
+          |          "htmlSignature":""
           |      }
           |  ]
           |}""".stripMargin)
@@ -328,7 +423,7 @@ trait IdentityGetContract {
           |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
-          |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
           |          "email": "bob@domain.tld"
           |      }
           |  ]
