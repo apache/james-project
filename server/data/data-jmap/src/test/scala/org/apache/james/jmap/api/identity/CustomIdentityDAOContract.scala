@@ -20,13 +20,16 @@
 package org.apache.james.jmap.api.identity
 
 import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.bob
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-trait CustomIdentityDAOContract {
+object CustomIdentityDAOContract {
   private val bob = Username.of("bob@localhost")
+}
+trait CustomIdentityDAOContract {
 
   def testee(): CustomIdentityDAO
 
