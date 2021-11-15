@@ -114,7 +114,7 @@ trait IdentityGetContract {
   @Test
   def getIdentityShouldReturnCustomIdentity(server: GuiceJamesServer): Unit = {
     val id = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IdentityCreationRequest(name = IdentityName("Bob (custom address)"),
+      .save(BOB, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
         email = BOB.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),

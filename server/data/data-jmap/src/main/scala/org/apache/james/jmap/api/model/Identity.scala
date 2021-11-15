@@ -23,6 +23,9 @@ import java.util.UUID
 
 import org.apache.james.core.MailAddress
 
+object IdentityName {
+  val DEFAULT: IdentityName = IdentityName("")
+}
 case class IdentityName(name: String) extends AnyVal
 object TextSignature {
   val DEFAULT: TextSignature = TextSignature("")
