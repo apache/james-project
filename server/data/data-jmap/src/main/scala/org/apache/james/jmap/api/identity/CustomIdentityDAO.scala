@@ -34,13 +34,13 @@ import reactor.core.scheduler.Schedulers
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-case class IdentityCreationRequest(name: IdentityName,
+case class IdentityCreationRequest(name: Option[IdentityName],
                                     email: MailAddress,
                                     replyTo: Option[List[EmailAddress]],
                                     bcc: Option[List[EmailAddress]],
                                     textSignature: Option[TextSignature],
                                     htmlSignature: Option[HtmlSignature]) {
-  def asIdentity(id: IdentityId): Identity = Identity(id, name, email, replyTo, bcc, textSignature.getOrElse(TextSignature.DEFAULT), htmlSignature.getOrElse(HtmlSignature.DEFAULT), mayDelete = MayDeleteIdentity(true))
+  def asIdentity(id: IdentityId): Identity = Identity(id, name.getOrElse(IdentityName.DEFAULT), email, replyTo, bcc, textSignature.getOrElse(TextSignature.DEFAULT), htmlSignature.getOrElse(HtmlSignature.DEFAULT), mayDelete = MayDeleteIdentity(true))
 }
 
 trait IdentityUpdate {
