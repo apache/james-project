@@ -29,7 +29,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
@@ -41,7 +40,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles LIST command
  */
-public class ListCmdHandler implements CommandHandler<POP3Session> {
+public class ListCmdHandler extends AbstractPOP3CommandHandler {
 
     private static final Collection<String> COMMANDS = ImmutableSet.of("LIST");
 

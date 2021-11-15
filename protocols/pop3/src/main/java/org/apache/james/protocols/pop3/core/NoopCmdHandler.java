@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.util.MDCBuilder;
@@ -38,7 +37,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles NOOP command
  */
-public class NoopCmdHandler implements CommandHandler<POP3Session> {
+public class NoopCmdHandler extends AbstractPOP3CommandHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(NoopCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("NOOP");
 
