@@ -25,7 +25,7 @@ import java.util.UUID
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.model.{EmailAddress, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
+import org.apache.james.jmap.api.model.{EmailAddress, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, PushSubscriptionCreationRequest, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
