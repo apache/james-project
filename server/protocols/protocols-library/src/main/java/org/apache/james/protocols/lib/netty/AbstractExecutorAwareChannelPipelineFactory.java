@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
+import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.HandlerConstants;
@@ -34,10 +35,10 @@ import org.jboss.netty.util.HashedWheelTimer;
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
-                                                       ChannelGroup group, String[] enabledCipherSuites,
+                                                       ChannelGroup group, Encryption encryption,
                                                        ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory,
                                                        HashedWheelTimer hashedWheelTimer) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, enabledCipherSuites, eHandler, frameHandlerFactory, hashedWheelTimer);
+        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, eHandler, frameHandlerFactory, hashedWheelTimer);
     }
     
     @Override

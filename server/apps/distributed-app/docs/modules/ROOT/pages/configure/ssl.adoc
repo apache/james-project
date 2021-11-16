@@ -84,6 +84,28 @@ Please note `JKS` keystore format is also supported (default value if no keystor
 </tls>
 ....
 
+
+=== Client authentication via certificates
+
+When you enable TLS, you may also configure the server to require a client certificate for authentication:
+
+....
+<tls socketTLS="false" startTLS="true">
+  <keystore>file://conf/keystore</keystore>
+  <keystoreType>JKS</keystoreType>
+  <secret>yoursecret</secret>
+
+  <clientAuth>
+    <truststore>file://conf/truststore</truststore>
+    <truststoreType>JKS</truststoreType>
+    <truststoreSecret>yoursecret</truststoreSecret>
+  </clientAuth>
+</tls>
+....
+
+James verifies client certificates against the provided truststore. You can fill it with trusted peer certificates directly, or an issuer certificate (CA) if you trust all certificates created by it. If you omit the truststore configuration, James will use the Java default truststore instead, effectively trusting any known CA.
+
+
 == Creating your own PEM keys
 
 The following commands can be used to create self signed PEM keys:

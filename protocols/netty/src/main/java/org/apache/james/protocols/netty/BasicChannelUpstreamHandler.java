@@ -210,13 +210,9 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     protected ProtocolSession createSession(ChannelHandlerContext ctx) throws Exception {
         SSLEngine engine = null;
         if (secure != null) {
-            engine = secure.getContext().createSSLEngine();
-            String[] enabledCipherSuites = secure.getEnabledCipherSuites();
-            if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
-                engine.setEnabledCipherSuites(enabledCipherSuites);
-            }
+            engine = secure.createSSLEngine();
         }
-        
+
         return protocol.newSession(new NettyProtocolTransport(ctx.getChannel(), engine));
     }
 

@@ -21,12 +21,11 @@ package org.apache.james.imapserver.netty;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.net.ssl.SSLContext;
-
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.protocols.api.Encryption;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
@@ -37,8 +36,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private SelectedMailbox selectedMailbox;
     private final Map<String, Object> attributesByKey = new HashMap<>();
-    private final SSLContext sslContext;
-    private final String[] enabledCipherSuites;
+    private final Encryption secure;
     private final boolean compress;
     private final Channel channel;
     private int handlerCount;
@@ -46,10 +44,9 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final SessionId sessionId;
     private boolean needsCommandInjectionDetection;
 
-    public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed, SessionId sessionId) {
+    public NettyImapSession(Channel channel, Encryption secure, boolean compress, boolean plainAuthDisallowed, SessionId sessionId) {
         this.channel = channel;
-        this.sslContext = sslContext;
-        this.enabledCipherSuites = enabledCipherSuites;
+        this.secure = secure;
         this.compress = compress;
         this.plainAuthDisallowed = plainAuthDisallowed;
         this.sessionId = sessionId;
@@ -138,11 +135,8 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
         channel.setReadable(false);
 
-        SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
+        SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
         filter.getEngine().setUseClientMode(false);
-        if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
-            filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
-        }
         channel.getPipeline().addFirst(SSL_HANDLER, filter);
 
         channel.setReadable(true);
@@ -152,7 +146,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     @Override
     public boolean supportStartTLS() {
-        return sslContext != null;
+        return secure != null && secure.getContext() != null;
     }
 
     @Override

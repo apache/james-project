@@ -20,6 +20,9 @@
 package org.apache.james.protocols.api;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * This class should be used to setup encrypted protocol handling
@@ -29,15 +32,17 @@ public final class Encryption {
     private final SSLContext context;
     private final boolean starttls;
     private final String[] enabledCipherSuites;
+    private final ClientAuth clientAuth;
 
-    private Encryption(SSLContext context, boolean starttls, String[] enabledCipherSuites) {
+    private Encryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
         this.context = context;
         this.starttls = starttls;
         this.enabledCipherSuites = enabledCipherSuites;
+        this.clientAuth = clientAuth;
     }
 
     public static Encryption createTls(SSLContext context) {
-        return createTls(context, null);
+        return createTls(context, null, ClientAuth.NONE);
     }
 
     /**
@@ -46,13 +51,15 @@ public final class Encryption {
      *
      * @param enabledCipherSuites
      *            or <code>null</code> if all Ciphersuites should be allowed
+     * @param clientAuth
+     *            specifies certificate based client authentication mode
      */
-    public static Encryption createTls(SSLContext context, String[] enabledCipherSuites) {
-        return new Encryption(context, false, enabledCipherSuites);
+    public static Encryption createTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        return new Encryption(context, false, enabledCipherSuites, clientAuth);
     }
 
     public static Encryption createStartTls(SSLContext context) {
-        return createStartTls(context, null);
+        return createStartTls(context, null, ClientAuth.NONE);
     }
 
     /**
@@ -61,9 +68,11 @@ public final class Encryption {
      *
      * @param enabledCipherSuites
      *            or <code>null</code> if all Ciphersuites should be allowed
+     * @param clientAuth
+     *            specifies certificate based client authentication mode
      */
-    public static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites) {
-        return new Encryption(context, true, enabledCipherSuites);
+    public static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        return new Encryption(context, true, enabledCipherSuites, clientAuth);
     }
 
     /**
@@ -93,5 +102,36 @@ public final class Encryption {
      */
     public String[] getEnabledCipherSuites() {
         return enabledCipherSuites;
+    }
+
+    /**
+     * Return the client authentication mode for the {@link Encryption}
+     * @return authentication mode
+     */
+    public ClientAuth getClientAuth() {
+        return clientAuth;
+    }
+
+    /**
+     * Create a new {@link SSLEngine} configured according to this class.
+     * @return sslengine
+     */
+    public SSLEngine createSSLEngine() {
+        SSLEngine engine = context.createSSLEngine();
+
+        // We need to copy the String array because of possible security issues.
+        // See https://issues.apache.org/jira/browse/PROTOCOLS-18
+        String[] cipherSuites = ArrayUtils.clone(enabledCipherSuites);
+
+        if (cipherSuites != null && cipherSuites.length > 0) {
+            engine.setEnabledCipherSuites(cipherSuites);
+        }
+        if (ClientAuth.NEED.equals(clientAuth)) {
+            engine.setNeedClientAuth(true);
+        }
+        if (ClientAuth.WANT.equals(clientAuth)) {
+            engine.setWantClientAuth(true);
+        }
+        return engine;
     }
 }
