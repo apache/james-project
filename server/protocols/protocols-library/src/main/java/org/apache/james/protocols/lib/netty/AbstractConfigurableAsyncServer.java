@@ -43,6 +43,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.protocols.api.ClientAuth;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
@@ -101,6 +102,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private boolean useStartTLS;
     private boolean useSSL;
 
+    private ClientAuth clientAuth;
+
     protected int connectionLimit;
 
     private String helloName;
@@ -111,6 +114,10 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private String certificates;
 
     private String secret;
+
+    private String truststore;
+    private String truststoreType;
+    private char[] truststoreSecret;
 
     protected Encryption encryption;
 
@@ -245,6 +252,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         useStartTLS = config.getBoolean("tls.[@startTLS]", false);
         useSSL = config.getBoolean("tls.[@socketTLS]", false);
 
+        if (config.getProperty("tls.clientAuth") != null || config.getKeys("tls.clientAuth").hasNext()) {
+            clientAuth = ClientAuth.NEED;
+        } else {
+            clientAuth = ClientAuth.NONE;
+        }
+
         if (useSSL && useStartTLS) {
             throw new ConfigurationException("startTLS is only supported when using plain sockets");
         }
@@ -260,6 +273,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
             secret = config.getString("tls.secret", null);
             x509Algorithm = config.getString("tls.algorithm", defaultX509algorithm);
+
+            truststore = config.getString("tls.clientAuth.truststore", null);
+            truststoreType = config.getString("tls.clientAuth.truststoreType", "JKS");
+            truststoreSecret = config.getString("tls.clientAuth.truststoreSecret", "").toCharArray();
+            LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
         }
 
         doConfigure(config);
@@ -421,12 +439,22 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
                     sslFactoryBuilder.withIdentityMaterial(keyManager);
                 }
+
+                if (clientAuth != null) {
+                    if (truststore != null) {
+                        sslFactoryBuilder.withTrustMaterial(
+                            fileSystem.getFile(truststore).toPath(),
+                            truststoreSecret,
+                            truststoreType);
+                    }
+                }
+
                 SSLContext context = sslFactoryBuilder.build().getSslContext();
 
                 if (useStartTLS) {
-                    encryption = Encryption.createStartTls(context, enabledCipherSuites);
+                    encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
                 } else {
-                    encryption = Encryption.createTls(context, enabledCipherSuites);
+                    encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
                 }
             } finally {
                 if (fis != null) {
@@ -489,10 +517,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @return defaultJmxName
      */
     protected abstract String getDefaultJMXName();
-
-    protected String[] getEnabledCipherSuites() {
-        return enabledCipherSuites;
-    }
 
     @Override
     public boolean isStarted() {
@@ -580,21 +604,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
         return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group,
-            enabledCipherSuites, getExecutionHandler(), getFrameHandlerFactory(), timer) {
-            @Override
-            protected SSLContext getSSLContext() {
-                if (getEncryption() == null) {
-                    return null;
-                } else {
-                    return getEncryption().getContext();
-                }
-            }
-
-            @Override
-            protected boolean isSSLSocket() {
-                return getEncryption() != null && !getEncryption().isStartTLS();
-            }
-
+            getEncryption(), getExecutionHandler(), getFrameHandlerFactory(), timer) {
 
             @Override
             protected ChannelUpstreamHandler createHandler() {

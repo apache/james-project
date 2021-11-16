@@ -75,6 +75,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.github.hakky54</groupId>
             <artifactId>sslcontext-kickstart-for-pem</artifactId>
         </dependency>

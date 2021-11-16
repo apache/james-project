@@ -21,7 +21,6 @@ package org.apache.james.protocols.netty;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
@@ -121,7 +120,7 @@ public class NettyServer extends AbstractAsyncServer {
             maxCurConnections,
             maxCurConnectionsPerIP,
             group,
-            secure != null ? secure.getEnabledCipherSuites() : null,
+            secure,
             eHandler,
             getFrameHandlerFactory(),
             hashedWheelTimer) {
@@ -129,20 +128,6 @@ public class NettyServer extends AbstractAsyncServer {
             @Override
             protected ChannelUpstreamHandler createHandler() {
                 return coreHandler;
-            }
-
-            @Override
-            protected boolean isSSLSocket() {
-                return getSSLContext() != null && secure != null && !secure.isStartTLS();
-            }
-
-            @Override
-            protected SSLContext getSSLContext() {
-                if (secure != null) {
-                    return secure.getContext();
-                } else  {
-                    return null;
-                }
             }
         };
 

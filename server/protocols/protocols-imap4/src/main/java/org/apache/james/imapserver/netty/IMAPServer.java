@@ -177,7 +177,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
                     // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.getContext().createSSLEngine();
+                    SSLEngine engine = secure.createSSLEngine();
                     engine.setUseClientMode(false);
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
@@ -210,7 +210,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
         if (secure != null && secure.isStartTLS()) {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure, imapMetrics);
         } else {
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
         }

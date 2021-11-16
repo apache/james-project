@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
-import javax.net.ssl.SSLContext;
-
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
@@ -36,6 +34,7 @@ import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.protocols.api.Encryption;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -59,9 +58,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     private final String hello;
 
-    private final String[] enabledCipherSuites;
-
-    private final SSLContext context;
+    private final Encryption secure;
 
     private final boolean compress;
 
@@ -78,17 +75,15 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       boolean plainAuthDisallowed, ImapMetrics imapMetrics) {
-        this(hello, processor, encoder, compress, plainAuthDisallowed, null, null, imapMetrics);
+        this(hello, processor, encoder, compress, plainAuthDisallowed, null, imapMetrics);
     }
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      boolean plainAuthDisallowed, SSLContext context, String[] enabledCipherSuites,
-                                      ImapMetrics imapMetrics) {
+                                      boolean plainAuthDisallowed, Encryption secure, ImapMetrics imapMetrics) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
-        this.context = context;
-        this.enabledCipherSuites = enabledCipherSuites;
+        this.secure = secure;
         this.compress = compress;
         this.plainAuthDisallowed = plainAuthDisallowed;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
@@ -97,7 +92,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), context, enabledCipherSuites, compress, plainAuthDisallowed,
+        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), secure, compress, plainAuthDisallowed,
             SessionId.generate());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
         imapsession.setAttribute(MDC_KEY, boundMDC);

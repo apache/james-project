@@ -111,6 +111,29 @@
 
     </subsection>
 
+    <subsection name="Client authentication via certificates">
+
+      <p>When you enable TLS, you may also configure the server to require a client certificate for authentication:</p>
+      <source>
+&lt;tls socketTLS="false" startTLS="false"&gt;
+    &lt;keystore&gt;file://conf/keystore&lt;/keystore&gt;
+    &lt;keystoreType&gt;JKS&lt;/keystoreType&gt;
+    &lt;secret&gt;yoursecret&lt;/secret&gt;
+
+    &lt;clientAuth&gt;
+        &lt;truststore&gt;file://conf/truststore&lt;/truststore&gt;
+        &lt;truststoreType&gt;JKS&lt;/truststoreType&gt;
+        &lt;truststoreSecret&gt;yoursecret&lt;/truststoreSecret&gt;
+    &lt;/clientAuth&gt;
+&lt;/tls&gt;
+</source>
+
+      <p>James verifies client certificates against the provided truststore. You can fill it with trusted peer certificates directly,
+         or an issuer certificate (CA) if you trust all certificates created by it. If you omit the truststore configuration,
+         James will use the Java default truststore instead, effectively trusting any known CA.</p>
+
+    </subsection>
+
     <subsection name="Creating your own PEM keys">
         <p>The following commands can be used to create self signed PEM keys:</p>
 

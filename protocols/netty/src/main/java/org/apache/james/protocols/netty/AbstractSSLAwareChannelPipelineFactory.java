@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import javax.net.ssl.SSLContext;
+
 import javax.net.ssl.SSLEngine;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.james.protocols.api.Encryption;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
@@ -33,8 +33,7 @@ import org.jboss.netty.util.HashedWheelTimer;
  */
 public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
 
-    
-    private String[] enabledCipherSuites = null;
+    private Encryption secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
                                                   int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler,
@@ -43,13 +42,11 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler,
-            ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
+            int maxConnections, int maxConnectsPerIp, ChannelGroup group, Encryption secure,
+            ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
         this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
-        
-        // We need to copy the String array because of possible security issues.
-        // See https://issues.apache.org/jira/browse/PROTOCOLS-18
-        this.enabledCipherSuites = ArrayUtils.clone(enabledCipherSuites);
+
+        this.secure = secure;
     }
 
     @Override
@@ -59,11 +56,8 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
         if (isSSLSocket()) {
             // We need to set clientMode to false.
             // See https://issues.apache.org/jira/browse/JAMES-1025
-            SSLEngine engine = getSSLContext().createSSLEngine();
+            SSLEngine engine = secure.createSSLEngine();
             engine.setUseClientMode(false);
-            if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
-                engine.setEnabledCipherSuites(enabledCipherSuites);
-            }
             pipeline.addFirst(HandlerConstants.SSL_HANDLER, new SslHandler(engine));
         }
         return pipeline;
@@ -72,10 +66,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
     /**
      * Return if the socket is using SSL/TLS
      */
-    protected abstract boolean isSSLSocket();
-    
-    /**
-     * Return the SSL context
-     */
-    protected abstract SSLContext getSSLContext();
+    protected boolean isSSLSocket() {
+        return secure != null && secure.getContext() != null && !secure.isStartTLS();
+    }
 }
