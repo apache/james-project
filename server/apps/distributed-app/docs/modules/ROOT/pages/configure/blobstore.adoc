@@ -127,6 +127,18 @@ Maximum size of stored objects expressed in bytes.
 
 | objectstorage.s3.http.concurrency
 | Allow setting the number of concurrent HTTP requests allowed by the Netty driver.
+
+| objectstorage.s3.truststore.path
+| optional: Verify the S3 server certificate against this trust store file.
+
+| objectstorage.s3.truststore.type
+| optional: Sepecify the type of the trust store, e.g. JKS, PKCS12
+
+| objectstorage.s3.truststore.secret
+| optional: Use this secret/password to access the trust store; default none
+
+| objectstorage.s3.truststore.algorithm
+| optional: Use this specific trust store algorithm; default SunX509
 |===
 
 ==== Buckets Configuration

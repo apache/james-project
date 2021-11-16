@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.net.URI;
+import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -53,10 +54,55 @@ public class AwsS3AuthConfiguration {
             private final String accessKeyId;
             private final String secretKey;
 
+            private Optional<String> trustStorePath;
+            private Optional<String> trustStoreType;
+            private Optional<String> trustStoreSecret;
+            private Optional<String> trustStoreAlgorithm;
+
             public ReadyToBuild(URI endpoint, String accessKeyId, String secretKey) {
                 this.endpoint = endpoint;
                 this.accessKeyId = accessKeyId;
                 this.secretKey = secretKey;
+                this.trustStorePath = Optional.empty();
+                this.trustStoreType = Optional.empty();
+                this.trustStoreSecret = Optional.empty();
+                this.trustStoreAlgorithm = Optional.empty();
+            }
+
+            public ReadyToBuild trustStorePath(Optional<String> trustStorePath) {
+                this.trustStorePath = trustStorePath;
+                return this;
+            }
+
+            public ReadyToBuild trustStorePath(String trustStorePath) {
+                return trustStorePath(Optional.ofNullable(trustStorePath));
+            }
+
+            public ReadyToBuild trustStoreType(Optional<String> trustStoreType) {
+                this.trustStoreType = trustStoreType;
+                return this;
+            }
+
+            public ReadyToBuild trustStoreType(String trustStoreType) {
+                return trustStoreType(Optional.ofNullable(trustStoreType));
+            }
+
+            public ReadyToBuild trustStoreSecret(Optional<String> trustStoreSecret) {
+                this.trustStoreSecret = trustStoreSecret;
+                return this;
+            }
+
+            public ReadyToBuild trustStoreSecret(String trustStoreSecret) {
+                return trustStoreSecret(Optional.ofNullable(trustStoreSecret));
+            }
+
+            public ReadyToBuild trustStoreAlgorithm(Optional<String> trustStoreAlgorithm) {
+                this.trustStoreAlgorithm = trustStoreAlgorithm;
+                return this;
+            }
+
+            public ReadyToBuild trustStoreAlgorithm(String trustStoreAlgorithm) {
+                return trustStoreAlgorithm(Optional.ofNullable(trustStoreAlgorithm));
             }
 
             public AwsS3AuthConfiguration build() {
@@ -68,7 +114,8 @@ public class AwsS3AuthConfiguration {
                 Preconditions.checkNotNull(secretKey, "'secretKey' is mandatory");
                 Preconditions.checkArgument(!secretKey.isEmpty(), "'secretKey' is mandatory");
 
-                return new AwsS3AuthConfiguration(endpoint, accessKeyId, secretKey);
+                return new AwsS3AuthConfiguration(endpoint, accessKeyId, secretKey,
+                    trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm);
             }
         }
     }
@@ -77,12 +124,25 @@ public class AwsS3AuthConfiguration {
     private final String accessKeyId;
     private final String secretKey;
 
+    private final Optional<String> trustStorePath;
+    private final Optional<String> trustStoreType;
+    private final Optional<String> trustStoreSecret;
+    private final Optional<String> trustStoreAlgorithm;
+
     private AwsS3AuthConfiguration(URI endpoint,
                                    String accessKeyId,
-                                   String secretKey) {
+                                   String secretKey,
+                                   Optional<String> trustStorePath,
+                                   Optional<String> trustStoreType,
+                                   Optional<String> trustStoreSecret,
+                                   Optional<String> trustStoreAlgorithm) {
         this.endpoint = endpoint;
         this.accessKeyId = accessKeyId;
         this.secretKey = secretKey;
+        this.trustStorePath = trustStorePath;
+        this.trustStoreType = trustStoreType;
+        this.trustStoreSecret = trustStoreSecret;
+        this.trustStoreAlgorithm = trustStoreAlgorithm;
     }
 
     public URI getEndpoint() {
@@ -97,20 +157,41 @@ public class AwsS3AuthConfiguration {
         return secretKey;
     }
 
+    public Optional<String> getTrustStorePath() {
+        return trustStorePath;
+    }
+
+    public Optional<String> getTrustStoreType() {
+        return trustStoreType;
+    }
+
+    public Optional<String> getTrustStoreSecret() {
+        return trustStoreSecret;
+    }
+
+    public Optional<String> getTrustStoreAlgorithm() {
+        return trustStoreAlgorithm;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof AwsS3AuthConfiguration) {
             AwsS3AuthConfiguration that = (AwsS3AuthConfiguration) o;
             return Objects.equal(endpoint, that.endpoint) &&
                 Objects.equal(accessKeyId, that.accessKeyId) &&
-                Objects.equal(secretKey, that.secretKey);
+                Objects.equal(secretKey, that.secretKey) &&
+                Objects.equal(trustStorePath, that.trustStorePath) &&
+                Objects.equal(trustStoreType, that.trustStoreType) &&
+                Objects.equal(trustStoreSecret, that.trustStoreSecret) &&
+                Objects.equal(trustStoreAlgorithm, that.trustStoreAlgorithm);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(endpoint, accessKeyId, secretKey);
+        return Objects.hashCode(endpoint, accessKeyId, secretKey,
+                trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm);
     }
 
     @Override
@@ -119,6 +200,9 @@ public class AwsS3AuthConfiguration {
             .add("endpoint", endpoint)
             .add("accessKeyId", accessKeyId)
             .add("secretKey", secretKey)
+            .add("trustStorePath", trustStorePath)
+            .add("trustStoreSecret", trustStoreSecret)
+            .add("trustStoreAlgorithm", trustStoreAlgorithm)
             .toString();
     }
 }
