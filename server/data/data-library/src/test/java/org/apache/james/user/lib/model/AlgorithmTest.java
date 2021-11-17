@@ -19,9 +19,6 @@
 
 package org.apache.james.user.lib.model;
 
-import static org.apache.james.user.lib.model.Algorithm.DEFAULT_FACTORY;
-import static org.apache.james.user.lib.model.Algorithm.LEGACY_FACTORY;
-
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -36,16 +33,110 @@ class AlgorithmTest {
     @Test
     void ofShouldParseRawHash() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").asString()).isEqualTo("SHA-1");
-            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1").asString()).isEqualTo("SHA-1/plain");
+            softly.assertThat(Algorithm.of("SHA-1").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1").isSalted()).isFalse();
+        });
+    }
+
+    @Test
+    void ofShouldParseRawHashWithFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1", "plain").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1", "plain").asString()).isEqualTo("SHA-1/plain");
+            softly.assertThat(Algorithm.of("SHA-1", "plain").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1", "plain").isSalted()).isFalse();
         });
     }
 
     @Test
     void ofShouldParseLegacy() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(LEGACY_FACTORY.of("SHA-1").asString()).isEqualTo("SHA-1");
-            softly.assertThat(LEGACY_FACTORY.of("SHA-1").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1/legacy").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/legacy").asString()).isEqualTo("SHA-1/legacy");
+            softly.assertThat(Algorithm.of("SHA-1/legacy").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1/legacy").isSalted()).isFalse();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacyWithFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1", "legacy").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1", "legacy").asString()).isEqualTo("SHA-1/legacy");
+            softly.assertThat(Algorithm.of("SHA-1", "legacy").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1", "legacy").isSalted()).isFalse();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacyIgnoringFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").asString()).isEqualTo("SHA-1/legacy");
+            softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").isSalted()).isFalse();
+        });
+    }
+
+    @Test
+    void ofShouldParseSalted() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1/salted").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/salted").asString()).isEqualTo("SHA-1/salted");
+            softly.assertThat(Algorithm.of("SHA-1/salted").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1/salted").isSalted()).isTrue();
+        });
+    }
+
+    @Test
+    void ofShouldParseSaltedWithFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1", "salted").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1", "salted").asString()).isEqualTo("SHA-1/salted");
+            softly.assertThat(Algorithm.of("SHA-1", "salted").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1", "salted").isSalted()).isTrue();
+        });
+    }
+
+    @Test
+    void ofShouldParseSaltedIgnoringFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1/salted", "plain").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/salted", "plain").asString()).isEqualTo("SHA-1/salted");
+            softly.assertThat(Algorithm.of("SHA-1/salted", "plain").isLegacy()).isFalse();
+            softly.assertThat(Algorithm.of("SHA-1/salted", "plain").isSalted()).isTrue();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacySalted() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted").asString()).isEqualTo("SHA-1/legacy_salted");
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted").isSalted()).isTrue();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacySaltedWithFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").asString()).isEqualTo("SHA-1/legacy_salted");
+            softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").isSalted()).isTrue();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacySaltedIgnoringFallback() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").getName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").asString()).isEqualTo("SHA-1/legacy_salted");
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").isLegacy()).isTrue();
+            softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").isSalted()).isTrue();
         });
     }
 }
