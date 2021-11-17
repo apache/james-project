@@ -57,7 +57,6 @@ import reactor.core.publisher.Mono;
 public class CassandraUsersDAO implements UsersDAO {
     private static final String DEFAULT_ALGO_VALUE = "SHA-512";
 
-    private final Algorithm.Factory algorithmFactory;
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
     private final PreparedStatement updateUserStatement;
@@ -67,8 +66,7 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersDAO(Algorithm.Factory algorithmFactory, Session session) {
-        this.algorithmFactory = algorithmFactory;
+    public CassandraUsersDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
@@ -125,7 +123,7 @@ public class CassandraUsersDAO implements UsersDAO {
             getUserStatement.bind()
                 .setString(NAME, name.asString()))
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
-                algorithmFactory.of(row.getString(ALGORITHM))));
+                Algorithm.of(row.getString(ALGORITHM))));
     }
 
     @Override
@@ -185,7 +183,7 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-        DefaultUser user = new DefaultUser(username, algorithmFactory.of(DEFAULT_ALGO_VALUE));
+        DefaultUser user = new DefaultUser(username, Algorithm.of(DEFAULT_ALGO_VALUE));
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
             insertStatement.bind()

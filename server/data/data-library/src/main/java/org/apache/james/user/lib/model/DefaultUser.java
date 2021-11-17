@@ -76,7 +76,8 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean verifyPassword(String pass) {
         try {
-            String hashGuess = DigestUtil.digestString(pass, algorithm);
+            String credentials = algorithm.isSalted() ? userName.asString() + pass : pass;
+            String hashGuess = DigestUtil.digestString(credentials, algorithm);
             return hashedPassword.equals(hashGuess);
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);
@@ -86,7 +87,8 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean setPassword(String newPass) {
         try {
-            hashedPassword = DigestUtil.digestString(newPass, algorithm);
+            String newCredentials = algorithm.isSalted() ? userName.asString() + newPass : newPass;
+            hashedPassword = DigestUtil.digestString(newCredentials, algorithm);
             return true;
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);

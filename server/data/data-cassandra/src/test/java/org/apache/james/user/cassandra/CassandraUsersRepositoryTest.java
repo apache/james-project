@@ -89,7 +89,7 @@ class CassandraUsersRepositoryTest {
     }
 
     private static UsersRepositoryImpl<CassandraUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandraCluster.getCassandraCluster().getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
