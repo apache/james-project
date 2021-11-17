@@ -51,4 +51,4 @@ case class Identity(id: IdentityId,
                     htmlSignature: HtmlSignature,
                     mayDelete: MayDeleteIdentity)
 
-
+case class ForbiddenSendFromException(mailAddress: MailAddress) extends IllegalStateException(s"Can not send from ${mailAddress.asString()}")

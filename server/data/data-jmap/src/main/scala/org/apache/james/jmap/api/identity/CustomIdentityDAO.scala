@@ -25,8 +25,9 @@ import java.util.UUID
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.model.{EmailAddress, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, PushSubscriptionCreationRequest, TextSignature}
+import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
+import org.apache.james.user.api.UsersRepository
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -83,7 +84,7 @@ trait CustomIdentityDAO {
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit]
 }
 
-class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom) {
+class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepository: UsersRepository) {
   def listIdentities(username: Username): List[Identity] =
     canSendFrom.allValidFromAddressesForUser(username)
       .collect(ImmutableList.toImmutableList()).asScala.toList
@@ -99,6 +100,9 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom) {
             htmlSignature = HtmlSignature.DEFAULT,
             mayDelete = MayDeleteIdentity(false))))
 
+  def userCanSendFrom(username: Username, mailAddress: MailAddress): Boolean =
+    canSendFrom.userCanSendFrom(username, usersRepository.getUsername(mailAddress))
+
   private def from(address: MailAddress): Option[IdentityId] =
     Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
       .toEither
@@ -109,7 +113,12 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom) {
 // This class is intended to merge default (server-set0 identities with (user defined) custom identities
 // Using the custom identities we can stores deltas of the default (server-set) identities allowing to modify them.
 class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identityFactory: DefaultIdentitySupplier) {
-  def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = customIdentityDao.save(user, creationRequest)
+  def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
+    if (identityFactory.userCanSendFrom(user, creationRequest.email)) {
+      customIdentityDao.save(user, creationRequest)
+    } else {
+      SMono.error(ForbiddenSendFromException(creationRequest.email))
+    }
 
   def list(user: Username): Publisher[Identity] = SFlux.merge(Seq(
     customIdentityDao.list(user),
