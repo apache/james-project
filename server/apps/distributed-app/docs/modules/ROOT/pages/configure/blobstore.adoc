@@ -132,7 +132,7 @@ Maximum size of stored objects expressed in bytes.
 | optional: Verify the S3 server certificate against this trust store file.
 
 | objectstorage.s3.truststore.type
-| optional: Sepecify the type of the trust store, e.g. JKS, PKCS12
+| optional: Specify the type of the trust store, e.g. JKS, PKCS12
 
 | objectstorage.s3.truststore.secret
 | optional: Use this secret/password to access the trust store; default none

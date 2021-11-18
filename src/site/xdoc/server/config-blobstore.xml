@@ -172,7 +172,7 @@ generate salt with : openssl rand -hex 16
                         <dd><i>optional:</i> Verify the S3 server certificate against this trust store file.</dd>
 
                         <dt><strong>objectstorage.s3.truststore.type</strong></dt>
-                        <dd><i>optional:</i> Sepecify the type of the trust store, e.g. JKS, PKCS12</dd>
+                        <dd><i>optional:</i> Specify the type of the trust store, e.g. JKS, PKCS12</dd>
 
                         <dt><strong>objectstorage.s3.truststore.secret</strong></dt>
                         <dd><i>optional:</i> Use this secret/password to access the trust store; default none</dd>
