@@ -19,19 +19,20 @@
 
 package org.apache.james.jmap.method
 
-import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityRepository}
 import org.apache.james.jmap.api.model.{ForbiddenSendFromException, HtmlSignature, Identity, IdentityName, TextSignature}
+import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.jmap.json.IdentitySerializer
-import org.apache.james.jmap.mail.{IdentityCreation, IdentityCreationId, IdentityCreationParseException, IdentityCreationResponse, IdentitySetRequest}
+import org.apache.james.jmap.mail.IdentityCreation.{knownProperties, serverSetProperty}
+import org.apache.james.jmap.mail.{IdentityCreationId, IdentityCreationResponse, IdentitySet, IdentitySetParseException, IdentitySetRequest}
 import org.apache.james.jmap.method.IdentitySetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MailboxSession
-import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
+
+import javax.inject.Inject
 
 object IdentitySetCreatePerformer {
   case class CreationResults(results: Seq[CreationResult]) {
@@ -57,7 +58,7 @@ object IdentitySetCreatePerformer {
 
   case class CreationFailure(clientId: IdentityCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: IdentityCreationParseException => e.setError
+      case e: IdentitySetParseException => e.setError
       case e: ForbiddenSendFromException => SetError.forbiddenFrom(SetErrorDescription(e.getMessage))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
@@ -76,9 +77,9 @@ class IdentitySetCreatePerformer @Inject()(identityRepository: IdentityRepositor
       .map(CreationResults)
 
   private def parseCreate(jsObject: JsObject): Either[Exception, IdentityCreationRequest] = for {
-    validJsObject <- IdentityCreation.validateProperties(jsObject)
+    validJsObject <- IdentitySet.validateProperties(serverSetProperty, knownProperties, jsObject)
     parsedRequest <- IdentitySerializer.deserializeIdentityCreationRequest(validJsObject).asEither
-      .left.map(errors => IdentityCreationParseException(IdentitySetError(errors)))
+      .left.map(errors => IdentitySetParseException.from(errors))
   } yield {
     parsedRequest
   }
@@ -96,13 +97,4 @@ class IdentitySetCreatePerformer @Inject()(identityRepository: IdentityRepositor
       textSignature = request.textSignature.fold[Option[TextSignature]](Some(TextSignature.DEFAULT))(_ => None),
       htmlSignature = request.htmlSignature.fold[Option[HtmlSignature]](Some(HtmlSignature.DEFAULT))(_ => None),
       mayDelete = identity.mayDelete)
-
-  private def IdentitySetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
-    errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) =>
-        SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in Identity object"), Some(Properties("email")))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
 }

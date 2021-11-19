@@ -19,43 +19,38 @@
 
 package org.apache.james.jmap.mail
 
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.refineV
-import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.model.{HtmlSignature, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Properties, SetError, UuidState}
+import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentitySetUpdateResponse
 import org.apache.james.jmap.method.WithAccountId
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
-object IdentityCreation {
-  private val serverSetProperty: Set[String] = Set("id", "mayDelete")
-  private val assignableProperties: Set[String] = Set("name", "email", "replyTo", "bcc", "textSignature", "htmlSignature")
-  private val knownProperties: Set[String] = assignableProperties ++ serverSetProperty
-
-  def validateProperties(jsObject: JsObject): Either[IdentityCreationParseException, JsObject] =
+object IdentitySet {
+  def validateProperties(serverSetProperty: Set[String], knownProperties: Set[String], jsObject: JsObject): Either[IdentitySetParseException, JsObject] =
     (jsObject.keys.intersect(serverSetProperty), jsObject.keys.diff(knownProperties)) match {
       case (_, unknownProperties) if unknownProperties.nonEmpty =>
-        Left(IdentityCreationParseException(SetError.invalidArguments(
+        Left(IdentitySetParseException(SetError.invalidArguments(
           SetErrorDescription("Some unknown properties were specified"),
-          Some(toProperties(unknownProperties.toSet)))))
+          Some(Properties.toProperties(unknownProperties.toSet)))))
       case (specifiedServerSetProperties, _) if specifiedServerSetProperties.nonEmpty =>
-        Left(IdentityCreationParseException(SetError.invalidArguments(
+        Left(IdentitySetParseException(SetError.invalidArguments(
           SetErrorDescription("Some server-set properties were specified"),
-          Some(toProperties(specifiedServerSetProperties.toSet)))))
+          Some(Properties.toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
+}
 
-  private def toProperties(strings: Set[String]): Properties = Properties(strings
-    .flatMap(string => {
-      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
-      refinedValue.fold(_ => None, Some(_))
-    }))
+object IdentityCreation {
+  val serverSetProperty: Set[String] = Set("id", "mayDelete")
+  val assignableProperties: Set[String] = Set("name", "email", "replyTo", "bcc", "textSignature", "htmlSignature")
+  val knownProperties: Set[String] = assignableProperties ++ serverSetProperty
 }
 
 case class IdentitySetRequest(accountId: AccountId,
-                              create: Option[Map[IdentityCreationId, JsObject]]) extends WithAccountId
+                              create: Option[Map[IdentityCreationId, JsObject]],
+                              update: Option[Map[UnparsedIdentityId, JsObject]]) extends WithAccountId
 
 case class IdentityCreationId(id: Id) {
   def serialise: String = id.value
@@ -71,6 +66,21 @@ case class IdentitySetResponse(accountId: AccountId,
                                oldState: Option[UuidState],
                                newState: UuidState,
                                created: Option[Map[IdentityCreationId, IdentityCreationResponse]],
-                               notCreated: Option[Map[IdentityCreationId, SetError]])
+                               notCreated: Option[Map[IdentityCreationId, SetError]],
+                               updated: Option[Map[IdentityId, IdentitySetUpdateResponse]],
+                               notUpdated: Option[Map[UnparsedIdentityId, SetError]])
 
-case class IdentityCreationParseException(setError: SetError) extends IllegalArgumentException
+case class IdentitySetParseException(setError: SetError) extends IllegalArgumentException
+
+object IdentitySetParseException {
+  def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): IdentitySetParseException = {
+    val setError: SetError = errors.head match {
+      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid"))
+      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) =>
+        SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in Identity object"))
+      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid: $message"))
+      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
+    }
+    IdentitySetParseException(setError)
+  }
+}
