@@ -19,6 +19,8 @@
 
 package org.apache.james.user.memory;
 
+import static org.apache.james.user.lib.model.Algorithm.HashingMode.PLAIN;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +47,7 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = Algorithm.of(config.getString("algorithm", "SHA-512"), config.getString("hashingMode", "plain"));
+        algo = Algorithm.of(config.getString("algorithm", "SHA-512"), config.getString("hashingMode", PLAIN.name()));
     }
 
     public void clear() {
@@ -54,7 +56,7 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public void addUser(Username username, String password) {
-        DefaultUser user = new DefaultUser(username, algo);
+        DefaultUser user = new DefaultUser(username, algo, algo);
         user.setPassword(password);
         userByName.put(username.asString(), user);
     }

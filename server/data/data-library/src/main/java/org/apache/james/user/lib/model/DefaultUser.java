@@ -36,19 +36,23 @@ public class DefaultUser implements User, Serializable {
 
     private final Username userName;
     private String hashedPassword;
-    private final Algorithm algorithm;
+    private Algorithm currentAlgorithm;
+    private final Algorithm preferredAlgorithm;
 
     /**
      * Standard constructor.
      * 
      * @param name
      *            the String name of this user
-     * @param hashAlg
-     *            the algorithm used to generate the hash of the password
+     * @param verifyAlg
+     *            the algorithm used to verify the hash of the password
+     * @param updateAlg
+     *            the algorithm used to update the hash of the password
      */
-    public DefaultUser(Username name, Algorithm hashAlg) {
+    public DefaultUser(Username name, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
-        algorithm = hashAlg;
+        currentAlgorithm = verifyAlg;
+        preferredAlgorithm = updateAlg;
     }
 
     /**
@@ -59,13 +63,16 @@ public class DefaultUser implements User, Serializable {
      *            the String name of this user
      * @param passwordHash
      *            the String hash of this users current password
-     * @param hashAlg
-     *            the String algorithm used to generate the hash of the password
+     * @param verifyAlg
+     *            the algorithm used to verify the hash of the password
+     * @param updateAlg
+     *            the algorithm used to update the hash of the password
      */
-    public DefaultUser(Username name, String passwordHash, Algorithm hashAlg) {
+    public DefaultUser(Username name, String passwordHash, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
         hashedPassword = passwordHash;
-        algorithm = hashAlg;
+        currentAlgorithm = verifyAlg;
+        preferredAlgorithm = updateAlg;
     }
 
     @Override
@@ -76,8 +83,8 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean verifyPassword(String pass) {
         try {
-            String credentials = algorithm.isSalted() ? userName.asString() + pass : pass;
-            String hashGuess = DigestUtil.digestString(credentials, algorithm);
+            String credentials = getCredentials(currentAlgorithm, pass);
+            String hashGuess = DigestUtil.digestString(credentials, currentAlgorithm);
             return hashedPassword.equals(hashGuess);
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);
@@ -87,11 +94,20 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean setPassword(String newPass) {
         try {
-            String newCredentials = algorithm.isSalted() ? userName.asString() + newPass : newPass;
-            hashedPassword = DigestUtil.digestString(newCredentials, algorithm);
+            String newCredentials = getCredentials(preferredAlgorithm, newPass);
+            hashedPassword = DigestUtil.digestString(newCredentials, preferredAlgorithm);
+            currentAlgorithm = preferredAlgorithm;
             return true;
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);
+        }
+    }
+
+    private String getCredentials(Algorithm algorithm, String pass) {
+        if (algorithm.isSalted()) {
+            return userName.asString() + pass;
+        } else {
+            return pass;
         }
     }
 
@@ -110,6 +126,6 @@ public class DefaultUser implements User, Serializable {
      * @return the name of the hashing algorithm used for this user's password
      */
     public Algorithm getHashAlgorithm() {
-        return algorithm;
+        return currentAlgorithm;
     }
 }

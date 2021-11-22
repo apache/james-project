@@ -28,36 +28,46 @@ class JPAUserTest {
     @Test
     void hashPasswordShouldBeNoopWhenNone() {
         //I doubt the expected result was the author intent
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "NONE")).isEqualTo("baeMiqu7");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "NONE")).isEqualTo("baeMiqu7");
     }
 
     @Test
     void hashPasswordShouldHashWhenMD5() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "MD5")).isEqualTo("702000e50c9fd3755b8fc20ecb07d1ac");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "MD5")).isEqualTo("702000e50c9fd3755b8fc20ecb07d1ac");
     }
 
     @Test
     void hashPasswordShouldHashWhenSHA1() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "SHA1")).isEqualTo("05dbbaa7b4bcae245f14d19ae58ef1b80adf3363");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "SHA1")).isEqualTo("05dbbaa7b4bcae245f14d19ae58ef1b80adf3363");
     }
 
     @Test
     void hashPasswordShouldHashWhenSHA256() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "SHA-256")).isEqualTo("6d06c72a578fe0b78ede2393b07739831a287774dcad0b18bc4bde8b0c948b82");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "SHA-256")).isEqualTo("6d06c72a578fe0b78ede2393b07739831a287774dcad0b18bc4bde8b0c948b82");
     }
 
     @Test
     void hashPasswordShouldHashWhenSHA512() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "SHA-512")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "SHA-512")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
     }
 
     @Test
     void hashPasswordShouldSha512WhenRandomString() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "random")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "random")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
     }
 
     @Test
-    void hashPasswordShouldMD5WhenNull() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null)).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
+    void hashPasswordShouldSha512WhenNull() {
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, null)).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
+    }
+
+    @Test
+    void hashPasswordShouldHashWithNullSalt() {
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null, "SHA-512/salted")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
+    }
+
+    @Test
+    void hashPasswordShouldHashWithSalt() {
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "salt", "SHA-512/salted")).isEqualTo("b7941dcdc380ec414623834919f7d5cbe241a2b6a23be79a61cd9f36178382901b8d83642b743297ac72e5de24e4111885dd05df06e14e47c943c05fdd1ff15a");
     }
 }
