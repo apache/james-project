@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -27,15 +30,26 @@ import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.MailAddress
+import org.apache.james.jmap.api.identity.IdentityCreationRequest
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.IdentitySetContract.IDENTITY_CREATION_REQUEST
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+import reactor.core.scala.publisher.SMono
 
-import java.util.UUID
-
+object IdentitySetContract {
+  val IDENTITY_CREATION_REQUEST = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+    email = BOB.asMailAddress(),
+    replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+    bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+    textSignature = Some(TextSignature("text signature")),
+    htmlSignature = Some(HtmlSignature("html signature")))
+}
 trait IdentitySetContract {
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
@@ -91,7 +105,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -349,7 +362,6 @@ trait IdentitySetContract {
 
     val response: String = `given`
       .body(request)
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .post
     .`then`
@@ -406,7 +418,6 @@ trait IdentitySetContract {
 
     val response: String = `given`
       .body(request)
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .post
     .`then`
@@ -469,7 +480,6 @@ trait IdentitySetContract {
 
     val response: String = `given`
       .body(request)
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .post
     .`then`
@@ -1191,4 +1201,351 @@ trait IdentitySetContract {
       .extract()
       .jsonPath()
       .get(s"methodResponses[0][1].created.$clientId.id")
+
+  @Test
+  def destroyShouldSucceedWhenDeleteCustomIdentity(server: GuiceJamesServer): Unit = {
+    val id = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .block()
+      .id.id.toString
+
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$id"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"destroyed": ["$id"]
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldFailWhenDeleteServerSetIdentities(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    val defaultServerSetIdentity = UUID.nameUUIDFromBytes("bob@domain.tld".getBytes(StandardCharsets.UTF_8))
+    val serverIdentitiesId1 = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$serverIdentitiesId1", "$defaultServerSetIdentity"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"notDestroyed": {
+           |					"$serverIdentitiesId1": {
+           |						"type": "forbidden",
+           |						"description": "User do not have permission to delete IdentityId($serverIdentitiesId1)",
+           |						"properties": [
+           |							"id"
+           |						]
+           |					},
+           |					"$defaultServerSetIdentity": {
+           |						"type": "forbidden",
+           |						"description": "User do not have permission to delete IdentityId($defaultServerSetIdentity)",
+           |						"properties": [
+           |							"id"
+           |						]
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldFailWhenInvalidId(): Unit = {
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["invalid"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"notDestroyed": {
+           |					"invalid": {
+           |						"type": "invalidArguments",
+           |						"description": "invalid is not a IdentityId: Invalid UUID string: invalid"
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldNotFailWhenUnknownId(): Unit = {
+    val id = UUID.randomUUID().toString
+
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$id"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"destroyed": ["$id"]
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
+    val customId1 = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .block()
+      .id.id.toString
+    val customId2 = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .block()
+      .id.id.toString
+    val defaultServerSetIdentity = UUID.nameUUIDFromBytes("bob@domain.tld".getBytes(StandardCharsets.UTF_8))
+
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$customId1", "$customId2", "$defaultServerSetIdentity"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"destroyed": ["$customId1", "$customId2"],
+           |				"notDestroyed": {
+           |					"$defaultServerSetIdentity": {
+           |						"type": "forbidden",
+           |						"description": "User do not have permission to delete IdentityId($defaultServerSetIdentity)",
+           |						"properties": [
+           |							"id"
+           |						]
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def deletedIdentityShouldNotBeFetchedAnyMore(server: GuiceJamesServer): Unit = {
+    val id = SMono(server.getProbe(classOf[IdentityProbe])
+      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .block()
+      .id.id.toString
+
+    val request1: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$id"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    `given`
+      .body(request1)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["$id"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"notFound": [
+           |		"$id"
+           |	],
+           |	"state": "${INSTANCE.value}",
+           |	"list": []
+           |}""".stripMargin)
+  }
+
 }

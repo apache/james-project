@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.api.identity.{IdentityBccUpdate, IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityNameUpdate, IdentityReplyToUpdate, IdentityTextSignatureUpdate, IdentityUpdateRequest}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
@@ -26,11 +27,19 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, SetError, UuidState}
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentitySetUpdateResponse
-import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
+import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 object IdentitySerializer {
   private implicit val emailerNameReads: Format[EmailerName] = Json.valueFormat[EmailerName]
   private implicit val identityIdFormat: Format[IdentityId] = Json.valueFormat[IdentityId]
+  private implicit val unparsedIdentityIdReads: Reads[UnparsedIdentityId] = {
+    case JsString(string) =>
+      refined.refineV[IdConstraint](string)
+        .fold(
+          e => JsError(s"identityId does not match Id constraints: $e"),
+          id => JsSuccess(UnparsedIdentityId(id)))
+    case _ => JsError("identityId needs to be represented by a JsString")
+  }
   private implicit val identityIdUnparsedFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
   private implicit val identityIdsFormat: Format[IdentityIds] = Json.valueFormat[IdentityIds]
   private implicit val emailAddressReads: Format[EmailAddress] = Json.format[EmailAddress]
