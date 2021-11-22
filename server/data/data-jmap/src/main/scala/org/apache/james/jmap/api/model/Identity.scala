@@ -40,7 +40,9 @@ case class MayDeleteIdentity(value: Boolean) extends AnyVal
 object IdentityId {
   def generate: IdentityId = IdentityId(UUID.randomUUID())
 }
-case class IdentityId(id: UUID)
+case class IdentityId(id: UUID) {
+  def serialize: String = id.toString
+}
 
 case class Identity(id: IdentityId,
                     name: IdentityName,

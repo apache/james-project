@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, UuidState}
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{IdentitySetRequest, IdentitySetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -57,5 +57,11 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
           created = creationResults.created.filter(_.nonEmpty),
           notCreated = creationResults.notCreated.filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
-      processingContext = invocation.processingContext)
+      processingContext = creationResults.created.getOrElse(Map())
+        .foldLeft(invocation.processingContext)({
+          case (processingContext, (clientId, response)) =>
+            Id.validate(response.id.serialize)
+              .fold(_ => processingContext,
+                serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
+        }))
 }
