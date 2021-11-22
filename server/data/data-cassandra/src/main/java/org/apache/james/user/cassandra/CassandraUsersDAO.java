@@ -44,18 +44,19 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
+import org.apache.james.user.lib.model.Algorithm.HashingMode;
 import org.apache.james.user.lib.model.DefaultUser;
 import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 import reactor.core.publisher.Mono;
 
 public class CassandraUsersDAO implements UsersDAO {
-    private static final String DEFAULT_ALGO_VALUE = "SHA-512";
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
@@ -65,8 +66,11 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement listStatement;
     private final PreparedStatement insertStatement;
 
+    private final Algorithm preferredAlgorithm;
+    private final HashingMode fallbackHashingMode;
+
     @Inject
-    public CassandraUsersDAO(Session session) {
+    public CassandraUsersDAO(Session session, CassandraRepositoryConfiguration configuration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
@@ -79,6 +83,13 @@ public class CassandraUsersDAO implements UsersDAO {
             .value(PASSWORD, bindMarker(PASSWORD))
             .value(ALGORITHM, bindMarker(ALGORITHM))
             .ifNotExists());
+        this.preferredAlgorithm = configuration.getPreferredAlgorithm();
+        this.fallbackHashingMode = configuration.getFallbackHashingMode();
+    }
+
+    @VisibleForTesting
+    public CassandraUsersDAO(Session session) {
+        this(session, CassandraRepositoryConfiguration.DEFAULT);
     }
 
     private PreparedStatement prepareListStatement(Session session) {
@@ -123,7 +134,7 @@ public class CassandraUsersDAO implements UsersDAO {
             getUserStatement.bind()
                 .setString(NAME, name.asString()))
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
-                Algorithm.of(row.getString(ALGORITHM))));
+                Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
     }
 
     @Override
@@ -183,7 +194,7 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-        DefaultUser user = new DefaultUser(username, Algorithm.of(DEFAULT_ALGO_VALUE));
+        DefaultUser user = new DefaultUser(username, preferredAlgorithm, preferredAlgorithm);
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
             insertStatement.bind()

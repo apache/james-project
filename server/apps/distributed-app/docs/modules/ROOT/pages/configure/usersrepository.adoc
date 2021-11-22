@@ -39,8 +39,11 @@ acting on the behalf of any user.
 | verifyFailureDelay
 | Delay after a failed authentication attempt with an invalid user name or password. Duration string defaulting to seconds, e.g. `2`, `2s`, `2000ms`. Default `0s` (disabled).
 
+| algorithm
+| use a specific hash algorithm to compute passwords, with optional mode `plain` (default) or `salted`; e.g. `SHA-512` (default),  `SHA-512/plain`, `SHA-512/salted`
+
 | hashingMode
-| change the way password hashes are computed: plain (default), salted, legacy, legacy_salted
+| specify the hashing mode to use if there is none recorded in the database: `plain` (default) for newer installations or `legacy` for older ones
 
 |===
 

@@ -23,6 +23,24 @@ Change list:
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
 
+### Support salted passwords
+
+Date: 24/11/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3674
+
+With this update, the password algorithm may include an option to salt the password hash with the user name, for increased security against rainbow table cracking. To use this feature, update your usersrepository.xml :
+```
+<algorithm>SHA-512/salted</algorithm>
+```
+
+Whenever users change their password, James will update the respective database entry with a salted hash.
+
+Note that `plain` hashing mode is the default. If you were using `legacy` mode and want to keep it for some reason, you must specify this option explicitly:
+```
+<algorithm>SHA-512/legacy</algorithm>
+```
+
 ### MailDir removal
 
 Date 19/09/2021

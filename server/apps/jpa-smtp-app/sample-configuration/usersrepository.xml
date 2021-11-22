@@ -22,7 +22,7 @@
 
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
     <destination URL="file://users/"/>
-    <algorithm>SHA-512</algorithm>
+    <algorithm>SHA-512/salted</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>
     <enableForwarding>true</enableForwarding>
 </usersrepository>

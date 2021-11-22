@@ -567,14 +567,14 @@ public interface UsersRepositoryContract {
 
         @Test
         default void updateUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.userWithUnknownDomain, Algorithm.of("hasAlg"))))
+            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.userWithUnknownDomain, Algorithm.of("hasAlg"), Algorithm.of("hasAlg"))))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
 
         @Test
         default void updateUserShouldNotThrowInvalidUsernameExceptionWhenInvalidUser(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.invalidUsername, Algorithm.of("hasAlg"))))
+            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.invalidUsername, Algorithm.of("hasAlg"), Algorithm.of("hasAlg"))))
                 .isNotInstanceOf(InvalidUsernameException.class);
         }
 
