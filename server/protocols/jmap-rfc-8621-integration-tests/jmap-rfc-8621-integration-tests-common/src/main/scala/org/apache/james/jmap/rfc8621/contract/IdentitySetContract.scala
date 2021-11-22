@@ -98,6 +98,7 @@ trait IdentitySetContract {
       .asString
 
     assertThatJson(response)
+      .when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
