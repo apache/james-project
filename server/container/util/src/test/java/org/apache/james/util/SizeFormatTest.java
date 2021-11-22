@@ -146,4 +146,10 @@ class SizeFormatTest {
             .isEqualTo(36L * 1024L * 1024L * 1024L);
     }
 
+    @Test
+    void parseAsByteCountShouldAcceptNoSpace() {
+        assertThat(SizeFormat.parseAsByteCount("36GiB"))
+            .isEqualTo(36L * 1024L * 1024L * 1024L);
+    }
+
 }
