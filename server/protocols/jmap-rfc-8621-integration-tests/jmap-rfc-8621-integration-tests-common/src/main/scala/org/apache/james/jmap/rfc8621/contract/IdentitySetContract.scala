@@ -212,7 +212,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -1164,7 +1163,6 @@ trait IdentitySetContract {
 
   private def createNewIdentity(clientId: String): String =
     `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(
         s"""{
            |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
@@ -1539,4 +1537,134 @@ trait IdentitySetContract {
            |}""".stripMargin)
   }
 
+
+  @Test
+  def updateShouldAcceptServerSetId(): Unit = {
+    val identityId: String = `given`
+      .body(
+        s"""{
+           |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+           |	"methodCalls": [
+           |		["Identity/get",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"ids": null
+           |			}, "c2"
+           |		]
+           |
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].list[0].id")
+
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": "NewName1",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$identityId": { }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "list": [
+           |                    {
+           |                        "id": "$identityId",
+           |                        "name": "NewName1",
+           |                        "email": "bob@domain.tld",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>",
+           |                        "mayDelete": true
+           |                    }
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+  
 }

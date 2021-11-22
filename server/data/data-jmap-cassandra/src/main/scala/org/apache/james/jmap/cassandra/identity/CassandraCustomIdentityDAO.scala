@@ -22,7 +22,6 @@ package org.apache.james.jmap.cassandra.identity
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{bindMarker, insertInto, select}
 import com.datastax.driver.core.{BoundStatement, PreparedStatement, Row, Session, UDTValue}
-import javax.inject.Inject
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.core.{MailAddress, Username}
@@ -34,6 +33,7 @@ import org.apache.james.jmap.cassandra.utils.EmailAddressTupleUtil
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import javax.inject.Inject
 import scala.jdk.javaapi.CollectionConverters
 
 case class CassandraCustomIdentityDAO @Inject()(session: Session,
@@ -66,12 +66,13 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
     .where(QueryBuilder.eq(USER, bindMarker(USER)))
     .and(QueryBuilder.eq(ID, bindMarker(ID))))
 
-  override def save(user: Username, creationRequest: IdentityCreationRequest): SMono[Identity] = {
-    val id = IdentityId.generate
-    SMono.just(id)
+  override def save(user: Username, creationRequest: IdentityCreationRequest): SMono[Identity] =
+    save(user, IdentityId.generate, creationRequest)
+
+  override def save(user: Username, identityId: IdentityId, creationRequest: IdentityCreationRequest): SMono[Identity] =
+    SMono.just(identityId)
       .map(creationRequest.asIdentity)
       .flatMap(identity => insert(user, identity))
-  }
 
   override def list(user: Username): SFlux[Identity] =
     SFlux.fromPublisher(executor.executeRows(selectAllStatement.bind().setString(USER, user.asString()))
