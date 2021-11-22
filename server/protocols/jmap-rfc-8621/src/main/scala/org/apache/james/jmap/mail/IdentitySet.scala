@@ -50,7 +50,8 @@ object IdentityCreation {
 
 case class IdentitySetRequest(accountId: AccountId,
                               create: Option[Map[IdentityCreationId, JsObject]],
-                              update: Option[Map[UnparsedIdentityId, JsObject]]) extends WithAccountId
+                              update: Option[Map[UnparsedIdentityId, JsObject]],
+                              destroy: Option[Seq[UnparsedIdentityId]]) extends WithAccountId
 
 case class IdentityCreationId(id: Id) {
   def serialise: String = id.value
@@ -68,7 +69,9 @@ case class IdentitySetResponse(accountId: AccountId,
                                created: Option[Map[IdentityCreationId, IdentityCreationResponse]],
                                notCreated: Option[Map[IdentityCreationId, SetError]],
                                updated: Option[Map[IdentityId, IdentitySetUpdateResponse]],
-                               notUpdated: Option[Map[UnparsedIdentityId, SetError]])
+                               notUpdated: Option[Map[UnparsedIdentityId, SetError]],
+                               destroyed: Option[Seq[IdentityId]],
+                               notDestroyed: Option[Map[UnparsedIdentityId, SetError]])
 
 case class IdentitySetParseException(setError: SetError) extends IllegalArgumentException
 

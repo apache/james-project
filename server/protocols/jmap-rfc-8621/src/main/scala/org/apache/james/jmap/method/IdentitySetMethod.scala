@@ -34,6 +34,7 @@ import reactor.core.scala.publisher.SMono
 
 class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
                                   updatePerformer: IdentitySetUpdatePerformer,
+                                  deletePerformer: IdentitySetDeletePerformer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentitySetRequest] {
   override val methodName: Invocation.MethodName = MethodName("Identity/set")
@@ -49,6 +50,7 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
     for {
       creationResults <- createPerformer.create(request, mailboxSession)
       updatedResults <- updatePerformer.update(request, mailboxSession)
+      destroyResults <- deletePerformer.destroy(request, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = methodName,
@@ -59,7 +61,9 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
           created = creationResults.created.filter(_.nonEmpty),
           notCreated = creationResults.notCreated.filter(_.nonEmpty),
           updated = Some(updatedResults.updated).filter(_.nonEmpty),
-          notUpdated = Some(updatedResults.notUpdated).filter(_.nonEmpty)))),
+          notUpdated = Some(updatedResults.notUpdated).filter(_.nonEmpty),
+          destroyed = Some(destroyResults.destroyed).filter(_.nonEmpty),
+          notDestroyed = Some(destroyResults.retrieveErrors).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
       processingContext = creationResults.created.getOrElse(Map())
         .foldLeft(invocation.processingContext)({

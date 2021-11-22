@@ -103,6 +103,9 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepositor
   def userCanSendFrom(username: Username, mailAddress: MailAddress): Boolean =
     canSendFrom.userCanSendFrom(username, usersRepository.getUsername(mailAddress))
 
+  def isServerSetIdentity(username: Username, id: IdentityId): Boolean =
+    listIdentities(username).map(_.id).contains(id)
+
   private def from(address: MailAddress): Option[IdentityId] =
     Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
       .toEither
@@ -128,7 +131,18 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
 
   def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] = customIdentityDao.update(user, identityId, identityUpdate)
 
-  def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = customIdentityDao.delete(username, ids)
+  def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] =
+    SMono.just(ids)
+      .handle[Seq[IdentityId]]{
+        case (ids, sink) => if (identityFactory.isServerSetIdentity(username, ids.head)) {
+          sink.error(IdentityForbiddenDeleteException(ids.head))
+        } else {
+          sink.next(ids)
+        }
+      }
+      .flatMap(ids => SMono.fromPublisher(customIdentityDao.delete(username, ids)))
+      .subscribeOn(Schedulers.elastic())
 }
 
 case class IdentityNotFoundException(id: IdentityId) extends RuntimeException(s"$id could not be found")
+case class IdentityForbiddenDeleteException(id: IdentityId) extends IllegalArgumentException(s"User do not have permission to delete $id")
