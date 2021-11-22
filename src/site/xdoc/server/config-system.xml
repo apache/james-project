@@ -180,7 +180,7 @@
 
                 <dt><strong>james.message.usememorycopy</strong></dt>
                 <dd>Optional. Boolean. Defaults to false. Recommended value is false. <br/>
-                    Should MimeMessageWrapper use a copy of the message in memory?</dd>
+                    Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold be copied to temporary files?</dd>
             </dl>
 
             </subsection>

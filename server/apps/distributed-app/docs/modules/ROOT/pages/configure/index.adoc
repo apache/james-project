@@ -83,6 +83,7 @@ of higher heap usage.
 
 | james.message.usememorycopy
 |Optional. Boolean. Defaults to false. Recommended value is false.
-Should MimeMessageWrapper use a copy of the message in memory?
+Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold 
+be copied to temporary files?
 
 |===
