@@ -62,7 +62,7 @@
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet">
+            <mailet match="RecipientIsLocal" class="VacationMailet">
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="RecipientIsLocal" class="Sieve">

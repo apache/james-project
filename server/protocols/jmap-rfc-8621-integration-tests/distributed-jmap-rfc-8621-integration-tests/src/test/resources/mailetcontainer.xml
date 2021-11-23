@@ -65,7 +65,7 @@
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet">
+            <mailet match="RecipientIsLocal" class="VacationMailet">
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" >

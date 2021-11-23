@@ -20,7 +20,6 @@
 
 package org.apache.james.mailets.configuration;
 
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.mailets.AddDeliveredToHeader;
@@ -35,6 +34,7 @@ import org.apache.james.transport.mailets.SetMimeHeader;
 import org.apache.james.transport.mailets.Sieve;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.mailets.ToRepository;
+import org.apache.james.transport.mailets.VacationMailet;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.james.transport.matchers.IsSenderInRRTLoop;
