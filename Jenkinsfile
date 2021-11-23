@@ -73,6 +73,8 @@ pipeline {
             steps {
                 echo 'Cleaning up the workspace'
                 deleteDir()
+                echo 'Cleaning up James maven repo dependencies'
+                sh 'rm -rf /home/jenkins/.m2/repository/org/apache/james'
             }
         }
 
