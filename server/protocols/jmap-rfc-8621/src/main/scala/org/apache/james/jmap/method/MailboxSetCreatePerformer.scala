@@ -49,7 +49,7 @@ object MailboxSetCreatePerformer {
       case e: MailboxExistsException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
       case e: MailboxNameException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
       case e: MailboxCreationParseException => e.setError
-      case _: InsufficientRightsException => SetError.forbidden(SetErrorDescription("Insufficient rights"), Properties("parentId"))
+      case _: InsufficientRightsException => SetError.forbidden(SetErrorDescription("Insufficient rights"), Some(Properties("parentId")))
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
