@@ -551,6 +551,64 @@ Response codes:
 * 400: The user is invalid
 * 404: The user is unknown
 
+== Administrating vacation settings
+
+=== Get vacation settings
+
+....
+curl -XGET http://ip:port/vacation/usernameToBeUsed
+....
+
+Resource name usernameToBeUsed representing valid users, hence it should
+match the criteria at xref:configure/usersrepository.adoc[User Repositories documentation]
+
+The response will look like this:
+
+....
+{
+  "enabled": true,
+  "fromDate": "2021-09-20T10:00:00Z",
+  "toDate": "2021-09-27T18:00:00Z",
+  "subject": "Out of office",
+  "textBody": "I am on vacation, will be back soon.",
+  "htmlBody": "<p>I am on vacation, will be back soon.</p>"
+}
+....
+
+Response codes:
+
+* 200: The vacation settings were successfully retrieved
+* 404: The user name is unknown
+
+=== Update vacation settings
+
+....
+curl -XPOST http://ip:port/vacation/usernameToBeUsed
+....
+
+Request body must be a JSON structure as described above.
+
+If any field is not set in the request, the corresponding field in the existing vacation message is left unchanged.
+
+Response codes:
+
+* 204: The vacation settings were successfully updated
+* 404: The user name is unknown
+* 400: The payload is invalid
+
+=== Delete vacation settings
+
+....
+curl -XDELETE http://ip:port/vacation/usernameToBeUsed
+....
+
+For convenience, this disables and clears the existing vacation settings of the user.
+
+Response codes:
+
+* 204: The vacation settings were successfully disabled
+* 404: The user name is unknown
+
 == Administrating mailboxes
 
 === All mailboxes

@@ -71,6 +71,7 @@ import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -90,6 +91,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
+        new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
