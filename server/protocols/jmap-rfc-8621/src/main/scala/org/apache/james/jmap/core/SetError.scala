@@ -54,8 +54,8 @@ object SetError {
   def invalidPatch(description: SetErrorDescription): SetError =
     SetError(invalidPatchValue, description, None)
 
-  def forbidden(description: SetErrorDescription, properties: Properties): SetError =
-    SetError(forbiddenValue, description, Some(properties))
+  def forbidden(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
+    SetError(forbiddenValue, description, properties)
 
   def stateMismatch(description: SetErrorDescription, properties: Properties): SetError =
     SetError(stateMismatchValue, description, Some(properties))

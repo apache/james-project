@@ -35,7 +35,7 @@ object IdentitySetDeletePerformer {
   case class IdentityDeletionSuccess(identityId: IdentityId) extends IdentityDeletionResult
   case class IdentityDeletionFailure(identityId: UnparsedIdentityId, exception: Throwable) extends IdentityDeletionResult {
     def asIdentitySetError: SetError = exception match {
-      case e: IdentityForbiddenDeleteException => SetError.forbidden(SetErrorDescription(e.getMessage), Properties("id"))
+      case e: IdentityForbiddenDeleteException => SetError.forbidden(SetErrorDescription(e.getMessage))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${identityId.id} is not a IdentityId: ${e.getMessage}"))
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
