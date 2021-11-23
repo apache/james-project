@@ -21,9 +21,9 @@ package org.apache.james.jmap.draft.model;
 
 import java.util.Map;
 
-import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.methods.JmapRequest;
+import org.apache.james.vacation.api.Vacation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

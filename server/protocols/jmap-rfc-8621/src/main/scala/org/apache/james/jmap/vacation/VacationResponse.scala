@@ -20,10 +20,10 @@
 package org.apache.james.jmap.vacation
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.api.vacation.Vacation
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{Id, Properties, UTCDate}
 import org.apache.james.jmap.mail.Subject
+import org.apache.james.vacation.api.Vacation
 
 import scala.compat.java8.OptionConverters._
 

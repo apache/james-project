@@ -25,7 +25,6 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.model.AccountId
-import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, VacationResponseTypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.{Invocation, UuidState}
@@ -37,6 +36,8 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
+import org.apache.james.vacation.api.{VacationPatch, VacationRepository}
+import org.apache.james.vacation.api.{AccountId => VacationAccountId}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -121,7 +122,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
       vacationRepository.modifyVacation(toVacationAccountId(mailboxSession), validatedPatch))
       .`then`(SMono.just(VacationResponseUpdateSuccess))
 
-  private def toVacationAccountId(mailboxSession: MailboxSession): AccountId = AccountId.fromUsername(mailboxSession.getUser)
+  private def toVacationAccountId(mailboxSession: MailboxSession): VacationAccountId = VacationAccountId.fromUsername(mailboxSession.getUser)
 
   private def createResponse(invocation: Invocation,
                              vacationResponseSetRequest: VacationResponseSetRequest,

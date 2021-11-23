@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft;
 
+import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
+
 import java.util.Arrays;
 
 import javax.inject.Inject;
@@ -33,9 +35,6 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationPatch;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -44,6 +43,9 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.vacation.api.Vacation;
+import org.apache.james.vacation.api.VacationPatch;
+import org.apache.james.vacation.api.VacationRepository;
 
 import reactor.core.publisher.Mono;
 
@@ -79,11 +81,11 @@ public class JmapGuiceProbe implements GuiceProbe {
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
-        vacationRepository.modifyVacation(accountId, vacationPatch).block();
+        vacationRepository.modifyVacation(toVacationAccountId(accountId), vacationPatch).block();
     }
 
     public Vacation retrieveVacation(AccountId accountId) {
-        return vacationRepository.retrieveVacation(accountId).block();
+        return vacationRepository.retrieveVacation(toVacationAccountId(accountId)).block();
     }
 
     public void setInMailboxes(MessageId messageId, Username username, MailboxId... mailboxIds) throws MailboxException {

@@ -20,7 +20,6 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.time.ZonedDateTime
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -28,7 +27,6 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.model.AccountId
-import org.apache.james.jmap.api.vacation.VacationPatch
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.draft.JmapGuiceProbe
@@ -37,6 +35,7 @@ import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HE
 import org.apache.james.jmap.rfc8621.contract.VacationResponseGetMethodContract.VACATION_RESPONSE
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
+import org.apache.james.vacation.api.VacationPatch
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object VacationResponseGetMethodContract {

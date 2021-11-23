@@ -39,7 +39,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.vacation.api.VacationPatch;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.probe.DataProbe;

@@ -33,8 +33,6 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadRepository;
-import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeModule;
@@ -52,10 +50,6 @@ import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
-import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
-import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistryModule;
-import org.apache.james.jmap.cassandra.vacation.CassandraVacationModule;
-import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -74,14 +68,8 @@ public class CassandraJmapModule extends AbstractModule {
         bind(UploadRepository.class).to(CassandraUploadRepository.class);
         bind(UploadConfiguration.class).toInstance(UploadConfiguration.SINGLETON);
 
-        bind(CassandraVacationRepository.class).in(Scopes.SINGLETON);
-        bind(VacationRepository.class).to(CassandraVacationRepository.class);
-
         bind(CassandraCustomIdentityDAO.class).in(Scopes.SINGLETON);
         bind(CustomIdentityDAO.class).to(CassandraCustomIdentityDAO.class);
-
-        bind(CassandraNotificationRegistry.class).in(Scopes.SINGLETON);
-        bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);
 
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
         bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
@@ -101,8 +89,6 @@ public class CassandraJmapModule extends AbstractModule {
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraVacationModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraNotificationRegistryModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMessageFastViewProjectionModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraEmailQueryViewModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMailboxChangeModule.MODULE);

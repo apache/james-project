@@ -32,7 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.vacation.api.Vacation;
 import org.apache.james.jmap.draft.utils.MimeMessageBodyGenerator;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.test.FakeMail;
