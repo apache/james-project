@@ -19,13 +19,12 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.draft.model.GetVacationRequest;
 import org.apache.james.jmap.draft.model.GetVacationResponse;
 import org.apache.james.jmap.draft.model.MethodCallId;
@@ -33,6 +32,8 @@ import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.apache.james.vacation.api.Vacation;
+import org.apache.james.vacation.api.VacationRepository;
 
 import com.google.common.base.Preconditions;
 
@@ -84,7 +85,7 @@ public class GetVacationResponseMethod implements Method {
     }
 
     private Mono<GetVacationResponse> process(MailboxSession mailboxSession) {
-        return vacationRepository.retrieveVacation(AccountId.fromUsername(mailboxSession.getUser()))
+        return vacationRepository.retrieveVacation(toVacationAccountId(AccountId.fromUsername(mailboxSession.getUser())))
             .map(vacation -> asVacationResponse(mailboxSession, vacation));
     }
 

@@ -49,6 +49,7 @@ import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
+import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
@@ -136,6 +137,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
+        new CassandraVacationModule(),
         new ElasticSearchMetricReporterModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);

@@ -19,15 +19,13 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 import static org.apache.james.util.ReactorUtils.context;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetVacationRequest;
@@ -36,6 +34,9 @@ import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.vacation.api.NotificationRegistry;
+import org.apache.james.vacation.api.Vacation;
+import org.apache.james.vacation.api.VacationRepository;
 
 import com.google.common.base.Preconditions;
 
@@ -106,8 +107,8 @@ public class SetVacationResponseMethod implements Method {
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
-            return vacationRepository.modifyVacation(accountId, vacationResponse.getPatch())
-                .then(notificationRegistry.flush(accountId))
+            return vacationRepository.modifyVacation(toVacationAccountId(accountId), vacationResponse.getPatch())
+                .then(notificationRegistry.flush(toVacationAccountId(accountId)))
                 .thenMany(Mono.just(JmapResponse.builder()
                     .methodCallId(methodCallId)
                     .responseName(RESPONSE_NAME)
