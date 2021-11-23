@@ -95,7 +95,7 @@
             <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
                 <targetFolderName>Spam</targetFolderName>
             </mailet>
-            <mailet match="All" class="org.apache.james.jmap.mailet.VacationMailet">
+            <mailet match="All" class="VacationMailet">
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="Sieve">

@@ -23,6 +23,22 @@ Change list:
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
 
+### Vacation Mailet moved
+
+Date: 29/11/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3675
+
+The Vacation Mailet is now included in the standard mailet set, so you do not need to specify a package name anymore:
+
+```
+class="org.apache.james.jmap.mailet.VacationMailet"
+=>
+class="VacationMailet"
+```
+
+Please update your `mailetcontainer.xml` accordingly.
+
 ### Support salted passwords
 
 Date: 24/11/2021

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mailet;
+package org.apache.james.transport.mailets;
 
 import java.time.ZonedDateTime;
 import java.util.Locale;
@@ -29,7 +29,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.draft.utils.MimeMessageBodyGenerator;
+import org.apache.james.transport.util.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.NotificationRegistry;

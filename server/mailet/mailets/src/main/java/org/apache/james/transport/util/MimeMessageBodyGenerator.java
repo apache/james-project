@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.utils;
+package org.apache.james.transport.util;
 
 import java.io.IOException;
 import java.util.Optional;
