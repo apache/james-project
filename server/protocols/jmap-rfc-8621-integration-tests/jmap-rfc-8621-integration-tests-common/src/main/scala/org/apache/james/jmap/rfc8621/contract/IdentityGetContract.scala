@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
+
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -515,5 +517,53 @@ trait IdentityGetContract {
           |        ]
           |    ]
           |}""".stripMargin)
+  }
+
+  @Test
+  def getRandomIdShouldNotFail(): Unit = {
+    val id = UUID.randomUUID().toString
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["$id"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/get",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"notFound": [
+           |					"$id"
+           |				],
+           |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"list": []
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
   }
 }

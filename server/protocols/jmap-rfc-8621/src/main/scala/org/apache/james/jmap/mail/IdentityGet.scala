@@ -59,9 +59,9 @@ case class IdentityGetRequest(accountId: AccountId,
                               ids: Option[IdentityIds],
                               properties: Option[Properties]) extends WithAccountId {
   def computeResponse(identities: List[Identity]): IdentityGetResponse = {
-    val list: Option[List[Identity]] = Some(identities.filter(identity => isRequested(identity.id))).filter(_.nonEmpty)
+    val list: List[Identity] = identities.filter(identity => isRequested(identity.id))
     val notFound: Option[IdentityIds] = ids
-      .map(ids => ids.distinct(list.getOrElse(List()).map(_.id)))
+      .map(ids => ids.distinct(list.map(_.id)))
       .filter(_.nonEmpty)
 
     IdentityGetResponse(
@@ -76,5 +76,5 @@ case class IdentityGetRequest(accountId: AccountId,
 
 case class IdentityGetResponse(accountId: AccountId,
                                state: UuidState,
-                               list: Option[List[Identity]],
+                               list: List[Identity],
                                notFound: Option[IdentityIds])
