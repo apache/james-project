@@ -1537,7 +1537,6 @@ trait IdentitySetContract {
            |}""".stripMargin)
   }
 
-
   @Test
   def updateShouldAcceptServerSetId(): Unit = {
     val identityId: String = `given`
@@ -1666,5 +1665,86 @@ trait IdentitySetContract {
            |    ]
            |}""".stripMargin)
   }
-  
+
+  @Test
+  def givenUpdatedServerSetIdentityWhenAdminRemoveThatIdentityThenDestroyThatIdentityShouldSucceed(server: GuiceJamesServer): Unit = {
+    // server create a alias for Bob
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+
+    // Bob update serverIdentity
+    `given`
+      .body(
+        s"""{
+           |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+           |	"methodCalls": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"update": {
+           |					"$serverIdentityId": {
+           |						"name": "NewName1",
+           |						"replyTo": [{
+           |							"name": "Difference Alice",
+           |							"email": "alice2@domain.tld"
+           |						}],
+           |						"bcc": [{
+           |							"name": "Difference David",
+           |							"email": "david2@domain.tld"
+           |						}],
+           |						"textSignature": "Difference text signature",
+           |						"htmlSignature": "<p>Difference html signature</p>"
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    // server delete provided alias
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // Bob delete that serverIdentity
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"destroy": ["$serverIdentityId"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    // serverIdentity should be destroyed
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"destroyed": ["$serverIdentityId"]
+           |}""".stripMargin)
+  }
 }
