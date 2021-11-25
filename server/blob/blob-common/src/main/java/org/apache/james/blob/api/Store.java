@@ -110,8 +110,8 @@ public interface Store<T, I> {
 
         private CloseableByteSource readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
             FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
-            try {
-                blobStore.read(bucketName, blobId, storagePolicy).transferTo(out);
+            try (InputStream in = blobStore.read(bucketName, blobId, storagePolicy)) {
+                in.transferTo(out);
                 return new DelegateCloseableByteSource(out.asByteSource(), out::reset);
             } catch (IOException e) {
                 throw new RuntimeException(e);
