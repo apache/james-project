@@ -30,10 +30,9 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ValuePatch;
 import org.apache.james.vacation.api.AccountId;
-import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.Vacation;
 import org.apache.james.vacation.api.VacationPatch;
-import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.VacationDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -57,15 +56,14 @@ public class VacationRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<VacationDTO> jsonExtractor;
 
-    private final VacationRepository vacationRepository;
-    private final NotificationRegistry notificationRegistry;
+    private final VacationService vacationService;
     private final UsersRepository usersRepository;
 
     @Inject
-    public VacationRoutes(VacationRepository vacationRepository, NotificationRegistry notificationRegistry,
-                          UsersRepository usersRepository, JsonTransformer jsonTransformer) {
-        this.vacationRepository = vacationRepository;
-        this.notificationRegistry = notificationRegistry;
+    public VacationRoutes(VacationService vacationService,
+                          UsersRepository usersRepository,
+                          JsonTransformer jsonTransformer) {
+        this.vacationService = vacationService;
         this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(VacationDTO.class, new JavaTimeModule());
@@ -86,7 +84,7 @@ public class VacationRoutes implements Routes {
     public VacationDTO getVacation(Request request, Response response) {
         testUserExists(request);
         AccountId accountId = AccountId.fromString(request.params(USER_NAME));
-        Vacation vacation = vacationRepository.retrieveVacation(accountId).block();
+        Vacation vacation = vacationService.retrieveVacation(accountId).block();
         return VacationDTO.from(vacation);
     }
 
@@ -102,8 +100,7 @@ public class VacationRoutes implements Routes {
             .toDate(updateOrKeep(vacationDto.getToDate()))
             .isEnabled(updateOrKeep(vacationDto.getEnabled()))
             .build();
-        vacationRepository.modifyVacation(accountId, vacationPatch)
-            .then(notificationRegistry.flush(accountId)).block();
+        vacationService.modifyVacation(accountId, vacationPatch).block();
         return Responses.returnNoContent(response);
     }
 
@@ -118,8 +115,7 @@ public class VacationRoutes implements Routes {
             .fromDate(ValuePatch.remove())
             .toDate(ValuePatch.remove())
             .build();
-        vacationRepository.modifyVacation(accountId, vacationPatch)
-            .then(notificationRegistry.flush(accountId)).block();
+        vacationService.modifyVacation(accountId, vacationPatch).block();
         return Responses.returnNoContent(response);
     }
 

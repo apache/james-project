@@ -34,9 +34,8 @@ import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
-import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.Vacation;
-import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 
 import com.google.common.base.Preconditions;
 
@@ -52,14 +51,12 @@ public class SetVacationResponseMethod implements Method {
     public static final String INVALID_ARGUMENTS1 = "invalidArguments";
     public static final String INVALID_ARGUMENT_DESCRIPTION = "update field should just contain one entry with key \"singleton\"";
 
-    private final VacationRepository vacationRepository;
-    private final NotificationRegistry notificationRegistry;
+    private final VacationService vacationService;
     private final MetricFactory metricFactory;
 
     @Inject
-    public SetVacationResponseMethod(VacationRepository vacationRepository, NotificationRegistry notificationRegistry, MetricFactory metricFactory) {
-        this.vacationRepository = vacationRepository;
-        this.notificationRegistry = notificationRegistry;
+    public SetVacationResponseMethod(VacationService vacationService, MetricFactory metricFactory) {
+        this.vacationService = vacationService;
         this.metricFactory = metricFactory;
     }
 
@@ -107,8 +104,7 @@ public class SetVacationResponseMethod implements Method {
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
-            return vacationRepository.modifyVacation(toVacationAccountId(accountId), vacationResponse.getPatch())
-                .then(notificationRegistry.flush(toVacationAccountId(accountId)))
+            return vacationService.modifyVacation(toVacationAccountId(accountId), vacationResponse.getPatch())
                 .thenMany(Mono.just(JmapResponse.builder()
                     .methodCallId(methodCallId)
                     .responseName(RESPONSE_NAME)

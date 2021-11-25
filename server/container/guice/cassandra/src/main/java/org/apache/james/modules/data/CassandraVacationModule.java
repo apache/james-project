@@ -19,9 +19,11 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.DefaultVacationService;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.cassandra.CassandraNotificationRegistry;
 import org.apache.james.vacation.cassandra.CassandraVacationRepository;
 
@@ -33,6 +35,9 @@ public class CassandraVacationModule extends AbstractModule {
 
     @Override
     public void configure() {
+        bind(DefaultVacationService.class).in(Scopes.SINGLETON);
+        bind(VacationService.class).to(DefaultVacationService.class);
+
         bind(CassandraVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(CassandraVacationRepository.class);
 

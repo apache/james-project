@@ -32,10 +32,9 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;
-import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.api.Vacation;
-import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
@@ -49,20 +48,18 @@ public class VacationMailet extends GenericMailet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VacationMailet.class);
 
-    private final VacationRepository vacationRepository;
+    private final VacationService vacationService;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
-    private final NotificationRegistry notificationRegistry;
     private final MimeMessageBodyGenerator mimeMessageBodyGenerator;
 
     @Inject
-    public VacationMailet(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider,
-                          AutomaticallySentMailDetector automaticallySentMailDetector, NotificationRegistry notificationRegistry,
+    public VacationMailet(VacationService vacationService, ZonedDateTimeProvider zonedDateTimeProvider,
+                          AutomaticallySentMailDetector automaticallySentMailDetector,
                           MimeMessageBodyGenerator mimeMessageBodyGenerator) {
-        this.vacationRepository = vacationRepository;
+        this.vacationService = vacationService;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
         this.automaticallySentMailDetector = automaticallySentMailDetector;
-        this.notificationRegistry = notificationRegistry;
         this.mimeMessageBodyGenerator = mimeMessageBodyGenerator;
     }
 
@@ -92,8 +89,8 @@ public class VacationMailet extends GenericMailet {
     private void manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
 
-        Mono<Vacation> vacation = vacationRepository.retrieveVacation(accountId);
-        Mono<Boolean> alreadySent = notificationRegistry.isRegistered(
+        Mono<Vacation> vacation = vacationService.retrieveVacation(accountId);
+        Mono<Boolean> alreadySent = vacationService.isNotificationRegistered(
                 AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
         Pair<Vacation, Boolean> pair = Flux.combineLatest(vacation, alreadySent, Pair::of)
@@ -132,7 +129,7 @@ public class VacationMailet extends GenericMailet {
 
             sendNotification(vacationReply);
 
-            notificationRegistry.register(AccountId.fromString(recipient.toString()),
+            vacationService.registerNotification(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
                 vacation.getToDate())
                 .block();
