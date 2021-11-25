@@ -23,6 +23,7 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Optional;
@@ -124,7 +125,9 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
             String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
             String fileURL = configuration.exportDirectory + "/" + fileName;
             File file = fileSystem.getFile(fileURL);
-            FileUtils.copyToFile(blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST), file);
+            try (InputStream in = blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST)) {
+                FileUtils.copyToFile(in, file);
+            }
 
             return file.getAbsolutePath();
         } catch (IOException e) {
