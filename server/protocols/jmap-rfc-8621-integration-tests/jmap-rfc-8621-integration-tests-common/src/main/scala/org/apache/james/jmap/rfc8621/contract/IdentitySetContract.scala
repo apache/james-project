@@ -23,6 +23,8 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
+import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
@@ -31,6 +33,8 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+import java.util.UUID
 
 trait IdentitySetContract {
   @BeforeEach
@@ -43,6 +47,7 @@ trait IdentitySetContract {
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
 
@@ -101,7 +106,7 @@ trait IdentitySetContract {
       .when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
-           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"sessionState": "${SESSION_STATE.value}",
            |	"methodResponses": [
            |		[
            |			"Identity/set",
@@ -274,7 +279,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -530,7 +534,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -550,10 +553,7 @@ trait IdentitySetContract {
            |	"notCreated": {
            |		"4f29": {
            |			"type": "invalidArguments",
-           |			"description": "Missing '/email' property in Identity object",
-           |			"properties": [
-           |				"email"
-           |			]
+           |			"description": "Missing '/email' property in Identity object"
            |		}
            |	}
            |}""".stripMargin)
@@ -592,7 +592,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -642,7 +641,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -688,7 +686,6 @@ trait IdentitySetContract {
          |}""".stripMargin
 
     val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -733,7 +730,6 @@ trait IdentitySetContract {
         |}""".stripMargin
 
     val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
       .post
@@ -761,4 +757,438 @@ trait IdentitySetContract {
            |}""".stripMargin)
   }
 
+  @Test
+  def updateShouldSucceed(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": "NewName1"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$identityId": {}
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}
+           |""".stripMargin)
+  }
+
+  @Test
+  def updateShouldModifyIdentityEntry(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": "NewName1",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$identityId": { }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "list": [
+           |                    {
+           |                        "id": "$identityId",
+           |                        "name": "NewName1",
+           |                        "email": "bob@domain.tld",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>",
+           |                        "mayDelete": true
+           |                    }
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotUpdatedWhenIdNotfound(): Unit = {
+    val notfoundIdentityId: String = UUID.randomUUID().toString
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$notfoundIdentityId": {
+           |                        "name": "NewName1"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "notUpdated": {
+           |                    "$notfoundIdentityId": {
+           |                        "type": "notFound",
+           |                        "description": "IdentityId($notfoundIdentityId) could not be found"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotUpdatedWhenIdNotParsed(): Unit = {
+    val notParsedId: String = "k123"
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$notParsedId": {
+           |                        "name": "NewName1"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "notUpdated": {
+           |                    "$notParsedId": {
+           |                        "type": "invalidArguments",
+           |                        "description": "Invalid UUID string: $notParsedId"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotUpdatedWhenAssignServerSetProperty(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "email": "bob2@domain.tld"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "notUpdated": {
+           |                    "$identityId": {
+           |                        "type": "invalidArguments",
+           |                        "description": "Some server-set properties were specified",
+           |                        "properties": [
+           |                            "email"
+           |                        ]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldSuccessWhenMixed(): Unit = {
+    val updateIdentityId1: String = createNewIdentity()
+    val updateIdentityId2: String = createNewIdentity()
+    val notUpdateIdentityId1: String = UUID.randomUUID().toString
+    val notUpdateIdentityId2: String = "notParsedId"
+
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$updateIdentityId1": { "name": "new Name 1" },
+           |                    "$updateIdentityId2": { "name": "new Name 2" },
+           |                    "$notUpdateIdentityId1": { "name": "new Name 3" },
+           |                    "$notUpdateIdentityId2": { "name": "new Name 4" }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$updateIdentityId1": {},
+           |                    "$updateIdentityId2": {}
+           |                },
+           |                "notUpdated": {
+           |                    "$notUpdateIdentityId1": {
+           |                        "type": "notFound",
+           |                        "description": "IdentityId($notUpdateIdentityId1) could not be found"
+           |                    },
+           |                    "$notUpdateIdentityId2": {
+           |                        "type": "invalidArguments",
+           |                        "description": "Invalid UUID string: $notUpdateIdentityId2"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  private def createNewIdentity(): String = createNewIdentity(UUID.randomUUID().toString)
+
+  private def createNewIdentity(clientId: String): String =
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+           |	"methodCalls": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"create": {
+           |					"$clientId": {
+           |						"name": "Bob",
+           |						"email": "bob@domain.tld",
+           |						"replyTo": [{
+           |							"name": "Alice",
+           |							"email": "alice@domain.tld"
+           |						}],
+           |						"bcc": [{
+           |							"name": "David",
+           |							"email": "david@domain.tld"
+           |						}],
+           |						"textSignature": "Some text signature",
+           |						"htmlSignature": "<p>Some html signature</p>"
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get(s"methodResponses[0][1].created.$clientId.id")
 }

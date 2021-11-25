@@ -33,6 +33,7 @@ import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
 class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
+                                  updatePerformer: IdentitySetUpdatePerformer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentitySetRequest] {
   override val methodName: Invocation.MethodName = MethodName("Identity/set")
@@ -47,6 +48,7 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentitySetRequest): SMono[InvocationWithContext] =
     for {
       creationResults <- createPerformer.create(request, mailboxSession)
+      updatedResults <- updatePerformer.update(request, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = methodName,
@@ -55,7 +57,9 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
           oldState = None,
           newState = UuidState.INSTANCE,
           created = creationResults.created.filter(_.nonEmpty),
-          notCreated = creationResults.notCreated.filter(_.nonEmpty)))),
+          notCreated = creationResults.notCreated.filter(_.nonEmpty),
+          updated = Some(updatedResults.updated).filter(_.nonEmpty),
+          notUpdated = Some(updatedResults.notUpdated).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
       processingContext = creationResults.created.getOrElse(Map())
         .foldLeft(invocation.processingContext)({
