@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -89,7 +90,7 @@ public class ReactorUtils {
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
-        return new StreamInputStream(byteArrays.toIterable(1).iterator());
+        return new StreamInputStream(byteArrays.toStream(1));
     }
 
     public static Flux<ByteBuffer> toChunks(InputStream inputStream, int bufferSize) {
@@ -112,10 +113,12 @@ public class ReactorUtils {
         private static final int NO_MORE_DATA = -1;
 
         private final Iterator<ByteBuffer> source;
+        private final Stream<ByteBuffer> sourceAsStream;
         private Optional<ByteBuffer> currentItemByteStream;
 
-        StreamInputStream(Iterator<ByteBuffer> source) {
-            this.source = source;
+        StreamInputStream(Stream<ByteBuffer> source) {
+            this.source = source.iterator();
+            this.sourceAsStream = source;
             this.currentItemByteStream = Optional.empty();
         }
 
@@ -150,6 +153,10 @@ public class ReactorUtils {
             return currentItemByteStream;
         }
 
+        @Override
+        public void close() throws IOException {
+            sourceAsStream.close();
+        }
     }
 
     private static int byteToInt(ByteBuffer buffer) {

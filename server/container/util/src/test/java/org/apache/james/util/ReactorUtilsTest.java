@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -473,6 +474,24 @@ class ReactorUtilsTest {
             InputStream inputStream = ReactorUtils.toInputStream(source);
 
             assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(bytes));
+        }
+
+        @Test
+        void givenALongFluxBytesWhenIReadItPartiallyBeforeClosingItThenTheOriginalFluxShouldBeDisposed() throws Exception {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
+
+            AtomicBoolean canceled = new AtomicBoolean(false);
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap)
+                .doOnCancel(() -> canceled.set(true));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            inputStream.close();
+
+            assertThat(canceled.get()).isTrue();
         }
 
         @Test
