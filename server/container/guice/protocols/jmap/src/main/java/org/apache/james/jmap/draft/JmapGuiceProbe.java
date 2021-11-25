@@ -45,13 +45,13 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.vacation.api.Vacation;
 import org.apache.james.vacation.api.VacationPatch;
-import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 
 import reactor.core.publisher.Mono;
 
 public class JmapGuiceProbe implements GuiceProbe {
 
-    private final VacationRepository vacationRepository;
+    private final VacationService vacationService;
     private final MailboxChangeRepository mailboxChangeRepository;
     private final EmailChangeRepository emailChangeRepository;
     private final JMAPServer jmapServer;
@@ -61,8 +61,8 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, MailboxChangeRepository mailboxChangeRepository, EmailChangeRepository emailChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
-        this.vacationRepository = vacationRepository;
+    private JmapGuiceProbe(VacationService vacationService, MailboxChangeRepository mailboxChangeRepository, EmailChangeRepository emailChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
+        this.vacationService = vacationService;
         this.mailboxChangeRepository = mailboxChangeRepository;
         this.emailChangeRepository = emailChangeRepository;
         this.jmapServer = jmapServer;
@@ -81,11 +81,11 @@ public class JmapGuiceProbe implements GuiceProbe {
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
-        vacationRepository.modifyVacation(toVacationAccountId(accountId), vacationPatch).block();
+        vacationService.modifyVacation(toVacationAccountId(accountId), vacationPatch).block();
     }
 
     public Vacation retrieveVacation(AccountId accountId) {
-        return vacationRepository.retrieveVacation(toVacationAccountId(accountId)).block();
+        return vacationService.retrieveVacation(toVacationAccountId(accountId)).block();
     }
 
     public void setInMailboxes(MessageId messageId, Username username, MailboxId... mailboxIds) throws MailboxException {

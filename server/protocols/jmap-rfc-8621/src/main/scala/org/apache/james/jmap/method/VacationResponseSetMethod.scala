@@ -36,7 +36,7 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.vacation.api.{VacationPatch, VacationRepository}
+import org.apache.james.vacation.api.{VacationPatch, VacationService}
 import org.apache.james.vacation.api.{AccountId => VacationAccountId}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -76,7 +76,7 @@ object VacationResponseSetMethod {
 }
 
 class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: EventBus,
-                                          vacationRepository: VacationRepository,
+                                          vacationService: VacationService,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseSetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/set")
@@ -119,7 +119,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
 
   private def update(validatedPatch: VacationPatch, mailboxSession: MailboxSession): SMono[VacationResponseUpdateResult] =
     SMono.fromPublisher(
-      vacationRepository.modifyVacation(toVacationAccountId(mailboxSession), validatedPatch))
+      vacationService.modifyVacation(toVacationAccountId(mailboxSession), validatedPatch))
       .`then`(SMono.just(VacationResponseUpdateSuccess))
 
   private def toVacationAccountId(mailboxSession: MailboxSession): VacationAccountId = VacationAccountId.fromUsername(mailboxSession.getUser)

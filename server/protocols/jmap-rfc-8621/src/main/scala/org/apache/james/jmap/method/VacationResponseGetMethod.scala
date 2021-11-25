@@ -33,7 +33,7 @@ import org.apache.james.jmap.vacation.{UnparsedVacationResponseId, VacationRespo
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{AccountId => JavaAccountId}
-import org.apache.james.vacation.api.VacationRepository
+import org.apache.james.vacation.api.VacationService
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -57,7 +57,7 @@ case class VacationResponseGetResult(vacationResponses: Set[VacationResponse], n
       notFound = notFound)
 }
 
-class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository,
+class VacationResponseGetMethod @Inject()(vacationService: VacationService,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseGetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/get")
@@ -110,7 +110,7 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
 
   private def getVacationSingleton(mailboxSession: MailboxSession): SMono[VacationResponse] = {
     val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
-    SMono.fromPublisher(vacationRepository.retrieveVacation(accountId))
+    SMono.fromPublisher(vacationService.retrieveVacation(accountId))
       .map(VacationResponse.asRfc8621)
   }
 }

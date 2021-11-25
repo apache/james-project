@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import org.apache.james.DefaultVacationService;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -31,6 +32,7 @@ import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.api.Vacation;
 import org.apache.james.vacation.api.VacationPatch;
+import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.memory.MemoryNotificationRegistry;
 import org.apache.james.vacation.memory.MemoryVacationRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -76,20 +78,18 @@ public class VacationRoutesTest {
     }
 
     private WebAdminServer webAdminServer;
-    private MemoryVacationRepository vacationRepository;
-    private MemoryNotificationRegistry notificationRegistry;
+    private VacationService vacationService;
 
     @BeforeEach
     public void setUp() throws Exception {
-        vacationRepository = new MemoryVacationRepository();
-        notificationRegistry = new MemoryNotificationRegistry(new DefaultZonedDateTimeProvider());
+        vacationService = new DefaultVacationService(
+            new MemoryVacationRepository(), new MemoryNotificationRegistry(new DefaultZonedDateTimeProvider()));
 
         SimpleDomainList domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
-        VacationRoutes vacationRoutes = new VacationRoutes(
-            vacationRepository, notificationRegistry, usersRepository, new JsonTransformer());
+        VacationRoutes vacationRoutes = new VacationRoutes(vacationService, usersRepository, new JsonTransformer());
         this.webAdminServer = WebAdminUtils.createWebAdminServer(vacationRoutes).start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
@@ -105,7 +105,7 @@ public class VacationRoutesTest {
 
     @Test
     void getVacation() {
-        vacationRepository.modifyVacation(AccountId.fromString(BOB), VacationPatch.builderFrom(VACATION).build()).block();
+        vacationService.modifyVacation(AccountId.fromString(BOB), VacationPatch.builderFrom(VACATION).build()).block();
 
         when()
             .get(VacationRoutes.VACATION + SEPARATOR + BOB)
@@ -132,12 +132,8 @@ public class VacationRoutesTest {
     }
 
     @Test
-    void postVacationCreates() throws Exception {
+    void postVacationCreates() {
         AccountId bob = AccountId.fromString(BOB);
-        RecipientId alice = RecipientId.fromMailAddress(new MailAddress(ALICE));
-
-        vacationRepository.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
-                .then(notificationRegistry.register(bob, alice, Optional.empty())).block();
 
         given()
             .body("{\"enabled\":true,\"fromDate\":\"2021-09-20T10:00:00Z\",\"toDate\":\"2021-09-27T18:00:00Z\"," +
@@ -147,7 +143,35 @@ public class VacationRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        Vacation vacation = vacationRepository.retrieveVacation(bob).block();
+        Vacation vacation = vacationService.retrieveVacation(bob).block();
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(vacation).isNotNull();
+            softly.assertThat(vacation.isEnabled()).isTrue();
+            softly.assertThat(vacation.getFromDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-20T10:00:00Z[UTC]")));
+            softly.assertThat(vacation.getToDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-27T18:00:00Z[UTC]")));
+            softly.assertThat(vacation.getSubject()).isEqualTo(Optional.of("On vacation again"));
+            softly.assertThat(vacation.getTextBody()).isEqualTo(Optional.of("Need more vacation!"));
+            softly.assertThat(vacation.getHtmlBody()).isEqualTo(Optional.of("<p>Need more vacation!</p>"));
+        });
+    }
+
+    @Test
+    void postVacationUpdatesAll() throws Exception {
+        AccountId bob = AccountId.fromString(BOB);
+        RecipientId alice = RecipientId.fromMailAddress(new MailAddress(ALICE));
+
+        vacationService.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
+            .then(vacationService.registerNotification(bob, alice, Optional.empty())).block();
+
+        given()
+            .body("{\"enabled\":true,\"fromDate\":\"2021-09-20T10:00:00Z\",\"toDate\":\"2021-09-27T18:00:00Z\"," +
+                "\"subject\":\"On vacation again\",\"textBody\":\"Need more vacation!\",\"htmlBody\":\"<p>Need more vacation!</p>\"}")
+        .when()
+            .post(VacationRoutes.VACATION + SEPARATOR + BOB)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        Vacation vacation = vacationService.retrieveVacation(bob).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(vacation).isNotNull();
             softly.assertThat(vacation.isEnabled()).isTrue();
@@ -158,17 +182,17 @@ public class VacationRoutesTest {
             softly.assertThat(vacation.getHtmlBody()).isEqualTo(Optional.of("<p>Need more vacation!</p>"));
         });
 
-        Boolean registered = notificationRegistry.isRegistered(bob, alice).block();
+        Boolean registered = vacationService.isNotificationRegistered(bob, alice).block();
         assertThat(registered).isFalse();
     }
 
     @Test
-    void postVacationUpdates() throws Exception {
+    void postVacationUpdatesPartial() throws Exception {
         AccountId bob = AccountId.fromString(BOB);
         RecipientId alice = RecipientId.fromMailAddress(new MailAddress(ALICE));
 
-        vacationRepository.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
-            .then(notificationRegistry.register(bob, alice, Optional.empty())).block();
+        vacationService.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
+            .then(vacationService.registerNotification(bob, alice, Optional.empty())).block();
 
         given()
             .body("{\"enabled\":true,\"subject\":\"More vacation\"}")
@@ -177,7 +201,7 @@ public class VacationRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        Vacation vacation = vacationRepository.retrieveVacation(bob).block();
+        Vacation vacation = vacationService.retrieveVacation(bob).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(vacation).isNotNull();
             softly.assertThat(vacation.isEnabled()).isTrue();
@@ -188,7 +212,7 @@ public class VacationRoutesTest {
             softly.assertThat(vacation.getHtmlBody()).isEqualTo(VACATION.getHtmlBody());
         });
 
-        Boolean registered = notificationRegistry.isRegistered(bob, alice).block();
+        Boolean registered = vacationService.isNotificationRegistered(bob, alice).block();
         assertThat(registered).isFalse();
     }
 
@@ -221,15 +245,15 @@ public class VacationRoutesTest {
         AccountId bob = AccountId.fromString(BOB);
         RecipientId alice = RecipientId.fromMailAddress(new MailAddress(ALICE));
 
-        vacationRepository.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
-            .then(notificationRegistry.register(bob, alice, Optional.empty())).block();
+        vacationService.modifyVacation(bob, VacationPatch.builderFrom(VACATION).build())
+            .then(vacationService.registerNotification(bob, alice, Optional.empty())).block();
 
         when()
             .delete(VacationRoutes.VACATION + SEPARATOR + BOB)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        Vacation vacation = vacationRepository.retrieveVacation(bob).block();
+        Vacation vacation = vacationService.retrieveVacation(bob).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(vacation).isNotNull();
             softly.assertThat(vacation.isEnabled()).isFalse();
@@ -240,7 +264,7 @@ public class VacationRoutesTest {
             softly.assertThat(vacation.getHtmlBody()).isEmpty();
         });
 
-        Boolean registered = notificationRegistry.isRegistered(bob, alice).block();
+        Boolean registered = vacationService.isNotificationRegistered(bob, alice).block();
         assertThat(registered).isFalse();
     }
 

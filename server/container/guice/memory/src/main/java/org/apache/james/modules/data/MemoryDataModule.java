@@ -21,6 +21,7 @@ package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CoreDataModule;
+import org.apache.james.DefaultVacationService;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
@@ -47,6 +48,7 @@ import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.memory.MemoryNotificationRegistry;
 import org.apache.james.vacation.memory.MemoryVacationRepository;
 
@@ -84,6 +86,9 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
+
+        bind(DefaultVacationService.class).in(Scopes.SINGLETON);
+        bind(VacationService.class).to(DefaultVacationService.class);
 
         bind(MemoryVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(MemoryVacationRepository.class);

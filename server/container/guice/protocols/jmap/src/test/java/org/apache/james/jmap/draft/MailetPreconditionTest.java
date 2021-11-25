@@ -60,7 +60,7 @@ class MailetPreconditionTest {
         @Test
         void vacationMailetCheckShouldThrowOnWrongMatcher() {
             assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "transport", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
+                "transport", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null)))))
                 .isInstanceOf(ConfigurationException.class);
         }
 
@@ -74,14 +74,14 @@ class MailetPreconditionTest {
         @Test
         void vacationMailetCheckShouldNotThrowIfValidPairPresent() {
             assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "transport", new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)))))
+                "transport", new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null)))))
                 .doesNotThrowAnyException();
         }
 
         @Test
         void vacationMailetCheckShouldSupportLocalDeliveryProcessor() {
             assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "local-delivery", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
+                "local-delivery", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null)))))
                 .doesNotThrowAnyException();
         }
     }
