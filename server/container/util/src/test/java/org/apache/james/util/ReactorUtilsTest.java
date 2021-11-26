@@ -573,7 +573,6 @@ class ReactorUtilsTest {
                 .hasMessage("Dummy");
         }
 
-
         @Test
         void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);

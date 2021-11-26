@@ -22,7 +22,6 @@ package org.apache.james.smtpserver;
 import java.io.IOException;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -73,7 +72,7 @@ public class SendMailHandler implements JamesMessageHook {
         try {
             queue.enQueue(mail);
             LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getMaybeSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
-        } catch (MessagingException me) {
+        } catch (Exception me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.denySoft())
