@@ -159,12 +159,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        return getObject(resolvedBucketName, blobId)
-            .publishOn(Schedulers.elastic())
-            .map(response -> ReactorUtils.toInputStream(response.flux))
+
+        return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
-            .block();
+            .block()
+            .flux);
     }
 
     private static class FluxResponse {
