@@ -179,6 +179,15 @@ generate salt with : openssl rand -hex 16
 
                         <dt><strong>objectstorage.s3.truststore.algorithm</strong></dt>
                         <dd><i>optional:</i> Use this specific trust store algorithm; default SunX509</dd>
+
+                        <dt><strong>objectstorage.s3.read.timeout</strong></dt>
+                        <dd><i>optional:</i> HTTP read timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.</dd>
+
+                        <dt><strong>objectstorage.s3.write.timeout</strong></dt>
+                        <dd><i>optional:</i> HTTP write timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.</dd>
+
+                        <dt><strong>objectstorage.s3.connection.timeout</strong></dt>
+                        <dd><i>optional:</i> HTTP connection timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.</dd>
                     </dl>
                 </subsection>
             </subsection>
