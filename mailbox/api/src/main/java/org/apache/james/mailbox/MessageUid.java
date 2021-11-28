@@ -45,7 +45,7 @@ public class MessageUid implements Comparable<MessageUid> {
     
     @Override
     public int compareTo(MessageUid o) {
-        return Long.valueOf(uid).compareTo(o.uid);
+        return Long.compare(uid, o.uid);
     }
 
     public long asLong() {
