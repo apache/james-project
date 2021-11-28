@@ -139,6 +139,15 @@ Maximum size of stored objects expressed in bytes.
 
 | objectstorage.s3.truststore.algorithm
 | optional: Use this specific trust store algorithm; default SunX509
+
+| objectstorage.s3.read.timeout
+| optional: HTTP read timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.
+
+| objectstorage.s3.write.timeout
+| optional: HTTP write timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.
+
+| objectstorage.s3.connection.timeout
+| optional: HTTP connection timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.
 |===
 
 ==== Buckets Configuration
