@@ -116,7 +116,7 @@ class IdentityRepositoryTest {
   }
 
   @Test
-  def listShouldNotReturnTheIdentityHasEmailNotExists(): Unit = {
+  def listShouldNotReturnTheIdentityHasAliasNotExists(): Unit = {
     SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
     when(identityFactory.listIdentities(BOB)).thenReturn(List())
     assertThat(SFlux(testee.list(BOB)).collectSeq().block().asJava)
@@ -151,7 +151,7 @@ class IdentityRepositoryTest {
   }
 
   @Test
-  def updateShouldSuccessWhenCustomExistsAndEmailExists(): Unit = {
+  def updateShouldSuccessWhenCustomExistsAndAliasExists(): Unit = {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
@@ -217,7 +217,7 @@ class IdentityRepositoryTest {
   }
 
   @Test
-  def updateShouldFailWhenEmailNotExists(): Unit = {
+  def updateShouldFailWhenAliasNotExists(): Unit = {
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
 
     val identity: Identity = SMono.fromPublisher(testee.save(BOB, CREATION_REQUEST)).block()

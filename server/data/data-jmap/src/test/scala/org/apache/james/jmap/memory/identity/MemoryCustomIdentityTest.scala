@@ -22,7 +22,7 @@ package org.apache.james.jmap.memory.identity
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract
 import org.junit.jupiter.api.BeforeEach
 
-class MemoryCustomIdentityTest extends CustomIdentityDAOContract{
+class MemoryCustomIdentityTest extends CustomIdentityDAOContract {
   var testee: MemoryCustomIdentityDAO = _
 
   @BeforeEach
