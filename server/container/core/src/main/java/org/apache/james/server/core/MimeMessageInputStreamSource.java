@@ -49,6 +49,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      * 100kb threshold for the stream.
      */
     private static final int DEFAULT_THRESHOLD = 1024 * 100;
+
     private static int threshold() {
         return Optional.ofNullable(System.getProperty("james.message.memory.threshold"))
             .map(SizeFormat::parseAsByteCount)
