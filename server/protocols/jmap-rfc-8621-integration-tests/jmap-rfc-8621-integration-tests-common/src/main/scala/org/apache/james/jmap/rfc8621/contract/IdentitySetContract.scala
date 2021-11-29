@@ -43,7 +43,7 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
 
 object IdentitySetContract {
-  val IDENTITY_CREATION_REQUEST = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+  val IDENTITY_CREATION_REQUEST: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
     email = BOB.asMailAddress(),
     replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
     bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
@@ -1161,7 +1161,7 @@ trait IdentitySetContract {
 
   private def createNewIdentity(): String = createNewIdentity(UUID.randomUUID().toString)
 
-  private def createNewIdentity(clientId: String): String =
+  private def createNewIdentity(clientId: String, email: String = "bob@domain.tld"): String =
     `given`
       .body(
         s"""{
@@ -1174,7 +1174,7 @@ trait IdentitySetContract {
            |				"create": {
            |					"$clientId": {
            |						"name": "Bob",
-           |						"email": "bob@domain.tld",
+           |						"email": "$email",
            |						"replyTo": [{
            |							"name": "Alice",
            |							"email": "alice@domain.tld"
@@ -1747,4 +1747,318 @@ trait IdentitySetContract {
            |	"destroyed": ["$serverIdentityId"]
            |}""".stripMargin)
   }
+
+  @Test
+  def givenServerSetAliasAndCreateACustomIdentityWithItWhenAdminRemoveThatAliasThenFetchThatIdentityShouldNoLongerReturn(server: GuiceJamesServer): Unit = {
+    // GIVEN bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // Bob create a new custom identity with bob-alias@domain.tld
+    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, "bob-alias@domain.tld")
+
+    // WHEN an admin delete bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // THEN Identity/get no longer returns the identity
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["$customIdentityId"]
+         |			}, "c1"
+         |		]
+         |
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"notFound": [
+           |		"$customIdentityId"
+           |	],
+           |	"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"list": []
+           |}""".stripMargin)
+  }
+
+  @Test
+  def givenServerSetAliasAndCreateACustomIdentityWhenAdminRemoveThatAliasThenUpdateThatIdentityShouldFail(server: GuiceJamesServer): Unit = {
+    // GIVEN bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // Bob create a new custom identity with bob-alias@domain.tld
+    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, "bob-alias@domain.tld")
+
+    // WHEN an admin delete bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // THEN Identity/set update of that identity fails
+    val request: String =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:submission"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"update": {
+         |					"$customIdentityId": {
+         |						"name": "NewName1",
+         |						"replyTo": [{
+         |							"name": "Difference Alice",
+         |							"email": "alice2@domain.tld"
+         |						}],
+         |						"bcc": [{
+         |							"name": "Difference David",
+         |							"email": "david2@domain.tld"
+         |						}],
+         |						"textSignature": "Difference text signature",
+         |						"htmlSignature": "<p>Difference html signature</p>"
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"notUpdated": {
+           |		"$customIdentityId": {
+           |			"type": "notFound",
+           |			"description": "IdentityId($customIdentityId) could not be found"
+           |		}
+           |	}
+           |}""".stripMargin)
+  }
+
+  @Test
+  def givenServerSetAliasAndUserUpdateItWhenAdminRemoveThatAliasThenFetchThatIdentityShouldNoLongerReturn(server: GuiceJamesServer): Unit = {
+    // GIVEN bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+
+    // Bob update the default identity of bob-alias@domain.tld
+    `given`
+      .body(
+        s"""{
+           |	"using": [
+           |		"urn:ietf:params:jmap:core",
+           |		"urn:ietf:params:jmap:submission"
+           |	],
+           |	"methodCalls": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"update": {
+           |					"$serverIdentityId": {
+           |						"name": "NewName1",
+           |						"replyTo": [{
+           |							"name": "Difference Alice",
+           |							"email": "alice2@domain.tld"
+           |						}],
+           |						"bcc": [{
+           |							"name": "Difference David",
+           |							"email": "david2@domain.tld"
+           |						}],
+           |						"textSignature": "Difference text signature",
+           |						"htmlSignature": "<p>Difference html signature</p>"
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    // WHEN an admin delete bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // THEN Identity/get that identity should no longer return
+    val request: String =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["$serverIdentityId"]
+         |			}, "c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"notFound": [
+           |		"$serverIdentityId"
+           |	],
+           |	"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"list": []
+           |}""".stripMargin)
+  }
+
+  @Test
+  def givenServerSetAliasAndUserUpdateItWhenAdminRemoveThatAliasThenUpdateThatIdentityShouldFail(server: GuiceJamesServer): Unit = {
+    // GIVEN bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+
+    // Bob update the default identity of bob-alias@domain.tld
+    `given`
+      .body(
+        s"""{
+           |	"using": [
+           |		"urn:ietf:params:jmap:core",
+           |		"urn:ietf:params:jmap:submission"
+           |	],
+           |	"methodCalls": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"update": {
+           |					"$serverIdentityId": {
+           |						"name": "NewName1",
+           |						"replyTo": [{
+           |							"name": "Difference Alice",
+           |							"email": "alice2@domain.tld"
+           |						}],
+           |						"bcc": [{
+           |							"name": "Difference David",
+           |							"email": "david2@domain.tld"
+           |						}],
+           |						"textSignature": "Difference text signature",
+           |						"htmlSignature": "<p>Difference html signature</p>"
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    // WHEN an admin delete bob-alias@domain.tld
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+
+    // THEN Identity/set update of that identity fails
+    val request: String =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:submission"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"update": {
+         |					"$serverIdentityId": {
+         |						"name": "NewName1",
+         |						"replyTo": [{
+         |							"name": "Difference Alice",
+         |							"email": "alice2@domain.tld"
+         |						}],
+         |						"bcc": [{
+         |							"name": "Difference David",
+         |							"email": "david2@domain.tld"
+         |						}],
+         |						"textSignature": "Difference text signature",
+         |						"htmlSignature": "<p>Difference html signature</p>"
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"notUpdated": {
+           |		"$serverIdentityId": {
+           |			"type": "notFound",
+           |			"description": "IdentityId($serverIdentityId) could not be found"
+           |		}
+           |	}
+           |}""".stripMargin)
+  }
+
 }
