@@ -76,7 +76,12 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
 
   override def list(user: Username): SFlux[Identity] =
     SFlux.fromPublisher(executor.executeRows(selectAllStatement.bind().setString(USER, user.asString()))
-      .map(toIdentity(_)))
+      .map(toIdentity))
+
+  override def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity] =
+    SMono.fromPublisher(executor.executeSingleRow(selectOneStatement.bind().setString(USER, user.asString())
+      .setUUID(ID, identityId.id))
+      .map(toIdentity))
 
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): SMono[Unit] =
     SMono.fromPublisher(executor.executeSingleRow(selectOneStatement.bind().setString(USER, user.asString())
@@ -85,6 +90,9 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
       .map(toIdentity)
       .map(identityUpdate.update)
       .flatMap(patch => insert(user, patch).`then`().asJava()))
+
+  override def upsert(user: Username, patch: Identity): SMono[Unit] =
+    insert(user, patch).`then`()
 
   override def delete(username: Username, ids: Seq[IdentityId]): SMono[Unit] =
     SFlux.fromIterable(ids)

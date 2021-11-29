@@ -41,10 +41,17 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
 
   override def list(user: Username): Publisher[Identity] = SFlux.fromIterable(table.row(user).values().asScala)
 
+  override def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity] =
+    SFlux.fromIterable(table.row(user).values().asScala)
+      .filter(identity => identity.id.equals(identityId))
+      .next()
+
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] =
     Option(table.get(user, identityId))
       .map(identityUpdate.update)
       .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(identity => SMono.fromCallable[Unit](() => table.put(user, identityId, identity)))
+
+  override def upsert(user: Username, patch: Identity): SMono[Unit] = SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
 
   override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
     .doOnNext(id => table.remove(username, id))

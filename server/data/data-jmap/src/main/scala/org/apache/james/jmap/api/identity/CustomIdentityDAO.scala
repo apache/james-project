@@ -20,7 +20,6 @@
 package org.apache.james.jmap.api.identity
 
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.identity.IdentityWithOrigin.IdentityWithOrigin
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.user.api.UsersRepository
@@ -89,7 +88,11 @@ trait CustomIdentityDAO {
 
   def list(user: Username): Publisher[Identity]
 
+  def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity]
+
   def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit]
+
+  def upsert(user: Username, patch: Identity): SMono[Unit]
 
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit]
 }
@@ -132,32 +135,48 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       SMono.error(ForbiddenSendFromException(creationRequest.email))
     }
 
-  def list(user: Username): Publisher[Identity] = {
-    val customIdentities: SFlux[IdentityWithOrigin] = SFlux.fromPublisher(customIdentityDao.list(user))
-      .map(IdentityWithOrigin.fromCustom)
-
-    val serverSetIdentities: SFlux[IdentityWithOrigin] = SMono.fromCallable(() => identityFactory.listIdentities(user))
-      .subscribeOn(Schedulers.elastic())
-      .flatMapMany(SFlux.fromIterable)
-      .map(IdentityWithOrigin.fromServerSet)
-
-    SFlux.merge(Seq(customIdentities, serverSetIdentities))
+  def list(user: Username): Publisher[Identity] =
+    listServerSetIdentity(user)
+      .flatMapMany { case (mailAddressSet, identityList) => listCustomIdentity(user, mailAddressSet)
+        .map(IdentityWithOrigin.fromCustom)
+        .mergeWith(SFlux.fromIterable(identityList)
+          .map(IdentityWithOrigin.fromServerSet))
+      }
       .groupBy(_.identity.id)
       .flatMap(_.reduce(IdentityWithOrigin.merge))
       .map(_.identity)
-  }
 
-  def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] =
-    SMono.fromPublisher(customIdentityDao.update(user, identityId, identityUpdateRequest))
-      .onErrorResume {
-        case error: IdentityNotFoundException =>
-          SFlux.fromIterable(identityFactory.listIdentities(user))
-            .filter(identity => identity.id.equals(identityId))
-            .next()
-            .flatMap(identity => SMono.fromPublisher(customIdentityDao.save(user, identityId, identityUpdateRequest.asCreationRequest(identity.email))))
-            .switchIfEmpty(SMono.error(error))
-            .`then`()
+  private def listServerSetIdentity(user: Username): SMono[(Set[MailAddress], List[Identity])] =
+    SMono.fromCallable(() => identityFactory.listIdentities(user))
+      .subscribeOn(Schedulers.elastic())
+      .map(list => (list.map(_.email).toSet, list))
+
+  private def listCustomIdentity(user: Username, availableMailAddresses: Set[MailAddress]): SFlux[Identity] =
+    SFlux.fromPublisher(customIdentityDao.list(user))
+      .filter(identity => availableMailAddresses.contains(identity.email))
+
+  def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] = {
+    val findServerSetIdentity: SMono[Option[Identity]] = SMono.fromCallable(() => identityFactory.listIdentities(user)
+      .find(identity => identity.id.equals(identityId)))
+    val findCustomIdentity: SMono[Option[Identity]] = SMono(customIdentityDao.findByIdentityId(user, identityId))
+      .map(Some(_))
+      .switchIfEmpty(SMono.just(None))
+
+    SFlux.zip(findServerSetIdentity, findCustomIdentity)
+      .next()
+      .flatMap {
+        case (None, None) => SMono.error(IdentityNotFoundException(identityId))
+        case (Some(_), Some(customIdentity)) => customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
+        case (Some(serverSetIdentity), None) => SMono(customIdentityDao.save(user, identityId, identityUpdateRequest.asCreationRequest(serverSetIdentity.email)))
+        case (None, Some(customIdentity)) =>
+          if (identityFactory.userCanSendFrom(user, customIdentity.email)) {
+            customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
+          } else {
+            SMono.error(IdentityNotFoundException(identityId))
+          }
       }
+      .`then`()
+  }
 
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] =
     SMono.just(ids)
