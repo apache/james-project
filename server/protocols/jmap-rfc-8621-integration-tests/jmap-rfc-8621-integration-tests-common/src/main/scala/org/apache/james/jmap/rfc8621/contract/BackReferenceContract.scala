@@ -462,7 +462,7 @@ trait BackReferenceContract {
            |        "#inMailbox": {
            |         "resultOf":"c1",
            |         "name":"Mailbox/query",
-           |         "path":"ids[0]"
+           |         "path":"ids/0"
            |       }
            |      },
            |      "sort": [{
