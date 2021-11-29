@@ -46,7 +46,8 @@ case class PlainPart(name: String) extends JsonPathPart {
 object ArrayElementPart {
   def parse(string: String): Option[ArrayElementPart] = {
     if (string forall Character.isDigit) {
-      fromInt(string.toInt)
+      Try(string.toInt)
+        .fold(_ => None, fromInt)
     } else {
       None
     }
@@ -72,8 +73,8 @@ object JsonPath {
     .flatMap {
       case "" => Nil
       case "*" => List(WildcardPart)
-      case string if ArrayElementPart.parse(string).isDefined => ArrayElementPart.parse(string)
-      case part: String => List(PlainPart(part))
+      case part: String => ArrayElementPart.parse(string)
+        .orElse(Some(PlainPart(part)))
     })
 }
 

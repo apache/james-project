@@ -64,6 +64,9 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
     "fail when has bracket" in {
       ArrayElementPart.parse("[0]") should equal(None)
     }
+    "fail when positive is too large" in {
+      ArrayElementPart.parse("2147483648") should equal(None)
+    }
   }
 
   "JsonPath evaluation" should {
