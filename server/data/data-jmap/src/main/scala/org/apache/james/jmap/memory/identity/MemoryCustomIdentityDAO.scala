@@ -32,7 +32,10 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
   private val table: Table[Username, IdentityId, Identity] = HashBasedTable.create
 
   override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
-    SMono.fromCallable(() => IdentityId.generate)
+    save(user, IdentityId.generate, creationRequest)
+
+  override def save(user: Username, identityId: IdentityId, creationRequest: IdentityCreationRequest): Publisher[Identity] =
+    SMono.just(identityId)
       .map(creationRequest.asIdentity)
       .doOnNext(identity => table.put(user, identity.id, identity))
 

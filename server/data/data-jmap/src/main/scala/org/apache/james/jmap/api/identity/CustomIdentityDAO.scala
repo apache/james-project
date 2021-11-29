@@ -21,10 +21,11 @@ package org.apache.james.jmap.api.identity
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+import javax.inject.Inject
 
 import com.google.common.collect.ImmutableList
-import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.identity.IdentityWithOrigin.IdentityWithOrigin
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.user.api.UsersRepository
@@ -36,11 +37,11 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 case class IdentityCreationRequest(name: Option[IdentityName],
-                                    email: MailAddress,
-                                    replyTo: Option[List[EmailAddress]],
-                                    bcc: Option[List[EmailAddress]],
-                                    textSignature: Option[TextSignature],
-                                    htmlSignature: Option[HtmlSignature]) {
+                                   email: MailAddress,
+                                   replyTo: Option[List[EmailAddress]],
+                                   bcc: Option[List[EmailAddress]],
+                                   textSignature: Option[TextSignature],
+                                   htmlSignature: Option[HtmlSignature]) {
   def asIdentity(id: IdentityId): Identity = Identity(id, name.getOrElse(IdentityName.DEFAULT), email, replyTo, bcc, textSignature.getOrElse(TextSignature.DEFAULT), htmlSignature.getOrElse(HtmlSignature.DEFAULT), mayDelete = MayDeleteIdentity(true))
 }
 
@@ -63,19 +64,30 @@ case class IdentityHtmlSignatureUpdate(htmlSignature: HtmlSignature) extends Ide
   override def update(identity: Identity): Identity = identity.copy(htmlSignature = htmlSignature)
 }
 
-case class IdentityUpdateRequest(name: Option[IdentityNameUpdate],
-                                 replyTo: Option[IdentityReplyToUpdate],
-                                 bcc: Option[IdentityBccUpdate],
-                                 textSignature: Option[IdentityTextSignatureUpdate],
-                                 htmlSignature: Option[IdentityHtmlSignatureUpdate]) extends IdentityUpdate {
+case class IdentityUpdateRequest(name: Option[IdentityNameUpdate] = None,
+                                 replyTo: Option[IdentityReplyToUpdate] = None,
+                                 bcc: Option[IdentityBccUpdate] = None,
+                                 textSignature: Option[IdentityTextSignatureUpdate] = None,
+                                 htmlSignature: Option[IdentityHtmlSignatureUpdate] = None) extends IdentityUpdate {
   def update(identity: Identity): Identity =
     List(name, replyTo, bcc, textSignature, htmlSignature)
       .flatten
       .foldLeft(identity)((acc, update) => update.update(acc))
+
+  def asCreationRequest(email: MailAddress): IdentityCreationRequest =
+    IdentityCreationRequest(
+      name = name.map(_.name),
+      email = email,
+      replyTo = replyTo.flatMap(_.replyTo),
+      bcc = bcc.flatMap(_.bcc),
+      textSignature = textSignature.map(_.textSignature),
+      htmlSignature = htmlSignature.map(_.htmlSignature))
 }
 
 trait CustomIdentityDAO {
   def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity]
+
+  def save(user: Username, identityId: IdentityId, creationRequest: IdentityCreationRequest): Publisher[Identity]
 
   def list(user: Username): Publisher[Identity]
 
@@ -123,13 +135,32 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       SMono.error(ForbiddenSendFromException(creationRequest.email))
     }
 
-  def list(user: Username): Publisher[Identity] = SFlux.merge(Seq(
-    customIdentityDao.list(user),
-    SMono.fromCallable(() => identityFactory.listIdentities(user))
-      .subscribeOn(Schedulers.elastic())
-      .flatMapMany(SFlux.fromIterable)))
+  def list(user: Username): Publisher[Identity] = {
+    val customIdentities: SFlux[IdentityWithOrigin] = SFlux.fromPublisher(customIdentityDao.list(user))
+      .map(IdentityWithOrigin.fromCustom)
 
-  def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] = customIdentityDao.update(user, identityId, identityUpdate)
+    val serverSetIdentities: SFlux[IdentityWithOrigin] = SMono.fromCallable(() => identityFactory.listIdentities(user))
+      .subscribeOn(Schedulers.elastic())
+      .flatMapMany(SFlux.fromIterable)
+      .map(IdentityWithOrigin.fromServerSet)
+
+    SFlux.merge(Seq(customIdentities, serverSetIdentities))
+      .groupBy(_.identity.id)
+      .flatMap(_.reduce(IdentityWithOrigin.merge))
+      .map(_.identity)
+  }
+
+  def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] =
+    SMono.fromPublisher(customIdentityDao.update(user, identityId, identityUpdateRequest))
+      .onErrorResume {
+        case error: IdentityNotFoundException =>
+          SFlux.fromIterable(identityFactory.listIdentities(user))
+            .filter(identity => identity.id.equals(identityId))
+            .next()
+            .flatMap(identity => SMono.fromPublisher(customIdentityDao.save(user, identityId, identityUpdateRequest.asCreationRequest(identity.email))))
+            .switchIfEmpty(SMono.error(error))
+            .`then`()
+      }
 
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] =
     SMono.just(ids)
@@ -146,3 +177,29 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
 
 case class IdentityNotFoundException(id: IdentityId) extends RuntimeException(s"$id could not be found")
 case class IdentityForbiddenDeleteException(id: IdentityId) extends IllegalArgumentException(s"User do not have permission to delete $id")
+
+object IdentityWithOrigin {
+  sealed trait IdentityWithOrigin {
+    def identity: Identity
+
+    def merge(other: IdentityWithOrigin): IdentityWithOrigin
+  }
+
+  case class CustomIdentityOrigin(inputIdentity: Identity) extends IdentityWithOrigin {
+    override def identity: Identity = inputIdentity
+
+    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = this
+  }
+
+  case class ServerSetIdentityOrigin(inputIdentity: Identity) extends IdentityWithOrigin {
+    override def identity: Identity = inputIdentity
+
+    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = other
+  }
+
+  def fromCustom(identity: Identity): IdentityWithOrigin = CustomIdentityOrigin(identity)
+
+  def fromServerSet(identity: Identity): IdentityWithOrigin = ServerSetIdentityOrigin(identity)
+
+  def merge(value1: IdentityWithOrigin, value2: IdentityWithOrigin): IdentityWithOrigin = value1.merge(value2)
+}
