@@ -20,14 +20,23 @@
 package org.apache.james.jmap.api.identity
 
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.bob
+import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.{CREATION_REQUEST, bob}
+import org.apache.james.jmap.api.identity.IdentityRepositoryTest.{BOB, IDENTITY1}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import scala.jdk.OptionConverters._
+
 object CustomIdentityDAOContract {
-  private val bob = Username.of("bob@localhost")
+  private val bob: Username = Username.of("bob@localhost")
+  private val CREATION_REQUEST: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+    email = bob.asMailAddress(),
+    replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+    bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+    textSignature = Some(TextSignature("text signature")),
+    htmlSignature = Some(HtmlSignature("html signature")))
 }
 trait CustomIdentityDAOContract {
 
@@ -41,13 +50,8 @@ trait CustomIdentityDAOContract {
 
   @Test
   def listShouldReturnSavedIdentity(): Unit = {
-    val identity = SMono(testee()
-      .save(bob, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity: Identity = SMono(testee()
+      .save(bob, CREATION_REQUEST))
       .block()
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
@@ -56,15 +60,10 @@ trait CustomIdentityDAOContract {
 
   @Test
   def listShouldReturnSavedIdentities(): Unit = {
-    val identity1 = SMono(testee()
-      .save(bob, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity1: Identity = SMono(testee()
+      .save(bob, CREATION_REQUEST))
       .block()
-    val identity2 = SMono(testee()
+    val identity2: Identity = SMono(testee()
       .save(bob, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
         email = bob.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss2")), new MailAddress("boss@domain.tld")))),
@@ -78,14 +77,29 @@ trait CustomIdentityDAOContract {
   }
 
   @Test
-  def saveShouldReturnPersistedValues(): Unit = {
-    val identity: Identity = SMono(testee().save(bob,
-      IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+  def findByIdentityIdShouldReturnEmptyWhenNotFound() : Unit = {
+    assertThat(SMono(testee().findByIdentityId(bob, IdentityId.generate)).blockOption().toJava)
+      .isEmpty
+  }
+
+  @Test
+  def findByIdentityIdShouldReturnEntry() : Unit = {
+    val identity1: Identity = SMono(testee()
+      .save(bob, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
         email = bob.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
         textSignature = Some(TextSignature("text signature")),
         htmlSignature = Some(HtmlSignature("html signature")))))
+      .block()
+
+    assertThat(SMono(testee().findByIdentityId(bob, identity1.id)).block())
+      .isEqualTo(identity1)
+  }
+
+  @Test
+  def saveShouldReturnPersistedValues(): Unit = {
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
     assertThat(identity)
@@ -101,13 +115,7 @@ trait CustomIdentityDAOContract {
 
   @Test
   def saveShouldNotReturnDeletedValues(): Unit = {
-    val identity: Identity = SMono(testee().save(bob,
-      IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
     SMono(testee().delete(bob, Seq(identity.id))).block()
@@ -140,13 +148,7 @@ trait CustomIdentityDAOContract {
 
   @Test
   def deleteShouldBeIdempotent(): Unit = {
-    val identity: Identity = SMono(testee().save(bob,
-      IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
     SMono(testee().delete(bob, Seq(identity.id))).block()
@@ -158,13 +160,7 @@ trait CustomIdentityDAOContract {
 
   @Test
   def updateShouldModifyUnderlyingRecord(): Unit = {
-    val identity: Identity = SMono(testee().save(bob,
-      IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
     SMono(testee().update(bob, identity.id, IdentityUpdateRequest(
@@ -188,13 +184,7 @@ trait CustomIdentityDAOContract {
 
   @Test
   def partialUpdatesShouldBePossible(): Unit = {
-    val identity: Identity = SMono(testee().save(bob,
-      IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = bob.asMailAddress(),
-        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
-        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
-        textSignature = Some(TextSignature("text signature")),
-        htmlSignature = Some(HtmlSignature("html signature")))))
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
     SMono(testee().update(bob, identity.id, IdentityUpdateRequest(
@@ -227,5 +217,31 @@ trait CustomIdentityDAOContract {
         htmlSignature = None)))
       .block())
       .isInstanceOf(classOf[IdentityNotFoundException])
+  }
+
+  @Test
+  def upsertShouldUpdateExistsEntry(): Unit = {
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
+      .block()
+    val updateIdentity: Identity = identity.copy(name = IdentityName("Bob (custom address)"))
+    SMono(testee().upsert(bob, updateIdentity)).block()
+    assertThat(SMono(testee().findByIdentityId(bob, identity.id)).block())
+      .isEqualTo(updateIdentity)
+  }
+
+  @Test
+  def upsertShouldCreateEntryWhenNotExists(): Unit = {
+    val identity: Identity = Identity(id = IDENTITY1.id,
+      name = IdentityName("Bob (3)"),
+      email = BOB.asMailAddress(),
+      replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss (updated)")), new MailAddress("boss-updated@domain.tld")))),
+      bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2 (updated)")), new MailAddress("boss-updated-2@domain.tld")))),
+      textSignature = TextSignature("text 2 signature"),
+      htmlSignature = HtmlSignature("html 2 signature"),
+      mayDelete = MayDeleteIdentity(true))
+
+    SMono(testee().upsert(bob, identity)).block()
+    assertThat(SMono(testee().findByIdentityId(bob, identity.id)).block())
+      .isEqualTo(identity)
   }
 }
