@@ -55,6 +55,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
             .map(Math::toIntExact)
             .orElse(DEFAULT_THRESHOLD);
     }
+
     private static final int THRESHOLD = threshold();
 
     private final Set<InputStream> streams = new HashSet<>();
