@@ -84,14 +84,14 @@ object JsonPath {
         } else if (arrayElementPartPosition == 0) {
           asArrayElementPart(string)
         } else {
-          asArrayElementInAnObject(string, part, arrayElementPartPosition)
+          asArrayElementInAnObject(part, arrayElementPartPosition)
         }
     })
 
   private def asPlainPart(part: String): List[JsonPathPart] = List(PlainPart(part))
 
-  private def asArrayElementInAnObject(string: String, part: String, arrayElementPartPosition: Int): List[JsonPathPart] =
-    ArrayElementPart.parse(string.substring(arrayElementPartPosition))
+  private def asArrayElementInAnObject(part: String, arrayElementPartPosition: Int): List[JsonPathPart] =
+    ArrayElementPart.parse(part.substring(arrayElementPartPosition))
       .map(List(PlainPart(part.substring(0, arrayElementPartPosition)), _))
       .getOrElse(List(PlainPart(part)))
 
