@@ -19,11 +19,6 @@
 
 package org.apache.james.jmap.api.identity
 
-import java.nio.charset.StandardCharsets
-import java.util.UUID
-import javax.inject.Inject
-
-import com.google.common.collect.ImmutableList
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.identity.IdentityWithOrigin.IdentityWithOrigin
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
@@ -33,7 +28,10 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import scala.jdk.CollectionConverters._
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import javax.inject.Inject
+import scala.jdk.StreamConverters._
 import scala.util.Try
 
 case class IdentityCreationRequest(name: Option[IdentityName],
@@ -97,20 +95,19 @@ trait CustomIdentityDAO {
 }
 
 class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepository: UsersRepository) {
-  def listIdentities(username: Username): List[Identity] =
-    canSendFrom.allValidFromAddressesForUser(username)
-      .collect(ImmutableList.toImmutableList()).asScala.toList
-      .flatMap(address =>
-        from(address).map(id =>
-          Identity(
-            id = id,
-            name = IdentityName(address.asString()),
-            email = address,
-            replyTo = None,
-            bcc = None,
-            textSignature = TextSignature.DEFAULT,
-            htmlSignature = HtmlSignature.DEFAULT,
-            mayDelete = MayDeleteIdentity(false))))
+  def listIdentities(username: Username): List[Identity] = canSendFrom.allValidFromAddressesForUser(username)
+    .toScala(LazyList).toList
+    .flatMap(address =>
+      from(address).map(id =>
+        Identity(
+          id = id,
+          name = IdentityName(address.asString()),
+          email = address,
+          replyTo = None,
+          bcc = None,
+          textSignature = TextSignature.DEFAULT,
+          htmlSignature = HtmlSignature.DEFAULT,
+          mayDelete = MayDeleteIdentity(false))))
 
   def userCanSendFrom(username: Username, mailAddress: MailAddress): Boolean =
     canSendFrom.userCanSendFrom(username, usersRepository.getUsername(mailAddress))
