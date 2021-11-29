@@ -49,6 +49,8 @@ object ArrayElementPart {
       val positionPart: String = string.substring(1, string.length - 1)
       Try(positionPart.toInt)
         .fold(_ => None, fromInt)
+    } else if (string forall Character.isDigit) {
+      fromInt(string.toInt)
     } else {
       None
     }

@@ -52,6 +52,9 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
     "succeed when zero" in {
       ArrayElementPart.parse("[0]") should equal(Some(ArrayElementPart(0)))
     }
+    "succeed when no bracket" in {
+      ArrayElementPart.parse("0") should equal(Some(ArrayElementPart(0)))
+    }
     "fail when negative" in {
       ArrayElementPart.parse("[-1]") should equal(None)
     }
@@ -63,9 +66,6 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
     }
     "fail when not open" in {
       ArrayElementPart.parse("0]") should equal(None)
-    }
-    "fail when no bracket" in {
-      ArrayElementPart.parse("0") should equal(None)
     }
   }
 
@@ -94,6 +94,20 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
     "succeed when first array element is present" in {
       val jsonPath = JsonPath.parse("path[0]")
       val json = Json.parse("""{"path" : ["1", "2", "3"]}""")
+      val expected = JsString("1")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "succeed when first array element is present in second path" in {
+      val jsonPath = JsonPath.parse("path/0")
+      val json = Json.parse("""{"path":[{"id":"1","code":"a"},{"id":"2","code":"b"},{"id":"3","code":"c"}]}""".stripMargin)
+      val expected = Json.parse("""{"id":"1","code":"a"}""")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "succeed when pointing to specific array elements and specific path" in {
+      val jsonPath = JsonPath.parse("path/0/id")
+      val json = Json.parse("""{"path":[{"id":"1","code":"a"},{"id":"2","code":"b"},{"id":"3","code":"c"}]}""".stripMargin)
       val expected = JsString("1")
 
       jsonPath.evaluate(json) should equal(JsSuccess(expected))
