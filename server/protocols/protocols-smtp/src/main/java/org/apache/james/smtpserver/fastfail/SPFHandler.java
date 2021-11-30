@@ -117,7 +117,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      *            SMTP session object
      */
     private void doSPFCheck(SMTPSession session, MaybeSender sender) {
-        Optional<String> heloEhlo = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Transaction);
+        Optional<String> heloEhlo = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection);
 
         // We have no Sender or HELO/EHLO yet return false
         if (sender.isNullSender() || !heloEhlo.isPresent()) {

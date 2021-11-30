@@ -159,7 +159,7 @@ public class SPFHandlerTest {
 
             @Override
             public <T> Optional<T> getAttachment(AttachmentKey<T> key, State state) {
-                sessionState.put(SMTPSession.CURRENT_HELO_NAME, helo);
+                connectionState.put(SMTPSession.CURRENT_HELO_NAME, helo);
 
                 if (state == State.Connection) {
                     return key.convert(connectionState.get(key));
