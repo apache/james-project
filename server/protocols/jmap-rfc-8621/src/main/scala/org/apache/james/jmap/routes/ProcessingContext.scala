@@ -73,7 +73,7 @@ object JsonPath {
     .flatMap {
       case "" => Nil
       case "*" => List(WildcardPart)
-      case part: String => ArrayElementPart.parse(string)
+      case part: String => ArrayElementPart.parse(part)
         .orElse(Some(PlainPart(part)))
     })
 }
