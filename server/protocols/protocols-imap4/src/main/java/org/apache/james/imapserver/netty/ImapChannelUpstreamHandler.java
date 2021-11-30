@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -103,11 +104,16 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     }
 
     private MDCBuilder mdc(ChannelHandlerContext ctx) {
-        ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
-        MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
+        ImapSession maybeSession = (ImapSession) attributes.get(ctx.getChannel());
 
-        return IMAPMDCContext.from(session)
-            .addToContext(boundMDC);
+        return Optional.ofNullable(maybeSession)
+            .map(session -> {
+                MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
+
+                return IMAPMDCContext.from(session)
+                    .addToContext(boundMDC);
+            })
+            .orElseGet(MDCBuilder::create);
     }
 
     @Override
