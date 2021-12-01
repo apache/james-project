@@ -35,14 +35,11 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     private static final Response UNKNOWN_COMMAND_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, "Unable to process request: the command is unknown").immutable();
 
     private boolean relayingAllowed;
-    private boolean needsCommandInjectionDetection;
-    
+
     public SMTPSessionImpl(ProtocolTransport transport, SMTPConfiguration config) {
         super(transport, config);
         relayingAllowed = config.isRelayingAllowed(getRemoteAddress().getAddress().getHostAddress());
-        needsCommandInjectionDetection = true;
     }
-
 
     @Override
     public boolean isRelayingAllowed() {
@@ -52,12 +49,12 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     @Override
     public void resetState() {
         // remember the ehlo mode between resets
-        Optional<String> currentHeloMode = getAttachment(CURRENT_HELO_MODE, State.Transaction);
+        Optional<String> currentHeloMode = getAttachment(CURRENT_HELO_MODE, State.Connection);
 
         getState().clear();
 
         // start again with the old helo mode
-        currentHeloMode.ifPresent(heloMode -> setAttachment(CURRENT_HELO_MODE, heloMode, State.Transaction));
+        currentHeloMode.ifPresent(heloMode -> setAttachment(CURRENT_HELO_MODE, heloMode, State.Connection));
     }
 
     @Override
@@ -76,7 +73,6 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     public void setRelayingAllowed(boolean relayingAllowed) {
         this.relayingAllowed = relayingAllowed;
     }
-
 
     @Override
     public Response newLineTooLongResponse() {
