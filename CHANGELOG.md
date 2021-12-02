@@ -20,11 +20,52 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3532 JMAP: Implement Email/import
  - MAILBOX-405 CreateMissingParentsTask implementation
  - JAMES-3316 Allow to write custom extensions in JMAP session
+ - JAMES-3534 JMAP support for Identity/set (part of RFC-8621)
+ - JAMES-3487 Java property: MimeMessageInputStreamSource THRESHOLD (#755)
+ - JAMES-3673 Separate trust store for S3 (#751)
+ - JAMES-3671 Added glowroot instrumentation for POP3 protocol
+ - JAMES-3670 Configurable restore location for messages from the Deleted Messages Vault
+ - JAMES-3667 Add a WebAdmin route for verifying a user password. (#741)
+ - JAMES-3669 Add an option to delay protocol responses on authentication failure, as basic protection against brute-force attacks (#746)
+ - JAMES-3668 Added utility to load extra system properties from a configuration file on server start (#744)
+ - JAMES-3539 Implement JMAP PushSubscriptions (as per RFC-8620)
+ - JAMES-3440 EmailQueryView support for sort by receivedAt (#710)
+ - JAMES-3078 Allow to disable user provisioning for JMAP (#708)
+ - JAMES-3674 Support salting on top of James user password storage. See related upgrade instructions.
+ - JAMES-3639 Allow to configure JMAP crypto with raw public key (#695)
+ - JAMES-3657 Modular entity validation for webadmin-data (#678)
+ - JAMES-3150 Garbage collection for deduplicated blobs using bloom filters
+ - JAMES-3588 Mailet to propagate encoutered error (#655)
+ - JAMES-3645 Allow RemoteDelivery to use SMTPS and fallback to SMTP (#632)
+ - JAMES-3639 Allow use PEM keys for SSL, JMAP
+ - JAMES-3640 Auto generate demo SSL PEM keys
+ - JAMES-3638 Allow use PKCS12 keystore for SSL (#625)
+ - JAMES-3297 Publish the number of items currently in the mailet pipeline as a metric (#650)
+ - JAMES-3623 Provide a (multi-DC firendly) Distributed POP3 Application
+ - JAMES-3544 Clean task for JMAP uploads
+ - JAMES-3621 WebAdmin task to clear the content of a mailbox
+ - JAMES-3516 Implement JMAP Thread/get (RFC-8621)
+ - JAMES-3621 Mailbox webadmin routes - unseenMessageCount + messageCount
+ - JAMES-3622 Compatibility with Cassandra 4.0.0
+ - Adopt Scala checkstyle
+ - JAMES-3618 Support LDAP for JPA guice based apps
+ - JAMES-3608 email.send.max.size option for JMAP
+ - JAMES-3610 SMTP/IMAP: unit for size related options
+ - JAMES-3605 Reconnection handlers for RabbitMQ consumers
+ - JAMES-3604 RabbitMQ connections should be cluster aware
+ - JAMES-3607 Functional healthcheck exercising mail reception
  
 ### Removed
  - JAMES-3578 Drop Cassandra schema version prior version 8 (see upgrade instructions)
  - JAMES-3596 Drop spring app WAR plugin
  - JAMES-3621 Drop benchmarks and debian/rpm packaging (was unmaintained and broken)
+ - Drop Swagger (#706)
+ - JAMES-3646 Remove Maildir implementation (#661)
+ - Remove GroupMembershipResolver and implement (#670)
+ - JAMES-2979 Remove FileMailQueue (#660)
+ - JAMES-3631 Drop no longer used MailRepository tables
+ - Terminate Apache James HUPA
+ - [REFACTORING] Remove unused BayesianAnalyzer and related class (#526)
  
 ### Changed
  - JAMES-3621 Re-organise server application
@@ -42,6 +83,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Cassandra implementation should depend on interfaces and ModSeqProvider
  - JAMES-3587 Deprecate MDCBuild::addContext (relies on potentially expensive implicit toString calls)
  - JAMES-3567 Distributed server should not rely on ActiveMQ
+ - Adopt MIME4J 0.8.6 (#682)
+ - UPGRADE jackson-dataformat-cbor 2.10.4 -> 2.11.4 (ES 7 driver) (#662)
+ - JAMES-3647 Adopt eclipse-temurin:11-jre-focal docker image (#652)
+ - JAMES-2968 Move "Time Spent in IMAP-*" Log Entry from INFO to DEBUG
+ - JAMES-2287 Encode BlobId with base64 (#572)
+ - JAMES-1862 IMAP plainAuthDisallowed should be true by default
+ - [UPGRADE] Security upgrade: JSOUP 1.14.1 -> 1.14.2 to address CVE-2021-3771
+ - [UPGRADE] Security upgrade: common-compress to 1.21
+ - JAMES-2625 Remove stacktrace upon ClosedChannelException
+ - JAMES-3261 Add some system properties for TLS (#588)
+ - Multiple miscaleneous dependency upgrades:
  
 ### Performance
  - JAMES-3466 Provision default mailboxes only when listing all mailboxes
@@ -98,6 +150,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3078 Continuation Token signing was done on the Netty event loop thread
  - JAMES-3467 Avoid loading all domains for auto-detection when auto-detection is off
  - JAMES-3435 Cassandra: Allow to avoid LWT for messages operations via message.write.strong.consistency.unsafe
+ - [PERFORMANCE] MessageUid::compareTo should not box values (#764)
+ - [PERFORMANCE] MessageFullViewFactory should not always evaluate textual content of the message
+ - [PERFORMANCE] defer expensive Monos in switchIfEmpty
+ - [PERFORMANCE] Limit context switches
+ - [PERF] Reactify UsersRepository::contains (#704)
+ - JAMES-3652 Avoid locking in protocol task execution (#666)
+ - JAMES-3196 Avoid MDC costs when not needed (#667)
+ - JAMES-3630 quotaDetailsReactive should group quota limit reads
+ - JAMES-3626 Better handle tombstones due to Cassandra empty collections
+ - JAMES-3627 Prepared statements for applicable flags
+ - [REFACTORING] Remove more REGEX usages (#587)
+ - JAMES-3629 enqueuedMailsV4 to use frozen collections
+ - [PERFORMANCE] IndexableMessage text field is never used
+ - [PERFORMANCE] AttributeValue: object mapper can be static
+ - JAMES-3613 IMAP + SMTP should compute transport MDC upon connection
+ - [PERFORMANCE] DropWizardMetricFactory: optimize wrapping monos
+ - [PERFORMANCE] Record SetMessagesProcessor metrics if executed
+ - [PERFORMANCE] SetMessagesMethod metrics are redundant with processor one
+ - [PERFORMANCE] Use lenient parsers for MIME4J in more places
+ - [PERFORMANCE] CreationMessage: Simplify assertAtLeastOneValidRecipient
+ - [PERFORMANCE] SetMessagesUpdateProcessor processing can be done lazily
+ - [PERFORMANCE] Optimize Username parsing
+ - [PERFORMANCE] JMAP: Fasten accept header parsing
 
 ### Fixed
  - JAMES-3589 Fix mailet processing logic upon partial matches by dropping Apache Camel mailetcontainer implementation
@@ -131,6 +206,53 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-2884 Email/query s/comparator/sort/
  - JAMES-3256 Dis-ambiguate MailDispatcher error logs
  - JAMES-3522 JMAP routes should position WWW-Authenticate
+ - JAMES-3677 BackReference should allow pointing to specific array elements (#765)
+ - JAMES-3613 Avoid a NPE due to IMAP MDC (#766)
+ - JAMES-2557 Sieve should cleanup email after sending them (#743)
+ - JAMES-1618 Fix manage sieve implementation and test it with Thunderbird (#742)
+ - JAMES-3600 Fix check Content-Length when ProvisioningTest (#738)
+ - JAMES-3666 Fix DSNBounce exception when no Date header is present
+ - JAMES-3477 Some email sent via the mailet context were never disposed (#712)
+ - JAMES-1930 Configure Memory Users repository in Memory APP (#709)
+ - JAMES-3516 Fix Thread/get error management
+ - JAMES-3662 Accept CORS headers without the JMAP API restriction on "Accept" headers (#699)
+ - JAMES-3369 JMAP EMail/get Fallback to text/plain when no HTML in multipart/alternative (#698)
+ - JAMES-3661 Email/* should handle quota exceptions (#696)
+ - Fix pom relativePath parent of apache-mailet-test module
+ - JAMES-3660 Cassandra mailbox creation unstable when high concurency (#686)
+ - MAILBOX-333 Avoid overQuotaMailing failures when no size limit (#676)
+ - JAMES-1436 SwitchableLineBasedFrameDecoder: clean up cumulation buffer (#673)
+ - Fix invalid json scope for james-json test-jar (#672)
+ - JAMES-3655 Fix Quota extensions with delegation
+ - JAMES-3477 Mail::duplicate did lead to file leak in various places (#668)
+ - JAMES-3640 No longer ship crypto materials in default configuration
+ - JAMES-3150 S3BlobStoreDAO listBlob paging (#643)
+ - PROTOCOLS-106 CRLFTerminatedInputStream should sanitize lonely \n delimiters
+- JAMES-3646 Sanitize some File based components  
+   - FileMailRepository shoud reject URL outside of James root
+   - SieveFileRepository should validate underlying files belong to its root
+- JAMES-1862 Generalize STARTTLS sanitizing fix
+- JAMES-1862 Prevent Session fixation via STARTTLS
+- JAMES-3634 + JAMES-3635 Apply fuzzing to Apache James
+   - Upgrade PrefixedRegex to RE2J
+   - Fuzzed input throws String out of bound exception for FETCH
+   - Prevent String OutOfBoundException for IMAP APPEND
+   - Prevent infinite loop for IMAP STATUS command parser
+   - Prevent infinite loop for IMAP APPEND command parser
+- MAILBOX-347 NONE Password hashing is actually replace the password with a fixed string (#641)
+- PROTOCOLS-118 Fixed continuation request not getting recognised by some clients (#640)
+- MAILBOX-407 listShouldReturnEmptyListWhenNoMailboxes fails with NPE
+- JAMES-2278 Fix the IMAP QRESYNC "out of bound" issue
+- JAMES-1808 if (character > 128) should be changed to if (character >= 128) (#634)
+- JAMES-1444 Using HasMailAttributeWithValueRegex matcher causes NPE during startup when JMX is enabled (#633)
+- JAMES-3373 Download optional query parameters should comply with advertized URI templates
+- JAMES-3440 JMAP RFC-8621: EmailQueryView position handling was wrong
+- JAMES-3601 RabbitMQ mailQueue Cassandra projection: Stop browsing buckets concurrently (#577)
+- JAMES-3625 JMAP session: Remove trailing / in session download url (#576)
+- JAMES-3601 Bind ContentStartDAO as a singleton
+- JAMES-3624 RFC 8887 (JMAP over WebSocket) Request needs property 'id' (is 'requestId')
+- JAMES-3620 Memory leak at org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler
+- JAMES-3611 SearchUtil getBaseSubject do not sanitize empty subject
 
 ### Documentation
  - JAMES-3405 Document Prometheus metric config (#373)
@@ -138,6 +260,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3255 Demo image now includes the james-cli utility
  - JAMES-3255 Use apache/james images
  - Better document THE release process (#337)
+ - Video link for James joining ApacheCON 2021 (#663) (#740)
+ - JAMES-2734 Document Sieve and ManageSieve (#745)
+ - JAMES-3665 - Add Kubernetes support document (#718)
+ - Split the distributed server documentation
+ - Update project Roadmap
+ - JAMES-3261 JPA: extra JDBC driver running the ZIPped apps (#684)
+ - JAMES-3644 Document DKIM + SPF setup with James
+ - Improvements of the README
+ - Improvements for download page:
+   - DOWNLOADS Remove warnings regarding cryptography
+   - DOWNLOADS Remove archive reference from the top, fix archive link for server
+   - DOWNLOADS Remove verify integrity section
+   - DOWNLOADS Remove "miror"section
+   - DOWNLOADS Remove dead link to Hupa
+ - Imap tutorial can demo Thunderbird connection
+ - Do not advertise James 2.3.2 on james.apache.org
+ - [DOCUMENTATION] Fix missing content-type in upgrade schema version command
+ - [DOCUMENTATION] Small polish of server/dev-build.html page (#645)
+ - [DOCUMENTATION] mailbox/cassandra table structure and denormalization (#608)
+ - JAMES-3389 Document email transfer routes
+ - [SITE] Update copyright footer
+ - [DOCUMENTATION] Install guide needs to refer to JRE 11
+ - Rework James extension examples
+ - Details guide to assemble your own tailor made James server
+ - JAMES-3617 Document Prometheus/Grafana setup and provide dashboards (#549)
+ - JAMES-3614 The homepage should comply with the ASF release policy
  
 ### Third party software
  - Upgrading to Apache Tika 1.26 is recommended
@@ -149,6 +297,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
      - https://tanzu.vmware.com/security/cve-2021-22116
      - [CVE-2021-32718](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-c3hj-rg5h-2772)
      - [CVE-2021-32719](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-5452-hxj4-773x)
+
+### Miscaleneous
+ - Mock SMTP version 0.5 (#733)
+   - report mock email count directly instead of copy+count
+   - http GET for mock email count
+   - mock email DELETE returning cleared emails
 
 ## [3.6.1] - 2021-12-02
 
