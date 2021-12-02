@@ -150,6 +150,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
      - [CVE-2021-32718](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-c3hj-rg5h-2772)
      - [CVE-2021-32719](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-5452-hxj4-773x)
 
+## [3.6.1] - 2021-12-02
+
+### Fixed
+- JAMES-3676 Avoid S3 connection leaks
+- JAMES-3477 Mail::duplicate did lead to file leak in various places
+- JAMES-3646 Sanitize some File based components  
+   - Prevent directory traversal on top of maildir mailbox (#659)
+   - FileMailRepository shoud reject URL outside of James root
+   - SieveFileRepository should validate underlying files belong to its root
+- JAMES-1862 Generalize STARTTLS sanitizing fix
+- JAMES-1862 Prevent Session fixation via STARTTLS
+- JAMES-3634 + JAMES-3635 Apply fuzzing to Apache James
+   - Upgrade PrefixedRegex to RE2J
+   - Fuzzed input throws String out of bound exception for FETCH
+   - Prevent String OutOfBoundException for IMAP APPEND
+   - Prevent infinite loop for IMAP STATUS command parser
+   - Prevent infinite loop for IMAP APPEND command parser
+- JAMES-3571 MimeMessageWrapper getSize was incorrect for empty messages
+- JAMES-3525 verifyIdentity should not fail on null sender
+- JAMES-3556 Fix JMAP eventUrl s/closeAfter/closeafter/
+- JAMES-3432 JMAP Uploads could alter the underlying byte source
+- JAMES-3537 (Email/set create should allow to attach mails)
+- JAMES-3558 JMAP Email/changes: When created + updated return both
+- JAMES-3558 JMAP Email/changes: moves should be considered as updates
+- JAMES-3557 Changes collectors should be ordered
+- JAMES-3277 Distinct uids before calling toRanges
+- JAMES-3434 Refactoring: EmailSubmissionSetMethod should not rely on nested clases
+- JAMES-3557 JMAP */changes: Increase default maxChanges 5 -> 256
+- JAMES-3557 */changes: Fail explicitly when too much entries on a single change
+- JAMES-3683 Upgrade to Log4J 2.15.0 (CVE-2021-44228)
+
+### Improvements
+- JAMES-3261 ZIP packaging for Guice Apps
+
 ## [3.6.0] - 2021-03-16
 
 ### Added
