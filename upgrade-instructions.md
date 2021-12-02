@@ -324,6 +324,10 @@ In an effort to simplify the code base, we dropped support for Cassandra schema 
 Installation running older schema version than version 5 needs to rely on releases 3.6.x to upgrade to schema version 8,
 before upgrading to an eventual newer version.
 
+## 3.6.1 version
+
+No specific operation to conduct from a 3.6.0 version.
+
 ## 3.6.0 version
 
 Changes to apply between 3.5.0 and 3.6.0 are reported here.
