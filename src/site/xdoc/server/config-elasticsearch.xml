@@ -128,7 +128,7 @@
       For configuring the metric reporting on ElasticSearch :
 
       <p>
-          In server version 3.6.0 james moved from Elasticsearch 6 to 7 and the metric reporting on Elasticsearch is deprecated.
+          In server version 3.6.1 james moved from Elasticsearch 6 to 7 and the metric reporting on Elasticsearch is deprecated.
           You can still use metric reporting on Elasticsearch but that requires you to run a separate Elasticsearch 6 instance and use that in your Elasticsearch metric reporting configuration.
       </p>
 
