@@ -14,7 +14,7 @@ Before runnning the Helm chart, James should have particularly access to the fol
 Apache Cassandra::
 - You can deploy Cassandra on Kubernetes with a link:https://github.com/bitnami/charts/tree/master/bitnami/cassandra[Cassandra chart] for testing purpose. However we would recommend running Cassandra on VirtualMachine for better stablilty.
 ElastiSearch:: 
-- Starting from `james:distributed-3.6.0` we have been using `elasticsearch-oss-7.10.2` as default version. Please check ElasticSearch link:https://www.elastic.co/downloads/past-releases#elasticsearch-oss[Release Page] for download.
+- Starting from `james:distributed-3.7.0` we have been using `elasticsearch-oss-7.10.2` as default version. Please check ElasticSearch link:https://www.elastic.co/downloads/past-releases#elasticsearch-oss[Release Page] for download.
 RabbitMQ:: 
 - link:https://github.com/rabbitmq/cluster-operator[RabbitMQ Cluster Operator] is a custom Kubernetes resource designed for the lifecycle (creation, upgrade, graceful shutdown) of a RabbitMQ cluster. Using Quickstart setup is enough for James deployment.
 
