@@ -5,7 +5,7 @@ image:https://img.shields.io/badge/Join%20us-Mailing%20lists-purple.svg[link="ht
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 image:https://img.shields.io/badge/CI-Jenkins-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
 image:https://img.shields.io/badge/Documentation-green.svg[link="https://james.apache.org/documentation.html"]
-image:https://img.shields.io/badge/Downloads-3.6.0-yellow.svg[link="https://james.apache.org/download.cgi"]
+image:https://img.shields.io/badge/Downloads-3.6.1-yellow.svg[link="https://james.apache.org/download.cgi"]
 image:https://img.shields.io/badge/Images-docker-blue.svg[link="https://hub.docker.com/r/apache/james"]
 image:https://img.shields.io/badge/License-ApacheV2-orange.svg[link="https://www.apache.org/licenses/"]
 image:https://img.shields.io/badge/Latests-news-red.svg[link="https://james.apache.org/index.html#posts"]
@@ -56,7 +56,7 @@ There is many other ways one can help us: packaging, communication, etc ...
 ====
 Requirements: `docker` installed.
 
-Here you will try James server version 3.6.0 thanks to a docker image. This James image has a default configuration using JPA
+Here you will try James server version 3.6.1 thanks to a docker image. This James image has a default configuration using JPA
 (hsqldb) and Lucene. It also includes a default domain named james.local and three default users: user01@james.local,
 user02@james.local, user03@james.local, with their default password being 1234.
 
@@ -64,7 +64,7 @@ Note: this James server will respond to IMAPS port 993 and SMTPS port 465.
 
 Pull and run the James image with the following single command:
 
-    $ docker run -p "465:465" -p "993:993" apache/james:demo-3.6.0
+    $ docker run -p "465:465" -p "993:993" apache/james:demo-3.6.1
 
 Then, connect this image with for instance, Thunderbird.
 link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more in depth user and domain creation, as well as Thunderbird setup.
@@ -79,7 +79,7 @@ Instructions for the distributed server can be found link:docs/modules/servers/p
 .Read more...
 [%collapsible]
 ====
-We require link:https://maven.apache.org[maven] version 3.6.0 minimum to build the project.
+We require link:https://maven.apache.org[maven] version 3.6.1 minimum to build the project.
 
 Simply run `mvn clean install` within this directory to compile the project.
 
@@ -108,7 +108,7 @@ See https://james.apache.org/server/manage-cli.html[Manage James via the Command
 
 == Develop on James
 
-James requires at least JDK 11 and Maven 3.6.0 to build.
+James requires at least JDK 11 and Maven 3.6.1 to build.
 Some parts of James are written in Scala so one might need to enable Scala plugin in IDE.
 
 We maintain link:examples/README.md[code examples] to help you write your own extensions and wire your own servers.
