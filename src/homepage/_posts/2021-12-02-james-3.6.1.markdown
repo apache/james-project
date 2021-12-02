@@ -1,0 +1,51 @@
+---
+layout: post
+title:  "Apache James Server 3.6.1"
+date:   2021-12-02  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.6.1 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+## Announcements
+
+[More announcements to follow this release]
+
+## Release changelog
+
+Here are some points we worked on:
+### Fixed
+- JAMES-3676 Avoid S3 connection leaks
+- JAMES-3477 Mail::duplicate did lead to file leak in various places
+- JAMES-3646 Sanitize some File based components  
+   - Prevent directory traversal on top of maildir mailbox (#659)
+   - FileMailRepository shoud reject URL outside of James root
+   - SieveFileRepository should validate underlying files belong to its root
+- JAMES-1862 Generalize STARTTLS sanitizing fix
+- JAMES-1862 Prevent Session fixation via STARTTLS
+- JAMES-3634 + JAMES-3635 Apply fuzzing to Apache James
+   - Upgrade PrefixedRegex to RE2J
+   - Fuzzed input throws String out of bound exception for FETCH
+   - Prevent String OutOfBoundException for IMAP APPEND
+   - Prevent infinite loop for IMAP STATUS command parser
+   - Prevent infinite loop for IMAP APPEND command parser
+- JAMES-3571 MimeMessageWrapper getSize was incorrect for empty messages
+- JAMES-3525 verifyIdentity should not fail on null sender
+- JAMES-3556 Fix JMAP eventUrl s/closeAfter/closeafter/
+- JAMES-3432 JMAP Uploads could alter the underlying byte source
+- JAMES-3537 (Email/set create should allow to attach mails)
+- JAMES-3558 JMAP Email/changes: When created + updated return both
+- JAMES-3558 JMAP Email/changes: moves should be considered as updates
+- JAMES-3557 Changes collectors should be ordered
+- JAMES-3277 Distinct uids before calling toRanges
+- JAMES-3434 Refactoring: EmailSubmissionSetMethod should not rely on nested clases
+- JAMES-3557 JMAP */changes: Increase default maxChanges 5 -> 256
+- JAMES-3557 */changes: Fail explicitly when too much entries on a single change
+
+### Improvements
+- JAMES-3261 ZIP packaging for Guice Apps
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Serverc
