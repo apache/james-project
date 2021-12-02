@@ -44,7 +44,7 @@ Then load the distributed server docker image:
 
 Alternatively we provide convenience distribution for the latest release:
 
-    docker pull apache/james:distributed-3.6.0
+    docker pull apache/james:distributed-3.6.1
 
 === Running
 
