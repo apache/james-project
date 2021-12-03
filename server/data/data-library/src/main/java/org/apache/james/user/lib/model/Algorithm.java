@@ -19,6 +19,12 @@
 
 package org.apache.james.user.lib.model;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +33,36 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class Algorithm {
+    public interface Hasher {
+        static Hasher from(Algorithm algorithm) {
+            return new RegularHashingSpec(algorithm);
+        }
+
+        byte[] digestString(String pass, String salt) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException;
+    }
+
+    public static class RegularHashingSpec implements Hasher {
+        private final Algorithm algorithm;
+
+        public RegularHashingSpec(Algorithm algorithm) {
+            this.algorithm = algorithm;
+        }
+
+        @Override
+        public byte[] digestString(String pass, String salt) throws NoSuchAlgorithmException {
+            MessageDigest md = MessageDigest.getInstance(algorithm.getName());
+            String saltedPass = applySalt(algorithm, pass, salt);
+            return md.digest(saltedPass.getBytes(ISO_8859_1));
+        }
+
+        private String applySalt(Algorithm algorithm, String pass, String salt) {
+            if (algorithm.isSalted()) {
+                return salt + pass;
+            } else {
+                return pass;
+            }
+        }
+    }
 
     public enum HashingMode {
         PLAIN,
@@ -61,10 +97,12 @@ public class Algorithm {
 
     private final String rawValue;
     private final HashingMode hashingMode;
+    private final Hasher hasher;
 
     private Algorithm(String rawValue, HashingMode hashingMode) {
         this.rawValue = rawValue;
         this.hashingMode = hashingMode;
+        this.hasher = Hasher.from(this);
     }
 
     public String asString() {
@@ -85,6 +123,10 @@ public class Algorithm {
 
     public boolean isSalted() {
         return hashingMode == HashingMode.SALTED || hashingMode == HashingMode.LEGACY_SALTED;
+    }
+
+    public Hasher hasher() {
+        return hasher;
     }
 
     @Override
