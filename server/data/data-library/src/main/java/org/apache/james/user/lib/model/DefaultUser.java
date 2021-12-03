@@ -143,23 +143,24 @@ public class DefaultUser implements User, Serializable {
      *             if the algorithm passed in cannot be found
      */
     static String digestString(String pass, Algorithm algorithm, String salt) throws NoSuchAlgorithmException {
-        MessageDigest md;
-        ByteArrayOutputStream bos;
-
         try {
-            md = MessageDigest.getInstance(algorithm.getName());
+            MessageDigest md = MessageDigest.getInstance(algorithm.getName());
             String saltedPass = applySalt(algorithm, pass, salt);
             byte[] digest = md.digest(saltedPass.getBytes(ISO_8859_1));
-            bos = new ByteArrayOutputStream();
-            OutputStream encodedStream = MimeUtility.encode(bos, "base64");
-            encodedStream.write(digest);
-            if (!algorithm.isLegacy()) {
-                encodedStream.close();
-            }
-            return bos.toString(ISO_8859_1);
+            return encodeInBase64(algorithm, digest);
         } catch (IOException | MessagingException e) {
             throw new RuntimeException("Fatal error", e);
         }
+    }
+
+    private static String encodeInBase64(Algorithm algorithm, byte[] digest) throws MessagingException, IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        OutputStream encodedStream = MimeUtility.encode(bos, "base64");
+        encodedStream.write(digest);
+        if (!algorithm.isLegacy()) {
+            encodedStream.close();
+        }
+        return bos.toString(ISO_8859_1);
     }
 
     static String applySalt(Algorithm algorithm, String pass, String salt) {
