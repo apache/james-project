@@ -424,8 +424,7 @@ class IMAPServerTest {
         @Test
         void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
             testIMAPClient.connect("127.0.0.1", port);
-
-
+            
             assertThat(testIMAPClient.capability())
                 .contains("LOGINDISABLED")
                 .doesNotContain("AUTH=PLAIN");
@@ -439,7 +438,7 @@ class IMAPServerTest {
 
         @BeforeEach
         void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerPlainAuthDisallowed.xml");
+            imapServer = createImapServer("imapServerPlainAuthAllowed.xml");
             port = imapServer.getListenAddresses().get(0).getPort();
         }
 
@@ -450,20 +449,19 @@ class IMAPServerTest {
 
         @Test
         void loginShouldFailOnUnEncryptedChannel() {
-            assertThatThrownBy(() ->
+            assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS))
-                .hasMessage("Login failed");
+                .doesNotThrowAnyException();
         }
 
         @Test
         void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
             testIMAPClient.connect("127.0.0.1", port);
 
-
             assertThat(testIMAPClient.capability())
-                .contains("LOGINDISABLED")
-                .doesNotContain("AUTH=PLAIN");
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
         }
     }
 
