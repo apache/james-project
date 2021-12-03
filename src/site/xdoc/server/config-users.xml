@@ -77,7 +77,9 @@
 
       <dl>
         <dt><strong>algorithm</strong></dt>
-        <dd>Algorithm to hash passwords. Supported password algorithm are: MD5, SHA-256, SHA-512, NONE(then SHA-1 will be used).</dd>
+        <dd>Algorithm to hash passwords. Supported password algorithm are: MD5, SHA-256, SHA-512, NONE(then SHA-1 will be used), `PBKDF2` (default).<br/>
+            <b>Note</b>: When using `PBKDF2` one can specify the iteration count and the key size in bytes. You can specify it as part of the algorithm. EG: `PBKDF2-2000-512` will use
+            2000 iterations with a key size of 512 bytes.</dd>
         <dd>MD5 and SHA-1 are deprecated.</dd>
         <dt><strong>enableVirtualHosting</strong></dt>
         <dd>true (default) or false. Defines if the usernames must (true) or may not contain (false) a domain part (user@domain.tld).</dd>
