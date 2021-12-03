@@ -19,12 +19,20 @@
 
 package org.apache.james.user.lib.model;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.util.DigestUtil;
 
 /**
  * Implementation of User Interface. Instances of this class do not allow the
@@ -84,7 +92,7 @@ public class DefaultUser implements User, Serializable {
     public boolean verifyPassword(String pass) {
         try {
             String credentials = getCredentials(currentAlgorithm, pass);
-            String hashGuess = DigestUtil.digestString(credentials, currentAlgorithm);
+            String hashGuess = digestString(credentials, currentAlgorithm);
             return hashedPassword.equals(hashGuess);
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);
@@ -95,7 +103,7 @@ public class DefaultUser implements User, Serializable {
     public boolean setPassword(String newPass) {
         try {
             String newCredentials = getCredentials(preferredAlgorithm, newPass);
-            hashedPassword = DigestUtil.digestString(newCredentials, preferredAlgorithm);
+            hashedPassword = digestString(newCredentials, preferredAlgorithm);
             currentAlgorithm = preferredAlgorithm;
             return true;
         } catch (NoSuchAlgorithmException nsae) {
@@ -127,5 +135,37 @@ public class DefaultUser implements User, Serializable {
      */
     public Algorithm getHashAlgorithm() {
         return currentAlgorithm;
+    }
+
+    /**
+     * Calculate digest of given String using given algorithm. Encode digest in
+     * MIME-like base64.
+     *
+     * @param pass
+     *            the String to be hashed
+     * @param algorithm
+     *            the algorithm to be used
+     * @return String Base-64 encoding of digest
+     *
+     * @throws NoSuchAlgorithmException
+     *             if the algorithm passed in cannot be found
+     */
+    static String digestString(String pass, Algorithm algorithm) throws NoSuchAlgorithmException {
+        MessageDigest md;
+        ByteArrayOutputStream bos;
+
+        try {
+            md = MessageDigest.getInstance(algorithm.getName());
+            byte[] digest = md.digest(pass.getBytes(ISO_8859_1));
+            bos = new ByteArrayOutputStream();
+            OutputStream encodedStream = MimeUtility.encode(bos, "base64");
+            encodedStream.write(digest);
+            if (!algorithm.isLegacy()) {
+                encodedStream.close();
+            }
+            return bos.toString(ISO_8859_1);
+        } catch (IOException | MessagingException e) {
+            throw new RuntimeException("Fatal error", e);
+        }
     }
 }
