@@ -42,12 +42,12 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
 
     MemoryUsersDAO() {
         this.userByName = new HashMap<>();
-        this.algo = Algorithm.of("SHA-512");
+        this.algo = Algorithm.of("PBKDF2");
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = Algorithm.of(config.getString("algorithm", "SHA-512"), config.getString("hashingMode", PLAIN.name()));
+        algo = Algorithm.of(config.getString("algorithm", "PBKDF2"), config.getString("hashingMode", PLAIN.name()));
     }
 
     public void clear() {
