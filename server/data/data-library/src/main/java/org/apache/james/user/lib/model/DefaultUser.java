@@ -25,8 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
@@ -129,6 +129,8 @@ public class DefaultUser implements User, Serializable {
         return currentAlgorithm;
     }
 
+
+
     /**
      * Calculate digest of given String using given algorithm. Encode digest in
      * MIME-like base64.
@@ -144,11 +146,9 @@ public class DefaultUser implements User, Serializable {
      */
     static String digestString(String pass, Algorithm algorithm, String salt) throws NoSuchAlgorithmException {
         try {
-            MessageDigest md = MessageDigest.getInstance(algorithm.getName());
-            String saltedPass = applySalt(algorithm, pass, salt);
-            byte[] digest = md.digest(saltedPass.getBytes(ISO_8859_1));
+            byte[] digest = algorithm.hasher().digestString(pass, salt);
             return encodeInBase64(algorithm, digest);
-        } catch (IOException | MessagingException e) {
+        } catch (IOException | MessagingException | InvalidKeySpecException e) {
             throw new RuntimeException("Fatal error", e);
         }
     }
@@ -161,13 +161,5 @@ public class DefaultUser implements User, Serializable {
             encodedStream.close();
         }
         return bos.toString(ISO_8859_1);
-    }
-
-    static String applySalt(Algorithm algorithm, String pass, String salt) {
-        if (algorithm.isSalted()) {
-            return salt + pass;
-        } else {
-            return pass;
-        }
     }
 }
