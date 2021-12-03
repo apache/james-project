@@ -91,8 +91,7 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean verifyPassword(String pass) {
         try {
-            String credentials = getCredentials(currentAlgorithm, pass);
-            String hashGuess = digestString(credentials, currentAlgorithm);
+            String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
             return hashedPassword.equals(hashGuess);
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("Security error: " + nsae);
@@ -102,8 +101,7 @@ public class DefaultUser implements User, Serializable {
     @Override
     public boolean setPassword(String newPass) {
         try {
-            String newCredentials = getCredentials(preferredAlgorithm, newPass);
-            hashedPassword = digestString(newCredentials, preferredAlgorithm);
+            hashedPassword = digestString(newPass, preferredAlgorithm, userName.asString());
             currentAlgorithm = preferredAlgorithm;
             return true;
         } catch (NoSuchAlgorithmException nsae) {
@@ -111,13 +109,7 @@ public class DefaultUser implements User, Serializable {
         }
     }
 
-    private String getCredentials(Algorithm algorithm, String pass) {
-        if (algorithm.isSalted()) {
-            return userName.asString() + pass;
-        } else {
-            return pass;
-        }
-    }
+
 
     /**
      * Method to access hash of password
@@ -150,13 +142,14 @@ public class DefaultUser implements User, Serializable {
      * @throws NoSuchAlgorithmException
      *             if the algorithm passed in cannot be found
      */
-    static String digestString(String pass, Algorithm algorithm) throws NoSuchAlgorithmException {
+    static String digestString(String pass, Algorithm algorithm, String salt) throws NoSuchAlgorithmException {
         MessageDigest md;
         ByteArrayOutputStream bos;
 
         try {
             md = MessageDigest.getInstance(algorithm.getName());
-            byte[] digest = md.digest(pass.getBytes(ISO_8859_1));
+            String saltedPass = applySalt(algorithm, pass, salt);
+            byte[] digest = md.digest(saltedPass.getBytes(ISO_8859_1));
             bos = new ByteArrayOutputStream();
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");
             encodedStream.write(digest);
@@ -166,6 +159,14 @@ public class DefaultUser implements User, Serializable {
             return bos.toString(ISO_8859_1);
         } catch (IOException | MessagingException e) {
             throw new RuntimeException("Fatal error", e);
+        }
+    }
+
+    static String applySalt(Algorithm algorithm, String pass, String salt) {
+        if (algorithm.isSalted()) {
+            return salt + pass;
+        } else {
+            return pass;
         }
     }
 }
