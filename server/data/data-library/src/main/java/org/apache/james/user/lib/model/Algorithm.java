@@ -76,6 +76,9 @@ public class Algorithm {
     }
 
     public static class PBKDF2Hasher implements Hasher {
+        public static final int DEFAULT_ITERATION_COUNT = 1000;
+        public static final int DEFAULT_KEY_SIZE = 512;
+
         public static Optional<Hasher> from(Algorithm algorithm) {
             if (algorithm.getName().startsWith("PBKDF2")) {
                 List<String> parts = Splitter.on('-').splitToList(algorithm.getName());
@@ -89,7 +92,7 @@ public class Algorithm {
             if (parts.size() >= 3) {
                 return Integer.parseInt(parts.get(2));
             } else {
-                return 512;
+                return DEFAULT_KEY_SIZE;
             }
         }
 
@@ -97,7 +100,7 @@ public class Algorithm {
             if (parts.size() >= 2) {
                 return Integer.parseInt(parts.get(1));
             } else {
-                return 1000;
+                return DEFAULT_ITERATION_COUNT;
             }
         }
 
