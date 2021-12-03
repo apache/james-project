@@ -79,7 +79,8 @@ public class DefaultUserTest {
     @ParameterizedTest
     @MethodSource("sha1LegacyTestBed")
     void testSha1Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DefaultUser.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1", "legacy")))
+        assertThat(DefaultUser.digestString(Optional.ofNullable(password).orElse(""),
+            Algorithm.of("SHA-1", "legacy"), "salt"))
             .isEqualTo(expectedHash);
     }
 
@@ -94,7 +95,7 @@ public class DefaultUserTest {
     @ParameterizedTest
     @MethodSource("sha512LegacyTestBed")
     void testSha512Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-512", "legacy")))
+        assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-512", "legacy"), "salt"))
             .isEqualTo(expectedHash);
     }
 
@@ -109,7 +110,7 @@ public class DefaultUserTest {
     @ParameterizedTest
     @MethodSource("sha1TestBed")
     void testSha1(String password, String expectedHash) throws Exception {
-        assertThat(DefaultUser.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1")))
+        assertThat(DefaultUser.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1"), "salt"))
             .isEqualTo(expectedHash);
     }
 
@@ -124,7 +125,7 @@ public class DefaultUserTest {
     @ParameterizedTest
     @MethodSource("sha512TestBed")
     void testSha512(String password, String expectedHash) throws Exception {
-        assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-512")))
+        assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-512"), "salt"))
             .isEqualTo(expectedHash);
     }
 }
