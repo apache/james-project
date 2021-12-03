@@ -300,6 +300,7 @@
                             <volume>/root/conf</volume>
                             <volume>/root/glowroot/plugins</volume>
                             <volume>/root/glowroot/data</volume>
+                            <volume>/root/extensions-jars</volume>
                         </volumes>
                     </container>
                     <extraDirectories>
