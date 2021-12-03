@@ -19,6 +19,9 @@
 
 package org.apache.james.user.lib.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +30,9 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class AlgorithmTest {
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(Algorithm.class).verify();
+        EqualsVerifier.forClass(Algorithm.class)
+            .withIgnoredFields("hasher")
+            .verify();
     }
 
     @Test
@@ -138,5 +143,71 @@ class AlgorithmTest {
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").isLegacy()).isTrue();
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").isSalted()).isTrue();
         });
+    }
+
+    @Test
+    void ofShouldParseIterationAndKeySize() {
+        assertThat(Algorithm.of("PBKDF2-10-20", "plain").hasher())
+            .isEqualTo(new Algorithm.PBKDF2Hasher(10, 20));
+    }
+
+    @Test
+    void ofShouldParseIteration() {
+        assertThat(Algorithm.of("PBKDF2-10", "plain").hasher())
+            .isEqualTo(new Algorithm.PBKDF2Hasher(10, 1024));
+    }
+
+    @Test
+    void ofShouldAcceptDefaultPBKDF2() {
+        assertThat(Algorithm.of("PBKDF2", "plain").hasher())
+            .isEqualTo(new Algorithm.PBKDF2Hasher(1000, 1024));
+    }
+
+    @Test
+    void ofShouldThrowOnBadIteration() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-bad", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnEmptyIteration() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnNegativeIteration() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2--1", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnEmptyKeySize() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-1-", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnBadKeySize() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-1-bad", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnZeroIteration() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-0", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnZeroKeySize() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-1-0", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldThrowOnNegativeKeySize() {
+        assertThatThrownBy(() -> Algorithm.of("PBKDF2-1--1", "plain"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

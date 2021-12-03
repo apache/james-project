@@ -110,7 +110,7 @@ public class DefaultUserTest {
     @ParameterizedTest
     @MethodSource("sha1TestBed")
     void testSha1(String password, String expectedHash) throws Exception {
-        assertThat(DefaultUser.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1"), "salt"))
+        assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-1"), "salt"))
             .isEqualTo(expectedHash);
     }
 
@@ -126,6 +126,59 @@ public class DefaultUserTest {
     @MethodSource("sha512TestBed")
     void testSha512(String password, String expectedHash) throws Exception {
         assertThat(DefaultUser.digestString(password, Algorithm.of("SHA-512"), "salt"))
+            .isEqualTo(expectedHash);
+    }
+
+    private static Stream<Arguments> PBKDF2TestBed() {
+        return Stream.of(
+            Arguments.of("myPassword", "Ag2g49zxor0w11yguLUMQ7EKBokU81LkvLyDqubWtQq7R5V21HVqZ+CEjEQxBLGfi35RFyesJtxb\r\n" +
+                "L5/VRCpI3g==\r\n"),
+            Arguments.of("otherPassword", "4KFfGIjbZqhaqZfr1rKWcoY5vkeps3/+x5BwU342kUbGGoW30kaP98R5iY6SNGg0yOaPBcB8EWqJ\r\n" +
+                "96RtIMnIYQ==\r\n"),
+            Arguments.of("", "6grdNX1hpxA5wJPXhBUJhz4qUoUSRZE0F3rqoPR+PYedDklDomJ0LPRV5f1SMNAX0fRgmQ8WDe6k\r\n" +
+                "2qr1Nc/orA==\r\n"),
+            Arguments.of("a", "WxpwqV5V9L3QR8xi8D8INuH0UH5oLeq+ZuXb6J1bAfhHp3urVOtAr+bwksC3JQRyC7QHE9MLfn61\r\n" +
+                "nTXo5johrQ==\r\n"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("PBKDF2TestBed")
+    void testPBKDF2(String password, String expectedHash) {
+        assertThat(DefaultUser.digestString(password, Algorithm.of("PBKDF2"), "salt"))
+            .isEqualTo(expectedHash);
+    }
+
+    private static Stream<Arguments> PBKDF210IterationTestBed() {
+        return Stream.of(
+            Arguments.of("myPassword", "AoNuFZ7ZI6vHU8obYASuuLPaQcr8fGentKWsOawBNTIc7MNJMbo4yNjo0pcCVK6J/XAfbISEKugt\r\n" +
+                "HwDeSUA10A==\r\n"),
+            Arguments.of("otherPassword", "e4+swbwo1s3X665INoRVsENXrgJtC7SMws9G3Y0GBoLZBkqZQzE2aT2WLd+hOlf3s/wwQe10MA0Q\r\n" +
+                "xMJQIcIosQ==\r\n"),
+            Arguments.of("", "ZBXj9rrLc4L9hHXOBPpDd5ot9DDB6qaq1g2mbAMOivpZe3eYw1ehdFXbU9pwpI4y/+MZlLkG3E1S\r\n" +
+                "WRQXuUZqag==\r\n"),
+            Arguments.of("a", "i1iWZzuaqsFotT998+stRqyrcyUrZ0diBJf9RJ52mUo0a074ykh8joWdrxhEsyd2Fh2DNO38TWxC\r\n" +
+                "KkIK6taLxA==\r\n"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("PBKDF210IterationTestBed")
+    void testPBKDF210Iteration(String password, String expectedHash) {
+        assertThat(DefaultUser.digestString(password, Algorithm.of("PBKDF2-10"), "salt"))
+            .isEqualTo(expectedHash);
+    }
+
+    private static Stream<Arguments> PBKDF210Iteration128KeySizeTestBed() {
+        return Stream.of(
+            Arguments.of("myPassword", "AoNuFZ7ZI6vHU8obYASuuA==\r\n"),
+            Arguments.of("otherPassword", "e4+swbwo1s3X665INoRVsA==\r\n"),
+            Arguments.of("", "ZBXj9rrLc4L9hHXOBPpDdw==\r\n"),
+            Arguments.of("a", "i1iWZzuaqsFotT998+stRg==\r\n"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("PBKDF210Iteration128KeySizeTestBed")
+    void testPBKDF210Iteration128KeySize(String password, String expectedHash) {
+        assertThat(DefaultUser.digestString(password, Algorithm.of("PBKDF2-10-128"), "salt"))
             .isEqualTo(expectedHash);
     }
 }

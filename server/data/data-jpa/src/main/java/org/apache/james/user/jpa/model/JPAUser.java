@@ -60,6 +60,9 @@ public class JPAUser implements User {
     @VisibleForTesting
     static String hashPassword(String password, String nullableSalt, String nullableAlgorithm) {
         Algorithm algorithm = Algorithm.of(Optional.ofNullable(nullableAlgorithm).orElse("SHA-512"));
+        if (algorithm.isPBKDF2()) {
+            return algorithm.digest(password, nullableSalt);
+        }
         String credentials = password;
         if (algorithm.isSalted() && nullableSalt != null) {
             credentials = nullableSalt + password;
