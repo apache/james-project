@@ -67,7 +67,7 @@ $ docker run -d \
    -v $PWD/webadmin.properties:/root/conf/webadmin.properties \
    -v $PWD/exts:/root/extensions-jars \
    -v $PWD/keystore:/root/conf/keystore \
-   -p 25:25 \
+   -p 8000:8000 \
    apache/james:memory-latest
 ```
 
