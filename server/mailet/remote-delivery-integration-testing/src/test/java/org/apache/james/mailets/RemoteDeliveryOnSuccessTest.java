@@ -51,10 +51,12 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -201,13 +203,17 @@ class RemoteDeliveryOnSuccessTest {
         awaitAtMostOneMinute.untilAsserted(() -> assertThat(mailRepositoryProbe
                 .listMailKeys(SUCCESS_REPOSITORY))
                 .hasSize(2));
+        Mail mail1 = mailRepositoryProbe.getMail(SUCCESS_REPOSITORY, mailRepositoryProbe.listMailKeys(SUCCESS_REPOSITORY).get(0));
+        Mail mail2 = mailRepositoryProbe.getMail(SUCCESS_REPOSITORY, mailRepositoryProbe.listMailKeys(SUCCESS_REPOSITORY).get(1));
+
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            assertThat(mailRepositoryProbe.getMail(SUCCESS_REPOSITORY, mailRepositoryProbe.listMailKeys(SUCCESS_REPOSITORY).get(0))
-                .getRecipients())
-                .containsOnly(RECIPIENT2_ADDRESS);
-            assertThat(mailRepositoryProbe.getMail(SUCCESS_REPOSITORY, mailRepositoryProbe.listMailKeys(SUCCESS_REPOSITORY).get(1))
-                .getRecipients())
-                .containsOnly(RECIPIENT1_ADDRESS);
+            assertThat(mail1.getRecipients()).hasSize(1);
+            assertThat(mail2.getRecipients()).hasSize(1);
+            assertThat(ImmutableList.builder()
+                .addAll(mail1.getRecipients())
+                .addAll(mail2.getRecipients())
+                .build())
+                .containsOnly(RECIPIENT1_ADDRESS, RECIPIENT2_ADDRESS);
         }));
     }
 
