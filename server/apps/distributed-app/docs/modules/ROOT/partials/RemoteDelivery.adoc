@@ -66,6 +66,7 @@ within the mailet code.<br>
 Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
 the ability to perform their own problem resolutions.
 * *debug* (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.
+* *onSuccess* (optional) - if specified, this processor is called for each email successfully sent to remote third parties.k
 
 ==== Security
 

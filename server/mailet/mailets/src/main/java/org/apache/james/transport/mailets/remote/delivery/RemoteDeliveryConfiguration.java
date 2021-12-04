@@ -62,6 +62,7 @@ public class RemoteDeliveryConfiguration {
     public static final String MAX_RETRIES = "maxRetries";
     public static final String DELAY_TIME = "delayTime";
     public static final String DEBUG = "debug";
+    public static final String ON_SUCCESS = "onSuccess";
     public static final int DEFAULT_SMTP_TIMEOUT = 180000;
     public static final MailQueueName DEFAULT_OUTGOING_QUEUE_NAME = MailQueueName.of("outgoing");
     public static final int DEFAULT_CONNECTION_TIMEOUT = 60000;
@@ -88,6 +89,7 @@ public class RemoteDeliveryConfiguration {
     private final String authUser;
     private final String authPass;
     private final Properties javaxAdditionalProperties;
+    private final Optional<String> onSuccess;
 
     public RemoteDeliveryConfiguration(MailetConfig mailetConfig, DomainList domainList) {
         isDebug = MailetUtil.getInitParameter(mailetConfig, DEBUG).orElse(false);
@@ -121,6 +123,7 @@ public class RemoteDeliveryConfiguration {
         }
         isBindUsed = bindAddress != null;
         javaxAdditionalProperties = computeJavaxProperties(mailetConfig);
+        onSuccess = Optional.ofNullable(mailetConfig.getInitParameter(ON_SUCCESS));
     }
 
     private Properties computeJavaxProperties(MailetConfig mailetConfig) {
@@ -315,5 +318,9 @@ public class RemoteDeliveryConfiguration {
 
     public String getBindAddress() {
         return bindAddress;
+    }
+
+    public Optional<String> getOnSuccess() {
+        return onSuccess;
     }
 }

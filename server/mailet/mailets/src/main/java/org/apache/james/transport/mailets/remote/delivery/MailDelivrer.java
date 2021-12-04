@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -37,11 +36,14 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -56,18 +58,20 @@ public class MailDelivrer {
     private final DnsHelper dnsHelper;
     private final MessageComposer messageComposer;
     private final Bouncer bouncer;
+    private final MailetContext mailetContext;
 
-    public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Bouncer bouncer) {
-        this(configuration, mailDelivrerToHost, new DnsHelper(dnsServer, configuration), bouncer);
+    public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Bouncer bouncer, MailetContext mailetContext) {
+        this(configuration, mailDelivrerToHost, new DnsHelper(dnsServer, configuration), bouncer, mailetContext);
     }
 
     @VisibleForTesting
-    MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DnsHelper dnsHelper, Bouncer bouncer) {
+    MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DnsHelper dnsHelper, Bouncer bouncer, MailetContext mailetContext) {
         this.configuration = configuration;
         this.mailDelivrerToHost = mailDelivrerToHost;
         this.dnsHelper = dnsHelper;
         this.messageComposer = new MessageComposer(configuration);
         this.bouncer = bouncer;
+        this.mailetContext = mailetContext;
     }
 
     /**
@@ -135,7 +139,22 @@ public class MailDelivrer {
             } catch (SendFailedException sfe) {
                 lastError = handleSendFailExceptionOnMxIteration(mail, sfe);
 
-                targetAddresses.removeAll(listDeliveredAddresses(sfe));
+                ImmutableList<InternetAddress> deliveredAddresses = listDeliveredAddresses(sfe);
+
+                configuration.getOnSuccess()
+                    .ifPresent(Throwing.consumer(onSuccess -> {
+                        Mail copy = mail.duplicate();
+                        try {
+                            copy.setRecipients(deliveredAddresses.stream()
+                                .map(Throwing.function(MailAddress::new))
+                                .collect(ImmutableList.toImmutableList()));
+                            mailetContext.sendMail(copy, onSuccess);
+                        } finally {
+                            LifecycleUtil.dispose(copy);
+                        }
+                    }));
+
+                targetAddresses.removeAll(deliveredAddresses);
             } catch (MessagingException me) {
                 lastError = handleMessagingException(mail, me);
                 if (configuration.isDebug()) {
@@ -157,7 +176,7 @@ public class MailDelivrer {
         return ExecutionResult.temporaryFailure();
     }
 
-    private Collection<InternetAddress> listDeliveredAddresses(SendFailedException sfe) {
+    private ImmutableList<InternetAddress> listDeliveredAddresses(SendFailedException sfe) {
         return Optional.ofNullable(sfe.getValidSentAddresses())
             .map(addresses ->
                 Arrays.stream(addresses)

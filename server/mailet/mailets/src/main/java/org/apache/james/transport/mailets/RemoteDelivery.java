@@ -115,6 +115,7 @@ import com.google.common.collect.HashMultimap;
  * Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
  * the ability to perform their own problem resolutions.</li>
  * <li><b>debug</b> (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.</li>
+ * <li><b>onSuccess</b> (optional) - if specified, this processor is called for each email successfully sent to remote third parties.</li>
  * </ul>
  * <br/>
  * <b>Security:</b><br/>
