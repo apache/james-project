@@ -84,6 +84,21 @@
                     <dd>Governs whether authenticated users that do not exist locally should be created in the users repository.
                     </dd>
 
+                    <dt><strong>authentication.strategy.draft</strong></dt>
+                    <dd>List[String] with delimiter ",". Defaults to AccessTokenAuthenticationStrategy,JWTAuthenticationStrategy,
+                        QueryParameterAccessTokenAuthenticationStrategy.</dd>
+                    <dd>Specify which authentication strategies system admin want to use for JMAP draft server.
+                        The implicit package name is "org.apache.james.jmap.http". If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+                        If no authentication strategy is specified, JMAP draft server will fallback to default strategies:
+                    AccessTokenAuthenticationStrategy, JWTAuthenticationStrategy, QueryParameterAccessTokenAuthenticationStrategy.</dd>
+
+                    <dt><strong>authentication.strategy.rfc8621</strong></dt>
+                    <dd>List[String] with delimiter ",". Defaults to JWTAuthenticationStrategy,BasicAuthenticationStrategy.</dd>
+                    <dd>Specify which authentication strategies system admin want to use for JMAP RFC-8621 server.
+                        The implicit package name is "org.apache.james.jmap.http". If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+                        If no authentication strategy is specified, JMAP RFC-8621 server will fallback to default strategies:
+                    JWTAuthenticationStrategy, BasicAuthenticationStrategy.</dd>
+
                     <dt><strong>jmap.version.default</strong></dt>
                     <dd>Optional string. Defaults to draft. Allowed values: draft, rfc-8621.</dd>
                     <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.

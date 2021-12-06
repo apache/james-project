@@ -40,6 +40,7 @@ public class JMAPDraftConfiguration {
         private Optional<String> secret = Optional.empty();
         private Optional<Boolean> enabled = Optional.empty();
         private ImmutableList.Builder<String> jwtPublicKeyPem = ImmutableList.builder();
+        private Optional<List<String>> authenticationStrategies = Optional.empty();
 
         private Builder() {
 
@@ -91,12 +92,18 @@ public class JMAPDraftConfiguration {
             return this;
         }
 
+        public Builder authenticationStrategies(Optional<List<String>> authenticationStrategies) {
+            this.authenticationStrategies = authenticationStrategies;
+            return this;
+        }
+
         public JMAPDraftConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
 
             Preconditions.checkState(!enabled.get() || cryptoParametersAreSpecified(),
                 "('keystore' && 'secret') or (privateKey && certificates) is mandatory");
-            return new JMAPDraftConfiguration(enabled.get(), keystore, privateKey, certificates, keystoreType.orElse("JKS"), secret, jwtPublicKeyPem.build());
+            return new JMAPDraftConfiguration(enabled.get(), keystore, privateKey, certificates, keystoreType.orElse("JKS"),
+                secret, jwtPublicKeyPem.build(), authenticationStrategies);
         }
 
         private boolean cryptoParametersAreSpecified() {
@@ -112,9 +119,11 @@ public class JMAPDraftConfiguration {
     private final String keystoreType;
     private final Optional<String> secret;
     private final List<String> jwtPublicKeyPem;
+    private final Optional<List<String>> authenticationStrategies;
 
     @VisibleForTesting
-    JMAPDraftConfiguration(boolean enabled, Optional<String> keystore, Optional<String> privateKey, Optional<String> certificates, String keystoreType, Optional<String> secret, List<String> jwtPublicKeyPem) {
+    JMAPDraftConfiguration(boolean enabled, Optional<String> keystore, Optional<String> privateKey, Optional<String> certificates, String keystoreType,
+                           Optional<String> secret, List<String> jwtPublicKeyPem, Optional<List<String>> authenticationStrategies) {
         this.enabled = enabled;
         this.keystore = keystore;
         this.privateKey = privateKey;
@@ -122,6 +131,7 @@ public class JMAPDraftConfiguration {
         this.keystoreType = keystoreType;
         this.secret = secret;
         this.jwtPublicKeyPem = jwtPublicKeyPem;
+        this.authenticationStrategies = authenticationStrategies;
     }
 
     public boolean isEnabled() {
@@ -150,5 +160,9 @@ public class JMAPDraftConfiguration {
 
     public List<String> getJwtPublicKeyPem() {
         return jwtPublicKeyPem;
+    }
+
+    public Optional<List<String>> getAuthenticationStrategies() {
+        return authenticationStrategies;
     }
 }

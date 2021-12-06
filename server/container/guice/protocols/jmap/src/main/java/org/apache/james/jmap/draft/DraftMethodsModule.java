@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.draft;
 
+import java.util.List;
+import java.util.Set;
+
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.methods.BlobManagerImpl;
@@ -46,20 +49,33 @@ import org.apache.james.jmap.draft.methods.SetMessagesProcessor;
 import org.apache.james.jmap.draft.methods.SetMessagesUpdateProcessor;
 import org.apache.james.jmap.draft.methods.SetVacationResponseMethod;
 import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
+import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.InjectionKeys;
+import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
-import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.NamingScheme;
+import org.apache.james.utils.PackageName;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 public class DraftMethodsModule extends AbstractModule {
+    private static PackageName IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX = PackageName.of("org.apache.james.jmap.http");
+    private static List<String> DEFAULT_AUTHENTICATION_STRATEGIES = ImmutableList.of(AccessTokenAuthenticationStrategy.class.getSimpleName(),
+        JWTAuthenticationStrategy.class.getSimpleName(),
+        QueryParameterAccessTokenAuthenticationStrategy.class.getSimpleName());
 
     @Override
     protected void configure() {
@@ -104,12 +120,21 @@ public class DraftMethodsModule extends AbstractModule {
     @Provides
     @Named(InjectionKeys.DRAFT)
     Authenticator provideAuthenticator(MetricFactory metricFactory,
-                                       AccessTokenAuthenticationStrategy accessTokenAuthenticationStrategy,
-                                       JWTAuthenticationStrategy jwtAuthenticationStrategy,
-                                       QueryParameterAccessTokenAuthenticationStrategy queryParameterAuthenticationStrategy) {
-        return Authenticator.of(metricFactory,
-            jwtAuthenticationStrategy,
-            accessTokenAuthenticationStrategy,
-            queryParameterAuthenticationStrategy);
+                                       @Named("draftJmapAuthenticationStrategies") Set<AuthenticationStrategy> strategies) {
+        return Authenticator.of(metricFactory, strategies);
+    }
+
+    @Provides
+    @Singleton
+    @Named("draftJmapAuthenticationStrategies")
+    public Set<AuthenticationStrategy> provideAuthenticationStrategies(GuiceGenericLoader loader,
+                                                                       JMAPDraftConfiguration configuration) {
+        return configuration.getAuthenticationStrategies()
+            .orElse(DEFAULT_AUTHENTICATION_STRATEGIES)
+            .stream()
+            .map(ClassName::new)
+            .map(Throwing.function(loader.<AuthenticationStrategy>withNamingSheme(
+                new NamingScheme.OptionalPackagePrefix(IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX))::instantiate))
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

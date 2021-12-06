@@ -207,6 +207,7 @@ public class JMAPModule extends AbstractModule {
                 .keystoreType(configuration.getString("tls.keystoreType", null))
                 .secret(configuration.getString("tls.secret", null))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, ImmutableList.copyOf(configuration.getStringArray("jwt.publickeypem.url"))))
+                .authenticationStrategies(Optional.ofNullable(configuration.getList(String.class, "authentication.strategy.draft", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
