@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.core
 
-import java.net.{URI, URL}
 import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
@@ -35,6 +34,7 @@ object JmapConfigProperties {
   val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
+  val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
 }
 
 object JmapRfc8621Configuration {
@@ -43,32 +43,30 @@ object JmapRfc8621Configuration {
   val WEBSOCKET_URL_PREFIX_DEFAULT: String = "ws://localhost"
   val UPLOAD_LIMIT_DEFAULT: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
 
-  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(URL_PREFIX_DEFAULT, WEBSOCKET_URL_PREFIX_DEFAULT, UPLOAD_LIMIT_DEFAULT)
+  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(
+    urlPrefixString = URL_PREFIX_DEFAULT,
+    websocketPrefixString = WEBSOCKET_URL_PREFIX_DEFAULT,
+    maxUploadSize = UPLOAD_LIMIT_DEFAULT)
 
-
-  def from(configuration: Configuration): JmapRfc8621Configuration = {
+  def from(configuration: Configuration): JmapRfc8621Configuration =
     JmapRfc8621Configuration(
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTY)).getOrElse(URL_PREFIX_DEFAULT),
       websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTY)).getOrElse(WEBSOCKET_URL_PREFIX_DEFAULT),
+      dynamicJmapPrefixResolutionEnabled = configuration.getBoolean(DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY, false),
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTY, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
         .getOrElse(UPLOAD_LIMIT_DEFAULT),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala)
-  }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixString: String,
+case class JmapRfc8621Configuration(urlPrefixString: String,
+                                    websocketPrefixString: String,
+                                    dynamicJmapPrefixResolutionEnabled: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None) {
-  val urlPrefix: URL = new URL(urlPrefixString)
-  val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
-  val downloadUrl: URL = new URL(urlPrefixString + "/download/{accountId}/{blobId}?type={type}&name={name}")
-  val uploadUrl: URL = new URL(s"$urlPrefixString/upload/{accountId}")
-  val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
-  val webSocketUrl: URI = new URI(s"$websocketPrefixString/jmap/ws")
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,

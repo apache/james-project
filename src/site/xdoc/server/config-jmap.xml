@@ -89,6 +89,14 @@
                     <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.
                     Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
                     rfc-8621 allow compatibility with other third party apps.</dd>
+
+                    <dt><strong>dynamic.jmap.prefix.resolution.enabled</strong></dt>
+                    <dd>Optional boolean. Defaults to false. Supported Jmap session endpoint returns dynamic prefix in response.
+                        When its config is true, and the HTTP request to Jmap session endpoint has a `X-JMAP-PREFIX` header with the value `http://new-domain/prefix`,
+                        then `apiUrl, downloadUrl, uploadUrl, eventSourceUrl, webSocketUrl` in response will be changed with a new prefix. Example: The `apiUrl` will be "http://new-domain/prefix/jmap".
+                        If the HTTP request to Jmap session endpoint has the `X-JMAP-WEBSOCKET-PREFIX` header with the value `ws://new-domain/prefix`,
+                        then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws://new-domain/prefix/jmap/ws".
+                    </dd>
                 </dl>
 
             </subsection>

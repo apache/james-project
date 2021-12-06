@@ -31,35 +31,38 @@ This should not be the same keystore than the ones used by TLS based protocols.
 Defaults to an empty list.
 
 | url.prefix
-| Optional. Configuration urlPrefix for JMAP routes.
-| Default value: http://localhost.
+| Optional. Configuration urlPrefix for JMAP routes. Default value: http://localhost.
 
 | websocket.url.prefix
-| Optional. URL for JMAP WebSocket route.
-| Default value: ws://localhost
+| Optional. URL for JMAP WebSocket route. Default value: ws://localhost
 
 | email.send.max.size
 | Optional. Configuration max size for message created in both JMAP Draft amd RFC-8621.
-| Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
+Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | upload.max.size
 | Optional. Configuration max size Upload in new JMAP-RFC-8621.
-| Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).
+Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | view.email.query.enabled
-| Optional boolean. Defaults to false.
-| Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
+| Optional boolean. Defaults to false. Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
 This enables a higher resilience, but the projection needs to be correctly populated.
 
 | user.provisioning.enabled
-| Optional boolean. Defaults to true.
-| Governs whether authenticated users that do not exist locally should be created in the users repository.
+| Optional boolean. Defaults to true. Governs whether authenticated users that do not exist locally should be created in the users repository.
 
 | jmap.version.default
 | Optional string. Defaults to draft. Allowed values: draft, rfc-8621.
-| Which version of the JMAP protocol should be served when none supplied in the Accept header.
+Which version of the JMAP protocol should be served when none supplied in the Accept header.
 Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
 rfc-8621 allow compatibility with other third party apps.
+
+| dynamic.jmap.prefix.resolution.enabled
+| Optional boolean. Defaults to false. Supported Jmap session endpoint returns dynamic prefix in response.
+When its config is true, and the HTTP request to Jmap session endpoint has a `X-JMAP-PREFIX` header with the value `http://new-domain/prefix`,
+then `apiUrl, downloadUrl, uploadUrl, eventSourceUrl, webSocketUrl` in response will be changed with a new prefix. Example: The `apiUrl` will be "http://new-domain/prefix/jmap".
+If the HTTP request to Jmap session endpoint has the `X-JMAP-WEBSOCKET-PREFIX` header with the value `ws://new-domain/prefix`,
+then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws://new-domain/prefix/jmap/ws".
 
 |===
 

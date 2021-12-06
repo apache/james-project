@@ -46,6 +46,7 @@ import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
+import org.apache.james.jmap.routes.JmapUrlEndpointResolver;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -166,7 +167,7 @@ public class JMAPModule extends AbstractModule {
 
     @ProvidesIntoSet
     Capability webSocketCapability(JmapRfc8621Configuration configuration) {
-        return DefaultCapabilities.webSocketCapability(configuration.webSocketUrl());
+        return DefaultCapabilities.webSocketCapability(JmapUrlEndpointResolver.from(configuration).webSocketUrl());
     }
 
     @Provides
