@@ -169,12 +169,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 .map(AuthenticationAnnounceMode::parse)
                 .orElseGet(() -> AuthenticationAnnounceMode.parseFallback(configuration.getString("authRequired", "false")));
 
-            if (authRequired != NEVER) {
-                LOGGER.info("This SMTP server requires authentication.");
-            } else {
-                LOGGER.info("This SMTP server does not require authentication.");
-            }
-
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
 
             // get the message size limit from the conf file and multiply
