@@ -237,10 +237,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return SMTPServer.this.heloEhloEnforcement;
         }
 
-        public String getSMTPGreeting() {
-            return SMTPServer.this.smtpGreeting;
-        }
-
         @Override
         public boolean useAddressBracketsEnforcement() {
             return SMTPServer.this.addressBracketsEnforcement;
