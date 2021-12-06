@@ -376,6 +376,7 @@
                         <volumes>
                             <volume>/logs</volume>
                             <volume>/root/conf</volume>
+                            <volume>/root/extensions-jars</volume>
                             <!-- Data for ActiveMQ mailQueue -->
                             <volume>/root/var</volume>
                             <volume>/root/glowroot/plugins</volume>

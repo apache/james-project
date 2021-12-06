@@ -427,6 +427,7 @@
                         <volumes>
                             <volume>/logs</volume>
                             <volume>/root/conf</volume>
+                            <volume>/root/extensions-jars</volume>
                             <volume>/root/glowroot/plugins</volume>
                             <volume>/root/glowroot/data</volume>
                         </volumes>
