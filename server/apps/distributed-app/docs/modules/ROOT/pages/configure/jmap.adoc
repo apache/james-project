@@ -51,6 +51,19 @@ This enables a higher resilience, but the projection needs to be correctly popul
 | user.provisioning.enabled
 | Optional boolean. Defaults to true. Governs whether authenticated users that do not exist locally should be created in the users repository.
 
+
+| authentication.strategy.draft
+| Optional List[String] with delimiter `,` . Specify which authentication strategies system admin want to use for JMAP draft server.
+The implicit package name is `org.apache.james.jmap.http`. If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+If no authentication strategy is specified, JMAP draft server will fallback to default strategies:
+`AccessTokenAuthenticationStrategy`, `JWTAuthenticationStrategy`, `QueryParameterAccessTokenAuthenticationStrategy`
+
+| authentication.strategy.rfc8621
+| Optional List[String] with delimiter `,` . Specify which authentication strategies system admin want to use for JMAP RFC-8621 server.
+The implicit package name is `org.apache.james.jmap.http`. If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+If no authentication strategy is specified, JMAP RFC-8621 server will fallback to default strategies:
+`JWTAuthenticationStrategy`, `BasicAuthenticationStrategy`.
+
 | jmap.version.default
 | Optional string. Defaults to draft. Allowed values: draft, rfc-8621.
 Which version of the JMAP protocol should be served when none supplied in the Accept header.

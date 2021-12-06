@@ -35,6 +35,7 @@ object JmapConfigProperties {
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
+  val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
 }
 
 object JmapRfc8621Configuration {
@@ -58,7 +59,8 @@ object JmapRfc8621Configuration {
         .map(MaxSizeUpload.of(_).get)
         .getOrElse(UPLOAD_LIMIT_DEFAULT),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
-      maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala)
+      maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
+      authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala)
 }
 
 case class JmapRfc8621Configuration(urlPrefixString: String,
@@ -66,9 +68,15 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     dynamicJmapPrefixResolutionEnabled: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,
-                                    maxConnections: Option[Int] = None) {
+                                    maxConnections: Option[Int] = None,
+                                    authenticationStrategies: Option[java.util.List[String]] = None) {
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
     maxConnections = maxConnections)
+
+  def getAuthenticationStrategiesAsJava(): Optional[java.util.List[String]] = authenticationStrategies.toJava
+
+  def withAuthenticationStrategies(list: Optional[java.util.List[String]]): JmapRfc8621Configuration =
+    this.copy(authenticationStrategies = list.toScala)
 }

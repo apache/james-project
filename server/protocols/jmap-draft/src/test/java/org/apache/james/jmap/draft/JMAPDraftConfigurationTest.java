@@ -106,9 +106,10 @@ public class JMAPDraftConfigurationTest {
         Optional<String> certificates = Optional.empty();
         Optional<String> keystore = Optional.empty();
         Optional<String> secret = Optional.empty();
+        Optional<List<String>> authenticationStrategies = Optional.empty();
 
         JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore,
-            privateKey, certificates, "JKS", secret, jwtPublicKeyPem);
+            privateKey, certificates, "JKS", secret, jwtPublicKeyPem, authenticationStrategies);
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .disable()
