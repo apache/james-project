@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.smtpserver.netty;
 
+import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationRequired.ANNOUNCE;
+import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationRequired.DISABLED;
+
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -50,13 +53,26 @@ import org.slf4j.LoggerFactory;
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocolAsyncServer.class);
 
+    public enum AuthenticationRequired {
+        DISABLED,
+        REQUIRED,
+        ANNOUNCE;
+
+        public static AuthenticationRequired parse(String authRequiredString) {
+            if (authRequiredString.equals("true")) {
+                return REQUIRED;
+            } else if (authRequiredString.equals("announce")) {
+                return ANNOUNCE;
+            } else {
+                return DISABLED;
+            }
+        }
+    }
+
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    public static final int AUTH_DISABLED = 0;
-    public static final int AUTH_REQUIRED = 1;
-    public static final int AUTH_ANNOUNCE = 2;
-    private int authRequired = AUTH_DISABLED;
+    private AuthenticationRequired authRequired = DISABLED;
     
     /**
      * Whether the server needs helo to be send first
@@ -132,21 +148,15 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         super.doConfigure(configuration);
         if (isEnabled()) {
             String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase(Locale.US);
-            if (authRequiredString.equals("true")) {
-                authRequired = AUTH_REQUIRED;
-            } else if (authRequiredString.equals("announce")) {
-                authRequired = AUTH_ANNOUNCE;
-            } else {
-                authRequired = AUTH_DISABLED;
-            }
-            if (authRequired != AUTH_DISABLED) {
+            authRequired = AuthenticationRequired.parse(authRequiredString);
+            if (authRequired != DISABLED) {
                 LOGGER.info("This SMTP server requires authentication.");
             } else {
                 LOGGER.info("This SMTP server does not require authentication.");
             }
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
-            if (authRequired == AUTH_DISABLED && authorizedAddresses == null) {
+            if (authRequired == DISABLED && authorizedAddresses == null) {
                 /*
                  * if SMTP AUTH is not required then we will use
                  * authorizedAddresses to determine whether or not to relay
@@ -187,7 +197,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             verifyIdentity = configuration.getBoolean("verifyIdentity", false);
 
-            if (authRequired == AUTH_DISABLED && verifyIdentity) {
+            if (authRequired == DISABLED && verifyIdentity) {
                 throw new ConfigurationException(
                     "SMTP configuration: 'verifyIdentity' can't be set to true if 'authRequired' is set to false.");
             }
@@ -244,10 +254,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         @Override
         public boolean isAuthRequired(String remoteIP) {
-            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {
+            if (SMTPServer.this.authRequired == ANNOUNCE) {
                 return true;
             }
-            boolean authRequired = SMTPServer.this.authRequired != AUTH_DISABLED;
+            boolean authRequired = SMTPServer.this.authRequired != DISABLED;
             if (authorizedNetworks != null) {
                 authRequired = authRequired && !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
             }
@@ -334,7 +344,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         return new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
-    public int getAuthRequired() {
+    public AuthenticationRequired getAuthRequired() {
         return authRequired;
     }
 }
