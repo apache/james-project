@@ -35,6 +35,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -96,6 +97,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -116,6 +119,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(NoClassDefFoundErrorMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -137,6 +142,8 @@ class MailetErrorsTest {
                         .mailet(OneRuntimeExceptionMailet.class)
                         .addProperty("onMailetException", "propagate"))
                     .addMailet(MailetConfiguration.TO_TRANSPORT)))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         jamesServer.getProbe(DataProbeImpl.class).fluent()
@@ -167,6 +174,8 @@ class MailetErrorsTest {
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
                 .putProcessor(CommonProcessors.root()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         jamesServer.getProbe(DataProbeImpl.class).fluent()
@@ -203,6 +212,8 @@ class MailetErrorsTest {
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
                 .putProcessor(CommonProcessors.root()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         jamesServer.getProbe(DataProbeImpl.class).fluent()
@@ -232,6 +243,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(NoClassDefFoundErrorMatcher.class)
                         .mailet(Null.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -255,6 +268,8 @@ class MailetErrorsTest {
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
                 .putProcessor(CommonProcessors.root()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         jamesServer.getProbe(DataProbeImpl.class).fluent()
@@ -292,6 +307,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -317,6 +334,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -341,6 +360,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -362,6 +383,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeErrorMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -384,6 +407,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ErrorMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -407,6 +432,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -433,6 +460,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -459,6 +488,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -479,6 +510,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(ErrorMatcher.class)
                         .mailet(NoopMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -499,6 +532,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(NoopMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -521,6 +556,8 @@ class MailetErrorsTest {
                         .matcher(ErrorMatcher.class)
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -543,6 +580,8 @@ class MailetErrorsTest {
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -569,6 +608,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -595,6 +636,8 @@ class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -621,6 +664,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Null.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -647,6 +692,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Null.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -677,6 +724,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(ErrorMatcher.class)
                         .mailet(Null.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -707,6 +756,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(Null.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -737,6 +788,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
@@ -767,6 +820,8 @@ class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);

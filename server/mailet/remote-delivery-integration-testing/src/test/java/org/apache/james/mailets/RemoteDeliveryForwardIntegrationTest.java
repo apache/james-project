@@ -31,6 +31,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -84,6 +85,8 @@ class RemoteDeliveryForwardIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(tempDir);
         jamesServer.start();
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());

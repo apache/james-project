@@ -74,8 +74,7 @@ regardless of this option.
 | auth.announce
 | This is an optional tag.  Possible values are:
 
-* never: Don't announce auth. If absent, *authorizedAddresses* are set to a wilcard to accept all remote hosts.
-This is the default behaviour.
+* never: Don't announce auth.
 
 * always: always announce AUTH capability to clients.
 

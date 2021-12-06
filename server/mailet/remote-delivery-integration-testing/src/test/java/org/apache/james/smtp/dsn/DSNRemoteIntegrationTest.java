@@ -147,7 +147,8 @@ class DSNRemoteIntegrationTest {
                 .addHook(DSNEhloHook.class.getName())
                 .addHook(DSNMailParameterHook.class.getName())
                 .addHook(DSNRcptParameterHook.class.getName())
-                .addHook(DSNMessageHook.class.getName()))
+                .addHook(DSNMessageHook.class.getName())
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 

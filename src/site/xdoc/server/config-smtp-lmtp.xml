@@ -91,8 +91,7 @@
         <dt><strong>auth.announce</strong></dt>
         <dd>This is an optional tag.  Possible values are:<br/>
 
-            * never: Don't announce auth. If absent, *authorizedAddresses* are set to a wilcard to accept all remote hosts.
-            This is the default behaviour.<br/>
+            * never: Don't announce auth.<br/>
 
             * always: always announce AUTH capability to clients.<br/>
 
