@@ -22,6 +22,7 @@ import java.net.URI
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.routes.JmapUrlEndpointResolver
 
 object DefaultCapabilities {
   def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
@@ -59,7 +60,7 @@ object DefaultCapabilities {
     SHARES_CAPABILITY,
     VACATION_RESPONSE_CAPABILITY,
     SUBMISSION_CAPABILITY,
-    webSocketCapability(configuration.webSocketUrl))
+    webSocketCapability(JmapUrlEndpointResolver.from(configuration).webSocketUrl))
 }
 
 object Capabilities {
