@@ -76,19 +76,30 @@
       <dd>Set the maximum simultaneous incoming connections for this service.</dd>
       <dt><strong>handler.connectionLimitPerIP</strong></dt>
       <dd>Set the maximum simultaneous incoming connections per IP for this service.</dd>
-      <dt><strong>handler.authRequired</strong></dt>
-      <dd>This is an optional tag with a boolean body.  If true, then the server will 
-      require authentication before delivering mail to non-local email addresses.  If this tag is absent, or the value 
-      is false then the client will not be prompted for authentication.  Only simple user/password authentication is
-      supported at this time. supported values:
-               true: required but announced only to not authorizedAddresses
-               false: don't use AUTH
-               announce: like true, but always announce AUTH capability to clients
+        <dt><strong>authRequired</strong></dt>
+        <dd>(deprecated) use auth.announce instead.
+            This is an optional tag with a boolean body.  If true, then the server will
+            announce authentication. If this tag is absent, or the value
+            is false then the client will not be prompted for authentication.  Only simple user/password authentication is
+            supported at this time. supported values:
+            true: announced only to not authorizedAddresses
+            false: don't announce AUTH. If absent, *authorizedAddresses* are set to a wilcard to accept all remote hosts.
+            announce: like true, but always announce AUTH capability to clients
 
-               The correct behaviour per RFC value would be false or announce
-               but we still support true for backward compatibility and because
-               some webmail client fails when AUTH is announced but no authentication
-               information has been provided</dd>
+            Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
+            regardless of this option.</dd>
+        <dt><strong>auth.announce</strong></dt>
+        <dd>This is an optional tag.  Possible values are:<br/>
+
+            * never: Don't announce auth. If absent, *authorizedAddresses* are set to a wilcard to accept all remote hosts.
+            This is the default behaviour.<br/>
+
+            * always: always announce AUTH capability to clients.<br/>
+
+            * forUnauthorizedAddresses: announced only to not authorizedAddresses<br/>
+
+            Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
+            regardless of this option.</dd>
       <dt><strong>handler.authorizedAddresses</strong></dt>
       <dd>Authorize specific addresses/networks.
                If you use SMTP AUTH, addresses that match those specified here will

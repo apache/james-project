@@ -34,7 +34,9 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <authRequired>false</authRequired>
-        <verifyIdentity>false</verifyIdentity>
+        <auth>
+            <announce>never</announce>
+        </auth>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>

@@ -78,7 +78,7 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public boolean isAuthSupported() {
+    public boolean isAuthAnnounced() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 

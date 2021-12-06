@@ -33,7 +33,9 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <authRequired>false</authRequired>
+        <auth>
+            <announce>never</announce>
+        </auth>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
@@ -59,7 +61,9 @@
         <!--
            Authorize only local users
         -->
-        <authRequired>true</authRequired>
+        <auth>
+            <announce>forUnauthorizedAddresses</announce>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
@@ -86,7 +90,9 @@
         <!--
            Authorize only local users
         -->
-        <authRequired>true</authRequired>
+        <auth>
+            <announce>forUnauthorizedAddresses</announce>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
