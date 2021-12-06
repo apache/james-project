@@ -53,7 +53,7 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
         if (!session.isRelayingAllowed()) {
             Domain toDomain = rcpt.getDomain();
             if (!isLocalDomain(toDomain)) {
-                if (session.isAuthSupported()) {
+                if (session.isAuthAnnounced()) {
                     return AUTH_REQUIRED;
                 } else {
                     return RELAYING_DENIED;

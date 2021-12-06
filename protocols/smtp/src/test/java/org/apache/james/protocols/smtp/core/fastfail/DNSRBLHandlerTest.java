@@ -138,7 +138,7 @@ public class DNSRBLHandlerTest {
             }
 
             @Override
-            public boolean isAuthSupported() {
+            public boolean isAuthAnnounced() {
                 return false;
             }
 
