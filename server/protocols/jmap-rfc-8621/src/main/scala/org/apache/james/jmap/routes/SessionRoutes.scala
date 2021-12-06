@@ -84,7 +84,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .action(CORS_CONTROL)
         .noCorsHeaders)
 
-  private def sendRespond(session: Session, resp: HttpServerResponse) =
+  private def sendRespond(session: Session, resp: HttpServerResponse): SMono[Void] =
     SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session)))
       .map(_.getBytes(StandardCharsets.UTF_8))
       .flatMap(bytes => SMono(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)

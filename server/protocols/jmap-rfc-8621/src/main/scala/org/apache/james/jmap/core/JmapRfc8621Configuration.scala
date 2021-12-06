@@ -23,36 +23,44 @@ import java.net.{URI, URL}
 import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
+import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_DEFAULT
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
 
 import scala.jdk.OptionConverters._
 
+object JmapConfigProperties {
+  val UPLOAD_LIMIT_PROPERTY: String = "upload.max.size"
+  val URL_PREFIX_PROPERTY: String = "url.prefix"
+  val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
+  val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
+  val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
+}
+
 object JmapRfc8621Configuration {
-  val LOCALHOST_URL_PREFIX: String = "http://localhost"
-  val LOCALHOST_WEBSOCKET_URL_PREFIX: String = "ws://localhost"
-  val UPLOAD_LIMIT_30_MB: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
-  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, LOCALHOST_WEBSOCKET_URL_PREFIX, UPLOAD_LIMIT_30_MB)
-  val URL_PREFIX_PROPERTIES: String = "url.prefix"
-  val WEBSOCKET_URL_PREFIX_PROPERTIES: String = "websocket.url.prefix"
-  val UPLOAD_LIMIT_PROPERTIES: String = "upload.max.size"
+  import JmapConfigProperties._
+  val URL_PREFIX_DEFAULT: String = "http://localhost"
+  val WEBSOCKET_URL_PREFIX_DEFAULT: String = "ws://localhost"
+  val UPLOAD_LIMIT_DEFAULT: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
+
+  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(URL_PREFIX_DEFAULT, WEBSOCKET_URL_PREFIX_DEFAULT, UPLOAD_LIMIT_DEFAULT)
+
 
   def from(configuration: Configuration): JmapRfc8621Configuration = {
     JmapRfc8621Configuration(
-      urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_URL_PREFIX),
-      websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_WEBSOCKET_URL_PREFIX),
-      maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null))
+      urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTY)).getOrElse(URL_PREFIX_DEFAULT),
+      websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTY)).getOrElse(WEBSOCKET_URL_PREFIX_DEFAULT),
+      maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTY, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
-        .getOrElse(UPLOAD_LIMIT_30_MB),
-      maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger("webpush.maxTimeoutSeconds", null)).map(Integer2int).toScala,
-      maxConnections = Optional.ofNullable(configuration.getInteger("webpush.maxConnections", null)).map(Integer2int).toScala)
+        .getOrElse(UPLOAD_LIMIT_DEFAULT),
+      maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
+      maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala)
   }
 }
 
 case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixString: String,
-                                    maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB,
+                                    maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None) {
   val urlPrefix: URL = new URL(urlPrefixString)

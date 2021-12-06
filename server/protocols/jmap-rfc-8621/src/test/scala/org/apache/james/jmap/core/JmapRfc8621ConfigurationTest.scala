@@ -22,7 +22,7 @@ package org.apache.james.jmap.core
 import java.net.URL
 
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
-import org.apache.james.jmap.core.JmapRfc8621Configuration.URL_PREFIX_PROPERTIES
+import org.apache.james.jmap.core.JmapConfigProperties.URL_PREFIX_PROPERTY
 import org.apache.james.jmap.core.JmapRfc8621ConfigurationTest.{emptyConfiguration, providedConfiguration}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -31,7 +31,7 @@ object JmapRfc8621ConfigurationTest {
   val emptyConfiguration: Configuration = new PropertiesConfiguration()
   def providedConfiguration(): Configuration = {
     val configuration: Configuration = new PropertiesConfiguration()
-    configuration.addProperty(URL_PREFIX_PROPERTIES, "http://random-domain.com")
+    configuration.addProperty(URL_PREFIX_PROPERTY, "http://random-domain.com")
     configuration
   }
 }

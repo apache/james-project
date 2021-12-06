@@ -30,7 +30,7 @@ import io.restassured.http.ContentType
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.Username
-import org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_URL_PREFIX
+import org.apache.james.jmap.core.JmapRfc8621Configuration.URL_PREFIX_DEFAULT
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration}
 import org.apache.james.jmap.http.Authenticator
@@ -200,10 +200,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    "urn:ietf:params:jmap:vacationresponse": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
                          |  },
                          |  "username" : "bob@james.org",
-                         |  "apiUrl" : "$LOCALHOST_URL_PREFIX/jmap",
-                         |  "downloadUrl" : "$LOCALHOST_URL_PREFIX/$downloadPath",
-                         |  "uploadUrl" : "$LOCALHOST_URL_PREFIX/upload/{accountId}",
-                         |  "eventSourceUrl" : "$LOCALHOST_URL_PREFIX/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
+                         |  "apiUrl" : "$URL_PREFIX_DEFAULT/jmap",
+                         |  "downloadUrl" : "$URL_PREFIX_DEFAULT/$downloadPath",
+                         |  "uploadUrl" : "$URL_PREFIX_DEFAULT/upload/{accountId}",
+                         |  "eventSourceUrl" : "$URL_PREFIX_DEFAULT/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
                          |  "state" : "${INSTANCE.value}"
                          |}""".stripMargin
 
