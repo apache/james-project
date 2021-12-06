@@ -257,11 +257,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             if (SMTPServer.this.authRequired == ANNOUNCE) {
                 return true;
             }
-            boolean authRequired = SMTPServer.this.authRequired != DISABLED;
-            if (authorizedNetworks != null) {
-                authRequired = authRequired && !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
+            if (SMTPServer.this.authRequired == DISABLED) {
+                return false;
             }
-            return authRequired;
+            return !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
         }
 
         /**
