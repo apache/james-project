@@ -147,6 +147,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 networks.add(addr);
             }
             authorizedNetworks = new NetMatcher(networks, dns);
+            LOGGER.info("Authorized addresses: {}", authorizedNetworks);
         }
         SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData) {
 
@@ -175,27 +176,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             }
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
-            if (authRequired == NEVER && authorizedAddresses == null) {
-                /*
-                 * if SMTP AUTH is not required then we will use
-                 * authorizedAddresses to determine whether or not to relay
-                 * e-mail. Therefore if SMTP AUTH is not required, we will not
-                 * relay e-mail unless the sending IP address is authorized.
-                 * 
-                 * Since this is a change in behavior for James v2, create a
-                 * default authorizedAddresses network of 0.0.0.0/0, which
-                 * matches all possible addresses, thus preserving the current
-                 * behavior.
-                 * 
-                 * James v3 should require the <authorizedAddresses> element.
-                 */
-                authorizedAddresses = "0.0.0.0/0.0.0.0";
-            }
-
-          
-            if (authorizedNetworks != null) {
-                LOGGER.info("Authorized addresses: {}", authorizedNetworks);
-            }
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes

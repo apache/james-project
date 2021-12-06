@@ -46,6 +46,7 @@ import org.apache.james.jdkim.mailets.MockPublicKeyRecordRetriever;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
@@ -138,6 +139,8 @@ class RemoteDeliveryDKIMIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
                     .addProperty("mail.smtp.allow8bitmime", "true")))
@@ -179,6 +182,8 @@ class RemoteDeliveryDKIMIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
                     .addProperty("mail.smtp.allow8bitmime", "true")))
@@ -221,6 +226,8 @@ class RemoteDeliveryDKIMIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                 .putProcessor(CommonProcessors.bounces()))

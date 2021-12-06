@@ -36,6 +36,7 @@
         <auth>
             <announce>never</announce>
         </auth>
+        <authorizedAddresses>0.0.0.0/0.0.0.0</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>

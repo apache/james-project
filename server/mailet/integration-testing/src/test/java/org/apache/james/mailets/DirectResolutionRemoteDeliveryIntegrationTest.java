@@ -100,7 +100,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                 .putProcessor(CommonProcessors.bounces()))
             .withSmtpConfiguration(SmtpConfiguration.builder()
                 .doNotVerifyIdentity()
-                .build())
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 
@@ -128,6 +128,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 
@@ -154,6 +156,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 
@@ -182,6 +186,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 
@@ -219,6 +225,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                     .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                         .matcher(All.class)))
                 .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .build(temporaryFolder);
         jamesServer.start();
 
