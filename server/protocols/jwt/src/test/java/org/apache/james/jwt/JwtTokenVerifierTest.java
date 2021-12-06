@@ -88,6 +88,40 @@ class JwtTokenVerifierTest {
     }
 
     @Test
+    void verifyAndExtractClaimShouldAllowExtractingClaim() {
+        assertThat(sut.verifyAndExtractClaim(VALID_TOKEN_WITHOUT_ADMIN, "name", String.class))
+            .contains("John Doe");
+    }
+
+    @Test
+    void verifyAndExtractClaimShouldReturnEmptyWhenBadDatatype() {
+        assertThat(sut.verifyAndExtractClaim(VALID_TOKEN_WITHOUT_ADMIN, "name", Integer.class))
+            .isEmpty();
+    }
+
+    @Test
+    void verifyAndExtractClaimShouldReturnEmptyWhenNotFound() {
+        assertThat(sut.verifyAndExtractClaim(VALID_TOKEN_WITHOUT_ADMIN, "notFound", String.class))
+            .isEmpty();
+    }
+
+
+    @Test
+    void verifyAndExtractClaimShouldReturnEmptyWhenNoneAlgorithm() {
+        assertThat(sut.verifyAndExtractClaim(TOKEN_NONE_ALGORITHM, "name", String.class))
+            .isEmpty();
+    }
+
+    @Test
+    void verifyAndExtractLoginShouldReturnEmptyOnMismatchingSigningKey() {
+        String invalidToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Pd6t82" +
+            "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
+            "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
+
+        assertThat(sut.verifyAndExtractClaim(invalidToken, "name", String.class)).isEmpty();
+    }
+
+    @Test
     void shouldReturnTrueOnValidSignatureWithMultipleKeys() {
         PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
         JwtTokenVerifier sut = new JwtTokenVerifier(pubKeyProvider);
