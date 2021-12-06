@@ -235,11 +235,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         @Override
         public boolean isRelayingAllowed(String remoteIP) {
-            boolean relayingAllowed = false;
             if (authorizedNetworks != null) {
-                relayingAllowed = SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
+                return SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
             }
-            return relayingAllowed;
+            return false;
         }
 
         @Override
