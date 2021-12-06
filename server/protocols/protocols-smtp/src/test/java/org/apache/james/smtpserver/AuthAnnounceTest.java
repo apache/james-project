@@ -18,24 +18,15 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.mailet.DsnParameters.Notify.DELAY;
-import static org.apache.mailet.DsnParameters.Notify.FAILURE;
-import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Base64;
-import java.util.EnumSet;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -72,8 +63,6 @@ import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.mailet.DsnParameters;
-import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
@@ -83,7 +72,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.TypeLiteral;
 
-class DSNTest {
+class AuthAnnounceTest {
     public static final String LOCAL_DOMAIN = "example.local";
     public static final Username BOB = Username.of("bob@localhost");
     public static final String PASSWORD = "bobpwd";
@@ -109,7 +98,6 @@ class DSNTest {
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-        usersRepository.addUser(BOB, PASSWORD);
 
         createMailRepositoryStore();
 
@@ -182,191 +170,111 @@ class DSNTest {
     }
 
     @Test
-    void ehloShouldAdvertiseDsnExtension() throws Exception {
+    void authAnnounceAlwaysShouldAnnounceAuth() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceAlways.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
         smtpProtocol.sendCommand("EHLO localhost");
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
-            softly.assertThat(smtpProtocol.getReplyString()).contains("250 DSN");
+            softly.assertThat(smtpProtocol.getReplyString())
+                .contains("250-AUTH LOGIN PLAIN");
         });
     }
 
-    private void authenticate(SMTPClient smtpProtocol) throws IOException {
-        smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB.asString() + "\0" + PASSWORD + "\0").getBytes(UTF_8)));
-        assertThat(smtpProtocol.getReplyCode())
-            .as("authenticated")
-            .isEqualTo(235);
-    }
-
     @Test
-    void dsnParametersShouldBeSetOnTheFinalEmail() throws Exception {
+    void authAnnounceSometimeShouldNotAnnounceAuthWhenMatching() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceSometimeMatching.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .envId(DsnParameters.EnvId.of("QQ314159"))
-                .ret(DsnParameters.Ret.HDRS)
-                .addRcptParameter(new MailAddress("rcpt@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY),
-                    new MailAddress("orcpt@localhost")
-                )).build().get());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                .doesNotContain("250-AUTH LOGIN PLAIN");
+        });
     }
 
     @Test
-    void multipleRecipientsShouldBeSupported() throws Exception {
+    void authAnnounceSometimeShouldAnnounceAuthWhenNotMatching() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceSometimeNotMatching.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt1@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt1@localhost");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt2@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt2@localhost");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .envId(DsnParameters.EnvId.of("QQ314159"))
-                .ret(DsnParameters.Ret.HDRS)
-                .addRcptParameter(new MailAddress("rcpt1@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY),
-                    new MailAddress("orcpt1@localhost")))
-                .addRcptParameter(new MailAddress("rcpt2@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY),
-                    new MailAddress("orcpt2@localhost")
-                )).build().get());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                .contains("250-AUTH LOGIN PLAIN");
+        });
     }
 
     @Test
-    void notifyCanBeOmitted() throws Exception {
+    void authAnnounceNeverShouldNotAnnounceAuth() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceNever.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .envId(DsnParameters.EnvId.of("QQ314159"))
-                .ret(DsnParameters.Ret.HDRS)
-                .addRcptParameter(new MailAddress("rcpt@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    new MailAddress("orcpt@localhost")))
-                .build().get());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                .doesNotContain("250-AUTH LOGIN PLAIN");
+        });
     }
 
     @Test
-    void orcptCanBeOmitted() throws Exception {
+    void authShouldNotBeAnnouncedOnPlainChannelsWhenRequireSSL() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-requireSSL.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .envId(DsnParameters.EnvId.of("QQ314159"))
-                .ret(DsnParameters.Ret.HDRS)
-                .addRcptParameter(new MailAddress("rcpt@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY)))
-                .build().get());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                .doesNotContain("250-AUTH LOGIN PLAIN");
+        });
     }
 
     @Test
-    void retCanBeOmitted() throws Exception {
+    void shouldStartWithPreviousConfiguration() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-noauth.xml")));
         smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> ENVID=QQ314159");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .envId(DsnParameters.EnvId.of("QQ314159"))
-                .addRcptParameter(new MailAddress("rcpt@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY),
-                    new MailAddress("orcpt@localhost")))
-                .build().get());
-    }
-
-    @Test
-    void envIdCanBeOmitted() throws Exception {
-        smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
-        smtpServer.init();
-
-        SMTPClient smtpProtocol = new SMTPClient();
-        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
-        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
-
-        smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
-        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
-
-        Mail lastMail = queue.getLastMail();
-        assertThat(lastMail.dsnParameters())
-            .contains(DsnParameters.builder()
-                .ret(DsnParameters.Ret.HDRS)
-                .addRcptParameter(new MailAddress("rcpt@localhost"), DsnParameters.RecipientDsnParameters.of(
-                    EnumSet.of(SUCCESS, FAILURE, DELAY),
-                    new MailAddress("orcpt@localhost")
-                )).build().get());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                // SSL is required
+                .doesNotContain("250-AUTH LOGIN PLAIN");
+        });
     }
 }

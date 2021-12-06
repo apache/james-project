@@ -466,7 +466,7 @@ public class AuthCmdHandler
 
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
-        if (session.isAuthSupported()) {
+        if (session.isAuthAnnounced()) {
             return ESMTP_FEATURES;
         } else {
             return Collections.emptyList();

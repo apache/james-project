@@ -37,7 +37,7 @@ public abstract class LMTPConfiguration extends ProtocolConfigurationImpl implem
     }
 
     @Override
-    public boolean isAuthRequired(String remoteIP) {
+    public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
         return false;
     }
 

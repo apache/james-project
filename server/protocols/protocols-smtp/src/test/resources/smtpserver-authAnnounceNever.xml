@@ -19,33 +19,21 @@
   under the License.
  -->
 
-<!-- Read https://james.apache.org/server/config-smtp-lmtp.html#SMTP_Configuration for further details -->
-
     <smtpserver enabled="true">
         <bind>0.0.0.0:0</bind>
-        <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
             <keystore>file://conf/keystore</keystore>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
             <algorithm>SunX509</algorithm>
         </tls>
-        <connectiontimeout>360</connectiontimeout>
-        <connectionLimit>0</connectionLimit>
-        <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <announce>never</announce>
             <requireSSL>false</requireSSL>
         </auth>
-        <verifyIdentity>true</verifyIdentity>
-        <maxmessagesize>0</maxmessagesize>
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+        <verifyIdentity>false</verifyIdentity>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
         <handlerchain>
-            <handler class="org.apache.james.smtpserver.dsn.DSNEhloHook"/>
-            <handler class="org.apache.james.smtpserver.dsn.DSNMailParameterHook"/>
-            <handler class="org.apache.james.smtpserver.dsn.DSNRcptParameterHook"/>
-            <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
     </smtpserver>

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
+import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.FOR_UNAUTHORIZED_ADDRESSES;
+
 import java.net.InetSocketAddress;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -63,7 +65,7 @@ public class SmtpGuiceProbe implements GuiceProbe {
     }
 
     public Port getSmtpAuthRequiredPort() {
-        return getPort(server -> ((SMTPServer) server).getAuthRequired() == SMTPServer.AUTH_REQUIRED);
+        return getPort(server -> ((SMTPServer) server).getAuthRequired().equals(FOR_UNAUTHORIZED_ADDRESSES));
     }
 
     private Port getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {

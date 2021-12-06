@@ -22,6 +22,60 @@ Change list:
  - [Adding messageId metadata to the Cassandra attachments](#adding-messageid-metadata-to-the-cassandra-attachments)
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
+ - [Vacation Mailet moved](#vacation-mailet-moved)
+ - [Support salted passwords](#support-salted-passwords)
+ - [MailDir removal](#maildir-removal)
+ - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
+
+### SMTP/LMTP authentication configuration reworked
+
+Date: 07/12/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3680
+
+We reworked SMTP/LMTP configuration to improve security and better explicit the configuration effects.
+
+We added a new setting within SMTP/LMTP configuration to avoid advertising authentication on unencrypted channels. 
+For security reasons, it is enabled by default, which is a breaking change. To disable it:
+
+```xml
+    <smtpserver enabled="true">
+        <jmxName>smtpserver-global</jmxName>
+        <bind>0.0.0.0:25</bind>
+        <!--- ... -->
+        <auth>
+            <announce>never</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
+        <!--- ... -->
+    </smtpserver>
+```
+
+Also, `requireAuth` setting, which was misleading, had been renamed to `auth.announce`. This change did not affect
+backward compatibility and `requireAuth` is still read as a fallback.
+
+ - `<requireAuth>false</requireAuth>` can now be specified with `<auth><announce>never</announce></auth>`
+ - `<requireAuth>announce</requireAuth>` can now be specified with `<auth><announce>always</announce></auth>`
+ - `<requireAuth>true</requireAuth>` can now be specified with `<auth><announce>forUnauthorizedAddresses</announce></auth>`
+
+Finally, an implicit wildcard value `0.0.0.0/0.0.0.0` was specified as authorizedAddresses (for James 2.3 backward 
+compatibility) when `<requireAuth>false</requireAuth>` or (equivalent) `<auth><announce>never</announce></auth>`. 
+This behaviour could result in a user believing she disabled authentication, but would ultimately result in an 
+open relay, which is unsecure, and why we no longer apply this implicit value. Users relying on James as an open
+relay will need to specify `authorizedAddresses` explicitly:
+
+```xml
+    <smtpserver enabled="true">
+        <jmxName>smtpserver-global</jmxName>
+        <bind>0.0.0.0:25</bind>
+        <!--- ... -->
+        <auth>
+            <announce>never</announce>
+        </auth>
+        <authorizedAddresses>0.0.0.0/0.0.0.0</authorizedAddresses>
+        <!--- ... -->
+    </smtpserver>
+```
 
 ### Vacation Mailet moved
 

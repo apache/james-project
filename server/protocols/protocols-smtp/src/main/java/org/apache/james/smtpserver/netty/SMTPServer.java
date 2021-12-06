@@ -18,7 +18,11 @@
  ****************************************************************/
 package org.apache.james.smtpserver.netty;
 
+import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.ALWAYS;
+import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.NEVER;
+
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -50,13 +54,72 @@ import org.slf4j.LoggerFactory;
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocolAsyncServer.class);
 
+    public enum AuthenticationAnnounceMode {
+        NEVER,
+        FOR_UNAUTHORIZED_ADDRESSES,
+        ALWAYS;
+
+        public static AuthenticationAnnounceMode parseFallback(String authRequiredString) {
+            String sanitized = authRequiredString.trim().toLowerCase(Locale.US);
+            if (sanitized.equals("true")) {
+                return FOR_UNAUTHORIZED_ADDRESSES;
+            } else if (sanitized.equals("announce")) {
+                return ALWAYS;
+            } else {
+                return NEVER;
+            }
+        }
+
+        public static AuthenticationAnnounceMode parse(String authRequiredString) {
+            String sanitized = authRequiredString.trim().toLowerCase(Locale.US);
+            switch (sanitized) {
+                case "forunauthorizedaddresses":
+                    return FOR_UNAUTHORIZED_ADDRESSES;
+                case "always":
+                    return ALWAYS;
+                case "never":
+                    return NEVER;
+                default:
+                    throw new RuntimeException("Unknown value for 'auth.announce': " + authRequiredString + ". Should be one of always, never, forUnauthorizedAddresses");
+            }
+        }
+    }
+
+    public static class AuthenticationConfiguration {
+        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return new AuthenticationConfiguration(
+                Optional.ofNullable(configuration.getString("auth.announce", null))
+                    .map(AuthenticationAnnounceMode::parse)
+                    .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
+                Optional.ofNullable(configuration.getBoolean("auth.requireSSL", null))
+                    .orElse(false));
+        }
+
+        private static AuthenticationAnnounceMode fallbackAuthenticationAnnounceMode(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return AuthenticationAnnounceMode.parseFallback(configuration.getString("authRequired", "false"));
+        }
+
+        private final AuthenticationAnnounceMode authenticationAnnounceMode;
+        private final boolean requireSSL;
+
+        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL) {
+            this.authenticationAnnounceMode = authenticationAnnounceMode;
+            this.requireSSL = requireSSL;
+        }
+
+        public AuthenticationAnnounceMode getAuthenticationAnnounceMode() {
+            return authenticationAnnounceMode;
+        }
+
+        public boolean isRequireSSL() {
+            return requireSSL;
+        }
+    }
+
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    public static final int AUTH_DISABLED = 0;
-    public static final int AUTH_REQUIRED = 1;
-    public static final int AUTH_ANNOUNCE = 2;
-    private int authRequired = AUTH_DISABLED;
+    private AuthenticationConfiguration authenticationConfiguration;
     
     /**
      * Whether the server needs helo to be send first
@@ -115,6 +178,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 networks.add(addr);
             }
             authorizedNetworks = new NetMatcher(networks, dns);
+            LOGGER.info("Authorized addresses: {}", authorizedNetworks);
         }
         SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData) {
 
@@ -131,42 +195,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     public void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
-            String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase(Locale.US);
-            if (authRequiredString.equals("true")) {
-                authRequired = AUTH_REQUIRED;
-            } else if (authRequiredString.equals("announce")) {
-                authRequired = AUTH_ANNOUNCE;
-            } else {
-                authRequired = AUTH_DISABLED;
-            }
-            if (authRequired != AUTH_DISABLED) {
-                LOGGER.info("This SMTP server requires authentication.");
-            } else {
-                LOGGER.info("This SMTP server does not require authentication.");
-            }
+            authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
-            if (authRequired == AUTH_DISABLED && authorizedAddresses == null) {
-                /*
-                 * if SMTP AUTH is not required then we will use
-                 * authorizedAddresses to determine whether or not to relay
-                 * e-mail. Therefore if SMTP AUTH is not required, we will not
-                 * relay e-mail unless the sending IP address is authorized.
-                 * 
-                 * Since this is a change in behavior for James v2, create a
-                 * default authorizedAddresses network of 0.0.0.0/0, which
-                 * matches all possible addresses, thus preserving the current
-                 * behavior.
-                 * 
-                 * James v3 should require the <authorizedAddresses> element.
-                 */
-                authorizedAddresses = "0.0.0.0/0.0.0.0";
-            }
-
-          
-            if (authorizedNetworks != null) {
-                LOGGER.info("Authorized addresses: {}", authorizedNetworks);
-            }
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes
@@ -187,7 +218,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             verifyIdentity = configuration.getBoolean("verifyIdentity", false);
 
-            if (authRequired == AUTH_DISABLED && verifyIdentity) {
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER && verifyIdentity) {
                 throw new ConfigurationException(
                     "SMTP configuration: 'verifyIdentity' can't be set to true if 'authRequired' is set to false.");
             }
@@ -225,20 +256,15 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         @Override
         public boolean isRelayingAllowed(String remoteIP) {
-            boolean relayingAllowed = false;
             if (authorizedNetworks != null) {
-                relayingAllowed = SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
+                return SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
             }
-            return relayingAllowed;
+            return false;
         }
 
         @Override
         public boolean useHeloEhloEnforcement() {
             return SMTPServer.this.heloEhloEnforcement;
-        }
-
-        public String getSMTPGreeting() {
-            return SMTPServer.this.smtpGreeting;
         }
 
         @Override
@@ -247,15 +273,19 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         }
 
         @Override
-        public boolean isAuthRequired(String remoteIP) {
-            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {
+        public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
+            if (authenticationConfiguration.requireSSL && !tlsStarted) {
+                return false;
+            }
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == ALWAYS) {
                 return true;
             }
-            boolean authRequired = SMTPServer.this.authRequired != AUTH_DISABLED;
-            if (authorizedNetworks != null) {
-                authRequired = authRequired && !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER) {
+                return false;
             }
-            return authRequired;
+            return Optional.ofNullable(authorizedNetworks)
+                .map(nets -> !nets.matchInetNetwork(remoteIP))
+                .orElse(true);
         }
 
         /**
@@ -338,7 +368,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         return new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
-    public int getAuthRequired() {
-        return authRequired;
+    public AuthenticationAnnounceMode getAuthRequired() {
+        return authenticationConfiguration.getAuthenticationAnnounceMode();
     }
 }

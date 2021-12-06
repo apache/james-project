@@ -110,6 +110,8 @@ class DSNRemoteIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .withMailetContainer(MailetContainer.builder()
                 .putProcessor(CommonProcessors.simpleRoot())
                 .putProcessor(CommonProcessors.error())

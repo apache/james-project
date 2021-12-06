@@ -55,7 +55,7 @@ public class ResolvableEhloHeloHandlerTest {
             HashMap<AttachmentKey<?>, Object> map = new HashMap<>();
 
             @Override
-            public boolean isAuthSupported() {
+            public boolean isAuthAnnounced() {
                 return authRequired;
             }
 

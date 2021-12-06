@@ -39,6 +39,7 @@ import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
@@ -97,6 +98,8 @@ class RemoteDeliveryErrorHandlingTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_ONLY_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(BCC_STRIPPER)
