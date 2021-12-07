@@ -772,7 +772,7 @@ public class RemoteDeliveryConfigurationTest {
         String helo = "domain.com";
         int connectionTimeout = 1856;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
+            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "false")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(connectionTimeout))
             .setProperty(RemoteDeliveryConfiguration.START_TLS, "true")
@@ -783,7 +783,7 @@ public class RemoteDeliveryConfigurationTest {
 
 
         assertThat(properties)
-            .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "true"),
+            .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "false"),
                 MapEntry.entry("mail.smtp.sendpartial", "true"),
                 MapEntry.entry("mail.smtp.ehlo", "true"),
                 MapEntry.entry("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout)),
@@ -798,7 +798,7 @@ public class RemoteDeliveryConfigurationTest {
         String helo = "domain.com";
         int connectionTimeout = 1856;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
+            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "false")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(connectionTimeout))
             .setProperty(RemoteDeliveryConfiguration.START_TLS, "true")
@@ -812,7 +812,7 @@ public class RemoteDeliveryConfigurationTest {
 
 
         assertThat(properties)
-            .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "true"),
+            .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "false"),
                 MapEntry.entry("mail.smtp.sendpartial", "true"),
                 MapEntry.entry("mail.smtp.ehlo", "true"),
                 MapEntry.entry("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout)),
@@ -821,5 +821,53 @@ public class RemoteDeliveryConfigurationTest {
                 MapEntry.entry("mail.debug", "false"),
                 MapEntry.entry("mail.smtp.starttls.enable", "true"),
                 MapEntry.entry("mail.smtp.auth", "true"));
+    }
+
+    @Test
+    void createFinalJavaxPropertiesWithSSLShouldProvidePropertiesWithMinimalConfiguration() {
+        String helo = "domain.com";
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
+            .setProperty(RemoteDeliveryConfiguration.HELO_NAME, helo)
+            .build();
+
+        Properties properties = new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).createFinalJavaxPropertiesWithSSL();
+
+
+        assertThat(properties)
+            .containsOnly(MapEntry.entry("mail.smtps.ssl.enable", "true"),
+                MapEntry.entry("mail.smtps.sendpartial", "false"),
+                MapEntry.entry("mail.smtps.ehlo", "true"),
+                MapEntry.entry("mail.smtps.connectiontimeout", "60000"),
+                MapEntry.entry("mail.smtps.localhost", helo),
+                MapEntry.entry("mail.smtps.timeout", "180000"),
+                MapEntry.entry("mail.debug", "false"),
+                MapEntry.entry("mail.smtps.starttls.enable", "false"));
+    }
+
+    @Test
+    void createFinalJavaxPropertiesWithSSLShouldProvidePropertiesWithFullConfigurationWithoutGateway() {
+        String helo = "domain.com";
+        int connectionTimeout = 1856;
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
+            .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
+            .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(connectionTimeout))
+            .setProperty(RemoteDeliveryConfiguration.START_TLS, "false")
+            .setProperty(RemoteDeliveryConfiguration.HELO_NAME, helo)
+            .build();
+
+        Properties properties = new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).createFinalJavaxPropertiesWithSSL();
+
+
+        assertThat(properties)
+            .containsOnly(MapEntry.entry("mail.smtps.ssl.enable", "true"),
+                MapEntry.entry("mail.smtps.sendpartial", "true"),
+                MapEntry.entry("mail.smtps.ehlo", "true"),
+                MapEntry.entry("mail.smtps.connectiontimeout", String.valueOf(connectionTimeout)),
+                MapEntry.entry("mail.smtps.localhost", helo),
+                MapEntry.entry("mail.smtps.timeout", "180000"),
+                MapEntry.entry("mail.debug", "false"),
+                MapEntry.entry("mail.smtps.starttls.enable", "false"));
     }
 }
