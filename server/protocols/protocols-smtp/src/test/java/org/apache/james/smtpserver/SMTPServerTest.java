@@ -147,12 +147,7 @@ public class SMTPServerTest {
                 throw new UnknownHostException();
             }
 
-            if ("128.0.0.1".equals(host) || "192.168.0.1".equals(host) || "127.0.0.1".equals(host) || "127.0.0.0".equals(
-                    host) || "255.0.0.0".equals(host) || "255.255.255.255".equals(host)) {
-                return InetAddress.getByName(host);
-            }
-
-            throw new UnsupportedOperationException("getByName not implemented in mock for host: " + host);
+            return InetAddress.getByName(host);
         }
 
         @Override

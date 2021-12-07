@@ -61,7 +61,7 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>true</announce>
+            <announce>always</announce>
             <requireSSL>false</requireSSL>
         </auth>
         <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
@@ -89,7 +89,7 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>true</announce>
+            <announce>always</announce>
             <requireSSL>false</requireSSL>
         </auth>
         <authorizedAddresses>0.0.0.0/0</authorizedAddresses>

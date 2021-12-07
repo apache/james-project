@@ -87,17 +87,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     public static class AuthenticationConfiguration {
         public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
-            return Optional.ofNullable(configuration.configurationAt("auth"))
-                .map(authConfiguration -> parse(configuration, authConfiguration))
-                .orElseGet(() -> new AuthenticationConfiguration(fallbackAuthenticationAnnounceMode(configuration), false));
-        }
-
-        private static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration, HierarchicalConfiguration<ImmutableNode> authConfiguration) {
             return new AuthenticationConfiguration(
-                Optional.ofNullable(authConfiguration.getString("announce", null))
+                Optional.ofNullable(configuration.getString("auth.announce", null))
                     .map(AuthenticationAnnounceMode::parse)
                     .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
-                Optional.ofNullable(authConfiguration.getBoolean("requireSSL", null))
+                Optional.ofNullable(configuration.getBoolean("auth.requireSSL", null))
                     .orElse(false));
         }
 
