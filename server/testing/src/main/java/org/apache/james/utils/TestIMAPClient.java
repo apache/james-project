@@ -76,13 +76,21 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         return this;
     }
 
+    public String capability() throws IOException {
+        imapClient.capability();
+        return imapClient.getReplyString();
+    }
+
     public TestIMAPClient disconnect() throws IOException {
         imapClient.disconnect();
         return this;
     }
 
     public TestIMAPClient login(String user, String password) throws IOException {
-        imapClient.login(user, password);
+        final boolean login = imapClient.login(user, password);
+        if (!login) {
+            throw new IOException("Login failed");
+        }
         return this;
     }
 

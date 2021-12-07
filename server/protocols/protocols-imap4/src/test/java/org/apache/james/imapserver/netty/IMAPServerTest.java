@@ -398,6 +398,74 @@ class IMAPServerTest {
     }
 
     @Nested
+    class PlainAuthDisallowed {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthDisallowed.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldFailOnUnEncryptedChannel() {
+            assertThatThrownBy(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
+        }
+
+        @Test
+        void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+            
+            assertThat(testIMAPClient.capability())
+                .contains("LOGINDISABLED")
+                .doesNotContain("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
+    class PlainAuthDisallowedSSL {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthAllowed.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldFailOnUnEncryptedChannel() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+
+            assertThat(testIMAPClient.capability())
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
     class Search {
         IMAPServer imapServer;
         private int port;
