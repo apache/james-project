@@ -35,6 +35,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>never</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
@@ -63,6 +64,7 @@
         -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
@@ -92,6 +94,7 @@
         -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>

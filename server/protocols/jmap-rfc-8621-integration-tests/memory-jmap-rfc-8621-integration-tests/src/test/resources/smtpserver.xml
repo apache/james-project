@@ -36,6 +36,7 @@
         <authRequired>false</authRequired>
         <auth>
             <announce>never</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>

@@ -54,7 +54,7 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
      * Return <code>false</code>
      */
     @Override
-    public boolean isAuthAnnounced(String remoteIP) {
+    public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
         return false;
     }
 
