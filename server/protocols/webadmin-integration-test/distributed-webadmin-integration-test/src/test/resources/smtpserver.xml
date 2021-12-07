@@ -35,6 +35,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>never</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>

@@ -135,6 +135,7 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
         addProperty("tls.[@startTLS]", startTLS);
         addProperty("tls.keystore", "test_keystore");
         addProperty("tls.secret", "jamestest");
+        addProperty("auth.requireSSL", false);
         addProperty("verifyIdentity", verifyIdentity);
 
         // add the rbl handler

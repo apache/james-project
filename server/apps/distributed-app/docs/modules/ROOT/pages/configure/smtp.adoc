@@ -83,6 +83,10 @@ regardless of this option.
 Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
 regardless of this option.
 
+| auth.requireSSL
+| This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
+channels.
+
 | authorizedAddresses
 | Authorize specific addresses/networks.
 

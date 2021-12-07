@@ -35,6 +35,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>never</announce>
+            <requireSSL>false</requireSSL>
         </auth>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>

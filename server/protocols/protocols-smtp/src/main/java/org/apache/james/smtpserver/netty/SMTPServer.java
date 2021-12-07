@@ -73,11 +73,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         public static AuthenticationAnnounceMode parse(String authRequiredString) {
             String sanitized = authRequiredString.trim().toLowerCase(Locale.US);
             switch (sanitized) {
-                case "forUnauthorizedAddresses":
+                case "forunauthorizedaddresses":
                     return FOR_UNAUTHORIZED_ADDRESSES;
                 case "always":
                     return ALWAYS;
-                case "neven":
+                case "never":
                     return NEVER;
                 default:
                     throw new RuntimeException("Unknown value for 'auth.announce': " + authRequiredString + ". Should be one of always, never, forUnauthorizedAddresses");
@@ -85,10 +85,47 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         }
     }
 
+    public static class AuthenticationConfiguration {
+        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return Optional.ofNullable(configuration.configurationAt("auth"))
+                .map(authConfiguration -> parse(configuration, authConfiguration))
+                .orElseGet(() -> new AuthenticationConfiguration(fallbackAuthenticationAnnounceMode(configuration), false));
+        }
+
+        private static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration, HierarchicalConfiguration<ImmutableNode> authConfiguration) {
+            return new AuthenticationConfiguration(
+                Optional.ofNullable(authConfiguration.getString("announce", null))
+                    .map(AuthenticationAnnounceMode::parse)
+                    .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
+                Optional.ofNullable(authConfiguration.getBoolean("requireSSL", null))
+                    .orElse(false));
+        }
+
+        private static AuthenticationAnnounceMode fallbackAuthenticationAnnounceMode(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return AuthenticationAnnounceMode.parseFallback(configuration.getString("authRequired", "false"));
+        }
+
+        private final AuthenticationAnnounceMode authenticationAnnounceMode;
+        private final boolean requireSSL;
+
+        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL) {
+            this.authenticationAnnounceMode = authenticationAnnounceMode;
+            this.requireSSL = requireSSL;
+        }
+
+        public AuthenticationAnnounceMode getAuthenticationAnnounceMode() {
+            return authenticationAnnounceMode;
+        }
+
+        public boolean isRequireSSL() {
+            return requireSSL;
+        }
+    }
+
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    private AuthenticationAnnounceMode authRequired = NEVER;
+    private AuthenticationConfiguration authenticationConfiguration;
     
     /**
      * Whether the server needs helo to be send first
@@ -164,10 +201,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     public void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
-            authRequired = Optional.ofNullable(configuration.configurationAt("auth"))
-                .flatMap(authConfiguration -> Optional.ofNullable(configuration.getString("auth.announce", null)))
-                .map(AuthenticationAnnounceMode::parse)
-                .orElseGet(() -> AuthenticationAnnounceMode.parseFallback(configuration.getString("authRequired", "false")));
+            authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
 
@@ -190,7 +224,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             verifyIdentity = configuration.getBoolean("verifyIdentity", false);
 
-            if (authRequired == NEVER && verifyIdentity) {
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER && verifyIdentity) {
                 throw new ConfigurationException(
                     "SMTP configuration: 'verifyIdentity' can't be set to true if 'authRequired' is set to false.");
             }
@@ -245,14 +279,19 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         }
 
         @Override
-        public boolean isAuthAnnounced(String remoteIP) {
-            if (SMTPServer.this.authRequired == ALWAYS) {
-                return true;
-            }
-            if (SMTPServer.this.authRequired == NEVER) {
+        public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
+            if (authenticationConfiguration.requireSSL && !tlsStarted) {
                 return false;
             }
-            return !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == ALWAYS) {
+                return true;
+            }
+            if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER) {
+                return false;
+            }
+            return Optional.ofNullable(authorizedNetworks)
+                .map(nets -> !nets.matchInetNetwork(remoteIP))
+                .orElse(true);
         }
 
         /**
@@ -336,6 +375,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     public AuthenticationAnnounceMode getAuthRequired() {
-        return authRequired;
+        return authenticationConfiguration.getAuthenticationAnnounceMode();
     }
 }

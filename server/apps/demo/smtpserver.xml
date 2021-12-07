@@ -33,7 +33,10 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <authRequired>false</authRequired>
+        <auth>
+            <announce>never</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
@@ -58,7 +61,10 @@
         <!--
            Authorize only local users
         -->
-        <authRequired>true</authRequired>
+        <auth>
+            <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
@@ -84,7 +90,10 @@
         <!--
            Authorize only local users
         -->
-        <authRequired>true</authRequired>
+        <auth>
+            <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>

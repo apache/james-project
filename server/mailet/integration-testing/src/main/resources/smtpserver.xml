@@ -37,6 +37,9 @@
 {{#hasAuthorizedAddresses}}
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
 {{/hasAuthorizedAddresses}}
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <verifyIdentity>{{verifyIdentity}}</verifyIdentity>
         <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
         <addressBracketsEnforcement>{{bracketEnforcement}}</addressBracketsEnforcement>

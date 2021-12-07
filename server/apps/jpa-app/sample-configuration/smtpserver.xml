@@ -47,6 +47,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>never</announce>
+            <requireSSL>true</requireSSL>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>
@@ -86,6 +87,7 @@
         -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>true</requireSSL>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
@@ -126,6 +128,7 @@
         -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>true</requireSSL>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
