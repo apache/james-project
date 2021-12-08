@@ -1719,11 +1719,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-queue-file</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-queue-jms</artifactId>
                 <version>${project.version}</version>
             </dependency>
