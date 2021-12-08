@@ -23,7 +23,6 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -34,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Mono;
 
 public class SimpleMailStore implements MailStore {
 
@@ -91,15 +92,21 @@ public class SimpleMailStore implements MailStore {
     }
 
     @Override
-    public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
+    public Mono<Void> storeMail(MailAddress recipient, Mail mail) {
         Username username = computeUsername(recipient);
-
         String locatedFolder = locateFolder(username, mail);
-        ComposedMessageId composedMessageId = mailboxAppender.append(mail.getMessage(), username, locatedFolder);
 
-        metric.increment();
-        LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
-            mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, composedMessageId);
+        try {
+            return Mono.from(mailboxAppender.append(mail.getMessage(), username, locatedFolder))
+                .doOnSuccess(ids -> {
+                    metric.increment();
+                    LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
+                        mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, ids);
+                })
+                .then();
+        } catch (MessagingException e) {
+            throw new RuntimeException("Could not retrieve mail message content", e);
+        }
     }
 
     private String locateFolder(Username username, Mail mail) {

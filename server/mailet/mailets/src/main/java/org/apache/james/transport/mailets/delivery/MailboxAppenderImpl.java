@@ -41,7 +41,11 @@ import org.apache.james.server.core.MimeMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class MailboxAppenderImpl implements MailboxAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppenderImpl.class);
@@ -52,10 +56,10 @@ public class MailboxAppenderImpl implements MailboxAppender {
         this.mailboxManager = mailboxManager;
     }
 
-    public ComposedMessageId append(MimeMessage mail, Username user, String folder) throws MessagingException {
+    public Mono<ComposedMessageId> append(MimeMessage mail, Username user, String folder) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
         return append(mail, user, useSlashAsSeparator(folder, session), session)
-            .getId();
+            .map(AppendResult::getId);
     }
 
     private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {
@@ -69,24 +73,29 @@ public class MailboxAppenderImpl implements MailboxAppender {
         return destination;
     }
 
-    private AppendResult append(MimeMessage mail, Username user, String folder, MailboxSession session) throws MessagingException {
-        mailboxManager.startProcessingRequest(session);
-        try {
-            MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
-            return appendMessageToMailbox(mail, session, mailboxPath);
-        } catch (MailboxException e) {
-            throw new MessagingException("Unable to access mailbox.", e);
-        } finally {
-            closeProcessing(session);
-        }
+    private Mono<AppendResult> append(MimeMessage mail, Username user, String folder, MailboxSession mailboxSession) {
+        MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
+        return Mono.using(
+            () -> {
+                mailboxManager.startProcessingRequest(mailboxSession);
+                return mailboxSession;
+            },
+            session -> appendMessageToMailbox(mail, session, mailboxPath),
+            this::closeProcessing)
+            .onErrorMap(MailboxException.class, e -> new MessagingException("Unable to access mailbox.", e));
     }
 
-    protected AppendResult appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
-        MessageManager mailbox = createMailboxIfNotExist(session, path);
-        if (mailbox == null) {
-            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().asString() + " was not found on this server.");
-        }
-        Content content = new Content() {
+    protected Mono<AppendResult> appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) {
+        return createMailboxIfNotExist(session, path)
+            .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(
+                MessageManager.AppendCommand.builder()
+                    .recent()
+                    .build(extractContent(mail)),
+                session)));
+    }
+
+    private Content extractContent(MimeMessage mail) {
+        return new Content() {
             @Override
             public InputStream getInputStream() throws IOException {
                 try {
@@ -105,32 +114,25 @@ public class MailboxAppenderImpl implements MailboxAppender {
                 }
             }
         };
-        return mailbox.appendMessage(
-            MessageManager.AppendCommand.builder()
-                .recent()
-                .build(content),
-            session);
     }
 
-    private MessageManager createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {
-        try {
-            return mailboxManager.getMailbox(path, session);
-        } catch (MailboxNotFoundException e) {
-            try {
-                mailboxManager.createMailbox(path, session);
-                return mailboxManager.getMailbox(path, session);
-            } catch (MailboxExistsException exist) {
-                LOGGER.info("Mailbox {} have been created concurrently", path);
-                return mailboxManager.getMailbox(path, session);
-            }
-        }
+    private Mono<MessageManager> createMailboxIfNotExist(MailboxSession session, MailboxPath path) {
+        return Mono.from(mailboxManager.getMailboxReactive(path, session))
+            .onErrorResume(MailboxNotFoundException.class, e ->
+                Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.createMailbox(path, session)).sneakyThrow())
+                    .subscribeOn(Schedulers.elastic())
+                    .then(Mono.from(mailboxManager.getMailboxReactive(path, session)))
+                    .onErrorResume(MailboxExistsException.class, e2 -> {
+                        LOGGER.info("Mailbox {} have been created concurrently", path);
+                        return Mono.from(mailboxManager.getMailboxReactive(path, session));
+                    }));
     }
 
     public MailboxSession createMailboxSession(Username user) {
         return mailboxManager.createSystemSession(user);
     }
 
-    private void closeProcessing(MailboxSession session) throws MessagingException {
+    private void closeProcessing(MailboxSession session) {
         session.close();
         try {
             mailboxManager.logout(session);

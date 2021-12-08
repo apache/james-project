@@ -21,10 +21,11 @@ package org.apache.james.transport.mailets.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -45,8 +46,12 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ArrayListMultimap;
+
+import reactor.core.publisher.Mono;
 
 class MailDispatcherTest {
     private static final String TEST_HEADER_NAME = "X-HEADER";
@@ -62,6 +67,7 @@ class MailDispatcherTest {
     public void setUp() throws Exception {
         fakeMailContext = FakeMailContext.defaultContext();
         mailStore = mock(MailStore.class);
+        when(mailStore.storeMail(any(), any())).thenReturn(Mono.empty());
     }
 
     @Test
@@ -132,7 +138,7 @@ class MailDispatcherTest {
             .mailStore(mailStore)
             .consume(true)
             .build();
-        doThrow(new MessagingException())
+        doReturn(Mono.error(new MessagingException()))
             .when(mailStore)
             .storeMail(any(MailAddress.class), any(Mail.class));
 
@@ -340,11 +346,13 @@ class MailDispatcherTest {
         }
 
         @Override
-        public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
-            String[] header = mail.getMessage().getHeader(headerName);
-            if (header != null) {
-                headerValues.put(recipient, header);
-            }
+        public Publisher<Void> storeMail(MailAddress recipient, Mail mail) {
+            return Mono.fromRunnable(Throwing.runnable(() -> {
+                String[] header = mail.getMessage().getHeader(headerName);
+                if (header != null) {
+                    headerValues.put(recipient, header);
+                }
+            }));
         }
 
         public Collection<String[]> getHeaderValues(MailAddress recipient) {

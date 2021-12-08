@@ -38,6 +38,8 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class SimpleMailStoreTest {
     public static final String FOLDER = "FOLDER";
     private SimpleMailStore testee;
@@ -48,6 +50,7 @@ class SimpleMailStoreTest {
     @BeforeEach
     void setUp() throws Exception {
         mailboxAppender = mock(MailboxAppenderImpl.class);
+        when(mailboxAppender.append(any(), any(), any())).thenReturn(Mono.empty());
         usersRepository = mock(UsersRepository.class);
         testee = SimpleMailStore.builder()
             .usersRepository(usersRepository)
