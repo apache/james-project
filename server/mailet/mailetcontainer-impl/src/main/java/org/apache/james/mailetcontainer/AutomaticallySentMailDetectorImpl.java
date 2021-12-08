@@ -26,7 +26,8 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.field.ContentTypeFieldImpl;
+import org.apache.james.mime4j.dom.field.ContentTypeField;
+import org.apache.james.mime4j.field.ContentTypeFieldLenientImpl;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
@@ -93,8 +94,8 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     @Override
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         return Optional.ofNullable(mail.getMessage().getContentType())
-            .map(field -> ContentTypeFieldImpl.PARSER.parse(new RawField("Content-Type", field), DecodeMonitor.SILENT))
-            .map(field -> field.getMimeType())
+            .map(field -> ContentTypeFieldLenientImpl.PARSER.parse(new RawField("Content-Type", field), DecodeMonitor.SILENT))
+            .map(ContentTypeField::getMimeType)
             .stream()
             .anyMatch("multipart/report"::equals);
     }
