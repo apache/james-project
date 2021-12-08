@@ -35,6 +35,12 @@ Default is 0.
 * *connectionTimeout* (optional) - an Integer for the Socket connection timeout in milliseconds. Default is 60000
 * *bounceProcessor* (optional) - a String containing the name of the mailet processor to pass messages that cannot
 be delivered to for DSN bounce processing. Default is to send a traditional message containing the bounce details.
+* *onSuccess* (optional) - if specified, this processor is called for each email successfully sent to remote third parties.
+
+When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatcherException)
+ to avoid confusing situations. Also remember that on partial delivery, both processors will be used: *onSuccess* with successfull recipients,
+ and *bounceProcessor* with failed recipients.
+
 * *startTLS* (optional) - a Boolean (true/false) indicating whether the STARTTLS command (if supported by the server)
 to switch the connection to a TLS-protected connection before issuing any login commands. Default is false.
 * *sslEnable* (optional) - a Boolean (true/false) indicating whether to use SSL to connect and use the SSL port unless
@@ -66,7 +72,6 @@ within the mailet code.<br>
 Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
 the ability to perform their own problem resolutions.
 * *debug* (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.
-* *onSuccess* (optional) - if specified, this processor is called for each email successfully sent to remote third parties.k
 
 ==== Security
 
