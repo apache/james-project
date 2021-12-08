@@ -19,7 +19,6 @@
 package org.apache.james.transport.mailets.delivery;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +37,12 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.runnable.ThrowingRunnable;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
@@ -130,30 +130,30 @@ public class MailDispatcher {
         message.setHeader(RFC2822Headers.RETURN_PATH, mail.getMaybeSender().asPrettyString());
 
         List<MailAddress> errors = deliver(mail, message);
-
         return errors;
     }
 
     private List<MailAddress> deliver(Mail mail, MimeMessage message) {
-        List<MailAddress> errors = new ArrayList<>();
-        for (MailAddress recipient : mail.getRecipients()) {
-            try {
-                Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);
-
-                addSpecificHeadersForRecipient(mail, message, recipient);
-                storeMailWithRetry(mail, recipient).subscribeOn(Schedulers.immediate()).block();
-
-                restoreHeaders(mail.getMessage(), savedHeaders);
-            } catch (Exception ex) {
-                LOGGER.error("Error while storing mail. This is a final exception.", ex);
-                errors.add(recipient);
-            }
-        }
-        return errors;
+        return Flux.fromIterable(mail.getRecipients())
+            .concatMap(recipient ->
+                Mono.using(
+                    () -> saveHeaders(mail, recipient),
+                    Throwing.function(any -> {
+                        addSpecificHeadersForRecipient(mail, message, recipient);
+                        return storeMailWithRetry(mail, recipient)
+                            .then(Mono.<MailAddress>empty());
+                    }),
+                    Throwing.consumer(savedHeaders -> restoreHeaders(mail.getMessage(), savedHeaders)))
+                    .onErrorResume(ex -> {
+                        LOGGER.error("Error while storing mail. This is a final exception.", ex);
+                        return Mono.just(recipient);
+                    }))
+            .collectList()
+            .block();
     }
 
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
-       return Mono.fromRunnable((ThrowingRunnable)() -> mailStore.storeMail(recipient, mail))
+       return Mono.from(mailStore.storeMail(recipient, mail))
            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error))
            .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
            .then();

@@ -19,13 +19,12 @@
 
 package org.apache.james.transport.mailets.delivery;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
 
 public interface MailStore {
     String DELIVERY_PATH_PREFIX = "DeliveryPath_";
 
-    void storeMail(MailAddress recipient, Mail mail) throws MessagingException;
+    Publisher<Void> storeMail(MailAddress recipient, Mail mail);
 }
