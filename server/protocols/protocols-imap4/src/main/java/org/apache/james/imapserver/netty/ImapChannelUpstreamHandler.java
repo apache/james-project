@@ -69,32 +69,34 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     private final ImapHeartbeatHandler heartbeatHandler = new ImapHeartbeatHandler();
 
-    private final boolean plainAuthDisallowed;
+    private final boolean requiredSSL;
+    private final boolean plainAuthEnabled;
 
     private final Metric imapConnectionsMetric;
     private final Metric imapCommandsMetric;
     
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      boolean plainAuthDisallowed, ImapMetrics imapMetrics) {
-        this(hello, processor, encoder, compress, plainAuthDisallowed, null, imapMetrics);
+                                      boolean requiredSSL, ImapMetrics imapMetrics, boolean plainAuthEnabled) {
+        this(hello, processor, encoder, compress, requiredSSL, null, plainAuthEnabled, imapMetrics);
     }
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      boolean plainAuthDisallowed, Encryption secure, ImapMetrics imapMetrics) {
+                                      boolean requiredSSL, Encryption secure, boolean plainAuthEnabled, ImapMetrics imapMetrics) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
         this.secure = secure;
         this.compress = compress;
-        this.plainAuthDisallowed = plainAuthDisallowed;
+        this.requiredSSL = requiredSSL;
+        this.plainAuthEnabled = plainAuthEnabled;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
     }
 
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), secure, compress, plainAuthDisallowed,
-            SessionId.generate());
+        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), secure, compress, requiredSSL,
+            plainAuthEnabled, SessionId.generate());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
         imapsession.setAttribute(MDC_KEY, boundMDC);
         attributes.set(ctx.getChannel(), imapsession);

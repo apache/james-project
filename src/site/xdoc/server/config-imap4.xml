@@ -85,6 +85,8 @@
              know what you are doing</dd>
         <dt><strong>plainAuthDisallowed</strong></dt>
         <dd>Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to true.</dd>
+        <dt><strong>auth.plainAuthEnabled</strong></dt>
+        <dd>Whether to enable Authentication PLAIN/ LOGIN command. Defaults to true.</dd>
       </dl>
 
 </section>

@@ -80,6 +80,9 @@
        <connectionLimitPerIP>0</connectionLimitPerIP>
 
         <plainAuthDisallowed>true</plainAuthDisallowed>
+        <auth>
+            <plainAuthEnabled>true</plainAuthEnabled>
+        </auth>
     </imapserver>
 
 </imapservers>
