@@ -61,7 +61,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         final String authType = request.getAuthType();
         if (authType.equalsIgnoreCase(PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
-            if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
+            if (session.isPlainAuthDisallowed()) {
                 no(request, responder, HumanReadableText.DISABLED_LOGIN);
             } else {
                 if (request instanceof IRAuthenticateRequest) {
@@ -140,7 +140,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         List<Capability> caps = new ArrayList<>();
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.
         // See IMAP-304
-        if (session.isPlainAuthDisallowed()  == false || session.isTLSActive()) {
+        if (!session.isPlainAuthDisallowed()) {
             caps.add(Capability.of("AUTH=PLAIN"));
         }
         // Support for SASL-IR. See RFC4959

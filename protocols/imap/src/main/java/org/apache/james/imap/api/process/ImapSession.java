@@ -209,10 +209,15 @@ public interface ImapSession extends CommandDetectionSession {
     boolean supportMultipleNamespaces();
     
     /**
-     * Return true if the login / authentication via plain username / password is
-     * disallowed
+     * Return true if SSL is required when Authenticating
      */
-    boolean isPlainAuthDisallowed();
+    boolean isSSLRequired();
+
+    /**
+     * Return true if the login / authentication via plain username / password is
+     * enabled
+     */
+    boolean isPlainAuthEnabled();
 
     default void setMailboxSession(MailboxSession mailboxSession) {
         setAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
@@ -226,5 +231,13 @@ public interface ImapSession extends CommandDetectionSession {
         return Optional.ofNullable(getMailboxSession())
             .map(MailboxSession::getUser)
             .orElse(null);
+    }
+
+    default boolean isPlainAuthDisallowed() {
+        return !isPlainAuthEnabled() || isAuthenticatingNonEncryptedWhenRequiredSSL();
+    }
+
+    default boolean isAuthenticatingNonEncryptedWhenRequiredSSL() {
+        return isSSLRequired() && !isTLSActive();
     }
 }

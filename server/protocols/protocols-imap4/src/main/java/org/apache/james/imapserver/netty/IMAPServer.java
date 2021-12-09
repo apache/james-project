@@ -78,6 +78,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private boolean plainAuthDisallowed;
     private int timeout;
     private int literalSizeLimit;
+    private boolean plainAuthEnabled;
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
     public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
@@ -114,6 +115,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
+        plainAuthEnabled = configuration.getBoolean("auth.plainAuthEnabled", true);
 
         processor.configure(getImapConfiguration(configuration));
     }
@@ -210,9 +212,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
         if (secure != null && secure.isStartTLS()) {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure, imapMetrics);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure, plainAuthEnabled, imapMetrics);
         } else {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics, plainAuthEnabled);
         }
         return coreHandler;
     }

@@ -49,20 +49,20 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
 
     @Override
     protected void processRequest(LoginRequest request, ImapSession session, Responder responder) {
-            // check if the login is allowed with LOGIN command. See IMAP-304
-            if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
-                no(request, responder, HumanReadableText.DISABLED_LOGIN);
-            } else {
-                doAuth(noDelegation(request.getUserid(), request.getPassword()),
-                    session, request, responder, HumanReadableText.INVALID_LOGIN);
-            }
+        // check if the login is allowed with LOGIN command. See IMAP-304
+        if (session.isPlainAuthDisallowed()) {
+            no(request, responder, HumanReadableText.DISABLED_LOGIN);
+        } else {
+            doAuth(noDelegation(request.getUserid(), request.getPassword()),
+                session, request, responder, HumanReadableText.INVALID_LOGIN);
+        }
     }
 
     @Override
     public List<Capability> getImplementedCapabilities(ImapSession session) {
         // Announce LOGINDISABLED if plain auth / login is deactivated and the session is not using
         // TLS. See IMAP-304
-        if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
+        if (session.isPlainAuthDisallowed()) {
             return LOGINDISABLED_CAPS;
         }
         return Collections.emptyList();

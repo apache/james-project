@@ -145,8 +145,13 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public boolean isPlainAuthDisallowed() {
+    public boolean isSSLRequired() {
         return false;
+    }
+
+    @Override
+    public boolean isPlainAuthEnabled() {
+        return true;
     }
 
     @Override
