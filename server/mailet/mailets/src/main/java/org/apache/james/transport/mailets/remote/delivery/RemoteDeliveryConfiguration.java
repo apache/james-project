@@ -211,31 +211,37 @@ public class RemoteDeliveryConfiguration {
     }
 
     public Properties createFinalJavaxProperties() {
-        Properties props = createFinalJavaxPropertiesNoSSL();
-        props.put("mail.smtp.ssl.enable", String.valueOf(isSSLEnable));
+        Properties props = createFinalJavaxProperties("smtp");
+        props.put("mail.smtp.ssl.enable", "false");
         return props;
     }
 
-    public Properties createFinalJavaxPropertiesNoSSL() {
+    public Properties createFinalJavaxPropertiesWithSSL() {
+        Properties props = createFinalJavaxProperties("smtps");
+        props.put("mail.smtps.ssl.enable", "true");
+        return props;
+    }
+    
+    private Properties createFinalJavaxProperties(String protocol) {
         Properties props = new Properties();
         props.put("mail.debug", "false");
         // Reactivated: javamail 1.3.2 should no more have problems with "250 OK" messages
         // (WAS "false": Prevents problems encountered with 250 OK Messages)
-        props.put("mail.smtp.ehlo", "true");
-        props.put("mail.smtp.timeout", String.valueOf(smtpTimeout));
-        props.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
-        props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));
-        props.put("mail.smtp.localhost", heloNameProvider.getHeloName());
-        props.put("mail.smtp.starttls.enable", String.valueOf(startTLS));
+        props.put("mail." + protocol + ".ehlo", "true");
+        props.put("mail." + protocol + ".timeout", String.valueOf(smtpTimeout));
+        props.put("mail." + protocol + ".connectiontimeout", String.valueOf(connectionTimeout));
+        props.put("mail." + protocol + ".sendpartial", String.valueOf(sendPartial));
+        props.put("mail." + protocol + ".localhost", heloNameProvider.getHeloName());
+        props.put("mail." + protocol + ".starttls.enable", String.valueOf(startTLS));
         if (isBindUsed()) {
             // undocumented JavaMail 1.2 feature, smtp transport will use
             // our socket factory, which will also set the local address
-            props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class);
+            props.put("mail." + protocol + ".socketFactory.class", RemoteDeliverySocketFactory.class);
             // Don't fallback to the standard socket factory on error, do throw an exception
-            props.put("mail.smtp.socketFactory.fallback", "false");
+            props.put("mail." + protocol + ".socketFactory.fallback", "false");
         }
         if (authUser != null) {
-            props.put("mail.smtp.auth", "true");
+            props.put("mail." + protocol + ".auth", "true");
         }
         props.putAll(javaxAdditionalProperties);
         return props;

@@ -67,8 +67,8 @@ public class MailDelivrerToHost {
         this.configuration = remoteDeliveryConfiguration;
         this.converter7Bit = new Converter7Bit(mailetContext);
         if (configuration.isSSLEnable()) {
-            this.smtpSession = Session.getInstance(configuration.createFinalJavaxPropertiesNoSSL());
-            this.smtpsSession = Session.getInstance(configuration.createFinalJavaxProperties());
+            this.smtpSession = Session.getInstance(configuration.createFinalJavaxProperties());
+            this.smtpsSession = Session.getInstance(configuration.createFinalJavaxPropertiesWithSSL());
         } else {
             this.smtpSession = Session.getInstance(configuration.createFinalJavaxProperties());
             this.smtpsSession = this.smtpSession;
@@ -79,7 +79,7 @@ public class MailDelivrerToHost {
         Session session = selectSession(outgoingMailServer);
         Properties props = getPropertiesForMail(mail, session);
         LOGGER.debug("Attempting delivery of {} to host {} at {} from {}",
-            mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get("mail.smtp.from"));
+            mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")));
 
         // Many of these properties are only in later JavaMail versions
         // "mail.smtp.ehlo"           //default true
@@ -90,7 +90,7 @@ public class MailDelivrerToHost {
         SMTPTransport transport = null;
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
-            transport.setLocalHost(props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()));
+            transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
@@ -98,7 +98,7 @@ public class MailDelivrerToHost {
                 transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
             LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
-                outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
+                outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
@@ -110,6 +110,14 @@ public class MailDelivrerToHost {
             return smtpsSession;
         } else {
             return smtpSession;
+        }
+    }
+
+    private String inContext(Session session, String name) {
+        if (session.getProperties().containsKey("mail.smtps.ssl.enable")) {
+            return name.replace("smtp", "smtps");
+        } else {
+            return name;
         }
     }
 
@@ -182,7 +190,7 @@ public class MailDelivrerToHost {
 
     private Properties getPropertiesForMail(Mail mail, Session session) {
         Properties props = session.getProperties();
-        props.put("mail.smtp.from", mail.getMaybeSender().asString());
+        props.put(inContext(session, "mail.smtp.from"), mail.getMaybeSender().asString());
         return props;
     }
 
