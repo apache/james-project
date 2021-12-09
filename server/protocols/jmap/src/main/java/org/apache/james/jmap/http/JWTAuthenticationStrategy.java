@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.jwt;
+package org.apache.james.jmap.http;
 
 import javax.inject.Inject;
 import javax.inject.Named;
