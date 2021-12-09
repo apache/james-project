@@ -40,6 +40,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +69,7 @@ public class DeliveryRunnableTest {
         bouncer = mock(Bouncer.class);
         mailDelivrer = mock(MailDelivrer.class);
         mailQueue = mock(MailQueue.class);
-        testee = new DeliveryRunnable(mailQueue, configuration, metricFactory, bouncer, mailDelivrer, FIXED_DATE_SUPPLIER);
+        testee = new DeliveryRunnable(mailQueue, configuration, metricFactory, bouncer, mailDelivrer, FIXED_DATE_SUPPLIER, mock(MailetContext.class));
     }
 
     @Test
