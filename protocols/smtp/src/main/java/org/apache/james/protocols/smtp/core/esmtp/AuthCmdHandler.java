@@ -168,7 +168,7 @@ public class AuthCmdHandler
                 argument = argument.substring(0,argument.indexOf(" "));
             }
             String authType = argument.toUpperCase(Locale.US);
-            if (authType.equals(AUTH_TYPE_PLAIN)) {
+            if (authType.equals(AUTH_TYPE_PLAIN) && session.getConfiguration().isPlainAuthEnabled()) {
                 String userpass;
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
@@ -182,7 +182,7 @@ public class AuthCmdHandler
                     userpass = initialResponse.trim();
                     return doPlainAuthPass(session, userpass);
                 }
-            } else if (authType.equals(AUTH_TYPE_LOGIN)) {
+            } else if (authType.equals(AUTH_TYPE_LOGIN) && session.getConfiguration().isPlainAuthEnabled()) {
                 
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
@@ -457,8 +457,6 @@ public class AuthCmdHandler
         return UNKNOWN_AUTH_TYPE;
     }
 
-
-
     @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
@@ -467,10 +465,11 @@ public class AuthCmdHandler
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         if (session.isAuthAnnounced()) {
-            return ESMTP_FEATURES;
-        } else {
-            return Collections.emptyList();
+            if (session.getConfiguration().isPlainAuthEnabled()) {
+                return ESMTP_FEATURES;
+            }
         }
+        return Collections.emptyList();
     }
 
     @Override

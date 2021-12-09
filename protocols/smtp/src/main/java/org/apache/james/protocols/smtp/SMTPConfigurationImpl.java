@@ -79,4 +79,8 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
         this.bracketsEnforcement = bracketsEnforcement;
     }
 
+    @Override
+    public boolean isPlainAuthEnabled() {
+        return true;
+    }
 }

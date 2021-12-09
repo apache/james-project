@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -203,6 +204,39 @@ class AuthAnnounceTest {
             softly.assertThat(smtpProtocol.getReplyString())
                 .doesNotContain("250-AUTH LOGIN PLAIN");
         });
+    }
+
+    @Test
+    void plainAuthShouldNotBeAnnouncedWhenDisabled() throws Exception {
+        smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-no-plain.xml")));
+        smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            softly.assertThat(smtpProtocol.getReplyString())
+                .doesNotContain("250-AUTH LOGIN PLAIN");
+        });
+    }
+
+    @Test
+    void plainAuthShouldFailWhenDisabled() throws Exception {
+        smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-no-plain.xml")));
+        smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("AUTH PLAIN");
+
+        assertThat(smtpProtocol.getReplyString())
+                .isEqualTo("504 Unrecognized Authentication Type\r\n");
     }
 
     @Test

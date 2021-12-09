@@ -86,13 +86,15 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     public static class AuthenticationConfiguration {
+
+
         public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
             return new AuthenticationConfiguration(
                 Optional.ofNullable(configuration.getString("auth.announce", null))
                     .map(AuthenticationAnnounceMode::parse)
                     .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
-                Optional.ofNullable(configuration.getBoolean("auth.requireSSL", null))
-                    .orElse(false));
+                configuration.getBoolean("auth.requireSSL", false),
+                configuration.getBoolean("auth.plainAuthEnabled", true));
         }
 
         private static AuthenticationAnnounceMode fallbackAuthenticationAnnounceMode(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -101,10 +103,12 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         private final AuthenticationAnnounceMode authenticationAnnounceMode;
         private final boolean requireSSL;
+        private final boolean plainAuthEnabled;
 
-        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL) {
+        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL, boolean plainAuthEnabled) {
             this.authenticationAnnounceMode = authenticationAnnounceMode;
             this.requireSSL = requireSSL;
+            this.plainAuthEnabled = plainAuthEnabled;
         }
 
         public AuthenticationAnnounceMode getAuthenticationAnnounceMode() {
@@ -113,6 +117,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         public boolean isRequireSSL() {
             return requireSSL;
+        }
+
+        public boolean isPlainAuthEnabled() {
+            return plainAuthEnabled;
         }
     }
 
@@ -270,6 +278,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public boolean useAddressBracketsEnforcement() {
             return SMTPServer.this.addressBracketsEnforcement;
+        }
+
+        public boolean isPlainAuthEnabled() {
+            return authenticationConfiguration.isPlainAuthEnabled();
         }
 
         @Override

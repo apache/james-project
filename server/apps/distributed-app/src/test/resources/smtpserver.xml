@@ -36,6 +36,7 @@
         <auth>
             <announce>never</announce>
             <requireSSL>false</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>0.0.0.0/0.0.0.0</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>
@@ -63,6 +64,7 @@
         <auth>
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>false</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
@@ -90,6 +92,7 @@
         <auth>
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>false</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
