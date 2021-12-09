@@ -87,6 +87,10 @@ regardless of this option.
 | This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
 channels.
 
+| auth.plainAuthEnabled
+| This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting
+can be used to enforce strong authentication mechanisms.
+
 | authorizedAddresses
 | Authorize specific addresses/networks.
 

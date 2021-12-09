@@ -39,6 +39,7 @@
     <auth>
       <announce>forUnauthorizedAddresses</announce>
       <requireSSL>false</requireSSL>
+      <plainAuthEnabled>true</plainAuthEnabled>
     </auth>
     <verifyIdentity>true</verifyIdentity>
     <maxmessagesize>0</maxmessagesize>
