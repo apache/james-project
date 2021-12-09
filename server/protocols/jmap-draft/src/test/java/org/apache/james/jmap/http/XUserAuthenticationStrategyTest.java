@@ -87,7 +87,7 @@ public class XUserAuthenticationStrategyTest {
         when(mockedHeaders.get("X-User"))
             .thenReturn("btellier"); // invalid because virtual hosting is turned on
 
-        assertThatThrownBy(() ->testee.createMailboxSession(mockedRequest).blockOptional())
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
             .isInstanceOf(UnauthorizedException.class);
     }
 
