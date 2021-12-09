@@ -29,7 +29,6 @@ import java.util.Optional;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
-import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
