@@ -35,4 +35,6 @@ public interface AuthHook extends Hook {
      * @return HockResult
      */
     HookResult doAuth(SMTPSession session, Username username, String password);
+
+    HookResult doSasl(SMTPSession session, Username claimedUser, String authToken);
 }

@@ -16,36 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.lmtp;
+package org.apache.james.jwt;
 
-import java.util.Optional;
+import java.security.PublicKey;
+import java.util.List;
 
-import org.apache.james.protocols.smtp.SASLConfiguration;
+import com.google.common.collect.ImmutableList;
 
-public class LMTPConfigurationImpl extends LMTPConfiguration {
+public class DefaultPublicKeyProvider implements PublicKeyProvider {
 
-    private long maxMessageSize = 0;    
+    private final JwtConfiguration jwtConfiguration;
+    private final PublicKeyReader reader;
 
-    public LMTPConfigurationImpl() {
-        super("JAMES Protocols LMTP Server");
-    }
-    
-    @Override
-    public long getMaxMessageSize() {
-        return maxMessageSize;
-    }
-    
-    public void setMaxMessageSize(long maxMessageSize) {
-        this.maxMessageSize = maxMessageSize;
+    public DefaultPublicKeyProvider(JwtConfiguration jwtConfiguration, PublicKeyReader reader) {
+        this.jwtConfiguration = jwtConfiguration;
+        this.reader = reader;
     }
 
     @Override
-    public boolean isPlainAuthEnabled() {
-        return false;
-    }
-
-    @Override
-    public Optional<SASLConfiguration> saslConfiguration() {
-        return Optional.empty();
+    public List<PublicKey> get() throws MissingOrInvalidKeyException {
+        ImmutableList<PublicKey> keys = jwtConfiguration.getJwtPublicKeyPem()
+            .stream()
+            .flatMap(s -> reader.fromPEM(s).stream())
+            .collect(ImmutableList.toImmutableList());
+        if (keys.size() != jwtConfiguration.getJwtPublicKeyPem().size()) {
+            throw new MissingOrInvalidKeyException();
+        }
+        return keys;
     }
 }

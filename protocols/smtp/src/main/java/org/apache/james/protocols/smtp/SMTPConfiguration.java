@@ -21,6 +21,8 @@
 
 package org.apache.james.protocols.smtp;
 
+import java.util.Optional;
+
 import org.apache.james.protocols.api.ProtocolConfiguration;
 
 
@@ -71,5 +73,7 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
     boolean useAddressBracketsEnforcement();
 
     boolean isPlainAuthEnabled();
+
+    Optional<SASLConfiguration> saslConfiguration();
 
 }

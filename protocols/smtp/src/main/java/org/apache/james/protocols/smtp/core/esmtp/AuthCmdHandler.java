@@ -30,10 +30,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -41,6 +45,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
+import org.apache.james.protocols.smtp.SASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -53,7 +58,10 @@ import org.apache.james.protocols.smtp.hook.MailParametersHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -70,7 +78,6 @@ public class AuthCmdHandler
     private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
     private static final String[] MAIL_PARAMS = { "AUTH" };
-    private static final List<String> ESMTP_FEATURES = ImmutableList.of("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN");
     
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
@@ -81,6 +88,7 @@ public class AuthCmdHandler
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
+    public static final char SASL_SEPARATOR = 1;
 
     private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
@@ -130,6 +138,7 @@ public class AuthCmdHandler
      * The text string for the SMTP AUTH type LOGIN.
      */
     protected static final String AUTH_TYPE_LOGIN = "LOGIN";
+    protected static final String AUTH_TYPE_OAUTHBEARER = "OAUTHBEARER";
 
     /**
      * The AuthHooks
@@ -196,10 +205,78 @@ public class AuthCmdHandler
                     String user = initialResponse.trim();
                     return doLoginAuthPass(session, user);
                 }
+            } else if (authType.equals(AUTH_TYPE_OAUTHBEARER)) {
+                return doSASLAuthentication(session, initialResponse);
             } else {
                 return doUnknownAuth(session, authType, initialResponse);
             }
         }
+    }
+
+    private Response doSASLAuthentication(SMTPSession session, String initialResponse) {
+        if (session.getConfiguration().saslConfiguration().isEmpty()) {
+            return doUnknownAuth(session, AUTH_TYPE_OAUTHBEARER, initialResponse);
+        }
+        SASLConfiguration saslConfiguration = session.getConfiguration().saslConfiguration().get();
+        if (initialResponse == null) {
+            return AUTH_ABORTED;
+        }
+        String decodedPayload = decodeBase64(initialResponse);
+        if (!decodedPayload.startsWith("n,")) {
+            return AUTH_ABORTED;
+        }
+        List<String> parts = Splitter.on(SASL_SEPARATOR).splitToList(decodedPayload);
+        if (parts.size() == 3 && parts.get(2).isEmpty()) {
+            Map<String, String> part1 = parseSASLPart(parts.get(0));
+            Map<String, String> part2 = parseSASLPart(parts.get(1));
+
+            String authToken = part2.get("auth");
+            String user = part1.get("user");
+
+            if (authToken.isEmpty()) {
+                return failSasl(saslConfiguration, session);
+            } else {
+                return hooks.stream()
+                    .flatMap(hook -> Optional.ofNullable(executeHook(session, hook,
+                        hook2 -> hook2.doSasl(session, Username.of(user), authToken))).stream())
+                    .filter(response -> !SMTPRetCode.AUTH_FAILED.equals(response.getRetCode()))
+                    .findFirst()
+                    .orElseGet(() -> failSasl(saslConfiguration, session));
+            }
+        } else {
+            return failSasl(saslConfiguration, session);
+        }
+    }
+
+    private Response failSasl(SASLConfiguration saslConfiguration, SMTPSession session) {
+        String rawResponse = String.format("{\"status\":\"invalid_token\",\"scope\":\"%s\",\"openid-configuration\":\"%s\"}",
+            saslConfiguration.getScope(),
+            saslConfiguration.getOidcSessionURL().toString());
+
+        session.pushLineHandler(new AbstractSMTPLineHandler() {
+            @Override
+            protected Response onCommand(SMTPSession session, String l) {
+                session.popLineHandler();
+
+                return AUTH_FAILED;
+            }
+        });
+        return new SMTPResponse("534", Base64.getEncoder().encodeToString(rawResponse.getBytes()));
+    }
+
+    private Map<String, String> parseSASLPart(String part) {
+        return Splitter.on(',')
+            .splitToList(part)
+            .stream()
+            .filter(s -> s.contains("="))
+            .flatMap(s -> {
+                int i = s.indexOf('=');
+                if (i == 0 || i == s.length() - 1) {
+                    return Stream.empty();
+                }
+                return Stream.of(Pair.of(s.substring(0, i), s.substring(i + 1)));
+            })
+            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
     /**
@@ -347,20 +424,7 @@ public class AuthCmdHandler
         
         if (hooks != null) {
             for (AuthHook rawHook : hooks) {
-                LOGGER.debug("executing  hook {}", rawHook);
-
-                long start = System.currentTimeMillis();
-                HookResult hRes = rawHook.doAuth(session, username, pass);
-                long executionTime = System.currentTimeMillis() - start;
-
-                if (rHooks != null) {
-                    for (HookResultHook rHook : rHooks) {
-                        LOGGER.debug("executing  hook {}", rHook);
-                        hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
-                    }
-                }
-
-                res = calcDefaultSMTPResponse(hRes);
+                res = executeHook(session, rawHook, hook -> hook.doAuth(session, username, pass));
 
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
@@ -379,6 +443,22 @@ public class AuthCmdHandler
         return res;
     }
 
+    private Response executeHook(SMTPSession session, AuthHook rawHook, Function<AuthHook, HookResult> tc) {
+        LOGGER.debug("executing  hook {}", rawHook);
+
+        long start = System.currentTimeMillis();
+        HookResult hRes = tc.apply(rawHook);
+        long executionTime = System.currentTimeMillis() - start;
+
+        HookResult finalHookResult = Optional.ofNullable(rHooks)
+                .orElse(ImmutableList.of()).stream()
+                .peek(rHook -> LOGGER.debug("executing  hook {}", rHook))
+                .reduce(hRes, (a, b) -> b.onHookResult(session, a, executionTime, rawHook), (a, b) -> {
+                    throw new UnsupportedOperationException();
+                });
+
+        return calcDefaultSMTPResponse(finalHookResult);
+    }
 
     /**
      * Calculate the SMTPResponse for the given result
@@ -465,9 +545,19 @@ public class AuthCmdHandler
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         if (session.isAuthAnnounced()) {
+            ImmutableList.Builder<String> authTypesBuilder = ImmutableList.builder();
             if (session.getConfiguration().isPlainAuthEnabled()) {
-                return ESMTP_FEATURES;
+                authTypesBuilder.add(AUTH_TYPE_LOGIN, AUTH_TYPE_PLAIN);
             }
+            if (session.getConfiguration().saslConfiguration().isPresent()) {
+                authTypesBuilder.add(AUTH_TYPE_OAUTHBEARER);
+            }
+            ImmutableList<String> authTypes = authTypesBuilder.build();
+            if (authTypes.isEmpty()) {
+                return Collections.emptyList();
+            }
+            final String joined = Joiner.on(' ').join(authTypes);
+            return ImmutableList.of("AUTH " + joined, "AUTH=" + joined);
         }
         return Collections.emptyList();
     }

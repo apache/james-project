@@ -16,36 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.lmtp;
 
-import java.util.Optional;
+package org.apache.james.protocols.smtp;
 
-import org.apache.james.protocols.smtp.SASLConfiguration;
+import java.net.URL;
 
-public class LMTPConfigurationImpl extends LMTPConfiguration {
+// TODO enable reuse via IMAP
+// TODO rename to OidcSASLConfiguration ?
+public class SASLConfiguration {
+    // TODO move here the code to parse this
+    private final URL jwkURL;
+    private final URL oidcSessionURL;
+    private final String claim;
+    private final String scope;
 
-    private long maxMessageSize = 0;    
-
-    public LMTPConfigurationImpl() {
-        super("JAMES Protocols LMTP Server");
-    }
-    
-    @Override
-    public long getMaxMessageSize() {
-        return maxMessageSize;
-    }
-    
-    public void setMaxMessageSize(long maxMessageSize) {
-        this.maxMessageSize = maxMessageSize;
+    public SASLConfiguration(URL jwkURL, URL oidcSessionURL, String claim, String scope) {
+        this.jwkURL = jwkURL;
+        this.oidcSessionURL = oidcSessionURL;
+        this.claim = claim;
+        this.scope = scope;
     }
 
-    @Override
-    public boolean isPlainAuthEnabled() {
-        return false;
+    public URL getJwkURL() {
+        return jwkURL;
     }
 
-    @Override
-    public Optional<SASLConfiguration> saslConfiguration() {
-        return Optional.empty();
+    public URL getOidcSessionURL() {
+        return oidcSessionURL;
+    }
+
+    public String getClaim() {
+        return claim;
+    }
+
+    public String getScope() {
+        return scope;
     }
 }

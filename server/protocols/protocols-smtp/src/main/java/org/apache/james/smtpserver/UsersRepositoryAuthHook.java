@@ -18,9 +18,13 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jwt.JwtTokenVerifier;
+import org.apache.james.protocols.smtp.SASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -29,6 +33,12 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.auth0.jwk.InvalidPublicKeyException;
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.UrlJwkProvider;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This Auth hook can be used to authenticate against the james user repository
@@ -58,5 +68,40 @@ public class UsersRepositoryAuthHook implements AuthHook {
             LOGGER.info("Unable to access UsersRepository", e);
         }
         return HookResult.DECLINED;
+    }
+
+    @Override
+    public HookResult doSasl(SMTPSession session, Username claimedUser, String authToken) {
+        SASLConfiguration saslConfiguration = session.getConfiguration().saslConfiguration().get();
+        try {
+            // TODO Move Jwk -> Jwt logic to james-server-jwt ? Idem for the jwk mvn dependency...
+            Jwk jwk = new UrlJwkProvider(saslConfiguration.getJwkURL()).get("realm-public-key");
+            JwtTokenVerifier jwtTokenVerifier = new JwtTokenVerifier(() -> {
+                try {
+                    return ImmutableList.of(jwk.getPublicKey());
+                } catch (InvalidPublicKeyException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            Optional<String> claim = jwtTokenVerifier.verifyAndExtractClaim(authToken, saslConfiguration.getClaim(), String.class);
+
+            Optional<String> authenticatedUser = claim.filter(claimedUser.asString()::equals);
+            if (authenticatedUser.isEmpty()) {
+                return HookResult.DECLINED;
+            }
+            try {
+                users.assertValid(claimedUser);
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.ok())
+                    .smtpDescription("Authentication Successful")
+                    .build();
+            } catch (UsersRepositoryException e) {
+                LOGGER.warn("Invalid username", e);
+                return HookResult.DECLINED;
+            }
+        } catch (JwkException e) {
+            LOGGER.error("Error calling JWK", e);
+            return HookResult.DECLINED;
+        }
     }
 }

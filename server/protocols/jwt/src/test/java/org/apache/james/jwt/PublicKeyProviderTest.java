@@ -19,7 +19,6 @@
 package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.Security;
 import java.security.interfaces.RSAPublicKey;
@@ -51,7 +50,7 @@ class PublicKeyProviderTest {
     void getShouldNotThrowWhenPEMKeyProvided() {
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY));
 
-        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+        PublicKeyProvider sut = new DefaultPublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
         assertThat(sut.get()).allSatisfy(key -> assertThat(key).isInstanceOf(RSAPublicKey.class));
     }
@@ -60,7 +59,7 @@ class PublicKeyProviderTest {
     void getShouldNotThrowWhenPEMKeyNotProvided() {
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of());
 
-        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+        PublicKeyProvider sut = new DefaultPublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
         assertThat(sut.get()).isEmpty();
     }

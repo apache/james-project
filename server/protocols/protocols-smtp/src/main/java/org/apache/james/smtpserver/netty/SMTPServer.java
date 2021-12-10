@@ -21,6 +21,8 @@ package org.apache.james.smtpserver.netty;
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.ALWAYS;
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.NEVER;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -38,6 +40,7 @@ import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.smtp.SASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
@@ -47,6 +50,9 @@ import org.apache.james.util.Size;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * NIO SMTPServer which use Netty
@@ -86,17 +92,42 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     public static class AuthenticationConfiguration {
-
-
         public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
             return new AuthenticationConfiguration(
                 Optional.ofNullable(configuration.getString("auth.announce", null))
                     .map(AuthenticationAnnounceMode::parse)
                     .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
-            Optional.ofNullable(configuration.getBoolean("auth.requireSSL", null))
-                .orElse(false),
+                Optional.ofNullable(configuration.getBoolean("auth.requireSSL", null))
+                    .orElse(false),
                 Optional.ofNullable(configuration.getBoolean("auth.plainAuthEnabled", null))
-                    .orElse(true));
+                    .orElse(true),
+                parseSASLConfigurationInAuthTag(configuration));
+        }
+
+        private static Optional<SASLConfiguration> parseSASLConfigurationInAuthTag(HierarchicalConfiguration<ImmutableNode> configuration) {
+            boolean haveOidcProperties = ImmutableList.copyOf(configuration.getKeys()).stream().anyMatch(key -> key.startsWith("auth.oidc"));
+            if (haveOidcProperties) {
+                return Optional.of(parseSASLConfigurationInOidcTag(configuration.configurationAt("auth").configurationAt("oidc")));
+            }
+            return Optional.empty();
+        }
+
+        private static SASLConfiguration parseSASLConfigurationInOidcTag(HierarchicalConfiguration<ImmutableNode> oidcConfiguration) {
+            String jwkUrl = oidcConfiguration.getString("jwkUrl", null);
+            String openIdConfigurationUrl = oidcConfiguration.getString("openIdConfigurationUrl", null);
+            String claim = oidcConfiguration.getString("claim", null);
+            String scope = oidcConfiguration.getString("scope", null);
+
+            Preconditions.checkArgument(jwkUrl != null, "'auth.oidc.jwkUrl' property need to be specified inside the oidc tag");
+            Preconditions.checkArgument(openIdConfigurationUrl != null, "'auth.oidc.openIdConfigurationUrl' property need to be specified inside the oidc tag");
+            Preconditions.checkArgument(claim != null, "'auth.oidc.claim' property need to be specified inside the oidc tag");
+            Preconditions.checkArgument(scope != null, "'auth.oidc.scope' property need to be specified inside the oidc tag");
+
+            try {
+                return new SASLConfiguration(new URL(jwkUrl), new URL(openIdConfigurationUrl), claim, scope);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         private static AuthenticationAnnounceMode fallbackAuthenticationAnnounceMode(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -106,11 +137,13 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         private final AuthenticationAnnounceMode authenticationAnnounceMode;
         private final boolean requireSSL;
         private final boolean plainAuthEnabled;
+        private final Optional<SASLConfiguration> saslConfiguration;
 
-        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL, boolean plainAuthEnabled) {
+        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL, boolean plainAuthEnabled, Optional<SASLConfiguration> saslConfiguration) {
             this.authenticationAnnounceMode = authenticationAnnounceMode;
             this.requireSSL = requireSSL;
             this.plainAuthEnabled = plainAuthEnabled;
+            this.saslConfiguration = saslConfiguration;
         }
 
         public AuthenticationAnnounceMode getAuthenticationAnnounceMode() {
@@ -123,6 +156,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         public boolean isPlainAuthEnabled() {
             return plainAuthEnabled;
+        }
+
+        public Optional<SASLConfiguration> getSaslConfiguration() {
+            return saslConfiguration;
         }
     }
 
@@ -320,6 +357,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return "JAMES SMTP Server ";
         }
 
+        @Override
+        public Optional<SASLConfiguration> saslConfiguration() {
+            return authenticationConfiguration.getSaslConfiguration();
+        }
     }
 
     @Override

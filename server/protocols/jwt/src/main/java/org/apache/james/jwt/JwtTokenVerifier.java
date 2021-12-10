@@ -38,7 +38,7 @@ public class JwtTokenVerifier {
     }
 
     public static JwtTokenVerifier create(JwtConfiguration jwtConfiguration) {
-        PublicKeyProvider publicKeyProvider = new PublicKeyProvider(jwtConfiguration, new PublicKeyReader());
+        DefaultPublicKeyProvider publicKeyProvider = new DefaultPublicKeyProvider(jwtConfiguration, new PublicKeyReader());
         return new JwtTokenVerifier(publicKeyProvider);
     }
 

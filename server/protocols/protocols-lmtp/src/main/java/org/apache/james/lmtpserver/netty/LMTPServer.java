@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.lmtpserver.netty;
 
+import java.util.Optional;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -29,6 +31,7 @@ import org.apache.james.protocols.lmtp.LMTPConfiguration;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
+import org.apache.james.protocols.smtp.SASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -107,6 +110,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         @Override
         public boolean isPlainAuthEnabled() {
             return false;
+        }
+
+        @Override
+        public Optional<SASLConfiguration> saslConfiguration() {
+            return Optional.empty();
         }
     }
 
