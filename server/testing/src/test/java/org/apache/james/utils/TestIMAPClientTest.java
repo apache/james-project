@@ -21,11 +21,11 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.utils.TestIMAPClient.Utf8IMAPClient;
+import org.apache.james.utils.TestIMAPClient.Utf8IMAPSClient;
 import org.junit.jupiter.api.Test;
 
 class TestIMAPClientTest {
-    static final Utf8IMAPClient NULL_IMAP_CLIENT = null;
+    static final Utf8IMAPSClient NULL_IMAP_CLIENT = null;
     TestIMAPClient testee = new TestIMAPClient(NULL_IMAP_CLIENT);
 
     @Test
