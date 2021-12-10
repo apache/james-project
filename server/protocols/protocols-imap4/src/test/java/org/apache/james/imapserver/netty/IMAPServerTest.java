@@ -532,7 +532,7 @@ class IMAPServerTest {
         }
 
         @Test
-        void loginShouldFailOnUnEncryptedChannel() {
+        void loginShouldSucceedOnUnEncryptedChannel() {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS))
@@ -540,7 +540,7 @@ class IMAPServerTest {
         }
 
         @Test
-        void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
+        void capabilityShouldAdvertiseLoginOnUnEncryptedChannel() throws Exception {
             testIMAPClient.connect("127.0.0.1", port);
 
             assertThat(testIMAPClient.capability())
