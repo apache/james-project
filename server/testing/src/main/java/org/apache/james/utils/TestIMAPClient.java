@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.commons.net.imap.IMAPClient;
+import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.io.CRLFLineReader;
 import org.apache.james.core.Username;
 import org.assertj.core.api.Assertions;
@@ -43,9 +43,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class TestIMAPClient extends ExternalResource implements Closeable, AfterEachCallback {
+    private static final Pattern EXAMINE_EXISTS = Pattern.compile("^\\* (\\d+) EXISTS$");
+    private static final int MESSAGE_NUMBER_MATCHING_GROUP = 1;
+    public static final String INBOX = "INBOX";
 
-    public static class Utf8IMAPClient extends IMAPClient {
-        private static String UTF8_ENCODING = "UTF-8";
+    public static class Utf8IMAPSClient extends AuthenticatingIMAPClient {
+        private static final String UTF8_ENCODING = "UTF-8";
 
         @Override
         protected void _connectAction_() throws IOException {
@@ -55,20 +58,15 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         }
     }
 
-    private static final Pattern EXAMINE_EXISTS = Pattern.compile("^\\* (\\d+) EXISTS$");
-    private static final int MESSAGE_NUMBER_MATCHING_GROUP = 1;
-    public static final String INBOX = "INBOX";
-
-    private final Utf8IMAPClient imapClient;
-
+    private final Utf8IMAPSClient imapClient;
 
     @VisibleForTesting
-    TestIMAPClient(Utf8IMAPClient imapClient) {
+    TestIMAPClient(Utf8IMAPSClient imapClient) {
         this.imapClient = imapClient;
     }
 
     public TestIMAPClient() {
-        this(new Utf8IMAPClient());
+        this(new Utf8IMAPSClient());
     }
 
     public TestIMAPClient connect(String host, int port) throws IOException {
@@ -90,6 +88,14 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         final boolean login = imapClient.login(user, password);
         if (!login) {
             throw new IOException("Login failed");
+        }
+        return this;
+    }
+
+    public TestIMAPClient authenticatePlain(String user, String password) throws Exception {
+        final boolean authenticatePlain = imapClient.authenticate(AuthenticatingIMAPClient.AUTH_METHOD.PLAIN, user, password);
+        if (!authenticatePlain) {
+            throw new Exception("Login failed");
         }
         return this;
     }
