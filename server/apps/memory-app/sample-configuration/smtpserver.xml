@@ -87,6 +87,12 @@
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
+            <oidc>
+                <openIdConfigurationUrl>https://auth.upn.integration-open-paas.org/auth/realms/upn/.well-known/openid-configuration</openIdConfigurationUrl>
+                <jwkUrl>https://auth.upn.integration-open-paas.org/auth/realms/upn/protocol/openid-connect/certs</jwkUrl>
+                <claim>email</claim>
+                <scope>openid profile email</scope>
+            </oidc>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->

@@ -226,12 +226,15 @@ public class AuthCmdHandler
             return AUTH_ABORTED;
         }
         List<String> parts = Splitter.on(SASL_SEPARATOR).splitToList(decodedPayload);
-        if (parts.size() == 3 && parts.get(2).isEmpty()) {
+        if (parts.size() == 4 && parts.get(2).isEmpty() && parts.get(3).isEmpty()) {
             Map<String, String> part1 = parseSASLPart(parts.get(0));
             Map<String, String> part2 = parseSASLPart(parts.get(1));
 
             String authToken = part2.get("auth");
             String user = part1.get("user");
+
+            System.out.println("user " + user);
+            System.out.println("authToken " + authToken);
 
             if (authToken.isEmpty()) {
                 return failSasl(saslConfiguration, session);
@@ -244,6 +247,7 @@ public class AuthCmdHandler
                     .orElseGet(() -> failSasl(saslConfiguration, session));
             }
         } else {
+            System.out.println("Bad: part size " + parts.size() + " / '" + parts.get(2) + "'" + " / '" + parts.get(3) + "'");
             return failSasl(saslConfiguration, session);
         }
     }

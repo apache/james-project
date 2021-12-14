@@ -55,9 +55,9 @@
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-TLS</jmxName>
-        <bind>0.0.0.0:0</bind>
+        <bind>0.0.0.0:465</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="false">
+        <tls socketTLS="true" startTLS="false">
             <keystore>file://conf/keystore</keystore>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
@@ -73,6 +73,17 @@
         {{#hasAuthorizedAddresses}}
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
         {{/hasAuthorizedAddresses}}
+        <auth>
+            <announce>always</announce>
+            <requireSSL>true</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
+            <oidc>
+                <openIdConfigurationUrl>https://auth.upn.integration-open-paas.org/auth/realms/upn/.well-known/openid-configuration</openIdConfigurationUrl>
+                <jwkUrl>https://auth.upn.integration-open-paas.org/auth/realms/upn/protocol/openid-connect/certs</jwkUrl>
+                <claim>email</claim>
+                <scope>openid profile email</scope>
+            </oidc>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>{{maxmessagesize}}</maxmessagesize>

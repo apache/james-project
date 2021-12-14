@@ -74,8 +74,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     public HookResult doSasl(SMTPSession session, Username claimedUser, String authToken) {
         SASLConfiguration saslConfiguration = session.getConfiguration().saslConfiguration().get();
         try {
-            // TODO Move Jwk -> Jwt logic to james-server-jwt ? Idem for the jwk mvn dependency...
-            Jwk jwk = new UrlJwkProvider(saslConfiguration.getJwkURL()).get("realm-public-key");
+            Jwk jwk = new UrlJwkProvider(saslConfiguration.getJwkURL()).get(null);
             JwtTokenVerifier jwtTokenVerifier = new JwtTokenVerifier(() -> {
                 try {
                     return ImmutableList.of(jwk.getPublicKey());

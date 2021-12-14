@@ -26,22 +26,35 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.IntSummaryStatistics;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
 class ConcurrentTestRunnerTest {
     private static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
     private static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
+
+    @Test
+    void t() {
+        char del = 1;
+        String bearer = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ1RXNWV3hOckQxU3BJWUxZQzU5bWN0Q19ESHM1aFFfN0N1Tkd3YjJSWkVBIn0.eyJleHAiOjE2Mzk0NjI1NzQsImlhdCI6MTYzOTQ1ODk3NCwiYXV0aF90aW1lIjoxNjM5NDU4OTcyLCJqdGkiOiIxZGFkZjdhMC0zZjQ5LTQ2N2EtYTRhNS03NjMzMjI1ODliN2QiLCJpc3MiOiJodHRwczovL2F1dGgudXBuLmludGVncmF0aW9uLW9wZW4tcGFhcy5vcmcvYXV0aC9yZWFsbXMvdXBuIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjIzZTBlZjg3LTZhYTMtNDdkYS1hY2NiLTI5YzU4OGQyYzFkOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im9wZW5wYWFzIiwic2Vzc2lvbl9zdGF0ZSI6IjQ0MTEwMTViLWE2OTktN…N1cm5hbWUxNCIsImdpdmVuX25hbWUiOiJGaXJzdG5hbWUxNCIsImZhbWlseV9uYW1lIjoiU3VybmFtZTE0IiwiZW1haWwiOiJmaXJzdG5hbWUxNC5zdXJuYW1lMTRAdXBuLmludGVncmF0aW9uLW9wZW4tcGFhcy5vcmcifQ.PeyWpHRR5U1Rm5x-b5PLHzq2CzeLdSRxt-nXz_2oA_FwcFFapWVQgmOOPXAiUHwZDMvwqg5ZpoNLvmXChocJn9VNzBxzKLPjhkwhVv4mATm2T31phg9A-_cGRr-J6ez90ooH_PaVJujxwDZwW4b3HY3ijmcjWxF6e1Nd9OJTnSJUc6Il34D4HQQv_SZT-7XQOYs1B4EQW1JvzXiRqEAXUiBheu37rwAZJO1sy3pqTzv_WYoSEpoD16yeV-KaHVe_XcfOreI70waf-_hm9Jr6oj-W_XgyCD8fE3w8FeUeV7tkGoBTzu8TouB_Cgu_Hiy4-hpXuCt4Cm0WglPdDDVdgw";
+        System.out.println(Base64.getEncoder()
+            .encodeToString(ImmutableList.of("n,user=firstname14.surname14@upn.integration-open-paas.org",
+                "auth=" + bearer, "", "").stream().collect(Collectors.joining("" + del)).getBytes()));
+    }
 
     @Test
     void constructorShouldThrowOnNegativeThreadCount() {
