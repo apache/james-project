@@ -30,15 +30,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
+import org.apache.james.protocols.api.OIDCSASLParser;
+import org.apache.james.protocols.api.OIDCSASLParser.OIDCInitialResponse;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -59,9 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -88,7 +85,6 @@ public class AuthCmdHandler
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
-    public static final char SASL_SEPARATOR = 1;
 
     private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
@@ -213,42 +209,28 @@ public class AuthCmdHandler
         }
     }
 
-    private Response doSASLAuthentication(SMTPSession session, String initialResponse) {
+    private Response doSASLAuthentication(SMTPSession session, String initialResponseString) {
         if (session.getConfiguration().saslConfiguration().isEmpty()) {
-            return doUnknownAuth(session, AUTH_TYPE_OAUTHBEARER, initialResponse);
+            return doUnknownAuth(session, AUTH_TYPE_OAUTHBEARER, initialResponseString);
         }
         SASLConfiguration saslConfiguration = session.getConfiguration().saslConfiguration().get();
-        if (initialResponse == null) {
+        if (initialResponseString == null) {
             return AUTH_ABORTED;
         }
-        String decodedPayload = decodeBase64(initialResponse);
-        if (!decodedPayload.startsWith("n,")) {
-            return AUTH_ABORTED;
-        }
-        List<String> parts = Splitter.on(SASL_SEPARATOR).splitToList(decodedPayload);
-        if (parts.size() == 4 && parts.get(2).isEmpty() && parts.get(3).isEmpty()) {
-            Map<String, String> part1 = parseSASLPart(parts.get(0));
-            Map<String, String> part2 = parseSASLPart(parts.get(1));
-
-            String authToken = part2.get("auth");
-            String user = part1.get("user");
-
-            System.out.println("user " + user);
-            System.out.println("authToken " + authToken);
-
-            if (authToken.isEmpty()) {
-                return failSasl(saslConfiguration, session);
-            } else {
-                return hooks.stream()
-                    .flatMap(hook -> Optional.ofNullable(executeHook(session, hook,
-                        hook2 -> hook2.doSasl(session, Username.of(user), authToken))).stream())
-                    .filter(response -> !SMTPRetCode.AUTH_FAILED.equals(response.getRetCode()))
-                    .findFirst()
-                    .orElseGet(() -> failSasl(saslConfiguration, session));
-            }
-        } else {
-            System.out.println("Bad: part size " + parts.size() + " / '" + parts.get(2) + "'" + " / '" + parts.get(3) + "'");
+        Optional<OIDCInitialResponse> maybeInitialResponse = OIDCSASLParser.parse(initialResponseString);
+        if (maybeInitialResponse.isEmpty()) {
             return failSasl(saslConfiguration, session);
+        }
+        OIDCInitialResponse oidcInitialResponse = maybeInitialResponse.get();
+        if (oidcInitialResponse.getToken().isEmpty()) {
+            return failSasl(saslConfiguration, session);
+        } else {
+            return hooks.stream()
+                .flatMap(hook -> Optional.ofNullable(executeHook(session, hook,
+                    hook2 -> hook2.doSasl(session, Username.of(oidcInitialResponse.getUser()), oidcInitialResponse.getToken()))).stream())
+                .filter(response -> !SMTPRetCode.AUTH_FAILED.equals(response.getRetCode()))
+                .findFirst()
+                .orElseGet(() -> failSasl(saslConfiguration, session));
         }
     }
 
@@ -266,21 +248,6 @@ public class AuthCmdHandler
             }
         });
         return new SMTPResponse("534", Base64.getEncoder().encodeToString(rawResponse.getBytes()));
-    }
-
-    private Map<String, String> parseSASLPart(String part) {
-        return Splitter.on(',')
-            .splitToList(part)
-            .stream()
-            .filter(s -> s.contains("="))
-            .flatMap(s -> {
-                int i = s.indexOf('=');
-                if (i == 0 || i == s.length() - 1) {
-                    return Stream.empty();
-                }
-                return Stream.of(Pair.of(s.substring(0, i), s.substring(i + 1)));
-            })
-            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
     /**
