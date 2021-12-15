@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.security.PublicKey;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -38,6 +39,7 @@ import com.auth0.jwk.InvalidPublicKeyException;
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.UrlJwkProvider;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -74,14 +76,12 @@ public class UsersRepositoryAuthHook implements AuthHook {
     public HookResult doSasl(SMTPSession session, Username claimedUser, String authToken) {
         SASLConfiguration saslConfiguration = session.getConfiguration().saslConfiguration().get();
         try {
-            Jwk jwk = new UrlJwkProvider(saslConfiguration.getJwkURL()).get(null);
-            JwtTokenVerifier jwtTokenVerifier = new JwtTokenVerifier(() -> {
-                try {
-                    return ImmutableList.of(jwk.getPublicKey());
-                } catch (InvalidPublicKeyException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            ImmutableList<PublicKey> keys = new UrlJwkProvider(saslConfiguration.getJwkURL())
+                .getAll()
+                .stream()
+                .map(Throwing.function(Jwk::getPublicKey))
+                .collect(ImmutableList.toImmutableList());
+            JwtTokenVerifier jwtTokenVerifier = new JwtTokenVerifier(() -> keys);
             Optional<String> claim = jwtTokenVerifier.verifyAndExtractClaim(authToken, saslConfiguration.getClaim(), String.class);
 
             Optional<String> authenticatedUser = claim.filter(claimedUser.asString()::equals);
