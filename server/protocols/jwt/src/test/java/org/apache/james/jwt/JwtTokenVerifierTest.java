@@ -78,7 +78,7 @@ class JwtTokenVerifierTest {
 
     @BeforeEach
     void setup() {
-        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)), new PublicKeyReader());
+        DefaultPublicKeyProvider pubKeyProvider = new DefaultPublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)), new PublicKeyReader());
         sut = new JwtTokenVerifier(pubKeyProvider);
     }
 
@@ -123,7 +123,7 @@ class JwtTokenVerifierTest {
 
     @Test
     void shouldReturnTrueOnValidSignatureWithMultipleKeys() {
-        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
+        DefaultPublicKeyProvider pubKeyProvider = new DefaultPublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
         JwtTokenVerifier sut = new JwtTokenVerifier(pubKeyProvider);
         assertThat(sut.verifyAndExtractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isPresent();
     }
@@ -143,7 +143,7 @@ class JwtTokenVerifierTest {
                 "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
                 "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
 
-        PublicKeyProvider pubKeyProvider = new PublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
+        DefaultPublicKeyProvider pubKeyProvider = new DefaultPublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_2, PUBLIC_PEM_KEY)), new PublicKeyReader());
         JwtTokenVerifier sut = new JwtTokenVerifier(pubKeyProvider);
 
         assertThat(sut.verifyAndExtractLogin(invalidToken)).isEmpty();
