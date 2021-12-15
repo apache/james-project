@@ -44,10 +44,14 @@ Defaults to 10MB. Must be a positive integer, optionally with a unit: B, K, M, G
 Defaults to 0 (unlimited). Must be a positive integer, optionally with a unit: B, K, M, G.
 
 | plainAuthDisallowed
-| Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to `true`.
+|  Deprecated. Should use `auth.plainAuthEnabled`, `auth.requireSSL` instead.
+Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to `true`.
 
 | auth.plainAuthEnabled
 | Whether to enable Authentication PLAIN/ LOGIN command. Defaults to `true`.
+
+| auth.requireSSL
+| true or false. Defaults to `true`. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.
 
 | timeout
 | Default to 30 minutes. After this time, inactive channels that have not performed read, write, or both operation for a while
