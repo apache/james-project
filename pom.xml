@@ -617,6 +617,7 @@
         <jackson.version>2.12.4</jackson.version>
         <feign.version>11.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
+        <jjwt.version>0.11.2</jjwt.version>
         <metrics.version>4.2.3</metrics.version>
         <testcontainers.version>1.15.3</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
@@ -817,7 +818,7 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-	    <dependency>
+            <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
                 <version>${project.version}</version>
@@ -2276,8 +2277,20 @@
             </dependency>
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt</artifactId>
-                <version>0.9.1</version>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
