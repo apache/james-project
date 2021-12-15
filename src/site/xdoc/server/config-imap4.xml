@@ -84,9 +84,11 @@
         <dd>This loads the core CommandHandlers. Only remove this if you really 
              know what you are doing</dd>
         <dt><strong>plainAuthDisallowed</strong></dt>
-        <dd>Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to true.</dd>
+        <dd>Deprecated. Should use `auth.plainAuthEnabled`, `auth.requireSSL` instead. Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to true.</dd>
         <dt><strong>auth.plainAuthEnabled</strong></dt>
         <dd>Whether to enable Authentication PLAIN/ LOGIN command. Defaults to true.</dd>
+        <dt><strong>auth.requireSSL</strong></dt>
+        <dd>true or false. Defaults to true. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.</dd>
       </dl>
 
 </section>
