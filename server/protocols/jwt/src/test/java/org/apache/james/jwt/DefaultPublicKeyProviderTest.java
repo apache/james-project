@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-class PublicKeyProviderTest {
+class DefaultPublicKeyProviderTest {
 
     private static final String PUBLIC_PEM_KEY = "-----BEGIN PUBLIC KEY-----\n" +
             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
@@ -51,7 +51,7 @@ class PublicKeyProviderTest {
     void getShouldNotThrowWhenPEMKeyProvided() {
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY));
 
-        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+        PublicKeyProvider sut = new DefaultPublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
         assertThat(sut.get()).allSatisfy(key -> assertThat(key).isInstanceOf(RSAPublicKey.class));
     }
@@ -60,7 +60,7 @@ class PublicKeyProviderTest {
     void getShouldNotThrowWhenPEMKeyNotProvided() {
         JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of());
 
-        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+        PublicKeyProvider sut = new DefaultPublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
         assertThat(sut.get()).isEmpty();
     }

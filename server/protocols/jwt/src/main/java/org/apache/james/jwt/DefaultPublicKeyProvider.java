@@ -16,12 +16,33 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.jwt;
 
 import java.security.PublicKey;
 import java.util.List;
 
-public interface PublicKeyProvider {
-    List<PublicKey> get() throws MissingOrInvalidKeyException;
+import com.google.common.collect.ImmutableList;
+
+public class DefaultPublicKeyProvider implements PublicKeyProvider {
+
+    private final JwtConfiguration jwtConfiguration;
+    private final PublicKeyReader reader;
+
+    public DefaultPublicKeyProvider(JwtConfiguration jwtConfiguration, PublicKeyReader reader) {
+        this.jwtConfiguration = jwtConfiguration;
+        this.reader = reader;
+    }
+
+    @Override
+    public List<PublicKey> get() throws MissingOrInvalidKeyException {
+        ImmutableList<PublicKey> keys = jwtConfiguration.getJwtPublicKeyPem()
+            .stream()
+            .flatMap(s -> reader.fromPEM(s).stream())
+            .collect(ImmutableList.toImmutableList());
+        if (keys.size() != jwtConfiguration.getJwtPublicKeyPem().size()) {
+            throw new MissingOrInvalidKeyException();
+        }
+        return keys;
+    }
+
 }
