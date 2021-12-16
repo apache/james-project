@@ -179,7 +179,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3434 Refactoring: EmailSubmissionSetMethod should not rely on nested clases
 - JAMES-3557 JMAP */changes: Increase default maxChanges 5 -> 256
 - JAMES-3557 */changes: Fail explicitly when too much entries on a single change
-- JAMES-3683 Upgrade to Log4J 2.15.0 (CVE-2021-44228)
+- JAMES-3683 Upgrade to Log4J 2.16.0 (CVE-2021-44228 + CVE-2021-45046)
 
 ### Improvements
 - JAMES-3261 ZIP packaging for Guice Apps
