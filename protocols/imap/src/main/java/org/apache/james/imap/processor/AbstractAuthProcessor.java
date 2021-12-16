@@ -166,6 +166,12 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         return new AuthenticationAttempt(Optional.empty(), authenticationId, password);
     }
 
+    protected void authSuccess(Username username, ImapSession session, ImapRequest request, Responder responder) {
+        session.authenticated();
+        session.setMailboxSession(getMailboxManager().createSystemSession(username));
+        okComplete(request, responder);
+    }
+
     protected static class AuthenticationAttempt {
         private final Optional<Username> delegateUserName;
         private final Username authenticationId;

@@ -145,7 +145,8 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ImapSession imapsession = new NettyImapSession(ctx.getChannel(), secure, compress, authenticationConfiguration.isSSLRequired(),
-            authenticationConfiguration.isPlainAuthEnabled(), SessionId.generate());
+            authenticationConfiguration.isPlainAuthEnabled(), SessionId.generate(),
+            authenticationConfiguration.getOidcSASLConfiguration());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
         imapsession.setAttribute(MDC_KEY, boundMDC);
         attributes.set(ctx.getChannel(), imapsession);

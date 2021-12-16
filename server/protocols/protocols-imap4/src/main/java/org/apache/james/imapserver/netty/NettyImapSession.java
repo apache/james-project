@@ -20,12 +20,14 @@ package org.apache.james.imapserver.netty;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
@@ -44,8 +46,11 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final boolean plainAuthEnabled;
     private final SessionId sessionId;
     private boolean needsCommandInjectionDetection;
+    private Optional<OidcSASLConfiguration> oidcSASLConfiguration;
+    private boolean supportsOAuth;
 
-    public NettyImapSession(Channel channel, Encryption secure, boolean compress, boolean requiredSSL, boolean plainAuthEnabled, SessionId sessionId) {
+    public NettyImapSession(Channel channel, Encryption secure, boolean compress, boolean requiredSSL, boolean plainAuthEnabled, SessionId sessionId,
+                            Optional<OidcSASLConfiguration> oidcSASLConfiguration) {
         this.channel = channel;
         this.secure = secure;
         this.compress = compress;
@@ -53,6 +58,8 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         this.plainAuthEnabled = plainAuthEnabled;
         this.sessionId = sessionId;
         this.needsCommandInjectionDetection = true;
+        this.oidcSASLConfiguration = oidcSASLConfiguration;
+        this.supportsOAuth = oidcSASLConfiguration.isPresent();
     }
 
     @Override
@@ -205,6 +212,16 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public boolean isPlainAuthEnabled() {
         return plainAuthEnabled;
+    }
+
+    @Override
+    public boolean supportsOAuth() {
+        return supportsOAuth;
+    }
+
+    @Override
+    public Optional<OidcSASLConfiguration> oidcSaslConfiguration() {
+        return oidcSASLConfiguration;
     }
 
     @Override

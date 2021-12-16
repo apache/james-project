@@ -27,6 +27,7 @@ import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when
@@ -218,6 +219,10 @@ public interface ImapSession extends CommandDetectionSession {
      * enabled
      */
     boolean isPlainAuthEnabled();
+
+    boolean supportsOAuth();
+
+    Optional<OidcSASLConfiguration> oidcSaslConfiguration();
 
     default void setMailboxSession(MailboxSession mailboxSession) {
         setAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
