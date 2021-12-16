@@ -36,7 +36,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-class OidcJwksPublicKeyProviderTest {
+class JwksPublicKeyProviderTest {
     private static final String JWKS_URI_PATH = "/auth/realms/realm1/protocol/openid-connect/certs";
     private static final String JWKS_JSON = "{" +
         "    \"keys\": [" +
@@ -91,7 +91,7 @@ class OidcJwksPublicKeyProviderTest {
 
     @Test
     void getShouldSuccessWhenKeyProvided() {
-        PublicKeyProvider testee = OidcJwksPublicKeyProvider.of(getJwksURL(), "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL(), "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
         List<PublicKey> publicKeys = testee.get();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(publicKeys).hasSize(1);
@@ -101,7 +101,7 @@ class OidcJwksPublicKeyProviderTest {
 
     @Test
     void getShouldReturnEmptyWhenKeyNotProvided() {
-        PublicKeyProvider testee = OidcJwksPublicKeyProvider.of(getJwksURL(), "notfound");
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL(), "notfound");
         assertThat(testee.get()).isEmpty();
     }
 
@@ -112,7 +112,7 @@ class OidcJwksPublicKeyProviderTest {
             .respond(HttpResponse.response().withStatusCode(200)
                 .withBody("invalid body", StandardCharsets.UTF_8));
 
-        PublicKeyProvider testee = OidcJwksPublicKeyProvider.of(new URL(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())),
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(new URL(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())),
             "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
         assertThatThrownBy(testee::get)
             .isInstanceOf(MissingOrInvalidKeyException.class);
@@ -120,7 +120,7 @@ class OidcJwksPublicKeyProviderTest {
 
     @Test
     void getShouldReturnAllPublicKeyWhenKidNoProvided() {
-        PublicKeyProvider testee = OidcJwksPublicKeyProvider.of(getJwksURL());
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL());
         assertThat(testee.get())
             .hasSize(2);
     }

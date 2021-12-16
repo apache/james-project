@@ -35,21 +35,21 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class OidcJwksPublicKeyProvider implements PublicKeyProvider {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OidcJwksPublicKeyProvider.class);
+public class JwksPublicKeyProvider implements PublicKeyProvider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwksPublicKeyProvider.class);
 
-    public static OidcJwksPublicKeyProvider of(URL jwksURL, String kid) {
-        return new OidcJwksPublicKeyProvider(jwksURL, Optional.of(kid));
+    public static JwksPublicKeyProvider of(URL jwksURL, String kid) {
+        return new JwksPublicKeyProvider(jwksURL, Optional.of(kid));
     }
 
-    public static OidcJwksPublicKeyProvider of(URL jwksURL) {
-        return new OidcJwksPublicKeyProvider(jwksURL, Optional.empty());
+    public static JwksPublicKeyProvider of(URL jwksURL) {
+        return new JwksPublicKeyProvider(jwksURL, Optional.empty());
     }
 
     private final UrlJwkProvider jwkProvider;
     private final Optional<String> kid;
 
-    private OidcJwksPublicKeyProvider(URL jwksURL, Optional<String> kid) {
+    private JwksPublicKeyProvider(URL jwksURL, Optional<String> kid) {
         Preconditions.checkNotNull(jwksURL);
         Preconditions.checkNotNull(kid);
         this.jwkProvider = new UrlJwkProvider(jwksURL);

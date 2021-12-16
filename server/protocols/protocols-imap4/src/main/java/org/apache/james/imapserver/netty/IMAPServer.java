@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
+import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
@@ -65,11 +67,26 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
         private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
+        private static final String OAUTH_PATH = "auth.oauth";
 
-        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
-            return new AuthenticationConfiguration(
-                configuration.getBoolean("auth.requireSSL", fallback(configuration)),
-                configuration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT));
+        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+            boolean isRequireSSL = configuration.getBoolean("auth.requireSSL", fallback(configuration));
+            boolean isPlainAuthEnabled = configuration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT);
+
+            if (configuration.immutableConfigurationsAt(OAUTH_PATH).isEmpty()) {
+                return new AuthenticationConfiguration(
+                    isRequireSSL,
+                    isPlainAuthEnabled);
+            } else {
+                try {
+                    return new AuthenticationConfiguration(
+                        isRequireSSL,
+                        isPlainAuthEnabled,
+                        OidcSASLConfiguration.parse(configuration.configurationAt(OAUTH_PATH)));
+                } catch (MalformedURLException | NullPointerException exception) {
+                    throw new ConfigurationException("Failed to retrieve oauth component", exception);
+                }
+            }
         }
 
         private static boolean fallback(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -78,10 +95,18 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
         private final boolean isSSLRequired;
         private final boolean plainAuthEnabled;
+        private final Optional<OidcSASLConfiguration> oidcSASLConfiguration;
 
         public AuthenticationConfiguration(boolean isSSLRequired, boolean plainAuthEnabled) {
             this.isSSLRequired = isSSLRequired;
             this.plainAuthEnabled = plainAuthEnabled;
+            this.oidcSASLConfiguration = Optional.empty();
+        }
+
+        public AuthenticationConfiguration(boolean isSSLRequired, boolean plainAuthEnabled, OidcSASLConfiguration oidcSASLConfiguration) {
+            this.isSSLRequired = isSSLRequired;
+            this.plainAuthEnabled = plainAuthEnabled;
+            this.oidcSASLConfiguration = Optional.of(oidcSASLConfiguration);
         }
 
         public boolean isSSLRequired() {
@@ -90,6 +115,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
         public boolean isPlainAuthEnabled() {
             return plainAuthEnabled;
+        }
+
+        public Optional<OidcSASLConfiguration> getOidcSASLConfiguration() {
+            return oidcSASLConfiguration;
         }
     }
 

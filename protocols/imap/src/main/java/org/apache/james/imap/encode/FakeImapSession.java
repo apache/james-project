@@ -19,12 +19,14 @@
 package org.apache.james.imap.encode;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 public class FakeImapSession implements ImapSession {
 
@@ -152,6 +154,16 @@ public class FakeImapSession implements ImapSession {
     @Override
     public boolean isPlainAuthEnabled() {
         return true;
+    }
+
+    @Override
+    public boolean supportsOAuth() {
+        return false;
+    }
+
+    @Override
+    public Optional<OidcSASLConfiguration> oidcSaslConfiguration() {
+        return Optional.empty();
     }
 
     @Override

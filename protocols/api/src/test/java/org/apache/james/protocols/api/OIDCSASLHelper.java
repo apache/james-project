@@ -17,34 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jwt;
+package org.apache.james.protocols.api;
 
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.Jwt;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
+import com.google.common.collect.ImmutableList;
 
-public class JwtTokenHelper {
-
-    public static  <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName, Class<T> returnType) {
-        int signatureIndex = token.lastIndexOf('.');
-        if (signatureIndex <= 0) {
-            return Optional.empty();
-        }
-        String nonSignedToken = token.substring(0, signatureIndex + 1);
-        try {
-            Jwt<Header, Claims> headerClaims = Jwts.parser().parseClaimsJwt(nonSignedToken);
-            T claim = (T) headerClaims.getHeader().get(claimName);
-            if (claim == null) {
-                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
-            }
-            return Optional.of(claim);
-        } catch (JwtException e) {
-            return Optional.empty();
-        }
+public class OIDCSASLHelper {
+    public static String generateOauthBearer(String username, String token) {
+        return Base64.getEncoder().encodeToString(String.join("" + OIDCSASLParser.SASL_SEPARATOR,
+                ImmutableList.of("user=" + username, "auth=Bearer " + token, "", ""))
+            .getBytes(StandardCharsets.US_ASCII));
     }
 }

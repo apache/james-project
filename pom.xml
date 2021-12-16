@@ -1573,6 +1573,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-jwt</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-lifecycle-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
