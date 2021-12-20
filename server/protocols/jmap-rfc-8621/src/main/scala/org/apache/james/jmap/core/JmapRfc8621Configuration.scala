@@ -19,8 +19,9 @@
 
 package org.apache.james.jmap.core
 
-import java.util.Optional
+import com.google.common.collect.ImmutableList
 
+import java.util.Optional
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_DEFAULT
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
@@ -60,7 +61,7 @@ object JmapRfc8621Configuration {
         .getOrElse(UPLOAD_LIMIT_DEFAULT),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
-      authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala)
+      authenticationStrategies = Optional.ofNullable(ImmutableList.copyOf(configuration.getStringArray(AUTHENTICATION_STRATEGIES))).toScala)
 }
 
 case class JmapRfc8621Configuration(urlPrefixString: String,
