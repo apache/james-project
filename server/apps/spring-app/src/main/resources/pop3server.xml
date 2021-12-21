@@ -42,7 +42,6 @@
        <connectionBacklog>200</connectionBacklog>
 
        <!-- Set to true to support STARTTLS or SSL for the Socket.
-             To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
         -->
        <tls socketTLS="false" startTLS="false">
            <!-- To create a new keystore execute:
