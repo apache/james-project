@@ -37,16 +37,22 @@ import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.change.MailboxChangeListener;
-import org.apache.james.jmap.core.Capability;
-import org.apache.james.jmap.core.DefaultCapabilities;
+import org.apache.james.jmap.core.CapabilityFactory;
+import org.apache.james.jmap.core.CoreCapabilityFactory;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
+import org.apache.james.jmap.core.MDNCapabilityFactory$;
+import org.apache.james.jmap.core.MailCapabilityFactory$;
+import org.apache.james.jmap.core.QuotaCapabilityFactory$;
+import org.apache.james.jmap.core.SharesCapabilityFactory$;
+import org.apache.james.jmap.core.SubmissionCapabilityFactory$;
+import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
+import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
-import org.apache.james.jmap.routes.JmapUrlEndpointResolver;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -135,13 +141,13 @@ public class JMAPModule extends AbstractModule {
         supportedVersions.addBinding().toInstance(Version.DRAFT);
         supportedVersions.addBinding().toInstance(Version.RFC8621);
 
-        Multibinder<Capability> supportedCapabilities = Multibinder.newSetBinder(binder(), Capability.class);
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.MAIL_CAPABILITY());
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.QUOTA_CAPABILITY());
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SHARES_CAPABILITY());
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.VACATION_RESPONSE_CAPABILITY());
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SUBMISSION_CAPABILITY());
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.MDN_CAPABILITY());
+        Multibinder<CapabilityFactory> supportedCapabilities = Multibinder.newSetBinder(binder(), CapabilityFactory.class);
+        supportedCapabilities.addBinding().toInstance(MailCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(QuotaCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(SharesCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(VacationResponseCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(SubmissionCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(MDNCapabilityFactory$.MODULE$);
     }
 
     @ProvidesIntoSet
@@ -161,13 +167,13 @@ public class JMAPModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    Capability coreCapability(JmapRfc8621Configuration configuration) {
-        return DefaultCapabilities.coreCapability(configuration.maxUploadSize());
+    CapabilityFactory coreCapability(JmapRfc8621Configuration configuration) {
+        return new CoreCapabilityFactory(configuration.maxUploadSize());
     }
 
     @ProvidesIntoSet
-    Capability webSocketCapability(JmapRfc8621Configuration configuration) {
-        return DefaultCapabilities.webSocketCapability(JmapUrlEndpointResolver.from(configuration).webSocketUrl());
+    CapabilityFactory webSocketCapability(JmapRfc8621Configuration configuration) {
+        return WebSocketCapabilityFactory$.MODULE$;
     }
 
     @Provides

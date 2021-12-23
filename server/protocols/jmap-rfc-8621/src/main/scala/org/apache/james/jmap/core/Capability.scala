@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.core
 
-import java.net.URI
+import java.net.{URI, URL}
 
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
@@ -33,6 +33,7 @@ import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstrain
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.util.Size
 import play.api.libs.json.{JsObject, Json}
+import reactor.netty.http.server.HttpServerRequest
 
 import scala.util.{Failure, Success, Try}
 
@@ -60,10 +61,60 @@ trait Capability {
   def properties(): CapabilityProperties
 }
 
+object UrlPrefixes {
+  private val JMAP_PREFIX_HEADER: String = "X-JMAP-PREFIX"
+  private val JMAP_WEBSOCKET_PREFIX_HEADER: String = "X-JMAP-WEBSOCKET-PREFIX"
+
+  def from(jmapRfc8621Configuration: JmapRfc8621Configuration, request: HttpServerRequest): UrlPrefixes =
+    if (jmapRfc8621Configuration.dynamicJmapPrefixResolutionEnabled) {
+      UrlPrefixes(
+        safeURL(request.requestHeaders().get(JMAP_PREFIX_HEADER))
+          .map(_.toURI)
+          .getOrElse(new URI(jmapRfc8621Configuration.urlPrefixString)),
+        safeURI(request.requestHeaders().get(JMAP_WEBSOCKET_PREFIX_HEADER))
+          .getOrElse(new URI(jmapRfc8621Configuration.websocketPrefixString)))
+    } else {
+      jmapRfc8621Configuration.urlPrefixes()
+    }
+
+  private def safeURI(string: String): Option[URI] = Option(string).flatMap(s => Try(new URI(s)).toOption)
+
+  private def safeURL(string: String): Option[URL] = Option(string).flatMap(s => Try(new URL(s)).toOption)
+}
+
+final case class UrlPrefixes(httpUrlPrefix: URI, webSocketURLPrefix: URI)
+
+trait CapabilityFactory {
+  def create(urlPrefixes: UrlPrefixes): Capability
+
+  def id(): CapabilityIdentifier
+}
+
 final case class CoreCapability(properties: CoreCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_CORE) extends Capability
 
+final case class CoreCapabilityFactory(maxUploadSize: MaxSizeUpload) extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_CORE
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = CoreCapability(CoreCapabilityProperties(
+    maxUploadSize,
+    MaxConcurrentUpload(4L),
+    MaxSizeRequest(10_000_000L),
+    MaxConcurrentRequests(4L),
+    MaxCallsInRequest(16L),
+    MaxObjectsInGet(500L),
+    MaxObjectsInSet(500L),
+    collationAlgorithms = List("i;unicode-casemap")))
+}
+
 case class WebSocketCapability(properties: WebSocketCapabilityProperties, identifier: CapabilityIdentifier = JMAP_WEBSOCKET) extends Capability
+
+case object WebSocketCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_WEBSOCKET
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = WebSocketCapability(
+    WebSocketCapabilityProperties(SupportsPush(true), new URI(urlPrefixes.webSocketURLPrefix + "/jmap/ws")))
+}
 
 object MaxSizeUpload {
   def of(size: Size): Try[MaxSizeUpload] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
@@ -108,6 +159,12 @@ final case class EhloArgs(value: String) extends AnyVal
 final case class SubmissionCapability(identifier: CapabilityIdentifier = EMAIL_SUBMISSION,
                                       properties: SubmissionProperties = SubmissionProperties()) extends Capability
 
+case object SubmissionCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = EMAIL_SUBMISSION
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = SubmissionCapability()
+}
+
 final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(0),
                                       submissionExtensions: Map[EhloName, List[EhloArgs]] = Map()) extends CapabilityProperties {
   override def jsonify(): JsObject = ResponseSerializer.submissionPropertiesWrites.writes(this)
@@ -119,6 +176,18 @@ object MailCapability {
 
 final case class MailCapability(properties: MailCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_MAIL) extends Capability
+
+case object MailCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_MAIL
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = MailCapability(MailCapabilityProperties(
+    MaxMailboxesPerEmail(Some(10_000_000L)),
+    MaxMailboxDepth(None),
+    MaxSizeMailboxName(200L),
+    MaxSizeAttachmentsPerEmail(20_000_000L),
+    emailQuerySortOptions = List("receivedAt", "sentAt", "size", "from", "to", "subject"),
+    MayCreateTopLevelMailbox(true)))
+}
 
 case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
 case class MaxMailboxDepth(value: Option[UnsignedInt])
@@ -142,8 +211,20 @@ final case class QuotaCapabilityProperties() extends CapabilityProperties {
 final case class QuotaCapability(properties: QuotaCapabilityProperties = QuotaCapabilityProperties(),
                                  identifier: CapabilityIdentifier = JAMES_QUOTA) extends Capability
 
+case object QuotaCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JAMES_QUOTA
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = QuotaCapability()
+}
+
 final case class SharesCapabilityProperties() extends CapabilityProperties {
   override def jsonify(): JsObject = Json.obj()
+}
+
+case object SharesCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JAMES_SHARES
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = SharesCapability()
 }
 
 final case class SharesCapability(properties: SharesCapabilityProperties = SharesCapabilityProperties(),
@@ -153,11 +234,23 @@ final case class MDNCapabilityProperties() extends CapabilityProperties {
   override def jsonify(): JsObject = Json.obj()
 }
 
+case object MDNCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_MDN
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = MDNCapability()
+}
+
 final case class MDNCapability(properties: MDNCapabilityProperties = MDNCapabilityProperties(),
                                identifier: CapabilityIdentifier = JMAP_MDN) extends Capability
 
 final case class VacationResponseCapabilityProperties() extends CapabilityProperties {
   override def jsonify(): JsObject = Json.obj()
+}
+
+case object VacationResponseCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_VACATION_RESPONSE
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = VacationResponseCapability()
 }
 
 final case class VacationResponseCapability(properties: VacationResponseCapabilityProperties = VacationResponseCapabilityProperties(),

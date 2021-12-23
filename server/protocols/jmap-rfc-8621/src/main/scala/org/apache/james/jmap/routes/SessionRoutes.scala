@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.routes
 
-import java.net.{URI, URL}
 import java.nio.charset.StandardCharsets
 import java.util.stream.Stream
 
@@ -29,52 +28,41 @@ import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8}
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
-import org.apache.james.jmap.core.{ProblemDetails, Session}
+import org.apache.james.jmap.core.{JmapRfc8621Configuration, ProblemDetails, Session, UrlPrefixes}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.routes.SessionRoutes.{JMAP_PREFIX_HEADER, JMAP_SESSION, JMAP_WEBSOCKET_PREFIX_HEADER, LOGGER, WELL_KNOWN_JMAP}
+import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
-
-import scala.util.Try
+import reactor.netty.http.server.HttpServerResponse
 
 object SessionRoutes {
   private val JMAP_SESSION: String = "/jmap/session"
   private val WELL_KNOWN_JMAP: String = "/.well-known/jmap"
   private val LOGGER: Logger = LoggerFactory.getLogger(classOf[SessionRoutes])
-  private val JMAP_PREFIX_HEADER: String = "X-JMAP-PREFIX"
-  private val JMAP_WEBSOCKET_PREFIX_HEADER: String = "X-JMAP-WEBSOCKET-PREFIX"
 }
 
 class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
-                               val sessionSupplier: SessionSupplier) extends JMAPRoutes {
+                               val sessionSupplier: SessionSupplier,
+                               val jmapRfc8621Configuration: JmapRfc8621Configuration) extends JMAPRoutes {
 
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
       .map(_.getUser)
       .handle[Session] {
-        case (username, sink) => sessionSupplier.generate(username, extractJMAPPrefix(request), extractJMAPWebSocketPrefix(request))
+        case (username, sink) => sessionSupplier.generate(username, UrlPrefixes.from(jmapRfc8621Configuration, request))
           .fold(sink.error, session => sink.next(session))
       }
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .subscribeOn(Schedulers.elastic())
       .asJava()
-
-  private def extractJMAPPrefix(request: HttpServerRequest): Option[URL] =
-    Option(request.requestHeaders().get(JMAP_PREFIX_HEADER))
-      .flatMap(value => Try(new URL(value)).toOption)
-
-  private def extractJMAPWebSocketPrefix(request: HttpServerRequest): Option[URI] =
-    Option(request.requestHeaders().get(JMAP_WEBSOCKET_PREFIX_HEADER))
-      .flatMap(value => Try(new URI(value)).toOption)
 
   private val redirectToSession: JMAPRoute.Action = JMAPRoutes.redirectTo(JMAP_SESSION)
 
