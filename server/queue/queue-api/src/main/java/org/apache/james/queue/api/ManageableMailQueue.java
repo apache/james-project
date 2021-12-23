@@ -59,7 +59,11 @@ public interface ManageableMailQueue extends MailQueue {
 
     /**
      * Remove all mails from the queue that match
-     * 
+     *
+     * The intent of remove is to allow operators to clear some emails from the mailqueue
+     * in an emergency situation such as a DOS attempt or a configuration error which creates a mail loop
+     * or a bounce loop
+     *
      * @param type
      * @param value
      * @return count the count of all removed mails
