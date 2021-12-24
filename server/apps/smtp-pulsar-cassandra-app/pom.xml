@@ -28,7 +28,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smtp-relay-1</artifactId>
+    <artifactId>pulsar-cassandra-smtp-relay</artifactId>
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Binaries :: SMTP Relay - C* ES Pular</name>

@@ -77,12 +77,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>smtp-relay-1</artifactId>
+            <artifactId>pulsar-cassandra-smtp-relay</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>smtp-relay-1</artifactId>
+            <artifactId>pulsar-cassandra-smtp-relay</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

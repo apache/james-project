@@ -45,5 +45,5 @@ public class CassandraPulsarForwardSmtpTest implements ForwardSmtpTest {
 
     @Order(2)
     @RegisterExtension
-    static SmtpTestExtension smtpTestExtension=new SmtpTestExtension(SMTP_GLOBAL_SERVER, testExtension);
+    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_GLOBAL_SERVER, testExtension);
 }
