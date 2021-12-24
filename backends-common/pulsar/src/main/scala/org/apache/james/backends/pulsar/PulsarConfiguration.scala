@@ -35,14 +35,14 @@ object PulsarConfiguration {
 
     val namespace = configuration.getString(NAMESPACE_PROPERTY_NAME)
     if (Strings.isNullOrEmpty(namespace))
-      throw new IllegalStateException("You need to specify the pulsar namespace as " + NAMESPACE_PROPERTY_NAME)
+      throw new IllegalStateException(s"You need to specify the pulsar namespace as ${NAMESPACE_PROPERTY_NAME}")
     new PulsarConfiguration(brokerUri, adminUri, Namespace(namespace))
   }
 
   private def extractUri(configuration: Configuration, uriPropertyName: String): String = {
     val extractedUri = configuration.getString(uriPropertyName)
     if (Strings.isNullOrEmpty(extractedUri))
-      throw new IllegalStateException("You need to specify the pulsar "+uriPropertyName+" uri")
+      throw new IllegalStateException(s"You need to specify the pulsar $uriPropertyName uri")
     try {
       new URI(extractedUri)
     } catch {

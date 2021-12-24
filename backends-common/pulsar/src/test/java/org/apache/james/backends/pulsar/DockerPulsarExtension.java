@@ -92,9 +92,6 @@ public class DockerPulsarExtension implements
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         configuration = pulsarConfiguration();
-        /*Awaitility.await().atMost(10, TimeUnit.SECONDS).until(
-                ()->adminClient.tenants().getTenants().contains("public")
-        );*/
         adminClient.namespaces().createNamespace(configuration.namespace().asString());
         dockerPulsar = new DockerPulsar(container, configuration, adminClient);
     }

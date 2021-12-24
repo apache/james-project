@@ -45,5 +45,5 @@ public class CassandraPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandT
 
     @Order(2)
     @RegisterExtension
-    static SmtpTestExtension smtpTestExtension=new SmtpTestExtension(SMTP_START_TLS_SERVER, testExtension);
+    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_START_TLS_SERVER, testExtension);
 }
