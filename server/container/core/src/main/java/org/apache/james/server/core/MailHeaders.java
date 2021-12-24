@@ -67,7 +67,7 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      */
     public MailHeaders(InputStream in) throws MessagingException {
         super();
-        load(in);
+        load(in, true);
     }
 
     /**
