@@ -20,6 +20,9 @@
 
 package org.apache.james.protocols.smtp;
 
+import java.util.Optional;
+
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfigurationImpl;
 
 /**
@@ -82,5 +85,10 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     @Override
     public boolean isPlainAuthEnabled() {
         return true;
+    }
+
+    @Override
+    public Optional<OidcSASLConfiguration> saslConfiguration() {
+        return Optional.empty();
     }
 }

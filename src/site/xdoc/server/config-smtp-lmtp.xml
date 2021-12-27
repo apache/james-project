@@ -103,6 +103,14 @@
         <dt><strong>auth.plainAuthEnabled</strong></dt>
         <dd>This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting
             can be used to enforce strong authentication mechanisms.</dd>
+        <dt><strong>auth.oidc.oidcConfigurationURL</strong></dt>
+        <dd>Provide OIDC url address for information to user. Only configure this when you want to authenticate SMTP server using a OIDC provider.</dd>
+        <dt><strong>auth.oidc.jwksURL</strong></dt>
+        <dd>Provide url to get OIDC's JSON Web Key Set to validate user token. Only configure this when you want to authenticate SMTP server using a OIDC provider.</dd>
+        <dt><strong>auth.oidc.claim</strong></dt>
+        <dd>Claim string uses to identify user. E.g: "email_address". Only configure this when you want to authenticate SMTP server using a OIDC provider.</dd>
+        <dt><strong>auth.oidc.scope</strong></dt>
+        <dd>An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate SMTP server using a OIDC provider.</dd>
       <dt><strong>handler.authorizedAddresses</strong></dt>
       <dd>Authorize specific addresses/networks.
                If you use SMTP AUTH, addresses that match those specified here will

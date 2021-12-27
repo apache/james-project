@@ -18,9 +18,16 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import javax.inject.Inject;
+import java.util.Optional;
 
+import javax.inject.Inject;
+import javax.mail.internet.AddressException;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.protocols.api.OIDCSASLParser;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -58,5 +65,36 @@ public class UsersRepositoryAuthHook implements AuthHook {
             LOGGER.info("Unable to access UsersRepository", e);
         }
         return HookResult.DECLINED;
+    }
+
+    @Override
+    public HookResult doSasl(SMTPSession session, OidcSASLConfiguration configuration, String initialResponse) {
+        return OIDCSASLParser.parse(initialResponse)
+            .flatMap(value -> new OidcJwtTokenVerifier()
+                .verifyAndExtractClaim(value.getToken(), configuration.getJwksURL(), configuration.getClaim()))
+            .flatMap(this::extractUserFromClaim)
+            .map(username -> {
+                try {
+                    users.assertValid(username);
+                    session.setUsername(username);
+                    session.setRelayingAllowed(true);
+                    return HookResult.builder()
+                        .hookReturnCode(HookReturnCode.ok())
+                        .smtpDescription("Authentication successful.")
+                        .build();
+                } catch (UsersRepositoryException e) {
+                    LOGGER.warn("Invalid username", e);
+                    return HookResult.DECLINED;
+                }
+            })
+            .orElse(HookResult.DECLINED);
+    }
+
+    private Optional<Username> extractUserFromClaim(String claimValue) {
+        try {
+            return Optional.of(Username.fromMailAddress(new MailAddress(claimValue)));
+        } catch (AddressException e) {
+            return Optional.empty();
+        }
     }
 }

@@ -19,7 +19,6 @@
 package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.Security;
 import java.security.interfaces.RSAPublicKey;

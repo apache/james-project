@@ -1,0 +1,20 @@
+<smtpserver enabled="true">
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="false" startTLS="true">
+        <keystore>classpath://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        <algorithm>SunX509</algorithm>
+    </tls>
+    <auth>
+        <announce>always</announce>
+        <requireSSL>true</requireSSL>
+        <plainAuthEnabled>false</plainAuthEnabled>
+        <!--OIDC path will be add dynamically in Tests-->
+    </auth>
+    <verifyIdentity>true</verifyIdentity>
+    <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
