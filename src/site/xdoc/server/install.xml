@@ -164,7 +164,7 @@
       
     <p>Running <code>$ ./james help</code> help will provide the list of commands you can invoke. </p>
     
-    <p>Once started, you'll see in the log file (./logs/james-server.log) that 
+    <p>Once started, you'll see in the log file (./log/wrapper.log) that 
        James is running. This means that Spring has loaded James and is now waiting for a request.</p>
   
   </subsection>
@@ -326,7 +326,7 @@ a OK LOGIN completed.
 closed
       </source>
     
-    <p>Trace out James actions in ./logs/james-server.log.</p>
+    <p>Trace out James actions in ./log/wrapper.log.</p>
     
     <p>Actions that will be taken by James on incoming mail are configured in
        the mailet pipe line (./conf/mailetcontainer.xml). Look at it if you want to
