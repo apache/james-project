@@ -123,7 +123,7 @@ Step 5: Start
 $ cd bin
 $ ./james start 
   * !! you need libc6 installed on Linux !! - sudo apt-get install libc6-i386 libc6-dev-i386 on ubuntu
-  * You can see log result in the log/james-server.log file.
+  * You can see log result in the log/wrapper.log file.
 
 Step 6: Create Domains and Users
 ################################
@@ -189,7 +189,7 @@ Step 8: Manage
 Step 9: Monitor
 ###############
 
-  * Monitor the ./log/james-server.log log file.
+  * Monitor the ./log/wrapper.log log file.
 
   * Monitor via JMX (launch any JMX client and connect to URL=service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi)
 
