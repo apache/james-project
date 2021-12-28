@@ -19,10 +19,6 @@
 
 package org.apache.james.smtpserver;
 
-import java.io.IOException;
-
-import javax.inject.Inject;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -33,6 +29,10 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.mail.Message;
+import java.io.IOException;
 
 /**
  * Queue the message
@@ -70,6 +70,8 @@ public class SendMailHandler implements JamesMessageHook {
         LOGGER.debug("sending mail");
 
         try {
+            Message message = mail.getMessage();
+            message.setSubject(mail.getMessage().getSubject());
             queue.enQueue(mail);
             LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getMaybeSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
         } catch (Exception me) {

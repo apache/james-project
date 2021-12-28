@@ -19,16 +19,15 @@
 
 package org.apache.james.server.core;
 
+import org.apache.mailet.base.RFC2822Headers;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetHeaders;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Enumeration;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetHeaders;
-
-import org.apache.mailet.base.RFC2822Headers;
 
 /**
  * This interface defines a container for mail headers. Each header must use
@@ -67,7 +66,7 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      */
     public MailHeaders(InputStream in) throws MessagingException {
         super();
-        load(in);
+        load(in, true);
     }
 
     /**
