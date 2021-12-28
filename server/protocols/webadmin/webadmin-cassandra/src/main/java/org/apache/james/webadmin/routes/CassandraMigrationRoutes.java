@@ -20,10 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.task.Task;
@@ -32,7 +28,6 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
 import org.apache.james.webadmin.dto.CassandraVersionResponse;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
-import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -40,19 +35,9 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ResponseHeader;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "Cassandra migration")
-@Path(":cassandra/version")
-@Produces("application/json")
 public class CassandraMigrationRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMigrationRoutes.class);
@@ -66,9 +51,7 @@ public class CassandraMigrationRoutes implements Routes {
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
-    public static String INVALID_VERSION_UPGRADE_REQUEST = "Invalid request for version upgrade";
     public static String MIGRATION_REQUEST_CAN_NOT_BE_DONE = "The migration requested can not be performed";
-    public static String PARTIAL_MIGRATION_PROCESS = "An error lead to partial migration process";
 
     @Inject
     public CassandraMigrationRoutes(CassandraMigrationService cassandraMigrationService,
@@ -96,16 +79,6 @@ public class CassandraMigrationRoutes implements Routes {
         service.post(VERSION_UPGRADE_TO_LATEST_BASE, upgradeToLatestTaskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
-    @POST
-    @Path("upgrade/latest")
-    @ApiOperation("Triggers a migration of Cassandra schema to the latest available")
-    @ApiResponses({
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-            }),
-        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
-    })
     public Task upgradeToLatest() {
         try {
             return cassandraMigrationService.upgradeToLastVersion();
@@ -120,45 +93,16 @@ public class CassandraMigrationRoutes implements Routes {
         }
     }
 
-    @POST
-    @Path("upgrade")
-    @ApiOperation("Triggers a migration of Cassandra schema to a specific version")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            paramType = "body",
-            dataType = "Integer",
-            example = "3",
-            value = "The schema version to upgrade to.")
-    })
-    @ApiResponses({
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
-            responseHeaders = {
-            @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
-        }),
-        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
-    })
     public Task upgradeToVersion(Request request) {
         LOGGER.debug("Cassandra upgrade launched");
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
         return cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
     }
 
-    @GET
-    @Path("latest")
-    @ApiOperation(value = "Getting the latest version available for Cassandra schema")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The latest version of the schema", response = CassandraVersionResponse.class)
-    })
     public CassandraVersionResponse getCassandraLatestVersion() {
         return CassandraVersionResponse.from(cassandraMigrationService.getLatestVersion());
     }
 
-    @GET
-    @ApiOperation(value = "Getting the current version used by Cassandra schema")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The current version of the schema", response = CassandraVersionResponse.class)
-    })
     public CassandraVersionResponse getCassandraCurrentVersion() {
         return CassandraVersionResponse.from(cassandraMigrationService.getCurrentVersion());
     }

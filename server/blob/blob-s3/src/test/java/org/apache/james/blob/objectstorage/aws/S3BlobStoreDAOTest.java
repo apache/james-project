@@ -21,6 +21,11 @@ package org.apache.james.blob.objectstorage.aws;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.stream.IntStream;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
@@ -34,6 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @ExtendWith(DockerAwsS3Extension.class)
 public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
@@ -81,5 +87,24 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
         assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).count().block())
             .isEqualTo(count);
+    }
+
+    @Test
+    void readShouldNotLeakHttpConnexionsForUnclosedStreams() {
+        BlobStoreDAO store = testee();
+
+        TestBlobId blobId = new TestBlobId("id");
+        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+
+        assertThatCode(() -> IntStream.range(0, 256)
+            .forEach(i -> {
+                InputStream inputStream = store.read(TEST_BUCKET_NAME, blobId);
+                // Close the stream without reading it
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })).doesNotThrowAnyException();
     }
 }

@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,19 +6,20 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 
 package org.apache.james.jmap.routes
 
+import java.net.{URI, URL}
 import java.nio.charset.StandardCharsets
 import java.util.stream.Stream
 
@@ -33,19 +34,23 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
+import org.apache.james.jmap.routes.SessionRoutes.{JMAP_PREFIX_HEADER, JMAP_SESSION, JMAP_WEBSOCKET_PREFIX_HEADER, LOGGER, WELL_KNOWN_JMAP}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.netty.http.server.HttpServerResponse
+import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
+
+import scala.util.Try
 
 object SessionRoutes {
   private val JMAP_SESSION: String = "/jmap/session"
   private val WELL_KNOWN_JMAP: String = "/.well-known/jmap"
-  private val LOGGER = LoggerFactory.getLogger(classOf[SessionRoutes])
+  private val LOGGER: Logger = LoggerFactory.getLogger(classOf[SessionRoutes])
+  private val JMAP_PREFIX_HEADER: String = "X-JMAP-PREFIX"
+  private val JMAP_WEBSOCKET_PREFIX_HEADER: String = "X-JMAP-WEBSOCKET-PREFIX"
 }
 
 class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
@@ -55,13 +60,21 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
       .map(_.getUser)
       .handle[Session] {
-        case (username, sink) =>  sessionSupplier.generate(username)
+        case (username, sink) => sessionSupplier.generate(username, extractJMAPPrefix(request), extractJMAPWebSocketPrefix(request))
           .fold(sink.error, session => sink.next(session))
       }
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .subscribeOn(Schedulers.elastic())
       .asJava()
+
+  private def extractJMAPPrefix(request: HttpServerRequest): Option[URL] =
+    Option(request.requestHeaders().get(JMAP_PREFIX_HEADER))
+      .flatMap(value => Try(new URL(value)).toOption)
+
+  private def extractJMAPWebSocketPrefix(request: HttpServerRequest): Option[URI] =
+    Option(request.requestHeaders().get(JMAP_WEBSOCKET_PREFIX_HEADER))
+      .flatMap(value => Try(new URI(value)).toOption)
 
   private val redirectToSession: JMAPRoute.Action = JMAPRoutes.redirectTo(JMAP_SESSION)
 
@@ -84,7 +97,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .action(CORS_CONTROL)
         .noCorsHeaders)
 
-  private def sendRespond(session: Session, resp: HttpServerResponse) =
+  private def sendRespond(session: Session, resp: HttpServerResponse): SMono[Void] =
     SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session)))
       .map(_.getBytes(StandardCharsets.UTF_8))
       .flatMap(bytes => SMono(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)

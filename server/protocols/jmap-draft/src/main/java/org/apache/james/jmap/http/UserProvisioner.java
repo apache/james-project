@@ -23,60 +23,57 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.FunctionalUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class UserProvisioner {
+    private final JMAPConfiguration jmapConfiguration;
     private final UsersRepository usersRepository;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    UserProvisioner(UsersRepository usersRepository, MetricFactory metricFactory) {
+    UserProvisioner(JMAPConfiguration jmapConfiguration, UsersRepository usersRepository, MetricFactory metricFactory) {
+        this.jmapConfiguration = jmapConfiguration;
         this.usersRepository = usersRepository;
         this.metricFactory = metricFactory;
     }
 
     public Mono<Void> provisionUser(MailboxSession session) {
-        if (session != null && !usersRepository.isReadOnly()) {
-            return Mono.fromRunnable(() -> createAccountIfNeeded(session))
-                .subscribeOn(Schedulers.elastic())
-                .then();
+        if (session != null && !usersRepository.isReadOnly() && jmapConfiguration.isUserProvisioningEnabled()) {
+            return createAccountIfNeeded(session);
         }
         return Mono.empty();
     }
 
-    private void createAccountIfNeeded(MailboxSession session) {
-        TimeMetric timeMetric = metricFactory.timer("JMAP-user-provisioning");
-        try {
-            Username username = session.getUser();
-            if (needsAccountCreation(username)) {
-                createAccount(username);
-            }
-        } catch (AlreadyExistInUsersRepositoryException e) {
-            // Ignore
-        } catch (UsersRepositoryException e) {
-            throw new RuntimeException(e);
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+    private Mono<Void> createAccountIfNeeded(MailboxSession session) {
+        Username username = session.getUser();
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-user-provisioning",
+            needsAccountCreation(username)
+                .filter(FunctionalUtils.identityPredicate())
+                .flatMap(any -> createAccount(username))
+                .onErrorResume(AlreadyExistInUsersRepositoryException.class, e -> Mono.empty())));
     }
 
-    private void createAccount(Username username) throws UsersRepositoryException {
-        usersRepository.addUser(username, generatePassword());
+    private Mono<Void> createAccount(Username username) {
+        return Mono.fromRunnable(Throwing.runnable(() -> usersRepository.addUser(username, generatePassword())))
+            .subscribeOn(Schedulers.elastic())
+            .then();
     }
 
-    private boolean needsAccountCreation(Username username) throws UsersRepositoryException {
-        return !usersRepository.contains(username);
+    private Mono<Boolean> needsAccountCreation(Username username) {
+        return Mono.from(usersRepository.containsReactive(username))
+            .map(FunctionalUtils.negate());
     }
 
     private String generatePassword() {

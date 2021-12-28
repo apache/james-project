@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -52,6 +53,9 @@ public class S3BlobStoreConfiguration {
             private Optional<BucketName> defaultBucketName;
             private Optional<String> bucketPrefix;
             private Optional<Integer> httpConcurrency;
+            private Optional<Duration> readTimeout;
+            private Optional<Duration> writeTimeout;
+            private Optional<Duration> connectionTimeout;
             private Region region;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
@@ -60,6 +64,9 @@ public class S3BlobStoreConfiguration {
                 this.defaultBucketName = Optional.empty();
                 this.bucketPrefix = Optional.empty();
                 this.httpConcurrency = Optional.empty();
+                this.readTimeout = Optional.empty();
+                this.writeTimeout = Optional.empty();
+                this.connectionTimeout = Optional.empty();
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -77,6 +84,21 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public ReadyToBuild writeTimeout(Optional<Duration> writeTimeout) {
+                this.writeTimeout = writeTimeout;
+                return this;
+            }
+
+            public ReadyToBuild connectionTimeout(Optional<Duration> connectionTimeout) {
+                this.connectionTimeout = connectionTimeout;
+                return this;
+            }
+
+            public ReadyToBuild readTimeout(Optional<Duration> readTimeout) {
+                this.readTimeout = readTimeout;
+                return this;
+            }
+
             public ReadyToBuild bucketPrefix(String bucketPrefix) {
                 this.bucketPrefix = Optional.ofNullable(bucketPrefix);
                 return this;
@@ -88,7 +110,7 @@ public class S3BlobStoreConfiguration {
             }
 
             public S3BlobStoreConfiguration build() {
-                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY));
+                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY), readTimeout, writeTimeout, connectionTimeout);
             }
         }
 
@@ -101,18 +123,27 @@ public class S3BlobStoreConfiguration {
     private final Optional<BucketName> namespace;
     private final Optional<String> bucketPrefix;
     private final int httpConcurrency;
+    private Optional<Duration> readTimeout;
+    private Optional<Duration> writeTimeout;
+    private Optional<Duration> connectionTimeout;
 
     @VisibleForTesting
     S3BlobStoreConfiguration(Optional<String> bucketPrefix,
                              Optional<BucketName> namespace,
                              Region region,
                              AwsS3AuthConfiguration specificAuthConfiguration,
-                             int httpConcurrency) {
+                             int httpConcurrency,
+                             Optional<Duration> readTimeout,
+                             Optional<Duration> writeTimeout,
+                             Optional<Duration> connectionTimeout) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
         this.specificAuthConfiguration = specificAuthConfiguration;
         this.httpConcurrency = httpConcurrency;
+        this.readTimeout = readTimeout;
+        this.writeTimeout = writeTimeout;
+        this.connectionTimeout = connectionTimeout;
     }
 
     public Optional<BucketName> getNamespace() {
@@ -135,6 +166,18 @@ public class S3BlobStoreConfiguration {
         return region;
     }
 
+    public Optional<Duration> getReadTimeout() {
+        return readTimeout;
+    }
+
+    public Optional<Duration> getWriteTimeout() {
+        return writeTimeout;
+    }
+
+    public Optional<Duration> getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof S3BlobStoreConfiguration) {
@@ -144,6 +187,9 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
                 && Objects.equals(this.region, that.region)
                 && Objects.equals(this.httpConcurrency, that.httpConcurrency)
+                && Objects.equals(this.readTimeout, that.readTimeout)
+                && Objects.equals(this.writeTimeout, that.writeTimeout)
+                && Objects.equals(this.connectionTimeout, that.connectionTimeout)
                 && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration);
         }
         return false;
@@ -151,7 +197,8 @@ public class S3BlobStoreConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration);
+        return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration,
+            readTimeout, writeTimeout, connectionTimeout);
     }
 
     @Override
@@ -162,6 +209,9 @@ public class S3BlobStoreConfiguration {
             .add("bucketPrefix", bucketPrefix)
             .add("region", region)
             .add("specificAuthConfiguration", specificAuthConfiguration)
+            .add("readTimeout", readTimeout)
+            .add("writeTimeout", writeTimeout)
+            .add("connectionTimeout", connectionTimeout)
             .toString();
     }
 }

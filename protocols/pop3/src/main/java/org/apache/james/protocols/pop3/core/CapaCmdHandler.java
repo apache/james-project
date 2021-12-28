@@ -29,7 +29,6 @@ import javax.inject.Inject;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.pop3.POP3Response;
@@ -41,7 +40,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * This handler is used to handle CAPA commands
  */
-public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHandler, CapaCapability {    
+public class CapaCmdHandler extends AbstractPOP3CommandHandler implements ExtensibleHandler, CapaCapability {
     private List<CapaCapability> caps;
     private static final Collection<String> COMMANDS = ImmutableSet.of("CAPA");
     private static final Set<String> CAPS = ImmutableSet.of("PIPELINING");

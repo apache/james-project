@@ -67,7 +67,7 @@ public class CassandraStepdefs {
             new CassandraRecipientRewriteTableDAO(cassandra.getConf()),
             new CassandraMappingsSourcesDAO(cassandra.getConf()));
         rrt.setUsersRepository(new UsersRepositoryImpl<>(RecipientRewriteTableFixture.domainListForCucumberTests(),
-            new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandra.getConf())));
+            new CassandraUsersDAO(cassandra.getConf())));
         rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }

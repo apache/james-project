@@ -40,6 +40,7 @@ import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
+import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
@@ -74,7 +75,7 @@ import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
 import org.apache.james.modules.server.SieveRoutesModule;
-import org.apache.james.modules.server.SwaggerRoutesModule;
+import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -93,6 +94,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
+        new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
@@ -104,7 +106,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new SieveRoutesModule(),
-        new SwaggerRoutesModule(),
         new WebAdminServerModule(),
         new WebAdminReIndexingTaskSerializationModule(),
         new MessagesRoutesModule(),
@@ -112,6 +113,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),
+        new CassandraVacationModule(),
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -169,6 +171,8 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

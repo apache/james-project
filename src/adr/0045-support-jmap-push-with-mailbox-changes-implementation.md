@@ -6,6 +6,8 @@ Date: 2020-12-08
 
 Accepted (lazy consensus).
 
+Implemented.
+
 ## Context
 
 JMAP Push notifications allow clients to efficiently update (almost) instantly to stay in sync with data changes on the server. 

@@ -40,10 +40,17 @@ import com.google.common.base.Strings;
 public class ArgumentParser {
     
     private final CoreCommands core;
+    private final boolean validatePutSize;
 
     @Inject
     public ArgumentParser(CoreCommands core) {
         this.core = core;
+        this.validatePutSize = true;
+    }
+
+    public ArgumentParser(CoreCommands core, boolean validatePutSize) {
+        this.core = core;
+        this.validatePutSize = validatePutSize;
     }
 
     public String getAdvertisedCapabilities() {
@@ -109,11 +116,12 @@ public class ArgumentParser {
         Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
         Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
 
+        long size;
         if (! arguments.hasNext()) {
             return "NO : Missing argument: script size";
         } else {
             try {
-                ParserUtils.getSize(arguments.next());
+                size = ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
                 return "NO \"" + e.getMessage() + "\"";
             }
@@ -122,6 +130,12 @@ public class ArgumentParser {
             return "NO \"Extra arguments not supported\"";
         } else {
             String content = Joiner.on("\r\n").join(firstLine);
+            if (validatePutSize) {
+                content += "\r\n";
+            }
+            if (content.length() < size && validatePutSize) {
+                throw new NotEnoughDataException();
+            }
             if (Strings.isNullOrEmpty(content)) {
                 return "NO \"Missing argument: script content\"";
             }
@@ -162,6 +176,7 @@ public class ArgumentParser {
         Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
 
         String scriptName;
+        long size;
         if (! arguments.hasNext()) {
              return "NO \"Missing argument: script name\"";
         } else {
@@ -174,7 +189,7 @@ public class ArgumentParser {
             return "NO \"Missing argument: script size\"";
         } else {
             try {
-                ParserUtils.getSize(arguments.next());
+                size = ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
                 return "NO \"" + e.getMessage() + "\"";
             }
@@ -183,6 +198,12 @@ public class ArgumentParser {
             return "NO \"Extra arguments not supported\"";
         } else {
             String content = Joiner.on("\r\n").join(firstLine);
+            if (validatePutSize) {
+                content += "\r\n";
+            }
+            if (content.length() < size && validatePutSize) {
+                throw new NotEnoughDataException();
+            }
             return core.putScript(session, ParserUtils.unquote(scriptName), content);
         }
     }

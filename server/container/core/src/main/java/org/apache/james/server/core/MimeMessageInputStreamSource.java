@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -34,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.util.SizeFormat;
 
 /**
  * Takes an input stream and creates a repeatable input stream source for a
@@ -43,6 +45,19 @@ import org.apache.james.lifecycle.api.Disposable;
  * This class is not thread safe!
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
+    /**
+     * 100kb threshold for the stream.
+     */
+    private static final int DEFAULT_THRESHOLD = 1024 * 100;
+
+    private static int threshold() {
+        return Optional.ofNullable(System.getProperty("james.message.memory.threshold"))
+            .map(SizeFormat::parseAsByteCount)
+            .map(Math::toIntExact)
+            .orElse(DEFAULT_THRESHOLD);
+    }
+
+    private static final int THRESHOLD = threshold();
 
     private final Set<InputStream> streams = new HashSet<>();
 
@@ -55,11 +70,6 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      * The full path of the temporary file
      */
     private final String sourceId;
-
-    /**
-     * 100kb threshold for the stream.
-     */
-    private static final int THRESHOLD = 1024 * 100;
 
     /**
      * Temporary directory to use

@@ -19,12 +19,17 @@
 
 package org.apache.james.jmap.mail
 
+import java.nio.charset.StandardCharsets.US_ASCII
+import java.time.ZoneId
+import java.util.Date
+
 import cats.implicits._
 import eu.timepit.refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.api.model.Preview
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
+import org.apache.james.jmap.api.model.{EmailAddress, Preview}
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
@@ -47,10 +52,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import java.nio.charset.StandardCharsets.US_ASCII
-import java.time.ZoneId
-import java.util.Date
-import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 

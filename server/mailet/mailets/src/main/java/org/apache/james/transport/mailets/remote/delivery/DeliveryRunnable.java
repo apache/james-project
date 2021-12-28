@@ -39,6 +39,7 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.Disposable;
@@ -62,19 +63,20 @@ public class DeliveryRunnable implements Disposable {
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
     private final Supplier<Date> dateSupplier;
+    private final MailetContext mailetContext;
     private Disposable disposable;
     private Scheduler remoteDeliveryScheduler;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
                             MailetContext mailetContext, Bouncer bouncer) {
         this(queue, configuration, metricFactory, bouncer,
-            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext), dnsServer, bouncer),
-            CURRENT_DATE_SUPPLIER);
+            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext), dnsServer, bouncer, mailetContext),
+            CURRENT_DATE_SUPPLIER, mailetContext);
     }
 
     @VisibleForTesting
     DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, MetricFactory metricFactory, Bouncer bouncer,
-                     MailDelivrer mailDelivrer, Supplier<Date> dateSupplier) {
+                     MailDelivrer mailDelivrer, Supplier<Date> dateSupplier, MailetContext mailetContext) {
         this.queue = queue;
         this.configuration = configuration;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
@@ -82,6 +84,7 @@ public class DeliveryRunnable implements Disposable {
         this.mailDelivrer = mailDelivrer;
         this.dateSupplier = dateSupplier;
         this.metricFactory = metricFactory;
+        this.mailetContext = mailetContext;
     }
 
     public void start() {
@@ -136,6 +139,8 @@ public class DeliveryRunnable implements Disposable {
         switch (executionResult.getExecutionState()) {
             case SUCCESS:
                 outgoingMailsMetric.increment();
+                configuration.getOnSuccess()
+                    .ifPresent(Throwing.consumer(onSuccess -> mailetContext.sendMail(mail, onSuccess)));
                 break;
             case TEMPORARY_FAILURE:
                 handleTemporaryFailure(mail, executionResult);

@@ -23,12 +23,12 @@ S: NO
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK
 
 C: LISTSCRIPTS
 S: OK
 
-C: PUTSCRIPT "mysievescript" {110+}
+C: PUTSCRIPT "mysievescript" {99+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {
@@ -36,7 +36,7 @@ C:   fileinto "INBOX.sent";
 C: }
 S: OK
 
-C: PUTSCRIPT "toto1" {110+}
+C: PUTSCRIPT "toto1" {99+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {
@@ -44,7 +44,7 @@ C:   fileinto "INBOX.sent";
 C: }
 S: OK
 
-C: PUTSCRIPT "toto2" {110+}
+C: PUTSCRIPT "toto2" {99+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {

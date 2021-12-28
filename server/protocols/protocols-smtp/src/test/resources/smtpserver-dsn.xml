@@ -33,7 +33,10 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <authRequired>true</authRequired>
+        <auth>
+            <announce>forUnauthorizedAddresses</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
         <verifyIdentity>true</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>

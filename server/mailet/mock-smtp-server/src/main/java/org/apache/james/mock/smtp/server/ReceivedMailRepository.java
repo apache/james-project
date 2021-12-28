@@ -19,6 +19,7 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -41,7 +42,16 @@ public class ReceivedMailRepository {
         return ImmutableList.copyOf(mails);
     }
 
-    public void clear() {
-        mails.clear();
+    public int count() {
+        return mails.size();
+    }
+
+    public List<Mail> clear() {
+        Mail mail;
+        ArrayList<Mail> result = new ArrayList<>();
+        while ((mail = mails.poll()) != null) {
+            result.add(mail);
+        }
+        return result;
     }
 }

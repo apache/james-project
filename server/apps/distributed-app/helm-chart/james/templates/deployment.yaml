@@ -1,0 +1,387 @@
+{{- $elasticsearchUrl := include "elasticsearch.url.list" . }}
+{{- $cassandraUrl := include "cassandra.url.list" . }}
+{{- $jamesOpts := include "james.jvmOpts" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: james-jmap
+spec:
+  selector:
+    matchLabels:
+      instance: james-jmap
+  replicas: {{ .Values.james.replicaJmapInstanceCount }}
+  template:
+    metadata:
+      labels:
+        app: james
+        instance: james-jmap
+    spec:
+    {{- if .Values.dockerCredentials }}
+      imagePullSecrets:
+      - name: docker-registry-secret
+    {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - james
+              topologyKey: "kubernetes.io/hostname"
+
+      containers:
+      - name: james-jmap
+        image: {{ .Values.james.image }}
+        readinessProbe:
+          httpGet:
+            path: /healthcheck/checks/Guice%20application%20lifecycle
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/checks/Guice%20application%20lifecycle
+            port: 8000
+          initialDelaySeconds: 91
+          periodSeconds: 30
+        envFrom:
+          - secretRef:
+              name: s3-james-credentials
+        env:
+        - name: ELASTICSEARCH_INIT_TIMEOUT
+          value: "120"
+        - name: JAMES_IMAP_SMTP_ENABLED
+          value: "false"
+        - name: JAMES_JMAP_ENABLED
+          value: "true"
+        - name: JAMES_CASSANDRA_NODES_URLS
+          value: "{{ $cassandraUrl | trimSuffix "," }}"
+        - name: JAMES_CASSANDRA_REPLICATION_FACTOR
+          value: "{{ .Values.james.env.cassandraReplicationFactor }}"
+        - name: JAMES_CASSANDRA_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-cassandra-account-james
+              key: james-user
+        - name: JAMES_CASSANDRA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-cassandra-account-james
+              key: james-password
+        - name: JAMES_ES_NODES_URLS
+          value: "{{ $elasticsearchUrl | trimSuffix "," }}"
+        - name: JAMES_AMQP_HOST
+          value: {{ .Values.james.env.jamesRabbitHost }}
+        - name: JAMES_AMQP_PORT
+          value: "5672"
+        - name: JAMES_AMQP_MANAGEMENT_PORT
+          value: "15672"
+        - name: JAMES_AMQP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-account-james
+              key: rabbitmq-user
+        - name: JAMES_AMQP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-account-james
+              key: rabbitmq-password
+        - name: JAMES_DKIM_SIGN_SMTP
+          value: {{ .Values.james.env.jamesDkimSignSmtp }}
+        - name: JAMES_DKIM_SIGN_DOMAIN
+          value: {{ .Values.james.env.jamesDkimSignDomain }}
+        - name: JAMES_DKIM_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dkim-private-key
+              key: dkim.key
+        - name: JAMES_BUCKET_COUNT
+          value: "6"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if and (.Values.james.secret.esUser) (.Values.james.secret.esPassword) }}
+        - name: JAMES_ES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-es-account-james
+              key: james-user
+        - name: JAMES_ES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-es-account-james
+              key: james-password
+        {{- end }}
+        - name: JAMES_DEFAULT_DOMAIN
+          value: {{ .Values.dns.emailDomain }}
+        - name: JAMES_SMTP_HOSTNAME
+          value: "{{ .Values.dns.smtpHostname }}"
+        - name: JAMES_SMTP_MESSAGE
+          value: "{{ .Values.james.env.jamesHELOMessage }}"
+        - name: JAMES_CASSANDRA_KEYSPACE
+          value: {{ .Values.james.env.jamesCassandraKeyspace }}
+        - name: JAMES_CASSANDRA_CACHE_KEYSPACE
+          value: {{ .Values.james.env.jamesCassandraCacheKeyspace }}
+        - name: JAMES_BUCKET_SUFFIX
+          value: "{{ .Values.james.secret.s3.bucketNameSuffix }}"
+        - name: JAMES_ES_MAILBOX_INDEX
+          value: {{ .Values.james.env.jamesEsMailboxIndex }}
+        - name: JAMES_ES_CLUSTER_NAME
+          value: {{ .Values.james.env.jamesEsClusterName }}
+        - name: JAMES_ES_HOST_SCHEME
+          value: {{ .Values.james.env.jamesEsHostScheme }}
+        - name: JAMES_ES_SSL_VALIDATION_STRATEGY
+          value: {{ .Values.james.env.jamesEsSslValidationStrategy }}
+        - name: JAMES_ES_HOST_NAME_VERIFIER
+          value: {{ .Values.james.env.jamesEsHostNameVerifier }}
+        - name: JAMES_ES_NB_SHARDS
+          value: "{{ .Values.james.env.jamesEsNbShards }}"
+        - name: JAMES_ES_NB_REPLICA
+          value: "{{ .Values.james.env.jamesEsNbReplica }}"
+        - name: JAMES_ES_MAILBOX_READ_ALIAS
+          value: "{{ .Values.james.env.jamesEsMailboxReadAlias }}"
+        - name: JAMES_ES_MAILBOX_READ_WRITE
+          value: "{{ .Values.james.env.jamesEsMailboxWriteAlias }}"
+        - name: JAMES_MESSAGE_SIZE
+          value: "{{ .Values.james.env.jamesMessageSize }}"
+        - name: JAVA_TOOL_OPTIONS
+          value: "{{ $jamesOpts }}"
+        ports:
+        - containerPort: 80
+        - containerPort: 8000
+        - containerPort: 4000
+        resources:
+          limits:
+            cpu: {{ .Values.james.env.jamesResources.limits.cpu }}
+            memory: {{ .Values.james.env.jamesResources.limits.memory }}
+          requests:
+            cpu: {{ .Values.james.env.jamesResources.requests.cpu }}
+            memory: {{ .Values.james.env.jamesResources.requests.memory }}
+        volumeMounts:
+        - name: all-in-one-config
+          mountPath: "/root/conf"
+          readOnly: true
+        {{- if .Values.james.tls.secretName }}
+        - name: james-secrets
+          mountPath: /root/secrets
+        {{- end }}
+      volumes:
+      - name: all-in-one-config
+        projected:
+          sources:
+          - configMap:
+              name: james-configs
+          - secret:
+              name: james-jwt-key
+      {{- if .Values.james.tls.secretName }}        
+      - name: james-secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Values.james.tls.secretName }}
+              items:
+              - key: tls.key
+                path: tls.key
+              - key: tls.crt
+                path: tls.crt
+        {{- end }}
+      priorityClassName: application-scope-medium
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: james-imap-smtp
+spec:
+  selector:
+    matchLabels:
+      instance: james-imap-smtp
+  replicas: {{ .Values.james.replicaImapSmtpInstanceCount }}
+  template:
+    metadata:
+      labels:
+        app: james
+        instance: james-imap-smtp
+    spec:
+    {{- if .Values.dockerCredentials }}
+      imagePullSecrets:
+      - name: docker-registry-secret
+    {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - james
+              topologyKey: "kubernetes.io/hostname"
+
+      containers:
+      - name: james-imap-smtp
+        image: {{ .Values.james.image }}
+        readinessProbe:
+          httpGet:
+            path: /healthcheck/checks/Guice%20application%20lifecycle
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/checks/Guice%20application%20lifecycle
+            port: 8000
+          initialDelaySeconds: 91
+          periodSeconds: 30
+        envFrom:
+          - secretRef:
+              name: s3-james-credentials
+        env:
+        - name: ELASTICSEARCH_INIT_TIMEOUT
+          value: "120"
+        - name: JAMES_IMAP_SMTP_ENABLED
+          value: "true"
+        - name: JAMES_JMAP_ENABLED
+          value: "false"
+        - name: JAMES_CASSANDRA_NODES_URLS
+          value: "{{ $cassandraUrl | trimSuffix "," }}"
+        - name: JAMES_CASSANDRA_REPLICATION_FACTOR
+          value: "{{ .Values.james.env.cassandraReplicationFactor }}"
+        - name: JAMES_CASSANDRA_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-cassandra-account-james
+              key: james-user
+        - name: JAMES_CASSANDRA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-cassandra-account-james
+              key: james-password
+        - name: JAMES_ES_NODES_URLS
+          value: "{{ $elasticsearchUrl | trimSuffix "," }}"
+        - name: JAMES_AMQP_HOST
+          value: {{ .Values.james.env.jamesRabbitHost }}
+        - name: JAMES_AMQP_PORT
+          value: "5672"
+        - name: JAMES_AMQP_MANAGEMENT_PORT
+          value: "15672"
+        - name: JAMES_AMQP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-account-james
+              key: rabbitmq-user
+        - name: JAMES_AMQP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-account-james
+              key: rabbitmq-password
+        - name: JAMES_DKIM_SIGN_SMTP
+          value: {{ .Values.james.env.jamesDkimSignSmtp }}
+        - name: JAMES_DKIM_SIGN_DOMAIN
+          value: {{ .Values.james.env.jamesDkimSignDomain }}
+        - name: JAMES_DKIM_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dkim-private-key
+              key: dkim.key
+        - name: JAMES_BUCKET_COUNT
+          value: "6"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if and (.Values.james.secret.esUser) (.Values.james.secret.esPassword) }}
+        - name: JAMES_ES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-es-account-james
+              key: james-user
+        - name: JAMES_ES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-es-account-james
+              key: james-password
+        {{- end }}
+        - name: JAMES_DEFAULT_DOMAIN
+          value: {{ .Values.dns.emailDomain }}
+        - name: JAMES_SMTP_HOSTNAME
+          value: "{{ .Values.dns.smtpHostname }}"
+        - name: JAMES_SMTP_MESSAGE
+          value: "{{ .Values.james.env.jamesHELOMessage }}"
+        - name: JAMES_CASSANDRA_KEYSPACE
+          value: {{ .Values.james.env.jamesCassandraKeyspace }}
+        - name: JAMES_CASSANDRA_CACHE_KEYSPACE
+          value: {{ .Values.james.env.jamesCassandraCacheKeyspace }}
+        - name: JAMES_BUCKET_SUFFIX
+          value: "{{ .Values.james.secret.s3.bucketNameSuffix }}"
+        - name: JAMES_ES_MAILBOX_INDEX
+          value: {{ .Values.james.env.jamesEsMailboxIndex }}
+        - name: JAMES_ES_CLUSTER_NAME
+          value: {{ .Values.james.env.jamesEsClusterName }}
+        - name: JAMES_ES_HOST_SCHEME
+          value: {{ .Values.james.env.jamesEsHostScheme }}
+        - name: JAMES_ES_SSL_VALIDATION_STRATEGY
+          value: {{ .Values.james.env.jamesEsSslValidationStrategy }}
+        - name: JAMES_ES_HOST_NAME_VERIFIER
+          value: {{ .Values.james.env.jamesEsHostNameVerifier }}
+        - name: JAMES_ES_NB_SHARDS
+          value: "{{ .Values.james.env.jamesEsNbShards }}"
+        - name: JAMES_ES_NB_REPLICA
+          value: "{{ .Values.james.env.jamesEsNbReplica }}"
+        - name: JAMES_ES_MAILBOX_READ_ALIAS
+          value: "{{ .Values.james.env.jamesEsMailboxReadAlias }}"
+        - name: JAMES_ES_MAILBOX_READ_WRITE
+          value: "{{ .Values.james.env.jamesEsMailboxWriteAlias }}"
+        - name: JAMES_MESSAGE_SIZE
+          value: "{{ .Values.james.env.jamesMessageSize }}"
+        - name: JAVA_TOOL_OPTIONS
+          value: "{{ $jamesOpts }}"
+        ports:
+        - containerPort: 8000
+        - containerPort: 25
+        - containerPort: 110
+        - containerPort: 465
+        - containerPort: 993
+        - containerPort: 4000
+        resources:
+          limits:
+            cpu: {{ .Values.james.env.jamesResources.limits.cpu }}
+            memory: {{ .Values.james.env.jamesResources.limits.memory }}
+          requests:
+            cpu: {{ .Values.james.env.jamesResources.requests.cpu }}
+            memory: {{ .Values.james.env.jamesResources.requests.memory }}
+        volumeMounts:
+        - name: all-in-one-config
+          mountPath: "/root/conf"
+          readOnly: true
+        {{- if .Values.james.tls.secretName }}
+        - name: james-secrets
+          mountPath: /root/secrets
+        {{- end }}
+      volumes:
+      - name: all-in-one-config
+        projected:
+          sources:
+          - configMap:
+              name: james-configs
+          - secret:
+              name: james-jwt-key
+      {{- if .Values.james.tls.secretName }}        
+      - name: james-secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Values.james.tls.secretName }}
+              items:
+              - key: tls.key
+                path: tls.key
+              - key: tls.crt
+                path: tls.crt
+        {{- end }}
+      priorityClassName: application-scope-medium

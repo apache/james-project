@@ -23,14 +23,8 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
 import java.util.Comparator;
-import java.util.List;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -46,7 +40,6 @@ import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AliasSourcesResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -57,20 +50,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "Address Aliases")
-@Path(AliasRoutes.ROOT_PATH)
-@Produces(Constants.JSON_CONTENT_TYPE)
 public class AliasRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/aliases";
@@ -109,14 +93,6 @@ public class AliasRoutes implements Routes {
         service.delete(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::deleteAlias);
     }
 
-    @GET
-    @Path(ROOT_PATH)
-    @ApiOperation(value = "getting addresses containing aliases list")
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public ImmutableSet<String> listAddressesWithAliases(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getMappingsForType(Mapping.Type.Alias)
             .flatMap(mapping -> mapping.asMailAddress().stream())
@@ -124,28 +100,6 @@ public class AliasRoutes implements Routes {
             .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
     }
 
-    @PUT
-    @Path(ROOT_PATH + "/{" + ALIAS_DESTINATION_ADDRESS + "}/sources/{" + ALIAS_SOURCE_ADDRESS + "}")
-    @ApiOperation(value = "adding a source address into an alias")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_DESTINATION_ADDRESS, paramType = "path",
-            value = "Destination mail address of the alias. Sending a mail to the alias source address will send it to " +
-                "that email address.\n" +
-                MAILADDRESS_ASCII_DISCLAIMER),
-        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_SOURCE_ADDRESS, paramType = "path",
-            value = "Source mail address of the alias. Sending a mail to that address will send it to " +
-                "the email destination address.\n" +
-                MAILADDRESS_ASCII_DISCLAIMER)
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
-        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "The alias source exists as an user already"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Source and destination can't be the same!"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the destination or source is not managed by the DomainList"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException addAlias(Request request, Response response) throws Exception {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
@@ -185,24 +139,6 @@ public class AliasRoutes implements Routes {
         }
     }
 
-    @DELETE
-    @Path(ROOT_PATH + "/{" + ALIAS_DESTINATION_ADDRESS + "}/sources/{" + ALIAS_SOURCE_ADDRESS + "}")
-    @ApiOperation(value = "remove an alias from a destination address")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_DESTINATION_ADDRESS, paramType = "path",
-            value = "Destination mail address of the alias to remove.\n" +
-                MAILADDRESS_ASCII_DISCLAIMER),
-        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_SOURCE_ADDRESS, paramType = "path",
-            value = "Source mail address of the alias to remove.\n" +
-                MAILADDRESS_ASCII_DISCLAIMER)
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400,
-            message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public HaltException deleteAlias(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
         MailAddress aliasToBeRemoved = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
@@ -211,18 +147,6 @@ public class AliasRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    @GET
-    @Path(ROOT_PATH + "/{" + ALIAS_DESTINATION_ADDRESS + "}")
-    @ApiOperation(value = "listing alias sources of an address")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_DESTINATION_ADDRESS, paramType = "path")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The destination is not an address"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
-    })
     public ImmutableSet<AliasSourcesResponse> listAliasesOfAddress(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
 

@@ -1,0 +1,14 @@
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="false" startTLS="false">
+        <keystore>classpath://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        <algorithm>SunX509</algorithm>
+    </tls>
+    <auth>
+        <plainAuthEnabled>true</plainAuthEnabled>
+        <requireSSL>true</requireSSL>
+    </auth>
+</imapserver>

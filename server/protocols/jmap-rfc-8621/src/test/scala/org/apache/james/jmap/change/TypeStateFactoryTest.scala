@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.change
 
+import org.apache.james.jmap.api.change
+import org.apache.james.jmap.api.change.TypeStateFactory
+import org.apache.james.jmap.api.model.TypeName
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Test

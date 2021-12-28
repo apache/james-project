@@ -26,12 +26,12 @@ S: NO
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK
 
 C: SETACTIVE "foo"
 S: NO \(NONEXISTENT\) "There is no script by that name"
 
-C: PUTSCRIPT "mysievescript" {110+}
+C: PUTSCRIPT "mysievescript" {99+}
 C: require ["fileinto"];
 C:
 C: if envelope :contains "to" "tmartin+sent" {

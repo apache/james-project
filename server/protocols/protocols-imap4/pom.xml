@@ -98,7 +98,12 @@
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-imap</artifactId>

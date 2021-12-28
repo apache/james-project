@@ -4,7 +4,8 @@ Date: 2020-06-11
 
 ## Status
 
-Proposed
+Implemented, used for JMAP notifications, however not yet used on top of the user entity as 
+described in this document.
 
 ## Context
 

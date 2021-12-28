@@ -46,26 +46,26 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
   }
 
   "Array element parsing" should {
-    "succeed when poositive" in {
-      ArrayElementPart.parse("[1]") should equal(Some(ArrayElementPart(1)))
+    "succeed when positive" in {
+      ArrayElementPart.parse("1") should equal(Some(ArrayElementPart(1)))
     }
     "succeed when zero" in {
-      ArrayElementPart.parse("[0]") should equal(Some(ArrayElementPart(0)))
+      ArrayElementPart.parse("0") should equal(Some(ArrayElementPart(0)))
+    }
+    "succeed when no bracket" in {
+      ArrayElementPart.parse("0") should equal(Some(ArrayElementPart(0)))
     }
     "fail when negative" in {
-      ArrayElementPart.parse("[-1]") should equal(None)
+      ArrayElementPart.parse("-1") should equal(None)
     }
     "fail when not an int" in {
-      ArrayElementPart.parse("[invalid]") should equal(None)
+      ArrayElementPart.parse("invalid") should equal(None)
     }
-    "fail when not closed" in {
-      ArrayElementPart.parse("[0") should equal(None)
+    "fail when has bracket" in {
+      ArrayElementPart.parse("[0]") should equal(None)
     }
-    "fail when not open" in {
-      ArrayElementPart.parse("0]") should equal(None)
-    }
-    "fail when no bracket" in {
-      ArrayElementPart.parse("0") should equal(None)
+    "fail when positive is too large" in {
+      ArrayElementPart.parse("2147483648") should equal(None)
     }
   }
 
@@ -85,39 +85,41 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
       jsonPath.evaluate(json) should equal(JsSuccess(expected))
     }
     "succeed when array element is present and root" in {
-      val jsonPath = JsonPath.parse("[1]")
+      val jsonPath = JsonPath.parse("1")
       val json = Json.parse("""["1", "2", "3"]""")
       val expected = JsString("2")
 
       jsonPath.evaluate(json) should equal(JsSuccess(expected))
     }
     "succeed when first array element is present" in {
-      val jsonPath = JsonPath.parse("path[0]")
+      val jsonPath = JsonPath.parse("path/0")
       val json = Json.parse("""{"path" : ["1", "2", "3"]}""")
       val expected = JsString("1")
 
       jsonPath.evaluate(json) should equal(JsSuccess(expected))
     }
+    "succeed when first array element is present in second path" in {
+      val jsonPath = JsonPath.parse("path/0")
+      val json = Json.parse("""{"path":[{"id":"1","code":"a"},{"id":"2","code":"b"},{"id":"3","code":"c"}]}""".stripMargin)
+      val expected = Json.parse("""{"id":"1","code":"a"}""")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "succeed when pointing to specific array elements and specific path" in {
+      val jsonPath = JsonPath.parse("path/0/id")
+      val json = Json.parse("""{"path":[{"id":"1","code":"a"},{"id":"2","code":"b"},{"id":"3","code":"c"}]}""".stripMargin)
+      val expected = JsString("1")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
     "fail when overflow" in {
-      val jsonPath = JsonPath.parse("path[3]")
+      val jsonPath = JsonPath.parse("path/3")
       val json = Json.parse("""{"path" : ["1", "2", "3"]}""")
 
       jsonPath.evaluate(json) shouldBe a[JsError]
     }
-    "parse should default to plain part when negative" in {
-      JsonPath.parse("path[-1]") should equal(JsonPath(List(PlainPart("path[-1]"))))
-    }
     "parse should default to plain part when not an int" in {
-      JsonPath.parse("path[invalid]") should equal(JsonPath(List(PlainPart("path[invalid]"))))
-    }
-    "parse should default to plain part when empty" in {
-      JsonPath.parse("path[]") should equal(JsonPath(List(PlainPart("path[]"))))
-    }
-    "parse should default to plain part when not closed" in {
-      JsonPath.parse("path[36") should equal(JsonPath(List(PlainPart("path[36"))))
-    }
-    "parse should default to plain part when not closed and root" in {
-      JsonPath.parse("[36") should equal(JsonPath(List(PlainPart("[36"))))
+      JsonPath.parse("path/]1") should equal(JsonPath(List(PlainPart("path"), PlainPart("]1"))))
     }
     "succeed when array part is present" in {
       val jsonPath = JsonPath.parse("path/*")

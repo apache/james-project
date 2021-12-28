@@ -152,7 +152,6 @@
                     </item>
                     <item name="7. Upgrade" href="/server/upgrade.html" collapse="true" >
                         <item name="Upgrade from 2.3" href="/server/upgrade-2.3.html" />
-                        <item name="Upgrade database" href="/server/upgrade-database.html" />
                     </item>
                     <item name="8. Developers Corner" href="/server/dev.html" collapse="true" >
                         <item name="Build from source" href="/server/dev-build.html" />
@@ -201,7 +200,6 @@
                 <item name="Implementations" href="/mailbox/index.html">
                     <item name="Mailbox Memory" href="/mailbox/mailbox-memory.html" />
                     <item name="Mailbox Cassandra" href="/mailbox/mailbox-cassandra.html" />
-                    <item name="Mailbox Maildir" href="/mailbox/mailbox-maildir.html" />
                     <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
                 </item>
                 <item name="Wiring" href="/mailbox/mailbox-spring.html" />

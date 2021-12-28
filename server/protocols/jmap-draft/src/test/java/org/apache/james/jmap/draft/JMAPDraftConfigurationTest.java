@@ -23,9 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class JMAPDraftConfigurationTest {
 
@@ -92,21 +95,21 @@ public class JMAPDraftConfigurationTest {
                 .enable()
                 .keystore("keystore")
                 .secret("secret")
-                .jwtPublicKeyPem(Optional.empty())
                 .build())
             .doesNotThrowAnyException();
     }
 
     @Test
     public void buildShouldWorkWhenDisabled() {
-        Optional<String> jwtPublicKeyPem = Optional.empty();
+        List<String> jwtPublicKeyPem = ImmutableList.of();
         Optional<String> privateKey = Optional.empty();
         Optional<String> certificates = Optional.empty();
         Optional<String> keystore = Optional.empty();
         Optional<String> secret = Optional.empty();
+        Optional<List<String>> authenticationStrategies = Optional.empty();
 
         JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore,
-            privateKey, certificates, "JKS", secret, jwtPublicKeyPem);
+            privateKey, certificates, "JKS", secret, jwtPublicKeyPem, authenticationStrategies);
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .disable()

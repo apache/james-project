@@ -36,6 +36,7 @@ import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BASE_PATH, expected_session_object}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object SessionRoutesContract {
@@ -171,4 +172,40 @@ trait SessionRoutesContract {
 
     assertThatJson(sessionJson).isEqualTo(expected_session_object)
   }
+
+  @Test
+  def getResponseShouldReturnUrlEndpointContainJmapPrefixWhenAssignHeaderAndConfigurationProvided(): Unit = {
+    `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .header("X-JMAP-PREFIX", "http://new-domain.tld/prefix")
+      .header("X-JMAP-WEBSOCKET-PREFIX", "ws://new-domain.tld/prefix")
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("apiUrl", Matchers.is("http://new-domain.tld/prefix/jmap"))
+      .body("downloadUrl", Matchers.is("http://new-domain.tld/prefix/download/{accountId}/{blobId}?type={type}&name={name}"))
+      .body("uploadUrl", Matchers.is("http://new-domain.tld/prefix/upload/{accountId}"))
+      .body("eventSourceUrl", Matchers.is("http://new-domain.tld/prefix/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
+      .body("capabilities.\"urn:ietf:params:jmap:websocket\".url", Matchers.is("ws://new-domain.tld/prefix/jmap/ws"))
+  }
+
+  @Test
+  def getResponseShouldReturnUrlEndpointNOTContainJmapPrefixWhenAssignInvalidHeader(): Unit = {
+    val sessionJson: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .header("X-JMAP-PREFIX", "new@domain")
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(sessionJson).isEqualTo(expected_session_object)
+  }
+
 }

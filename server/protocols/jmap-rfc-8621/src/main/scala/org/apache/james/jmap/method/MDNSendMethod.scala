@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.mail.internet.MimeMessage
+import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
@@ -76,7 +77,9 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                          invocation: InvocationWithContext,
                          mailboxSession: MailboxSession,
                          request: MDNSendRequest): SFlux[InvocationWithContext] =
-    identityResolver.resolveIdentityId(request.identityId, mailboxSession)
+    request.identityId.validate
+      .fold(e => SMono.error(new IllegalArgumentException("The IdentityId cannot be found", e)),
+      id => identityResolver.resolveIdentityId(id, mailboxSession))
       .flatMap(maybeIdentity => maybeIdentity.map(identity => create(identity, request, mailboxSession, invocation.processingContext))
         .getOrElse(SMono.error(IdentityIdNotFoundException("The IdentityId cannot be found"))))
       .flatMapMany(createdResults => {

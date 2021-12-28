@@ -28,9 +28,9 @@ import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, EventBus, Group}
 import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository}
-import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.api.model.{AccountId, State, TypeName}
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
-import org.apache.james.jmap.core.{State, UuidState}
+import org.apache.james.jmap.core.UuidState
 import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}

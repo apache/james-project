@@ -213,10 +213,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-swagger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jmap-draft-integration-testing</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -380,6 +376,7 @@
                         <volumes>
                             <volume>/logs</volume>
                             <volume>/root/conf</volume>
+                            <volume>/root/extensions-jars</volume>
                             <!-- Data for ActiveMQ mailQueue -->
                             <volume>/root/var</volume>
                             <volume>/root/glowroot/plugins</volume>

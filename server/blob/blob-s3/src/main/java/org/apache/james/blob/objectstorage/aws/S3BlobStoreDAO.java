@@ -22,9 +22,12 @@ package org.apache.james.blob.objectstorage.aws;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.Closeable;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -62,6 +66,7 @@ import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.http.TlsTrustManagersProvider;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Configuration;
@@ -103,6 +108,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
             .httpClientBuilder(NettyNioAsyncHttpClient.builder()
+                .tlsTrustManagersProvider(getTrustManagerProvider(configuration.getSpecificAuthConfiguration()))
                 .maxConcurrency(configuration.getHttpConcurrency())
                 .maxPendingConnectionAcquires(10_000))
             .endpointOverride(authConfiguration.getEndpoint())
@@ -116,6 +122,33 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .build();
     }
 
+    private TlsTrustManagersProvider getTrustManagerProvider(AwsS3AuthConfiguration configuration) {
+        try {
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
+                configuration.getTrustStoreAlgorithm().orElse(TrustManagerFactory.getDefaultAlgorithm()));
+            KeyStore trustStore = loadTrustStore(configuration);
+            trustManagerFactory.init(trustStore);
+            return trustManagerFactory::getTrustManagers;
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private KeyStore loadTrustStore(AwsS3AuthConfiguration configuration) {
+        if (configuration.getTrustStorePath().isEmpty()) {
+            return null; // use java default truststore
+        }
+        try (FileInputStream trustStoreStream = new FileInputStream(configuration.getTrustStorePath().get())) {
+            char[] secret = configuration.getTrustStoreSecret().map(String::toCharArray).orElse(null);
+            KeyStore trustStore = KeyStore.getInstance(
+                configuration.getTrustStoreType().orElse(KeyStore.getDefaultType()));
+            trustStore.load(trustStoreStream, secret);
+            return trustStore;
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     @PreDestroy
     public void close() {
@@ -126,12 +159,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        return getObject(resolvedBucketName, blobId)
-            .publishOn(Schedulers.elastic())
-            .map(response -> ReactorUtils.toInputStream(response.flux))
+
+        return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
-            .block();
+            .block()
+            .flux);
     }
 
     private static class FluxResponse {

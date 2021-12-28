@@ -20,11 +20,9 @@
 package org.apache.james.user.lib.model;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.util.DigestUtil;
 
 /**
  * Implementation of User Interface. Instances of this class do not allow the
@@ -36,19 +34,23 @@ public class DefaultUser implements User, Serializable {
 
     private final Username userName;
     private String hashedPassword;
-    private final Algorithm algorithm;
+    private Algorithm currentAlgorithm;
+    private final Algorithm preferredAlgorithm;
 
     /**
      * Standard constructor.
      * 
      * @param name
      *            the String name of this user
-     * @param hashAlg
-     *            the algorithm used to generate the hash of the password
+     * @param verifyAlg
+     *            the algorithm used to verify the hash of the password
+     * @param updateAlg
+     *            the algorithm used to update the hash of the password
      */
-    public DefaultUser(Username name, Algorithm hashAlg) {
+    public DefaultUser(Username name, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
-        algorithm = hashAlg;
+        currentAlgorithm = verifyAlg;
+        preferredAlgorithm = updateAlg;
     }
 
     /**
@@ -59,13 +61,16 @@ public class DefaultUser implements User, Serializable {
      *            the String name of this user
      * @param passwordHash
      *            the String hash of this users current password
-     * @param hashAlg
-     *            the String algorithm used to generate the hash of the password
+     * @param verifyAlg
+     *            the algorithm used to verify the hash of the password
+     * @param updateAlg
+     *            the algorithm used to update the hash of the password
      */
-    public DefaultUser(Username name, String passwordHash, Algorithm hashAlg) {
+    public DefaultUser(Username name, String passwordHash, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
         hashedPassword = passwordHash;
-        algorithm = hashAlg;
+        currentAlgorithm = verifyAlg;
+        preferredAlgorithm = updateAlg;
     }
 
     @Override
@@ -75,23 +80,18 @@ public class DefaultUser implements User, Serializable {
 
     @Override
     public boolean verifyPassword(String pass) {
-        try {
-            String hashGuess = DigestUtil.digestString(pass, algorithm);
-            return hashedPassword.equals(hashGuess);
-        } catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException("Security error: " + nsae);
-        }
+        String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
+        return hashedPassword.equals(hashGuess);
     }
 
     @Override
     public boolean setPassword(String newPass) {
-        try {
-            hashedPassword = DigestUtil.digestString(newPass, algorithm);
-            return true;
-        } catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException("Security error: " + nsae);
-        }
+        hashedPassword = digestString(newPass, preferredAlgorithm, userName.asString());
+        currentAlgorithm = preferredAlgorithm;
+        return true;
     }
+
+
 
     /**
      * Method to access hash of password
@@ -108,6 +108,18 @@ public class DefaultUser implements User, Serializable {
      * @return the name of the hashing algorithm used for this user's password
      */
     public Algorithm getHashAlgorithm() {
-        return algorithm;
+        return currentAlgorithm;
+    }
+
+    /**
+     * Calculate digest of given String using given algorithm. Encode digest in
+     * MIME-like base64.
+     *
+     * @param pass the String to be hashed
+     * @param algorithm the algorithm to be used
+     * @return String Base-64 encoding of digest
+     */
+    static String digestString(String pass, Algorithm algorithm, String salt) {
+        return algorithm.digest(pass, salt);
     }
 }

@@ -45,9 +45,8 @@ case class PlainPart(name: String) extends JsonPathPart {
 
 object ArrayElementPart {
   def parse(string: String): Option[ArrayElementPart] = {
-    if (string.startsWith("[") && string.endsWith("]")) {
-      val positionPart: String = string.substring(1, string.length - 1)
-      Try(positionPart.toInt)
+    if (string forall Character.isDigit) {
+      Try(string.toInt)
         .fold(_ => None, fromInt)
     } else {
       None
@@ -74,28 +73,9 @@ object JsonPath {
     .flatMap {
       case "" => Nil
       case "*" => List(WildcardPart)
-      case string if ArrayElementPart.parse(string).isDefined => ArrayElementPart.parse(string)
-      case part: String =>
-        val arrayElementPartPosition = part.indexOf('[')
-        if (arrayElementPartPosition < 0) {
-          asPlainPart(part)
-        } else if (arrayElementPartPosition == 0) {
-          asArrayElementPart(string)
-        } else {
-          asArrayElementInAnObject(string, part, arrayElementPartPosition)
-        }
+      case part: String => ArrayElementPart.parse(part)
+        .orElse(Some(PlainPart(part)))
     })
-
-  private def asPlainPart(part: String): List[JsonPathPart] = List(PlainPart(part))
-
-  private def asArrayElementInAnObject(string: String, part: String, arrayElementPartPosition: Int): List[JsonPathPart] =
-    ArrayElementPart.parse(string.substring(arrayElementPartPosition))
-      .map(List(PlainPart(part.substring(0, arrayElementPartPosition)), _))
-      .getOrElse(List(PlainPart(part)))
-
-  private def asArrayElementPart(string: String): List[JsonPathPart] =
-    List(ArrayElementPart.parse(string)
-      .getOrElse(PlainPart(string)))
 }
 
 case class JsonPath(parts: List[JsonPathPart]) {

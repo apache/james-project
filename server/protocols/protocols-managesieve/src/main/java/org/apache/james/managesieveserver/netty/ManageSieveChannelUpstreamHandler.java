@@ -22,12 +22,12 @@ package org.apache.james.managesieveserver.netty;
 import java.io.Closeable;
 import java.net.InetSocketAddress;
 
-import javax.net.ssl.SSLContext;
-
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
+import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.api.Encryption;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -48,32 +48,40 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     private final Logger logger;
     private final ChannelLocal<Session> attributes;
     private final ManageSieveProcessor manageSieveProcessor;
-    private final SSLContext sslContext;
-    private final String[] enabledCipherSuites;
-    private final boolean sslServer;
+    private final Encryption secure;
 
-    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext,
-                                             String[] enabledCipherSuites, boolean sslServer, Logger logger) {
+    public ManageSieveChannelUpstreamHandler(
+            ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
         this.logger = logger;
         this.attributes = new ChannelLocal<>();
         this.manageSieveProcessor = manageSieveProcessor;
-        this.sslContext = sslContext;
-        this.enabledCipherSuites = enabledCipherSuites;
-        this.sslServer = sslServer;
+        this.secure = secure;
+    }
+
+    private boolean isSSL() {
+        return secure != null && !secure.isStartTLS();
     }
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        ChannelManageSieveResponseWriter attachment = (ChannelManageSieveResponseWriter) ctx.getAttachment();
         try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
-            String request = (String) e.getMessage();
+            String request = attachment.cumulate((String) e.getMessage());
+            if (request.isEmpty() || request.startsWith("\r\n")) {
+                return;
+            }
+
             Session manageSieveSession = attributes.get(ctx.getChannel());
             String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
-            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(responseString);
+            attachment.resetCumulation();
+            attachment.write(responseString);
             if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
                 turnSSLon(ctx.getChannel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
             }
+        } catch (NotEnoughDataException ex) {
+            // Do nothing will keep the cumulation
         }
     }
 
@@ -110,13 +118,13 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
             logger.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
-            if (sslServer) {
+            if (isSSL()) {
                 session.setSslEnabled(true);
             }
             attributes.set(ctx.getChannel(), session);
             ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
             super.channelBound(ctx, e);
-            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
+            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities() + "OK\r\n");
         }
     }
 
@@ -131,13 +139,10 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     }
 
     private void turnSSLon(Channel channel) {
-        if (sslContext != null) {
+        if (secure != null) {
             channel.setReadable(false);
-            SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
+            SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
             filter.getEngine().setUseClientMode(false);
-            if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
-                filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
-            }
             channel.getPipeline().addFirst(SSL_HANDLER, filter);
             channel.setReadable(true);
         }

@@ -55,7 +55,8 @@
                     <dd>Password used to read the keystore</dd>
 
                     <dt><strong>jwt.publickeypem.url</strong></dt>
-                    <dd>Optional. JWT tokens allows request to bypass authentication</dd>
+                    <dd>Optional. Coma separated list of RSA public keys URLs to validate JWT tokens allowing requests to bypass authentication.
+                        Defaults to an empty list.</dd>
 
                     <dt><strong>url.prefix</strong></dt>
                     <dd>Optional. Configuration urlPrefix for JMAP routes.</dd>
@@ -78,11 +79,39 @@
                     <dd>Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
                         This enables a higher resilience, but the projection needs to be correctly populated.</dd>
 
+                    <dt><strong>user.provisioning.enabled</strong></dt>
+                    <dd>Optional boolean. Defaults to true.</dd>
+                    <dd>Governs whether authenticated users that do not exist locally should be created in the users repository.
+                    </dd>
+
+                    <dt><strong>authentication.strategy.draft</strong></dt>
+                    <dd>List[String] with delimiter ",". Defaults to AccessTokenAuthenticationStrategy,JWTAuthenticationStrategy,
+                        QueryParameterAccessTokenAuthenticationStrategy.</dd>
+                    <dd>Specify which authentication strategies system admin want to use for JMAP draft server.
+                        The implicit package name is "org.apache.james.jmap.http". If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+                        If no authentication strategy is specified, JMAP draft server will fallback to default strategies:
+                    AccessTokenAuthenticationStrategy, JWTAuthenticationStrategy, QueryParameterAccessTokenAuthenticationStrategy.</dd>
+
+                    <dt><strong>authentication.strategy.rfc8621</strong></dt>
+                    <dd>List[String] with delimiter ",". Defaults to JWTAuthenticationStrategy,BasicAuthenticationStrategy.</dd>
+                    <dd>Specify which authentication strategies system admin want to use for JMAP RFC-8621 server.
+                        The implicit package name is "org.apache.james.jmap.http". If you have a custom authentication strategy outside this package, you have to specify its FQDN.
+                        If no authentication strategy is specified, JMAP RFC-8621 server will fallback to default strategies:
+                    JWTAuthenticationStrategy, BasicAuthenticationStrategy.</dd>
+
                     <dt><strong>jmap.version.default</strong></dt>
                     <dd>Optional string. Defaults to draft. Allowed values: draft, rfc-8621.</dd>
                     <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.
                     Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
                     rfc-8621 allow compatibility with other third party apps.</dd>
+
+                    <dt><strong>dynamic.jmap.prefix.resolution.enabled</strong></dt>
+                    <dd>Optional boolean. Defaults to false. Supported Jmap session endpoint returns dynamic prefix in response.
+                        When its config is true, and the HTTP request to Jmap session endpoint has a `X-JMAP-PREFIX` header with the value `http://new-domain/prefix`,
+                        then `apiUrl, downloadUrl, uploadUrl, eventSourceUrl, webSocketUrl` in response will be changed with a new prefix. Example: The `apiUrl` will be "http://new-domain/prefix/jmap".
+                        If the HTTP request to Jmap session endpoint has the `X-JMAP-WEBSOCKET-PREFIX` header with the value `ws://new-domain/prefix`,
+                        then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws://new-domain/prefix/jmap/ws".
+                    </dd>
                 </dl>
 
             </subsection>

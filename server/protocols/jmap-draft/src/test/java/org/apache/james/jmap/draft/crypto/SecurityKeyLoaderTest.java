@@ -23,9 +23,7 @@ import static org.apache.james.jmap.draft.crypto.JamesSignatureHandlerFixture.JW
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.security.KeyStoreException;
-import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystemFixture;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
@@ -33,15 +31,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.google.common.collect.ImmutableList;
+
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 
 class SecurityKeyLoaderTest {
-
     @Test
-    void loadShouldThrowWhenJMAPIsNotEnabled() throws Exception {
+    void loadShouldThrowWhenJMAPIsNotEnabled() {
         JMAPDraftConfiguration jmapConfiguration = JMAPDraftConfiguration.builder()
             .disable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("james72laBalle")
             .build();
@@ -56,10 +55,10 @@ class SecurityKeyLoaderTest {
     }
 
     @Test
-    void loadShouldThrowWhenWrongKeystore() throws Exception {
+    void loadShouldThrowWhenWrongKeystore() {
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore("badAliasKeystore")
             .secret("password")
             .build();
@@ -74,10 +73,10 @@ class SecurityKeyLoaderTest {
     }
 
     @Test
-    void loadShouldThrowWhenWrongPassword() throws Exception {
+    void loadShouldThrowWhenWrongPassword() {
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("WrongPassword")
             .build();
@@ -95,9 +94,26 @@ class SecurityKeyLoaderTest {
     void loadShouldReturnAsymmetricKeysWhenCorrectPassword() throws Exception {
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("james72laBalle")
+            .build();
+
+        SecurityKeyLoader loader = new SecurityKeyLoader(
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
+            jmapDraftConfiguration);
+
+        assertThat(loader.load())
+            .isNotNull();
+    }
+
+    @Test
+    void loadShouldReturnAsymmetricKeysWhenRawPublicKey() throws Exception {
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
+            .enable()
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
+            .certificates("key.pub")
+            .privateKey("private.nopass.key")
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
@@ -118,7 +134,7 @@ class SecurityKeyLoaderTest {
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .jwtPublicKeyPem(ImmutableList.of(JWT_PUBLIC_KEY))
             .keystore(keyStoreInDifferentVersion)
             .secret("james72laBalle")
             .build();

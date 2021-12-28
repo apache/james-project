@@ -27,7 +27,8 @@ startup companies. A few years ago he was working on a Fintech startup and contr
 
 Join him Tuesday, 21th of September in the *highligh* track.
 
-The link to the video of the talk will be updated when available.
+This talk can be seen on [youtube][youtube].
 
 [apacheCON]: https://www.apachecon.com/acah2021/index.html
 [desc]: https://www.apachecon.com/acah2021/tracks/highlight.html
+[youtube]: https://www.youtube.com/watch?v=uA775icp-kk

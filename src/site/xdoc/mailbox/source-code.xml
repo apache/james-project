@@ -28,8 +28,7 @@
   <section name="Source Code Organization">
     <p>The available modules are the <a href="mailbox-api.html">Mailbox API</a>, 
       <a href="mailbox-store.html">Mailbox Store</a>(the base and utility classes) 
-      and the different implementations we propose (<a href="mailbox-memory.html">Memory</a>, 
-      <a href="mailbox-maildir.html">Maildir</a>, 
+      and the different implementations we propose (<a href="mailbox-memory.html">Memory</a>,
       <a href="mailbox-jpa.html">JPA</a>).
     </p>
     <p>A module for <a href="mailbox-tool.html">tooling</a> is also available.

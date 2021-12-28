@@ -27,6 +27,7 @@ import org.apache.james.jmap.core.{AccountId, Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
 import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.mailbox.exception.ThreadNotFoundException
 import org.apache.james.mailbox.model.{ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
@@ -66,7 +67,7 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
   override val methodName: MethodName = MethodName("Thread/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] = {
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] =
     getThreadResponse(request, mailboxSession)
       .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
       .map(threadGetResult => threadGetResult.asResponse(request.accountId))
@@ -75,7 +76,6 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
         arguments = Arguments(ThreadSerializer.serialize(threadGetResponse)),
         methodCallId = invocation.invocation.methodCallId))
       .map(InvocationWithContext(_, invocation.processingContext))
-  }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, ThreadGetRequest] =
     ThreadSerializer.deserialize(invocation.arguments.value) match {
@@ -84,17 +84,18 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
     }
 
   private def getThreadResponse(threadGetRequest: ThreadGetRequest,
-                                mailboxSession: MailboxSession): SFlux[ThreadGetResult] = {
+                                mailboxSession: MailboxSession): SFlux[ThreadGetResult] =
     SFlux.fromIterable(threadGetRequest.ids)
       .flatMap(unparsedThreadId => {
         Try(threadIdFactory.fromString(unparsedThreadId.id.toString()))
-          .fold(e => SFlux.just(ThreadGetResult.notFound(unparsedThreadId)),
+          .fold(_ => SFlux.just(ThreadGetResult.notFound(unparsedThreadId)),
             threadId => SFlux.fromPublisher(mailboxManager.getThread(threadId, mailboxSession))
               .collectSeq()
               .map(seq => Thread(id = unparsedThreadId.id, emailIds = seq.toList))
               .map(ThreadGetResult.found)
-              .onErrorResume((_ => SMono.just(ThreadGetResult.notFound(unparsedThreadId)))))
+              .onErrorResume({
+                case _: ThreadNotFoundException => SMono.just(ThreadGetResult.notFound(unparsedThreadId))
+                case e => SMono.error(e)
+              }))
       })
-  }
-
 }

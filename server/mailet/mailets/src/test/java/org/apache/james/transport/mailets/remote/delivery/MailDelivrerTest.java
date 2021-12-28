@@ -40,6 +40,7 @@ import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -74,7 +75,7 @@ class MailDelivrerTest {
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .build(),
             mock(DomainList.class));
-        testee = new MailDelivrer(configuration, mailDelivrerToHost, dnsHelper, bouncer);
+        testee = new MailDelivrer(configuration, mailDelivrerToHost, dnsHelper, bouncer, mock(MailetContext.class));
     }
 
     @Test

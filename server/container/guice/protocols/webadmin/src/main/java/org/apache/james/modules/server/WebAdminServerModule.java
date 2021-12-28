@@ -181,7 +181,7 @@ public class WebAdminServerModule extends AbstractModule {
     JwtTokenVerifier.Factory providesJwtTokenVerifier(WebAdminConfiguration webAdminConfiguration,
                                               @Named("jmap") Provider<JwtTokenVerifier> jmapTokenVerifier) {
         return () -> webAdminConfiguration.getJwtPublicKey()
-            .map(keyPath -> new JwtConfiguration(Optional.of(keyPath)))
+            .map(keyPath -> new JwtConfiguration(ImmutableList.of(keyPath)))
             .map(JwtTokenVerifier::create)
             .orElseGet(jmapTokenVerifier::get);
     }

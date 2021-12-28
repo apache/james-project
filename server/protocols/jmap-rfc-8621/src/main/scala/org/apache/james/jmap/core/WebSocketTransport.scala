@@ -22,7 +22,8 @@ package org.apache.james.jmap.core
 import java.nio.charset.StandardCharsets
 
 import com.google.common.hash.Hashing
-import org.apache.james.jmap.change.{TypeName, TypeState}
+import org.apache.james.jmap.api.model.{State, TypeName}
+import org.apache.james.jmap.change.TypeState
 import org.apache.james.jmap.routes.PingPolicy.Interval
 
 sealed trait WebSocketInboundMessage

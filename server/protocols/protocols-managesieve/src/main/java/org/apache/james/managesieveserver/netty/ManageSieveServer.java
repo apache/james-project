@@ -80,15 +80,8 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
         return new ManageSieveChannelUpstreamHandler(manageSieveProcessor,
-            getEncryption() == null ? null : getEncryption().getContext(),
-            getEnabledCipherSuites(),
-            isSSL(),
+            getEncryption(),
             LOGGER);
-    }
-
-    private boolean isSSL() {
-        return getEncryption() != null
-            && !getEncryption().isStartTLS();
     }
 
     @Override
@@ -105,7 +98,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
                     // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.getContext().createSSLEngine();
+                    SSLEngine engine = secure.createSSLEngine();
                     engine.setUseClientMode(false);
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 

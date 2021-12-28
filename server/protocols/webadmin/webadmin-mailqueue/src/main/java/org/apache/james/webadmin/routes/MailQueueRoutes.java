@@ -29,10 +29,6 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
@@ -65,22 +61,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Booleans;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.jaxrs.PATCH;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
-
-@Api(tags = "MailQueues")
-@Path(MailQueueRoutes.BASE_URL)
-@Produces("application/json")
 public class MailQueueRoutes implements Routes {
 
     public static final String BASE_URL = "/mailQueues";
@@ -127,14 +112,6 @@ public class MailQueueRoutes implements Routes {
         forceDelayedMailsDelivery(service);
     }
 
-    @GET
-    @ApiOperation(
-        value = "Listing existing MailQueues"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineListQueues(Service service) {
         service.get(BASE_URL,
             (request, response) -> mailQueueFactory.listCreatedMailQueues()
@@ -144,20 +121,6 @@ public class MailQueueRoutes implements Routes {
             jsonTransformer);
     }
 
-    @GET
-    @Path("/{mailQueueName}")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path")
-    })
-    @ApiOperation(
-        value = "Get a MailQueue details"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = MailQueueDTO.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for getting the mail queue."),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void getMailQueue(Service service) {
         service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME,
             (request, response) -> getMailQueue(request),
@@ -188,35 +151,6 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    @GET
-    @Path("/{mailQueueName}/mails")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
-        @ApiImplicitParam(
-                required = false,
-                dataType = "boolean",
-                name = DELAYED_QUERY_PARAM,
-                paramType = "query",
-                example = "?delayed=true",
-                value = "Whether the mails are delayed in the mail queue or not (already sent)."),
-        @ApiImplicitParam(
-                required = false,
-                dataType = "int",
-                name = LIMIT_QUERY_PARAM,
-                paramType = "query",
-                example = "?limit=100",
-                defaultValue = "100",
-                value = "Limits the maximum number of mails returned by this endpoint")
-    })
-    @ApiOperation(
-        value = "List the mails of the MailQueue"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for listing the mails from the mail queue."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void listMails(Service service) {
         service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
                 (request, response) -> listMails(request),
@@ -265,41 +199,6 @@ public class MailQueueRoutes implements Routes {
             .orElse(true);
     }
 
-    @DELETE
-    @Path("/{mailQueueName}/mails")
-    @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
-        @ApiImplicitParam(
-                required = false, 
-                dataTypeClass = MailAddress.class,
-                name = SENDER_QUERY_PARAM, 
-                paramType = "query",
-                example = "?sender=sender@james.org",
-                value = "The sender of the mails to be deleted should be equals to this query parameter."),
-        @ApiImplicitParam(
-                required = false, 
-                dataType = "String", 
-                name = NAME_QUERY_PARAM,
-                paramType = "query",
-                example = "?name=mailName",
-                value = "The name of the mails to be deleted should be equals to this query parameter."),
-        @ApiImplicitParam(
-                required = false, 
-                dataType = "MailAddress", 
-                name = RECIPIENT_QUERY_PARAM, 
-                paramType = "query",
-                example = "?recipient=recipient@james.org",
-                value = "The recipients of the mails to be deleted should contain this query parameter."),
-    })
-    @ApiOperation(
-        value = "Delete mails from the MailQueue"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "OK, the task for deleting mails is created"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for deleting mails from the mail queue."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void deleteMails(Service service) {
         TaskFromRequest taskFromRequest = this::deleteMails;
         service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
@@ -348,31 +247,6 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    @PATCH
-    @Path("/{mailQueueName}/mails")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            dataType = "string",
-            name = "mailQueueName",
-            paramType = "path"),
-        @ApiImplicitParam(
-            required = false,
-            dataType = "boolean",
-            name = DELAYED_QUERY_PARAM,
-            paramType = "query",
-            example = "?delayed=true",
-            value = "Whether the mails are delayed in the mail queue or not (already sent).")
-    })
-    @ApiOperation(
-        value = "Force delayed mails delivery"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for getting the mail queue."),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void forceDelayedMailsDelivery(Service service) {
         service.patch(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
             this::forceDelayedMailsDelivery,

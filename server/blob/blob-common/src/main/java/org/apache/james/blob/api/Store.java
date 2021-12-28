@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -70,7 +70,7 @@ public interface Store<T, I> {
 
         @FunctionalInterface
         public interface Decoder<T> {
-            T decode(Stream<Pair<BlobType, CloseableByteSource>> streams);
+            T decode(Map<BlobType, CloseableByteSource> streams);
         }
 
         private final BlobPartsId.Factory<I> idFactory;
@@ -102,16 +102,14 @@ public interface Store<T, I> {
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(Schedulers.elastic())
-                .map(entry ->  Pair.of(entry.getKey(), readByteSource(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy())))
-                .collectList()
-                .map(Collection::stream)
+                .collectMap(Map.Entry::getKey, entry -> readByteSource(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy()))
                 .map(decoder::decode);
         }
 
         private CloseableByteSource readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
             FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
-            try {
-                blobStore.read(bucketName, blobId, storagePolicy).transferTo(out);
+            try (InputStream in = blobStore.read(bucketName, blobId, storagePolicy)) {
+                in.transferTo(out);
                 return new DelegateCloseableByteSource(out.asByteSource(), out::reset);
             } catch (IOException e) {
                 throw new RuntimeException(e);

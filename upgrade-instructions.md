@@ -22,6 +22,111 @@ Change list:
  - [Adding messageId metadata to the Cassandra attachments](#adding-messageid-metadata-to-the-cassandra-attachments)
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
+ - [Vacation Mailet moved](#vacation-mailet-moved)
+ - [Support salted passwords](#support-salted-passwords)
+ - [MailDir removal](#maildir-removal)
+ - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
+
+### SMTP/LMTP authentication configuration reworked
+
+Date: 07/12/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3680
+
+We reworked SMTP/LMTP configuration to improve security and better explicit the configuration effects.
+
+We added a new setting within SMTP/LMTP configuration to avoid advertising authentication on unencrypted channels. 
+For security reasons, it is enabled by default, which is a breaking change. To disable it:
+
+```xml
+    <smtpserver enabled="true">
+        <jmxName>smtpserver-global</jmxName>
+        <bind>0.0.0.0:25</bind>
+        <!--- ... -->
+        <auth>
+            <announce>never</announce>
+            <requireSSL>false</requireSSL>
+        </auth>
+        <!--- ... -->
+    </smtpserver>
+```
+
+Also, `requireAuth` setting, which was misleading, had been renamed to `auth.announce`. This change did not affect
+backward compatibility and `requireAuth` is still read as a fallback.
+
+ - `<requireAuth>false</requireAuth>` can now be specified with `<auth><announce>never</announce></auth>`
+ - `<requireAuth>announce</requireAuth>` can now be specified with `<auth><announce>always</announce></auth>`
+ - `<requireAuth>true</requireAuth>` can now be specified with `<auth><announce>forUnauthorizedAddresses</announce></auth>`
+
+Finally, an implicit wildcard value `0.0.0.0/0.0.0.0` was specified as authorizedAddresses (for James 2.3 backward 
+compatibility) when `<requireAuth>false</requireAuth>` or (equivalent) `<auth><announce>never</announce></auth>`. 
+This behaviour could result in a user believing she disabled authentication, but would ultimately result in an 
+open relay, which is unsecure, and why we no longer apply this implicit value. Users relying on James as an open
+relay will need to specify `authorizedAddresses` explicitly:
+
+```xml
+    <smtpserver enabled="true">
+        <jmxName>smtpserver-global</jmxName>
+        <bind>0.0.0.0:25</bind>
+        <!--- ... -->
+        <auth>
+            <announce>never</announce>
+        </auth>
+        <authorizedAddresses>0.0.0.0/0.0.0.0</authorizedAddresses>
+        <!--- ... -->
+    </smtpserver>
+```
+
+### Vacation Mailet moved
+
+Date: 29/11/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3675
+
+The Vacation Mailet is now included in the standard mailet set, so you do not need to specify a package name anymore:
+
+```
+class="org.apache.james.jmap.mailet.VacationMailet"
+=>
+class="VacationMailet"
+```
+
+Please update your `mailetcontainer.xml` accordingly.
+
+### Support salted passwords
+
+Date: 24/11/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3674
+
+With this update, the password algorithm may include an option to salt the password hash with the user name, for increased security against rainbow table cracking. To use this feature, update your usersrepository.xml :
+```
+<algorithm>SHA-512/salted</algorithm>
+```
+
+Whenever users change their password, James will update the respective database entry with a salted hash.
+
+Note that `plain` hashing mode is the default. If you were using `legacy` mode and want to keep it for some reason, you must specify this option explicitly:
+```
+<algorithm>SHA-512/legacy</algorithm>
+```
+
+### MailDir removal
+
+Date 19/09/2021
+
+Mailing list vote: https://www.mail-archive.com/server-dev@james.apache.org/msg71060.html
+
+Concerned product: Spring configured with MailDir
+
+The maildir implementation, deprecated in 3.6.1 release, following a non-interoperable James naming scheme, suffering
+from numerous bugs and unmaintained for several years had been removed for the 3.7.0 release. 
+
+We encourage maildir users to switch to the JPA implementation (relying on an embedded
+database by default). Tools like [imapsync](https://imapsync.lamiral.info/) or 
+[pop2imap](http://www.linux-france.org/prj/pop2imap/) can be used for this
+migration. This [link](https://james.staged.apache.org/james-project/3.7.0/servers/distributed/operate/migrating.html) 
+explains how to use IMAP Sync.
 
 ### Change defaults for JPA UsersRepository hash function
 
@@ -272,6 +377,10 @@ In an effort to simplify the code base, we dropped support for Cassandra schema 
 
 Installation running older schema version than version 5 needs to rely on releases 3.6.x to upgrade to schema version 8,
 before upgrading to an eventual newer version.
+
+## 3.6.1 version
+
+No specific operation to conduct from a 3.6.0 version.
 
 ## 3.6.0 version
 

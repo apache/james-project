@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 /**
  * This service is used by components that wants to lookup a File resource from
@@ -85,11 +86,11 @@ public interface FileSystem {
      * Similar to getFile but enforces the file to be within baseDir
      */
     default File getFileWithinBaseDir(String fileURL) throws FileNotFoundException, IOException {
-        File file = getFile(fileURL);
-        if (file.getCanonicalPath().startsWith(getBasedir().getCanonicalPath())) {
-            return file;
+        Path path = getFile(fileURL).toPath().normalize();
+        if (path.startsWith(getBasedir().toPath().normalize())) {
+            return path.toFile();
         }
-        throw new IOException(fileURL + " -> " + file.getCanonicalPath() + " jail break outside of " + getBasedir().getCanonicalPath());
+        throw new IOException(fileURL + " -> " + path.toFile().getCanonicalPath() + " jail break outside of " + getBasedir().getCanonicalPath());
     }
 
     /**

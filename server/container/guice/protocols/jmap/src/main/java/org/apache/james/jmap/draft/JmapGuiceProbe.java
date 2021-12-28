@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft;
 
+import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
+
 import java.util.Arrays;
 
 import javax.inject.Inject;
@@ -33,9 +35,6 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationPatch;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -44,12 +43,15 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.vacation.api.Vacation;
+import org.apache.james.vacation.api.VacationPatch;
+import org.apache.james.vacation.api.VacationService;
 
 import reactor.core.publisher.Mono;
 
 public class JmapGuiceProbe implements GuiceProbe {
 
-    private final VacationRepository vacationRepository;
+    private final VacationService vacationService;
     private final MailboxChangeRepository mailboxChangeRepository;
     private final EmailChangeRepository emailChangeRepository;
     private final JMAPServer jmapServer;
@@ -59,8 +61,8 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, MailboxChangeRepository mailboxChangeRepository, EmailChangeRepository emailChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
-        this.vacationRepository = vacationRepository;
+    private JmapGuiceProbe(VacationService vacationService, MailboxChangeRepository mailboxChangeRepository, EmailChangeRepository emailChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
+        this.vacationService = vacationService;
         this.mailboxChangeRepository = mailboxChangeRepository;
         this.emailChangeRepository = emailChangeRepository;
         this.jmapServer = jmapServer;
@@ -79,11 +81,11 @@ public class JmapGuiceProbe implements GuiceProbe {
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
-        vacationRepository.modifyVacation(accountId, vacationPatch).block();
+        vacationService.modifyVacation(toVacationAccountId(accountId), vacationPatch).block();
     }
 
     public Vacation retrieveVacation(AccountId accountId) {
-        return vacationRepository.retrieveVacation(accountId).block();
+        return vacationService.retrieveVacation(toVacationAccountId(accountId)).block();
     }
 
     public void setInMailboxes(MessageId messageId, Username username, MailboxId... mailboxIds) throws MailboxException {

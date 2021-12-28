@@ -26,3 +26,136 @@ Where ports:
 
 * 25 : SMTP
 * 8000 : HTTP interface for setting mock SMTP server behavior
+
+Then you can use the http endpoints. Let's demonstrate them via the standard unix `curl` command.
+
+Right after startup, the server should have no emails, no behaviors.
+
+----
+$ curl -X GET localhost:8000/smtpBehaviors
+[]
+$ curl -X GET localhost:8000/smtpMails
+[]
+$ curl -X GET localhost:8000/smtpMailsCount
+0
+$
+----
+
+Given you send an email on port 25, the counter updates to 1 and you're able to observe the email
+via the smtpMails endpoint.
+
+----
+$ cat mail.txt
+From: Alice
+To: Bob
+Subject: test
+ 
+This is a test message body.
+$ curl smtp://localhost --mail-from alice@wonder.land --mail-rcpt bob@cat.construction --upload-file mail.txt --silent
+$ curl -X GET localhost:8000/smtpMailsCount
+1
+$ curl -X GET localhost:8000/smtpMails --silent | jq
+[
+  {
+    "from": "alice@wonder.land",
+    "recipients": [
+      {
+        "address": "bob@cat.construction",
+        "parameters": []
+      }
+    ],
+    "mailParameters": [],
+    "message": "Received: <...>From: Alice\nTo: Bob\nSubject: test\n\nThis is a test message body.\n\r\n"
+  }
+]
+$
+----
+
+To delete emails, eg in order to start a new test, you can use the DELETE method on `smtpMails`. This
+call also returns the deleted emails. In case you have a use case that requires DELETE, it's advised
+to observe/assert emails via the returned value of DELETE, instead of GETting them and doing the DELETE
+as a separate step. There's no guarantee of not getting an email between the two calls, ie a GET and a
+later DELETE.
+
+----
+$ curl -X DELETE localhost:8000/smtpMails --silent | jq
+[
+  {
+    "from": "alice@wonder.land",
+    "recipients": [
+      {
+        "address": "bob@cat.construction",
+        "parameters": []
+      }
+    ],
+    "mailParameters": [],
+    "message": "Received: <...>From: Alice\nTo: Bob\nSubject: test\n\nThis is a test message body.\n\r\n"
+  }
+]
+$ curl -X GET localhost:8000/smtpMailsCount
+0
+$ curl -X GET localhost:8000/smtpMails
+[]
+$
+----
+
+The server is capable of testing flows that reject emails, so you could check your application's reaction to
+dynamic errors, for example when it's not possible to resolve the domain of the recipient address. For this
+purpose, you could use the smtpBehavior endpoint.
+
+----
+$ curl -X GET localhost:8000/smtpMails
+[]
+$ curl -X GET localhost:8000/smtpBehaviors
+[]
+$ cat behaviors.json
+  [
+    {
+      "command": "RCPT TO",
+      "condition": {
+        "operator": "contains",
+        "matchingValue": "@cat.construction"
+      },
+      "response": {"code": "501", "message": "5.1.3 Bad recipient address syntax"}
+    }
+  ]
+$ curl -X PUT localhost:8000/smtpBehaviors --data @behaviors.json
+$ curl -X GET localhost:8000/smtpBehaviors --silent | jq
+[
+  {
+    "condition": {
+      "operator": "contains",
+      "matchingValue": "@cat.construction"
+    },
+    "response": {
+      "code": 501,
+      "message": "5.1.3 Bad recipient address syntax"
+    },
+    "numberOfAnswer": null,
+    "command": "RCPT TO"
+  }
+]
+$ curl smtp://localhost --mail-from alice@wonder.land --mail-rcpt bob@cat.construction --upload-file mail.txt --silent -v
+*   Trying 127.0.0.1:25...
+* Connected to localhost (127.0.0.1) port 25 (#0)
+< 220 891889d20442 ESMTP SubEthaSMTP 3.1.7
+> EHLO mail.txt
+< 250-891889d20442
+< 250-8BITMIME
+< 250 Ok
+> MAIL FROM:<alice@wonder.land>
+< 250 Ok
+> RCPT TO:<bob@cat.construction>
+< 501 5.1.3 Bad recipient address syntax
+* RCPT failed: 501
+> QUIT
+< 221 Bye
+* Closing connection 0
+$ curl -X GET localhost:8000/smtpMails
+[]
+$ curl -X DELETE localhost:8000/smtpBehaviors
+$ curl -X GET localhost:8000/smtpBehaviors
+[]
+$
+----
+

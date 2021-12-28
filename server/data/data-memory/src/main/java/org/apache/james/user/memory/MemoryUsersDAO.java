@@ -19,6 +19,8 @@
 
 package org.apache.james.user.memory;
 
+import static org.apache.james.user.lib.model.Algorithm.HashingMode.PLAIN;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,21 +39,15 @@ import org.apache.james.user.lib.model.DefaultUser;
 public class MemoryUsersDAO implements UsersDAO, Configurable {
     private final Map<String, User> userByName;
     private Algorithm algo;
-    private Algorithm.Factory hashFactory;
 
     MemoryUsersDAO() {
         this.userByName = new HashMap<>();
-        this.hashFactory = Algorithm.DEFAULT_FACTORY;
-        this.algo = hashFactory.of("SHA-512");
+        this.algo = Algorithm.of("PBKDF2");
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        hashFactory = Optional.ofNullable(config.getString("hashingMode", null))
-            .map(Algorithm.HashingMode::parse)
-            .orElse(Algorithm.HashingMode.DEFAULT)
-            .getFactory();
-        algo = hashFactory.of(config.getString("algorithm", "SHA-512"));
+        algo = Algorithm.of(config.getString("algorithm", "PBKDF2"), config.getString("hashingMode", PLAIN.name()));
     }
 
     public void clear() {
@@ -60,7 +56,7 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public void addUser(Username username, String password) {
-        DefaultUser user = new DefaultUser(username, algo);
+        DefaultUser user = new DefaultUser(username, algo, algo);
         user.setPassword(password);
         userByName.put(username.asString(), user);
     }

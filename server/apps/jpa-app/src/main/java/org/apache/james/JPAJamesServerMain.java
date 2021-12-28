@@ -48,7 +48,6 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
-import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -67,7 +66,6 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new ReIndexingModule(),
-        new SwaggerRoutesModule(),
         new SieveRoutesModule(),
         new WebAdminReIndexingTaskSerializationModule());
 
@@ -100,6 +98,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

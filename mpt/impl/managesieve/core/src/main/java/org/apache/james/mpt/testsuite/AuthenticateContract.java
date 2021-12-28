@@ -41,4 +41,11 @@ public interface AuthenticateContract extends HostSystemProvider {
             .withLocale(Locale.US)
             .run("authenticate");
     }
+
+    @Test
+    default void authenticateBase64ShouldWork() throws Exception {
+        authenticateContractProtocol()
+            .withLocale(Locale.US)
+            .run("authenticateBase64");
+    }
 }

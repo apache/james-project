@@ -49,6 +49,7 @@ import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
+import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
@@ -77,7 +78,7 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
-import org.apache.james.modules.server.SwaggerRoutesModule;
+import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -96,6 +97,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
+        new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
@@ -103,7 +105,6 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SwaggerRoutesModule(),
         new WebAdminServerModule(),
         new WebAdminReIndexingTaskSerializationModule(),
         new MessagesRoutesModule(),
@@ -138,6 +139,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
+        new CassandraVacationModule(),
         new ElasticSearchMetricReporterModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
@@ -162,6 +164,8 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         DistributedPOP3JamesConfiguration configuration = DistributedPOP3JamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

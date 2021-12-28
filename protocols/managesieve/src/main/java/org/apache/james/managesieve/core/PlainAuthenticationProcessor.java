@@ -20,6 +20,8 @@
 
 package org.apache.james.managesieve.core;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 
 import org.apache.james.core.Username;
@@ -54,15 +56,21 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
 
     @Override
     public Username isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException {
-        if (suppliedClientData.contains("\u0000")) {
-            return authenticateWithSeparator(session, suppliedClientData, '\u0000');
-        } else {
-            return authenticateWithSeparator(session, suppliedClientData, ' ');
+        try {
+            byte[] decoded = Base64.getDecoder().decode(suppliedClientData.getBytes());
+            String decodedString = new String(decoded, StandardCharsets.US_ASCII);
+            return authenticateWithSeparator(session, decodedString, '\u0000');
+        } catch (Exception e) {
+            if (suppliedClientData.contains("\u0000")) {
+                return authenticateWithSeparator(session, suppliedClientData, '\u0000');
+            } else {
+                return authenticateWithSeparator(session, suppliedClientData, ' ');
+            }
         }
     }
 
     private Username authenticateWithSeparator(Session session, String suppliedClientData, char c) throws SyntaxException, AuthenticationException {
-        Iterator<String> it = Splitter.on(c).split(suppliedClientData).iterator();
+        Iterator<String> it = Splitter.on(c).omitEmptyStrings().split(suppliedClientData).iterator();
         if (!it.hasNext()) {
             throw new SyntaxException("You must supply a username for the authentication mechanism. Formal syntax : <NULL>username<NULL>password");
         }

@@ -67,6 +67,37 @@ class AwsS3ConfigurationReaderTest {
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
         String secretKey = "mySecretKey";
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
+        String trustStorePath = "/some/where/truststore.p12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_PATH, trustStorePath);
+        String trustStoreType = "PKCS12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_TYPE, trustStoreType);
+        String trustStoreSecret = "myTrustStoreSecret";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_SECRET, trustStoreSecret);
+        String trustStoreAlgorithm = "myTrustStoreAlgorithm";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_ALGORITHM, trustStoreAlgorithm);
+
+        AwsS3AuthConfiguration expected = AwsS3AuthConfiguration.builder()
+            .endpoint(endpoint)
+            .accessKeyId(accessKeyId)
+            .secretKey(secretKey)
+            .trustStorePath(trustStorePath)
+            .trustStoreType(trustStoreType)
+            .trustStoreSecret(trustStoreSecret)
+            .trustStoreAlgorithm(trustStoreAlgorithm)
+            .build();
+        AwsS3AuthConfiguration authConfiguration = AwsS3ConfigurationReader.from(configuration);
+        assertThat(authConfiguration).isEqualTo(expected);
+    }
+
+    @Test
+    void fromShouldWorkWithoutOptionals() {
+        Configuration configuration = new PropertiesConfiguration();
+        URI endpoint = URI.create("http://myEndpoint");
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
+        String accessKeyId = "myAccessKeyId";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
+        String secretKey = "mySecretKey";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
 
         AwsS3AuthConfiguration expected = AwsS3AuthConfiguration.builder()
             .endpoint(endpoint)

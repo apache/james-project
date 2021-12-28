@@ -23,8 +23,6 @@ import static io.restassured.RestAssured.given;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.jwt.JwtConfiguration;
@@ -38,13 +36,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import io.restassured.RestAssured;
 
 public abstract class JwtFilterIntegrationTest {
 
     protected static JwtConfiguration jwtConfiguration() {
         return new JwtConfiguration(
-            Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
+            ImmutableList.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
     }
 
     private static final String DOMAIN = "domain";

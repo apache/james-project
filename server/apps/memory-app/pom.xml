@@ -156,10 +156,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-swagger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailbox-adapter</artifactId>
         </dependency>
         <dependency>
@@ -304,6 +300,7 @@
                             <volume>/root/conf</volume>
                             <volume>/root/glowroot/plugins</volume>
                             <volume>/root/glowroot/data</volume>
+                            <volume>/root/extensions-jars</volume>
                         </volumes>
                     </container>
                     <extraDirectories>

@@ -19,12 +19,25 @@
 
 package org.apache.james.jmap.json
 
-import javax.inject.Inject
-import org.apache.james.jmap.change.{TypeName, TypeState, TypeStateFactory}
-import org.apache.james.jmap.core.{AccountId, OutboundMessage, PingMessage, PushState, RequestId, State, StateChange, WebSocketError, WebSocketInboundMessage, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
+import org.apache.james.jmap.api.change.TypeStateFactory
+import org.apache.james.jmap.api.model.{State, TypeName}
+import org.apache.james.jmap.change.TypeState
+import org.apache.james.jmap.core.{AccountId, OutboundMessage, PingMessage, PushState, RequestId, StateChange, WebSocketError, WebSocketInboundMessage, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
+import org.apache.james.jmap.method.PushVerification
 import play.api.libs.json.{Format, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
+import javax.inject.Inject
 import scala.util.Try
+
+object PushSerializer {
+  implicit val pushVerificationWrites: Writes[PushVerification] = (pushVerification: PushVerification) => Json.obj(
+    "@type" -> "PushVerification",
+    "pushSubscriptionId" -> pushVerification.pushSubscriptionId.value,
+    "verificationCode" -> pushVerification.verificationCode.value)
+
+  def serializePushVerification(pushVerification: PushVerification): JsValue =
+    pushVerificationWrites.writes(pushVerification)
+}
 
 case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
   private implicit val stateWrites: Writes[State] = state => JsString(state.serialize)

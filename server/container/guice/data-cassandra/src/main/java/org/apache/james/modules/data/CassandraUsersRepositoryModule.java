@@ -19,16 +19,14 @@
 
 package org.apache.james.modules.data;
 
-import java.util.Optional;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.cassandra.CassandraRepositoryConfiguration;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.UsersRepositoryImpl;
-import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -51,20 +49,17 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
     }
 
+    @Provides
+    @Singleton
+    public CassandraRepositoryConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return CassandraRepositoryConfiguration.from(
+            configurationProvider.getConfiguration("usersrepository"));
+    }
+
     @ProvidesIntoSet
     InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, UsersRepositoryImpl<CassandraUsersDAO> usersRepository) {
         return InitilizationOperationBuilder
             .forClass(UsersRepositoryImpl.class)
             .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
-    }
-
-    @Provides
-    @Singleton
-    Algorithm.Factory provideAlgorithmFactory(ConfigurationProvider configurationProvider) throws ConfigurationException {
-        return Optional.ofNullable(configurationProvider.getConfiguration("usersrepository")
-            .getString("hashingMode", null))
-            .map(Algorithm.HashingMode::parse)
-            .orElse(Algorithm.HashingMode.DEFAULT)
-            .getFactory();
     }
 }

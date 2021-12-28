@@ -4108,6 +4108,16 @@ trait EmailGetMethodContract {
          |                                "size": 20,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
+         |                            },
+         |                            {
+         |                                "charset": "iso-8859-1",
+         |                                "disposition": "inline",
+         |                                "size": 19,
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "name": "avertissement.txt",
+         |                                "type": "text/plain",
+         |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
          |                        ]
          |                    }
@@ -4173,6 +4183,16 @@ trait EmailGetMethodContract {
          |                                "size": 30,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
+         |                            },
+         |                            {
+         |                                "charset": "iso-8859-1",
+         |                                "disposition": "inline",
+         |                                "size": 19,
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "name": "avertissement.txt",
+         |                                "type": "text/plain",
+         |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
          |                        ]
          |                    }
@@ -4433,6 +4453,11 @@ trait EmailGetMethodContract {
          |                                "value": "/blabla/\\r\\n*bloblo*\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
+         |                            },
+         |                            "5":{
+         |                                "value": "inline attachment\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
          |                            }
          |                        }
          |                    }
@@ -4497,6 +4522,11 @@ trait EmailGetMethodContract {
          |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
+         |                            },
+         |                            "5": {
+         |                                "value": "inline attachment\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
          |                            }
          |                        }
          |                    }
@@ -4505,6 +4535,65 @@ trait EmailGetMethodContract {
          |            },
          |            "c1"
          |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def htmlBodyValuesShouldFallBackToPlainTextWhenNoHtmlPart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.cal.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["bodyValues", "htmlBody"],
+         |      "fetchHTMLBodyValues": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .inPath(s"methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |	"htmlBody": [{
+         |		"charset": "UTF-8",
+         |		"size": 47,
+         |		"partId": "3",
+         |		"blobId": "${messageId.serialize()}_3",
+         |		"type": "text/plain"
+         |	}],
+         |	"id": "${messageId.serialize()}",
+         |	"bodyValues": {
+         |		"3": {
+         |			"value": "J <j@linagora.com> a accepté votre invitation.",
+         |			"isEncodingProblem": false,
+         |			"isTruncated": false
+         |		}
+         |	}
          |}""".stripMargin)
   }
 
@@ -4566,6 +4655,11 @@ trait EmailGetMethodContract {
          |                            },
          |                            "4": {
          |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "5":{
+         |                                "value": "inline attachment\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }

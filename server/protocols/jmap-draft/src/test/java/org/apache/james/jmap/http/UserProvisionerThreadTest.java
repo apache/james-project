@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -42,7 +43,7 @@ public class UserProvisionerThreadTest {
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         session = MailboxSessionUtil.create(Username.of("username"));
-        testee = new UserProvisioner(usersRepository, new RecordingMetricFactory());
+        testee = new UserProvisioner(JMAPConfiguration.DEFAULT, usersRepository, new RecordingMetricFactory());
     }
 
     @Test

@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.jwt;
 
+import java.security.PublicKey;
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Strings;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -43,50 +43,55 @@ public class JwtTokenVerifier {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
-    private final PublicKeyProvider pubKeyProvider;
+
+    private final List<PublicKey> publicKeys;
 
     public JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
-        this.pubKeyProvider = pubKeyProvider;
+        this.publicKeys = pubKeyProvider.get();
     }
 
     public Optional<String> verifyAndExtractLogin(String token) {
+        return verifyAndExtractClaim(token, "sub", String.class)
+            .filter(s -> !s.isEmpty());
+    }
+
+    public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
+        return publicKeys.stream()
+            .flatMap(key -> verifyAndExtractClaim(token, claimName, returnType, key).stream())
+            .findFirst();
+    }
+
+    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, PublicKey publicKey) {
         try {
-            String subject = extractLogin(token);
-            if (Strings.isNullOrEmpty(subject)) {
-                throw new MalformedJwtException("'subject' field in token is mandatory");
+            Jws<Claims> jws = parseToken(token, publicKey);
+            T claim = jws
+                .getBody()
+                .get(claimName, returnType);
+            if (claim == null) {
+                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
             }
-            return Optional.of(subject);
+            return Optional.of(claim);
         } catch (JwtException e) {
             LOGGER.info("Failed Jwt verification", e);
             return Optional.empty();
         }
     }
 
-    private String extractLogin(String token) throws JwtException {
-        Jws<Claims> jws = parseToken(token);
-        return jws
-                .getBody()
-                .getSubject();
-    }
-
     public boolean hasAttribute(String attributeName, Object expectedValue, String token) {
         try {
-            Jwts
-                .parser()
-                .require(attributeName, expectedValue)
-                .setSigningKey(pubKeyProvider.get())
-                .parseClaimsJws(token);
-            return true;
+            return verifyAndExtractClaim(token, attributeName, Object.class)
+                .map(expectedValue::equals)
+                .orElse(false);
         } catch (JwtException e) {
             LOGGER.info("Jwt validation failed for claim {} to {}", attributeName, expectedValue, e);
             return false;
         }
     }
 
-    private Jws<Claims> parseToken(String token) throws JwtException {
+    private Jws<Claims> parseToken(String token, PublicKey publicKey) throws JwtException {
         return Jwts
                 .parser()
-                .setSigningKey(pubKeyProvider.get())
+                .setSigningKey(publicKey)
                 .parseClaimsJws(token);
     }
 }

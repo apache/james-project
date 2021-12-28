@@ -1,0 +1,216 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "dns": {
+            "type": "object",
+            "properties": {
+                "emailDomain": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-.]+$"
+                },
+                "jmapUrl": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-.]+$"
+                },
+                "adminUrl": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-.]+$"
+                },
+                "smtpHostname": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-.]+$"
+                }
+            },
+            "additionalProperties": true,
+            "required": [
+                "emailDomain",
+                "jmapUrl",
+                "adminUrl",
+                "smtpHostname"
+            ]
+        },
+        "dockerRegistrySecret": {
+            "type": "string"
+        },
+        "james": {
+            "type": "object",
+            "properties": {
+                "env": {
+                    "type": "object",
+                    "properties": {
+                        "jamesCassandraKeyspace": {
+                            "type": "string"
+                        },
+                        "jamesCassandraCacheKeyspace": {
+                            "type": "string"
+                        },
+                        "jamesEsMailboxIndex": {
+                            "type": "string"
+                        },
+                        "jamesEsClusterName": {
+                            "type": "string"
+                        },
+                        "jamesEsHostScheme": {
+                            "type": "string"
+                        },
+                        "jamesEsSslValidationStrategy": {
+                            "type": "string"
+                        },
+                        "jamesEsHostNameVerifier": {
+                            "type": "string"
+                        },
+                        "jamesEsNbShards": {
+                            "type": "integer"
+                        },
+                        "jamesEsNbReplica": {
+                            "type": "integer"
+                        },
+                        "jamesEsMailboxReadAlias": {
+                            "type": "string"
+                        },
+                        "jamesEsMailboxWriteAlias": {
+                            "type": "string"
+                        },
+                        "jamesRabbitHost": {
+                            "type": "string"
+                        },
+                        "jamesMessageSize": {
+                            "type": "string"
+                        },                        
+                        "jamesDkimSignSmtp": {
+                            "type": "string"
+                        },
+                        "jamesDkimSignDomain": {
+                            "type": "string"
+                        },
+                        "remoteDeliveryGateway": {
+                            "type": "string"
+                        },
+                        "remoteDeliveryGatewayPort": {
+                            "type": "string"
+                        },
+                        "remoteDeliveryHelo": {
+                            "type": "string"
+                        },
+                        "jamesHELOMessage": {
+                            "type": "string"
+                        },
+                        "cassandraReplicationFactor": {
+                            "type": "integer"
+                        },
+                        "jvmOpts": {
+                            "type": "string"
+                        },
+                        "jamesResources": {
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": {
+                                            "type": "string"
+                                        },
+                                        "memory": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "request": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": {
+                                            "type": "string"
+                                        },
+                                        "memory": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "glowroot": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "required": [
+                        "jamesCassandraKeyspace",
+                        "jamesCassandraCacheKeyspace",
+                        "jamesEsMailboxIndex",
+                        "jamesEsClusterName",
+                        "jamesEsHostScheme",
+                        "jamesEsSslValidationStrategy",
+                        "jamesEsHostNameVerifier",
+                        "jamesEsNbShards",
+                        "jamesEsNbReplica",
+                        "jamesEsMailboxReadAlias",
+                        "jamesEsMailboxWriteAlias",
+                        "jamesRabbitHost",
+                        "jamesMessageSize",
+                        "jamesDkimSignSmtp",
+                        "jamesDkimSignDomain",
+                        "jamesHELOMessage",
+                        "cassandraReplicationFactor",
+                        "jvmOpts",
+                        "jamesResources",
+                        "glowroot"
+                    ],
+                    "additionalProperties": false
+                },
+                "replicaJmapInstanceCount": {
+                    "type": "integer"
+                },
+                "replicaImapSmtpInstanceCount": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-_:/.]+$"
+                },
+                "tls": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "env",
+                "replicaJmapInstanceCount",
+                "replicaImapSmtpInstanceCount",
+                "image"
+            ],
+            "additionalProperties": true
+        },
+        "ingress": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "annotations": {
+                    "type": "object"
+                },
+                "tls": {
+                    "type": "object"
+                }
+            }
+        },
+        "ingressRoutes": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "annotations": {
+                    "type": "object"
+                },
+                "tls": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}

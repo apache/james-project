@@ -41,6 +41,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 public class MailboxAppenderImplTest {
 
     public static final Username USER = Username.of("user");
@@ -68,7 +70,7 @@ public class MailboxAppenderImplTest {
 
     @Test
     void appendShouldAddMessageToDesiredMailbox() throws Exception {
-        testee.append(mimeMessage, USER, FOLDER);
+        Mono.from(testee.append(mimeMessage, USER, FOLDER)).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -82,7 +84,7 @@ public class MailboxAppenderImplTest {
         MailboxPath mailboxPath = MailboxPath.forUser(USER, FOLDER);
         mailboxManager.createMailbox(mailboxPath, session);
 
-        testee.append(mimeMessage, USER, FOLDER);
+        Mono.from(testee.append(mimeMessage, USER, FOLDER)).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(mailboxPath, session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -93,13 +95,13 @@ public class MailboxAppenderImplTest {
 
     @Test
     void appendShouldNotAppendToEmptyFolder() {
-        assertThatThrownBy(() -> testee.append(mimeMessage, USER, EMPTY_FOLDER))
+        assertThatThrownBy(() -> Mono.from(testee.append(mimeMessage, USER, EMPTY_FOLDER)).block())
             .isInstanceOf(MessagingException.class);
     }
 
     @Test
     void appendShouldRemovePathSeparatorAsFirstChar() throws Exception {
-        testee.append(mimeMessage, USER, "." + FOLDER);
+        Mono.from(testee.append(mimeMessage, USER, "." + FOLDER)).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -110,7 +112,7 @@ public class MailboxAppenderImplTest {
 
     @Test
     void appendShouldReplaceSlashBySeparator() throws Exception {
-        testee.append(mimeMessage, USER, FOLDER + "/any");
+        Mono.from(testee.append(mimeMessage, USER, FOLDER + "/any")).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER + ".any"), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -122,7 +124,7 @@ public class MailboxAppenderImplTest {
     @RepeatedTest(20)
     void appendShouldNotFailInConcurrentEnvironment() throws Exception {
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> testee.append(mimeMessage, USER, FOLDER + "/any"))
+            .reactorOperation((a, b) -> Mono.from(testee.append(mimeMessage, USER, FOLDER + "/any")).then())
             .threadCount(100)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
     }

@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -35,12 +37,14 @@ public class ResourceFactory {
     }
 
     public void validate(File file) throws IOException {
-        String canonicalPath = file.getCanonicalPath();
-        if (!canonicalPath.startsWith(directoryProvider.getAbsoluteDirectory())
-            && !canonicalPath.startsWith(directoryProvider.getRootDirectory())
-            && !canonicalPath.startsWith(directoryProvider.getVarDirectory())) {
+        Path resourcePath = file.toPath().normalize();
+        if (!resourcePath.startsWith(Paths.get(directoryProvider.getConfDirectory()).normalize())
+            && !resourcePath.startsWith(Paths.get(directoryProvider.getRootDirectory()).normalize())
+            && !resourcePath.startsWith(Paths.get(directoryProvider.getVarDirectory()).normalize())) {
 
-            throw new IOException(canonicalPath + " jail break outside of " + directoryProvider.getRootDirectory());
+            throw new IOException(String.format("%s path is not part of allowed resource locations: %s, %s, %s",
+                resourcePath.toFile().getCanonicalPath(), directoryProvider.getConfDirectory(), directoryProvider.getRootDirectory(),
+                directoryProvider.getVarDirectory()));
         }
     }
     

@@ -62,6 +62,37 @@ import com.google.common.collect.ImmutableSet;
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
 
+    public static class AuthenticationConfiguration {
+        private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
+        private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
+
+        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return new AuthenticationConfiguration(
+                configuration.getBoolean("auth.requireSSL", fallback(configuration)),
+                configuration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT));
+        }
+
+        private static boolean fallback(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return configuration.getBoolean("plainAuthDisallowed", PLAIN_AUTH_DISALLOWED_DEFAULT);
+        }
+
+        private final boolean isSSLRequired;
+        private final boolean plainAuthEnabled;
+
+        public AuthenticationConfiguration(boolean isSSLRequired, boolean plainAuthEnabled) {
+            this.isSSLRequired = isSSLRequired;
+            this.plainAuthEnabled = plainAuthEnabled;
+        }
+
+        public boolean isSSLRequired() {
+            return isSSLRequired;
+        }
+
+        public boolean isPlainAuthEnabled() {
+            return plainAuthEnabled;
+        }
+    }
+
     private static final String softwaretype = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
@@ -75,9 +106,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private boolean compress;
     private int maxLineLength;
     private int inMemorySizeLimit;
-    private boolean plainAuthDisallowed;
     private int timeout;
     private int literalSizeLimit;
+    private AuthenticationConfiguration authenticationConfiguration;
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
     public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
@@ -109,11 +140,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .map(Math::toIntExact)
             .orElse(DEFAULT_LITERAL_SIZE_LIMIT);
 
-        plainAuthDisallowed = configuration.getBoolean("plainAuthDisallowed", true);
         timeout = configuration.getInt("timeout", DEFAULT_TIMEOUT);
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
+        authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
 
         processor.configure(getImapConfiguration(configuration));
     }
@@ -177,7 +208,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
                     // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.getContext().createSSLEngine();
+                    SSLEngine engine = secure.createSSLEngine();
                     engine.setUseClientMode(false);
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
@@ -207,14 +238,20 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
-        ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
+        ImapChannelUpstreamHandler.ImapChannelUpstreamHandlerBuilder coreHandlerBuilder = ImapChannelUpstreamHandler.builder()
+            .hello(hello)
+            .processor(processor)
+            .encoder(encoder)
+            .compress(compress)
+            .authenticationConfiguration(authenticationConfiguration)
+            .secure(secure)
+            .imapMetrics(imapMetrics);
+
         if (secure != null && secure.isStartTLS()) {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
-        } else {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
+            coreHandlerBuilder.secure(secure);
         }
-        return coreHandler;
+        return coreHandlerBuilder.build();
     }
 
     @Override

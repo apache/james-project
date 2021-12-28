@@ -592,7 +592,7 @@
         <apache-mime4j.version>0.8.6</apache-mime4j.version>
         <apache.openjpa.version>3.1.2</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
-        <log4j2.version>2.14.1</log4j2.version>
+        <log4j2.version>2.17.0</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
@@ -617,6 +617,7 @@
         <jackson.version>2.12.4</jackson.version>
         <feign.version>11.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
+        <jjwt.version>0.11.2</jjwt.version>
         <metrics.version>4.2.3</metrics.version>
         <testcontainers.version>1.15.3</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
@@ -640,7 +641,8 @@
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>5.0.1</guice.version>
-        <logback.version>1.2.5</logback.version>
+        <logback.version>1.2.9</logback.version>
+        <tink.version>1.6.1</tink.version>
 
         <bouncycastle.version>1.69</bouncycastle.version>
 
@@ -785,11 +787,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-maildir</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-memory</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -821,7 +818,7 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-	    <dependency>
+            <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
                 <version>${project.version}</version>
@@ -1723,11 +1720,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-queue-file</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-queue-jms</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1893,11 +1885,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-rabbitmq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-webadmin-swagger</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -2077,11 +2064,6 @@
                 <version>0.5.0</version>
             </dependency>
             <dependency>
-                <groupId>com.github.kongchen</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
-                <version>3.1.8</version>
-            </dependency>
-            <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
                 <artifactId>compiler</artifactId>
                 <version>0.9.10</version>
@@ -2090,6 +2072,16 @@
                 <groupId>com.github.stefanbirkner</groupId>
                 <artifactId>system-lambda</artifactId>
                 <version>1.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.crypto.tink</groupId>
+                <artifactId>apps-webpush</artifactId>
+                <version>${tink.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.crypto.tink</groupId>
+                <artifactId>tink</artifactId>
+                <version>${tink.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -2280,8 +2272,20 @@
             </dependency>
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt</artifactId>
-                <version>0.9.1</version>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -2621,6 +2625,11 @@
                 <version>${junit.vintage.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-netty</artifactId>
+                <version>5.11.2</version>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>3.7.7</version>
@@ -2811,18 +2820,6 @@
                             <phase>none</phase>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <groupId>com.github.kongchen</groupId>
-                    <artifactId>swagger-maven-plugin</artifactId>
-                    <version>3.1.7</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>javax.xml.bind</groupId>
-                            <artifactId>jaxb-api</artifactId>
-                            <version>${jaxb.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>com.google.cloud.tools</groupId>

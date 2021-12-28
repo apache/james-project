@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,9 +33,6 @@ import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetError;
@@ -44,6 +42,8 @@ import org.apache.james.jmap.draft.model.SetVacationResponse;
 import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.vacation.api.Vacation;
+import org.apache.james.vacation.api.VacationService;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,18 +58,16 @@ public class SetVacationResponseMethodTest {
     private static final String SUBJECT = "subject";
 
     private SetVacationResponseMethod testee;
-    private VacationRepository vacationRepository;
+    private VacationService vacationService;
     private MethodCallId methodCallId;
     private MailboxSession mailboxSession;
-    private NotificationRegistry notificationRegistry;
 
     @Before
     public void setUp() {
         methodCallId = mock(MethodCallId.class);
         mailboxSession = mock(MailboxSession.class);
-        vacationRepository = mock(VacationRepository.class);
-        notificationRegistry = mock(NotificationRegistry.class);
-        testee = new SetVacationResponseMethod(vacationRepository, notificationRegistry, new DefaultMetricFactory());
+        vacationService = mock(VacationService.class);
+        testee = new SetVacationResponseMethod(vacationService, new DefaultMetricFactory());
     }
 
     @Test(expected = NullPointerException.class)
@@ -108,7 +106,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
+        verifyNoMoreInteractions(vacationService);
     }
 
     @Test
@@ -131,7 +129,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
+        verifyNoMoreInteractions(vacationService);
     }
 
     @Test
@@ -159,7 +157,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
+        verifyNoMoreInteractions(vacationService);
     }
 
     @Test
@@ -175,9 +173,7 @@ public class SetVacationResponseMethodTest {
         AccountId accountId = AccountId.fromUsername(USERNAME);
 
         when(mailboxSession.getUser()).thenReturn(USERNAME);
-        when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(Mono.empty());
-        when(notificationRegistry.flush(any()))
-            .thenReturn(Mono.empty());
+        when(vacationService.modifyVacation(eq(toVacationAccountId(accountId)), any())).thenReturn(Mono.empty());
 
         Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mailboxSession);
 
@@ -190,9 +186,8 @@ public class SetVacationResponseMethodTest {
             .build();
         assertThat(result).containsExactly(expected);
 
-        verify(vacationRepository).modifyVacation(eq(accountId), any());
-        verify(notificationRegistry).flush(accountId);
-        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
+        verify(vacationService).modifyVacation(eq(toVacationAccountId(accountId)), any());
+        verifyNoMoreInteractions(vacationService);
     }
 
     @Test
@@ -219,7 +214,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
+        verifyNoMoreInteractions(vacationService);
     }
 
 }

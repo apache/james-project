@@ -265,7 +265,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .switchIfEmpty(messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType))
+            .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
     }
@@ -313,7 +313,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData) {
         return delete(metaData)
             .then(messageDAOV3.retrieveMessage(metaData, FetchType.Metadata)
-                .switchIfEmpty(messageDAO.retrieveMessage(metaData, FetchType.Metadata)))
+                .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metaData, FetchType.Metadata))))
             .map(pair -> pair.toMailboxMessage(metaData, ImmutableList.of()));
     }
 
@@ -346,13 +346,18 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+        return block(addReactive(mailbox, message));
+    }
+
+    @Override
+    public Mono<MessageMetaData> addReactive(Mailbox mailbox, MailboxMessage message) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return block(addUidAndModseq(message, mailboxId)
+        return addUidAndModseq(message, mailboxId)
             .flatMap(Throwing.function((MailboxMessage messageWithUidAndModSeq) ->
                 save(mailbox, messageWithUidAndModSeq)
                     .thenReturn(messageWithUidAndModSeq)))
-            .map(MailboxMessage::metaData));
+            .map(MailboxMessage::metaData);
     }
 
     private Mono<MailboxMessage> addUidAndModseq(MailboxMessage message, CassandraId mailboxId) {

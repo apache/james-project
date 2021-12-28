@@ -23,6 +23,7 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.MailetContext;
 
@@ -123,7 +125,9 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
             String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
             String fileURL = configuration.exportDirectory + "/" + fileName;
             File file = fileSystem.getFile(fileURL);
-            FileUtils.copyToFile(blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST), file);
+            try (InputStream in = blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST)) {
+                FileUtils.copyToFile(in, file);
+            }
 
             return file.getAbsolutePath();
         } catch (IOException e) {
@@ -147,7 +151,11 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
                 .mimeMessage(mimeMessage)
                 .build();
 
-            mailetContext.sendMail(mail);
+            try {
+                mailetContext.sendMail(mail);
+            } finally {
+                LifecycleUtil.dispose(mail);
+            }
         } catch (Exception e) {
             throw new BlobExportException("Error while sending email", e);
         }

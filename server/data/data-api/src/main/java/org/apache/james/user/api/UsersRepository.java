@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
+import org.reactivestreams.Publisher;
 
 /**
  * Interface for a repository of users. A repository represents a logical
@@ -86,6 +87,8 @@ public interface UsersRepository {
      *             if error
      */
     boolean contains(Username name) throws UsersRepositoryException;
+
+    Publisher<Boolean> containsReactive(Username name);
 
     /**
      * Test if user with name 'name' has password 'password'.

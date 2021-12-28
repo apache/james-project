@@ -40,7 +40,7 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.OptionConverters._
-import scala.util.Try
+import scala.util.{Try, Using}
 
 class MDNParseMethod @Inject()(serializer: MDNSerializer,
                                val blobResolvers: BlobResolvers,
@@ -92,10 +92,12 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
 
   private def toParseResults(blobId: BlobId, mailboxSession: MailboxSession): SMono[MDNParseResults] =
     blobResolvers.resolve(blobId, mailboxSession)
-      .flatMap(blob => parse(blob.blobId, blob.content)
-        .flatMap {
-          case (mdn, message) => buildMDNParseResults(blobId, mdn, message, mailboxSession)
-        })
+      .flatMap(blob => Using(blob.content) {
+        parse(blob.blobId, _)
+      }.fold(e => SMono.error[(MDN, Message)](e), result => result))
+      .flatMap {
+        case (mdn, message) => buildMDNParseResults(blobId, mdn, message, mailboxSession)
+      }
       .onErrorResume {
         case e: BlobNotFoundException => SMono.just(MDNParseResults.notFound(e.blobId))
         case e: BlobUnParsableException => SMono.just(MDNParseResults.notParse(e.blobId))

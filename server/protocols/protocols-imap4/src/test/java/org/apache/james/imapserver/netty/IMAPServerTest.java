@@ -55,6 +55,8 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.api.utils.BogusSslContextFactory;
+import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -247,7 +249,7 @@ class IMAPServerTest {
             assertThat(imapCode).isEqualTo(IMAPReply.NO);
         }
     }
-    
+
     @Nested
     class Ssl {
         IMAPServer imapServer;
@@ -394,6 +396,222 @@ class IMAPServerTest {
                     .append("INBOX", _129K_MESSAGE))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("BAD APPEND failed.");
+        }
+    }
+
+    @Nested
+    class PlainAuthDisabled {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthDisabled.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldFail() {
+            assertThatThrownBy(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
+        }
+
+        @Test
+        void authenticatePlainShouldFail() {
+            assertThatThrownBy(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
+        }
+
+        @Test
+        void capabilityShouldNotAdvertiseLoginAndAuthenticationPlain() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+
+            assertThat(testIMAPClient.capability())
+                .contains("LOGINDISABLED")
+                .doesNotContain("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
+    class PlainAuthEnabledWithoutRequireSSL {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthEnabledWithoutRequireSSL.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldSucceed() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void authenticatePlainShouldSucceed() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void capabilityShouldAdvertiseLoginAndAuthenticationPlain() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+
+            assertThat(testIMAPClient.capability())
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
+    class PlainAuthDisallowed {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthDisallowed.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldFailOnUnEncryptedChannel() {
+            assertThatThrownBy(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
+        }
+
+        @Test
+        void capabilityShouldNotAdvertiseLoginOnUnEncryptedChannel() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+
+            assertThat(testIMAPClient.capability())
+                .contains("LOGINDISABLED")
+                .doesNotContain("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
+    class PlainAuthDisallowedSSL {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerPlainAuthAllowed.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void loginShouldSucceedOnUnEncryptedChannel() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void capabilityShouldAdvertiseLoginOnUnEncryptedChannel() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port);
+
+            assertThat(testIMAPClient.capability())
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
+        }
+    }
+
+    @Nested
+    class AuthenticationRequireSSL {
+        IMAPServer imapServer;
+
+        @AfterEach
+        void tearDown() {
+            if (imapServer != null) {
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void loginShouldFailWhenRequireSSLAndUnEncryptedChannel() throws Exception {
+            imapServer = createImapServer("imapServerRequireSSLIsTrueAndStartSSLIsFalse.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            assertThatThrownBy(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
+
+        }
+
+        @Test
+        void loginShouldSuccessWhenRequireSSLAndEncryptedChannel() throws Exception {
+            imapServer = createImapServer("imapServerRequireSSLIsTrueAndStartSSLIsTrue.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            IMAPSClient client = new IMAPSClient(false, BogusSslContextFactory.getClientContext());
+            client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+            client.connect("127.0.0.1", port);
+            client.execTLS();
+            client.login(USER.asString(), USER_PASS);
+
+            assertThat(client.getReplyString()).contains("OK LOGIN completed.");
+        }
+
+        @Test
+        void loginShouldSuccessWhenNOTRequireSSLAndUnEncryptedChannel() throws Exception {
+            imapServer = createImapServer("imapServerRequireSSLIsFalseAndStartSSLIsFalse.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", SMALL_MESSAGE))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void loginShouldSuccessWhenNOTRequireSSLAndEncryptedChannel() throws Exception {
+            imapServer = createImapServer("imapServerRequireSSLIsFalseAndStartSSLIsTrue.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            IMAPSClient client = new IMAPSClient(false, BogusSslContextFactory.getClientContext());
+            client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+            client.connect("127.0.0.1", port);
+            client.execTLS();
+            client.login(USER.asString(), USER_PASS);
+
+            assertThat(client.getReplyString()).contains("OK LOGIN completed.");
         }
     }
 

@@ -46,7 +46,6 @@ import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.server.core.MimeMessageWrapper;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
@@ -111,9 +110,8 @@ public class MimeMessageStore {
 
     static class MimeMessageDecoder implements Store.Impl.Decoder<MimeMessage> {
         @Override
-        public MimeMessage decode(Stream<Pair<BlobType, CloseableByteSource>> streams) {
-            Preconditions.checkNotNull(streams);
-            Map<BlobType, CloseableByteSource> pairs = streams.collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
+        public MimeMessage decode(Map<BlobType, CloseableByteSource> pairs) {
+            Preconditions.checkNotNull(pairs);
             Preconditions.checkArgument(pairs.containsKey(HEADER_BLOB_TYPE));
             Preconditions.checkArgument(pairs.containsKey(BODY_BLOB_TYPE));
 

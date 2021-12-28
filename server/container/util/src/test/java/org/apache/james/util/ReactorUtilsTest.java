@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -472,6 +473,104 @@ class ReactorUtilsTest {
             InputStream inputStream = ReactorUtils.toInputStream(source);
 
             assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(bytes));
+        }
+
+
+        @Test
+        void givenALongFluxBytesWhenIDoNotReadItBeforeClosingItThenTheOriginalFluxShouldBeDisposed() throws Exception {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
+
+            AtomicBoolean canceled = new AtomicBoolean(false);
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList, 1, 1)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap)
+                .doOnCancel(() -> canceled.set(true));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            inputStream.close();
+
+            assertThat(canceled.get()).isTrue();
+        }
+
+        @Test
+        void givenALongFluxBytesWhenIReadItPartiallyBeforeClosingItThenTheOriginalFluxShouldBeDisposed() throws Exception {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
+
+            AtomicBoolean canceled = new AtomicBoolean(false);
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList, 1, 1)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap)
+                .doOnCancel(() -> canceled.set(true));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            byte[] buffer = new byte[3];
+            inputStream.read(buffer);
+            inputStream.close();
+
+            assertThat(canceled.get()).isTrue();
+        }
+
+        @Test
+        void givenALongFluxBytesWhenIReadItFullyWithoutClosingItThenTheOriginalFluxShouldBeDisposed() throws Exception {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
+
+            AtomicBoolean canceled = new AtomicBoolean(false);
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList, 1, 1)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap)
+                .doFinally(any -> canceled.set(true));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            IOUtils.readFully(inputStream, 41111);
+            // do not close it
+            assertThat(canceled.get()).isTrue();
+        }
+
+        @Test
+        void exceptionsShouldCancelOriginalFluxSubscription() {
+            AtomicBoolean canceled = new AtomicBoolean(false);
+            Flux<ByteBuffer> source = Flux.fromIterable(ImmutableList.of(
+                Mono.just("abc"), Mono.just("def"),
+                Mono.<String>error(new RuntimeException("Dummy")),
+                Mono.just("mno")))
+                .doFinally(any -> canceled.set(true))
+                .concatMap(s -> s, 1)
+                .map(String::getBytes)
+                .map(ByteBuffer::wrap);
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+
+            try {
+                byte[] buffer = new byte[3];
+                inputStream.read(buffer);
+                inputStream.read(buffer);
+                inputStream.read(buffer);
+            } catch (Exception e) {
+                // expected
+            }
+
+            assertThat(canceled.get()).isTrue();
+        }
+
+        @Test
+        void exceptionsShouldBePropagated() {
+            Flux<ByteBuffer> source = Flux.fromIterable(ImmutableList.of(
+                Mono.just("abc"), Mono.just("def"), Mono.just("ghi"), Mono.just("jkl"),
+                Mono.<String>error(new RuntimeException("Dummy")), Mono.just("mno")))
+                .concatMap(s -> s, 1)
+                .map(String::getBytes)
+                .map(ByteBuffer::wrap);
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+
+            assertThatThrownBy(() -> IOUtils.toByteArray(inputStream))
+                .hasMessage("Dummy");
         }
 
         @Test

@@ -1179,7 +1179,6 @@ The Apache Software Foundation (http://www.apache.org/).
         <with-license id='ApacheLicenseVersion2'>
             <by-organisation id='apache.org'>        
                 <resource name='james-mailbox-jpa-context.xml'/>
-                <resource name='james-mailbox-maildir-context.xml'/>
                 <resource name='james-mailbox-memory-context.xml'/>
                 <resource name='james-server-context.xml'/>
             </by-organisation>
@@ -1239,7 +1238,6 @@ All rights reserved.
                 <resource name='apache-james-imap-processor-0.2.1.jar'/>
                 <resource name='apache-james-mailbox-api-0.3.jar'/>
                 <resource name='apache-james-mailbox-jpa-0.3.jar'/>
-                <resource name='apache-james-mailbox-maildir-0.3.jar'/>
                 <resource name='apache-james-mailbox-memory-0.3.jar'/>
                 <resource name='apache-james-mailbox-store-0.3.jar'/>
                 <resource name='apache-james-mailbox-tool-0.3.jar'/>

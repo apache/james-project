@@ -20,7 +20,7 @@
 C: AUTHENTICATE
 S: NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command
 
-C: AUTHENTICATE UNKNOWN
+C: AUTHENTICATE "UNKNOWN"
 S: NO Unknown SASL mechanism UNKNOWN
 
 C: AUTHENTICATE "PLAIN"
@@ -34,4 +34,4 @@ S: NO authentication failed
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
-S: OK authentication successfull
+S: OK

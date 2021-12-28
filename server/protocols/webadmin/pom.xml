@@ -46,7 +46,6 @@
         <module>webadmin-mailrepository</module>
         <module>webadmin-pop3</module>
         <module>webadmin-rabbitmq</module>
-        <module>webadmin-swagger</module>
     </modules>
 
 </project>

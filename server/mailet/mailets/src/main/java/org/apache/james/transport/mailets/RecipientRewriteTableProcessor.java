@@ -203,6 +203,7 @@ public class RecipientRewriteTableProcessor {
                 .state(errorProcessor)
                 .build();
             mailetContext.sendMail(newMail);
+            LifecycleUtil.dispose(newMail);
         }
 
         if (executionResults.newRecipients.isEmpty()) {

@@ -33,7 +33,9 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ['192.168.100.10:8000']      
-```      
+```   
+For Kubernetes deployment, we recommend using Prometheus `ServiceMonitor` to collect James metrics through James Webadmin service. Please see our James Helm-chart for more information.
+
 ## Connect Data source to Grafana
 
 Add Prometheus data source to Grafana.\

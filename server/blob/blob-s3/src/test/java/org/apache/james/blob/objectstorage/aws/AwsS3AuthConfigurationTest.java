@@ -33,6 +33,10 @@ public class AwsS3AuthConfigurationTest {
     private static final URI ENDPOINT = URI.create("http://myEndpoint");
     private static final String ACCESS_KEY_ID = "myAccessKeyId";
     private static final String SECRET_KEY = "mySecretKey";
+    private static final String TRUST_STORE_PATH = "/where/ever/truststore.p12";
+    private static final String TRUST_STORE_TYPE = "PKCS12";
+    private static final String TRUST_STORE_SECRET = "myTrustStoreSecret";
+    private static final String TRUST_STORE_ALGORITHM = "myTrustStoreAlgorithm";
 
     @Test
     public void credentialsShouldRespectBeanContract() {
@@ -100,12 +104,39 @@ public class AwsS3AuthConfigurationTest {
             .endpoint(ENDPOINT)
             .accessKeyId(ACCESS_KEY_ID)
             .secretKey(SECRET_KEY)
+            .trustStorePath(TRUST_STORE_PATH)
+            .trustStoreType(TRUST_STORE_TYPE)
+            .trustStoreSecret(TRUST_STORE_SECRET)
+            .trustStoreAlgorithm(TRUST_STORE_ALGORITHM)
             .build();
 
         assertSoftly(softly -> {
             softly.assertThat(configuration.getEndpoint()).isEqualTo(ENDPOINT);
             softly.assertThat(configuration.getAccessKeyId()).isEqualTo(ACCESS_KEY_ID);
             softly.assertThat(configuration.getSecretKey()).isEqualTo(SECRET_KEY);
+            softly.assertThat(configuration.getTrustStorePath()).hasValue(TRUST_STORE_PATH);
+            softly.assertThat(configuration.getTrustStoreType()).hasValue(TRUST_STORE_TYPE);
+            softly.assertThat(configuration.getTrustStoreSecret()).hasValue(TRUST_STORE_SECRET);
+            softly.assertThat(configuration.getTrustStoreAlgorithm()).hasValue(TRUST_STORE_ALGORITHM);
+        });
+    }
+
+    @Test
+    public void builderShouldWorkWithoutOptionals() {
+        AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
+                .endpoint(ENDPOINT)
+                .accessKeyId(ACCESS_KEY_ID)
+                .secretKey(SECRET_KEY)
+                .build();
+
+        assertSoftly(softly -> {
+            softly.assertThat(configuration.getEndpoint()).isEqualTo(ENDPOINT);
+            softly.assertThat(configuration.getAccessKeyId()).isEqualTo(ACCESS_KEY_ID);
+            softly.assertThat(configuration.getSecretKey()).isEqualTo(SECRET_KEY);
+            softly.assertThat(configuration.getTrustStorePath()).isNotPresent();
+            softly.assertThat(configuration.getTrustStoreType()).isNotPresent();
+            softly.assertThat(configuration.getTrustStoreSecret()).isNotPresent();
+            softly.assertThat(configuration.getTrustStoreAlgorithm()).isNotPresent();
         });
     }
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.server.core.filesystem.ResourceFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -36,20 +37,16 @@ import org.springframework.core.io.Resource;
 public class DefaultJamesResourceLoader extends DefaultResourceLoader implements JamesResourceLoader {
 
     private final JamesDirectoriesProvider jamesDirectoriesProvider;
+    private final ResourceFactory resourceFactory;
 
     public DefaultJamesResourceLoader(JamesDirectoriesProvider jamesDirectoriesProvider) {
         this.jamesDirectoriesProvider = jamesDirectoriesProvider;
+        this.resourceFactory = new ResourceFactory(jamesDirectoriesProvider);
     }
 
     @Override
     public void validate(File file) throws IOException {
-        String canonicalPath = file.getCanonicalPath();
-        if (!canonicalPath.startsWith(jamesDirectoriesProvider.getAbsoluteDirectory())
-            && !canonicalPath.startsWith(jamesDirectoriesProvider.getRootDirectory())
-            && !canonicalPath.startsWith(jamesDirectoriesProvider.getVarDirectory())) {
-
-            throw new IOException(canonicalPath + " jail break outside of " + jamesDirectoriesProvider.getRootDirectory());
-        }
+        resourceFactory.validate(file);
     }
     
     /**

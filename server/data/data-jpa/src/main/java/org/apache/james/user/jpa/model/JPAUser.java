@@ -34,6 +34,7 @@ import javax.persistence.Version;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.model.Algorithm;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.HashFunction;
@@ -57,14 +58,21 @@ public class JPAUser implements User {
      * @return not null
      */
     @VisibleForTesting
-    static String hashPassword(String password, String alg) {
-        return chooseHashFunction(alg).apply(password);
+    static String hashPassword(String password, String nullableSalt, String nullableAlgorithm) {
+        Algorithm algorithm = Algorithm.of(Optional.ofNullable(nullableAlgorithm).orElse("SHA-512"));
+        if (algorithm.isPBKDF2()) {
+            return algorithm.digest(password, nullableSalt);
+        }
+        String credentials = password;
+        if (algorithm.isSalted() && nullableSalt != null) {
+            credentials = nullableSalt + password;
+        }
+        return chooseHashFunction(algorithm.getName()).apply(credentials);
     }
 
     interface PasswordHashFunction extends Function<String, String> {}
 
-    private static PasswordHashFunction chooseHashFunction(String nullableAlgorithm) {
-        String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("SHA-512");
+    private static PasswordHashFunction chooseHashFunction(String algorithm) {
         switch (algorithm) {
             case "NONE":
                 return password -> password;
@@ -115,7 +123,7 @@ public class JPAUser implements User {
         super();
         this.name = userName;
         this.alg = alg;
-        this.password = hashPassword(password, alg);
+        this.password = hashPassword(password, userName, alg);
     }
 
     @Override
@@ -129,7 +137,7 @@ public class JPAUser implements User {
         if (newPass == null) {
             result = false;
         } else {
-            password = hashPassword(newPass, alg);
+            password = hashPassword(newPass, name, alg);
             result = true;
         }
         return result;
@@ -141,7 +149,7 @@ public class JPAUser implements User {
         if (pass == null) {
             result = password == null;
         } else {
-            result = password != null && password.equals(hashPassword(pass, alg));
+            result = password != null && password.equals(hashPassword(pass, name, alg));
         }
         return result;
     }

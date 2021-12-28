@@ -19,9 +19,8 @@
 
 package org.apache.james;
 
-import java.util.Optional;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
@@ -53,8 +52,8 @@ import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SieveRoutesModule;
-import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
@@ -64,6 +63,7 @@ import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -72,17 +72,16 @@ public class MemoryJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
+        new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
         new MailboxesExportRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SieveRoutesModule(),
-        new SwaggerRoutesModule());
+        new SieveRoutesModule());
 
-
-    public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(Optional.empty());
+    public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(ImmutableList.of());
 
     public static final Module WEBADMIN_NO_AUTH_MODULE = Modules.combine(binder -> binder.bind(JwtConfiguration.class).toInstance(NO_JWT_CONFIGURATION),
         binder -> binder.bind(AuthenticationFilter.class).to(NoAuthenticationFilter.class),
@@ -104,6 +103,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new JmapEventBusModule(),
         new JmapTasksModule(),
         new MemoryDataJmapModule(),
+        new MemoryPushSubscriptionModule(),
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
@@ -139,6 +139,8 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new DKIMMailetModule());
 
     public static void main(String[] args) throws Exception {
+        ExtraProperties.initialize();
+
         Configuration configuration = Configuration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();

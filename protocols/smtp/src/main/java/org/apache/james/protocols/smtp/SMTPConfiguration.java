@@ -53,7 +53,7 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
      * @param remoteIP the remote IP address in String form
      * @return whether SMTP authentication is on
      */
-    boolean isAuthRequired(String remoteIP);
+    boolean isAuthAnnounced(String remoteIP, boolean tlsStarted);
     
     /**
      * Returns whether the remote server needs to send a HELO/EHLO

@@ -46,7 +46,6 @@
      <connectionBacklog>200</connectionBacklog>
 
      <!-- Set to true to support STARTTLS or TLS for the Socket.
-           To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
       -->
      <tls socketTLS="false" startTLS="false">
          <!-- To create a new keystore execute:
@@ -84,22 +83,22 @@
          
         <!-- Set the maximum simultaneous incoming connections per IP for this service -->
         <connectionLimitPerIP>0</connectionLimitPerIP>
-         
-        <!--  Uncomment this if you want to require SMTP authentication.
+
+       <auth>
+           <!--  Uncomment this if you want to require SMTP authentication.
 
                supported values:
-               true: required but announced only to not authorizedAddresses
-               false: don't use AUTH
-               announce: like true, but always announce AUTH capability to clients
+               forUnauthorizedAddresses:  announced only to not authorizedAddresses
+               never: don't announce AUTH
+               always: always announce AUTH capability to clients
 
                The correct behaviour per RFC value would be false or announce
                but we still support true for backward compatibility and because
                some webmail client fails when AUTH is announced but no authentication
                information has been provided
           -->
-        <!--
-        <authRequired>true</authRequired>
-         -->
+         <!-- <announce>forUnauthorizedAddresses</announce> -->
+       </auth>
 
 <!-- CHECKME! -->
         <!--  Uncomment this if you want to authorize specific addresses/networks.

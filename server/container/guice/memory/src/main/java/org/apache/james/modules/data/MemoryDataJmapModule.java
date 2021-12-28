@@ -23,18 +23,16 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.upload.UploadRepository;
-import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
-import org.apache.james.jmap.memory.vacation.MemoryNotificationRegistry;
-import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
@@ -53,11 +51,8 @@ public class MemoryDataJmapModule extends AbstractModule {
         bind(InMemoryUploadRepository.class).in(Scopes.SINGLETON);
         bind(UploadRepository.class).to(InMemoryUploadRepository.class);
 
-        bind(MemoryVacationRepository.class).in(Scopes.SINGLETON);
-        bind(VacationRepository.class).to(MemoryVacationRepository.class);
-
-        bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
-        bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
+        bind(MemoryCustomIdentityDAO.class).in(Scopes.SINGLETON);
+        bind(CustomIdentityDAO.class).to(MemoryCustomIdentityDAO.class);
 
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
         bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);

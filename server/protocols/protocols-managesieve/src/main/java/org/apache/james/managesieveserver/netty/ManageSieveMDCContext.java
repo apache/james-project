@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -61,7 +62,8 @@ public class ManageSieveMDCContext {
     private static MDCBuilder from(Session session) {
         return Optional.ofNullable(session)
             .map(s -> MDCBuilder.create()
-                .addToContext(MDCBuilder.USER, s.getUser().asString()))
+                .addToContextIfPresent(MDCBuilder.USER, Optional.ofNullable(s.getUser())
+                    .map(Username::asString)))
             .orElse(MDCBuilder.create());
     }
 }

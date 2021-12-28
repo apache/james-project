@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.mailet.Mail;
 
 import com.google.common.collect.ImmutableList;
 
@@ -53,6 +54,11 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
         return ImmutableList.copyOf(
             repositoryStore.select(url)
                 .list());
+    }
+
+    public Mail getMail(MailRepositoryUrl url, MailKey key) throws Exception {
+        return repositoryStore.select(url)
+                .retrieve(key);
     }
 
     public List<MailRepositoryUrl> listRepositoryUrls() {

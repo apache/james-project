@@ -1,0 +1,9 @@
+<testserver enabled="true">
+    <jmxName>testserver-custom</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <connectionBacklog>150</connectionBacklog>
+    <connectiontimeout>360</connectiontimeout>
+    <connectionLimit>100</connectionLimit>
+    <connectionLimitPerIP>5</connectionLimitPerIP>
+    <helloName autodetect="false">custom-mailer</helloName>
+</testserver>

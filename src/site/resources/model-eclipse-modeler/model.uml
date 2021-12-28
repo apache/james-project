@@ -69,9 +69,6 @@
   </packagedElement>
   <packagedElement xmi:type="uml:Package" xmi:id="_gKaa4MAWEd-WluVYiXTpAQ" name="org.apache.james:mailbox">
     <packagedElement xmi:type="uml:Interface" xmi:id="_ucy7YMAWEd-WluVYiXTpAQ" name="apache-james-mailbox-api"/>
-    <packagedElement xmi:type="uml:Class" xmi:id="_aTVdUMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-maildir">
-      <generalization xmi:id="_vX-fUMAYEd-WluVYiXTpAQ" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
-    </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="_cBuRwMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-library" clientDependency="_ktiV4MAYEd-WluVYiXTpAQ" isAbstract="true">
       <interfaceRealization xmi:id="_ktiV4MAYEd-WluVYiXTpAQ" name="" supplier="_ucy7YMAWEd-WluVYiXTpAQ" client="_cBuRwMAXEd-WluVYiXTpAQ" contract="_ucy7YMAWEd-WluVYiXTpAQ"/>
     </packagedElement>

@@ -18,7 +18,7 @@ There should be two folders in var:
      Of course, if you changed database.properties and still use a database for the mailboxes,
      you will have to look for the users, domains and mailboxes in your database, whatever,
      wherever it is.
-     You can find in store other folders such as store/activemq, store/maildir...
+     You can find in store other folders such as store/activemq
 
      
 For some functions, James uses the system temporary folder (/tmp on linux).

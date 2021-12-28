@@ -102,3 +102,41 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
 
   def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, REQUEST]
 }
+
+trait WithoutAccountId {
+}
+
+trait MethodWithoutAccountId[REQUEST <: WithoutAccountId] extends Method {
+  def metricFactory: MetricFactory
+
+  def sessionSupplier: SessionSupplier
+
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
+    val either: Either[Exception, Publisher[InvocationWithContext]] = for {
+      request <- getRequest(invocation.invocation)
+    } yield {
+      doProcess(invocation, mailboxSession, request)
+    }
+
+    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
+      .onErrorResume[InvocationWithContext] {
+        case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
+          ErrorCode.InvalidArguments,
+          s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
+          invocation.invocation.methodCallId), invocation.processingContext))
+        case e: UnsupportedNestingException => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
+          ErrorCode.UnsupportedFilter,
+          description = e.message,
+          invocation.invocation.methodCallId), invocation.processingContext))
+        case e: IllegalArgumentException => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+        case e: RequestTooLargeException => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(ErrorCode.RequestTooLarge, e.description, invocation.invocation.methodCallId), invocation.processingContext))
+        case e: Throwable => SFlux.error[InvocationWithContext](e)
+      }
+
+    metricFactory.decoratePublisherWithTimerMetric(JMAP_RFC8621_PREFIX + methodName.value, result)
+  }
+
+  def getRequest(invocation: Invocation): Either[Exception, REQUEST]
+
+  def doProcess(invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
+}

@@ -67,7 +67,7 @@ class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContrac
     public void createRecipientRewriteTable() {
         recipientRewriteTable = new CassandraRecipientRewriteTable(recipientRewriteTableDAO, mappingsSourcesDAO);
         recipientRewriteTable.setUsersRepository(new UsersRepositoryImpl<>(new SimpleDomainList(),
-            new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandraCluster.getCassandraCluster().getConf())));
+            new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf())));
     }
 
     @Override

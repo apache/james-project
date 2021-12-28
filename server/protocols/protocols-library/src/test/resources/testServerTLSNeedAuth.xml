@@ -1,0 +1,15 @@
+<testserver enabled="true">
+    <tls socketTLS="true" startTLS="false">
+        <keystore>file://conf/keystore</keystore>
+        <keystoreType>JKS</keystoreType>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        <algorithm>SunX509</algorithm>
+
+        <clientAuth>
+            <truststore>file://conf/truststore</truststore>
+            <truststoreType>JKS</truststoreType>
+            <truststoreSecret>james72laBalle</truststoreSecret>
+        </clientAuth>
+    </tls>
+</testserver>

@@ -162,10 +162,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-swagger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jpa-common-guice</artifactId>
         </dependency>
         <dependency>
@@ -308,6 +304,17 @@
                             <jvmFlag>-Djdk.tls.ephemeralDHKeySize=2048</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                        <volumes>
+                            <volume>/logs</volume>
+                            <volume>/root/conf</volume>
+                            <volume>/root/extensions-jars</volume>
+                            <volume>/root/glowroot/plugins</volume>
+                            <volume>/root/glowroot/data</volume>
+                            <!-- Data for ActiveMQ mailQueue -->
+                            <volume>/root/var</volume>
+                            <!-- Data for derby database -->
+                            <volume>/var/store</volume>
+                        </volumes>
                     </container>
                     <extraDirectories>
                         <paths>

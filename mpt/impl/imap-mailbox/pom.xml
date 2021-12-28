@@ -41,7 +41,6 @@
         <module>inmemory</module>
         <module>jpa</module>
         <module>lucenesearch</module>
-        <module>maildir</module>
         <module>rabbitmq</module>
     </modules>
 
@@ -86,12 +85,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-maildir</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

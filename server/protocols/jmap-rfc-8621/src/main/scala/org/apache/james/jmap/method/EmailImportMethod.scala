@@ -20,8 +20,8 @@
 package org.apache.james.jmap.method
 
 import java.util.Date
-import eu.timepit.refined.auto._
 
+import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.Size.sanitizeSize
@@ -35,7 +35,7 @@ import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationRespons
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
 import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.mime4j.codec.DecodeMonitor
@@ -75,6 +75,7 @@ object EmailImportMethod {
       case e: BlobNotFoundException => SetError.notFound(SetErrorDescription(s"Blob ${e.blobId} could not be found"))
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }

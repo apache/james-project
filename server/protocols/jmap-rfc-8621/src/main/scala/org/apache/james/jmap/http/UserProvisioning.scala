@@ -23,41 +23,37 @@ import java.util.UUID
 
 import javax.inject.Inject
 import org.apache.james.core.Username
+import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.user.api.{AlreadyExistInUsersRepositoryException, UsersRepository, UsersRepositoryException}
+import org.apache.james.user.api.{AlreadyExistInUsersRepositoryException, UsersRepository}
 import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
 
-class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactory: MetricFactory) {
-
+class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactory: MetricFactory, jmapConfiguration: JMAPConfiguration = JMAPConfiguration.DEFAULT) {
   def provisionUser(session: MailboxSession): SMono[Unit] =
-    if (session != null && !usersRepository.isReadOnly) {
-      SMono.fromCallable(() => createAccountIfNeeded(session))
-        .`then`
+    if (session != null && !usersRepository.isReadOnly && jmapConfiguration.isUserProvisioningEnabled) {
+      createAccountIfNeeded(session)
     } else {
       SMono.empty
     }
 
-  private def createAccountIfNeeded(session: MailboxSession): Unit = {
-    val timeMetric = metricFactory.timer("JMAP-RFC-8621-user-provisioning")
-    try {
-      val username = session.getUser
-      if (needsAccountCreation(username)) {
-        createAccount(username)
-      }
-    } catch {
-      case exception: AlreadyExistInUsersRepositoryException => // Ignore
-      case exception: UsersRepositoryException => throw new RuntimeException(exception)
-    } finally {
-      timeMetric.stopAndPublish
-    }
-  }
+  private def createAccountIfNeeded(session: MailboxSession): SMono[Unit] =
+    SMono(metricFactory.decoratePublisherWithTimerMetric("JMAP-RFC-8621-user-provisioning",
+      needsAccountCreation(session.getUser)
+        .filter(b => b)
+        .flatMap(_ => createAccount(session.getUser))
+        .onErrorResume {
+          case _: AlreadyExistInUsersRepositoryException => SMono.empty[Unit]
+          case e => SMono.error[Unit](e)
+        }))
 
-  @throws[UsersRepositoryException]
-  private def createAccount(username: Username): Unit = usersRepository.addUser(username, generatePassword)
+  private def createAccount(username: Username): SMono[Unit] =
+    SMono.fromCallable(() => usersRepository.addUser(username, generatePassword))
+      .subscribeOn(Schedulers.elastic())
 
-  @throws[UsersRepositoryException]
-  private def needsAccountCreation(username: Username): Boolean = !usersRepository.contains(username)
+  private def needsAccountCreation(username: Username): SMono[Boolean] =
+    SMono(usersRepository.containsReactive(username)).map(b => !b)
 
   private def generatePassword: String = UUID.randomUUID.toString
 }

@@ -103,12 +103,7 @@ class DSNTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        domainList = new MemoryDomainList(new InMemoryDNSService()
-            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
-            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
-            .registerMxRecord(LOCAL_DOMAIN, "127.0.0.1")
-            .registerMxRecord("examplebis.local", "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1"));
+        domainList = new MemoryDomainList(new InMemoryDNSService());
         domainList.configure(DomainListConfiguration.DEFAULT);
 
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));

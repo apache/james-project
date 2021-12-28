@@ -20,6 +20,7 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.{StandardCharsets, Charset => NioCharset}
 import java.util.Date
+
 import cats.implicits._
 import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
@@ -32,8 +33,8 @@ import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.routes.{Blob, BlobResolvers}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
-import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
+import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}

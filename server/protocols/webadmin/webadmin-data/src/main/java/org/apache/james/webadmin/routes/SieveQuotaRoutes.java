@@ -22,11 +22,6 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -42,18 +37,9 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Joiner;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "SieveQuota")
-@Path(SieveQuotaRoutes.ROOT_PATH)
-@Produces("application/json")
 public class SieveQuotaRoutes implements Routes {
 
     public static final String ROOT_PATH = "/sieve/quota";
@@ -89,13 +75,6 @@ public class SieveQuotaRoutes implements Routes {
         defineRemovePerUserSieveQuota(service);
     }
 
-    @GET
-    @ApiOperation(value = "Reading global sieve quota size")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 204, message = "Global sieve quota not set."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetGlobalSieveQuota(Service service) {
         service.get(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
@@ -108,16 +87,6 @@ public class SieveQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @PUT
-    @ApiOperation(value = "Update global sieve quota size")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "long", name = REQUESTED_SIZE, paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 400, message = "The body is not a positive integer."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdateGlobalSieveQuota(Service service) {
         service.put(DEFAULT_QUOTA_PATH, (request, response) -> {
             QuotaSizeLimit requestedSize = extractRequestedQuotaSizeFromRequest(request);
@@ -126,12 +95,6 @@ public class SieveQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @ApiOperation(value = "Removes global sieve quota")
-    @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Global sieve quota removed."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineRemoveGlobalSieveQuota(Service service) {
         service.delete(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
@@ -143,17 +106,6 @@ public class SieveQuotaRoutes implements Routes {
         });
     }
 
-    @GET
-    @Path(value = ROOT_PATH + "/{" + USER_ID + "}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = USER_ID, paramType = "path")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 204, message = "User sieve quota not set."),
-            @ApiResponse(code = 404, message = "The user name does not exist"),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineGetPerUserSieveQuota(Service service) {
         service.get(USER_SIEVE_QUOTA_PATH, (request, response) -> {
             Username userId = getUsername(request.params(USER_ID));
@@ -167,18 +119,6 @@ public class SieveQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @PUT
-    @Path(value = ROOT_PATH + "/{" + USER_ID + "}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = USER_ID, paramType = "path"),
-            @ApiImplicitParam(required = true, dataType = "long", name = REQUESTED_SIZE, paramType = "body")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK", response = Long.class),
-            @ApiResponse(code = 400, message = "The body is not a positive integer."),
-            @ApiResponse(code = 404, message = "The user name does not exist"),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
             Username userId = getUsername(request.params(USER_ID));
@@ -188,16 +128,6 @@ public class SieveQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    @DELETE
-    @Path(value = ROOT_PATH + "/{" + USER_ID + "}")
-    @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "string", name = USER_ID, paramType = "path")
-    })
-    @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "User sieve quota removed."),
-            @ApiResponse(code = 404, message = "The user name does not exist"),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
-    })
     public void defineRemovePerUserSieveQuota(Service service) {
         service.delete(USER_SIEVE_QUOTA_PATH, (request, response) -> {
             Username usernameId = getUsername(request.params(USER_ID));

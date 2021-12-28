@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import static org.apache.james.imapserver.netty.IMAPServer.AuthenticationConfiguration;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
-
-import javax.net.ssl.SSLContext;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -36,6 +37,7 @@ import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.protocols.api.Encryption;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -57,11 +59,62 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapChannelUpstreamHandler.class);
     public static final String MDC_KEY = "bound_MDC";
 
+    public static class ImapChannelUpstreamHandlerBuilder {
+        private String hello;
+        private Encryption secure;
+        private boolean compress;
+        private ImapProcessor processor;
+        private ImapEncoder encoder;
+        private IMAPServer.AuthenticationConfiguration authenticationConfiguration;
+        private ImapMetrics imapMetrics;
+
+        public ImapChannelUpstreamHandlerBuilder hello(String hello) {
+            this.hello = hello;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder secure(Encryption secure) {
+            this.secure = secure;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder compress(boolean compress) {
+            this.compress = compress;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder processor(ImapProcessor processor) {
+            this.processor = processor;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder encoder(ImapEncoder encoder) {
+            this.encoder = encoder;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder authenticationConfiguration(IMAPServer.AuthenticationConfiguration authenticationConfiguration) {
+            this.authenticationConfiguration = authenticationConfiguration;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandlerBuilder imapMetrics(ImapMetrics imapMetrics) {
+            this.imapMetrics = imapMetrics;
+            return this;
+        }
+
+        public ImapChannelUpstreamHandler build() {
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration);
+        }
+    }
+
+    public static ImapChannelUpstreamHandlerBuilder builder() {
+        return new ImapChannelUpstreamHandlerBuilder();
+    }
+
     private final String hello;
 
-    private final String[] enabledCipherSuites;
-
-    private final SSLContext context;
+    private final Encryption secure;
 
     private final boolean compress;
 
@@ -71,34 +124,28 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     private final ImapHeartbeatHandler heartbeatHandler = new ImapHeartbeatHandler();
 
-    private final boolean plainAuthDisallowed;
+    private final AuthenticationConfiguration authenticationConfiguration;
 
     private final Metric imapConnectionsMetric;
+
     private final Metric imapCommandsMetric;
-    
-    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      boolean plainAuthDisallowed, ImapMetrics imapMetrics) {
-        this(hello, processor, encoder, compress, plainAuthDisallowed, null, null, imapMetrics);
-    }
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      boolean plainAuthDisallowed, SSLContext context, String[] enabledCipherSuites,
-                                      ImapMetrics imapMetrics) {
+                                      Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
-        this.context = context;
-        this.enabledCipherSuites = enabledCipherSuites;
+        this.secure = secure;
         this.compress = compress;
-        this.plainAuthDisallowed = plainAuthDisallowed;
+        this.authenticationConfiguration = authenticationConfiguration;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
     }
 
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), context, enabledCipherSuites, compress, plainAuthDisallowed,
-            SessionId.generate());
+        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), secure, compress, authenticationConfiguration.isSSLRequired(),
+            authenticationConfiguration.isPlainAuthEnabled(), SessionId.generate());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
         imapsession.setAttribute(MDC_KEY, boundMDC);
         attributes.set(ctx.getChannel(), imapsession);
@@ -108,11 +155,16 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     }
 
     private MDCBuilder mdc(ChannelHandlerContext ctx) {
-        ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
-        MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
+        ImapSession maybeSession = (ImapSession) attributes.get(ctx.getChannel());
 
-        return IMAPMDCContext.from(session)
-            .addToContext(boundMDC);
+        return Optional.ofNullable(maybeSession)
+            .map(session -> {
+                MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
+
+                return IMAPMDCContext.from(session)
+                    .addToContext(boundMDC);
+            })
+            .orElseGet(MDCBuilder::create);
     }
 
     @Override

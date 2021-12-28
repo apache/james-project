@@ -1,0 +1,26 @@
+= James Distributed Mail Server
+:navtitle: Distributed James Application
+
+The Distributed server offers an easy way to scale email server. Based on
+noSQL solutions, it is intended to be easy to operate for large
+deployments, without needing sharding and protocol aware load balancing.
+
+The Distributed Server does assume that you have advanced
+technical knowledge and is the most complex and feature-rich option.
+
+This server is:
+
+* Intended for use by experts only
+* Used for large-scale distributed deployments
+* Is designed for Mail Delivery use cases but can also carry out mail processing
+* The most feature-rich server, but also by far the most complex
+
+In this section of the documentation, we will introduce you to:
+
+* xref:objectives.adoc[Objectives and motivation of the Distributed Server]
+* xref:architecture/index.adoc[Overview of architecture]
+* xref:run/index.adoc[Run the Distributed Server]
+* xref:configure/index.adoc[Configure the Distributed Server]
+* xref:operate/index.adoc[Operation of the Distributed Server]
+* xref:extending/index.adoc[How to extend the server]
+

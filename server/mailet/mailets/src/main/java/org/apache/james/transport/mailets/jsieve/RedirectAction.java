@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.jsieve;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionRedirect;
@@ -57,12 +58,17 @@ public class RedirectAction implements MailAction {
     public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
 
-        context.post(MailImpl.builder()
+        MailImpl redirectedMail = MailImpl.builder()
             .name("redirect-" + aMail.getName())
             .sender(aMail.getMaybeSender())
             .addRecipient(new MailAddress(anAction.getAddress()))
             .mimeMessage(aMail.getMessage())
-            .build());
+            .build();
+        try {
+            context.post(redirectedMail);
+        } finally {
+            LifecycleUtil.dispose(redirectedMail);
+        }
 
         LOGGER.debug("Redirected Message ID: {} to \"{}\"", aMail.getMessage().getMessageID(), anAction.getAddress());
         DiscardAction.removeRecipient(aMail, context);

@@ -62,9 +62,9 @@ import reactor.core.publisher.Mono;
 public class CassandraEmailQueryView implements EmailQueryView {
     private static final String LIMIT_MARKER = "LIMIT_BIND_MARKER";
 
-    private final CassandraMessageId.Factory messageIdFactory;
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement listMailboxContentBySentAt;
+    private final PreparedStatement listMailboxContentByReceivedAt;
     private final PreparedStatement listMailboxContentSinceSentAt;
     private final PreparedStatement listMailboxContentSinceReceivedAt;
     private final PreparedStatement insertInLookupTable;
@@ -79,14 +79,19 @@ public class CassandraEmailQueryView implements EmailQueryView {
     private final PreparedStatement lookupDate;
 
     @Inject
-    public CassandraEmailQueryView(CassandraMessageId.Factory messageIdFactory, Session session) {
-        this.messageIdFactory = messageIdFactory;
+    public CassandraEmailQueryView(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
 
         listMailboxContentBySentAt = session.prepare(select()
             .from(TABLE_NAME_SENT_AT)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
             .orderBy(desc(SENT_AT))
+            .limit(bindMarker(LIMIT_MARKER)));
+
+        listMailboxContentByReceivedAt = session.prepare(select()
+            .from(TABLE_NAME_RECEIVED_AT)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .orderBy(desc(RECEIVED_AT))
             .limit(bindMarker(LIMIT_MARKER)));
 
         listMailboxContentSinceSentAt = session.prepare(select()
@@ -161,7 +166,18 @@ public class CassandraEmailQueryView implements EmailQueryView {
         return executor.executeRows(listMailboxContentBySentAt.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setInt(LIMIT_MARKER, limit.getLimit().get()))
-            .map(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID)));
+            .map(row -> CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID)));
+    }
+
+    @Override
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
+        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
+
+        CassandraId cassandraId = (CassandraId) mailboxId;
+        return executor.executeRows(listMailboxContentByReceivedAt.bind()
+            .setUUID(MAILBOX_ID, cassandraId.asUuid())
+            .setInt(LIMIT_MARKER, limit.getLimit().get()))
+            .map(row -> CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID)));
     }
 
     @Override
@@ -175,7 +191,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setTimestamp(RECEIVED_AT, sinceDate))
             .map(row -> {
-                CassandraMessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID));
+                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID));
                 Date receivedAt = row.getTimestamp(RECEIVED_AT);
                 Date sentAt = row.getTimestamp(SENT_AT);
 
@@ -185,6 +201,20 @@ public class CassandraEmailQueryView implements EmailQueryView {
             })
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
+            .take(limit.getLimit().get());
+    }
+
+    @Override
+    public Flux<MessageId> listMailboxContentSinceReceivedAtSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
+
+        Date sinceDate = Date.from(since.toInstant());
+        CassandraId cassandraId = (CassandraId) mailboxId;
+
+        return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
+            .setUUID(MAILBOX_ID, cassandraId.asUuid())
+            .setTimestamp(RECEIVED_AT, sinceDate))
+            .<MessageId>map(row -> CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID)))
             .take(limit.getLimit().get());
     }
 
@@ -199,7 +229,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setInt(LIMIT_MARKER, limit.getLimit().get())
             .setTimestamp(SENT_AT, sinceDate))
-            .map(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE)));
+            .map(row -> CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID_LOWERCASE)));
     }
 
     @Override

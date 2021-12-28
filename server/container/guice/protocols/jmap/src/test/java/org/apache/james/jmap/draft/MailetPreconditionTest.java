@@ -23,12 +23,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.VacationMailet;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.mailet.MailetContext;
@@ -60,7 +60,7 @@ class MailetPreconditionTest {
         @Test
         void vacationMailetCheckShouldThrowOnWrongMatcher() {
             assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "transport", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
+                "transport", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null)))))
                 .isInstanceOf(ConfigurationException.class);
         }
 
@@ -74,14 +74,14 @@ class MailetPreconditionTest {
         @Test
         void vacationMailetCheckShouldNotThrowIfValidPairPresent() {
             assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "transport", new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)))))
+                "transport", new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null)))))
                 .doesNotThrowAnyException();
         }
 
         @Test
         void vacationMailetCheckShouldSupportLocalDeliveryProcessor() {
             assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
-                "local-delivery", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
+                "local-delivery", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null)))))
                 .doesNotThrowAnyException();
         }
     }

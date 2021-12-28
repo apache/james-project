@@ -121,36 +121,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.github.kongchen</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
-                <configuration>
-                    <apiSources>
-                        <apiSource>
-                            <springmvc>false</springmvc>
-                            <locations>org.apache.james.webadmin</locations>
-                            <info>
-                                <title>Swagger Maven Plugin</title>
-                                <version>v1</version>
-                            </info>
-                            <swaggerDirectory>${project.build.directory}</swaggerDirectory>
-                            <swaggerFileName>webadmin-rabbitmq</swaggerFileName>
-                        </apiSource>
-                    </apiSources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>compile</phase>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

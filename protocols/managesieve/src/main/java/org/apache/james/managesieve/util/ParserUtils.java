@@ -50,4 +50,16 @@ public class ParserUtils {
         return result;
     }
 
+    public static String unquoteFirst(String quoted) {
+        if (quoted == null) {
+            return null;
+        }
+        if (quoted.length() > 2 && quoted.startsWith("\"") && quoted.indexOf('\"', 1) >= 0) {
+            return quoted.substring(1, quoted.indexOf('\"', 1));
+        } else if (quoted.startsWith("'") && quoted.endsWith("'")) {
+            return quoted.substring(1, quoted.length() - 1);
+        }
+        return null;
+    }
+
 }

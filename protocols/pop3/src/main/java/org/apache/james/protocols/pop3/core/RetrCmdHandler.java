@@ -30,7 +30,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
@@ -46,7 +45,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles RETR command
  */
-public class RetrCmdHandler implements CommandHandler<POP3Session> {
+public class RetrCmdHandler extends AbstractPOP3CommandHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetrCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("RETR");
     @VisibleForTesting

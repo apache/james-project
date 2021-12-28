@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621;
 import static org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_CONFIGURATION;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
@@ -29,20 +30,20 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.change.EmailDeliveryTypeName$;
 import org.apache.james.jmap.change.EmailSubmissionTypeName$;
 import org.apache.james.jmap.change.EmailTypeName$;
 import org.apache.james.jmap.change.IdentityTypeName$;
 import org.apache.james.jmap.change.MailboxTypeName$;
 import org.apache.james.jmap.change.ThreadTypeName$;
-import org.apache.james.jmap.change.TypeName;
 import org.apache.james.jmap.change.VacationResponseTypeName$;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
+import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
-import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.mail.DefaultNamespaceFactory;
 import org.apache.james.jmap.mail.NamespaceFactory;
 import org.apache.james.jmap.method.CoreEchoMethod;
@@ -53,6 +54,7 @@ import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.IdentityGetMethod;
+import org.apache.james.jmap.method.IdentitySetMethod;
 import org.apache.james.jmap.method.MDNParseMethod;
 import org.apache.james.jmap.method.MDNSendMethod;
 import org.apache.james.jmap.method.MailboxChangesMethod;
@@ -60,12 +62,17 @@ import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
+import org.apache.james.jmap.method.PushSubscriptionGetMethod;
+import org.apache.james.jmap.method.PushSubscriptionSetMethod;
 import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.ThreadChangesMethod;
 import org.apache.james.jmap.method.ThreadGetMethod;
 import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
 import org.apache.james.jmap.method.ZoneIdProvider;
+import org.apache.james.jmap.pushsubscription.DefaultWebPushClient;
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
+import org.apache.james.jmap.pushsubscription.WebPushClient;
 import org.apache.james.jmap.routes.AttachmentBlobResolver;
 import org.apache.james.jmap.routes.BlobResolver;
 import org.apache.james.jmap.routes.DownloadRoutes;
@@ -78,12 +85,19 @@ import org.apache.james.jmap.routes.UploadResolver;
 import org.apache.james.jmap.routes.UploadRoutes;
 import org.apache.james.jmap.routes.WebSocketRoutes;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.NamingScheme;
+import org.apache.james.utils.PackageName;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -94,6 +108,10 @@ import com.google.inject.name.Named;
 
 public class RFC8621MethodsModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(RFC8621MethodsModule.class);
+    private static PackageName IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX = PackageName.of("org.apache.james.jmap.http");
+    private static List<String> DEFAULT_AUTHENTICATION_STRATEGIES = ImmutableList.of(
+        BasicAuthenticationStrategy.class.getSimpleName(),
+        JWTAuthenticationStrategy.class.getSimpleName());
 
     @Override
     protected void configure() {
@@ -102,6 +120,9 @@ public class RFC8621MethodsModule extends AbstractModule {
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);
         bind(MDNSendMethod.class).in(Scopes.SINGLETON);
+
+        bind(DefaultWebPushClient.class).in(Scopes.SINGLETON);
+        bind(WebPushClient.class).to(DefaultWebPushClient.class);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
@@ -112,12 +133,15 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(EmailSetMethod.class);
         methods.addBinding().to(EmailSubmissionSetMethod.class);
         methods.addBinding().to(IdentityGetMethod.class);
+        methods.addBinding().to(IdentitySetMethod.class);
         methods.addBinding().to(MailboxChangesMethod.class);
         methods.addBinding().to(MailboxGetMethod.class);
         methods.addBinding().to(MailboxQueryMethod.class);
         methods.addBinding().to(MailboxSetMethod.class);
         methods.addBinding().to(MDNParseMethod.class);
         methods.addBinding().to(MDNSendMethod.class);
+        methods.addBinding().to(PushSubscriptionGetMethod.class);
+        methods.addBinding().to(PushSubscriptionSetMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
@@ -160,11 +184,31 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Singleton
     @Named(InjectionKeys.RFC_8621)
     Authenticator provideAuthenticator(MetricFactory metricFactory,
-                                       Set<AuthenticationStrategy> authenticationStrategies) {
+                                       @Named("jmapRFC8621AuthenticationStrategies") Set<AuthenticationStrategy> authenticationStrategies) {
 
         return Authenticator.of(
             metricFactory,
             authenticationStrategies);
+    }
+
+    @Provides
+    @Singleton
+    @Named("jmapRFC8621AuthenticationStrategies")
+    public Set<AuthenticationStrategy> provideAuthenticationStrategies(GuiceGenericLoader loader,
+                                                                       JmapRfc8621Configuration configuration) {
+        return configuration.getAuthenticationStrategiesAsJava()
+            .orElse(DEFAULT_AUTHENTICATION_STRATEGIES)
+            .stream()
+            .map(ClassName::new)
+            .map(Throwing.function(loader.<AuthenticationStrategy>withNamingSheme(
+                new NamingScheme.OptionalPackagePrefix(IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX))::instantiate))
+            .collect(ImmutableSet.toImmutableSet());
+    }
+
+    @Provides
+    @Singleton
+    PushClientConfiguration providePushClientConfiguration(JmapRfc8621Configuration configuration) {
+        return configuration.webPushConfiguration();
     }
 
     @Provides

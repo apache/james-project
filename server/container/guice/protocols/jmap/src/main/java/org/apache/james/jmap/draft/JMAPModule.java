@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -43,9 +44,9 @@ import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
+import org.apache.james.jmap.routes.JmapUrlEndpointResolver;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -55,6 +56,7 @@ import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.MailetContainerModule.ProcessorsCheck;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.apache.james.transport.mailets.VacationMailet;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.Port;
@@ -165,7 +167,7 @@ public class JMAPModule extends AbstractModule {
 
     @ProvidesIntoSet
     Capability webSocketCapability(JmapRfc8621Configuration configuration) {
-        return DefaultCapabilities.webSocketCapability(configuration.webSocketUrl());
+        return DefaultCapabilities.webSocketCapability(JmapUrlEndpointResolver.from(configuration).webSocketUrl());
     }
 
     @Provides
@@ -177,6 +179,7 @@ public class JMAPModule extends AbstractModule {
                 .enabled(configuration.getBoolean("enabled", true))
                 .port(Port.of(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT)))
                 .enableEmailQueryView(Optional.ofNullable(configuration.getBoolean("view.email.query.enabled", null)))
+                .userProvisioningEnabled(Optional.ofNullable(configuration.getBoolean("user.provisioning.enabled", null)))
                 .defaultVersion(Optional.ofNullable(configuration.getString("jmap.version.default", null))
                     .map(Version::of))
                 .maximumSendSize(Optional.ofNullable(configuration.getString("email.send.max.size", null))
@@ -203,7 +206,8 @@ public class JMAPModule extends AbstractModule {
                 .certificates(configuration.getString("tls.certificates", null))
                 .keystoreType(configuration.getString("tls.keystoreType", null))
                 .secret(configuration.getString("tls.secret", null))
-                .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
+                .jwtPublicKeyPem(loadPublicKey(fileSystem, ImmutableList.copyOf(configuration.getStringArray("jwt.publickeypem.url"))))
+                .authenticationStrategies(Optional.ofNullable(configuration.getList(String.class, "authentication.strategy.draft", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
@@ -221,8 +225,10 @@ public class JMAPModule extends AbstractModule {
         return JwtTokenVerifier.create(jwtConfiguration);
     }
 
-    private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
-        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), StandardCharsets.US_ASCII)));
+    private List<String> loadPublicKey(FileSystem fileSystem, List<String> jwtPublickeyPemUrl) {
+        return jwtPublickeyPemUrl.stream()
+            .map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), StandardCharsets.US_ASCII)))
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Singleton

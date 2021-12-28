@@ -24,7 +24,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.reactivestreams.Publisher;
 
 public interface MailboxAppender {
-    ComposedMessageId append(MimeMessage mail, Username user, String folder) throws MessagingException;
+    Publisher<ComposedMessageId> append(MimeMessage mail, Username user, String folder) throws MessagingException;
 }

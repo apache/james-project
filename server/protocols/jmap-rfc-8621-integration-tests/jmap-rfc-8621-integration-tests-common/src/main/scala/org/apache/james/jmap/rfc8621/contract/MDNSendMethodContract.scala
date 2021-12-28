@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.util.concurrent.TimeUnit
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -45,9 +49,6 @@ import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.awaitility.core.ConditionFactory
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 import scala.jdk.CollectionConverters._
 
 object MDNSendMethodContract {
@@ -273,13 +274,13 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$DAVID_IDENTITY_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
-         |            "finalRecipient": "rfc822; ${DAVID.asString()}",
+         |            "finalRecipient": "rfc822; ${ANDRE.asString()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
