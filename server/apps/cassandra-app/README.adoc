@@ -2,7 +2,7 @@
 
 *WARNING*: This server only targets single James node deployment on top of a shared database.
 
-It do not target deployments with multiple James nodes as is misses inter-node communication capabilities.
+It does not target deployments with multiple James nodes as is misses inter-node communication capabilities.
 
 *WARNING*: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
 alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
@@ -11,6 +11,10 @@ alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO o
 
  * Java 11 SDK
 
+Firstly, create your own user network on Docker for the James environment:
+
+    $ docker network create --driver bridge james
+
 Third party compulsory dependencies:
 
  * Cassandra 3.11.10
@@ -18,8 +22,8 @@ Third party compulsory dependencies:
 
 [source]
 ----
-$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.10
-$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:3.11.10
+$ docker run -d --network james -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
 ----
 
 == Running
@@ -61,7 +65,7 @@ Then run it:
 
 [source]
 ----
-docker run apache/james:cassandra-latest
+docker run --network james apache/james:cassandra-latest
 ----
 
 For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
@@ -69,7 +73,7 @@ For security reasons you are required to generate your own keystore, that you ca
 [source]
 ----
 keytool -genkey -alias james -keyalg RSA -keystore keystore
-docker run -v $PWD/keystore:/root/conf/keystore docker run apache/james:cassandra-latest
+docker run --network james -v $PWD/keystore:/root/conf/keystore docker run apache/james:cassandra-latest
 ----
 
 Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
@@ -77,7 +81,7 @@ to pass extra JVM flags. For instance:
 
 [source]
 ----
-docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:cassandra-latest
+docker run --network james -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:cassandra-latest
 ----
 
 [Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
@@ -86,7 +90,7 @@ Disabled by default, its java agent can easily be enabled:
 
 [source]
 ----
-docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:cassandra-latest
+docker run --network james -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:cassandra-latest
 ----
 
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
