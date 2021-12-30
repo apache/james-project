@@ -47,7 +47,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>never</announce>
-            <requireSSL>true</requireSSL>
+            <requireSSL>false</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
