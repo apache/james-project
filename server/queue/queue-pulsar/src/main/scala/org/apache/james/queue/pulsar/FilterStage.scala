@@ -22,10 +22,11 @@ package org.apache.james.queue.pulsar
 import akka.actor.{Actor, ActorLogging, Props}
 import com.sksamuel.pulsar4s.akka.streams.CommittableMessage
 import com.sksamuel.pulsar4s.{ConsumerMessage, SequenceId}
+import org.apache.james.blob.api.BlobId
 
 import scala.math.Ordered.orderingToOrdered
 
-private[pulsar] class FilterStage extends Actor with ActorLogging {
+private[pulsar] class FilterStage(implicit val blobIdFactory:BlobId.Factory) extends Actor with ActorLogging {
   private var filters = Set.empty[Filter]
   private val name = self.path.name
 
@@ -41,10 +42,10 @@ private[pulsar] class FilterStage extends Actor with ActorLogging {
       log.debug(s"filtering mail with active filters : $filters , sequence: ${sequenceId} metadata : $metadata")
       if (shouldBeFiltered(metadata, sequenceId)) {
         log.debug(s"message filtered : sequence: ${sequenceId} metadata : $metadata")
-        sender() ! (None, cm)
+        sender() ! (None, Some(metadata.partsId), cm)
       } else {
         log.debug(s"message not filtered : sequence: ${sequenceId} metadata : $metadata")
-        sender() ! (Some(metadata), cm)
+        sender() ! (Some(metadata), None, cm)
       }
       removeExpiredFilters(sequenceId)
 
@@ -78,5 +79,5 @@ private[pulsar] class FilterStage extends Actor with ActorLogging {
 }
 
 private[pulsar] object FilterStage {
-  def props = Props(new FilterStage())
+  def props(implicit blobIdFactory:BlobId.Factory) = Props(new FilterStage())
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.pulsar
 
+import org.apache.james.blob.api.BlobId
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.mailet.Mail
@@ -80,4 +81,12 @@ private[pulsar] case class MailMetadata(enqueueId: String,
                         remoteHost: String,
                         perRecipientHeaders: Map[String, Iterable[Header]],
                         headerBlobId: String,
-                        bodyBlobId: String)
+                        bodyBlobId: String){
+
+  def partsId(implicit blobIdFactory: BlobId.Factory): MimeMessagePartsId =
+    MimeMessagePartsId.builder()
+      .headerBlobId(blobIdFactory.from(headerBlobId))
+      .bodyBlobId(blobIdFactory.from(bodyBlobId))
+      .build()
+
+}
