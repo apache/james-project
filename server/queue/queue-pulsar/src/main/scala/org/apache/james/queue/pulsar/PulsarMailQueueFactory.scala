@@ -51,7 +51,13 @@ class PulsarMailQueueFactory @Inject()(config: PulsarConfiguration,
   private val system: ActorSystem = ActorSystem("pulsar-mailqueue")
 
   @PreDestroy
-  def stop(): Unit = system.terminate()
+  def stop(): Unit = {
+    queues.getAndUpdate(map => {
+      map.values.foreach(_.close())
+      map.empty
+    })
+    system.terminate()
+  }
 
   override def getQueue(name: MailQueueName, count: MailQueueFactory.PrefetchCount): Optional[PulsarMailQueue] = {
     Try(admin.topics().getInternalInfo(s"persistent://${config.namespace.asString}/James-${name.asString()}")).toOption.map(_ =>

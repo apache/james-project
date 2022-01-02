@@ -98,6 +98,7 @@ class PulsarMailQueue(
 
   private val enqueueBufferSize = 10
   private val requeueBufferSize = 10
+  private val awaitTimeout = 10.seconds
 
   gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + name, () => getSize)
   private val dequeueMetrics = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString)
@@ -105,7 +106,8 @@ class PulsarMailQueue(
 
   private implicit val implicitSystem: ActorSystem = system
   private implicit val ec: ExecutionContextExecutor = system.dispatcher
-  private implicit val client = PulsarClient(config.brokerUri)
+  private implicit val implicitBlobIdFactory: BlobId.Factory = blobIdFactory
+  private implicit val client: PulsarAsyncClient = PulsarClient(config.brokerUri)
   private val admin = {
     val builder = PulsarAdmin.builder()
     builder.serviceHttpUrl(config.adminUri).build()
@@ -221,20 +223,18 @@ class PulsarMailQueue(
       .map(message =>
         (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
           message)
-      ).ask[(Option[MailMetadata], CommittableMessage[String])](filterStage)
+      ).ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterStage)
       .flatMapConcat {
-        case (None, committableMessage) =>
+        case (None, Some(partsId), committableMessage) =>
           committableMessage.ack()
-          Source.empty
-        case (Some(metadata), committableMessage) =>
-          val partsId = MimeMessagePartsId.builder()
-            .headerBlobId(blobIdFactory.from(metadata.headerBlobId))
-            .bodyBlobId(blobIdFactory.from(metadata.bodyBlobId))
-            .build()
+          deleteMimeMessage(partsId)
+            .flatMapConcat(_ => Source.empty)
+        case (Some(metadata), _, committableMessage) =>
+          val partsId = metadata.partsId
           Source
             .fromPublisher(readMimeMessage(partsId))
-            .map(message => (readMail(metadata, message), committableMessage))
-      }.map { case (mail, message) => new PulsarMailQueueItem(mail, message) }
+            .map(message => (readMail(metadata, message), partsId, committableMessage))
+      }.map { case (mail, partsId, message) => new PulsarMailQueueItem(mail, partsId, message) }
       .map(mailQueueItemDecoratorFactory.decorate(_, name))
 
       .alsoTo(counter)
@@ -251,15 +251,16 @@ class PulsarMailQueue(
       .toMat(Sink.asPublisher[MailQueue.MailQueueItem](true).withAttributes(Attributes.inputBuffer(initial = 1, max = 1)))(Keep.both)
   }
 
-  class PulsarMailQueueItem(mail: Mail, message: CommittableMessage[String]) extends MailQueueItem {
+  class PulsarMailQueueItem(mail: Mail, partsId: MimeMessagePartsId, message: CommittableMessage[String]) extends MailQueueItem {
     override val getMail: Mail = mail
 
     override def done(success: Boolean): Unit = {
       if (success) {
         dequeueMetrics.increment()
-        message.ack(cumulative = false)
+        Await.ready(message.ack(cumulative = false), awaitTimeout)
+        deleteMimeMessage(partsId).run()
       } else {
-        message.nack()
+        Await.ready(message.nack(), awaitTimeout)
       }
     }
   }
@@ -333,7 +334,7 @@ class PulsarMailQueue(
   private def syncEnqueue(mail: Mail, delay: Duration): Unit = {
     metricFactory.decorateSupplierWithTimerMetric(
       ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString,
-      () => Await.result(internalEnqueue(mail, delay), 10.second)
+      () => Await.result(internalEnqueue(mail, delay), awaitTimeout)
     )
   }
 
@@ -453,7 +454,7 @@ class PulsarMailQueue(
     )
 
     if (reader.hasMessageAvailable)
-      reader.next(10.seconds)
+      reader.next(awaitTimeout)
     else
       None
   }
@@ -583,5 +584,17 @@ class PulsarMailQueue(
       case e: MessagingException =>
         throw new MailQueue.MailQueueException("Error while reading blob", e)
     }
+
+  private def deleteMimeMessage(partsId: MimeMessagePartsId): Source[Void, NotUsed] = {
+    def doDelete() =
+      try {
+        mimeMessageStore.delete(partsId)
+      } catch {
+        case e: MessagingException =>
+          throw new MailQueue.MailQueueException("Error while deleting blob", e)
+      }
+
+    Source.fromPublisher(doDelete())
+  }
 
 }

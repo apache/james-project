@@ -21,8 +21,9 @@ package org.apache.james.queue.pulsar;
 
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
@@ -48,8 +49,8 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.apache.james.queue.pulsar.PulsarMailQueue;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -79,13 +80,14 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     private MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem;
     private PulsarConfiguration config;
     private ActorSystem system;
+    private MemoryBlobStoreDAO memoryBlobStore;
 
     @BeforeEach
     void setUp(DockerPulsarExtension.DockerPulsar pulsar, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         this.metricTestSystem = metricTestSystem;
         blobIdFactory = new HashBlobId.Factory();
 
-        MemoryBlobStoreDAO memoryBlobStore = new MemoryBlobStoreDAO();
+        memoryBlobStore = new MemoryBlobStoreDAO();
         PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, BucketName.DEFAULT, blobIdFactory);
         MimeMessageStore.Factory mimeMessageStoreFactory = new MimeMessageStore.Factory(blobStore);
         mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
@@ -181,6 +183,55 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         assertThat(getManageableMailQueue().browse()).toIterable()
                 .extracting(mail -> mail.getMail().getName())
                 .containsExactly("namez");
+    }
+
+    @Test
+    void queueShouldRemoveMailFromStoreOnAcknowledgedDequeue() throws Exception {
+        String expectedName = "name";
+        enQueue(defaultMail()
+                .name(expectedName)
+                .build());
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        mailQueueItem.done(true);
+
+        assertThat(mailQueueItem.getMail().getName())
+                .isEqualTo(expectedName);
+
+        Awaitility.await().untilAsserted(() -> assertThatStoreIsEmpty());
+    }
+
+    @Test
+    void removeShouldRemoveMailFromStoreWhenFilteredOut() throws Exception {
+        enQueue(defaultMail()
+                .name("name1")
+                .build());
+        enQueue(defaultMail()
+                .name("name2")
+                .build());
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
+
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse())
+                .toIterable()
+                .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+                .extracting(Mail::getName)
+                .containsExactly("name1");
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        mailQueueItem.done(true);
+        Awaitility.await().untilAsserted(() -> assertThatStoreIsEmpty());
+    }
+
+    private void assertThatStoreIsEmpty() {
+        var blobIds = Flux.from(memoryBlobStore.listBlobs(BucketName.DEFAULT))
+                .map(Objects::toString)
+                .collectList()
+                .defaultIfEmpty(List.of())
+                .block();
+        assertThat(blobIds).isEmpty();
     }
 
     @Disabled("this guarantee is too strong for Pulsar implementation and doesn't match any domain requirement")
