@@ -592,7 +592,7 @@
         <apache-mime4j.version>0.8.6</apache-mime4j.version>
         <apache.openjpa.version>3.1.2</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
-        <log4j2.version>2.17.0</log4j2.version>
+        <log4j2.version>2.17.1</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
