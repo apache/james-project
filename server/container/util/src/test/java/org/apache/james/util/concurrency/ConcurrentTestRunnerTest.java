@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Closeable;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.IntSummaryStatistics;
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
@@ -51,6 +53,13 @@ class ConcurrentTestRunnerTest {
                 .threadCount(-1)
                 .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void test() throws Exception {
+        System.out.println(IOUtils.toString(new FileInputStream("/home/jenkins/.docker/config.json")));
+
+        assertThat(false).isTrue(); // Fail
     }
 
     @Test
