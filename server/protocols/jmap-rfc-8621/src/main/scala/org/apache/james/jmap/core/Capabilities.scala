@@ -61,6 +61,7 @@ object DefaultCapabilities {
     SharesCapabilityFactory,
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,
+    SubmissionCapabilityFactory,
     WebSocketCapabilityFactory)
 }
 

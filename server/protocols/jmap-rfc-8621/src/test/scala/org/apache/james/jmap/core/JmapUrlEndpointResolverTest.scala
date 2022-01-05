@@ -40,7 +40,7 @@ object JmapUrlEndpointResolverTest {
 class JmapUrlEndpointResolverTest extends AnyWordSpec with Matchers {
   "JmapUrlEndpointResolverTest" should {
     "succeed to configuration urlPrefix when provided" in {
-      val testee : JmapUrlEndpointResolver= new JmapUrlEndpointResolver(UrlPrefixes(new URI("http://random-domain.com/"), new URI("ws://random-domain.com")))
+      val testee : JmapUrlEndpointResolver= new JmapUrlEndpointResolver(UrlPrefixes(new URI("http://random-domain.com"), new URI("ws://random-domain.com")))
 
       testee.apiUrl must be(new URL("http://random-domain.com/jmap"))
       testee.downloadUrl must be(new URL("http://random-domain.com/download/{accountId}/{blobId}?type={type}&name={name}"))
