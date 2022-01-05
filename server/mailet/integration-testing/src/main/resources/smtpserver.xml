@@ -39,6 +39,7 @@
 {{/hasAuthorizedAddresses}}
         <auth>
             <requireSSL>false</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <verifyIdentity>{{verifyIdentity}}</verifyIdentity>
         <maxmessagesize>{{maxmessagesize}}</maxmessagesize>

@@ -97,9 +97,12 @@
 
             Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
             regardless of this option.</dd>
-      <dt><strong>auth.requireSSL</strong></dt>
-      <dd>This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
-          channels.</dd>
+        <dt><strong>auth.requireSSL</strong></dt>
+        <dd>This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
+            channels.</dd>
+        <dt><strong>auth.plainAuthEnabled</strong></dt>
+        <dd>This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting
+            can be used to enforce strong authentication mechanisms.</dd>
       <dt><strong>handler.authorizedAddresses</strong></dt>
       <dd>Authorize specific addresses/networks.
                If you use SMTP AUTH, addresses that match those specified here will

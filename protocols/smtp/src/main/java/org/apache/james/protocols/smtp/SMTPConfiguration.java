@@ -70,4 +70,6 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
      */
     boolean useAddressBracketsEnforcement();
 
+    boolean isPlainAuthEnabled();
+
 }

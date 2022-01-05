@@ -37,6 +37,7 @@
         <auth>
             <announce>never</announce>
             <requireSSL>false</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>

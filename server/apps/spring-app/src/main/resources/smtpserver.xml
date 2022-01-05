@@ -98,6 +98,8 @@
                information has been provided
           -->
          <!-- <announce>forUnauthorizedAddresses</announce> -->
+         <!-- <requireSSL>false</requireSSL> -->
+           <plainAuthEnabled>true</plainAuthEnabled>
        </auth>
 
 <!-- CHECKME! -->

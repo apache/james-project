@@ -34,5 +34,9 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     public void setMaxMessageSize(long maxMessageSize) {
         this.maxMessageSize = maxMessageSize;
     }
-    
+
+    @Override
+    public boolean isPlainAuthEnabled() {
+        return false;
+    }
 }

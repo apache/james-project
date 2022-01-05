@@ -38,6 +38,7 @@
         <auth>
             <announce>never</announce>
             <requireSSL>true</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <verifyIdentity>false</verifyIdentity>
@@ -62,12 +63,10 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <!--
-           Authorize only local users
-        -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>true</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
@@ -93,12 +92,10 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <!--
-           Authorize only local users
-        -->
         <auth>
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>true</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
