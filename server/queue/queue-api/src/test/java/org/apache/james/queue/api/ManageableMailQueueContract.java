@@ -31,14 +31,24 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -569,18 +579,31 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .containsExactly("name1");
     }
 
-    @Test
-    default void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() throws Exception {
+    static Stream<Arguments> removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() throws AddressException {
+        return Stream.of(
+            Arguments.of(List.of(RECIPIENT1, RECIPIENT2), RECIPIENT2),
+            Arguments.of(List.of(RECIPIENT1, RECIPIENT2), RECIPIENT1),
+            Arguments.of(List.of(RECIPIENT1, RECIPIENT2, RECIPIENT3), RECIPIENT2),
+            Arguments.of(List.of(RECIPIENT1, new MailAddress(RECIPIENT1.asString() + ".local"), RECIPIENT2), RECIPIENT1),
+            Arguments.of(List.of(RECIPIENT1, RECIPIENT2, new MailAddress(RECIPIENT1.asString() + ".local")), RECIPIENT1),
+            Arguments.of(List.of(new MailAddress(RECIPIENT1.asString() + ".local"), RECIPIENT1, RECIPIENT2), RECIPIENT1),
+            Arguments.of(List.of(new MailAddress(RECIPIENT1.asString() + ".local"), RECIPIENT2, RECIPIENT1), RECIPIENT1)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    default void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients(List<MailAddress> recipients, MailAddress toRemove) throws Exception {
         enQueue(defaultMailNoRecipient()
             .name("name1")
-            .recipients(RECIPIENT1, RECIPIENT2)
+            .recipients(recipients)
             .build());
         enQueue(defaultMailNoRecipient()
             .name("name2")
-            .recipients(RECIPIENT1, RECIPIENT3)
+            .recipients(recipients.stream().filter(recipient -> !recipient.equals(toRemove)).collect(Collectors.toList()))
             .build());
 
-        getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, toRemove.asString());
 
         assertThat(getManageableMailQueue().browse())
             .toIterable()
