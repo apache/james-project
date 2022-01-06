@@ -21,7 +21,7 @@ package org.apache.james.jmap.routes
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{Capability, ErrorCode, Invocation, MissingCapabilityException, RequestObject, ResponseObject}
+import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, MissingCapabilityException, RequestObject, ResponseObject}
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -34,19 +34,19 @@ object JMAPApi {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApi])
 }
 
-class JMAPApi (methods: Set[Method], defaultCapabilities: Set[Capability]) {
+class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifier]) {
 
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
   @Inject
-  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[Capability]) {
-    this(javaMethods.asScala.toSet, supportedCapabilities.asScala.toSet)
+  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[CapabilityFactory]) {
+    this(javaMethods.asScala.toSet, supportedCapabilities.asScala.map(x => x.id()).toSet)
   }
 
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
     val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
-    val unsupportedCapabilities = requestObject.using.toSet -- defaultCapabilities.map(_.identifier())
+    val unsupportedCapabilities = requestObject.using.toSet -- defaultCapabilities
     val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {

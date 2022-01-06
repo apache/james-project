@@ -21,7 +21,6 @@ package org.apache.james.jmap.change
 import org.apache.james.JsonSerializationVerifier
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.api.change
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.TypeName
 import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_EMPTY_TYPE_STATE_MAP, EVENT_ID, EVENT_JSON, EVENT_JSON_EMPTY_TYPE_STATE_MAP, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY, USERNAME}

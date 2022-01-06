@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.core
 
+import java.net.{URI, URL}
 import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
@@ -74,6 +75,8 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
     maxConnections = maxConnections)
+
+  def urlPrefixes(): UrlPrefixes = UrlPrefixes(new URI(urlPrefixString), new URI(websocketPrefixString))
 
   def getAuthenticationStrategiesAsJava(): Optional[java.util.List[String]] = authenticationStrategies.toJava
 

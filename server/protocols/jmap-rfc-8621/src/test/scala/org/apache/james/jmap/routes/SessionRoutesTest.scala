@@ -66,8 +66,9 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn(Mono.just(mockedSession))
 
     val sessionRoutes = new SessionRoutes(
-      sessionSupplier = new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION, DefaultCapabilities.supported(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).capabilities),
-      authenticator = mockedAuthFilter)
+      sessionSupplier = new SessionSupplier(DefaultCapabilities.supported(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)),
+      authenticator = mockedAuthFilter,
+      jmapRfc8621Configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)
     jmapServer = new JMAPServer(
       TEST_CONFIGURATION,
       Set(new JMAPRoutesHandler(Version.RFC8621, sessionRoutes)).asJava,
