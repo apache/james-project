@@ -646,9 +646,13 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             case Sender:
                 return count(removeWithSelector(JAMES_MAIL_SENDER + " = '" + value + "'"));
             case Recipient:
-                return count(removeWithSelector(JAMES_MAIL_RECIPIENTS + " = '" + value + "' or " + JAMES_MAIL_RECIPIENTS
-                        + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "' or " + JAMES_MAIL_RECIPIENTS + " LIKE '%"
-                        + JAMES_MAIL_SEPARATOR + value + "%'"));
+                return count(removeWithSelector(
+                    String.join(" or ",
+                        JAMES_MAIL_RECIPIENTS + " = '" + value + "'", // = value
+                        JAMES_MAIL_RECIPIENTS + " LIKE '" + value + JAMES_MAIL_SEPARATOR + "%'", // LIKE value;%
+                        JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + JAMES_MAIL_SEPARATOR + "%'", // LIKE %;value;%
+                        JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "'" // LIKE %;value
+                    )));
             default:
                 break;
         }
