@@ -65,7 +65,7 @@
         <dependency>
             <groupId>com.softwaremill.sttp.client3</groupId>
             <artifactId>okhttp-backend_${scala.base}</artifactId>
-            <version>3.0.0</version>
+            <version>3.3.18</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.play</groupId>
