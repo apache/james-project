@@ -598,19 +598,20 @@ public interface Pop3ServerContract {
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
-        IntStream.range(0, 50)
+        var mailCount = 50;
+        IntStream.range(0, mailCount)
             .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER)));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, mailCount).size() == mailCount);
 
         // When I delete all of them
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
         pop3Client.login(USER, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
-        assertThat(pop3MessageInfos).hasSize(50);
+        assertThat(pop3MessageInfos).hasSize(mailCount);
         pop3Client.deleteMessage(pop3MessageInfos.get(45).number);
         pop3Client.logout();
 
