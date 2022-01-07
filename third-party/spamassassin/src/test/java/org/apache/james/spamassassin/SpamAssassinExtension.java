@@ -61,6 +61,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
         spamAssassinContainer
             .withCreateContainerCmdModifier(cmd -> cmd.withName(containerName()))
             .withStartupTimeout(STARTUP_TIMEOUT)
+            .withExposedPorts(783)
             .waitingFor(new SpamAssassinWaitStrategy(spamAssassinContainer, STARTUP_TIMEOUT));
     }
 
