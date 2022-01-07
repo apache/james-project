@@ -134,4 +134,18 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeleted() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
+
+    }
 }

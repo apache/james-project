@@ -123,4 +123,18 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
     public void enQueueShouldAcceptMailWithDuplicatedNames() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeleted() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
+
+    }
 }

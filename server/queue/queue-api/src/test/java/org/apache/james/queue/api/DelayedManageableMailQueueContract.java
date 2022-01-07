@@ -23,6 +23,7 @@ import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(ExecutorExtension.class)
 public interface DelayedManageableMailQueueContract extends DelayedMailQueueContract, ManageableMailQueueContract {
@@ -68,6 +70,61 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
         getManageableMailQueue().clear();
 
         assertThat(getManageableMailQueue().getSize()).isEqualTo(0L);
+    }
+
+    @Test
+    default void delayedEmailsShouldBeDeleted() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("abc")
+                .build(),
+            5L,
+            TimeUnit.SECONDS);
+        // The queue being FIFO a second email can serve as a wait condition
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("def")
+                .build(),
+            5L,
+            TimeUnit.SECONDS);
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "abc");
+
+        ArrayList<String> names = new ArrayList<>();
+        Flux.from(getManageableMailQueue().deQueue())
+            .subscribeOn(Schedulers.elastic())
+            .subscribe(item -> names.add(item.getMail().getName()));
+
+       Awaitility.await().untilAsserted(() -> assertThat(names).contains("def"));
+        assertThat(names).containsExactly("def");
+    }
+
+    @Test
+    default void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("abc")
+                .build(),
+            5L,
+            TimeUnit.SECONDS);
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "abc");
+
+        // The newer email
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("def")
+                .build());
+        // The queue being FIFO a third email can serve as a wait condition
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("ghi")
+                .build(),
+            5L,
+            TimeUnit.SECONDS);
+
+        ArrayList<String> names = new ArrayList<>();
+        Flux.from(getManageableMailQueue().deQueue())
+            .subscribeOn(Schedulers.elastic())
+            .subscribe(item -> names.add(item.getMail().getName()));
+
+       Awaitility.await().untilAsserted(() -> assertThat(names).contains("ghi"));
+        assertThat(names).containsExactly("def", "ghi");
     }
 
     @Test
