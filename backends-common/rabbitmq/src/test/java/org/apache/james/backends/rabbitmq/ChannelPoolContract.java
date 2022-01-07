@@ -86,7 +86,7 @@ interface ChannelPoolContract {
 
         assertThatThrownBy(channelMono::block)
             .isInstanceOf(NoSuchElementException.class)
-            .hasMessage("Timeout waiting for idle object");
+            .hasMessageContaining("Timeout waiting for idle object");
     }
 
     default Channel borrowChannel(ChannelPool channelPool) {
