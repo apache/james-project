@@ -229,6 +229,15 @@ class SMTPSaslTest {
     }
 
     @Test
+    void oauthShouldSupportXOAUTH2Type() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH XOAUTH2 " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
     void oauthWithNoTLSConnectShouldFail() throws Exception {
         SMTPClient client = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
@@ -325,6 +334,19 @@ class SMTPSaslTest {
     }
 
     @Test
+    void ehloShouldAdvertiseXOAUTH2WhenConfigIsProvided() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("EHLO localhost");
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(client.getReplyCode()).isEqualTo(250);
+            softly.assertThat(client.getReplyString())
+                .contains("XOAUTH2");
+        });
+    }
+
+    @Test
     void ehloShouldNotAdvertiseOAUTHBEARERWhenConfigIsNotProvided() throws Exception {
         smtpServer.destroy();
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
@@ -338,6 +360,23 @@ class SMTPSaslTest {
             softly.assertThat(client.getReplyCode()).isEqualTo(250);
             softly.assertThat(client.getReplyString())
                 .doesNotContain("OAUTHBEARER");
+        });
+    }
+
+    @Test
+    void ehloShouldNotAdvertiseXOAUTH2WhenConfigIsNotProvided() throws Exception {
+        smtpServer.destroy();
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+        client.sendCommand("EHLO localhost");
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(client.getReplyCode()).isEqualTo(250);
+            softly.assertThat(client.getReplyString())
+                .doesNotContain("XOAUTH2");
         });
     }
 

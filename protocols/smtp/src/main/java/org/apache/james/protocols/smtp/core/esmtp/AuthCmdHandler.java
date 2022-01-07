@@ -138,6 +138,7 @@ public class AuthCmdHandler
      * The text string for the SMTP AUTH type OAUTHBEARER.
      */
     protected static final String AUTH_TYPE_OAUTHBEARER = "OAUTHBEARER";
+    protected static final String AUTH_TYPE_XOAUTH2 = "XOAUTH2";
 
     /**
      * The AuthHooks
@@ -204,7 +205,8 @@ public class AuthCmdHandler
                     String user = initialResponse.trim();
                     return doLoginAuthPass(session, user);
                 }
-            } else if (authType.equals(AUTH_TYPE_OAUTHBEARER) && session.supportsOAuth()) {
+            } else if ((authType.equals(AUTH_TYPE_OAUTHBEARER) || authType.equals(AUTH_TYPE_XOAUTH2))
+                && session.supportsOAuth()) {
                 return doSASLAuthentication(session, initialResponse);
             } else {
                 return doUnknownAuth(session, authType, initialResponse);
@@ -511,6 +513,7 @@ public class AuthCmdHandler
             }
             if (session.getConfiguration().saslConfiguration().isPresent()) {
                 authTypesBuilder.add(AUTH_TYPE_OAUTHBEARER);
+                authTypesBuilder.add(AUTH_TYPE_XOAUTH2);
             }
             ImmutableList<String> authTypes = authTypesBuilder.build();
             if (authTypes.isEmpty()) {
