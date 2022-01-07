@@ -641,7 +641,7 @@
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>5.0.1</guice.version>
-        <logback.version>1.2.9</logback.version>
+        <logback.version>1.2.10</logback.version>
         <tink.version>1.6.1</tink.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
