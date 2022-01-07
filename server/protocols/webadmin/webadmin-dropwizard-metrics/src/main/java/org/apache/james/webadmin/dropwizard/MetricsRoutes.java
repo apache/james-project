@@ -22,6 +22,7 @@ package org.apache.james.webadmin.dropwizard;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
@@ -32,9 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.james.webadmin.PublicRoutes;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.SampleNameFilter;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.exporter.common.TextFormat;
 import spark.Request;
@@ -47,12 +49,11 @@ import spark.Service;
 public class MetricsRoutes implements PublicRoutes {
 
     public static final String BASE = "/metrics";
-    private final CollectorRegistry collectorRegistry;
+    private final DropwizardExports dropwizardExports;
 
     @Inject
     public MetricsRoutes(MetricRegistry registry) {
-        collectorRegistry = CollectorRegistry.defaultRegistry;
-        new DropwizardExports(registry).register(collectorRegistry);
+        dropwizardExports = new DropwizardExports(registry);
     }
 
     @Override
@@ -72,7 +73,12 @@ public class MetricsRoutes implements PublicRoutes {
         rawResponse.setContentType(TextFormat.CONTENT_TYPE_004);
 
         try (Writer writer = new BufferedWriter(rawResponse.getWriter())) {
-            TextFormat.write004(writer, collectorRegistry.filteredMetricFamilySamples(params));
+            SampleNameFilter nameFilter = new SampleNameFilter.Builder().nameMustBeEqualTo(params).build();
+            TextFormat.write004(writer,
+                Collections.enumeration(dropwizardExports.collect()
+                .stream()
+                .filter(e -> nameFilter.test(e.name))
+                .collect(ImmutableList.toImmutableList())));
             writer.flush();
         }
         return response;
