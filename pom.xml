@@ -2659,7 +2659,7 @@
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-java8-compat_${scala.base}</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.scalacheck</groupId>
