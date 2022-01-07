@@ -3258,6 +3258,7 @@ trait MailboxSetMethodContract {
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(BOB.asString()))
       .contains("newName")
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(BOB.asString()))
       .doesNotContain("mailbox")
   }
 
