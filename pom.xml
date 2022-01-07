@@ -633,7 +633,7 @@
         <maven-plugin-api.version>3.8.4</maven-plugin-api.version>
         <maven-reporting-impl.version>3.0.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.0</maven-reporting-api.version>
-        <qdox.version>2.0.0</qdox.version>
+        <qdox.version>2.0.1</qdox.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <javax.persistence.version>1.0.2</javax.persistence.version>
