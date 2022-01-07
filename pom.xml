@@ -644,7 +644,7 @@
         <logback.version>1.2.9</logback.version>
         <tink.version>1.6.1</tink.version>
 
-        <bouncycastle.version>1.69</bouncycastle.version>
+        <bouncycastle.version>1.70</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.6</scala.version>
