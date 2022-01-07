@@ -176,9 +176,6 @@ public class AuthCmdHandler
                 argument = argument.substring(0,argument.indexOf(" "));
             }
             String authType = argument.toUpperCase(Locale.US);
-            if (!session.isAuthAnnounced()) {
-                return doUnknownAuth(session, authType, initialResponse);
-            }
             if (authType.equals(AUTH_TYPE_PLAIN) && session.getConfiguration().isPlainAuthEnabled()) {
                 String userpass;
                 if (initialResponse == null) {
@@ -207,7 +204,7 @@ public class AuthCmdHandler
                     String user = initialResponse.trim();
                     return doLoginAuthPass(session, user);
                 }
-            } else if (authType.equals(AUTH_TYPE_OAUTHBEARER)) {
+            } else if (authType.equals(AUTH_TYPE_OAUTHBEARER) && session.supportsOAuth()) {
                 return doSASLAuthentication(session, initialResponse);
             } else {
                 return doUnknownAuth(session, authType, initialResponse);
