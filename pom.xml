@@ -2233,6 +2233,11 @@
                 <version>${dnsjava.version}</version>
             </dependency>
             <dependency>
+                <groupId>eu.timepit</groupId>
+                <artifactId>refined_${scala.base}</artifactId>
+                <version>0.9.28</version>
+            </dependency>
+            <dependency>
                 <groupId>io.cucumber</groupId>
                 <artifactId>cucumber-guice</artifactId>
                 <version>${cucumber.version}</version>

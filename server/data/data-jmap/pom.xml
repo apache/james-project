@@ -122,7 +122,6 @@
         <dependency>
             <groupId>eu.timepit</groupId>
             <artifactId>refined_${scala.base}</artifactId>
-            <version>0.9.20</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
