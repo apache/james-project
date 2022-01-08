@@ -34,17 +34,17 @@ private[pulsar] class FilterStage(implicit val blobIdFactory:BlobId.Factory) ext
 
     case filter: Filter =>
       registerFilter(filter)
-      log.debug(s"new filter registered, active filters : $filters ")
+      log.debug(s"$name - new filter registered, active filters : $filters ")
 
     // processing mail
     case (metadata: MailMetadata, cm: CommittableMessage[_]) =>
       val sequenceId = cm.message.sequenceId
-      log.debug(s"filtering mail with active filters : $filters , sequence: ${sequenceId} metadata : $metadata")
+      log.debug(s"$name - filtering mail with active filters : $filters , sequence: ${sequenceId} metadata : $metadata")
       if (shouldBeFiltered(metadata, sequenceId)) {
-        log.debug(s"message filtered : sequence: ${sequenceId} metadata : $metadata")
+        log.debug(s"$name - message filtered : sequence: ${sequenceId} metadata : $metadata")
         sender() ! (None, Some(metadata.partsId), cm)
       } else {
-        log.debug(s"message not filtered : sequence: ${sequenceId} metadata : $metadata")
+        log.debug(s"$name - message not filtered : sequence: ${sequenceId} metadata : $metadata")
         sender() ! (Some(metadata), None, cm)
       }
       removeExpiredFilters(sequenceId)
@@ -52,12 +52,12 @@ private[pulsar] class FilterStage(implicit val blobIdFactory:BlobId.Factory) ext
     // support browsing
     case (metadata: MailMetadata, message: ConsumerMessage[_]) =>
       val sequenceId = message.sequenceId
-      log.debug(s"filtering browse with filters : $filters , sequence: ${sequenceId} metadata : $metadata")
+      log.debug(s"$name - filtering browse with filters : $filters , sequence: ${sequenceId} metadata : $metadata")
       if (shouldBeFiltered(metadata, sequenceId)) {
-        log.debug(s"message filtered : sequence: ${sequenceId} metadata : $metadata")
+        log.debug(s"$name - message filtered : sequence: ${sequenceId} metadata : $metadata")
         sender() ! None
       } else {
-        log.debug(s"message not filtered : sequence: ${sequenceId} metadata : $metadata")
+        log.debug(s"$name - message not filtered : sequence: ${sequenceId} metadata : $metadata")
         sender() ! Some(metadata)
       }
 

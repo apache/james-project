@@ -143,10 +143,11 @@ The size of the mail queue can be simply computed from the out and scheduled top
 
 Upon deletes, the condition of this deletion, as well as the sequence before which it applies is synchronized across
 nodes an in-memory datastructures wrapped in an actor. Each instance uses a unique subscription and thus will maintain a
-set of all deletions ever performed.
+set of all deletions ever performed. This mechanism is repeated for both the out
+and the scheduled topic, using the respective sequence values for each set of filters.
 
-Upon dequeues, messages of the out topic are filtered using that in-memory data structure, then exposed as a reactive 
-publisher.
+Upon dequeues, messages of the out and scheduled topics are filtered using that 
+in-memory data structure, then exposed as a reactive publisher.
 
 Upon browsing, both the out and scheduled topics are read from the consumption offset and filtering is applied.
 
