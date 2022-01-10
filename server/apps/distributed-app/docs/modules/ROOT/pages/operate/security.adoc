@@ -63,6 +63,10 @@ for your outgoing emails to be trusted.
 or xref:configure/jmx.adoc[disabling JMX]. JMX is needed to use the existing CLI application but webadmin do offer similar
 features.
 
+ - 9. If JMAP is enabled, be sure that JMAP PUSH cannot be used for server side request forgery. This can be
+xref:configure/jmap.adoc[configured] using the `push.prevent.server.side.request.forgery=true` property,
+forbidding push to private addresses.
+
 === Best practice: Should
 
  - 1. Avoid advertising login/authenticate capabilities in clear channels. This might prevent some clients to attempt login
