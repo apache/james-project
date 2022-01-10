@@ -26,6 +26,8 @@ import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 import javax.annotation.PreDestroy;
@@ -98,6 +100,7 @@ public class WebAdminServer implements Startable {
             throw new RuntimeException(e);
         });
         if (configuration.isEnabled()) {
+            service.ipAddress(listeningIP());
             service.port(configuration.getPort().get().getValue());
             configureExceptionHanding();
             configureHTTPS();
@@ -115,6 +118,17 @@ public class WebAdminServer implements Startable {
             LOGGER.info("Web admin server started");
         }
         return this;
+    }
+
+    private String listeningIP() {
+        try {
+            if (configuration.getHost().equals("0.0.0.0")) {
+                return configuration.getHost();
+            }
+            return InetAddress.getByName(configuration.getHost()).getHostAddress();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void configureMDC() {

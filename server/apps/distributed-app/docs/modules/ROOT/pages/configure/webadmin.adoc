@@ -27,7 +27,7 @@ to get some examples and hints.
 | Define WebAdmin's port (default: 8080)
 
 | host
-| Define WebAdmin's host (default: localhost)
+| Define WebAdmin's host (default: localhost, use 0.0.0.0 to listen on all addresses)
 
 | cors.enable
 | Allow the Cross-origin resource sharing (default: false)

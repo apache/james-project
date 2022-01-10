@@ -37,7 +37,7 @@
         <dt><strong>port</strong></dt>
         <dd>Define WebAdmin's port (default: 8080)</dd>
         <dt><strong>host</strong></dt>
-        <dd>Define WebAdmin's host (default: localhost)</dd>
+        <dd>Define WebAdmin's host (default: localhost, use 0.0.0.0 to listen on all addresses)</dd>
         <dt><strong>cors.enable</strong></dt>
         <dd>Allow the Cross-origin resource sharing (default: false)</dd>
         <dt><strong>cors.origin</strong></dt>
