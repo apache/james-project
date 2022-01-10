@@ -73,6 +73,16 @@
         {{#hasAuthorizedAddresses}}
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
         {{/hasAuthorizedAddresses}}
+        <auth>
+            <requireSSL>true</requireSSL>
+            <plainAuthEnabled>true</plainAuthEnabled>
+            <oidc>
+                <oidcConfigurationURL>https://auth.upn.integration-open-paas.org/auth/realms/upn/.well-known/openid-configuration</oidcConfigurationURL>
+                <jwksURL>https://auth.upn.integration-open-paas.org/auth/realms/upn/protocol/openid-connect/certs</jwksURL>
+                <claim>email</claim>
+                <scope>openid profile email</scope>
+            </oidc>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>{{maxmessagesize}}</maxmessagesize>

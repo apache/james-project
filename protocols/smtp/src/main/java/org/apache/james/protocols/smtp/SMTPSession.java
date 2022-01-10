@@ -77,7 +77,9 @@ public interface SMTPSession extends ProtocolSession {
      * @return recipient count
      */
     int getRcptCount();
-    
+
+
+    boolean supportsOAuth();
 
 }
 

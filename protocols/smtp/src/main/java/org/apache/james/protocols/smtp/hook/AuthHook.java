@@ -19,6 +19,7 @@
 package org.apache.james.protocols.smtp.hook;
 
 import org.apache.james.core.Username;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
@@ -35,4 +36,6 @@ public interface AuthHook extends Hook {
      * @return HockResult
      */
     HookResult doAuth(SMTPSession session, Username username, String password);
+
+    HookResult doSasl(SMTPSession session, OidcSASLConfiguration saslConfiguration, String initialResponse);
 }
