@@ -14,7 +14,7 @@ Rate limiting is one of the common features. Examples: SaaS is
 one https://www.fastmail.help/hc/en-us/articles/1500000277382-Account-limits#sending/receiving
 , https://support.google.com/mail/answer/22839
 
-They limit how many emails you can send/receive from/to each email account over a given period of time.  
+They limit how many emails users can send/receive from/to each email account over a given period of time.  
 We believe the rate-limiting will help James has more benefits:
 
 - Control of the resource
