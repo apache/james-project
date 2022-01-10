@@ -10,7 +10,7 @@ Not yet implemented.
 
 ## Context
 
-Rate limiting is one of the common features. Examples: SaaS is
+Rate limiting is one of the common features expected from an email system. Examples: SaaS is
 one https://www.fastmail.help/hc/en-us/articles/1500000277382-Account-limits#sending/receiving
 , https://support.google.com/mail/answer/22839
 
