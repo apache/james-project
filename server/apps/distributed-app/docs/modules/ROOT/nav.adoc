@@ -56,6 +56,7 @@
 *** xref:operate/migrating.adoc[]
 *** xref:operate/cli.adoc[]
 *** xref:operate/cassandra-migration.adoc[]
+*** xref:operate/security.adoc[]
 ** xref:extending/index.adoc[]
 *** xref:extending/mail-processing.adoc[]
 *** xref:extending/mailbox-listeners.adoc[]
