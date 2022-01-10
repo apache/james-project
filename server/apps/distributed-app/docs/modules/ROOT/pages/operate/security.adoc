@@ -77,6 +77,9 @@ using `auth.plainAuthEnabled=false`.
 integration, and some experimental, insufficiently tested xref:configure/mailets.adoc#_clamavscan[ClamAV] tooling exisits.
 Filtering with third party systems upstream is also possible.
 
+ - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
+POP3, ManagedSieve, etc... Be conservative on what you expose.
+
 === Best practice: Could
 
  - 1. Set up link:https://openid.net/connect/[OIDC] for IMAP, SMTP and JMAP. Disable login/plain/basic authentication.
