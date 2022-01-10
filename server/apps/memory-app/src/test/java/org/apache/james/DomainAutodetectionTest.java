@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
@@ -31,7 +32,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DomainAutodetectionTest {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(DomainListConfiguration.class)

@@ -141,7 +141,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
 
-        Configuration configuration = Configuration.builder()
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 

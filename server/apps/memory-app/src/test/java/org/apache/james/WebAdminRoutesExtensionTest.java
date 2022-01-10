@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static io.restassured.RestAssured.when;
 import static org.apache.james.MyRoute.SHABANG;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.hamcrest.CoreMatchers.is;
 
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -34,7 +35,12 @@ import io.restassured.RestAssured;
 
 class WebAdminRoutesExtensionTest {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                 .toInstance(WebAdminConfiguration.builder()

@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.junit.categories.Unstable;
@@ -32,7 +33,12 @@ class LinshareBlobExportMechanismProvidingTest {
     private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .extension(linshareGuiceExtension)
         .server(MemoryJamesServerMain::createServer)
         .build();
