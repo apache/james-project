@@ -19,6 +19,8 @@
 
 package org.apache.james.mailets;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -36,11 +38,14 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -148,6 +153,7 @@ public class TemporaryJamesServer {
 
         jamesServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(serverBaseModule)
+            .combineWith(new MemoryUsersRepositoryModule())
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule())
