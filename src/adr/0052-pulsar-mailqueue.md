@@ -104,15 +104,19 @@ To reach this status the following work needs to be under-taken:
 
 We could then create a new artifact relying solely on Pulsar, and deprecate the RabbitMQ based artifact.
 
-Priorities are not yet supported by the current implementation. See [JIRA-XXXX](TODO).
-
-A bug regarding clear not purging delayed messages had been 
-[reported](https://github.com/apache/james-project/pull/808#discussion_r780162174) as well.
-
 A broader adoption of Pulsar would benefit from performance insights.
 
 This work could be continued, for instance under the form of a Google Summer of Code for 2022.
 
+### Nice to have complementary work
+
+ - The Pulsar MailQueue needs to work on top of a deduplicated blob store. To do this we need to be able to list blobs 
+ referenced by the Pulsar MailQueue, see [JIRA-XXXX](TODO).
+ 
+ The support of deduplicated blobs in a queue, that is short lived have less benefits in terms of storage space. Yet it enables to do a single blob creation accross the full message lifecycle for message bodies.
+ 
+ Priorities are not yet supported by the current implementation. See [JIRA-XXXX](TODO).
+ 
 ## Technical details
 
 [[This section requires a deep review]]
@@ -124,6 +128,8 @@ The MailQueue relies on the following topology:
  - out topic :  contains the mails that are ready to be dequeued.
  - scheduled topic: emails that are delayed are first enqueued there.
  - filter topic: Deletions (name, sender, recipients) prior a given sequence are synchronized between nodes using this topic.
+ 
+ The consumers on out topic and scheduled topic use the same subscription name and shared consumers. On filter topic, each consumer uses a unique subscription name and will therefore receive a copy of every messages in the topic. this ensures a full distribution of the filter state to all nodes in the cluster.
 
 Upon enqueue, the blobs are first saved, then the Pulsar message payload is generated and published to the relevant 
 topic (out or scheduled).
@@ -151,10 +157,11 @@ Upon clear, the out topic is deleted.
 
 Miscellaneous remarks:
 
- - The pulsar admin client is used to list existing queues and to move  the current offset of scheduled message subscription upon flushes.
+ - By design the implementation doesn't try to offer absolute consistency guarantees. We tend to lean on the side of eventual consistency. For instance message moved for scheduled to out topics might temporarily be browsed in double or deletes might not apply instantly.
+ - The pulsar admin client is used to list existing queues and to move the current offset of scheduled message subscription upon flushes.
  - Priorities are not yet supported.
- - Only metadata transit through Pulsar. The general purpose of James blobStore, backed by a S3 compatible API, is used to
-   store the underlying email content. Saves on top of object-storage is latency prone and exposed to end SMTP clients.
+ - Only metadata transits through Pulsar. The general purpose of James blobStore, backed by a S3 compatible API, is used to
+   store the underlying email content. Please note that in the context of a mail queue, the tradeoffs behind a blob store choice are different: in long term storage cheaper storage cost would be preferable to higher latencies, especially for writes done asynchronously whereas a mailQueue would benefit from more expensive low latency storage (email do not stay there long) with low write latencies (user facing in SMTP). We might benefit in the future to support usage of a distinct blob store solution to back the queue.
 
 ## References
  
