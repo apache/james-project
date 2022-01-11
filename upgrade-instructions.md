@@ -26,6 +26,26 @@ Change list:
  - [Support salted passwords](#support-salted-passwords)
  - [MailDir removal](#maildir-removal)
  - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
+ - [Restrict listening interface to loopback by default for webadmin](#restrict-listening-interface-to-loopback-by-default-for-webadmin)
+ 
+### Restrict listening interface to loopback by default for webadmin
+
+Date: 11/01/2022
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3690
+
+As a security safe guard, we now enforce the `host` configuration parameter defined in `webadmin.properties` when 
+binding the listening interface for the webadmin server.
+
+By default, it listens on the loopback interface.
+
+The previous behaviour can be restored by using the following configuration:
+
+```
+host=0.0.0.0
+```
+
+Be aware that webadmin do not enforce authentication by default, and needs JWT protection to be safely exposed.
 
 ### SMTP/LMTP authentication configuration reworked
 
