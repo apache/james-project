@@ -92,10 +92,8 @@ Pulsar technology would benefit from a broader adoption in James, eventually bec
 backing Apache James messaging capabilities.
 
 To reach this status the following work needs to be under-taken:
- - The Pulsar MailQueue needs to work on top of a deduplicated blob store. To do this we need to be able to list blobs 
- referenced by the Pulsar MailQueue, see [JIRA-XXXX](TODO).
  - The event bus (described in [ADR 37](0037-eventbus.md)) would benefit from a Pulsar implementation, replacing the 
- existing RabbitMQ one (described in [ADR-38](0038-distributed-eventbus.md)). See [JIRA-XXXX](TODO).
+ existing RabbitMQ one (described in [ADR-38](0038-distributed-eventbus.md)). See [JIRA-3699](https://issues.apache.org/jira/browse/JAMES-3699).
  - While being less critical, a task manager implementation would be needed as well to replace the RabbitMQ one
  described in [ADR 2](0002-make-taskmanager-distributed.md) [ADR 3](0003-distributed-workqueue.md) 
  [ADR 4](0004-distributed-tasks-listing.md) [ADR 5](0005-distributed-task-termination-ackowledgement.md) 
@@ -111,7 +109,7 @@ This work could be continued, for instance under the form of a Google Summer of 
 ### Nice to have complementary work
 
  - The Pulsar MailQueue needs to work on top of a deduplicated blob store. To do this we need to be able to list blobs 
- referenced by the Pulsar MailQueue, see [JIRA-XXXX](TODO).
+ referenced by the Pulsar MailQueue, see [JIRA-3703](https://issues.apache.org/jira/browse/JAMES-3703).
  
  The support of deduplicated blobs in a queue, that is short lived have less benefits in terms of storage space. Yet it enables to do a single blob creation accross the full message lifecycle for message bodies.
  
