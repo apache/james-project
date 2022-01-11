@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.junit.ExecutorExtension;
@@ -54,6 +53,21 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
         assertThat(getManageableMailQueue().browse()).toIterable()
             .extracting(mail -> mail.getMail().getName())
             .containsExactly("name1");
+    }
+
+    @Test
+    default void delayedMessagesShouldBeCleared() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+                .name("name1")
+                .build(),
+            30L,
+            TimeUnit.SECONDS);
+
+        Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(1L));
+
+        getManageableMailQueue().clear();
+
+        assertThat(getManageableMailQueue().getSize()).isEqualTo(0L);
     }
 
     @Test
