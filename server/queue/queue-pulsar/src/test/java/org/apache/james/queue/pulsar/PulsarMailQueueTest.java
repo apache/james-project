@@ -22,10 +22,9 @@ package org.apache.james.queue.pulsar;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
@@ -64,10 +63,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.sksamuel.pulsar4s.ConsumerMessage;
 
 import akka.actor.ActorSystem;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.publisher.Mono;
+import scala.jdk.javaapi.OptionConverters;
 
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
@@ -136,6 +137,44 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 metricTestSystem.getMetricFactory(),
                 metricTestSystem.getSpyGaugeRegistry(),
                 system);
+    }
+
+    @Disabled("JAMES-3700 We need to define a deadletter policy for the Pulsar MailQueue")
+    @Test
+    void badMessagesShouldNotAlterDelivery(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
+        new JavaClient(pulsar.getConfiguration().brokerUri(),
+            String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+            .send("BAD").get();
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name")
+            .build());
+
+        MailQueue.MailQueueItem mail = Flux.from(getMailQueue().deQueue()).onErrorResume(e -> Mono.empty()).take(1).single().block();
+        assertThat(mail.getMail().getName()).isEqualTo("name");
+    }
+
+    @Disabled("JAMES-3700 We need to define a deadletter policy for the Pulsar MailQueue")
+    @Test
+    void badMessagesShouldBeMovedToADeadLetterTopic(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
+        new JavaClient(pulsar.getConfiguration().brokerUri(),
+            String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+            .send("BAD").get();
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name")
+            .build());
+
+        try {
+            Flux.from(getMailQueue().deQueue()).take(1).single().block();
+        } catch (Exception e) {
+            // Expected to fail
+        }
+        Optional<String> deadletterMessage = OptionConverters.toJava(new JavaClient(pulsar.getConfiguration().brokerUri(),
+            String.format("persistent://%s/James-%s/dead-letter", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+            .consumeOne())
+            .map(ConsumerMessage::value);
+        assertThat(deadletterMessage).contains("BAD");
     }
 
     @Test
