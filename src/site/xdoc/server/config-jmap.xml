@@ -112,6 +112,11 @@
                         If the HTTP request to Jmap session endpoint has the `X-JMAP-WEBSOCKET-PREFIX` header with the value `ws://new-domain/prefix`,
                         then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws://new-domain/prefix/jmap/ws".
                     </dd>
+
+                    <dt><strong>webpush.prevent.server.side.request.forgery</strong></dt>
+                    <dd>Optional boolean. Prevent server side request forgery by preventing calls to the private network
+                        ranges. Defaults to true, can be disabled for testing.
+                    </dd>
                 </dl>
 
             </subsection>
