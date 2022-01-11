@@ -14,7 +14,7 @@ installations have in you, and thus will cause legitimate traffic to be rejected
 to do so might result in *information disclosure*.
  - *Email forgery*. An attacker might craft an email on the behalf of legitimate users.
  - Email protocols allow user to authenticate and thus can be used as *oracles* to guess user passwords.
- - *Spam*. Non legitimate traffic can be a real bourbon to your users.
+ - *Spam*. Non legitimate traffic can be a real burden to your users.
  - *Denial of service*: A small request may result in a very large response and require considerable work on the server...
  - *Denial of service*: A malicious JMAP client may use the JMAP push subscription to attempt to flood a third party
 server with requests, creating a denial-of-service attack and masking the attacker’s true identity.
