@@ -17,20 +17,19 @@ one https://www.fastmail.help/hc/en-us/articles/1500000277382-Account-limits#sen
 They limit how many emails users can send/receive from/to each email account over a given period of time.  
 We believe the rate-limiting will help James to have more benefits:
 
-- Control of the resource
-- Easy to dynamic config the user policy.
+- Control of the resources
+- Easy to configure dynamically the user policy.
 - Complements the storage quota
 - Can be a security requirement for SaaS deployments.
 - Minimise impacts of Open-relay types of compression.
-- Limiting the amount of email sent to third parties can also prevent them from considering you as an open relay and can
+- Limiting the amount of emails sent to third parties can also prevent them from considering you as an open relay and can
   be beneficial as well.
 
 ## Decision
 
 Set up a new maven project dedicated to rating limiting. This allows the rate limiting mailets to be embedded in a James
 server as a soft dependency using the external-jar loading mechanism. Please note that this will take the form of an
-extension jars, that could be dropped in one's James installation, and thus is optional, and not of a runtime
-dependency.
+extension jar, that could be dropped in one's James installation, and thus is optional, and not a runtime dependency.
 
 Rate limiting will be enabled per sender, per receiver and globally. For each we will provide options for email size and
 email count.
@@ -38,9 +37,9 @@ email count.
 - This can be done via mailets:
     - PerSenderRateLimit is per sender
     - PerRecipientRateLimit is per recipient
-    - GlobalRateLimit for everyone Depending on the position in the pipeline this could allow rating limit all emails in
+    - GlobalRateLimit is for everyone. Depending on the position in the pipeline this could allow rate limiting all emails in
       transit, relayed emails or locally delivered emails.    
-      The rate limit will be config
+      The rate limit will be configured
       in [mailetcontainer.xml](/server/apps/distributed-app/sample-configuration/mailetcontainer.xml).
 
 - Those mailets will be based on a generic RateLimiter interface. We will propose two implementations for it:
@@ -54,7 +53,7 @@ implementation he wishes to use.
 
 ## Consequences
 
-- When having change the rate limit config, We need to restart James.
+- When having a change in the rate limit configuration, we need to restart James.
 - Only protocols allowing to submit emails make sense here so SMTP and JMAP.
 - It is more than acceptable to lose all redis data, which is equivalent to resetting the rate limiting.
 
