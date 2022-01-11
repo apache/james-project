@@ -15,7 +15,7 @@ one https://www.fastmail.help/hc/en-us/articles/1500000277382-Account-limits#sen
 , https://support.google.com/mail/answer/22839
 
 They limit how many emails users can send/receive from/to each email account over a given period of time.  
-We believe the rate-limiting will help James has more benefits:
+We believe the rate-limiting will help James to have more benefits:
 
 - Control of the resource
 - Easy to dynamic config the user policy.
