@@ -93,7 +93,8 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
             .subscribeOn(Schedulers.elastic())
             .subscribe(item -> names.add(item.getMail().getName()));
 
-       Awaitility.await().untilAsserted(() -> assertThat(names).contains("def"));
+       Awaitility.await()
+           .untilAsserted(() -> assertThat(names).contains("def"));
         assertThat(names).containsExactly("def");
     }
 
@@ -123,7 +124,8 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
             .subscribeOn(Schedulers.elastic())
             .subscribe(item -> names.add(item.getMail().getName()));
 
-       Awaitility.await().untilAsserted(() -> assertThat(names).contains("ghi"));
+       Awaitility.await()
+           .untilAsserted(() -> assertThat(names).contains("ghi"));
         assertThat(names).containsExactly("def", "ghi");
     }
 
