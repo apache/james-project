@@ -54,7 +54,7 @@ public class TestJMAPServerModule extends AbstractModule {
         protected void configure() {
             bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
 
-            bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.DEFAULT());
+            bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT());
         }
     }
 

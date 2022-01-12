@@ -45,10 +45,10 @@ trait WebPushClient {
 }
 
 object PushClientConfiguration {
-  val DEFAULT: PushClientConfiguration = PushClientConfiguration(
-      maxTimeoutSeconds = Some(10),
-      maxConnections = Some(10),
-      preventServerSideRequestForgery = false)
+  val UNSAFE_DEFAULT: PushClientConfiguration = PushClientConfiguration(
+    maxTimeoutSeconds = Some(10),
+    maxConnections = Some(10),
+    preventServerSideRequestForgery = false)
 }
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
