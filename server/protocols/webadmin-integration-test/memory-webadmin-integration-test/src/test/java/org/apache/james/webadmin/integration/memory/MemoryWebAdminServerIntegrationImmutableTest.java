@@ -20,16 +20,23 @@
 package org.apache.james.webadmin.integration.memory;
 
 import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(MemoryJamesServerMain::createServer)
         .lifeCycle(PER_CLASS)
         .build();

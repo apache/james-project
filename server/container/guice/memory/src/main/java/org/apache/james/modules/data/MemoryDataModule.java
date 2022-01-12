@@ -22,7 +22,6 @@ package org.apache.james.modules.data;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CoreDataModule;
 import org.apache.james.DefaultVacationService;
-import org.apache.james.UserEntityValidator;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
@@ -40,8 +39,6 @@ import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.InitializationOperation;
@@ -54,9 +51,7 @@ import org.apache.james.vacation.memory.MemoryVacationRepository;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MemoryDataModule extends AbstractModule {
@@ -99,21 +94,11 @@ public class MemoryDataModule extends AbstractModule {
         bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
 
-        bind(UsersRepository.class).to(MemoryUsersRepository.class);
-
         bind(MailRepositoryStoreConfiguration.Item.class)
             .toProvider(() -> new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
-    }
-
-    @Provides
-    @Singleton
-    public MemoryUsersRepository providesUsersRepository(DomainList domainList, UserEntityValidator validator) {
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-        usersRepository.setValidator(validator);
-        return usersRepository;
     }
 
     @ProvidesIntoSet
@@ -128,12 +113,5 @@ public class MemoryDataModule extends AbstractModule {
         return InitilizationOperationBuilder
             .forClass(MemoryRecipientRewriteTable.class)
             .init(() -> memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable")));
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, MemoryUsersRepository usersRepository) {
-        return InitilizationOperationBuilder
-            .forClass(MemoryUsersRepository.class)
-            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
     }
 }

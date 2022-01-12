@@ -22,6 +22,7 @@ package org.apache.james;
 import static io.restassured.RestAssured.when;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
@@ -46,7 +47,12 @@ import reactor.core.scheduler.Schedulers;
 
 class GuiceLifecycleHeathCheckTest {
     private static JamesServerBuilder extensionBuilder() {
-        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        return new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+            MemoryJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .usersRepository(DEFAULT)
+                .build())
             .server(configuration -> MemoryJamesServerMain.createServer(configuration)
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                     .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)));

@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -33,7 +34,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MemoryJmapJamesServerTest {
 
     private static JamesServerBuilder extensionBuilder() {
-        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        return new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+            MemoryJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .usersRepository(DEFAULT)
+                .build())
             .server(configuration -> MemoryJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()));
     }

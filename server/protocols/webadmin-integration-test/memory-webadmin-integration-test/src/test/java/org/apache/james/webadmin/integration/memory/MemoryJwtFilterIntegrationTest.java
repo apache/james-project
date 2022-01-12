@@ -20,9 +20,11 @@
 package org.apache.james.webadmin.integration.memory;
 
 import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
@@ -34,7 +36,12 @@ import com.google.inject.name.Names;
 
 class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtTokenVerifier.Factory.class)

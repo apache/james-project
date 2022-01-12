@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -28,6 +29,7 @@ import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
+import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -58,7 +60,6 @@ import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
@@ -141,7 +142,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
 
-        Configuration configuration = Configuration.builder()
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
@@ -152,9 +153,11 @@ public class MemoryJamesServerMain implements JamesServerMain {
         JamesServerMain.main(server);
     }
 
-    public static GuiceJamesServer createServer(Configuration configuration) {
+    public static GuiceJamesServer createServer(MemoryJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE);
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
+                .chooseModules(configuration.getUsersRepositoryImplementation()));
     }
 
 }

@@ -19,9 +19,13 @@
 
 package org.apache.james.jmap.memory.cucumber;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+
 import javax.inject.Inject;
 
+import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -52,9 +56,10 @@ public class MemoryStepdefs {
     @Before
     public void init() throws Exception {
         temporaryFolder.create();
-        Configuration configuration = Configuration.builder()
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
+            .usersRepository(DEFAULT)
             .build();
 
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();

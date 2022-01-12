@@ -19,10 +19,11 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+
 import java.io.IOException;
 
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -35,9 +36,10 @@ public class MemoryJmapTestRule implements TestRule {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     public GuiceJamesServer jmapServer(Module... modules) throws IOException {
-        Configuration configuration = Configuration.builder()
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
+            .usersRepository(DEFAULT)
             .build();
         return MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
