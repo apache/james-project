@@ -2099,11 +2099,35 @@
                 <groupId>com.google.crypto.tink</groupId>
                 <artifactId>apps-webpush</artifactId>
                 <version>${tink.version}</version>
+                <exclusions>
+                    <!-- https://cwe.mitre.org/data/definitions/502.html -->
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                    <!-- https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22569 -->
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.google.crypto.tink</groupId>
                 <artifactId>tink</artifactId>
                 <version>${tink.version}</version>
+                <exclusions>
+                    <!-- https://cwe.mitre.org/data/definitions/502.html -->
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                    <!-- https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22569 -->
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
