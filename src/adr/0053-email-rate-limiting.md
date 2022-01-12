@@ -57,6 +57,12 @@ implementation he wishes to use.
 - Only protocols allowing to submit emails make sense here so SMTP and JMAP.
 - It is more than acceptable to lose all redis data, which is equivalent to resetting the rate limiting.
 
+## Alternatives
+
+Alternatives implementation of the rate limiter can be proposed, and used within the aforementionned mailet.
+
+For instance one could rely on Cassandra counters and Cassandra time series (thus not needing additional dependencies) however we fear the potential performance impact doing so.  Streaming based options, that aggregate in memory counters, might be a viable option too.
+
 ## References
 
 - [JIRA](https://issues.apache.org/jira/browse/JAMES-3693)
