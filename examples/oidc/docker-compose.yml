@@ -56,5 +56,15 @@ services:
     image: devopsfaith/krakend:latest
     ports:
       - "8090:8090"
+      - "1234:1234"
     volumes:
       - ./krakend/krakend.json:/etc/krakend/krakend.json
+
+  jwt-revoker:
+    depends_on:
+      - krakend
+    container_name: jwt-revoker
+    build:
+      context: ./jwt-revoker
+    ports:
+      - "9000:8080"

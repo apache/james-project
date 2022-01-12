@@ -6,6 +6,16 @@
   "name": "oidc-james",
   "port": 8090,
   "host": [ "james" ],
+  "extra_config": {
+    "github_com/devopsfaith/bloomfilter": {
+      "N": 10000000,
+      "P": 0.0000001,
+      "HashName": "optimal",
+      "TTL": 3600,
+      "port": 1234,
+      "TokenKeys": ["sid"]
+    }
+  },
   "endpoints": [
     {
       "endpoint": "/jmap",
