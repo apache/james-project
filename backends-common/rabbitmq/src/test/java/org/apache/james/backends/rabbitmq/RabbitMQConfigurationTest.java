@@ -32,9 +32,12 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -388,6 +391,68 @@ class RabbitMQConfigurationTest {
 
         assertThat(rabbitMQConfiguration.getSslConfiguration().getKeyStore())
                 .isNotEmpty();
+    }
+
+    @Test
+    void queueTTLShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getQueueTTL())
+            .isEqualTo(Optional.of(3600000L));
+    }
+
+    @Test
+    void fromShouldReturnCustomQueueTTLValueWhenGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        configuration.addProperty("notification.queue.ttl", 99999);
+
+        assertThat(RabbitMQConfiguration.from(configuration).getQueueTTL())
+            .isEqualTo(Optional.of(99999L));
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1})
+    void fromShouldThrowWhenQueueTTLIsNotPositive(long ttl) {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        configuration.addProperty("notification.queue.ttl", ttl);
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("'notification.queue.ttl' must be strictly positive");
+    }
+
+    @Test
+    void fromShouldThrowWhenQueueTTLIsNotANumber() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        configuration.addProperty("notification.queue.ttl", "notnumber");
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(ConversionException.class);
     }
 
     @Nested

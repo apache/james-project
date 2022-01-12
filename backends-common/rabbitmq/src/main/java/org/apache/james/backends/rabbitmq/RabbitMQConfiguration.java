@@ -303,6 +303,8 @@ public class RabbitMQConfiguration {
 
     private static String SSL_KEY_STORE_PATH = "ssl.keystore";
     private static String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
+    private static String QUEUE_TTL = "notification.queue.ttl";
+    private static Long QUEUE_TTL_DEFAULT = 3600000L;
 
     public static class ManagementCredentials {
 
@@ -396,6 +398,7 @@ public class RabbitMQConfiguration {
         private Optional<Boolean> useQuorumQueues;
         private Optional<Integer> quorumQueueReplicationFactor;
         private Optional<SSLConfiguration> sslConfiguration;
+        private Optional<Long> queueTTL;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
@@ -414,6 +417,7 @@ public class RabbitMQConfiguration {
             this.useQuorumQueues = Optional.empty();
             this.quorumQueueReplicationFactor = Optional.empty();
             this.hosts = ImmutableList.builder();
+            this.queueTTL = Optional.of(QUEUE_TTL_DEFAULT);
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -488,6 +492,12 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder queueTTL(long ttl) {
+            Preconditions.checkArgument(ttl > 0, String.format("'%s' must be strictly positive", QUEUE_TTL));
+            this.queueTTL = Optional.of(ttl);
+            return this;
+        }
+
         public RabbitMQConfiguration build() {
             Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
             Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
@@ -507,7 +517,8 @@ public class RabbitMQConfiguration {
                     sslConfiguration.orElse(defaultBehavior()),
                     useQuorumQueues.orElse(false),
                     quorumQueueReplicationFactor.orElse(DEFAULT_QUORUM_QUEUE_REPLICATION_FACTOR),
-                    hostsDefaultingToUri());
+                    hostsDefaultingToUri(),
+                    queueTTL);
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -554,6 +565,8 @@ public class RabbitMQConfiguration {
                 .collect(ImmutableList.toImmutableList()))
             .orElse(ImmutableList.of());
 
+        Long queueTTL = configuration.getLong(QUEUE_TTL, QUEUE_TTL_DEFAULT);
+
         ManagementCredentials managementCredentials = ManagementCredentials.from(configuration);
         return builder()
             .amqpUri(amqpUri)
@@ -565,6 +578,7 @@ public class RabbitMQConfiguration {
             .useQuorumQueues(useQuorumQueues)
             .quorumQueueReplicationFactor(quorumQueueReplicationFactor)
             .hosts(hosts)
+            .queueTTL(queueTTL)
             .build();
     }
 
@@ -632,9 +646,12 @@ public class RabbitMQConfiguration {
     private final int quorumQueueReplicationFactor;
     private final List<Host> hosts;
     private final ManagementCredentials managementCredentials;
+    private final Optional<Long> queueTTL;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
-                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs, int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration, boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts) {
+                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
+                                  int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
+                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -651,6 +668,7 @@ public class RabbitMQConfiguration {
         this.useQuorumQueues = useQuorumQueues;
         this.quorumQueueReplicationFactor = quorumQueueReplicationFactor;
         this.hosts = hosts;
+        this.queueTTL = queueTTL;
     }
 
     public URI getUri() {
@@ -706,16 +724,20 @@ public class RabbitMQConfiguration {
     }
 
     public QueueArguments.Builder workQueueArgumentsBuilder() {
+        QueueArguments.Builder builder = QueueArguments.builder();
         if (useQuorumQueues) {
-            return QueueArguments.builder()
-                .quorumQueue()
-                .replicationFactor(quorumQueueReplicationFactor);
+            builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
         }
-        return QueueArguments.builder();
+        queueTTL.ifPresent(builder::queueTTL);
+        return builder;
     }
 
     public List<Host> rabbitMQHosts() {
         return hosts;
+    }
+
+    public Optional<Long> getQueueTTL() {
+        return queueTTL;
     }
 
     @Override
@@ -738,7 +760,8 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.quorumQueueReplicationFactor, that.quorumQueueReplicationFactor)
                 && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
-                && Objects.equals(this.hosts, that.hosts);
+                && Objects.equals(this.hosts, that.hosts)
+                && Objects.equals(this.queueTTL, that.queueTTL);
         }
         return false;
     }
@@ -746,6 +769,6 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, useQuorumQueues, hosts,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement, sslConfiguration);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement, sslConfiguration, queueTTL);
     }
 }
