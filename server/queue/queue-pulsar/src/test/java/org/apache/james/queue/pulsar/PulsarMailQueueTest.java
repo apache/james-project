@@ -238,4 +238,18 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @Override
     public void flushShouldPreserveBrowseOrder() {
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeleted() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
+
+    }
 }

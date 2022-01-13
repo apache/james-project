@@ -143,6 +143,20 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     }
 
     @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeleted() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3687 Delayed deletes are buggy")
+    public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
+
+    }
+
+    @Test
     void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
         long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(ChronoUnit.FOREVER.getDuration());
 
