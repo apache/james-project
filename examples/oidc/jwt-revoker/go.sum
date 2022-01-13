@@ -38,6 +38,7 @@ github.com/devopsfaith/bloomfilter v1.4.0/go.mod h1:LQuMjwtBekCk8qdTHOJ7wZpEYB3J
 github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc/go.mod h1:J9Y/58s7wx7HbHT3i4UKNwLGuBB9qCf0/JUdEFGDPmA=
 github.com/devopsfaith/krakend-consul v1.4.0/go.mod h1:76v8AByTEzlBbiGWEzHFvT4g9BOtr8fpotYIMoac64Q=
 github.com/devopsfaith/krakend-gologging v1.4.0/go.mod h1:0IBy8rXN5ck5nHp5DRxOki3nPVm3Akta4X78qeNATwA=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/digitalocean/godo v1.1.1/go.mod h1:h6faOIcZ8lWIwNQ+DN7b3CgX4Kwby5T+nbpNqkUIozU=
 github.com/digitalocean/godo v1.10.0/go.mod h1:h6faOIcZ8lWIwNQ+DN7b3CgX4Kwby5T+nbpNqkUIozU=

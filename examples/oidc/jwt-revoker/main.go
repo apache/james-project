@@ -21,39 +21,37 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
+	"strings"
 
 	"github.com/devopsfaith/bloomfilter/rpc/client"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
 
 var key = "sid"
 
-type LogoutToken struct {
-	Token string `json:"logout_token"`
-}
-
 func main() {
 	server := "krakend:1234"
 
-	c, err := client.New(server)
-	if err != nil {
-		log.Println("unable to create the rpc client:", err.Error())
+	bloomfilter, error := client.New(server)
+	if error != nil {
+		log.Println("unable to create the rpc client:", error.Error())
 		return
 	}
-	defer c.Close()
+	defer bloomfilter.Close()
 
 	router := mux.NewRouter()
 	// Create
-	router.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
-		addToken(w, r, c)
+	router.HandleFunc("/add", func(responseWriter http.ResponseWriter, request *http.Request) {
+		addToken(responseWriter, request, bloomfilter)
 	}).Methods("POST")
 
 	// Check
-	router.HandleFunc("/check/{tokenId}", func(w http.ResponseWriter, r *http.Request) {
-		checkToken(w, r, c)
+	router.HandleFunc("/check/{tokenId}", func(responseWriter http.ResponseWriter, request *http.Request) {
+		checkToken(responseWriter, request, bloomfilter)
 	}).Methods("GET")
 
 	log.Printf("Starting server...")
@@ -61,38 +59,55 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
-func addToken(w http.ResponseWriter, r *http.Request, bloomfilter *client.Bloomfilter) {
-	// Save a copy of this request for debugging.
-	requestDump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		log.Println(err)
+func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfilter *client.Bloomfilter) {
+	// Read request body
+	buffer, errorBody := ioutil.ReadAll(request.Body)
+	if errorBody != nil {
+		log.Fatal("Error reading request body: ", errorBody.Error())
+		http.Error(responseWriter, "Error reading request body: "+errorBody.Error(), http.StatusInternalServerError)
+		return
 	}
-	log.Println(string(requestDump))
 
-	var logoutToken LogoutToken
-	json.NewDecoder(r.Body).Decode(&logoutToken)
+	// Extract logout token from body request
+	var logoutToken = strings.Split(string(buffer), "=")[1]
 
-	subject := key + "-" + logoutToken.Token
+	// Parsing logout token
+	token, _, errorParse := new(jwt.Parser).ParseUnverified(logoutToken, jwt.MapClaims{})
+	if errorParse != nil {
+		log.Fatal("Error parsing logout_token: ", errorParse)
+		http.Error(responseWriter, "Error parsing logout_token: "+errorParse.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Fetching claims
+	claims, success := token.Claims.(jwt.MapClaims)
+	if !success {
+		log.Fatal("Error when getting token claims")
+		http.Error(responseWriter, "Error when getting token claims", http.StatusInternalServerError)
+		return
+	}
+
+	// Sending sid claim to bloomfilter
+	subject := key + "-" + claims["sid"].(string)
 	bloomfilter.Add([]byte(subject))
 	log.Printf("adding [%s] %s", key, subject)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-func checkToken(w http.ResponseWriter, r *http.Request, bloomfilter *client.Bloomfilter) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
+func checkToken(responseWriter http.ResponseWriter, request *http.Request, bloomfilter *client.Bloomfilter) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(request)
 	tokenID := params["tokenId"]
 	subject := key + "-" + tokenID
 
 	res, err := bloomfilter.Check([]byte(subject))
 	if err != nil {
 		log.Println("Unable to check:", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	log.Printf("checking [%s] %s => %v", key, subject, res)
 
-	json.NewEncoder(w).Encode(res)
+	json.NewEncoder(responseWriter).Encode(res)
 }
