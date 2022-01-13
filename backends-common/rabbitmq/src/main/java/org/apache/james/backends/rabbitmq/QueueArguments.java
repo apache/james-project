@@ -31,7 +31,7 @@ public class QueueArguments {
         }
 
         public Builder queueTTL(long queueTTL) {
-            arguments.put("x-message-ttl", queueTTL);
+            arguments.put("x-expires", queueTTL);
             return this;
         }
 

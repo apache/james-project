@@ -402,7 +402,7 @@ class RabbitMQConfigurationTest {
             .build();
 
         assertThat(rabbitMQConfiguration.getQueueTTL())
-            .isEqualTo(Optional.of(3600000L));
+            .isEqualTo(Optional.empty());
     }
 
     @Test

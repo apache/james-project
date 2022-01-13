@@ -57,7 +57,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
@@ -413,34 +412,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             eventBus.dispatch(EVENT, NO_KEYS).block();
 
             assertThat(dequeueEvent()).isEqualTo(EVENT);
-        }
-
-        @Test
-        void messageShouldPresentWhenTTLNotExpired() {
-            Sender sender = rabbitMQExtension.getSender();
-            sender.delete(QueueSpecification.queue(WORK_QUEUE_NAME))
-                .block();
-            String ttlQueue = "test-ttl";
-
-            sender.declareQueue(QueueSpecification.queue(ttlQueue)
-                    .durable(DURABLE)
-                    .exclusive(false)
-                    .autoDelete(false)
-                    .arguments(QueueArguments.builder().queueTTL(100000).build()))
-                .block();
-            sender.bind(BindingSpecification.binding()
-                    .exchange(TEST_NAMING_STRATEGY.exchange())
-                    .queue(ttlQueue)
-                    .routingKey(EMPTY_ROUTING_KEY))
-                .block();
-
-            eventBus.dispatch(EVENT, NO_KEYS).block();
-
-            byte[] messageBody = rabbitMQExtension.getReceiverProvider().createReceiver().consumeAutoAck(ttlQueue)
-                .blockFirst()
-                .getBody();
-
-            assertThat(eventSerializer.asEvent(new String(messageBody, StandardCharsets.UTF_8))).isEqualTo(EVENT);
         }
 
         private Event dequeueEvent() {
