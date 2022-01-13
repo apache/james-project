@@ -11,7 +11,13 @@ This docker-compose will start the following services:
 * KrakenD being the OIDC gateway against James by exposing two endpoints: 
   * `POST /jmap` for JMAP requests against James with normal authentication
   * `POST /oidc/jmap` for JMAP request against James with a JWT token issued by the Keycloak
-* a jwt-revoker side container that will be called by Keycloak back-channel logout to invalidate tokens (SLO)
+ * a jwt-revoker side container that will be called by Keycloak back-channel logout to invalidate tokens (SLO)
+  
+## Overall architecture
+
+Here is an architecture diagram showing how Single Sign On works for this example:
+
+![](oidc-sso.png)
 
 ## Start the service
 
