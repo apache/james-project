@@ -19,6 +19,14 @@ Here is an architecture diagram showing how Single Sign On works for this exampl
 
 ![](oidc-sso.png)
 
+SSO auto-discovery might require the set up of a `.well-known/webfinger` endpoint described in 
+[this spec](https://openid.net/specs/openid-connect-discovery-1_0.html)
+via external means (not provided here).
+
+Here is an architecture diagram showing how Single Log Out works for this example, using the backchannel OIDC flow:
+
+![](oidc-slo.png)
+
 ## Start the service
 
 Just do:
