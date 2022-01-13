@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/devopsfaith/bloomfilter/rpc/client"
@@ -31,12 +32,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var key = "sid"
+func getEnvironmentVariable(envVariable string, defaultVariable string) string {
+	result, ok := os.LookupEnv(envVariable)
+	if !ok {
+		return defaultVariable
+	}
+	return result
+}
+
+var key = getEnvironmentVariable("JWT_CLAIM", "sid")
 
 func main() {
-	server := "krakend:1234"
+	krakendHost := getEnvironmentVariable("KRAKEND_HOST", "krakend")
+	krakendPort := getEnvironmentVariable("KRAKEND_PORT", "1234")
 
-	bloomfilter, error := client.New(server)
+	krakendServer := krakendHost + ":" + krakendPort
+
+	jwtRevokerPort := ":" + getEnvironmentVariable("JWT_REVOKER_PORT", "8080")
+
+	bloomfilter, error := client.New(krakendServer)
 	if error != nil {
 		log.Println("unable to create the rpc client:", error.Error())
 		return
@@ -56,7 +70,7 @@ func main() {
 
 	log.Printf("Starting server...")
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(jwtRevokerPort, router))
 }
 
 func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfilter *client.Bloomfilter) {
@@ -64,7 +78,7 @@ func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfi
 	buffer, errorBody := ioutil.ReadAll(request.Body)
 	if errorBody != nil {
 		log.Fatal("Error reading request body: ", errorBody.Error())
-		http.Error(responseWriter, "Error reading request body: "+errorBody.Error(), http.StatusInternalServerError)
+		http.Error(responseWriter, "Error reading request body: " + errorBody.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -75,7 +89,7 @@ func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfi
 	token, _, errorParse := new(jwt.Parser).ParseUnverified(logoutToken, jwt.MapClaims{})
 	if errorParse != nil {
 		log.Fatal("Error parsing logout_token: ", errorParse)
-		http.Error(responseWriter, "Error parsing logout_token: "+errorParse.Error(), http.StatusInternalServerError)
+		http.Error(responseWriter, "Error parsing logout_token: " + errorParse.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -88,7 +102,7 @@ func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfi
 	}
 
 	// Sending sid claim to bloomfilter
-	subject := key + "-" + claims["sid"].(string)
+	subject := key + "-" + claims[key].(string)
 	bloomfilter.Add([]byte(subject))
 	log.Printf("adding [%s] %s", key, subject)
 
