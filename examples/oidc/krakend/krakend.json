@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "name": "oidc-james",
+  "port": 8090,
+  "host": [ "james" ],
+  "endpoints": [
+    {
+      "endpoint": "/jmap",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/jmap",
+          "encoding": "json",
+          "method": "POST"
+        }
+      ],
+      "headers_to_pass": [
+        "Accept",
+        "Content-Type",
+        "Authorization"
+      ]
+    },
+    {
+      "endpoint": "/oidc/jmap",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/jmap",
+          "encoding": "json",
+          "method": "POST"
+        }
+      ],
+      "headers_to_pass": [
+        "Accept",
+        "Content-Type",
+        "X-User"
+      ],
+      "extra_config": {
+        "github.com/devopsfaith/krakend-jose/validator": {
+          "alg": "RS256",
+          "jwk-url": "http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "propagate-claims": [
+            ["email", "X-User"]
+          ],
+          "cache": true
+        }
+      }
+    }
+  ]
+}

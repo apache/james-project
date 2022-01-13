@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      - ldap
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./james/keystore:/root/conf/keystore
+      - ./james/usersrepository.xml:/root/conf/usersrepository.xml
+      - ./james/jmap.properties:/root/conf/jmap.properties
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+
+  keycloak:
+    depends_on:
+      - ldap
+    image: quay.io/keycloak/keycloak:16.1.0
+    container_name: keycloak
+    volumes:
+      - ./keycloak/realm-oidc.json:/tmp/realm-oidc.json
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/tmp/realm-oidc.json
+
+  ldap:
+    container_name: ldap
+    image: osixia/openldap:1.5.0
+    ports:
+      - "389:389"
+      - "636:636"
+    command: [--copy-service]
+    volumes:
+      - ./ldap/populate.ldif:/container/service/slapd/assets/config/bootstrap/ldif/data.ldif
+    environment:
+      - LDAP_DOMAIN=localhost
+      
+  krakend:
+    depends_on:
+      - keycloak
+      - james
+    container_name: krakend
+    image: devopsfaith/krakend:latest
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./krakend/krakend.json:/etc/krakend/krakend.json
