@@ -131,6 +131,7 @@ https://github.com/apache/james-project/blob/master/server/apps/distributed-app/
 
 | notification.queue.ttl
 | Configure queue ttl (in ms). References: https://www.rabbitmq.com/ttl.html#queue-ttl.
+This is used only on queues used to share notification patterns, are exclusive to a node. If omitted, it will not add the TTL configure when declaring queues.
 Optional integer, defaults is 3600000.
 
 |===

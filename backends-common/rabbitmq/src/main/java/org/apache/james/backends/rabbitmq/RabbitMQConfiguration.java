@@ -304,7 +304,6 @@ public class RabbitMQConfiguration {
     private static String SSL_KEY_STORE_PATH = "ssl.keystore";
     private static String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
     private static String QUEUE_TTL = "notification.queue.ttl";
-    private static Long QUEUE_TTL_DEFAULT = 3600000L;
 
     public static class ManagementCredentials {
 
@@ -417,7 +416,7 @@ public class RabbitMQConfiguration {
             this.useQuorumQueues = Optional.empty();
             this.quorumQueueReplicationFactor = Optional.empty();
             this.hosts = ImmutableList.builder();
-            this.queueTTL = Optional.of(QUEUE_TTL_DEFAULT);
+            this.queueTTL = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -492,9 +491,9 @@ public class RabbitMQConfiguration {
             return this;
         }
 
-        public Builder queueTTL(long ttl) {
-            Preconditions.checkArgument(ttl > 0, String.format("'%s' must be strictly positive", QUEUE_TTL));
-            this.queueTTL = Optional.of(ttl);
+        public Builder queueTTL(Optional<Long> ttl) {
+            ttl.ifPresent(aLong -> Preconditions.checkArgument(aLong > 0, "'%s' must be strictly positive", QUEUE_TTL));
+            this.queueTTL = ttl;
             return this;
         }
 
@@ -565,7 +564,7 @@ public class RabbitMQConfiguration {
                 .collect(ImmutableList.toImmutableList()))
             .orElse(ImmutableList.of());
 
-        Long queueTTL = configuration.getLong(QUEUE_TTL, QUEUE_TTL_DEFAULT);
+        Optional<Long> queueTTL = Optional.ofNullable(configuration.getLong(QUEUE_TTL, null));
 
         ManagementCredentials managementCredentials = ManagementCredentials.from(configuration);
         return builder()
