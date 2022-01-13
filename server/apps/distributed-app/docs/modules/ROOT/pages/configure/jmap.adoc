@@ -88,7 +88,20 @@ Enabling *TRACE* on `org.apache.james.jmap.wire` enables reactor-netty wiretap, 
 all incoming and outgoing requests, outgoing requests. This will log also potentially sensible information
 like authentication credentials.
 
+== OIDC set up
+
+The use of `XUserAuthenticationStrategy` allow delegating the authentication responsibility to a third party system,
+which could be used to set up authentication against an OIDC provider.
+
+We do supply an link:https://github.com[example] of such a setup. It combines the link:https://www.keycloak.org/[Keycloack]
+OIDC provider with the link:https://www.krakend.io/[Krackend] API gateway, but usage of similar technologies is definitely doable.
+
 == Generating a JWT key pair
+
+Apache James can alternatively be configured to check the validity of JWT tokens itself. No revocation mechanism is
+supported in such a setup, and the `sub` claim is used to identify the user. The key configuration is static.
+
+This requires the `JWTAuthenticationStrategy` authentication strategy to be used.
 
 The Distributed server enforces the use of RSA-SHA-256.
 

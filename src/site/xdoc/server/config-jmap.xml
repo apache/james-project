@@ -127,6 +127,14 @@
                 like authentication credentials.</p>
             </subsection>
 
+            <subsection name="OIDC set up">
+                <p>The use of <code>XUserAuthenticationStrategy</code> allow delegating the authentication responsibility to a third party system,
+                    which could be used to set up authentication against an OIDC provider.</p>
+                <p>We do supply an <a href="https://github.com">example</a> of such a setup. It combines the
+                    <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider with the
+                    <a href="https://www.krakend.io/">Krackend</a> API gateway, but usage of similar technologies is definitely doable.</p>
+            </subsection>
+
             <subsection name="JMAP-draft vs JMAP-RFC-8621">
                 <p>James had been supporting an implementation based on an early specification of JMAP, what we call here
                 <em>JMAP-draft</em> version. But the protocol went under a lot of changes until its finalization as an
