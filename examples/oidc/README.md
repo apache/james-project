@@ -11,6 +11,7 @@ This docker-compose will start the following services:
 * KrakenD being the OIDC gateway against James by exposing two endpoints: 
   * `POST /jmap` for JMAP requests against James with normal authentication
   * `POST /oidc/jmap` for JMAP request against James with a JWT token issued by the Keycloak
+* a jwt-revoker side container that will be called by Keycloak back-channel logout to invalidate tokens (SLO)
 
 ## Start the service
 
@@ -21,6 +22,8 @@ docker-compose up
 ```
 
 ## Try it out
+
+### SSO
 
 There is no frontend in this example to interact directly with Keycloak and get a valid JWT token from it. 
 
@@ -42,3 +45,16 @@ However, you can use the Keycloak playground example:
   * Don't forget the `Accept` header as well with the value `application/json; jmapVersion=rfc-8621` to use the JMAP spec from the RFC-8621
 
 If everything goes well, you should get a valid response back.
+
+### SLO
+
+When user is logging out, we use Keycloak back-channel logout to send a message to the jwt-revoker side container 
+that will parse the `logout_token`, fetch the `sid` claim (id of the session the user decided to terminate) and add it
+to the bloomfilter of Krakend. Then Krakend will reject tokens having the same `sid`, because that session has been revoked.
+
+You can try it out with our example by :
+
+* Repeat the SSO steps and get the token
+* Call the JMAP endpoint with that token to check it's valid
+* Click on the `Logout` button in the Keycloak app
+* Try to call the JMAP endpoint again, and you get a 401 response from Krakend as it's been revoked
