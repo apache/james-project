@@ -25,6 +25,7 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
@@ -51,7 +52,8 @@ public class DistributedPushSubscriptionSetMethodTest implements PushSubscriptio
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule()))
+            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule())
+            .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
         .build();
 
     @RegisterExtension

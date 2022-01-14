@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.core
 
-import java.net.{URI, URL}
+import java.net.URI
 import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
@@ -35,6 +35,7 @@ object JmapConfigProperties {
   val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
+  val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
 }
@@ -61,6 +62,7 @@ object JmapRfc8621Configuration {
         .getOrElse(UPLOAD_LIMIT_DEFAULT),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
+      preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
       authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala)
 }
 
@@ -70,11 +72,13 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
-                                    authenticationStrategies: Option[java.util.List[String]] = None) {
+                                    authenticationStrategies: Option[java.util.List[String]] = None,
+                                    preventServerSideRequestForgery: Boolean = true) {
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
-    maxConnections = maxConnections)
+    maxConnections = maxConnections,
+    preventServerSideRequestForgery = preventServerSideRequestForgery)
 
   def urlPrefixes(): UrlPrefixes = UrlPrefixes(new URI(urlPrefixString), new URI(websocketPrefixString))
 

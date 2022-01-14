@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.modules.mailbox.FastRetryBackoffModule;
 
 import com.google.common.collect.ImmutableList;
@@ -52,6 +53,8 @@ public class TestJMAPServerModule extends AbstractModule {
         @Override
         protected void configure() {
             bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
+
+            bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT());
         }
     }
 
