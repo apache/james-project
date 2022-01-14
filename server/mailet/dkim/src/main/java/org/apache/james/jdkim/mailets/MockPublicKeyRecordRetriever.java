@@ -32,8 +32,8 @@ import com.google.common.collect.ImmutableMultimap;
 public class MockPublicKeyRecordRetriever implements PublicKeyRecordRetriever {
     private final ImmutableMultimap<String, String> records;
 
-    public MockPublicKeyRecordRetriever(String record, CharSequence selector, CharSequence token) {
-        records = ImmutableMultimap.of(makeKey(selector, token), record);
+    public MockPublicKeyRecordRetriever(String aRecord, CharSequence selector, CharSequence token) {
+        records = ImmutableMultimap.of(makeKey(selector, token), aRecord);
     }
 
     public List<String> getRecords(CharSequence methodAndOptions, CharSequence selector, CharSequence token) throws TempFailException, PermFailException {
