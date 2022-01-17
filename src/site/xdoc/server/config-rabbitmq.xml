@@ -123,6 +123,11 @@
           <dd>Optional, default to the host specified as part of the URI.
               Allow creating cluster aware connections.
               A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672</dd>
+
+          <dt><strong>notification.queue.ttl</strong></dt>
+          <dd>Optional integer, defaults is 3600000.
+              This is used only on queues used to share notification patterns, are exclusive to a node. If omitted, it will not add the TTL configure when declaring queues.
+              Configure queue ttl (in ms). References: https://www.rabbitmq.com/ttl.html#queue-ttl.</dd>
       </dl>
   </section>
 
