@@ -58,3 +58,10 @@ services:
       - "8090:8090"
     volumes:
       - ./krakend/krakend.json:/etc/krakend/krakend.json
+
+  jwt-revoker:
+    depends_on:
+      - krakend
+    container_name: jwt-revoker
+    build:
+      context: ./jwt-revoker
