@@ -71,4 +71,8 @@ public class DockerRedis {
         return RedisClient.create(redisURI().toString())
             .connect().sync();
     }
+
+    public void flushAll() {
+        createClient().flushall();
+    }
 }
