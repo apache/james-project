@@ -26,9 +26,9 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-rate-limiting-redis</artifactId>
+    <artifactId>james-server-rate-limiter-redis</artifactId>
     <packaging>jar</packaging>
-    <name>Apache James :: Server :: Mailet :: Rate limiting</name>
+    <name>Apache James :: Server :: Mailet :: Rate limiting Redis</name>
 
     <dependencies>
         <dependency>

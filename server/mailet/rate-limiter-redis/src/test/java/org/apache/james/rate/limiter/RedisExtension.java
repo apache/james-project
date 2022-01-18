@@ -17,28 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.ratelimiting;
+package org.apache.james.rate.limiter;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.GuiceModuleTestExtension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+public class RedisExtension implements GuiceModuleTestExtension {
+    public static final DockerRedis DOCKER_REDIS_SINGLETON = new DockerRedis();
 
-import io.lettuce.core.api.sync.RedisCommands;
-
-public class RedisExtensionTest {
-
-    @RegisterExtension
-    static RedisExtension redisExtension = new RedisExtension();
-
-    @Test
-    void redisExtensionShouldWork(DockerRedis redis) {
-        RedisCommands<String, String> client = redis.createClient();
-        String key = "KEY1";
-        String keyValue = "Value1";
-        client.set(key, keyValue);
-
-        assertThat(client.get(key)).isEqualTo(keyValue);
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        DOCKER_REDIS_SINGLETON.start();
     }
 
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        DOCKER_REDIS_SINGLETON.stop();
+    }
+
+    public DockerRedis dockerRedis() {
+        return DOCKER_REDIS_SINGLETON;
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return parameterContext.getParameter().getType() == DockerRedis.class;
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return dockerRedis();
+    }
 }

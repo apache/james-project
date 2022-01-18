@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.ratelimiting;
+package org.apache.james.rate.limiter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
