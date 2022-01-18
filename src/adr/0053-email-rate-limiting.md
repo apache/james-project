@@ -43,8 +43,12 @@ email count.
       in [mailetcontainer.xml](/server/apps/distributed-app/sample-configuration/mailetcontainer.xml).
 
 - Those mailets will be based on a generic RateLimiter interface. We will propose two implementations for it:
-    - In memory (guava based) suitable for single instance deployments
-    - [Redis](https://redis.io) based, suitable for distributed deployments.
+    - In memory implementation: suitable for single instance deployments.
+    - [Redis](https://redis.io) based implementation: suitable for distributed deployments.
+
+We will base on [RateLimitJ](https://github.com/mokies/ratelimitj) to provide the implementation.
+It is a Java library for rate limiting, assembled using extensible storage (Redis) and application framework adaptors. 
+Its library's interfaces support thread-safe sync, async, and reactive usage patterns which is suitable for our reactive pipeline.
 
 The implementation chosen will be configurable as part of mailet configuration. One would be able to configure the
 implementation he wishes to use.
@@ -59,7 +63,7 @@ implementation he wishes to use.
 
 ## Alternatives
 
-Alternatives implementation of the rate limiter can be proposed, and used within the aforementionned mailet.
+Alternatives implementation of the rate limiter can be proposed, and used within the aforementioned mailet.
 
 For instance one could rely on Cassandra counters and Cassandra time series (thus not needing additional dependencies) however we fear the potential performance impact doing so.  Streaming based options, that aggregate in memory counters, might be a viable option too.
 
@@ -67,4 +71,4 @@ For instance one could rely on Cassandra counters and Cassandra time series (thu
 
 - [JIRA](https://issues.apache.org/jira/browse/JAMES-3693)
 - [Redis driver](https://github.com/lettuce-io/lettuce-core#reactive-api)
-- [Guava rate limiter](https://guava.dev/releases/19.0/api/docs/index.html?com/google/common/util/concurrent/RateLimiter.html)
+- [RateLimitJ](https://github.com/mokies/ratelimitj)
