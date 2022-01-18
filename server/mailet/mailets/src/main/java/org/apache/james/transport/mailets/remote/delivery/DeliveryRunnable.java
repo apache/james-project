@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELIVERY_PERMANENT_ERROR;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.Date;
 import java.util.function.Supplier;
@@ -32,6 +33,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
@@ -41,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -110,7 +113,12 @@ public class DeliveryRunnable implements Disposable {
         return Mono.create(sink -> {
             Mail mail = queueItem.getMail();
 
-            try {
+            try (Closeable closeable =
+                     MDCBuilder.create()
+                        .addToContext("mail", mail.getName())
+                        .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
+                        .addToContext("sender", mail.getMaybeSender().asString())
+                        .build()) {
                 LOGGER.debug("will process mail {}", mail.getName());
                 attemptDelivery(mail);
                 queueItem.done(true);
