@@ -85,6 +85,7 @@
         <module>mailet/mailetcontainer-impl</module>
         <module>mailet/mailets</module>
         <module>mailet/mock-smtp-server</module>
+        <module>mailet/rate-limiter</module>
         <module>mailet/rate-limiter-redis</module>
         <module>mailet/remote-delivery-integration-testing</module>
 
