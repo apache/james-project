@@ -40,7 +40,7 @@ trait RateLimiterContract {
 
   @Test
   def subsequentRequestsBelowLimitsWithoutPauseShouldBeAcceptable(): Unit = {
-   val rateLimiter = testee().create(rules)
+   val rateLimiter = testee().withSpecification(rules)
 
    SoftAssertions.assertSoftly(softly => {
     (1 to 4).foreach(_ => {
@@ -52,7 +52,7 @@ trait RateLimiterContract {
 
   @Test
   def subsequentRequestsAtLimitsWithoutPauseShouldBeAcceptable(): Unit = {
-   val rateLimiter = testee().create(rules)
+   val rateLimiter = testee().withSpecification(rules)
 
    val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()
    assertThat(actual).isEqualTo(AcceptableRate)
@@ -60,7 +60,7 @@ trait RateLimiterContract {
 
  @Test
  def subsequentRequestsOverLimitsWithoutPauseShouldBeExceeded(): Unit = {
-  val rateLimiter = testee().create(rules)
+  val rateLimiter = testee().withSpecification(rules)
 
   val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 5)).block()
   assertThat(actual).isEqualTo(RateExceeded)
@@ -68,7 +68,7 @@ trait RateLimiterContract {
 
  @Test
  def subsequentRequestsByBlockOverLimitsWithoutPauseShouldBeExceeded(): Unit = {
-  val rateLimiter = testee().create(rules)
+  val rateLimiter = testee().withSpecification(rules)
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 2)).block()
   val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 3)).block()
@@ -77,7 +77,7 @@ trait RateLimiterContract {
 
  @Test
  def subsequentRequestsByBlockOverLimitsWithSmallPauseShouldBeExceeded(): Unit = {
-  val rateLimiter = testee().create(Rules(Seq(Rule(4, Duration.ofSeconds(20)))))
+  val rateLimiter = testee().withSpecification(Rules(Seq(Rule(4, Duration.ofSeconds(20)))))
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 2)).block()
   sleep(Duration.ofSeconds(1))
@@ -87,7 +87,7 @@ trait RateLimiterContract {
 
  @Test
  def subsequentRequestsByBlockOverLimitsWithLongPauseShouldBeAcceptable(): Unit = {
-  val rateLimiter = testee().create(rules)
+  val rateLimiter = testee().withSpecification(rules)
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 2)).block()
   sleep(Duration.ofSeconds(3))
@@ -97,7 +97,7 @@ trait RateLimiterContract {
 
  @Test
  def rateLimitingShouldBePartitionedByKey(): Unit = {
-  val rateLimiter = testee().create(rules)
+  val rateLimiter = testee().withSpecification(rules)
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 2)).block()
   val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key2"), 3)).block()
@@ -106,7 +106,7 @@ trait RateLimiterContract {
 
  @Test
  def shouldFailWhenUpperLimitExceeded(): Unit = {
-  val rateLimiter = testee().create(Rules(Seq(
+  val rateLimiter = testee().withSpecification(Rules(Seq(
     Rule(1, Duration.ofSeconds(1)),
     Rule(2, Duration.ofSeconds(20)))))
 
@@ -121,7 +121,7 @@ trait RateLimiterContract {
 
  @Test
  def shouldFailWhenLowerLimitExceeded(): Unit = {
-  val rateLimiter = testee().create(Rules(Seq(
+  val rateLimiter = testee().withSpecification(Rules(Seq(
    Rule(2, Duration.ofSeconds(5)),
    Rule(1, Duration.ofSeconds(1)))))
 
@@ -133,7 +133,7 @@ trait RateLimiterContract {
 
  @Test
  def shouldSucceedWhenBothRulesAreRespected(): Unit = {
-  val rateLimiter = testee().create(Rules(Seq(
+  val rateLimiter = testee().withSpecification(Rules(Seq(
    Rule(2, Duration.ofSeconds(5)),
    Rule(1, Duration.ofSeconds(1)))))
 

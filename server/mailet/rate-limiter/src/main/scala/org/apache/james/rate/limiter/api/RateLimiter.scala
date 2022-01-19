@@ -64,6 +64,12 @@ trait RateLimiterFactoryProvider {
   def create(mailetConfig: MailetConfig): RateLimiterFactory
 }
 
-sealed trait RateLimitingResult
-case object RateExceeded extends RateLimitingResult
-case object AcceptableRate extends RateLimitingResult
+sealed trait RateLimitingResult {
+  def merge(other: RateLimitingResult): RateLimitingResult
+}
+case object RateExceeded extends RateLimitingResult {
+  override def merge(other: RateLimitingResult): RateLimitingResult = RateExceeded
+}
+case object AcceptableRate extends RateLimitingResult {
+  override def merge(other: RateLimitingResult): RateLimitingResult = other
+}
