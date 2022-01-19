@@ -542,9 +542,18 @@ class PulsarMailQueue(
     val scheduledTopicReader = PulsarReader.forTopic(scheduledTopic)
 
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
-    val browseableMails: Source[Mail, NotUsed] = outTopicReader.concat(scheduledTopicReader)
+
+    val outSource = outTopicReader
       .map(message => (jsonStringToMailMetadata(message.value), message))
+      .via(debugLogger("browse-out"))
       .ask[Option[MailMetadata]](filterStage)
+
+    val scheduledSource = scheduledTopicReader
+      .map(message => (jsonStringToMailMetadata(message.value), message))
+      .via(debugLogger("browse-scheduled"))
+      .ask[Option[MailMetadata]](filterScheduledStage)
+
+    val browseableMails: Source[Mail, NotUsed] = outSource.concat(scheduledSource)
       .collect { case Some(value) => value }
       .flatMapConcat(metadata => {
         val partsId = MimeMessagePartsId.builder()
