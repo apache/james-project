@@ -1,0 +1,60 @@
+= Rate limiting for Apache James
+
+This maven module provide a James extension allowing one to enforce rate limiting for Apache James email processing.
+
+== Running rate limiting with the memory implementation
+
+ - 1. Compile this project.
+ - 2. Place the generated "jar with dependencies" in James `extensions-jars` folder.
+ - 3. Configure James to use the memory implementation for Rate Limiting by putting the following content within
+`extension.properties`:
+
+----
+guice.extension.module=org.apache.james.rate.limiter.memory.MemoryRateLimiterModule
+----
+
+ - 4. Use the rate limiting mailets within `mailetcontainer.xml`
+
+We provide a sample `docker-compose` demonstrating this setup.
+
+== Mailets
+
+=== PerSenderRateLimit
+
+*PerSenderRateLimit* allows defining and enforcing rate limits for the sender of matching emails.
+
+This allows writing rules like:
+
+ - A sender can send 10 emails per hour
+ - A sender can send email to a total of 20 recipients per hour
+ - A sender can send 100 MB of emails (total computed taking only the email size into account) per hour
+ - A sender can send 200 MB of emails (total computed taking each recipient copies into account) per hour
+
+Depending on its position and the matcher it is being combined with, those rate limiting rules could be applied to
+submitted emails, received emails or emitted email being relayed to third parties.
+
+Here are supported configuration parameters:
+
+ - *keyPrefix*: An optional key prefix to apply to rate limiting. Choose distinct values if you specify
+ this mailet twice within your `mailetcontainer.xml` file. Defaults to none.
+ - *exceededProcessor*: Processor to which emails whose rate is exceeded should be redirected to. Defaults to error.
+ Use this to customize the behaviour upon exceeded rate.
+ - *duration*: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).
+ - *count*: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.
+ - *recipients*: Count of recipients allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.
+ - *size*: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.
+ - *totalSize*: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.
+
+
+For instance, to apply all the examples given above:
+
+----
+<mailet matcher="All" class="PerSenderRateLimit">
+    <keyPrefix>myPrefix</keyPrefix>
+    <duration>1h</duration>
+    <count>10</count>
+    <recipients>20</recipients>
+    <size>100M</size>
+    <totalSize>200M</totalSize>
+</mailet>
+----
