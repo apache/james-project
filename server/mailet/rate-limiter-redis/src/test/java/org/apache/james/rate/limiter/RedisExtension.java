@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 
 public class RedisExtension implements GuiceModuleTestExtension {
-    public static final DockerRedis DOCKER_REDIS_SINGLETON = new DockerRedis();
+    private static final DockerRedis DOCKER_REDIS_SINGLETON = new DockerRedis();
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {

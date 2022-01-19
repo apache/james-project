@@ -28,7 +28,7 @@
 
     <artifactId>james-server-rate-limiter-redis</artifactId>
     <packaging>jar</packaging>
-    <name>Apache James :: Server :: Mailet :: Rate limiting Redis</name>
+    <name>Apache James :: Server :: Mailet :: Rate Limiter :: Redis</name>
 
     <dependencies>
         <dependency>
