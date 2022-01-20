@@ -126,6 +126,8 @@ The MailQueue relies on the following topology:
  - out topic :  contains the mails that are ready to be dequeued.
  - scheduled topic: emails that are delayed are first enqueued there.
  - filter topic: Deletions (name, sender, recipients) prior a given sequence are synchronized between nodes using this topic.
+ - filter scheduled topic: Deletions for the scheduled topic, applied while moving items from the scheduled topic to the out topic.
+ 
  
  The consumers on out topic and scheduled topic use the same subscription name and shared consumers. On filter topic, each consumer uses a unique subscription name and will therefore receive a copy of every messages in the topic. this ensures a full distribution of the filter state to all nodes in the cluster.
 
