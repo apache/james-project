@@ -26,48 +26,56 @@ import com.google.common.annotations.VisibleForTesting
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
-import org.apache.james.rate.limiter.api.Quantity.Quantity
-import org.apache.james.rate.limiter.api.{AcceptableRate, Quantity, RateExceeded, RateLimiter, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
+import org.apache.james.rate.limiter.api.Increment.Increment
+import org.apache.james.rate.limiter.api.{AcceptableRate, AllowedQuantity, Increment, RateExceeded, RateLimiter, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.apache.james.util.DurationParser
 import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import scala.util.Try
+
 case class KeyPrefix(value: String)
 
 sealed trait EntityType {
   def asString(): String
 
-  def extractQuantity(mail: Mail): Quantity
+  def extractQuantity(mail: Mail): Option[Increment]
 }
 
 case object Count extends EntityType {
   override def asString(): String = "count"
 
-  override def extractQuantity(mail: Mail): Quantity = 1
+  override def extractQuantity(mail: Mail): Option[Increment] = Some(1)
 }
 case object RecipientsType extends EntityType {
   override def asString(): String = "recipients"
 
-  override def extractQuantity(mail: Mail): Quantity = Quantity.liftOrThrow(mail.getRecipients.size())
+  override def extractQuantity(mail: Mail): Option[Increment] = Some(Increment.liftOrThrow(mail.getRecipients.size()))
 }
 case object Size extends EntityType {
   override def asString(): String = "size"
 
-  override def extractQuantity(mail: Mail): Quantity = Quantity.liftOrThrow(mail.getMessageSize.toInt)
+  override def extractQuantity(mail: Mail): Option[Increment] = Some(Increment.liftOrThrow(mail.getMessageSize.toInt))
 }
 case object TotalSize extends EntityType {
   override def asString(): String = "totalSize"
 
-  override def extractQuantity(mail: Mail): Quantity = Quantity.liftOrThrow((mail.getMessageSize * mail.getRecipients.size()).toInt)
+  override def extractQuantity(mail: Mail): Option[Increment] =
+    Try(Math.multiplyExact(mail.getMessageSize.toInt, mail.getRecipients.size()).toInt)
+      .map(Increment.liftOrThrow)
+      .toOption
 }
 
 case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(sender: MailAddress, mail: Mail): Publisher[RateLimitingResult] = {
     val rateLimitingKey = SenderKey(keyPrefix, entityType, sender)
 
-    rateLimiter.map(limiter => limiter.rateLimit(rateLimitingKey, entityType.extractQuantity(mail)))
+    rateLimiter.map(limiter =>
+      entityType.extractQuantity(mail)
+        .map(increment => limiter.rateLimit(rateLimitingKey, increment))
+        .getOrElse(SMono.just[RateLimitingResult](RateExceeded)))
       .getOrElse(SMono.just[RateLimitingResult](AcceptableRate))
   }
 }
@@ -99,7 +107,8 @@ case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailA
  *    <li><b>count</b>: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
  *    <li><b>recipients</b>: Count of recipients allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
  *    <li><b>size</b>: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
- *    <li><b>totalSize</b>: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
+ *    <li><b>totalSize</b>: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
+ *    totalSize is limited in increments of 2exp(31) - ~2 billions: sending a 10MB file to more than 205 recipients will be rejected if this parameter is enabled.</li>
  *  </ul>
  *
  *  <p>For instance, to apply all the examples given above:</p>
@@ -159,13 +168,13 @@ class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactor
       .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
 
   private def extractCountRules(duration: Duration): Option[Rules] = Option(getInitParameter("count"))
-    .map(_.toInt)
-    .map(Quantity.liftOrThrow)
+    .map(_.toLong)
+    .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   private def extractRecipientsRules(duration: Duration): Option[Rules] = Option(getInitParameter("recipients"))
-    .map(_.toInt)
-    .map(Quantity.liftOrThrow)
+    .map(_.toLong)
+    .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   private def extractSizeRules(duration: Duration): Option[Rules] = Option(getInitParameter("size"))
@@ -174,8 +183,8 @@ class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactor
       case s => s
     }
     .map(org.apache.james.util.Size.parse)
-    .map(_.asBytes().toInt)
-    .map(Quantity.liftOrThrow)
+    .map(_.asBytes())
+    .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   private def extractTotalSizeRules(duration: Duration): Option[Rules] = Option(getInitParameter("totalSize"))
@@ -184,8 +193,8 @@ class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactor
       case s => s
     }
     .map(org.apache.james.util.Size.parse)
-    .map(_.asBytes().toInt)
-    .map(Quantity.liftOrThrow)
+    .map(_.asBytes())
+    .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   override def service(mail: Mail): Unit = mail.getMaybeSender

@@ -43,7 +43,8 @@ Here are supported configuration parameters:
  - *count*: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.
  - *recipients*: Count of recipients allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.
  - *size*: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.
- - *totalSize*: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.
+ - *totalSize*: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
+   totalSize is limited in increments of 2exp(31) - ~2 billions: sending a 10MB file to more than 205 recipients will be rejected if this parameter is enabled.
 
 
 For instance, to apply all the examples given above:

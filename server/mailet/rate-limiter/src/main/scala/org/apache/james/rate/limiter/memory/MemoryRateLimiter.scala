@@ -24,7 +24,7 @@ import java.time.Duration
 import com.google.inject.AbstractModule
 import es.moki.ratelimitj.core.limiter.request.{RequestLimitRule, RequestRateLimiter}
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter
-import org.apache.james.rate.limiter.api.Quantity.Quantity
+import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.apache.mailet.MailetConfig
 import org.reactivestreams.Publisher
@@ -58,7 +58,7 @@ class MemoryRateLimiterFactory(precision: Option[Duration] = None) extends RateL
 }
 
 case class MemoryRateLimiter(limiter: RequestRateLimiter) extends RateLimiter {
-  override def rateLimit(key: RateLimitingKey, increaseQuantity: Quantity): Publisher[RateLimitingResult] = 
+  override def rateLimit(key: RateLimitingKey, increaseQuantity: Increment): Publisher[RateLimitingResult] =
     if (limiter.overLimitWhenIncremented(key.asString(), increaseQuantity.value)) {
       SMono.just(RateExceeded)
     } else {

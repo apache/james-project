@@ -24,7 +24,8 @@ import java.time.Duration
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-import org.apache.james.rate.limiter.api.Quantity.Quantity
+import org.apache.james.rate.limiter.api.AllowedQuantity.AllowedQuantity
+import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.mailet.MailetConfig
 import org.reactivestreams.Publisher
 
@@ -32,28 +33,45 @@ trait RateLimitingKey {
     def asString(): String
 }
 
-object Quantity {
+object AllowedQuantity {
   type PositiveLongConstraint = Positive
-  type Quantity = Int Refined PositiveLongConstraint
+  type AllowedQuantity = Long Refined PositiveLongConstraint
 
-  def validate(value: Int): Either[NumberFormatException, Quantity] =
+  def validate(value: Long): Either[NumberFormatException, AllowedQuantity] =
     refined.refineV[PositiveLongConstraint](value) match {
       case Right(value) => Right(value)
       case Left(error) => Left(new NumberFormatException(error))
     }
 
-  def liftOrThrow(value: Int): Quantity =
+  def liftOrThrow(value: Long): AllowedQuantity =
     validate(value) match {
       case Right(value) => value
       case Left(error) => throw error
     }
 }
 
-case class Rule(quantity: Quantity, duration: Duration)
+object Increment {
+  type PositiveLongConstraint = Positive
+  type Increment = Int Refined PositiveLongConstraint
+
+  def validate(value: Int): Either[NumberFormatException, Increment] =
+    refined.refineV[PositiveLongConstraint](value) match {
+      case Right(value) => Right(value)
+      case Left(error) => Left(new NumberFormatException(error))
+    }
+
+  def liftOrThrow(value: Int): Increment =
+    validate(value) match {
+      case Right(value) => value
+      case Left(error) => throw error
+    }
+}
+
+case class Rule(quantity: AllowedQuantity, duration: Duration)
 case class Rules(rules: Seq[Rule])
 
 trait RateLimiter {
-    def rateLimit(key: RateLimitingKey, increaseQuantity: Quantity): Publisher[RateLimitingResult]
+    def rateLimit(key: RateLimitingKey, increaseQuantity: Increment): Publisher[RateLimitingResult]
 }
 
 trait RateLimiterFactory {
