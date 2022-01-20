@@ -32,7 +32,7 @@ case class TestKey(value: String) extends RateLimitingKey {
 }
 
 trait RateLimiterContract {
-  private val rules = Rules(Seq(Rule(4, Duration.ofSeconds(2))))
+  private val rules = Rules(Seq(Rule(4L, Duration.ofSeconds(2))))
 
   def testee(): RateLimiterFactory
 
@@ -77,7 +77,7 @@ trait RateLimiterContract {
 
  @Test
  def subsequentRequestsByBlockOverLimitsWithSmallPauseShouldBeExceeded(): Unit = {
-  val rateLimiter = testee().withSpecification(Rules(Seq(Rule(4, Duration.ofSeconds(20)))))
+  val rateLimiter = testee().withSpecification(Rules(Seq(Rule(4L, Duration.ofSeconds(20)))))
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 2)).block()
   sleep(Duration.ofSeconds(1))
@@ -107,8 +107,8 @@ trait RateLimiterContract {
  @Test
  def shouldFailWhenUpperLimitExceeded(): Unit = {
   val rateLimiter = testee().withSpecification(Rules(Seq(
-    Rule(1, Duration.ofSeconds(1)),
-    Rule(2, Duration.ofSeconds(20)))))
+    Rule(1L, Duration.ofSeconds(1)),
+    Rule(2L, Duration.ofSeconds(20)))))
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
   sleep(Duration.ofMillis(1100))
@@ -122,8 +122,8 @@ trait RateLimiterContract {
  @Test
  def shouldFailWhenLowerLimitExceeded(): Unit = {
   val rateLimiter = testee().withSpecification(Rules(Seq(
-   Rule(2, Duration.ofSeconds(5)),
-   Rule(1, Duration.ofSeconds(1)))))
+   Rule(2L, Duration.ofSeconds(5)),
+   Rule(1L, Duration.ofSeconds(1)))))
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
   // 2 requests in less than 1 s -> fail
@@ -134,8 +134,8 @@ trait RateLimiterContract {
  @Test
  def shouldSucceedWhenBothRulesAreRespected(): Unit = {
   val rateLimiter = testee().withSpecification(Rules(Seq(
-   Rule(2, Duration.ofSeconds(5)),
-   Rule(1, Duration.ofSeconds(1)))))
+   Rule(2L, Duration.ofSeconds(5)),
+   Rule(1L, Duration.ofSeconds(1)))))
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
   sleep(Duration.ofSeconds(1))

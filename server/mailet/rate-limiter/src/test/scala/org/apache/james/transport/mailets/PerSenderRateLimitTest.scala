@@ -19,12 +19,15 @@
 
 package org.apache.james.transport.mailets
 
+import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.memory.MemoryRateLimiterFactoryProvider
 import org.apache.mailet.base.test.{FakeMail, FakeMailetConfig}
 import org.apache.mailet.{Mail, MailetConfig}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{Nested, Test}
+
+import scala.jdk.CollectionConverters._
 
 class PerSenderRateLimitTest {
   def testee(mailetConfig: MailetConfig): PerSenderRateLimit = {
@@ -248,6 +251,54 @@ class PerSenderRateLimitTest {
       softly.assertThat(mail2.getState).isEqualTo("error")
       softly.assertThat(mail3.getState).isEqualTo("transport")
     })
+  }
+
+  @Test
+  def totalSizeShouldRejectWhenOverflowing(): Unit = {
+    val mailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerSenderRateLimit")
+      .setProperty("duration", "20s")
+      .setProperty("totalSize", "1G")
+      .build())
+
+    val recipients = (1 to 450).map(i => new MailAddress(s"rcpt${i}@domain.tld")).toList
+
+    // 450 * 10 MB = 4.5GB (overflow to a positive integer)
+    val mail: Mail = FakeMail.builder()
+      .name("mail1")
+      .sender("sender@domain.tld")
+      .recipients(recipients.asJava)
+      .size(10L * 1024L * 1024L)
+      .state("transport")
+      .build()
+
+    mailet.service(mail)
+
+    assertThat(mail.getState).isEqualTo("error")
+  }
+
+  @Test
+  def overflowOnTotalSizeShouldNotAffectOtherCriteriaWhenUnspecified(): Unit = {
+    val mailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerSenderRateLimit")
+      .setProperty("duration", "20s")
+      .setProperty("count", "2")
+      .build())
+
+    val recipients = (1 to 450).map(i => new MailAddress(s"rcpt${i}@domain.tld")).toList
+
+    // 450 * 10 MB = 4.5GB (overflow to a positive integer)
+    val mail: Mail = FakeMail.builder()
+      .name("mail1")
+      .sender("sender@domain.tld")
+      .recipients(recipients.asJava)
+      .size(10L * 1024L * 1024L)
+      .state("transport")
+      .build()
+
+    mailet.service(mail)
+
+    assertThat(mail.getState).isEqualTo("transport")
   }
 
   @Test
