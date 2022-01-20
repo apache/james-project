@@ -91,6 +91,12 @@
         <dd>true or false. Defaults to true. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.</dd>
       </dl>
 
+    <subsection name="OIDC set up">
+        <p>James IMAP support XOAUTH2 authentication mechanism which allow authenticating against a OIDC providers.
+            Please configure <code>auth.oauth</code> part to use this.</p>
+        <p>We do supply an <a href="https://github.com/apache/james-project/tree/master/examples/oidc">example</a> of such a setup. It uses the
+            <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider, but usage of similar technologies is definitely doable.</p>
+    </subsection>
 </section>
 
 </body>
