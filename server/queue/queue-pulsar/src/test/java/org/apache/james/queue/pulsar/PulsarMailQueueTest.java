@@ -22,8 +22,10 @@ package org.apache.james.queue.pulsar;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
@@ -65,6 +67,7 @@ import com.github.fge.lambdas.Throwing;
 
 import akka.actor.ActorSystem;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
@@ -237,19 +240,5 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @Disabled("this guarantee is too strong for Pulsar implementation and doesn't match any domain requirement")
     @Override
     public void flushShouldPreserveBrowseOrder() {
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-3687 Delayed deletes are buggy")
-    public void delayedEmailsShouldBeDeleted() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-3687 Delayed deletes are buggy")
-    public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
-
     }
 }

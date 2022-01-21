@@ -117,6 +117,7 @@ class PulsarMailQueue(
   private val outTopic = Topic(s"persistent://${config.namespace.asString}/James-${name.asString()}")
   private val scheduledTopic = Topic(s"persistent://${config.namespace.asString}/${name.asString()}-scheduled")
   private val filterTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-${name.asString()}")
+  private val filterScheduledTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-scheduled-${name.asString()}")
   private val subscription = Subscription("subscription-" + name.asString())
   private val scheduledSubscription = Subscription("scheduled-subscription-" + name.asString())
 
@@ -124,6 +125,7 @@ class PulsarMailQueue(
   private val scheduledTopicProducer = client.producer(ProducerConfig(scheduledTopic, enableBatching = Some(false)))
 
   private val filterProducer = client.producer(ProducerConfig(filterTopic, enableBatching = Some(false)))
+  private val filterScheduledProducer = client.producer(ProducerConfig(filterScheduledTopic, enableBatching = Some(false)))
 
   private def completingSinkOf[U](producer: Producer[U]): Sink[(ProducerMessage[U], Promise[Done]), NotUsed] =
     Flow.fromFunction[(ProducerMessage[U], Promise[Done]), Unit] {
@@ -204,8 +206,11 @@ class PulsarMailQueue(
 
   def scheduledConsumer(): Consumer[String] = buildConsumer(scheduledSubscription, scheduledTopic)
 
+
+  private val filterScheduledStage: ActorRef = system.actorOf(FilterStage.props)
   private val requeueMessage = Flow.apply[CommittableMessage[String]]
-    .flatMapConcat(message => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message)))
+    .via(filteringFlow(filterScheduledStage))
+    .flatMapConcat{case (_,_,message) => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message))}
     .flatMapConcat(message => Source.future(message.ack(cumulative = false)))
     .toMat(Sink.ignore)(Keep.none)
 
@@ -214,30 +219,15 @@ class PulsarMailQueue(
       .toMat(requeueMessage)(Keep.left) //use of toMat to keep reference of Control which would be lost by direct usage of flatMapConcat
 
   private val filterStage: ActorRef = system.actorOf(FilterStage.props)
-
   private val counter: Sink[Any, Future[Int]] =
     Sink.fold[Int, Any](0)((acc, _) => acc + 1)
 
   private val dequeueFlow: RunnableGraph[(Control, Publisher[MailQueueItem])] = {
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
     streams.committableSource(consumer)
-      .map(message =>
-        (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
-          message)
-      ).ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterStage)
-      .flatMapConcat {
-        case (None, Some(partsId), committableMessage) =>
-          committableMessage.ack()
-          deleteMimeMessage(partsId)
-            .flatMapConcat(_ => Source.empty)
-        case (Some(metadata), _, committableMessage) =>
-          val partsId = metadata.partsId
-          Source
-            .fromPublisher(readMimeMessage(partsId))
-            .map(message => (readMail(metadata, message), partsId, committableMessage))
-      }.map { case (mail, partsId, message) => new PulsarMailQueueItem(mail, partsId, message) }
+      .via(filteringFlow(filterStage))
+      .map { case (mail, partsId, message) => new PulsarMailQueueItem(mail, partsId, message) }
       .map(mailQueueItemDecoratorFactory.decorate(_, name))
-
       .alsoTo(counter)
       // akka streams virtual publisher handles a subscription timeout to the
       // exposed publisher which will terminate the stream if the timeout is not
@@ -251,6 +241,26 @@ class PulsarMailQueue(
       .via(debugLogger("dequeueFlow"))
       .toMat(Sink.asPublisher[MailQueue.MailQueueItem](true).withAttributes(Attributes.inputBuffer(initial = 1, max = 1)))(Keep.both)
   }
+
+  private def filteringFlow(filterActor:ActorRef) = {
+    implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
+    Flow.apply[CommittableMessage[String]].map(message =>
+      (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
+        message)
+    ).ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterActor)
+      .flatMapConcat {
+        case (None, Some(partsId), committableMessage) =>
+          committableMessage.ack()
+          deleteMimeMessage(partsId)
+            .flatMapConcat(_ => Source.empty)
+        case (Some(metadata), _, committableMessage) =>
+          val partsId = metadata.partsId
+          Source
+            .fromPublisher(readMimeMessage(partsId))
+            .map(message => (readMail(metadata, message), partsId, committableMessage))
+      }
+  }
+
 
   class PulsarMailQueueItem(mail: Mail, partsId: MimeMessagePartsId, message: CommittableMessage[String]) extends MailQueueItem {
     override val getMail: Mail = mail
@@ -266,38 +276,6 @@ class PulsarMailQueue(
     }
   }
 
-  /**
-   * For now, filterFlow always rereads the whole topic from the start by using a random subscription name.
-   * Filters are never removed from the topic.
-   * This means that the FilterStage will get slower to start as the number of filter increases, it will also consume
-   * an increasing amount of RAM until the first mail is processed which will invalidate and purge the expired filters.
-   *
-   * @see [[FilterStage]]
-   */
-  private val filterFlow = {
-    val filterSubscription = Subscription("filter-subscription-" + name.asString() + "-" + UUID.randomUUID().toString)
-    val logInvalidFilterPayload = Flow.apply[JsResult[Filter]]
-      .collectType[JsError]
-      .map(error => "unable to parse filter" + Json.prettyPrint(JsError.toJson(error)))
-      .log("filterFlow")
-      .addAttributes(Attributes.logLevels(onElement = Attributes.LogLevels.Error)).to(Sink.ignore)
-
-    streams.source(() =>
-      client.consumer(
-        ConsumerConfig(
-          subscriptionName = filterSubscription,
-          topics = Seq(filterTopic),
-          subscriptionType = Some(SubscriptionType.Shared),
-          subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
-        )
-      )
-    ).map(message => Json.fromJson[Filter](Json.parse(message.value)))
-      .divertTo(logInvalidFilterPayload, when = _.isError)
-      .map(_.get)
-      .via(debugLogger("filterFlow"))
-      .to(Sink.foreach(filter => filterStage ! filter))
-  }
-
   def registerDequeueSubscription(): Unit = consumer().close()
 
   def registerScheduledSubscription(): Unit = scheduledConsumer().close()
@@ -309,13 +287,56 @@ class PulsarMailQueue(
   private lazy val (dequeueControl: Control, dequeuePublisher: Publisher[MailQueueItem], scheduledConsumerControl: Control) = startDequeuing()
   private val enqueue: SourceQueueWithComplete[(Mail, Duration, Promise[Done])] = enqueueFlow.run()
   private val requeue: SourceQueueWithComplete[ProducerMessage[MessageAsJson]] = requeueFlow.run()
-  private val filterFlowControl: Control = filterFlow.run()
+  private val filtersCommandFlowControl: Control =
+    filtersCommandFlow(
+      filterTopic,
+      Subscription("filter-subscription-" + name.asString() + "-" + UUID.randomUUID().toString),
+      filterStage
+    ).run()
+  private val scheduledFiltersCommandFlowControl: Control =
+    filtersCommandFlow(
+      filterScheduledTopic,
+      Subscription("filter-scheduled-subscription-" + name.asString() + "-" + UUID.randomUUID().toString),
+      filterScheduledStage
+    ).run()
 
   private def startDequeuing() = {
     val (dequeueControl: Control, dequeuePublisher: Publisher[MailQueueItem]) = dequeueFlow.run()
     val scheduledConsumerControl: Control = requeueScheduledMessages.run()
     (dequeueControl, dequeuePublisher, scheduledConsumerControl)
   }
+
+  /**
+   * For now, filtersCommandFlow always rereads the whole topic from the start by using a random subscription name.
+   * Filters are never removed from the topic.
+   * This means that the FilterStage will get slower to start as the number of filter increases, it will also consume
+   * an increasing amount of RAM until the first mail is processed which will invalidate and purge the expired filters.
+   *
+   * @see [[FilterStage]]
+   */
+  private def filtersCommandFlow(topic:Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
+    val logInvalidFilterPayload = Flow.apply[JsResult[Filter]]
+      .collectType[JsError]
+      .map(error => "unable to parse filter" + Json.prettyPrint(JsError.toJson(error)))
+      .log("filterFlow")
+      .addAttributes(Attributes.logLevels(onElement = Attributes.LogLevels.Error)).to(Sink.ignore)
+
+    streams.source(() =>
+      client.consumer(
+        ConsumerConfig(
+          subscriptionName = filterSubscription,
+          topics = Seq(topic),
+          subscriptionType = Some(SubscriptionType.Shared),
+          subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
+        )
+      )
+    ).map(message => Json.fromJson[Filter](Json.parse(message.value)))
+      .divertTo(logInvalidFilterPayload, when = _.isError)
+      .map(_.get)
+      .via(debugLogger("filterFlow"))
+      .to(Sink.foreach(filter => filteringStage ! filter))
+  }
+
 
   /**
    * @inheritdoc
@@ -370,9 +391,9 @@ class PulsarMailQueue(
     requeue.complete()
     dequeueControl.stop()
     scheduledConsumerControl.stop()
-    filterFlowControl.stop()
+    filtersCommandFlowControl.stop()
+    scheduledFiltersCommandFlowControl.stop()
     client.close()
-    system.terminate() //FIXME: to remove when injected
   }
 
   /**
@@ -478,13 +499,22 @@ class PulsarMailQueue(
    * @return 0 because this is an async and distributed process running on several nodes on the cluster
    */
   override def remove(`type`: ManageableMailQueue.Type, value: String): Long = {
-    import Filter._
-
     val maybeLastSequenceId = lastMessage(outTopic).map(_.sequenceId)
+    val maybeLastScheduledSequenceId = lastMessage(scheduledTopic).map(_.sequenceId)
 
-    maybeLastSequenceId.foreach { lastSequenceId =>
+    val filter = buildFilter(`type`, value, maybeLastSequenceId)
+    val scheduledFilter = buildFilter(`type`, value, maybeLastScheduledSequenceId)
+
+    filter.foreach(publishFilter(filterProducer))
+    scheduledFilter.foreach(publishFilter(filterScheduledProducer))
+
+    0
+  }
+
+  private def buildFilter(`type`: ManageableMailQueue.Type, value: String, maybeLastSequenceId: Option[SequenceId]): Option[Filter] = {
+    maybeLastSequenceId.map { lastSequenceId =>
       import ManageableMailQueue.Type
-      val filter: Filter = `type` match {
+      `type` match {
         case Type.Sender =>
           Filter.BySender(value, lastSequenceId)
         case Type.Recipient =>
@@ -492,9 +522,13 @@ class PulsarMailQueue(
         case Type.Name =>
           Filter.ByName(value, lastSequenceId)
       }
-      filterProducer.send(Json.stringify(Json.toJson(filter)))
+
     }
-    0
+  }
+
+  private def publishFilter(producer:Producer[String])(filter:Filter): Unit ={
+    import Filter._
+    producer.send(Json.stringify(Json.toJson(filter)))
   }
 
   private def jsonStringToMailMetadata(json: String): MailMetadata =
@@ -508,9 +542,18 @@ class PulsarMailQueue(
     val scheduledTopicReader = PulsarReader.forTopic(scheduledTopic)
 
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
-    val browseableMails: Source[Mail, NotUsed] = outTopicReader.concat(scheduledTopicReader)
+
+    val outSource = outTopicReader
       .map(message => (jsonStringToMailMetadata(message.value), message))
+      .via(debugLogger("browse-out"))
       .ask[Option[MailMetadata]](filterStage)
+
+    val scheduledSource = scheduledTopicReader
+      .map(message => (jsonStringToMailMetadata(message.value), message))
+      .via(debugLogger("browse-scheduled"))
+      .ask[Option[MailMetadata]](filterScheduledStage)
+
+    val browseableMails: Source[Mail, NotUsed] = outSource.concat(scheduledSource)
       .collect { case Some(value) => value }
       .flatMapConcat(metadata => {
         val partsId = MimeMessagePartsId.builder()

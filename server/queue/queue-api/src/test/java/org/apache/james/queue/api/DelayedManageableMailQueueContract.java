@@ -20,6 +20,9 @@
 package org.apache.james.queue.api;
 
 import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.apache.james.queue.api.Mails.defaultMailNoRecipient;
+import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
+import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -42,9 +45,14 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
     @Override
     ManageableMailQueue getManageableMailQueue();
 
+    default void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueue.MailQueueException {
+        getManageableMailQueue().enQueue(mail, delay, unit);
+    }
+
+
     @Test
     default void delayedMessagesShouldBeBrowesable() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("name1")
                 .build(),
             30L,
@@ -59,7 +67,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
     @Test
     default void delayedMessagesShouldBeCleared() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("name1")
                 .build(),
             30L,
@@ -74,13 +82,13 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
     @Test
     default void delayedEmailsShouldBeDeleted() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("abc")
                 .build(),
             5L,
             TimeUnit.SECONDS);
         // The queue being FIFO a second email can serve as a wait condition
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("def")
                 .build(),
             5L,
@@ -99,8 +107,33 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
     }
 
     @Test
+    default void deletedDelayedMessagesShouldNotBeBrowseable() throws Exception {
+        enQueue(defaultMail()
+                .name("name1")
+                .build(),
+                30L,
+                TimeUnit.SECONDS);
+        enQueue(defaultMailNoRecipient()
+                .name("name2")
+                .recipient(RECIPIENT1)
+                .build());
+        enQueue(defaultMailNoRecipient()
+                .name("name3")
+                .recipient(RECIPIENT2)
+                .build());
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
+
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse()).toIterable()
+                .extracting(mail -> mail.getMail().getName())
+                .containsExactly("name2");
+    }
+
+    @Test
     default void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("abc")
                 .build(),
             5L,
@@ -109,11 +142,11 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "abc");
 
         // The newer email
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("def")
                 .build());
         // The queue being FIFO a third email can serve as a wait condition
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("ghi")
                 .build(),
             5L,
@@ -131,10 +164,10 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
     @Test
     default void flushShouldRemoveDelaysWhenImmediateMessageFirst() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("name1")
                 .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .name("name2")
                 .build(),
             30L,
@@ -151,7 +184,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
     @Test
     default void flushShouldRemoveDelays() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build(),
             30L,
@@ -167,17 +200,17 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
     @Test
     default void flushShouldPreserveBrowseOrder() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
 
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build(),
             30L,
             TimeUnit.SECONDS);
 
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build(),
             2L,
