@@ -12,6 +12,8 @@ services:
       - ./james/keystore:/root/conf/keystore
       - ./james/usersrepository.xml:/root/conf/usersrepository.xml
       - ./james/jmap.properties:/root/conf/jmap.properties
+      - ./james/smtpserver.xml:/root/conf/smtpserver.xml
+      - ./james/imapserver.xml:/root/conf/imapserver.xml
     ports:
       - "80:80"
       - "25:25"
