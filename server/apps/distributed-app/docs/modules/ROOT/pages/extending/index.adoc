@@ -129,3 +129,32 @@ public class MyMailet extends GenericMailet {
 ....
 
 Note that overriding injection definitions of the Distributed Server for your injections is not supported.
+
+== Pre-packaged extensions
+
+=== Rate Limiting for mailet processing
+
+*Vendor*: Apache Foundation (James project), Apache License V2
+
+link:https://github.com/apache/james-project/tree/master/server/mailet/rate-limiter[Project link] contains detailed set
+up instructions and configuration examples as well as a pre-configured docker-compose.
+
+This extension ships mailets for applying advanced rate limit criteria to the email transiting through your James server.
+It is shipped with two backends implemented:
+
+ - *in memory*: For single server mode.
+ - *Redis*: Uses link:https://redis.io/[Redis] as a shared, fast and scalable in-memory datastore, allowing to apply rate
+ limiting in a distributed fashion. Here is the link:https://github.com/apache/james-project/tree/master/server/mailet/rate-limiter[link] to the Redis extension for rate limiting.
+ - Alternative extensions can be written and loaded into James using the xref:extending/index.adoc#_handling_injections_for_your_extensions[Guice extension mechanism]
+ and providing custom injections for the `RateLimiterFactoryProvider` class.
+
+This extension ships the following mailets:
+
+- `PerSenderRateLimit` allows defining limits applied to the senders of emails (count of email, count of recipients,
+size, size * recipients)
+- `PerRecipientRateLimit` allows defining limits applied to the recipients of emails (count of email, size)
+- `GlobalRateLimit` allows defining limits applied to all the emails (count of email, count of recipients,
+size, size * recipients)
+
+Depending on their positions and the matcher they are being combined with, those rate limiting rules could be applied to
+submitted emails, received emails or emitted email being relayed to third parties.
