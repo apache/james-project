@@ -53,6 +53,18 @@ Whether to enable Authentication PLAIN if the connection is not encrypted via SS
 | auth.requireSSL
 | true or false. Defaults to `true`. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.
 
+| auth.oidc.oidcConfigurationURL
+| Provide OIDC url address for information to user. Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
+| auth.oidc.jwksURL
+| Provide url to get OIDC's JSON Web Key Set to validate user token. Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
+| auth.oidc.claim
+| Claim string uses to identify user. E.g: "email_address". Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
+| auth.oidc.scope
+| An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
 | timeout
 | Default to 30 minutes. After this time, inactive channels that have not performed read, write, or both operation for a while
 will be closed. Negative value disable this behaviour.
@@ -96,3 +108,10 @@ will use the specified value.
 | Set the maximum simultaneous incoming connections per IP for this service
 
 |===
+
+=== OIDC setup
+James IMAP support XOAUTH2 authentication mechanism which allow authenticating against a OIDC providers.
+Please configure `auth.oidc` part to use this.
+
+We do supply an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of such a setup.
+It uses the Keycloak OIDC provider, but usage of similar technologies is definitely doable.

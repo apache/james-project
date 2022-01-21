@@ -153,6 +153,13 @@
       <dd>The configuration handler chain</dd>
     </dl>
 
+      <subsection name="OIDC set up">
+          <p>James SMTP support XOAUTH2 authentication mechanism which allow authenticating against a OIDC providers.
+              Please configure <code>auth.oidc</code> part to use this.</p>
+          <p>We do supply an <a href="https://github.com/apache/james-project/tree/master/examples/oidc">example</a> of such a setup. It uses the
+              <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider, but usage of similar technologies is definitely doable.</p>
+      </subsection>
+
     <subsection name="Configure Authenticated SMTP (SMTP AUTH)">
 
       <p>Authenticated SMTP is a method of securing your SMTP server.  With SMTP AUTH enabled senders who wish to 
