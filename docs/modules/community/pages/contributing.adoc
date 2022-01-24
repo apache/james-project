@@ -94,6 +94,43 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 
 Additional ideas are more than welcome. Don't hesitate to discuss that with us!
 
+=== Code patches
+
+Patches should be attached to the corresponding JIRA issue.
+
+Always use diff -u to generate patches, so we can apply them using 'patch'.
+
+Make sure the patch only contains what is intended, your checkout could be outdated.
+
+Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a single patch covering
+several files, but please only one issue at a time.
+
+Briefly outline the reason for your patch, the solution your patch implements, why a patch is needed and why your code
+will solve the problem. Note any bug numbers your patch addresses.
+
+The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
+responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
+patch is more likely to be committed quickly.
+
+== Idea or design proposals
+
+People can submit ideas, features or design changes proposals by discussing it through the
+xref:mailing-lists.adoc[mailing lists] and/or submitting an ADR (Architecture Decision Record). A discussion
+on the mailing list getting a consensus of the community can be the object of the writing of an ADR to confirm the
+change agreed upon.
+
+ADRs *MUST* be submitted under the folder `src/adr` via a pull request. The standards used for writing an ADR are
+described in the https://github.com/apache/james-project/blob/master/src/adr/0001-record-architecture-decisions.md[first ADR]
+written for the Apache James project.
+
+The number of the ADR should be incremental. If an other ADR gets merged concurrently, the committer is responsible for
+updating its number accordingly.
+
+When the ADR reaches a consensus within the community and is accepted, it can be merged and goes into effect.
+
+An ADR can't be removed after being accepted and merged. However, a new ADR can supersede a previous one. This is so
+we are able to keep track on all the decisions being made regarding the project.
+
 === Coding standards
 
 While we are glad to accept contributions to documentation from anyone, in almost any format, because its much better
@@ -149,40 +186,3 @@ mvn validate -PsortPom
 ```
 The `sortPom` profile can be used on all maven phases. Make sure to review the changes made by the tool, it is known to
 sometimes remove whitespaces which may not be desirable.
-
-=== Code patches
-
-Patches should be attached to the corresponding JIRA issue.
-
-Always use diff -u to generate patches, so we can apply them using 'patch'.
-
-Make sure the patch only contains what is intended, your checkout could be outdated.
-
-Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a single patch covering
-several files, but please only one issue at a time.
-
-Briefly outline the reason for your patch, the solution your patch implements, why a patch is needed and why your code
-will solve the problem. Note any bug numbers your patch addresses.
-
-The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
-responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
-patch is more likely to be committed quickly.
-
-== Idea or design proposals
-
-People can submit ideas, features or design changes proposals by discussing it through the
-xref:mailing-lists.adoc[mailing lists] and/or submitting an ADR (Architecture Decision Record). A discussion
-on the mailing list getting a consensus of the community can be the object of the writing of an ADR to confirm the
-change agreed upon.
-
-ADRs *MUST* be submitted under the folder `src/adr` via a pull request. The standards used for writing an ADR are
-described in the https://github.com/apache/james-project/blob/master/src/adr/0001-record-architecture-decisions.md[first ADR]
-written for the Apache James project.
-
-The number of the ADR should be incremental. If an other ADR gets merged concurrently, the committer is responsible for
-updating its number accordingly.
-
-When the ADR reaches a consensus within the community and is accepted, it can be merged and goes into effect.
-
-An ADR can't be removed after being accepted and merged. However, a new ADR can supersede a previous one. This is so
-we are able to keep track on all the decisions being made regarding the project.
