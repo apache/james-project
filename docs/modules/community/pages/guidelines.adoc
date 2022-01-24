@@ -45,6 +45,16 @@ The Apache James Project's private mailing list for discussion of issues that ar
 such as legal, personal, or security issues prior to a published fix. Subscription to the list is only opened to Apache
 James PMC members and Apache Software Foundation Members.
 
+Topics to be discussed on the private mailing list:
+
+ - Discussion of board reports. PMC members need to report quaterly project activity to the Apache board of directors,
+which is done through link:https://reporter.apache.org[reporter.apache.org]. Prior report submission, the draft should
+be discussed on the private mailing list.
+ - Discussions of link:https://community.apache.org/newcommitter.html[new committers, new PMCs], including proposition discussions, votes and process follow up.
+ - Handling of xref:contributing.adoc#_reporting_security_vulnerabilities[security vulnerability reports], and CVE publication.
+
+Other topics should be discussed/voted on server-dev instead.
+
 === GIT
 
 All of the Apache James products are maintained in shared information repositories using GIT on git-wip-us.apache.org.
