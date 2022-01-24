@@ -19,6 +19,7 @@
 package org.apache.james.protocols.pop3.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
@@ -69,11 +70,11 @@ public class MockMailbox extends ImapMailbox {
     }
 
     @Override
-    public InputStream getMessage(long uid) {
+    public InputStream getMessage(long uid) throws IOException {
         InputStream body = getMessageBody(uid);
         InputStream headers = getMessageHeaders(uid);
         if (body == null || headers == null) {
-            return null;
+            throw new IOException("Message does not exist for uid " + uid);
         }
         return new SequenceInputStream(headers, body);
     }

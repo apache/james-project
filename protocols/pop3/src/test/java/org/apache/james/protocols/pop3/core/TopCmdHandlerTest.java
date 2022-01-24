@@ -23,11 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
@@ -39,7 +41,36 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.junit.jupiter.api.Test;
 
-class RetrCmdHandlerTest {
+public class TopCmdHandlerTest {
+
+    @Test
+    void onCommandShowsSpecificSyntaxError() {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn(null);
+
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
+        assertThat(response.getLines().get(0)).isEqualTo("-ERR Usage: TOP [mail number] [line count]");
+    }
+
+    @Test
+    void onCommandDetectsMissingLinesNumber() {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn("1");
+
+        MessageMetaData data = new MessageMetaData("1234", 567);
+        when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+        
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
+        assertThat(response.getLines().get(0)).contains("Usage:");
+    }
 
     @Test
     void onCommandHandlesMissingContent() throws IOException {
@@ -47,7 +78,7 @@ class RetrCmdHandlerTest {
         when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
 
         Request request = mock(Request.class);
-        when(request.getArgument()).thenReturn("1");
+        when(request.getArgument()).thenReturn("1 2");
 
         MessageMetaData data = new MessageMetaData("1234", 567);
         when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
@@ -56,28 +87,39 @@ class RetrCmdHandlerTest {
         when(session.getUserMailbox()).thenReturn(mailbox);
         when(mailbox.getMessage(data.getUid())).thenThrow(new IOException("cannot retrieve message content"));
 
-        Response response = new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
         assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
         assertThat(response.getLines().get(0)).contains("does not exist");
     }
-
+    
     @Test
-    void onCommandRetrievesMessage() throws IOException {
+    void onCommandRetrievesMessageLines() throws IOException {
         POP3Session session = mock(POP3Session.class);
         when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
 
         Request request = mock(Request.class);
-        when(request.getArgument()).thenReturn("1");
-
+        when(request.getArgument()).thenReturn("1 2");
+        
         MessageMetaData data = new MessageMetaData("1234", 567);
         when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
 
         Mailbox mailbox = mock(Mailbox.class);
         when(session.getUserMailbox()).thenReturn(mailbox);
-        when(mailbox.getMessage(data.getUid())).thenReturn(InputStream.nullInputStream());
+        String message = 
+            "Subject: test\r\n" +
+            "\r\n" +
+            "line1\r\n" +
+            "line2\r\n" +
+            "line3\r\n";
+        when(mailbox.getMessage(data.getUid())).thenReturn(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
 
-        Response response = new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
         assertThat(response.getRetCode()).isEqualTo(POP3Response.OK_RESPONSE);
         assertThat(response).isInstanceOf(POP3StreamResponse.class);
+        
+        String result = IOUtils.toString(((POP3StreamResponse) response).getStream(), StandardCharsets.UTF_8);
+        assertThat(result).contains("line1");
+        assertThat(result).contains("line2");
+        assertThat(result).doesNotContain("line3");
     }
 }

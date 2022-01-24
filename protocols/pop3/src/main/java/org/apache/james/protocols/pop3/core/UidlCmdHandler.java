@@ -50,10 +50,18 @@ public class UidlCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private static final Set<String> CAPS = ImmutableSet.of("UIDL");
 
     private final MetricFactory metricFactory;
+    private final POP3MessageCommandDelegate commandDelegate;
 
     @Inject
     public UidlCmdHandler(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
+        this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
+            @Override
+            protected Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) throws IOException {
+                String identifier = session.getUserMailbox().getIdentifier();
+                return new POP3Response(POP3Response.OK_RESPONSE, args.getMessageNumber() + " " + data.getUid(identifier));
+            }
+        };
     }
 
     /**
@@ -68,65 +76,37 @@ public class UidlCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
                     .addToContext(MDCBuilder.ACTION, "UIDL")
                     .addToContext(MDCConstants.withSession(session))
                     .addToContext(MDCConstants.forRequest(request)),
-                () -> uidl(session, request)));
+                () -> handleMessageRequest(session, request)));
     }
 
-    private Response uidl(POP3Session session, Request request) {
+    private Response handleMessageRequest(POP3Session session, Request request) {
         LOGGER.trace("UIDL command received");
-        POP3Response response = null;
-        String parameters = request.getArgument();
+        if (request.getArgument() != null) {
+            return commandDelegate.handleMessageRequest(session, request);
+        }
+        
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
             List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
             try {
                 String identifier = session.getUserMailbox().getIdentifier();
-                if (parameters == null) {
-                    response = new POP3Response(POP3Response.OK_RESPONSE, "unique-id listing follows");
+                POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, "unique-id listing follows");
 
-                    for (int i = 0; i < uidList.size(); i++) {
-                        MessageMetaData metadata = uidList.get(i);
-                        if (!deletedUidList.contains(metadata.getUid())) {
-                            StringBuilder responseBuffer = new StringBuilder().append(i + 1).append(" ").append(metadata.getUid(identifier));
-                            response.appendLine(responseBuffer.toString());
-                        }
-                    }
-
-                    response.appendLine(".");
-                } else {
-                    int num = 0;
-                    try {
-                        num = Integer.parseInt(parameters);
-
-                        MessageMetaData metadata = MessageMetaDataUtils.getMetaData(session, num);
-
-                        if (metadata == null) {
-                            StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                            return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                        }
-
-                        if (deletedUidList.contains(metadata.getUid()) == false) {
-                            StringBuilder responseBuffer = new StringBuilder(64).append(num).append(" ").append(metadata.getUid(identifier));
-                            response = new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
-                        } else {
-                            StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") already deleted.");
-                            response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                        }
-                    } catch (IndexOutOfBoundsException npe) {
-                        StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                        response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                    } catch (NumberFormatException nfe) {
-                        StringBuilder responseBuffer = new StringBuilder(64).append(parameters).append(" is not a valid number");
-                        response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
+                for (int i = 0; i < uidList.size(); i++) {
+                    MessageMetaData metadata = uidList.get(i);
+                    if (!deletedUidList.contains(metadata.getUid())) {
+                        response.appendLine((i + 1) + " " + metadata.getUid(identifier));
                     }
                 }
-            } catch (IOException e) {
+
+                response.appendLine(".");
+                return response;
+            } catch (IOException ioe) {
                 return POP3Response.ERR;
             }
-
         } else {
             return POP3Response.ERR;
         }
-        return response;
     }
 
     @Override

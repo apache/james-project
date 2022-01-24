@@ -27,9 +27,9 @@ import java.util.List;
  */
 public interface Mailbox {
     /**
-     * Return the full message (headers + body) as {@link InputStream} or
-     * <code>null</code> if no message can be found for the given
-     * <code>uid</code>
+     * Return the full message (headers + body) as {@link InputStream}
+     * for the given <code>uid</code>.
+     * @exception IOException If message can not be found or is inaccessible
      */
     InputStream getMessage(String uid) throws IOException;
 

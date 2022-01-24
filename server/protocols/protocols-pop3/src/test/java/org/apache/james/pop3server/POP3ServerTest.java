@@ -549,11 +549,6 @@ public class POP3ServerTest {
         mailboxManager.deleteMailbox(mailboxPath, session);
     }
 
-    @Disabled("JAMES-3709 Concurrent deletes causes NPE when retrieving messages" +
-        "POP3: UIDL" +
-        "Delete the messages" +
-        "POP3: RETR XXX" +
-        "   /!\\ NPE")
     @Test
     void pop3SessionShouldTolerateConcurrentDeletes() throws Exception {
         finishSetUp(pop3Configuration);
@@ -591,9 +586,9 @@ public class POP3ServerTest {
 
         Reader r = pop3Client.retrieveMessageTop(entries[0].number, 0);
 
-        assertThat(r).isNull();
+        assertThat(r).isNull(); // = message not found
 
-        // Fails: The NPE is not handled and causes the connection to abort...
+        // POP3 session must still be valid afterwards
         assertThatCode(() -> pop3Client.listMessages()).doesNotThrowAnyException();
     }
 

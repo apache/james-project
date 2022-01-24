@@ -62,7 +62,7 @@ public class MailboxAdapter implements Mailbox {
             if (results.hasNext()) {
                 return results.next().getFullContent().getInputStream();
             } else {
-                return null;
+                throw new IOException("Message does not exist for uid " + uid);
             }
         } catch (MailboxException e) {
             throw new IOException("Unable to retrieve message for uid " + uid, e);

@@ -107,7 +107,7 @@ public class DistributedMailboxAdapter implements Mailbox {
                 LOGGER.warn("Removing {} from {} POP3 projection for user {} at it is not backed by a MailboxMessage",
                     uid, mailbox.getId().serialize(), session.getUser().asString());
                 Mono.from(metadataStore.remove(mailbox.getId(), messageId)).block();
-                return null;
+                throw new IOException("Message does not exist for uid " + uid);
             }
         } catch (MailboxException e) {
             throw new IOException("Unable to retrieve message body for uid " + uid, e);
