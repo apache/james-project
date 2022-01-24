@@ -50,7 +50,25 @@ James PMC members and Apache Software Foundation Members.
 All of the Apache James products are maintained in shared information repositories using GIT on git-wip-us.apache.org.
 The Apache committers have write access to these repositories; everyone has read access via anonymous GIT.
 
-== Voting
+== Consensus
+
+As a community we are seeking link:https://community.apache.org/committers/decisionMaking.html[consensus] in our
+decision making.
+
+We actively rely on link:https://community.apache.org/committers/lazyConsensus.html[lazy consensus] for most of our
+decisions, be them validating xref:contributing.adoc#_how_to_contribute_some_code[code changes], enacting
+xref:contributing.adoc#_idea_or_design_proposals[design decisions].
+
+=== Voting
+
+Some decisions might require to vote:
+
+ - xref:release.adoc[releases]
+ - establishing a new sub-project
+ - retiring sub-projects
+ - taking a decision when lazy consensus failed.
+
+Note that we encourage discussing the issues prior to trigger a vote. That way bad surprises may be avoided ahead of time.
 
 Any of the Apache James Committers may vote on any issue or action item. However, the only binding votes are those cast
 by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary
