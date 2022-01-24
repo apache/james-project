@@ -31,7 +31,7 @@ To report a bug, please use the appropriate Bug Tracker JIRA link according to t
 * https://issues.apache.org/jira/browse/JDKIM[jDKIM]
 
 Once you are logged on the appropriate JIRA page, click on the red Create button, then complete the different fields
-as accurately as possible, so that any user can reproduce the reported bug. Also note that all your information must be
+as accurately as possible, so that any user can reproduce the reported bug. Also, note that all your information must be
 readable (use markdown).
 
 Then, you have to click on Create to submit your bug.
@@ -46,7 +46,7 @@ Specific details about security in James can be found here.
 == Documentation
 
 Documentation is an easy way to get on board! Check out the
-https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation]
+link:https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation]
 label on JIRA to get some ideas.
 Report on JIRA the typos you spot, the information you miss, and any improvement you can think of.
 The next step is to contribute the documentation changes via https://github.com/apache/james-project/tree/master/docs/modules[Git].
