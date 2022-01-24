@@ -94,23 +94,7 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 
 Additional ideas are more than welcome. Don't hesitate to discuss that with us!
 
-=== Code patches
 
-Patches should be attached to the corresponding JIRA issue.
-
-Always use diff -u to generate patches, so we can apply them using 'patch'.
-
-Make sure the patch only contains what is intended, your checkout could be outdated.
-
-Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a single patch covering
-several files, but please only one issue at a time.
-
-Briefly outline the reason for your patch, the solution your patch implements, why a patch is needed and why your code
-will solve the problem. Note any bug numbers your patch addresses.
-
-The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
-responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
-patch is more likely to be committed quickly.
 
 == Idea or design proposals
 
@@ -189,3 +173,25 @@ mvn validate -PsortPom
 ```
 The `sortPom` profile can be used on all maven phases. Make sure to review the changes made by the tool, it is known to
 sometimes remove whitespaces which may not be desirable.
+
+=== Code patches
+
+While we definitely prefer receiving contributions under the form of xref:#_how_to_contribute_some_code[Github pull requests],
+in order to still be vendor neutral on the contribution process, we do accept submission of patches, in a process described
+below.
+
+Patches should be attached to the corresponding JIRA issue.
+
+Always use diff -u to generate patches, so we can apply them using 'patch'.
+
+Make sure the patch only contains what is intended, your checkout could be outdated.
+
+Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a single patch covering
+several files, but please only one issue at a time.
+
+Briefly outline the reason for your patch, the solution your patch implements, why a patch is needed and why your code
+will solve the problem. Note any bug numbers your patch addresses.
+
+The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
+responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
+patch is more likely to be committed quickly.
