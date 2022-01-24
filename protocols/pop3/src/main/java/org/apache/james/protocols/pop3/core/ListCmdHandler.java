@@ -45,10 +45,17 @@ public class ListCmdHandler extends AbstractPOP3CommandHandler {
     private static final Collection<String> COMMANDS = ImmutableSet.of("LIST");
 
     private final MetricFactory metricFactory;
+    private final POP3MessageCommandDelegate commandDelegate;
 
     @Inject
     public ListCmdHandler(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
+        this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
+            @Override
+            protected POP3Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) {
+                return new POP3Response(POP3Response.OK_RESPONSE, args.getMessageNumber() + " " + data.getSize());
+            }
+        };
     }
 
     /**
@@ -70,66 +77,33 @@ public class ListCmdHandler extends AbstractPOP3CommandHandler {
                     .addToContext(MDCBuilder.ACTION, "LIST")
                     .addToContext(MDCConstants.withSession(session))
                     .addToContext(MDCConstants.forRequest(request)),
-                () -> list(session, request)));
+                () -> handleMessageRequest(session, request)));
     }
 
-    private Response list(POP3Session session, Request request) {
-        String parameters = request.getArgument();
-        List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
-        List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
+    private Response handleMessageRequest(POP3Session session, Request request) {
+        if (request.getArgument() != null) {
+            return commandDelegate.handleMessageRequest(session, request);
+        }
 
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
-            POP3Response response = null;
 
-            if (parameters == null) {
+            List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
+            List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
 
-                long size = 0;
-                int count = 0;
-                List<MessageMetaData> validResults = new ArrayList<>();
-                if (!uidList.isEmpty()) {
-
-                    for (MessageMetaData data : uidList) {
-                        if (!deletedUidList.contains(data.getUid())) {
-                            size += data.getSize();
-                            count++;
-                            validResults.add(data);
-                        }
-                    }
-                }
-                StringBuilder responseBuffer = new StringBuilder(32).append(count).append(" ").append(size);
-                response = new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
-                count = 0;
-                for (int i = 0; i < validResults.size(); i++) {
-                    responseBuffer = new StringBuilder(16).append(i + 1).append(" ").append(validResults.get(i).getSize());
-                    response.appendLine(responseBuffer.toString());
-                }
-                response.appendLine(".");
-            } else {
-                int num = 0;
-                try {
-                    num = Integer.parseInt(parameters);
-
-                    MessageMetaData data = MessageMetaDataUtils.getMetaData(session, num);
-                    if (data == null) {
-                        StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                        return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                    }
-
-                    if (!deletedUidList.contains(data.getUid())) {
-                        StringBuilder responseBuffer = new StringBuilder(64).append(num).append(" ").append(data.getSize());
-                        response = new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
-                    } else {
-                        StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") already deleted.");
-                        response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                    }
-                } catch (IndexOutOfBoundsException npe) {
-                    StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                    response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                } catch (NumberFormatException nfe) {
-                    StringBuilder responseBuffer = new StringBuilder(64).append(parameters).append(" is not a valid number");
-                    response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
+            long totalSize = 0;
+            List<String> validResults = new ArrayList<>();
+            for (int i = 0; i < uidList.size(); i++) {
+                MessageMetaData data = uidList.get(i);
+                if (!deletedUidList.contains(data.getUid())) {
+                    totalSize += data.getSize();
+                    validResults.add((i + 1) + " " + data.getSize());
                 }
             }
+
+            POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, validResults.size() + " " + totalSize);
+            validResults.forEach(response::appendLine);
+            response.appendLine(".");
+
             return response;
         } else {
             return POP3Response.ERR;

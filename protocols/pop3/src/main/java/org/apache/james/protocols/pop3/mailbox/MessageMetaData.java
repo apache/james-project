@@ -18,12 +18,14 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3.mailbox;
 
-import org.apache.james.protocols.pop3.core.MessageMetaDataUtils;
+import com.google.common.base.CharMatcher;
 
 /**
  * Hold meta data for a message
  */
 public class MessageMetaData {
+
+    private static final CharMatcher IS_RFC1939_COMPATIBLE = CharMatcher.inRange((char) 0x21, (char) 0x7E).precomputed();
 
     private final String uid;
     private final long size;
@@ -32,7 +34,7 @@ public class MessageMetaData {
         this.uid = uid;
         this.size = size;
 
-        if (!MessageMetaDataUtils.isRFC1939Compatible(uid)) {
+        if (uid == null || !IS_RFC1939_COMPATIBLE.matchesAllOf(uid)) {
             throw new IllegalArgumentException("UID is not RFC1939 compatible");
         }
     }

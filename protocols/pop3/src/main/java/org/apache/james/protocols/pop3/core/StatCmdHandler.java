@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -76,17 +75,14 @@ public class StatCmdHandler extends AbstractPOP3CommandHandler {
             long size = 0;
             int count = 0;
             if (!uidList.isEmpty()) {
-                List<MessageMetaData> validResults = new ArrayList<>();
                 for (MessageMetaData data : uidList) {
                     if (!deletedUidList.contains(data.getUid())) {
                         size += data.getSize();
                         count++;
-                        validResults.add(data);
                     }
                 }
             }
-            StringBuilder responseBuffer = new StringBuilder(32).append(count).append(" ").append(size);
-            return new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
+            return new POP3Response(POP3Response.OK_RESPONSE, count + " " + size);
 
         } else {
             return POP3Response.ERR;

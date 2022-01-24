@@ -20,11 +20,16 @@
 package org.apache.james.protocols.pop3.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,15 +39,14 @@ import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
-import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.junit.jupiter.api.Test;
 
-class RetrCmdHandlerTest {
+public class DeleCmdHandlerTest {
 
     @Test
-    void onCommandHandlesMissingContent() throws IOException {
+    void onCommandDeletesInitialMessage() throws IOException {
         POP3Session session = mock(POP3Session.class);
         when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
 
@@ -51,18 +55,23 @@ class RetrCmdHandlerTest {
 
         MessageMetaData data = new MessageMetaData("1234", 567);
         when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+        when(session.getAttachment(POP3Session.DELETED_UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.empty());
 
         Mailbox mailbox = mock(Mailbox.class);
         when(session.getUserMailbox()).thenReturn(mailbox);
         when(mailbox.getMessage(data.getUid())).thenThrow(new IOException("cannot retrieve message content"));
 
-        Response response = new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
-        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
-        assertThat(response.getLines().get(0)).contains("does not exist");
+        Response response = new DeleCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.OK_RESPONSE);
+        assertThat(response.getLines().get(0)).contains("Message deleted");
+
+        verify(session).setAttachment(eq(POP3Session.DELETED_UID_LIST), 
+            argThat(uidList -> uidList.size() == 1 && uidList.contains("1234")),
+            eq(ProtocolSession.State.Transaction));
     }
 
     @Test
-    void onCommandRetrievesMessage() throws IOException {
+    void onCommandDeletesAdditionalMessage() throws IOException {
         POP3Session session = mock(POP3Session.class);
         when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
 
@@ -71,13 +80,36 @@ class RetrCmdHandlerTest {
 
         MessageMetaData data = new MessageMetaData("1234", 567);
         when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+        List<String> uidList = new ArrayList<>();
+        when(session.getAttachment(POP3Session.DELETED_UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(uidList));
 
         Mailbox mailbox = mock(Mailbox.class);
         when(session.getUserMailbox()).thenReturn(mailbox);
-        when(mailbox.getMessage(data.getUid())).thenReturn(InputStream.nullInputStream());
+        when(mailbox.getMessage(data.getUid())).thenThrow(new IOException("cannot retrieve message content"));
 
-        Response response = new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        Response response = new DeleCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
         assertThat(response.getRetCode()).isEqualTo(POP3Response.OK_RESPONSE);
-        assertThat(response).isInstanceOf(POP3StreamResponse.class);
+        assertThat(response.getLines().get(0)).contains("Message deleted");
+
+        assertThat(uidList).containsOnly("1234");
+        verify(session, never()).setAttachment(eq(POP3Session.DELETED_UID_LIST), anyList(), eq(ProtocolSession.State.Transaction));
     }
+
+    @Test
+    void onCommandHandlesDeletedMessage() {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn("1");
+
+        MessageMetaData data = new MessageMetaData("1234", 567);
+        when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+        when(session.getAttachment(POP3Session.DELETED_UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data.getUid())));
+
+        Response response = new DeleCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
+        assertThat(response.getLines().get(0)).contains("already deleted");
+    }
+
 }

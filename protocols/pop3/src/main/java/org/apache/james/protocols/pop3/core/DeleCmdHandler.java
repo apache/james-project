@@ -42,14 +42,28 @@ import com.google.common.collect.ImmutableSet;
 public class DeleCmdHandler extends AbstractPOP3CommandHandler {
     private static final Collection<String> COMMANDS = ImmutableSet.of("DELE");
 
-    private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: DELE [mail number]").immutable();
     private static final Response DELETED = new POP3Response(POP3Response.OK_RESPONSE, "Message deleted").immutable();
 
     private final MetricFactory metricFactory;
-
+    private final POP3MessageCommandDelegate commandDelegate;
+    
     @Inject
     public DeleCmdHandler(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
+        this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
+            @Override
+            protected Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) {
+                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction)
+                    .orElseGet(() -> {
+                        ArrayList<String> uidList = new ArrayList<>();
+                        session.setAttachment(POP3Session.DELETED_UID_LIST, uidList, State.Transaction);
+                        return uidList;
+                    });
+
+                deletedUidList.add(data.getUid());
+                return DELETED;
+            }
+        };
     }
 
     /**
@@ -64,48 +78,7 @@ public class DeleCmdHandler extends AbstractPOP3CommandHandler {
                     .addToContext(MDCBuilder.ACTION, "DELE")
                     .addToContext(MDCConstants.withSession(session))
                     .addToContext(MDCConstants.forRequest(request)),
-                () -> delete(session, request)));
-    }
-
-    private Response delete(POP3Session session, Request request) {
-        if (session.getHandlerState() == POP3Session.TRANSACTION) {
-            int num = 0;
-            try {
-                num = Integer.parseInt(request.getArgument());
-            } catch (Exception e) {
-                return SYNTAX_ERROR;
-            }
-            try {
-                MessageMetaData meta = MessageMetaDataUtils.getMetaData(session, num);
-                if (meta == null) {
-                    StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                    return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                }
-                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction)
-                    .orElseGet(() -> {
-                        ArrayList<String> uidList = new ArrayList<>();
-                        session.setAttachment(POP3Session.DELETED_UID_LIST, uidList, State.Transaction);
-                        return uidList;
-                    });
-
-                String uid = meta.getUid();
-
-                if (deletedUidList.contains(uid)) {
-                    StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") already deleted.");
-                    return new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                } else {
-                    deletedUidList.add(uid);
-                    // we are replacing our reference with "DELETED", so we have
-                    // to dispose the no-more-referenced mail object.
-                    return DELETED;
-                }
-            } catch (IndexOutOfBoundsException iob) {
-                StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-            }
-        } else {
-            return POP3Response.ERR;
-        }
+                () -> commandDelegate.handleMessageRequest(session, request)));
     }
 
     @Override

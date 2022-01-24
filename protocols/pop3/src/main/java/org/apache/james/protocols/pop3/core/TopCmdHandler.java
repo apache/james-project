@@ -23,14 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
@@ -38,8 +35,6 @@ import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.apache.james.util.MDCBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,20 +42,34 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles TOP command
  */
-public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TopCmdHandler.class);
+public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCapability {
     private static final Collection<String> COMMANDS = ImmutableList.of("TOP");
     private static final Set<String> CAPS = ImmutableSet.of("TOP");
     
-    private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: TOP [mail number] [Line number]").immutable();
-    private static final Response ERROR_MESSAGE_RETR = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();
+    private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: TOP [mail number] [line count]").immutable();
 
     private final MetricFactory metricFactory;
+    private final POP3MessageCommandDelegate commandDelegate;
 
     @Inject
     public TopCmdHandler(MetricFactory metricFactory) {
-        super(metricFactory);
         this.metricFactory = metricFactory;
+        this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
+            @Override
+            protected Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) throws IOException {
+                if (args.getLineCount().isEmpty()) {
+                    return handleSyntaxError();
+                }
+                InputStream content = getMessageContent(session, data);
+                InputStream in = new CountingBodyInputStream(new CRLFTerminatedInputStream(new ExtraDotInputStream(content)), args.getLineCount().get());
+                return new POP3StreamResponse(POP3Response.OK_RESPONSE, "Message follows", in);
+            }
+
+            @Override
+            protected Response handleSyntaxError() {
+                return SYNTAX_ERROR;
+            }
+        };
     }
 
     /**
@@ -79,62 +88,11 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
                     .addToContext(MDCBuilder.ACTION, "TOP")
                     .addToContext(MDCConstants.withSession(session))
                     .addToContext(MDCConstants.forRequest(request)),
-                () -> top(session, request)));
+                () -> commandDelegate.handleMessageRequest(session, request)));
     }
 
-    private Response top(POP3Session session, Request request) {
-        LOGGER.trace("TOP command received");
-        String parameters = request.getArgument();
-        if (parameters == null) {
-            return SYNTAX_ERROR;
-        }
-
-        String argument = "";
-        String argument1 = "";
-        int pos = parameters.indexOf(" ");
-        if (pos > 0) {
-            argument = parameters.substring(0, pos);
-            argument1 = parameters.substring(pos + 1);
-        }
-
-        if (session.getHandlerState() == POP3Session.TRANSACTION) {
-            int num = 0;
-            int lines = -1;
-            try {
-                num = Integer.parseInt(argument);
-                lines = Integer.parseInt(argument1);
-            } catch (NumberFormatException nfe) {
-                return SYNTAX_ERROR;
-            }
-            try {
-
-                MessageMetaData data = MessageMetaDataUtils.getMetaData(session, num);
-                if (data == null) {
-                    StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                    return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                }
-
-                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
-
-                String uid = data.getUid();
-                if (!deletedUidList.contains(uid)) {
-
-                    InputStream message = new CountingBodyInputStream(new ExtraDotInputStream(new CRLFTerminatedInputStream(getMessageContent(session, data))), lines);
-                    return new POP3StreamResponse(POP3Response.OK_RESPONSE, "Message follows", message);
-
-                } else {
-                    StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") already deleted.");
-                    return new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
-                }
-            } catch (IOException ioe) {
-                return ERROR_MESSAGE_RETR;
-            } catch (IndexOutOfBoundsException | NoSuchElementException iob) {
-                StringBuilder exceptionBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                return new POP3Response(POP3Response.ERR_RESPONSE, exceptionBuffer.toString());
-            }
-        } else {
-            return POP3Response.ERR;
-        }
+    protected InputStream getMessageContent(POP3Session session, MessageMetaData data) throws IOException {
+        return session.getUserMailbox().getMessage(data.getUid());
     }
 
     @Override
