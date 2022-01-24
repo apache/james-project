@@ -69,6 +69,8 @@ We actively rely on link:https://community.apache.org/committers/lazyConsensus.h
 decisions, be them validating xref:contributing.adoc#_how_to_contribute_some_code[code changes], enacting
 xref:contributing.adoc#_idea_or_design_proposals[design decisions].
 
+All code modifications should achieve lazy consensus under the form of github pull requests.
+
 === Voting
 
 Some decisions might require to vote:
