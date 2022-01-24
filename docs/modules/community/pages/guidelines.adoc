@@ -55,7 +55,7 @@ The Apache committers have write access to these repositories; everyone has read
 Any of the Apache James Committers may vote on any issue or action item. However, the only binding votes are those cast
 by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary
 author of what is being changed may also cast a binding vote on that issue. All other votes are non-binding. All
-committers are encouraged to participate in decisions, but the decision itself is made by those who have been long-time
+contributors are encouraged to participate in decisions, but the decision itself is made by those who have been long-time
 contributors to the project. In other words, the Apache Project is a minimum-threshold meritocracy.
 
 The act of voting carries certain obligations -- voting members are not only stating their opinion, they are agreeing
