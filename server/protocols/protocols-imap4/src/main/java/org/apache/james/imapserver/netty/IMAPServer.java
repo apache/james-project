@@ -67,13 +67,13 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
         private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
-        private static final String OAUTH_PATH = "auth.oauth";
+        private static final String OIDC_PATH = "auth.oidc";
 
         public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
             boolean isRequireSSL = configuration.getBoolean("auth.requireSSL", fallback(configuration));
             boolean isPlainAuthEnabled = configuration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT);
 
-            if (configuration.immutableConfigurationsAt(OAUTH_PATH).isEmpty()) {
+            if (configuration.immutableConfigurationsAt(OIDC_PATH).isEmpty()) {
                 return new AuthenticationConfiguration(
                     isRequireSSL,
                     isPlainAuthEnabled);
@@ -82,7 +82,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     return new AuthenticationConfiguration(
                         isRequireSSL,
                         isPlainAuthEnabled,
-                        OidcSASLConfiguration.parse(configuration.configurationAt(OAUTH_PATH)));
+                        OidcSASLConfiguration.parse(configuration.configurationAt(OIDC_PATH)));
                 } catch (MalformedURLException | NullPointerException exception) {
                     throw new ConfigurationException("Failed to retrieve oauth component", exception);
                 }

@@ -629,7 +629,7 @@ class IMAPServerTest {
     }
 
     @Nested
-    class Oauth {
+    class Oidc {
         String JWKS_URI_PATH = "/jwks";
         ClientAndServer authServer;
         IMAPServer imapServer;
@@ -645,10 +645,10 @@ class IMAPServerTest {
                     .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
-            config.addProperty("auth.oauth.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
-            config.addProperty("auth.oauth.claim", OidcTokenFixture.CLAIM);
-            config.addProperty("auth.oauth.oidcConfigurationURL", "https://example.com/jwks");
-            config.addProperty("auth.oauth.scope", "email");
+            config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+            config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+            config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
+            config.addProperty("auth.oidc.scope", "email");
             imapServer = createImapServer(config);
             port = imapServer.getListenAddresses().get(0).getPort();
         }
