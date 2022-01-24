@@ -82,14 +82,12 @@
         <br />
         <a href="https://issues.apache.org/jira/browse/JDKIM">jDKIM</a>
         <br />
-        <a href="https://issues.apache.org/jira/browse/HUPA">Hupa</a>
-        <br />
         Once you are logged on the appropriate JIRA page, 
         click on the red Create button, then complete the 
         different fields as accurately as possible, so that 
         any user can reproduce the reported bug. 
         Also note that all your information must be readable 
-        (use markedown).
+        (use markdown).
         <br />
         Then, you have to click on Create to submit your bug.
       </p>
@@ -140,7 +138,33 @@
       </p>
     </section>
 
-    <section name="How to contribute to the code?">
+    <section name="Idea or design proposals">
+      <p>People can submit ideas, features or design changes proposals by discussing it through the
+        <a href="https://james.apache.org/mail.html">mailing lists</a>.</p>
+
+      <p>Structuring design changes are tracked by <a href="https://github.com/joelparkerhenderson/architecture-decision-record">ADRs</a>
+        (Architecture Decision Records). A discussion on the mailing list getting a consensus of the community can be the object
+        of the writing of an ADR to confirm the change agreed upon. The Project Member Committee will take care of maintaining such
+        records but anyone should feel free to help on such a task by proposing ADRs related to his work.</p>
+
+      <p>ADRs <b>MUST</b> be submitted under the folder `src/adr` via a pull request. The standards used for writing an ADR are
+        described in the <a href="https://github.com/apache/james-project/blob/master/src/adr/0001-record-architecture-decisions.md">first ADR</a>
+        written for the Apache James project.</p>
+
+      <p>The number of the ADR should be incremental. If another ADR gets merged concurrently, the committer is responsible for
+        updating its number accordingly.</p>
+
+      <p>When the ADR reaches a consensus within the community and is accepted, it can be merged and goes into effect.</p>
+
+      <p>An ADR can't be removed after being accepted and merged. However, a new ADR can supersede a previous one. This is so
+        we are able to keep track on all the decisions being made regarding the project.</p>
+    </section>
+
+    <section name="How to contribute to some code?">
+      <p>We encourage discussions prior code contributions on the <a href="https://james.apache.org/mail.html">mailing lists</a>. For significant design
+        changes the writing of <b>ADRs</b> is encouraged.</p>
+
+      Your code contribution <b>MUST</b> be backed by a <a href="_reporting_bugs">JIRA ticket</a>.
       <p>
         Clone the source code of the project from its
         <a href="git://git.apache.org/james-project.git">apache git repository</a>
@@ -178,18 +202,10 @@ Here is some more details about what my commit does, and the rationals of the ch
         please consider these guidelines to help us to assimilate your contribution.
       </p>
       <p>
-        Submissions to the James project must follow the coding
-        conventions outlined in this document. James developers
-        are asked to follow coding conventions already present in the code.
-        (For example, if the existing code has the bracket on
-        the same line as the if statement, then all subsequent code
-        should also follow that convention.) Anything not
-        explicitly mentioned in this document should adhere to the
-        official
-        <a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Sun
-          Java Coding Conventions
-        </a>
-        .
+        Submissions to the James project must follow the coding conventions outlined in the
+        <a href="https://github.com/apache/james-project/blob/master/checkstyle.xml">checkstyle document</a>, which runs
+        upon <code>mvn compile</code> and all phases which depend on <code>compile</code>. Not respecting it will halt the build, and means
+        your contribution would not be acceptable.
       </p>
       <p>
         <strong>Developers who commit code that does not follow
@@ -198,24 +214,7 @@ Here is some more details about what my commit does, and the rationals of the ch
         </strong>
       </p>
       <p>
-        1. Your code should pass our <a href="https://github.com/apache/james-project/blob/master/checkstyle.xml">checkstyle</a>
-        which runs upon <code>mvn clean install</code>.
-      </p>
-      <p>
-        2. Extra spaces between parentheses are not allowed:
-      </p>
-      <p>
-        <source><![CDATA[
-  
-  if (foo) > Good
-  
-  or
-  
-  if ( foo ) > Bad
-        ]]></source>
-      </p>
-      <p>
-        3. Four spaces.<strong>NO tabs</strong>. Period. <br/>
+        1. Four spaces.<strong>NO tabs</strong>. Period. <br/>
         The James mailing list receives commit messages that
         are almost impossible to read if tabs are used.
       </p>
@@ -225,19 +224,19 @@ Here is some more details about what my commit does, and the rationals of the ch
         (setq-default tab-width 4 indent-tabs-mode nil)
       </p>
       <p>
-        4. Use Unix linefeeds for all .java source code files. Only
+        2. Use Unix linefeeds for all .java source code files. Only
         platform-specific files (e.g. .bat files for Windows) should
         contain non-Unix linefeeds.
       </p>
-      <p>5. Javadoc <strong>MUST</strong>
+      <p>3. Javadoc <strong>MUST</strong>
         exist on all API methods. Contributing
         a missing javadoc for any method, class, variable, etc., will
         be GREATLY appreciated as this will help to improve the James project.
       </p>
-      <p>6. The standard Apache license header <strong>MUST</strong> be placed at the top of every file.</p>
-      <p>7. Your change set <strong>MUST</strong> be covered by tests. We also strongly appreciate integration tests.</p>
+      <p>4. The standard Apache license header <strong>MUST</strong> be placed at the top of every file.</p>
+      <p>5. Your change set <strong>MUST</strong> be covered by tests. We also strongly appreciate integration tests.</p>
       <p>
-        8. <strong>pom.xml</strong>
+        6. <strong>pom.xml</strong>
 
         <br/>
         We also require the following best practice regarding maven:
@@ -282,6 +281,10 @@ Here is some more details about what my commit does, and the rationals of the ch
     </section>
 
     <section name="Code Patches">
+      <p>While we definitely prefer receiving contributions under the form of Github pull requests,
+        in order to still be vendor neutral on the contribution process, we do accept submission of patches, in a process described
+        below.
+      </p>
       <p>
         Patches should be attached to the corresponding JIRA issue.
         <br />

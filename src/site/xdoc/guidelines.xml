@@ -104,6 +104,18 @@
           Subscription to the list is only open to Apache James PMC
           members and Apache Software Foundation Members.
         </p>
+
+        <ul>Topics to be discussed on the private mailing list:
+
+          <li>Discussion of board reports. PMC members need to report quaterly project activity to the Apache board of directors,
+            which is done through <a href="https://reporter.apache.org">reporter.apache.org</a>. Prior report submission, the draft should
+          be discussed on the private mailing list</li>
+          <li>Discussions of <a href="https://community.apache.org/newcommitter.html">new committers, new PMCs</a>, including proposition
+            discussions, votes and process follow up.</li>
+          <li>Handling of <a href="contribute.html#reporting_security_vulnerabilities">security vulnerability reports</a>, and CVE publication.</li>
+        </ul>
+
+        <p>Other topics should be discussed/voted on server-dev instead.</p>
       </subsection>
       <subsection name="GIT">
         <p>
@@ -115,30 +127,28 @@
       </subsection>
     </section>
 
-    <section name="Status">
+    <section name="Consensus">
       <p>
-        Each of the Apache Project's active source code repositories contain a
-        file called "STATUS" which is used to keep track of the agenda
-        and plans for work within that repository. The STATUS file
-        includes information about release plans, a summary of code
-        changes committed since the last release, a list of proposed
-        changes that are under discussion, brief notes about items that
-        individual committers are working on or want discussion about,
-        and anything else that might be useful to help the group track
-        progress. The active STATUS files are automatically posted to
-        the mailing list each week.
+        As a community we are seeking <a href="https://community.apache.org/committers/decisionMaking.html">consensus</a> in our
+        decision making.
       </p>
       <p>
-        Many issues will be encountered by the project, each resulting in zero
-        or more proposed action items. Issues should be raised on the
-        mailing list as soon as they are identified. Action items must
-        be raised on the mailing list and added to the relevant STATUS
-        file. All action items may be voted on, but not all of them will
-        require a formal vote.
+        We actively rely on <a href="https://community.apache.org/committers/lazyConsensus.html">lazy consensus</a> for most of our
+        decisions, be them validating xref:contributing.adoc#_how_to_contribute_some_code[code changes], enacting
+        <a href="contributing.html#_idea_or_design_proposals">design decisions</a>.
       </p>
     </section>
 
     <section name="Voting">
+      <ul>Some decisions might require to vote:
+        <li>releases</li>
+        <li>establishing a new sub-project</li>
+        <li>retiring sub-projects</li>
+        <li>taking a decision when lazy consensus failed.</li>
+      </ul>
+
+      <p>Note that we encourage discussing the issues prior to trigger a vote. That way bad surprises may be avoided ahead of time.</p>
+
       <p>
         Any of the Apache James Committers may vote on any issue or action
         item. However, the only binding votes are those cast by active
@@ -200,11 +210,6 @@
         depending upon the type of action item.
       </p>
       <p>
-        Votes are tallied within the STATUS file, adjacent to the action item
-        under vote. All votes must be either sent to the mailing list or
-        added directly to the STATUS file entry for that action item.
-      </p>
-      <p>
         Votes are to remain open for 72 hours after which the developer who put
         forth the vote should tabulate the result and send this to the
         mailing list. A developer should be sensitive to holidays that
@@ -212,184 +217,33 @@
       </p>
     </section>
 
-    <section name="Types of Action Items">
-      <subsection name="Long Term Plans">
-        <p>
-          Long term plans are simply announcements that group members are working
-          on particular issues related to the Apache software. These are
-          not voted on, but group members who do not agree with a
-          particular plan, or think an alternate plan would be better,
-          are obligated to inform the group of their feelings. In
-          general, it is always better to hear about alternate plans
-          prior to spending time on less adequate solutions.
-        </p>
-      </subsection>
-      <subsection name="Short Term Plans">
-        <p>
-          Short term plans are announcements that a developer is working on a
-          particular set of documentation or code files, with the
-          implication that other committers should avoid them or try to
-          coordinate their changes. This is a good way to proactively
-          avoid conflict and possible duplication of work.
-        </p>
-      </subsection>
-      <subsection name="Release Plan">
-        <p>
-          A release plan is used to keep all the committers aware of when a
-          release is desired, who will be the release manager, when the
-          repository will be frozen in order to create the release, and
-          assorted other trivia to keep us from tripping over ourselves
-          during the final moments. Lazy majority decides each issue in
-          the release plan.
-        </p>
-      </subsection>
-      <subsection name="Release Testing">
-        <p>
-          After a new release is built, colloquially termed a tarball, it must be
-          tested before being released to the public. Majority approval
-          is required before the tarball can be publically released.
-        </p>
-      </subsection>
-      <subsection name="Showstoppers">
-        <p>
-          Showstoppers are issues that require a fix be in place before the next public
-          release. They are listed in the STATUS file in order to focus
-          special attention on the problem. An issue becomes a
-          showstopper when it is listed as such in STATUS and remains so
-          by lazy consensus.
-        </p>
-      </subsection>
-      <subsection name="Product Changes">
-        <p>
-          Changes to the Apache James products, including code and documentation,
-          will appear as action items under several categories
-          corresponding to the change status:
-        </p>
-      </subsection>
-      <subsection name="Concept/Plan">
-        <p>
-          An idea or plan for a change. These are usually only listed in STATUS
-          when the change is substantial, significantly impacts the API,
-          or is likely to be controversial. Votes are being requested
-          early so as to uncover conflicts before too much work is done.
-        </p>
-      </subsection>
-      <subsection name="Proposed Patch">
-        <p>
-          A specific set of changes to the current product in the form of
-          input to the patch command (a diff output).
-        </p>
-      </subsection>
-      <subsection name="Committed Change">
-        <p>
-          A one-line summary of a change that has been committed to the
-          repository since the last public release.
-        </p>
-        <p>
-          All product changes to the currently active repository are subject to
-          lazy consensus. All product changes to a prior-branch (old
-          version) repository require consensus before the change is
-          committed.
-        </p>
-      </subsection>
-    </section>
+    <section name="Section for new committers">
+      <p>First congratulation for your involvement!</p>
 
-    <section name="When to Commit a Change">
-      <p>
-        Ideas must be review-then-commit; patches can be commit-then-review. With
-        a commit-then-review process, we trust that the developer doing
-        the commit has a high degree of confidence in the change.
-        Doubtful changes, new features, and large-scale overhauls need
-        to be discussed before being committed to a repository. Any
-        change that affects the semantics of arguments to configurable
-        directives, significantly adds to the runtime size of the
-        program, or changes the semantics of an existing API function
-        must receive consensus approval on the mailing list before being
-        committed.
-      </p>
-      <p>
-        Each developer is responsible for notifying the mailing list and adding
-        an action item to STATUS when they have an idea for a new
-        feature or major change to propose for the product. The
-        distributed nature of the Apache project requires an advance
-        notice of 48 hours in order to properly review a major change --
-        consensus approval of either the concept or a specific patch is
-        required before the change can be committed. Note that a member
-        might veto the concept (with an adequate explanation), but later
-        rescind that veto if a specific patch satisfies their
-        objections. No advance notice is required to commit singular bug
-        fixes.
-      </p>
-      <p>
-        Related changes should be committed as a group, or very closely together.
-        Half-completed projects should not be committed unless doing so
-        is necessary to pass the baton to another developer who has
-        agreed to complete the project in short order. All code changes
-        must be successfully compiled on the developer's platform before
-        being committed.
-      </p>
-      <p>
-        The current source code tree should be capable of complete compilation
-        at all times. However, it is sometimes impossible for a
-        developer on one platform to avoid breaking some other platform
-        when a change is committed, particularly when completing the
-        change requires access to a special development tool on that
-        other platform. If it is anticipated that a given change will
-        break some other platform, the committer must indicate that in
-        the commit log.
-      </p>
-      <p>
-        The committer is responsible for the quality of any third-party code or
-        documentation they commit to the repository. All software
-        committed to the repository must be covered by the Apache
-        LICENSE or contain a copyright and license that allows
-        redistribution under the same conditions as the Apache LICENSE.
-      </p>
-      <p>
-        A committed change must be reversed if it is vetoed by one of the
-        voting members and the veto conditions cannot be immediately
-        satisfied by the equivalent of a "bug fix" commit. The veto must
-        be rescinded before the change can be included in any public
-        release.
-      </p>
-    </section>
+      As part of the <a href="https://community.apache.org/newcommitter.html">process to become a committer</a>, the following steps should have had been emailed to you:
 
-    <section name="Patch Format">
-      <p>
-        When a specific change to the software is proposed for discussion or
-        voting on the mailing list, it should be presented in the form
-        of input to the patch command. When sent to the mailing list,
-        the message should contain a Subject beginning with [PATCH] and
-        a distinctive one-line summary corresponding to the action item
-        for that patch. Afterwords, the patch summary in the STATUS file
-        should be updated to point to the Message-ID of that message.
-      </p>
-      <p>
-        The patch should be created by using the diff -u command from the
-        original software file(s) to the modified software file(s).
-        E.g.,
-      </p>
-      <source>
-        diff -u James.java.orig James.java >> patchfile.txt
-      </source>
-      <p>
-        All patches necessary to address an action item should be concatenated
-        within a single patch message. If later modification of the
-        patch proves necessary, the entire new patch should be posted
-        and not just the difference between two patches. The STATUS file
-        entry should then be updated to point to the new patch message.
+      <ul>
+        <li>Signing of <a href="https://www.apache.org/licenses/#clas">Contributor License Agreement</a></li>
+        <li>Establishing an Apache profile with the Apache secretary.</li>
+        <li>Access will directly be granted on the<a href="https://issues.apache.org/jira/projects/JAMES">JIRA</a>,
+          the ASF Git repository and the <a href="https://ci-builds.apache.org/job/james/job/ApacheJames/">ci</a>.</li>
+        <li>Extra steps should be taken for Github access (see below).</li>
+        <li>A PMC should have had announced your nomination. If you have not already been doing it, we strongly
+        encourage you to write an email on public mailing list, presenting you, and your motivations toward
+          contributing on Apache James. A reply to the announce would do the trick!</li>
+      </ul>
 
-      </p>
-      <p>
-        The completed patchfile should produce no errors or prompts when the
-        command,
-      </p>
-      <source>
-        patch -s &lt; patchfile
-      </source>
-      <p>
-        is issued in the target repository.
-      </p>
+      <h3>Accessing Apache GitHub as a Committer</h3>
+      <ul>
+        <li>Verify you have a Github ID enabled with <a href="https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/">2FA</a></li>
+        <li>Enter your Github ID into your <a href="https://id.apache.org/">Apache ID profile</a></li>
+        <li>Merge your Apache and GitHub accounts using <a href="https://gitbox.apache.org/setup/">GitBox</a> (Apache Account Linking utility). You should see 3 green checks in GitBox.</li>
+      </ul>
+
+      <p>Wait at least 30  minutes for an email inviting you to Apache GitHub Organization and accept invitation.</p>
+
+      <p>After accepting the Github Invitation verify that you are a member of the <a href="https://github.com/orgs/apache/teams/james-committers">GitHub Apache James team</a>.</p>
+
     </section>
     
   </body>
