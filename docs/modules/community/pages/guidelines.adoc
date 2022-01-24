@@ -118,3 +118,27 @@ All votes must be either sent to the mailing list for that action item.
 Votes are to remain open for 72 hours after which the developer who put forth the vote should tabulate the result and
 send this to the mailing list. A developer should be sensitive to holidays that could dampen participation in the vote.
 
+== Section for new committers
+
+First congratulation for your involvement!
+
+As part of the link:https://community.apache.org/newcommitter.html[process to become a committer], the following steps should have had been emailed to you:
+
+ - Signing of link:https://www.apache.org/licenses/#clas[Contributor License Agreement]
+ - Establishing an Apache profile with the Apache secretary.
+ - Access will directly be granted on the link:https://issues.apache.org/jira/projects/JAMES[JIRA],
+the ASF Git repository and the link:https://ci-builds.apache.org/job/james/job/ApacheJames/[ci].
+ - Extra steps should be taken for xref:#_accessing_apache_github_as_a_committer[Github access].
+ - A PMC should have had announced your nomination. If you have not already been doing it, we strongly
+encourage you to write an email on public mailing list, presenting you, and your motivations toward
+contributing on Apache James. A reply to the announce would do the trick!
+
+=== Accessing Apache GitHub as a Committer
+
+- Verify you have a Github ID enabled with link:https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/[2FA]
+- Enter your Github ID into your link:https://id.apache.org/[Apache ID profile]
+- Merge your Apache and GitHub accounts using link:https://gitbox.apache.org/setup/[GitBox] (Apache Account Linking utility). You should see 3 green checks in GitBox.
+
+Wait at least 30  minutes for an email inviting you to Apache GitHub Organization and accept invitation.
+
+- After accepting the Github Invitation verify that you are a member of the link:https://github.com/orgs/apache/teams/james-committers[GitHub Apache James team].
