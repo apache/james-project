@@ -34,7 +34,46 @@
                     documentation, bug reports, and feedback!</p>
             </div>
         </div>
-
+        <section name="Version 3.x">
+            <p>Since Apache James version 3.1 we maintain a changelog as part of the code base under the form
+                of a <a href="https://github.com/apache/james-project/blob/master/CHANGELOG.md">changelog file</a>
+                as well as details <a href="https://github.com/apache/james-project/blob/master/upgrade-instructions.md">upgrade instructions</a>.</p>
+        </section>
+        <section name="Version 3.6.1">
+            <p>Released December 2021</p>
+            <p><a href="https://james.apache.org/james/update/2021/12/02/james-3.6.1.html">Read the release announce</a>. </p>
+            <ul>
+                This release fixes the following vulnerability issues, that are present prior to 3.6.1:
+                <li><b>CVE-2021-38542</b>: Apache James vulnerable to STARTTLS command injection (IMAP and POP3)</li>
+                <li><b>CVE-2021-40110</b>: Apache James IMAP vulnerable to a ReDoS</li>
+                <li><b>CVE-2021-40111</b>: Apache James IMAP parsing Denial Of Service</li>
+                <li><b>CVE-2021-40525</b>: Apache James: Sieve file storage vulnerable to path traversal attacks</li>
+            </ul>
+        </section>
+        <section name="Version 3.6.0">
+            <p>Released March 2021</p>
+            <p><a href="https://james.apache.org/james/update/2021/03/16/james-3.6.0.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.5.0">
+            <p>Released July 2020</p>
+            <p><a href="https://james.apache.org/james/update/2020/07/16/james-3.5.0.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.4.0">
+            <p>Released September 2019</p>
+            <p><a href="https://james.apache.org/james/update/2019/09/05/james-3.4.0.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.3.0">
+            <p>Released March 2019</p>
+            <p><a href="https://james.apache.org/james/update/2019/03/26/james-3.3.0.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.2.0">
+            <p>Released November 2018</p>
+            <p><a href="https://james.apache.org/james/update/2018/11/14/james-3.2.0.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.1.0">
+            <p>Released July 2018</p>
+            <p><a href="https://james.apache.org/james/update/2018/07/31/james-3.1.0.html">Read the release announce</a>. </p>
+        </section>
         <section name="Version 3.0.1">
 
             <p>Released October 2017</p>
