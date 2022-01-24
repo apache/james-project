@@ -19,6 +19,8 @@
 
 package org.apache.james.rate.limiter.memory
 
+import java.time.Duration
+
 import es.moki.ratelimitj.core.limiter.request.{RequestLimitRule, RequestRateLimiter}
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter
 import org.apache.james.rate.limiter.api.Quantity.Quantity
@@ -28,10 +30,17 @@ import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 
-class MemoryRateLimiterFactory() extends RateLimiterFactory {
+class MemoryRateLimiterFactory(precision: Option[Duration] = None) extends RateLimiterFactory {
   override def withSpecification(rules: Rules): RateLimiter = {
-    MemoryRateLimiter(new InMemorySlidingWindowRequestRateLimiter(rules.rules.map(convert).toSet.asJava))
+    MemoryRateLimiter(new InMemorySlidingWindowRequestRateLimiter(rules.rules
+      .map(convert)
+      .map(withPrecision)
+      .toSet.asJava))
   }
+
+  private def withPrecision(rule: RequestLimitRule): RequestLimitRule =
+    precision.map(rule.withPrecision)
+      .getOrElse(rule)
 
   private def convert(rule: Rule): RequestLimitRule = RequestLimitRule.of(rule.duration, rule.quantity.value)
 }

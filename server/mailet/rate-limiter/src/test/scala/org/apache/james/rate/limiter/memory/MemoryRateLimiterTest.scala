@@ -24,7 +24,7 @@ import java.time.Duration
 import org.apache.james.rate.limiter.api.{RateLimiterContract, RateLimiterFactory}
 
 class MemoryRateLimiterTest extends RateLimiterContract {
-  override def testee(): RateLimiterFactory = new MemoryRateLimiterFactory()
+  override def testee(): RateLimiterFactory = new MemoryRateLimiterFactory(precision = Some(Duration.ofSeconds(1)))
 
   override def sleep(duration: Duration): Unit = Thread.sleep(duration.toMillis)
 }
