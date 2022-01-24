@@ -123,26 +123,15 @@ we are able to keep track on all the decisions being made regarding the project.
 While we are glad to accept contributions to documentation from anyone, in almost any format, because its much better
 than none, please consider these guidelines to help us to assimilate your contribution.
 
-Submissions to the James project must follow the coding conventions outlined in this document. James developers are
-asked to follow coding conventions already present in the code. (For example, if the existing code has the bracket on
-the same line as the if statement, then all subsequent code should also follow that convention.) Anything not explicitly
-mentioned in this document should adhere to the official
-https://www.oracle.com/java/technologies/javase/codeconventions-contents.html[Java Coding Conventions].
+Submissions to the James project must follow the coding conventions outlined in the
+link:https://github.com/apache/james-project/blob/master/checkstyle.xml[checkstyle document], which runs
+upon `mvn compile` and all phases which depend on `compile`. Not respecting it will halt the build, and means
+your contribution would not be
+acceptable.
+
 
 *Developers who commit code that does not follow the coding conventions outlined in this document will be responsible
-for fixing their own code.*
-
-. Your code should pass our https://github.com/apache/james-project/blob/master/checkstyle.xml[checkstyle] which runs
-upon `mvn compile` and all phases which depend on `compile`.
-. Extra spaces between parentheses are not allowed:
-
-```
-  if (foo) > Good
-
-  or
-
-  if ( foo ) > Bad
-```
+for fixing their own code.* `.
 
 [start=3]
 . Four spaces. *No tabs.* Period.
@@ -155,8 +144,8 @@ GREATLY appreciated as this will help to improve the James project.
 . Your change set *MUST* be covered by tests. We also strongly appreciate integration tests.
 . We also  require the following best practice regarding maven and the *pom.xml*:
 
-** Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the same v
-ersion, and that there is no version clashes.
+** Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the same version,
+and that there is no version clashes.
 ** Don't use _org.apache.james_ groupId for internal dependencies. Use _${james.groupId}_. If not, you break the policies
 for automatic sorting, as well as make it more ambiguous. One exception is apache-mime4j-* artifacts which share the
 james groupId despite living in a different repository.
