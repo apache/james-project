@@ -98,7 +98,7 @@ public class RetrCmdHandler extends AbstractPOP3CommandHandler {
 
                 String uid = data.getUid();
                 if (!deletedUidList.contains(uid)) {
-                    InputStream content = session.getUserMailbox().getMessage(uid);
+                    InputStream content = getMessageContent(session, data);
 
                     if (content != null) {
                         InputStream in = new CRLFTerminatedInputStream(new ExtraDotInputStream(content));
@@ -119,6 +119,10 @@ public class RetrCmdHandler extends AbstractPOP3CommandHandler {
             return POP3Response.ERR;
         }
         return response;
+    }
+    
+    protected InputStream getMessageContent(POP3Session session, MessageMetaData data) throws IOException {
+        return session.getUserMailbox().getMessage(data.getUid());
     }
 
     @Override
