@@ -37,7 +37,7 @@
         <b>Customisable solution</b>
       </i>  Apache James behaviour can be easily extended by the means of
       several plugin extensions, for instance <a href="/howTo/mail-processing.html">mailets</a>,
-      <a href="/howTo/custom-listeners.html">Mailbox listenrs</a>, <a href="/howTo/custom-listeners.html">SMTP hooks</a>,
+      <a href="/howTo/custom-listeners.html">Mailbox listeners</a>, <a href="/howTo/custom-listeners.html">SMTP hooks</a>,
       <a href="/howTo/custom-smtp-commands.html">SMTP commands</a>, or <a href="/howTo/custom-webadmin-routes.html">WebAdmin routes</a>,
       for instance.</p>
     <p>
