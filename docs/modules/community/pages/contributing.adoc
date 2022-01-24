@@ -64,12 +64,17 @@ which will be automatically published via gitpubsub to http://james.apache.org[A
 
 == How to contribute some code?
 
+We encourage discussions prior code contributions on the xref:mailing-lists.adoc[mailing lists]. For significant design
+changes the writing of xref:#_idea_or_design_proposals[ADRs] is encouraged.
+
+Your code contribution *must* be backed by a xref:_reporting_bugs[JIRA ticket].
+
 * Clone the source code of the project from its link:git://git.apache.org/james-project.git[apache git repository] or its
 https://github.com/apache/james-project[Github]
 * Create your branch and name it with the JIRA ticket number.
-* Create a Pull Request with your branch name and prefix its different commits with the same name.
-
-Alternatively you can create a patch as xref:_code_patches[outlined below], and attach it to the JIRA ticket.
+* Create a Pull Request on Github with your branch name and prefix its different commits with the same name.
+* A build will be started for your work on the link:https://ci-builds.apache.org/job/james/job/ApacheJames/[Apache CI].
+* Active contributors will review your work, and merge it.
 
 A valid commit comment might be:
 
@@ -78,6 +83,8 @@ JAMES-2285 My awesome commit title
 
 Here is some more details about what my commit does, and the rationals of the choice I took.
 ```
+
+Alternatively you can create a patch as xref:_code_patches[outlined below], and attach it to the JIRA ticket.
 
 === Licenses
 
@@ -93,8 +100,6 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature]
 
 Additional ideas are more than welcome. Don't hesitate to discuss that with us!
-
-
 
 == Idea or design proposals
 
