@@ -115,15 +115,18 @@ patch is more likely to be committed quickly.
 == Idea or design proposals
 
 People can submit ideas, features or design changes proposals by discussing it through the
-xref:mailing-lists.adoc[mailing lists] and/or submitting an ADR (Architecture Decision Record). A discussion
-on the mailing list getting a consensus of the community can be the object of the writing of an ADR to confirm the
-change agreed upon.
+xref:mailing-lists.adoc[mailing lists].
+
+Structuring design changes are tracked by link:https://github.com/joelparkerhenderson/architecture-decision-record[ADRs]
+(Architecture Decision Records). A discussion on the mailing list getting a consensus of the community can be the object
+of the writing of an ADR to confirm the change agreed upon. The Project Member Committee will take care of maintaining such
+records but anyone should feel free to help on such a task by proposing ADRs related to his work.
 
 ADRs *MUST* be submitted under the folder `src/adr` via a pull request. The standards used for writing an ADR are
 described in the https://github.com/apache/james-project/blob/master/src/adr/0001-record-architecture-decisions.md[first ADR]
 written for the Apache James project.
 
-The number of the ADR should be incremental. If an other ADR gets merged concurrently, the committer is responsible for
+The number of the ADR should be incremental. If another ADR gets merged concurrently, the committer is responsible for
 updating its number accordingly.
 
 When the ADR reaches a consensus within the community and is accepted, it can be merged and goes into effect.
