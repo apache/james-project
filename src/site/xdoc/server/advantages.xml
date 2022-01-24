@@ -36,7 +36,7 @@
           <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3, IMAP4. We also plan to support JMAP. ManageSIEVE support is experimental.</p>
 
           <p>Apache James Server is able to store user and message data either in any JPA-compatible database,
-            in Cassandra (allowing fast, reliable, even real-time replicated storage) in combinaison with an objectstore.</p>
+            in Cassandra (allowing fast, reliable, even real-time replicated storage) in combinaison with an objectstore (S3 compatible API).</p>
 
           <p>Provides a powerful, flexible mail application engine through support for the Apache Mailet
             API.  With its Mailet pipeline architecture, Apache James Server can be used not only to provide standard e-mail
