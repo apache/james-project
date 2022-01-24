@@ -29,7 +29,6 @@ To report a bug, please use the appropriate Bug Tracker JIRA link according to t
 * https://issues.apache.org/jira/browse/JSIEVE[jSieve]
 * https://issues.apache.org/jira/browse/JSPF[jSPF]
 * https://issues.apache.org/jira/browse/JDKIM[jDKIM]
-* https://issues.apache.org/jira/browse/HUPA[Hupa]
 
 Once you are logged on the appropriate JIRA page, click on the red Create button, then complete the different fields
 as accurately as possible, so that any user can reproduce the reported bug. Also note that all your information must be
