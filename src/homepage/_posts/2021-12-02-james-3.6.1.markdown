@@ -11,7 +11,14 @@ Early adopters can [download it][download], any issue can be reported on our iss
 
 ## Announcements
 
-[More announcements to follow this release]
+This release fixes the following vulnerability issues, that are present prior to 3.6.1:
+
+ - *CVE-2021-38542*: Apache James vulnerable to STARTTLS command injection (IMAP and POP3)
+ - *CVE-2021-40110*: Apache James IMAP vulnerable to a ReDoS
+ - *CVE-2021-40111*: Apache James IMAP parsing Denial Of Service
+ - *CVE-2021-40525*: Apache James: Sieve file storage vulnerable to path traversal attacks
+ 
+We recommend users to upgrade to this version.
 
 ## Release changelog
 

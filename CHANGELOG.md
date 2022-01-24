@@ -306,6 +306,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [3.6.1] - 2021-12-02
 
+### Security
+
+This release fixes the following vulnerability issues, that are present prior to 3.6.1:
+
+ - *CVE-2021-38542*: Apache James vulnerable to STARTTLS command injection (IMAP and POP3)
+ - *CVE-2021-40110*: Apache James IMAP vulnerable to a ReDoS
+ - *CVE-2021-40111*: Apache James IMAP parsing Denial Of Service
+ - *CVE-2021-40525*: Apache James: Sieve file storage vulnerable to path traversal attacks
+
 ### Fixed
 - JAMES-3676 Avoid S3 connection leaks
 - JAMES-3477 Mail::duplicate did lead to file leak in various places
