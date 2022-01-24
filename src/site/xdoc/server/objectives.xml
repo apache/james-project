@@ -28,10 +28,24 @@
   <section name="Design goals">
     <p>
       <i>
-        <b>Complete portability</b>
-      </i>  Apache James is be a 100% pure Java application
-      based on the Java 2 platform and the JavaMail 1.3 API.
-    </p>
+        <b>Complete solution</b>
+      </i>  The mail system is able to handle both mail
+      transport and storage in a single server application. Apache James
+      works alone without the need for any other server or solution.</p>
+    <p>
+      <i>
+        <b>Customisable solution</b>
+      </i>  Apache James behaviour can be easily extended by the means of
+      several plugin extensions, for instance <a href="/howTo/mail-processing.html">mailets</a>,
+      <a href="/howTo/custom-listeners.html">Mailbox listenrs</a>, <a href="/howTo/custom-listeners.html">SMTP hooks</a>,
+      <a href="/howTo/custom-smtp-commands.html">SMTP commands</a>, or <a href="/howTo/custom-webadmin-routes.html">WebAdmin routes</a>,
+      for instance.</p>
+    <p>
+      <i>
+        <b>Horizontally scalable email server</b>
+      </i>  Apache James uses resource abstraction (see below) to provide and assemble
+        the components of a <a href="https://james.staged.apache.org/james-distributed-app/3.7.0/index.html">Distributed Email server</a>
+        based on modern, scalable NoSQL solutions: Cassandra, objectstorage, ElasticSearch, RabbitMQ/Pulsar.</p>
     <p>
       <i>
         <b>Protocol abstraction</b>
@@ -40,12 +54,6 @@
       the server. Apache James is not be tied to any particular protocol but
       follow an abstracted server design (like JavaMail did on the
       client side)</p>
-    <p>
-      <i>
-        <b>Complete solution</b>
-      </i>  The mail system is able to handle both mail
-      transport and storage in a single server application. Apache James
-      works alone without the need for any other server or solution.</p>
     <p>
       <i>
         <b>Mailet support</b>
@@ -63,7 +71,10 @@
       </i>  Like protocols, resources are abstracted and,
       accessed through defined interfaces (like JPA for
       mailbox or user accounts in RDBMS's). The server is
-      highly modular and reuse solutions from other projects.</p>
+      highly modular and reuse solutions from other projects.
+      Thanks to the modularity of the servers, you can use <a href="/howTo/custom-james-assembly.html">James as a toolkit to assemble your
+      own mail server</a>. Select which components of Apache James you want to use, in which combinaison, and even write your
+      owns.</p>
 
     <p>Anything else you may want if you help us write it :-)</p>
 
