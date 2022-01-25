@@ -28,6 +28,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -47,6 +48,7 @@ class MailAddressTest {
                 GOOD_ADDRESS,
                 GOOD_QUOTED_LOCAL_PART,
                 "server-dev@james-apache.org",
+                "a..b@domain.com",
                 "server-dev@[127.0.0.1]",
                 "server-dev@#123",
                 "server-dev@#123.apache.org",
@@ -93,6 +95,22 @@ class MailAddressTest {
     void testGoodMailAddressString(String mailAddress) {
         assertThatCode(() -> new MailAddress(mailAddress))
             .doesNotThrowAnyException();
+    }
+
+    @Disabled("JAMES-3708 Fails on the following values:" +
+        "" +
+        "a..b@domain.com -> javax.mail.internet.AddressException: Local address contains dot-dot in string ``a..b@domain.com''" +
+        "server-dev@#123 -> javax.mail.internet.AddressException: Domain contains illegal character in string ``server-dev@#123''" +
+        "server-dev@#123.apache.org -> javax.mail.internet.AddressException: Domain contains illegal character in string ``server-dev@#123.apache.org'''" +
+        "server-dev\\.@james.apache.org' -> javax.mail.internet.AddressException: Local address ends with dot in string ``server-dev\\.@james.apache.org''" +
+        "" +
+        "Impact: potential NPEs (bouncing, remoteDelivery)" +
+        "Those values should likely be rejected")
+    @ParameterizedTest
+    @MethodSource("goodAddresses")
+    void toInternetAddressShouldNoop(String mailAddress) throws Exception {
+        assertThat(new MailAddress(mailAddress).toInternetAddress())
+            .isNotNull();
     }
 
     @ParameterizedTest

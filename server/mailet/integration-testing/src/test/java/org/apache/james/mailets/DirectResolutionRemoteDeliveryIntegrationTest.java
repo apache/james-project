@@ -26,10 +26,12 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.apache.james.mailets.configuration.MailetConfiguration.LOCAL_DELIVERY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
@@ -113,6 +115,35 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
 
         awaitAtMostOneMinute
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
+    }
+
+    @Disabled("JAMES-3708 a..b@domain.com triggers a parsing error within javax.mail, the exception is ingnored and substituted with null," +
+        "resulting in a NPE in RemoteDelivery. Instead we should reject as part of SMTP reception emails we cannot handle." +
+        "This can be used to make the delivery of all remote recipients fail while local recipient succeeds.")
+    @Test
+    void test(@TempDir File temporaryFolder) throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
+
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
+                .putProcessor(directResolutionTransport())
+                .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
+            .build(temporaryFolder);
+        jamesServer.start();
+
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(FROM, PASSWORD);
+
+        assertThatThrownBy(() -> messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, "to..user@" + JAMES_ANOTHER_DOMAIN))
+            .isInstanceOf(IOException.class);
     }
 
     @Test
