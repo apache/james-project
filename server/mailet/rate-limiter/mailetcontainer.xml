@@ -101,6 +101,15 @@
         </processor>
 
         <processor state="relay" enableJmx="true">
+            <mailet matcher="All" class="GlobalRateLimit">
+                <keyPrefix>myPrefix</keyPrefix>
+                <duration>1h</duration>
+                <count>100</count>
+                <recipients>200</recipients>
+                <size>1000M</size>
+                <totalSize>2000M</totalSize>
+                <exceededProcessor>tooMuchMails</exceededProcessor>
+            </mailet>
             <mailet matcher="All" class="PerSenderRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
@@ -108,6 +117,7 @@
                 <recipients>20</recipients>
                 <size>100M</size>
                 <totalSize>200M</totalSize>
+                <exceededProcessor>tooMuchMails</exceededProcessor>
             </mailet>
             <mailet match="All" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
@@ -117,6 +127,12 @@
                 <deliveryThreads>10</deliveryThreads>
                 <sendpartial>true</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
+            </mailet>
+        </processor>
+
+        <processor state="tooMuchMails" enableJmx="true">
+            <mailet match="All" class="Bounce">
+                <message>Rate limit exceeded!</message>
             </mailet>
         </processor>
 

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -21,18 +21,23 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 
-import com.google.common.annotations.VisibleForTesting
 import javax.inject.Inject
-import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult}
 import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
-  def rateLimit(sender: MailAddress, mail: Mail): Publisher[RateLimitingResult] = {
-    val rateLimitingKey = SenderKey(keyPrefix, entityType, sender)
+case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) extends RateLimitingKey {
+  val globalPrefix: String = "global"
+
+  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString()}_$globalPrefix}")
+    .getOrElse(s"${entityType.asString()}_$globalPrefix")
+}
+
+case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
+  def rateLimit(mail: Mail): Publisher[RateLimitingResult] = {
+    val rateLimitingKey = GlobalKey(keyPrefix, entityType)
 
     rateLimiter.map(limiter =>
       entityType.extractQuantity(mail)
@@ -42,19 +47,14 @@ case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Opt
   }
 }
 
-case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailAddress: MailAddress) extends RateLimitingKey {
-  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString()}_${mailAddress.asString()}")
-    .getOrElse(s"${entityType.asString()}_${mailAddress.asString()}")
-}
-
 /**
- * <p><b>PerSenderRateLimit</b> allows defining and enforcing rate limits for the sender of matching emails.</p>
+ * <p><b>GlobalRateLimit</b> allows defining and enforcing rate limits for all users.</p>
  *
  * <ul>This allows writing rules like:
- *   <li>A sender can send 10 emails per hour</li>
- *   <li>A sender can send email to a total of 20 recipients per hour</li>
- *   <li>A sender can send 100 MB of emails (total computed taking only the email size into account) per hour</li>
- *   <li>A sender can send 200 MB of emails (total computed taking each recipient copies into account) per hour</li>
+ *   <li>All users can send 100 emails per hour</li>
+ *   <li>All users can send email to a total of 200 recipients per hour</li>
+ *   <li>All users can send 1000 MB of emails (total computed taking only the email size into account) per hour</li>
+ *   <li>All users can send 2000 MB of emails (total computed taking each recipient copies into account) per hour</li>
  * </ul>
  *
  * <p>Depending on its position and the matcher it is being combined with, those rate limiting rules could be applied to
@@ -66,17 +66,17 @@ case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailA
  *    <li><b>exceededProcessor</b>: Processor to which emails whose rate is exceeded should be redirected to. Defaults to error.
  *    Use this to customize the behaviour upon exceeded rate.</li>
  *    <li><b>duration</b>: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).</li>
- *    <li><b>count</b>: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
- *    <li><b>recipients</b>: Count of recipients allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
- *    <li><b>size</b>: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
- *    <li><b>totalSize</b>: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
+ *    <li><b>count</b>: Count of emails allowed for all users during duration. Optional, if unspecified this rate limit is not applied.</li>
+ *    <li><b>recipients</b>: Count of recipients allowed for all users during duration. Optional, if unspecified this rate limit is not applied.</li>
+ *    <li><b>size</b>: Size of emails allowed for all users during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
+ *    <li><b>totalSize</b>: Size of emails allowed for all users during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
  *    totalSize is limited in increments of 2exp(31) - ~2 billions: sending a 10MB file to more than 205 recipients will be rejected if this parameter is enabled.</li>
  *  </ul>
  *
  *  <p>For instance, to apply all the examples given above:</p>
  *
  *   <pre><code>
- * &lt;mailet matcher=&quot;All&quot; class=&quot;PerSenderRateLimit&quot;&gt;
+ * &lt;mailet matcher=&quot;All&quot; class=&quot;GlobalRateLimit&quot;&gt;
  *     &lt;keyPrefix&gt;myPrefix&lt;/keyPrefix&gt;
  *     &lt;duration&gt;1h&lt;/duration&gt;
  *     &lt;count&gt;10&lt;/count&gt;
@@ -95,11 +95,11 @@ case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailA
  *
  * @param rateLimiterFactoryProvider Allows instantiations of the underlying rate limiters.
  */
-class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactoryProvider) extends GenericMailet {
-  private var countRateLimiter: PerSenderRateLimiter = _
-  private var recipientsRateLimiter: PerSenderRateLimiter = _
-  private var sizeRateLimiter: PerSenderRateLimiter = _
-  private var totalSizeRateLimiter: PerSenderRateLimiter = _
+class GlobalRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactoryProvider) extends GenericMailet {
+  private var countRateLimiter: GlobalRateLimiter = _
+  private var recipientsRateLimiter: GlobalRateLimiter = _
+  private var sizeRateLimiter: GlobalRateLimiter = _
+  private var totalSizeRateLimiter: GlobalRateLimiter = _
   private var exceededProcessor: String = _
   private var keyPrefix: Option[KeyPrefix] = _
 
@@ -110,30 +110,23 @@ class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactor
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
 
-    def perSenderRateLimiter(entityType: EntityType): PerSenderRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration)
+    def globalRateLimiter(entityType: EntityType): GlobalRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration)
 
-    countRateLimiter = perSenderRateLimiter(Count)
-    recipientsRateLimiter = perSenderRateLimiter(RecipientsType)
-    sizeRateLimiter = perSenderRateLimiter(Size)
-    totalSizeRateLimiter = perSenderRateLimiter(TotalSize)
+    countRateLimiter = globalRateLimiter(Count)
+    recipientsRateLimiter = globalRateLimiter(RecipientsType)
+    sizeRateLimiter = globalRateLimiter(Size)
+    totalSizeRateLimiter = globalRateLimiter(TotalSize)
   }
 
-  @VisibleForTesting
   def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
 
-  override def service(mail: Mail): Unit = mail.getMaybeSender
-      .asOptional()
-      .ifPresent(sender => {
-        applyRateLimiter(mail, sender)
-      })
-
-  private def applyRateLimiter(mail: Mail, sender: MailAddress): Unit = {
+  override def service(mail: Mail): Unit = {
     val pivot: RateLimitingResult = AcceptableRate
     val result = SFlux.merge(Seq(
-        countRateLimiter.rateLimit(sender, mail),
-        recipientsRateLimiter.rateLimit(sender, mail),
-        sizeRateLimiter.rateLimit(sender, mail),
-        totalSizeRateLimiter.rateLimit(sender, mail)))
+      countRateLimiter.rateLimit(mail),
+      recipientsRateLimiter.rateLimit(mail),
+      sizeRateLimiter.rateLimit(mail),
+      totalSizeRateLimiter.rateLimit(mail)))
       .fold(pivot)((a, b) => a.merge(b))
       .block()
 
@@ -142,8 +135,8 @@ class PerSenderRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactor
     }
   }
 
-  private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix], duration: Duration): PerSenderRateLimiter =
-    PerSenderRateLimiter(rateLimiter = entityType.extractRules(duration, getMailetConfig)
+  private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix], duration: Duration): GlobalRateLimiter =
+    GlobalRateLimiter(rateLimiter = entityType.extractRules(duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification),
       keyPrefix = keyPrefix,
       entityType = entityType)
