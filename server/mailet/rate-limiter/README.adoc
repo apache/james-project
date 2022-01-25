@@ -57,5 +57,52 @@ For instance, to apply all the examples given above:
     <recipients>20</recipients>
     <size>100M</size>
     <totalSize>200M</totalSize>
+    <exceededProcessor>tooMuchMails</exceededProcessor>
 </mailet>
 ----
+
+When the rate is exceeded, all mails will be moved to processor *tooMuchMails* which send a bounce message notifies that user exceeded the rate limit.
+
+=== GlobalRateLimit
+
+*GlobalRateLimit* allows defining and enforcing rate limits for all users.
+
+This allows writing rules like:
+
+- All users can send 100 emails per hour
+- All users can send email to a total of 200 recipients per hour
+- All users can send 1000 MB of emails (total computed taking only the email size into account) per hour
+- All users can send 2000 MB of emails (total computed taking each recipient copies into account) per hour
+
+Depending on its position and the matcher it is being combined with, those rate limiting rules could be applied to
+submitted emails, received emails or emitted email being relayed to third parties.
+
+Here are supported configuration parameters:
+
+- *keyPrefix*: An optional key prefix to apply to rate limiting. Choose distinct values if you specify
+this mailet twice within your `mailetcontainer.xml` file. Defaults to none.
+- *exceededProcessor*: Processor to which emails whose rate is exceeded should be redirected to. Defaults to error.
+Use this to customize the behaviour upon exceeded rate.
+- *duration*: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).
+- *count*: Count of emails allowed for all users during duration. Optional, if unspecified this rate limit is not applied.
+- *recipients*: Count of recipients allowed for all users during duration. Optional, if unspecified this rate limit is not applied.
+- *size*: Size of emails allowed for all users during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.
+- *totalSize*: Size of emails allowed for all users during duration (each recipient of the email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
+totalSize is limited in increments of 2exp(31) - ~2 billions: sending a 10MB file to more than 205 recipients will be rejected if this parameter is enabled.
+
+
+For instance, to apply all the examples given above:
+
+----
+<mailet matcher="All" class="GlobalRateLimit">
+    <keyPrefix>myPrefix</keyPrefix>
+    <duration>1h</duration>
+    <count>100</count>
+    <recipients>200</recipients>
+    <size>1000M</size>
+    <totalSize>2000M</totalSize>
+    <exceededProcessor>tooMuchMails</exceededProcessor>
+</mailet>
+----
+
+When the rate is exceeded, all mails will be moved to processor *tooMuchMails* which send a bounce message notifies that user exceeded the rate limit.
