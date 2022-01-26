@@ -304,6 +304,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
    - http GET for mock email count
    - mock email DELETE returning cleared emails
 
+## [3.6.2] - 2022-01-26
+
+### Fixed
+
+ - JAMES-3646 Rely on strong typing for file paths operations
+ - Upgrade Log4J to 2.17.1 (CVE-2021-44832 + CVE-2021-45105)
+ - Upgrade Logback to 1.2.9 (CVE-2021-42550)
+
 ## [3.6.1] - 2021-12-02
 
 ### Security
