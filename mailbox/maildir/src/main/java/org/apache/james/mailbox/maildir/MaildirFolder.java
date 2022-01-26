@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -107,7 +108,7 @@ public class MaildirFolder {
 
     public MaildirFolder validateWithinFolder(File maildirRoot) throws MailboxNotFoundException {
         try {
-            if (!rootFolder.toPath().normalize().startsWith(maildirRoot.toPath().normalize())) {
+            if (!Path.of(rootFolder.getCanonicalPath()).normalize().startsWith(Path.of(maildirRoot.getCanonicalPath()).normalize())) {
                 throw new MailboxNotFoundException(rootFolder.getCanonicalPath() + " jail breaks out of " + maildirRoot.getCanonicalPath());
             }
         } catch (IOException e) {
