@@ -43,39 +43,24 @@ func getEnvironmentVariable(envVariable string, defaultVariable string) string {
 var key = getEnvironmentVariable("JWT_CLAIM", "sid")
 
 func main() {
-	krakendHost := getEnvironmentVariable("KRAKEND_HOST", "krakend")
-	krakendPort := getEnvironmentVariable("KRAKEND_PORT", "1234")
-
-	krakendServer := krakendHost + ":" + krakendPort
-
 	jwtRevokerPort := ":" + getEnvironmentVariable("JWT_REVOKER_PORT", "8080")
-
-	bloomfilter, error := client.New(krakendServer)
-	if error != nil {
-		log.Println("unable to create the rpc client:", error.Error())
-		return
-	}
-	defer bloomfilter.Close()
 
 	router := mux.NewRouter()
 	// Create
-	router.HandleFunc("/add", func(responseWriter http.ResponseWriter, request *http.Request) {
-		addToken(responseWriter, request, bloomfilter)
-	}).Methods("POST")
+	router.HandleFunc("/add", addToken).Methods("POST")
 
 	// Check
-	router.HandleFunc("/check/{tokenId}", func(responseWriter http.ResponseWriter, request *http.Request) {
-		checkToken(responseWriter, request, bloomfilter)
-	}).Methods("GET")
+	router.HandleFunc("/check/{tokenId}", checkToken).Methods("GET")
 
 	log.Printf("Starting server...")
 
 	log.Fatal(http.ListenAndServe(jwtRevokerPort, router))
 }
 
-func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfilter *client.Bloomfilter) {
+func addToken(responseWriter http.ResponseWriter, request *http.Request) {
 	// Read request body
 	buffer, errorBody := ioutil.ReadAll(request.Body)
+	defer request.Body.Close()
 	if errorBody != nil {
 		log.Fatal("Error reading request body: ", errorBody.Error())
 		http.Error(responseWriter, "Error reading request body: " + errorBody.Error(), http.StatusInternalServerError)
@@ -103,6 +88,14 @@ func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfi
 
 	// Sending sid claim to bloomfilter
 	subject := key + "-" + claims[key].(string)
+
+	bloomfilter, errorConnect := connectToBloomfilter()
+  if errorConnect != nil {
+    http.Error(responseWriter, "Error connecting to the rpc client: " + errorConnect.Error(), http.StatusInternalServerError)
+    return
+  }
+  defer bloomfilter.Close()
+
 	bloomfilter.Add([]byte(subject))
 	log.Printf("adding [%s] %s", key, subject)
 
@@ -110,11 +103,18 @@ func addToken(responseWriter http.ResponseWriter, request *http.Request, bloomfi
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-func checkToken(responseWriter http.ResponseWriter, request *http.Request, bloomfilter *client.Bloomfilter) {
+func checkToken(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(request)
 	tokenID := params["tokenId"]
 	subject := key + "-" + tokenID
+
+	bloomfilter, errorConnect := connectToBloomfilter()
+  if errorConnect != nil {
+    http.Error(responseWriter, "Error connecting to the rpc client: " + errorConnect.Error(), http.StatusInternalServerError)
+    return
+  }
+  defer bloomfilter.Close()
 
 	res, err := bloomfilter.Check([]byte(subject))
 	if err != nil {
@@ -124,4 +124,18 @@ func checkToken(responseWriter http.ResponseWriter, request *http.Request, bloom
 	}
 
 	json.NewEncoder(responseWriter).Encode(res)
+}
+
+func connectToBloomfilter() (*client.Bloomfilter, error) {
+	krakendHost := getEnvironmentVariable("KRAKEND_HOST", "krakend")
+	krakendPort := getEnvironmentVariable("KRAKEND_PORT", "1234")
+
+	krakendServer := krakendHost + ":" + krakendPort
+
+	bloomfilter, errorConnect := client.New(krakendServer)
+	if errorConnect != nil {
+		log.Println("Unable to create the rpc client:", errorConnect.Error())
+		return nil, errorConnect
+	}
+	return bloomfilter, nil
 }
