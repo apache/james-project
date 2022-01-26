@@ -143,8 +143,7 @@ vulnerability. This affected Apache James prior to version 3.6.1.
 
 This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-3634[JAMES-3634]
 
-*Mitigation*: We recommend upgrading to Apache James 3.6.1, which enforce the use of RE2J regular
-expression engine to execute regex in linear time without back-tracking.
+*Mitigation*: We recommend upgrading to Apache James 3.6.1, which fixes this vulnerability.
 
 === CVE-2021-40525: Apache James: Sieve file storage vulnerable to path traversal attacks
 
@@ -155,9 +154,7 @@ to path traversal, allowing reading and writing any file.
 
 This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-3646[JAMES-3646]
 
-*Mitigation*:This vulnerability had been patched in Apache
-
-James 3.6.1 and higher. We recommend the upgrade.
+*Mitigation*:This vulnerability had been patched in Apache James 3.6.1 and higher. We recommend the upgrade.
 
 This could also be mitigated by ensuring manageSieve is disabled, which is the case by default.
 
