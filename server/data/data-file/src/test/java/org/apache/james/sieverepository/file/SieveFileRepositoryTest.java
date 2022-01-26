@@ -84,4 +84,13 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
                 new ScriptName("../other/script")))
             .isInstanceOf(StorageException.class);
     }
+
+    @Test
+    void getScriptShouldNotAllowToReadScriptsOfOtherUsersWhenPrefix() throws Exception {
+        sieveRepository().putScript(Username.of("testa"), new ScriptName("script"), new ScriptContent("PWND!!!"));
+
+        assertThatThrownBy(() ->  sieveRepository().getScript(Username.of("test"),
+            new ScriptName("../other/script")))
+            .isInstanceOf(StorageException.class);
+    }
 }
