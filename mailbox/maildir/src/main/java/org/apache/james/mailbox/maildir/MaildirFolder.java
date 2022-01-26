@@ -107,7 +107,7 @@ public class MaildirFolder {
 
     public MaildirFolder validateWithinFolder(File maildirRoot) throws MailboxNotFoundException {
         try {
-            if (!rootFolder.getCanonicalPath().startsWith(maildirRoot.getCanonicalPath())) {
+            if (!rootFolder.toPath().normalize().startsWith(maildirRoot.toPath().normalize())) {
                 throw new MailboxNotFoundException(rootFolder.getCanonicalPath() + " jail breaks out of " + maildirRoot.getCanonicalPath());
             }
         } catch (IOException e) {
