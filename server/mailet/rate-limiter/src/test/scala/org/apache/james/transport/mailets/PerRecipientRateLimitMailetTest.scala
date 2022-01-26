@@ -19,12 +19,17 @@
 
 package org.apache.james.transport.mailets
 
+import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.memory.MemoryRateLimiterFactoryProvider
-import org.apache.mailet.base.test.{FakeMail, FakeMailetConfig}
+import org.apache.mailet.base.test.{FakeMail, FakeMailContext, FakeMailetConfig}
 import org.apache.mailet.{Mail, MailetConfig}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.assertj.core.api.SoftAssertions
-import org.junit.jupiter.api.{Nested, Test}
+import org.junit.jupiter.api.{Disabled, Nested, Test}
+import org.mockito.Mockito.times
+import org.mockito.{ArgumentCaptor, Mockito}
+
+import scala.jdk.CollectionConverters._
 
 class PerRecipientRateLimitMailetTest {
 
@@ -159,6 +164,7 @@ class PerRecipientRateLimitMailetTest {
     val mail1: Mail = FakeMail.builder()
       .name("mail1")
       .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
       .size(50 * 1024)
       .state("transport")
       .build()
@@ -166,6 +172,7 @@ class PerRecipientRateLimitMailetTest {
     val mail2: Mail = FakeMail.builder()
       .name("mail2")
       .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
       .size(51 * 1024)
       .state("transport")
       .build()
@@ -173,6 +180,7 @@ class PerRecipientRateLimitMailetTest {
     val mail3: Mail = FakeMail.builder()
       .name("mail3")
       .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
       .size(49 * 1024)
       .state("transport")
       .build()
@@ -183,8 +191,157 @@ class PerRecipientRateLimitMailetTest {
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(mail1.getState).isEqualTo("transport")
-      softly.assertThat(mail2.getState).isEqualTo("error")
+      softly.assertThat(mail2.getState).isEqualTo("tooMuchMails")
       softly.assertThat(mail3.getState).isEqualTo("transport")
+    })
+  }
+
+  @Test
+  def shouldRateLimitPerRecipient(): Unit = {
+    val mailetContext = Mockito.spy(FakeMailContext.defaultContext)
+
+    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerRecipientRateLimitMailet")
+      .setProperty("duration", "20s")
+      .setProperty("count", "1")
+      .setProperty("exceededProcessor", "tooMuchMails")
+      .mailetContext(mailetContext)
+      .build())
+
+    // acceptable
+    val mail1: Mail = FakeMail.builder()
+      .name("mail")
+      .sender("sender1@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .state("transport")
+      .build()
+
+    // "rcpt1@linagora.com" : exceeded, "rcpt2@linagora.com" : acceptable
+    val mail2: Mail = FakeMail.builder()
+      .name("mail")
+      .sender("sender1@domain.tld")
+      .recipients("rcpt1@linagora.com", "rcpt2@linagora.com")
+      .state("transport")
+      .build()
+
+    mailet.service(mail1)
+    mailet.service(mail2)
+
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(mail1.getState).isEqualTo("transport")
+      softly.assertThat(mail2.getState).isEqualTo("ghost")
+    })
+
+    val mailCapture: ArgumentCaptor[Mail] = ArgumentCaptor.forClass(classOf[Mail])
+    val stateCapture: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
+
+    Mockito.verify(mailetContext, times(2)).sendMail(mailCapture.capture(), stateCapture.capture())
+
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(mailCapture.getAllValues.size()).isEqualTo(2)
+      softly.assertThat(mailCapture.getAllValues.asScala
+        .find(mail => mail.getState.equals("transport"))
+        .map(mail => mail.getRecipients).get)
+        .containsExactlyInAnyOrder(new MailAddress("rcpt2@linagora.com"))
+
+      softly.assertThat(mailCapture.getAllValues.asScala
+        .find(mail => mail.getState.equals("tooMuchMails"))
+        .map(mail => mail.getRecipients).get)
+        .containsExactlyInAnyOrder(new MailAddress("rcpt1@linagora.com"))
+      softly.assertThat(stateCapture.getAllValues)
+        .containsExactlyInAnyOrder("transport", "tooMuchMails")
+    })
+  }
+
+  @Test
+  def shouldRateLimitedWhenAllRecipientsExceeded(): Unit = {
+    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerRecipientRateLimitMailet")
+      .setProperty("duration", "20s")
+      .setProperty("count", "1")
+      .setProperty("exceededProcessor", "tooMuchMails")
+      .build())
+
+    val mail1: Mail = FakeMail.builder()
+      .name("mail1")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com", "rcpt2@linagora.com")
+      .state("transport")
+      .build()
+
+    val mail2: Mail = FakeMail.builder()
+      .name("mail2")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com", "rcpt2@linagora.com")
+      .state("transport")
+      .build()
+
+    mailet.service(mail1)
+    mailet.service(mail2)
+
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(mail1.getState).isEqualTo("transport")
+      softly.assertThat(mail2.getState).isEqualTo("tooMuchMails")
+    })
+  }
+
+  @Disabled("atomicity problem. https://github.com/apache/james-project/pull/851#issuecomment-1020792286")
+  @Test
+  def mailetShouldSupportBothCountAndSize(): Unit = {
+    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerRecipientRateLimitMailet")
+      .setProperty("duration", "20s")
+      .setProperty("count", "2")
+      .setProperty("size", "100K")
+      .setProperty("exceededProcessor", "tooMuchMails")
+      .build())
+
+    // acceptable
+    val mail1: Mail = FakeMail.builder()
+      .name("mail1")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .size(50 * 1024)
+      .state("transport")
+      .build()
+
+    // exceeded (size)
+    val mail2: Mail = FakeMail.builder()
+      .name("mail2")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .size(51 * 1024)
+      .state("transport")
+      .build()
+
+    // acceptable
+    val mail3: Mail = FakeMail.builder()
+      .name("mail3")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .size(1)
+      .state("transport")
+      .build()
+
+    // exceeded (count)
+    val mail4: Mail = FakeMail.builder()
+      .name("mail4")
+      .sender("sender@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .size(1)
+      .state("transport")
+      .build()
+
+    mailet.service(mail1)
+    mailet.service(mail2)
+    mailet.service(mail3)
+    mailet.service(mail4)
+
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(mail1.getState).isEqualTo("transport")
+      softly.assertThat(mail2.getState).isEqualTo("tooMuchMails")
+      softly.assertThat(mail3.getState).isEqualTo("transport")
+      softly.assertThat(mail4.getState).isEqualTo("tooMuchMails")
     })
   }
 

@@ -83,52 +83,49 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
       val rateLimitResults: Seq[(MailAddress, RateLimitingResult)] = mail.getRecipients.asScala.toSeq
         .map(recipient => (recipient, applyRateLimiter(mail, recipient)))
 
-      exceededProcess(mail, rateLimitResults)
-      acceptableProcess(mail, rateLimitResults)
-    }
-  }
-
-  private def exceededProcess(mail: Mail, rateLimitResults: Seq[(MailAddress, RateLimitingResult)]): Unit = {
-    // if all recipients exceed the rate limit -> overwrite the state mail property
-    // else cloning the mail (with exceeded recipients) and send the clone to the exceededProcessor
-    if (!rateLimitResults.exists(_._2.equals(AcceptableRate))) {
-      mail.setState(exceededProcessor)
-    } else {
-      val exceededRecipients: Seq[MailAddress] = rateLimitResults.filter(_._2.equals(RateExceeded)).map(_._1)
-
-      if (exceededRecipients.nonEmpty) {
-        mail.setState(Mail.GHOST)
-        val newMail: MailImpl = MailImpl.duplicate(mail)
-        try {
-          newMail.setRecipients(ImmutableList.copyOf(exceededRecipients.asJava))
-          getMailetContext.sendMail(newMail, exceededProcessor)
-        } finally {
-          LifecycleUtil.dispose(newMail)
-        }
-      }
-    }
-  }
-
-  private def acceptableProcess(mail: Mail, rateLimitResults: Seq[(MailAddress, RateLimitingResult)]): Unit = {
-    // if all recipients acceptable the rate limit -> do nothing
-    // else cloning the mail (with acceptable recipients) and send the clone to the next processor
-    if (!rateLimitResults.exists(_._2.equals(RateExceeded))) {
-      // do nothing
-    }
-    else {
+      val rateLimitedRecipients: Seq[MailAddress] = rateLimitResults.filter(_._2.equals(RateExceeded)).map(_._1)
       val acceptableRecipients: Seq[MailAddress] = rateLimitResults.filter(_._2.equals(AcceptableRate)).map(_._1)
 
-      if (acceptableRecipients.nonEmpty) {
-        mail.setState(Mail.GHOST)
-        val newMail: MailImpl = MailImpl.duplicate(mail)
-        try {
-          newMail.setRecipients(ImmutableList.copyOf(acceptableRecipients.asJava))
-          // state = "transport" to avoid loop
-          getMailetContext.sendMail(newMail, Mail.TRANSPORT)
-        } finally {
-          LifecycleUtil.dispose(newMail)
+      // if all recipients exceed the rate limit -> overwrite the state mail property
+      // else cloning the mail (with exceeded recipients) and send the clone to the exceededProcessor
+      if (rateLimitedRecipients.nonEmpty) {
+        if (acceptableRecipients.isEmpty) {
+          mail.setState(exceededProcessor)
+        } else {
+          mail.setState(Mail.GHOST)
+          exceededProcess(mail, rateLimitedRecipients)
         }
       }
+
+      // if all recipients acceptable the rate limit -> do nothing
+      // else cloning the mail (with acceptable recipients) and send the clone to the next processor
+      if (acceptableRecipients.nonEmpty) {
+        if (rateLimitedRecipients.nonEmpty) {
+          mail.setState(Mail.GHOST)
+          acceptableProcess(mail, acceptableRecipients)
+        }
+      }
+    }
+  }
+
+  private def exceededProcess(mail: Mail, rateLimitedRecipients: Seq[MailAddress]): Unit = {
+    val newMail: MailImpl = MailImpl.duplicate(mail)
+    try {
+      newMail.setRecipients(ImmutableList.copyOf(rateLimitedRecipients.asJava))
+      getMailetContext.sendMail(newMail, exceededProcessor)
+    } finally {
+      LifecycleUtil.dispose(newMail)
+    }
+  }
+
+  private def acceptableProcess(mail: Mail, acceptableRecipients: Seq[MailAddress]): Unit = {
+    val newMail: MailImpl = MailImpl.duplicate(mail)
+    try {
+      newMail.setRecipients(ImmutableList.copyOf(acceptableRecipients.asJava))
+      // state = "transport" to avoid loop
+      getMailetContext.sendMail(newMail, Mail.TRANSPORT)
+    } finally {
+      LifecycleUtil.dispose(newMail)
     }
   }
 
