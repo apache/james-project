@@ -34,6 +34,9 @@ This section sums up and links upgrade instructions for people willing to upgrad
 |===
 | Upgrade from | Recommended upgrade path to 3.7.0 (unreleased)
 
+| 3.6.2
+| Rolling upgrade to 3.7.0 (unreleased). No specific upgrade instructions to perform.
+
 | 3.6.1
 | Rolling upgrade to 3.7.0 (unreleased). No specific upgrade instructions to perform.
 

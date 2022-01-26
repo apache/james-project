@@ -119,14 +119,14 @@ layout: default
             <ul class="james-ul no-padding">
               <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>
 WHAT WILL YOU TRY:</b><br>
-              <span>Here you will try James server v 3.6.1 thanks to an image. This James image has a default configuration
+              <span>Here you will try James server v 3.6.2 thanks to an image. This James image has a default configuration
                 using JPA (hsqldb) and Lucene. It also includes a default domain named james.local and three default users:
                 user01@james.local, user02@james.local, user03@james.local, with their default password being <i>1234</i>.<br>
                 <i>Note: this James server will respond to IMAPS port 993 and SMTPS port 465.</i></span></span>
               </li>
               <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>STEPS YOU HAVE TO FOLLOW:</b><br>
                 Pull and run the James image with the following single command:<br><br>
-                <code class="highlighter-rouge">docker run -p "465:465" -p "993:993" apache/james:demo-3.6.1</code>
+                <code class="highlighter-rouge">docker run -p "465:465" -p "993:993" apache/james:demo-3.6.2</code>
 
                 <br><br>
                 Then, connect this image with for instance, Thunderbird. This <a href="howTo/imap-server.html">tutorial</a> covers more in depth user and domain creation,
@@ -141,7 +141,7 @@ WHAT WILL YOU TRY:</b><br>
                 using storage technologies like <a href="https://cassandra.apache.org/">Cassandra</a>,
                   <a href="https://www.elastic.co/elasticsearch/">ElasticSearch</a>, <a href="https://www.rabbitmq.com/">RabbitMQ</a>, and
                 <a href="https://wiki.openstack.org/wiki/Swift">objectStorage (S3/Swift)</a>.<br/><br/>
-                Feedback on this product, announced as a beta since 3.6.1 is welcome.<br/><br/>
+                Feedback on this product, announced as a beta since 3.5.0 is welcome.<br/><br/>
                 This product can be executed via <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docker-compose.yml">
                 docker-compose</a> or you can follow its<a href="/server/install/guice-cassandra-rabbitmq-swift.html"> standard
                 installation guide</a>
