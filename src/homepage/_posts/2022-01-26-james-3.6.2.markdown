@@ -1,0 +1,25 @@
+---
+layout: post
+title:  "Apache James Server 3.6.2"
+date:   2022-01-26  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.6.2 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+## Announcements
+
+[More announcements to follow this release]
+
+## Release changelog
+
+This is a maintenance release addressing the following issues:
+
+ - JAMES-3646 Rely on strong typing for file paths operations
+ - Upgrade Log4J to 2.17.1 (CVE-2021-44832 + CVE-2021-45105)
+ - Upgrade Logback to 1.2.9 (CVE-2021-42550)
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
