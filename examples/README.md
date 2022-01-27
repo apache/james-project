@@ -59,3 +59,15 @@ This enables:
  - Write any additional components
  - Drop any unneeded component
  - You have control on the dependencies and can reduce the classpath size
+ 
+## OIDC JMAP, IMAP and SMTP example with James
+
+[This example](oidc) demonstrates how to configure [OIDC]() for JMAP, IMAP and SMTP.
+
+This example uses:
+ - [KeyCloack](https://www.keycloak.org/) as an identity provider
+ - [Krakend](https://www.krakend.io/) as an API gateway to check JWT tokens
+ - A LDAP as James user source
+ - [Thunderbird](https://www.thunderbird.net/en-US/) as a Mail User Agent. (version 91.4.1)
+ 
+Of course alternative technologies can be used.
