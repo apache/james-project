@@ -22,7 +22,7 @@ package org.apache.james.rate.limiter.redis
 import es.moki.ratelimitj.core.limiter.request.{ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisRateLimiterFactory => RateLimitjFactory}
 import io.lettuce.core.RedisClient
-import org.apache.james.rate.limiter.api.Quantity.Quantity
+import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
@@ -50,7 +50,7 @@ class RedisRateLimiterFactory(redisConfiguration: RedisRateLimiterConfiguration)
 }
 
 case class RedisRateLimiter(limiter: ReactiveRequestRateLimiter) extends RateLimiter {
-  override def rateLimit(key: RateLimitingKey, increaseQuantity: Quantity): Publisher[RateLimitingResult] =
+  override def rateLimit(key: RateLimitingKey, increaseQuantity: Increment): Publisher[RateLimitingResult] =
     SMono.fromPublisher(limiter.overLimitWhenIncrementedReactive(key.asString(), increaseQuantity.value))
       .filter(isOverLimit => !isOverLimit)
       .map(_ => AcceptableRate)
