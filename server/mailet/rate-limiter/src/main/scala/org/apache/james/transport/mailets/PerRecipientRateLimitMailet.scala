@@ -20,20 +20,18 @@
 package org.apache.james.transport.mailets
 
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.lifecycle.api.LifecycleUtil
-import org.apache.james.rate.limiter.api.{AcceptableRate, AllowedQuantity, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
-import org.apache.james.util.DurationParser
+import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult}
+import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
-import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 
 import scala.jdk.CollectionConverters._
 import scala.util.Using
@@ -62,19 +60,10 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
     val keyPrefix: Option[KeyPrefix] = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
 
-    val countRateLimiter: Option[PerRecipientRateLimiter] = Option(getInitParameter("count"))
-      .flatMap(parameter => extractCountToRateLimiter(parameter, duration, rateLimiterFactory)
-        .map(rateLimiter => PerRecipientRateLimiter(rateLimiter, keyPrefix, Count)))
+    def perRecipientRateLimiter(entityType: EntityType): Option[PerRecipientRateLimiter] = createRateLimiter(entityType, duration, rateLimiterFactory, keyPrefix)
 
-    val sizeRateLimiter: Option[PerRecipientRateLimiter] = Option(getInitParameter("size"))
-      .map {
-        case "" => throw new IllegalArgumentException("'size' field cannot be empty if specified")
-        case s => s
-      }
-      .flatMap(parameter => extractSizeToRateLimiter(parameter, duration, rateLimiterFactory)
-        .map(rateLimiter => PerRecipientRateLimiter(rateLimiter, keyPrefix, Size)))
-
-    rateLimiters = Seq(countRateLimiter, sizeRateLimiter)
+    rateLimiters = Seq(perRecipientRateLimiter(Size),
+      perRecipientRateLimiter(Count))
       .filter(limiter => limiter.isDefined)
       .map(limiter => limiter.get)
   }
@@ -101,26 +90,14 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
   }
 
   @VisibleForTesting
-  def parseDuration(): Duration =
-    Option(getInitParameter("duration"))
-      .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
-      .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
+  def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
 
-
-  private def extractCountToRateLimiter(quantity: String, duration: Duration, rateLimiterFactory: RateLimiterFactory): Option[RateLimiter] =
-    Some(quantity)
-      .map(_.toLong)
-      .map(AllowedQuantity.liftOrThrow)
-      .map(quantity => Rules(Seq(Rule(quantity, duration))))
+  private def createRateLimiter(entityType: EntityType, duration: Duration,
+                                rateLimiterFactory: RateLimiterFactory, keyPrefix: Option[KeyPrefix]): Option[PerRecipientRateLimiter] =
+    entityType.extractRules(duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification)
+      .map(PerRecipientRateLimiter(_, keyPrefix, entityType))
 
-  private def extractSizeToRateLimiter(quantity: String, duration: Duration, rateLimiterFactory: RateLimiterFactory): Option[RateLimiter] =
-    Some(quantity)
-      .map(org.apache.james.util.Size.parse)
-      .map(_.asBytes())
-      .map(AllowedQuantity.liftOrThrow)
-      .map(quantity => Rules(Seq(Rule(quantity, duration))))
-      .map(rateLimiterFactory.withSpecification)
 
   private def applyRateLimiter(mail: Mail): Seq[(MailAddress, RateLimitingResult)] =
     SFlux.fromIterable(mail.getRecipients.asScala)
