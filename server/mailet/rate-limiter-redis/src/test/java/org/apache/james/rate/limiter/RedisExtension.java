@@ -37,6 +37,11 @@ public class RedisExtension implements GuiceModuleTestExtension {
         DOCKER_REDIS_SINGLETON.stop();
     }
 
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        DOCKER_REDIS_SINGLETON.flushAll();
+    }
+
     public DockerRedis dockerRedis() {
         return DOCKER_REDIS_SINGLETON;
     }
