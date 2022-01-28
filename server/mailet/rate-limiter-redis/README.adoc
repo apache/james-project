@@ -1,0 +1,43 @@
+= Distributed Rate limiting for Apache James on top of Redis
+
+This package provides distributed rate limiting using Redis as a shared data store.
+
+It reuses work of xref:../rate-limiter/README.adoc[the Rate Limiter extensions] but substitute a Redis implementation
+for the underlying rate limiting.
+
+== Running rate limiting with the memory implementation
+
+- 1. Compile this project.
+- 2. Place the generated "jar with dependencies" in James `extensions-jars` folder.
+- 3. Configure James to use the redis implementation for Rate Limiting by putting the following content within
+`extension.properties`:
+
+----
+guice.extension.module=org.apache.james.rate.limiter.redis.R
+----
+
+- 4. Use the rate limiting mailets within `mailetcontainer.xml`
+
+We provide a sample `docker-compose` demonstrating this setup.
+
+== Additionnal mailet parameters
+
+Mailets need to specify the `redisURL` tag.
+
+This consists in a list of urls to contact the Redis servers.
+
+Specifying a single URL will connect to a single Redis instance.
+
+Specifying a coma delimited list of URLs will connect to Redis as a cluster.
+
+Eg:
+
+```
+<mailet matcher="All" class="PerSenderRateLimit">
+    <redisURL>redis://localhost:6379</redisURL>
+    <keyPrefix>myPrefix</keyPrefix>
+    <duration>1h</duration>
+    <count>10</count>
+</mailet>
+``
+
