@@ -33,9 +33,10 @@ import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
+import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 
 import scala.jdk.CollectionConverters._
-import scala.util.Using;
+import scala.util.Using
 
 case class PerRecipientRateLimiter(rateLimiter: RateLimiter, keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(recipient: MailAddress, mail: Mail): Publisher[RateLimitingResult] =
@@ -125,7 +126,7 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
     SFlux.fromIterable(mail.getRecipients.asScala)
       .flatMap(recipient => SFlux.merge(rateLimiters.map(rateLimiter => rateLimiter.rateLimit(recipient, mail)))
         .fold[RateLimitingResult](AcceptableRate)((a, b) => a.merge(b))
-        .map(rateLimitingResult => (recipient, rateLimitingResult)))
+        .map(rateLimitingResult => (recipient, rateLimitingResult)), DEFAULT_CONCURRENCY)
       .collectSeq()
       .block()
 
