@@ -50,13 +50,11 @@ class RedisRateLimiterFactory(redisConfiguration: RedisRateLimiterConfiguration)
       new RedisSingleInstanceRateLimitjFactory(RedisClient.create(redisConfiguration.redisURI.value.last))
     }
 
-  override def withSpecification(rules: Rules): RateLimiter = {
-    val requestRateLimiter: ReactiveRequestRateLimiter = rateLimitjFactory.getInstanceReactive(rules.rules
+  override def withSpecification(rules: Rules): RateLimiter =
+    RedisRateLimiter(rateLimitjFactory.getInstanceReactive(rules.rules
       .map(convert)
       .map(withPrecision)
-      .toSet.asJava)
-    RedisRateLimiter(requestRateLimiter)
-  }
+      .toSet.asJava))
 
   private def withPrecision(rule: RequestLimitRule): RequestLimitRule =
     redisConfiguration.windowPrecision
@@ -64,7 +62,6 @@ class RedisRateLimiterFactory(redisConfiguration: RedisRateLimiterConfiguration)
       .getOrElse(rule)
 
   private def convert(rule: Rule): RequestLimitRule = RequestLimitRule.of(rule.duration, rule.quantity.value)
-
 }
 
 case class RedisRateLimiter(limiter: ReactiveRequestRateLimiter) extends RateLimiter {
