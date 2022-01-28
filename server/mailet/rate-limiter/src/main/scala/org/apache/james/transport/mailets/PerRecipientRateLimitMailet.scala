@@ -80,8 +80,7 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
 
   override def service(mail: Mail): Unit = {
     if (!mail.getRecipients.isEmpty) {
-      val rateLimitResults: Seq[(MailAddress, RateLimitingResult)] = mail.getRecipients.asScala.toSeq
-        .map(recipient => (recipient, applyRateLimiter(mail, recipient)))
+      val rateLimitResults: Seq[(MailAddress, RateLimitingResult)] = applyRateLimiter(mail)
 
       val rateLimitedRecipients: Seq[MailAddress] = rateLimitResults.filter(_._2.equals(RateExceeded)).map(_._1)
       val acceptableRecipients: Seq[MailAddress] = rateLimitResults.filter(_._2.equals(AcceptableRate)).map(_._1)
@@ -122,9 +121,12 @@ class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimi
       .map(quantity => Rules(Seq(Rule(quantity, duration))))
       .map(rateLimiterFactory.withSpecification)
 
-  private def applyRateLimiter(mail: Mail, recipient: MailAddress): RateLimitingResult =
-    SFlux.merge(rateLimiters.map(rateLimiter => rateLimiter.rateLimit(recipient, mail)))
-      .fold[RateLimitingResult](AcceptableRate)((a, b) => a.merge(b))
+  private def applyRateLimiter(mail: Mail): Seq[(MailAddress, RateLimitingResult)] =
+    SFlux.fromIterable(mail.getRecipients.asScala)
+      .flatMap(recipient => SFlux.merge(rateLimiters.map(rateLimiter => rateLimiter.rateLimit(recipient, mail)))
+        .fold[RateLimitingResult](AcceptableRate)((a, b) => a.merge(b))
+        .map(rateLimitingResult => (recipient, rateLimitingResult)))
+      .collectSeq()
       .block()
 
 }
