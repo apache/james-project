@@ -22,7 +22,11 @@ package org.apache.james.rate.limiter.redis
 import java.time.Duration
 
 import com.google.common.base.Preconditions
+import eu.timepit.refined
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.RedisURI
+import org.apache.james.rate.limiter.redis.RedisUris.RedisUris
 import org.apache.mailet.MailetConfig
 
 object RedisRateLimiterConfiguration {
@@ -31,8 +35,27 @@ object RedisRateLimiterConfiguration {
 
   def from(redisUri: String, windowPrecision: Option[Duration] = None): RedisRateLimiterConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
-    RedisRateLimiterConfiguration(RedisURI.create(redisUri), windowPrecision)
+    RedisRateLimiterConfiguration(RedisUris.from(redisUri), windowPrecision)
   }
 }
 
-case class RedisRateLimiterConfiguration(redisURI: RedisURI, windowPrecision: Option[Duration] = None)
+object RedisUris {
+  type RedisUrisConstraint = NonEmpty
+  type RedisUris = List[RedisURI] Refined RedisUrisConstraint
+
+  def validate(value: List[RedisURI]): Either[IllegalArgumentException, RedisUris] =
+    refined.refineV[RedisUrisConstraint](value) match {
+      case Right(value) => Right(value)
+      case Left(error) => Left(new IllegalArgumentException(error))
+    }
+
+  def liftOrThrow(value: List[RedisURI]): RedisUris =
+    validate(value) match {
+      case Right(value) => value
+      case Left(error) => throw error
+    }
+
+  def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
+}
+
+case class RedisRateLimiterConfiguration(redisURI: RedisUris, windowPrecision: Option[Duration] = None)
