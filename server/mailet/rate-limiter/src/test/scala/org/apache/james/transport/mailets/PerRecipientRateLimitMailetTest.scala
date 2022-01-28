@@ -229,27 +229,23 @@ class PerRecipientRateLimitMailetTest {
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(mail1.getState).isEqualTo("transport")
-      softly.assertThat(mail2.getState).isEqualTo("ghost")
+      softly.assertThat(mail2.getState).isEqualTo("transport")
     })
 
     val mailCapture: ArgumentCaptor[Mail] = ArgumentCaptor.forClass(classOf[Mail])
     val stateCapture: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
 
-    Mockito.verify(mailetContext, times(2)).sendMail(mailCapture.capture(), stateCapture.capture())
+    Mockito.verify(mailetContext, times(1)).sendMail(mailCapture.capture(), stateCapture.capture())
 
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(mailCapture.getAllValues.size()).isEqualTo(2)
-      softly.assertThat(mailCapture.getAllValues.asScala
-        .find(mail => mail.getState.equals("transport"))
-        .map(mail => mail.getRecipients).get)
-        .containsExactlyInAnyOrder(new MailAddress("rcpt2@linagora.com"))
+      softly.assertThat(mailCapture.getAllValues.size()).isEqualTo(1)
 
       softly.assertThat(mailCapture.getAllValues.asScala
         .find(mail => mail.getState.equals("tooMuchMails"))
         .map(mail => mail.getRecipients).get)
         .containsExactlyInAnyOrder(new MailAddress("rcpt1@linagora.com"))
       softly.assertThat(stateCapture.getAllValues)
-        .containsExactlyInAnyOrder("transport", "tooMuchMails")
+        .containsExactlyInAnyOrder( "tooMuchMails")
     })
   }
 
