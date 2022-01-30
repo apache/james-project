@@ -329,7 +329,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
         }
 
         @Test
@@ -646,7 +646,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
         }
     }
 
@@ -859,7 +859,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
         }
     }
     

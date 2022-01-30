@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -127,19 +126,19 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
-        void addDomainMappingsShouldReturnOkWhenWithA255LongDomainSource() {
+        void addDomainMappingsShouldReturnOkWhenWithA253LongDomainSource() {
             given()
                 .body("to.com")
             .when()
-                .put(StringUtils.repeat('a', 255))
+                .put(StringUtils.repeat("123456789.", 25) + "com")
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        void addDomainMappingsShouldReturnOkWhenWithA255LongDomainDestination() {
+        void addDomainMappingsShouldReturnOkWhenWithA253LongDomainDestination() {
             given()
-                .body(StringUtils.repeat('a', 255))
+                .body(StringUtils.repeat("123456789.", 25) + "com")
             .when()
                 .put("from.com")
             .then()
@@ -437,7 +436,7 @@ class DomainMappingsRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("The domain " + longDomainName + " is invalid."))
-                .body("details", is("Domain name length should not exceed 255 characters"));
+                .body("details", is("Domain name length should not exceed 253 characters"));
         }
 
         @Test
@@ -453,7 +452,7 @@ class DomainMappingsRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("The domain " + longDomainName + " is invalid."))
-                .body("details", is("Domain name length should not exceed 255 characters"));
+                .body("details", is("Domain name length should not exceed 253 characters"));
         }
 
         private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> requestingFunction) {
