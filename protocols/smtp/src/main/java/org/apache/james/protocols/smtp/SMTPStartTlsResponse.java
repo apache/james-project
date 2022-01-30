@@ -34,10 +34,6 @@ public class SMTPStartTlsResponse extends SMTPResponse implements StartTlsRespon
         super(code, description);
     }
 
-    public SMTPStartTlsResponse(String rawLine) {
-        super(rawLine);
-    }
-
     /**
      * Returns an immutable {@link StartTlsResponse}
      */
