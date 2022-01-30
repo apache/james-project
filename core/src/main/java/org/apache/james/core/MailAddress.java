@@ -29,6 +29,8 @@ import javax.mail.internet.InternetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Splitter;
+
 /**
  * A representation of an email address.
  * <p/>
@@ -232,7 +234,18 @@ public class MailAddress implements java.io.Serializable {
         }
 
         localPart = localPartSB.toString();
+
+        if (localPart.startsWith(".")
+            || localPart.endsWith(".")
+            || haveDoubleDot(localPart)) {
+            throw new AddressException("Addresses cannot start end with '.' or contain two consecutive dots");
+        }
+
         domain = createDomain(domainSB.toString());
+    }
+
+    private boolean haveDoubleDot(String localPart) {
+        return Splitter.on('.').splitToList(localPart).stream().anyMatch(String::isEmpty);
     }
 
     private Domain createDomain(String domain) throws AddressException {

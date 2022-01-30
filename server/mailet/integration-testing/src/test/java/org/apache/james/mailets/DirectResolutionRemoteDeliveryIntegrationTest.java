@@ -31,7 +31,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
@@ -49,6 +48,7 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -117,11 +117,13 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
-    @Disabled("JAMES-3708 a..b@domain.com triggers a parsing error within javax.mail, the exception is ingnored and substituted with null," +
-        "resulting in a NPE in RemoteDelivery. Instead we should reject as part of SMTP reception emails we cannot handle." +
-        "This can be used to make the delivery of all remote recipients fail while local recipient succeeds.")
     @Test
-    void test(@TempDir File temporaryFolder) throws Exception {
+    void shouldRejectInvalidAddressesUponSubmission(@TempDir File temporaryFolder) throws Exception {
+        /*
+        a..b@domain.com triggered a parsing error within javax.mail, the exception was ignored and substituted with null,
+        resulting in a NPE in RemoteDelivery. Instead we now reject it as part of SMTP reception emails we cannot handle.
+        This could be used to make the delivery of all remote recipients fail while local recipient succeeds.
+         */
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
 
@@ -143,7 +145,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
 
         assertThatThrownBy(() -> messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, "to..user@" + JAMES_ANOTHER_DOMAIN))
-            .isInstanceOf(IOException.class);
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("Error upon step RCPT: 553 5.1.3 Syntax error in recipient address");
     }
 
     @Test
