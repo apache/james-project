@@ -379,12 +379,12 @@ public class MailAddress implements java.io.Serializable {
      *
      * @return the address
      */
-    public InternetAddress toInternetAddress() {
+    public Optional<InternetAddress> toInternetAddress() {
         try {
-            return new InternetAddress(toString());
+            return Optional.of(new InternetAddress(toString()));
         } catch (javax.mail.internet.AddressException ae) {
-            //impossible really
-            return null;
+            LOGGER.warn("A valid address '{}' as per James criterial fails to parse as a javax.mail InternetAdrress", asString());
+            return Optional.empty();
         }
     }
 

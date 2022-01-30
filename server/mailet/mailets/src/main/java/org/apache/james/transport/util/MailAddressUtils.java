@@ -55,7 +55,7 @@ public class MailAddressUtils {
 
     private static Stream<InternetAddress> streamOfInternetAddress(List<MailAddress> mailAddresses) {
         return mailAddresses.stream()
-            .map(MailAddress::toInternetAddress);
+            .flatMap(mailAddress -> mailAddress.toInternetAddress().stream());
     }
 
     public static boolean isUnalteredOrReversePathOrSender(MailAddress mailAddress) {

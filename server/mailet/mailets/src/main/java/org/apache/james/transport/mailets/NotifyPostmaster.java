@@ -204,11 +204,18 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
                     .allowedSpecials(ALLOWED_SPECIALS)
                     .getSpecialAddress(to.get());
             if (specialAddress.isPresent()) {
-                return ImmutableList.of(specialAddress.get().toInternetAddress());
+                return specialAddress
+                    .flatMap(MailAddress::toInternetAddress)
+                    .map(ImmutableList::of)
+                    .orElse(ImmutableList.of());
             }
             LOGGER.info("\"to\" parameter ignored, set to postmaster");
         }
-        return ImmutableList.of(getMailetContext().getPostmaster().toInternetAddress());
+        return getMailetContext()
+            .getPostmaster()
+            .toInternetAddress()
+            .map(ImmutableList::of)
+            .orElse(ImmutableList.of());
     }
 
     @Override

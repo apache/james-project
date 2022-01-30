@@ -59,7 +59,7 @@ class XOriginatingIpInNetworkSpec extends Specification with Matchers {
           .remoteAddr("10.0.0.1")
           .mimeMessage(
             MimeMessageBuilder.mimeMessageBuilder()
-              .addToRecipient(testRecipient.toInternetAddress)
+              .addToRecipient(testRecipient.toInternetAddress.get())
               .addHeader(X_ORIGINATING_IP,"192.168.200.1")
               .build())
           .build
@@ -77,7 +77,7 @@ class XOriginatingIpInNetworkSpec extends Specification with Matchers {
           .remoteAddr("10.0.0.1")
           .mimeMessage(
             MimeMessageBuilder.mimeMessageBuilder()
-              .addToRecipient(testRecipient.toInternetAddress)
+              .addToRecipient(testRecipient.toInternetAddress.get())
               .addHeader(X_ORIGINATING_IP,"[192.168.200.1]")
               .build())
           .build
@@ -95,7 +95,7 @@ class XOriginatingIpInNetworkSpec extends Specification with Matchers {
           .remoteAddr("10.0.0.1")
           .mimeMessage(
             MimeMessageBuilder.mimeMessageBuilder()
-              .addToRecipient(testRecipient.toInternetAddress)
+              .addToRecipient(testRecipient.toInternetAddress.get())
               .addHeader(X_ORIGINATING_IP,"10.0.0.2")
               .build())
           .build
@@ -113,7 +113,7 @@ class XOriginatingIpInNetworkSpec extends Specification with Matchers {
           .remoteAddr("10.0.0.1")
           .mimeMessage(
             MimeMessageBuilder.mimeMessageBuilder()
-              .addToRecipient(testRecipient.toInternetAddress)
+              .addToRecipient(testRecipient.toInternetAddress.get())
               .build())
           .build
 

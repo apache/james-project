@@ -100,7 +100,7 @@ public class NotifyPostmasterTest {
                 .build();
         notifyPostmaster.init(mailetConfig);
 
-        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
+        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress().get());
     }
 
     @Test
@@ -112,7 +112,7 @@ public class NotifyPostmasterTest {
                 .build();
         notifyPostmaster.init(mailetConfig);
 
-        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
+        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress().get());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class NotifyPostmasterTest {
                 .build();
         notifyPostmaster.init(mailetConfig);
 
-        assertThat(notifyPostmaster.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress());
+        assertThat(notifyPostmaster.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress().get());
     }
 
     @Test
@@ -136,7 +136,7 @@ public class NotifyPostmasterTest {
                 .build();
         notifyPostmaster.init(mailetConfig);
 
-        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
+        assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress().get());
     }
 
     @Test

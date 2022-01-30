@@ -32,7 +32,7 @@ public class InternetAddressConverter {
     public static ImmutableSet<InternetAddress> convert(Collection<MailAddress> recipients) {
         Preconditions.checkNotNull(recipients);
         return recipients.stream()
-            .map(MailAddress::toInternetAddress)
+            .flatMap(mailAddress -> mailAddress.toInternetAddress().stream())
             .collect(ImmutableSet.toImmutableSet());
     }
 }

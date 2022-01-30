@@ -21,11 +21,14 @@
 
 package org.apache.james.transport.mailets;
 
+import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * Returns the current time for the mail server.  Sample configuration:
@@ -61,7 +64,8 @@ public class ServerTime extends GenericMailet {
         // MAIL FROM/RCPT TO commands used to send the inquiry.
 
         if (response.getFrom() == null) {
-            response.setFrom(mail.getRecipients().iterator().next().toInternetAddress());
+            mail.getRecipients().iterator().next().toInternetAddress()
+                .ifPresent(Throwing.<Address>consumer(response::setFrom).sneakyThrow());
         }
 
         if (response.getAllRecipients() == null) {

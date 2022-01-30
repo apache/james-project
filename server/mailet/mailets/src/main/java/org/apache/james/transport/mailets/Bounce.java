@@ -130,7 +130,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
     private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of(
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError");
     private static final List<MailAddress> RECIPIENTS = ImmutableList.of(SpecialAddress.REVERSE_PATH);
-    private static final List<InternetAddress> TO = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
+    private static final List<InternetAddress> TO = SpecialAddress.REVERSE_PATH.toInternetAddress().stream().collect(ImmutableList.toImmutableList());
     private final DNSService dns;
 
     @Inject
