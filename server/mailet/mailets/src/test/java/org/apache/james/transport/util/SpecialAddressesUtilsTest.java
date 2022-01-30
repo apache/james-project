@@ -294,7 +294,7 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(sender);
     }
@@ -304,9 +304,9 @@ public class SpecialAddressesUtilsTest {
         MailAddress from = MailAddressFixture.ANY_AT_JAMES;
         MailAddress from2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
-            .addFrom(from.toInternetAddress(), from2.toInternetAddress()));
+            .addFrom(from.toInternetAddress().get(), from2.toInternetAddress().get()));
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(from, from2);
     }
@@ -320,7 +320,7 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(sender);
     }
@@ -331,7 +331,7 @@ public class SpecialAddressesUtilsTest {
                 .name("name")
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress().get()));
 
         assertThat(addresses).isEmpty();
     }
@@ -340,7 +340,7 @@ public class SpecialAddressesUtilsTest {
     void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress().get()));
 
         assertThat(addresses).isEmpty();
     }
@@ -354,7 +354,7 @@ public class SpecialAddressesUtilsTest {
         MailAddress expectedReplyTo = MailAddressFixture.ANY_AT_JAMES;
         MailAddress expectedReplyTo2 = MailAddressFixture.OTHER_AT_JAMES;
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(expectedReplyTo, expectedReplyTo2);
     }
@@ -368,7 +368,7 @@ public class SpecialAddressesUtilsTest {
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(sender);
     }
@@ -381,7 +381,7 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(sender);
     }
@@ -392,7 +392,7 @@ public class SpecialAddressesUtilsTest {
                 .name("name")
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress().get()));
 
         assertThat(addresses).isEmpty();
     }
@@ -404,7 +404,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .addToRecipient(to.asString(), to2.asString()));
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(to, to2);
     }
@@ -416,7 +416,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .addToRecipient(to.asString(), to2.asString()));
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(to, to2);
     }
@@ -427,7 +427,7 @@ public class SpecialAddressesUtilsTest {
                 .name("name")
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress().get()));
 
         assertThat(addresses).isEmpty();
     }
@@ -438,7 +438,7 @@ public class SpecialAddressesUtilsTest {
                 .name("name")
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.NULL.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.NULL.toInternetAddress().get()));
 
         assertThat(addresses).isEmpty();
     }
@@ -451,7 +451,7 @@ public class SpecialAddressesUtilsTest {
 
         MailAddress address = new MailAddress("user", "address.marker");
         MailAddress address2 = new MailAddress("user2", "address.marker");
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(address.toInternetAddress(), address2.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(address.toInternetAddress().get(), address2.toInternetAddress().get()));
 
         assertThat(addresses).containsOnly(address, address2);
     }
@@ -462,7 +462,7 @@ public class SpecialAddressesUtilsTest {
                 .name("name")
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.DELETE.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.DELETE.toInternetAddress().get()));
 
         MailAddress expected = new MailAddress("delete@address.marker");
         assertThat(addresses).containsOnly(expected);

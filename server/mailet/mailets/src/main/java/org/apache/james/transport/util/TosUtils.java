@@ -56,6 +56,6 @@ public class TosUtils {
 
     private boolean containsOnlyUnalteredOrTo(List<InternetAddress> apparentlyTo) {
         return apparentlyTo.size() == 1 && 
-                (apparentlyTo.get(0).equals(SpecialAddress.UNALTERED.toInternetAddress()) || apparentlyTo.get(0).equals(SpecialAddress.RECIPIENTS.toInternetAddress()));
+                (apparentlyTo.get(0).equals(SpecialAddress.UNALTERED.toInternetAddress().get()) || apparentlyTo.get(0).equals(SpecialAddress.RECIPIENTS.toInternetAddress().get()));
     }
 }

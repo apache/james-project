@@ -98,7 +98,7 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
+        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress().get());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
+        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress().get());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress());
+        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress().get());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.FROM.toInternetAddress());
+        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.FROM.toInternetAddress().get());
     }
 
     @Test
@@ -146,7 +146,7 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
+        assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress().get());
     }
 
     @Test

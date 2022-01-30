@@ -116,7 +116,7 @@ public class DSNBounceTest {
 
         @Test
         void getToShouldReturnReversePathOnly() {
-            assertThat(dsnBounce.getTo()).containsOnly(SpecialAddress.REVERSE_PATH.toInternetAddress());
+            assertThat(dsnBounce.getTo()).containsOnly(SpecialAddress.REVERSE_PATH.toInternetAddress().get());
         }
 
         @Test
@@ -305,7 +305,7 @@ public class DSNBounceTest {
             SentMail sentMail = sentMails.get(0);
 
             assertThat(sentMail.getMsg().getFrom())
-                .containsOnly(fakeMailContext.getPostmaster().toInternetAddress());
+                .containsOnly(fakeMailContext.getPostmaster().toInternetAddress().get());
             assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
         }
 
@@ -332,7 +332,7 @@ public class DSNBounceTest {
             assertThat(sentMails).hasSize(1);
             SentMail sentMail = sentMails.get(0);
 
-            assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress());
+            assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress().get());
             assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
         }
 
@@ -359,7 +359,7 @@ public class DSNBounceTest {
             assertThat(sentMails).hasSize(1);
             SentMail sentMail = sentMails.get(0);
 
-            assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress());
+            assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress().get());
             assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
         }
 
@@ -387,7 +387,7 @@ public class DSNBounceTest {
             assertThat(sentMails).hasSize(1);
             SentMail sentMail = sentMails.get(0);
 
-            assertThat(sentMail.getMsg().getFrom()).containsOnly(bounceSender.toInternetAddress());
+            assertThat(sentMail.getMsg().getFrom()).containsOnly(bounceSender.toInternetAddress().get());
             assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
         }
     }

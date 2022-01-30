@@ -163,7 +163,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
     private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action", "defaultStatus");
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
-    private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
+    private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress().get());
 
     private static final String LOCALHOST = "127.0.0.1";
     private static final Pattern DIAG_PATTERN = Patterns.compilePatternUncheckedException("^\\d{3}\\s.*$");

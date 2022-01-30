@@ -61,7 +61,7 @@ class TosUtilsTest {
     @Test
     void getToShouldReturnEmptyWhenMailetToContainsOnlyUnaltered() throws Exception {
         when(mailet.getTo())
-            .thenReturn(ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
+            .thenReturn(ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress().get()));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -73,7 +73,7 @@ class TosUtilsTest {
     @Test
     void getToShouldReturnEmptyWhenMailetToContainsOnlyRecipients() throws Exception {
         when(mailet.getTo())
-            .thenReturn(ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
+            .thenReturn(ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress().get()));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -87,7 +87,7 @@ class TosUtilsTest {
         MailAddress mailAddress = new MailAddress("test", "james.org");
         MailAddress mailAddress2 = new MailAddress("test2", "james.org");
         when(mailet.getTo())
-            .thenReturn(ImmutableList.of(mailAddress.toInternetAddress(), mailAddress2.toInternetAddress()));
+            .thenReturn(ImmutableList.of(mailAddress.toInternetAddress().get(), mailAddress2.toInternetAddress().get()));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -100,7 +100,7 @@ class TosUtilsTest {
     @Test
     void getToShouldReturnAddressesFromOriginalMailWhenMailetToAreSpecialAddresses() throws Exception {
         when(mailet.getTo())
-            .thenReturn(ImmutableList.of(SpecialAddress.FROM.toInternetAddress(), SpecialAddress.TO.toInternetAddress()));
+            .thenReturn(ImmutableList.of(SpecialAddress.FROM.toInternetAddress().get(), SpecialAddress.TO.toInternetAddress().get()));
 
         MailAddress from = new MailAddress("from", "james.org");
         MailAddress toMailAddress = new MailAddress("to", "james.org");

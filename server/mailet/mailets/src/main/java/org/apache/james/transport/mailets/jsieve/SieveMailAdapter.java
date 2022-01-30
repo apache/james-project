@@ -31,6 +31,7 @@ import java.util.Set;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
@@ -271,7 +272,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     public String getEnvelopeTo() {
         return getMail().getRecipients()
             .stream()
-            .map(mailAddress -> mailAddress.toInternetAddress().getAddress())
+            .flatMap(mailAddress -> mailAddress.toInternetAddress().stream())
+            .map(InternetAddress::getAddress)
             .filter(Objects::nonNull)
             .findFirst()
             .orElse(null);

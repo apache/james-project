@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
+import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -60,6 +61,9 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -396,7 +400,7 @@ public class WhiteListManager extends GenericMailet {
             selectRS = selectStmt.executeQuery();
             while (selectRS.next()) {
                 MailAddress mailAddress = new MailAddress(selectRS.getString(1), selectRS.getString(2));
-                out.println(mailAddress.toInternetAddress().toString());
+                out.println(mailAddress.toString());
             }
 
             out.println();
@@ -664,12 +668,13 @@ public class WhiteListManager extends GenericMailet {
             MimeMessage reply = new MimeMessage(Session.getDefaultInstance(System.getProperties(), null));
 
             // Create the list of recipients in the Address[] format
-            InternetAddress[] rcptAddr = new InternetAddress[1];
-            rcptAddr[0] = senderMailAddress.toInternetAddress();
-            reply.setRecipients(Message.RecipientType.TO, rcptAddr);
+            reply.setRecipients(Message.RecipientType.TO, senderMailAddress.toInternetAddress().stream()
+                .collect(ImmutableList.toImmutableList())
+                .toArray(new InternetAddress[0]));
 
             // Set the sender...
-            reply.setFrom(notifier.toInternetAddress());
+            notifier.toInternetAddress()
+                .ifPresent(Throwing.<Address>consumer(reply::setFrom).sneakyThrow());
 
             // Create the message body
             MimeMultipart multipart = new MimeMultipart();

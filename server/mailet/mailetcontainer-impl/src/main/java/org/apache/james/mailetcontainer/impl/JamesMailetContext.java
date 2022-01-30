@@ -65,6 +65,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -186,7 +187,8 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
 
         // Change the sender...
         if (bouncer != null) {
-            reply.getMessage().setFrom(bouncer.toInternetAddress());
+            bouncer.toInternetAddress()
+                .ifPresent(Throwing.<Address>consumer(address -> reply.getMessage().setFrom(address)).sneakyThrow());
         }
 
         reply.getMessage().saveChanges();

@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -146,7 +148,7 @@ public class MailModifier {
      */
     public void setReplyTo(Optional<MailAddress> optionalReplyTo) throws MessagingException {
         optionalReplyTo.ifPresent(Throwing
-            .consumer((MailAddress address) -> setReplyTo(address))
+            .consumer((ThrowingConsumer<MailAddress>) this::setReplyTo)
             .sneakyThrow());
     }
 
@@ -157,7 +159,10 @@ public class MailModifier {
                 LOGGER.debug("replyTo set to: null");
             }
         } else {
-            mail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
+            ImmutableList<InternetAddress> replyToAsList = replyTo.toInternetAddress()
+                .stream()
+                .collect(ImmutableList.toImmutableList());
+            mail.getMessage().setReplyTo(replyToAsList.toArray(new InternetAddress[0]));
             if (mailet.getInitParameters().isDebug()) {
                 LOGGER.debug("replyTo set to: {}", replyTo);
             }
@@ -204,7 +209,8 @@ public class MailModifier {
 
     public void setSender(Optional<MailAddress> sender) throws MessagingException {
         if (sender.isPresent()) {
-            mail.getMessage().setFrom(sender.get().toInternetAddress());
+            sender.flatMap(MailAddress::toInternetAddress)
+                .ifPresent(Throwing.<Address>consumer(address -> mail.getMessage().setFrom(address)).sneakyThrow());
 
             if (mailet.getInitParameters().isDebug()) {
                 LOGGER.debug("sender set to: {}", sender);

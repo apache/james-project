@@ -117,7 +117,7 @@ class MailAddressTest {
     @MethodSource("goodAddresses")
     void toInternetAddressShouldNoop(String mailAddress) throws Exception {
         assertThat(new MailAddress(mailAddress).toInternetAddress())
-            .isNotNull();
+            .isNotEmpty();
     }
 
     @ParameterizedTest
@@ -171,7 +171,7 @@ class MailAddressTest {
         InternetAddress b = new InternetAddress(GOOD_ADDRESS);
         MailAddress a = new MailAddress(b);
 
-        assertThat(a.toInternetAddress()).isEqualTo(b);
+        assertThat(a.toInternetAddress()).contains(b);
         assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
     }
 

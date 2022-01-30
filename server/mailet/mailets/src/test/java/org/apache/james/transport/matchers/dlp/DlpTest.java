@@ -133,7 +133,7 @@ class DlpTest {
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
                 .mimeMessageBuilder()
-                .addFrom(ANY_AT_JAMES.toInternetAddress()))
+                .addFrom(ANY_AT_JAMES.toInternetAddress().get()))
             .build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);
@@ -170,7 +170,7 @@ class DlpTest {
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
                 .mimeMessageBuilder()
-                .addToRecipient(RECIPIENT2.toInternetAddress()))
+                .addToRecipient(RECIPIENT2.toInternetAddress().get()))
             .build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);
@@ -190,7 +190,7 @@ class DlpTest {
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
                 .mimeMessageBuilder()
-                .addCcRecipient(RECIPIENT2.toInternetAddress()))
+                .addCcRecipient(RECIPIENT2.toInternetAddress().get()))
             .build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);
@@ -210,7 +210,7 @@ class DlpTest {
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
                 .mimeMessageBuilder()
-                .addBccRecipient(RECIPIENT2.toInternetAddress()))
+                .addBccRecipient(RECIPIENT2.toInternetAddress().get()))
             .build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);

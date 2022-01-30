@@ -133,7 +133,8 @@ public class RejectAction implements MailAction {
 
         // Send the message
         MimeMessage reply = (MimeMessage) aMail.getMessage().reply(false);
-        reply.setFrom(soleRecipient.toInternetAddress());
+        soleRecipient.toInternetAddress()
+            .ifPresent(Throwing.<Address>consumer(reply::setFrom).sneakyThrow());
         reply.setContent(multipart);
         reply.saveChanges();
         Address[] recipientAddresses = reply.getAllRecipients();
