@@ -240,17 +240,24 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         if (configuration.isAutoDetect()) {
             String hostName;
             try {
-                hostName = dns.getHostName(dns.getLocalHost());
+                hostName = removeTrailingDot(dns.getHostName(dns.getLocalHost()));
             } catch (UnknownHostException ue) {
                 hostName = "localhost";
             }
 
             LOGGER.info("Local host is: {}", hostName);
-            if (hostName != null && !hostName.equals("localhost")) {
+            if (!Strings.isNullOrEmpty(hostName) && !hostName.equals("localhost")) {
                 return ImmutableList.of(Domain.of(hostName));
             }
         }
         return ImmutableList.of();
+    }
+
+    private String removeTrailingDot(String domain) {
+        if (domain.endsWith(".")) {
+            return domain.substring(0, domain.length() - 1);
+        }
+        return domain;
     }
 
     /**

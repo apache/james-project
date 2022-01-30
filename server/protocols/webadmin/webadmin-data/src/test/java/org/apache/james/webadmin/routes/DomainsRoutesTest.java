@@ -203,9 +203,9 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void putShouldReturnOkWhenWithA255LongDomainName() {
+        void putShouldReturnOkWhenWithA253LongDomainName() {
             when()
-                .put(StringUtils.repeat('a', 255))
+                .put(StringUtils.repeat("123456789.", 25) + "com")
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
         }
@@ -222,7 +222,7 @@ class DomainsRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain creation " + longDomainName))
-                .body("details", is("Domain name length should not exceed 255 characters"));
+                .body("details", is("Domain name length should not exceed 253 characters"));
         }
 
         @Test

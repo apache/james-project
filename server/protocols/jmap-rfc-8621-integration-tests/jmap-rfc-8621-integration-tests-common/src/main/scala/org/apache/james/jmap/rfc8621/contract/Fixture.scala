@@ -84,7 +84,7 @@ object Fixture {
 
   val AUTHORIZATION_HEADER: String = "Authorization"
   val DOMAIN: Domain = Domain.of("domain.tld")
-  val DOMAIN_WITH_SPACE: Domain = Domain.of("dom ain.tld")
+  val DOMAIN_WITH_SPACE: String = "dom ain.tld"
   val _2_DOT_DOMAIN: Domain = Domain.of("do.main.tld")
   val BOB: Username = Username.fromLocalPartWithDomain("bob", DOMAIN)
   val ANDRE: Username = Username.fromLocalPartWithDomain("andre", DOMAIN)

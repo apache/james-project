@@ -78,7 +78,7 @@ class XMLDomainListTest {
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
-            .addConfiguredDomains(Domain.of("domain1."), Domain.of("domain2."))
+            .addConfiguredDomains(Domain.of("domain1"), Domain.of("domain2"))
             .defaultDomain(DEFAULT_DOMAIN));
 
         assertThat(dom.getDomains()).hasSize(3);
@@ -90,7 +90,7 @@ class XMLDomainListTest {
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
-            .addConfiguredDomains(Domain.of("domain1."))
+            .addConfiguredDomains(Domain.of("domain1"))
             .defaultDomain(DEFAULT_DOMAIN));
 
         assertThat(dom.getDomains()).contains(Domain.of("local"));
@@ -102,7 +102,7 @@ class XMLDomainListTest {
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
-            .addConfiguredDomains(Domain.of("domain1."))
+            .addConfiguredDomains(Domain.of("domain1"))
             .defaultDomain(DEFAULT_DOMAIN));
 
         assertThat(dom.getDomains()).hasSize(2);
