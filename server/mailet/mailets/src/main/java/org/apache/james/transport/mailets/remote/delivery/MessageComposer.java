@@ -46,7 +46,7 @@ public class MessageComposer {
      * @param e The MessagingException to use
      * @return logString
      */
-    public String fromException(Exception e) {
+    private String fromException(Exception e) {
         if (e.getClass().getName().endsWith(".SMTPSendFailedException")) {
             return "RemoteHost said: " + e.getMessage();
         } else if (e instanceof SendFailedException) {
