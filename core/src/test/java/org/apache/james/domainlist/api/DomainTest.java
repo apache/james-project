@@ -20,15 +20,19 @@
 package org.apache.james.domainlist.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class DomainTest {
+    private static String DOMAIN_WITH_64_CHAR_PART = "abc." + "d".repeat(64) + ".com";
 
     @Test
     void shouldRespectBeanContract() {
@@ -42,64 +46,56 @@ class DomainTest {
         assertThat(Domain.of("Domain")).isEqualTo(Domain.of("domain"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "",
+        "aab..ddd",
+        "aab.cc.1com",
+        "abc.abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd.com",
+        "domain$bad.com",
+        "domain/bad.com",
+        "domain\\bad.com",
+        "domain@bad.com",
+        "domain@bad.com",
+        "domain%bad.com",
+        "#domain.com",
+        "bad-.com",
+        "bad_.com",
+        "-bad.com",
+        "bad_.com",
+        "[domain.tld",
+        "domain.tld]",
+        "a[aaa]a",
+        "[aaa]a",
+        "a[aaa]",
+        "[]"
+    })
+    void invalidDomains(String arg) {
+        assertThatThrownBy(() -> Domain.of(arg))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "domain.tld",
+        "do-main.tld",
+        "do_main.tld",
+        "ab.dc.de.fr",
+        "123.456.789.a23",
+        "acv.abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabc.fr",
+        "ab--cv.fr",
+        "ab__cd.fr",
+        "domain",
+        "[domain]",
+        "127.0.0.1"
+    })
+    void validDomains(String arg) {
+        assertThatCode(() -> Domain.of(arg))
+            .doesNotThrowAnyException();
+    }
+
     @Test
     void shouldRemoveBrackets() {
         assertThat(Domain.of("[domain]")).isEqualTo(Domain.of("domain"));
-    }
-
-    @Test
-    void openBracketWithTextShouldNotBeRemoved() {
-        assertThat(Domain.of("[domain")).isEqualTo(Domain.of("[Domain"));
-    }
-
-    @Test
-    void singleOpenBracketShouldNotBeRemoved() {
-        assertThat(Domain.of("[")).isEqualTo(Domain.of("["));
-    }
-
-    @Test
-    void singleClosingBracketShouldNotBeRemoved() {
-        assertThat(Domain.of("]")).isEqualTo(Domain.of("]"));
-    }
-
-    @Test
-    void closeBracketWithTextShouldNotBeRemoved() {
-        assertThat(Domain.of("aaa]")).isEqualTo(Domain.of("aaa]"));
-    }
-
-    @Test
-    void bracketSurroundedWithTextShouldNotBeRemoved() {
-        assertThat(Domain.of("a[aaa]a")).isEqualTo(Domain.of("a[aaa]a"));
-    }
-
-    @Test
-    void bracketWithTextSuffixShouldNotBeRemoved() {
-        assertThat(Domain.of("[aaa]a")).isEqualTo(Domain.of("[aaa]a"));
-    }
-
-    @Test
-    void bracketWithTextPrefixShouldNotBeRemoved() {
-        assertThat(Domain.of("a[aaa]")).isEqualTo(Domain.of("a[aaa]"));
-    }
-
-    @Test
-    void singleBracketShouldNotBeRemoved() {
-        assertThat(Domain.of("[]")).isEqualTo(Domain.of("[]"));
-    }
-
-    @Test
-    void shouldThrowWhenDomainContainAtSymbol() {
-        assertThatThrownBy(() -> Domain.of("Dom@in")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowWhenDomainContainUrlOperatorSymbol() {
-        assertThatThrownBy(() -> Domain.of("Dom/in")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowWhenDomainIsEmpty() {
-        assertThatThrownBy(() -> Domain.of("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -108,14 +104,14 @@ class DomainTest {
     }
 
     @Test
-    void shouldAllow255LongDomain() {
-        assertThat(Domain.of(StringUtils.repeat('a', 255)).asString())
-            .hasSize(255);
+    void shouldAllow253LongDomain() {
+        assertThat(Domain.of(StringUtils.repeat("aaaaaaaaa.", 25) + "aaa").asString())
+            .hasSize(253);
     }
 
     @Test
     void shouldThrowWhenTooLong() {
-        assertThatThrownBy(() -> Domain.of(StringUtils.repeat('a', 256)))
+        assertThatThrownBy(() -> Domain.of(StringUtils.repeat('a', 254)))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }
