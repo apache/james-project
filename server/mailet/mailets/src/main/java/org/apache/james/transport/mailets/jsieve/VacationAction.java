@@ -88,18 +88,18 @@ public class VacationAction implements MailAction {
         Set<MailAddress> currentMailAddresses = ImmutableSet.copyOf(mail.getRecipients());
         Set<MailAddress> allowedMailAddresses = Stream
             .concat(
-                actionVacation.getAddresses().stream().map(s -> retrieveAddressFromString(s, context)),
+                actionVacation.getAddresses().stream().flatMap(this::retrieveAddressFromString),
                 Stream.of(context.getRecipient()))
             .collect(ImmutableSet.toImmutableSet());
         return !Sets.intersection(currentMailAddresses, allowedMailAddresses).isEmpty();
     }
 
-    private MailAddress retrieveAddressFromString(String address, ActionContext context) {
+    private Stream<MailAddress> retrieveAddressFromString(String address) {
         try {
-            return new MailAddress(address);
+            return Stream.of(new MailAddress(address));
         } catch (AddressException e) {
             LOGGER.warn("Mail address {} was not well formatted : {}", address, e.getLocalizedMessage());
-            return null;
+            return Stream.empty();
         }
     }
 
