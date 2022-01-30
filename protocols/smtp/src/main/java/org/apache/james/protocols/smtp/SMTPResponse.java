@@ -22,18 +22,12 @@ package org.apache.james.protocols.smtp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.protocols.api.AbstractResponse;
 
 /**
  * Contains an SMTP result
  */
 public class SMTPResponse extends AbstractResponse {
-
-    protected SMTPResponse() {
-        
-    }
-    
     /**
      * Construct a new SMTPResponse. The given code and description can not be null, if null an IllegalArgumentException
      * get thrown
@@ -43,37 +37,6 @@ public class SMTPResponse extends AbstractResponse {
      */
     public SMTPResponse(String code, CharSequence description) {
         super(code, description);
-    }
-
-    /**
-     * Construct a new SMTPResponse. The given rawLine need to be in format [SMTPResponseReturnCode SMTResponseDescription].
-     * If this is not the case an IllegalArgumentException get thrown.
-     * 
-     * @param rawLine the raw SMTPResponse
-     */
-    public SMTPResponse(String rawLine) {
-        this(extractCode(rawLine), extractResponse(rawLine));
-    }
-    
-
-    private  static String extractCode(String raw) {
-        String[] args = StringUtils.split(raw, " ");
-        if (args != null && args.length > 1) {
-            return args[0];
-            
-        } else {
-            throw new IllegalArgumentException("Invalid Response format. Format should be [Code Description]");
-        }
-    }
-    
-    private  static String extractResponse(String raw) {
-        String[] args = StringUtils.split(raw, " ");
-        if (args != null && args.length > 1) {
-            return args[2];
-            
-        } else {
-            return null;
-        }
     }
 
     @Override
@@ -97,6 +60,4 @@ public class SMTPResponse extends AbstractResponse {
 
         return responseList;
     }
-
-
 }

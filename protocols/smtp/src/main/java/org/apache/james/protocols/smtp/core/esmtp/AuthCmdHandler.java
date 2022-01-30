@@ -448,9 +448,7 @@ public class AuthCmdHandler
                 }
                 return response;
             } else if (returnCode.isDisconnected()) {
-                SMTPResponse response =  new SMTPResponse("");
-                response.setEndSession(true);
-                return response;
+                return Response.DISCONNECT;
             }
         }
         return null;
