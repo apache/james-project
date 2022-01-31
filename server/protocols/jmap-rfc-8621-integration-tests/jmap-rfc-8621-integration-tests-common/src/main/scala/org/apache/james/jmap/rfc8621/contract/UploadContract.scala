@@ -78,6 +78,7 @@ trait UploadContract {
       .get(s"/download/$ACCOUNT_ID/$blobId")
     .`then`
       .statusCode(SC_OK)
+      .contentType("application/json")
       .extract
       .body
       .asByteArray()

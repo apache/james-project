@@ -152,7 +152,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         val bytes = json.getBytes(StandardCharsets.UTF_8)
 
         SMono.fromPublisher(response
-          .header(CONTENT_TYPE, uploadResponse.`type`.asString())
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
           .header(CONTENT_LENGTH, Integer.toString(bytes.length))
           .status(CREATED)
           .sendByteArray(SMono.just(bytes)))
