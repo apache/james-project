@@ -53,6 +53,16 @@
             We follow the standard procedures within the ASF regarding
             <a href="https://apache.org/security/committers.html#vulnerability-handling">vulnerability handling</a>.
         </subsection>
+        <subsection name="CVE-2021-44228: Log4Shell">
+            <p>Apache James Spring distribution prior to release 3.6.1 is vulnerable to attacks leveraging Log4Shell.
+            This can be leveraged to conduct remote code execution with only SMTP access.</p>
+
+            <p><b>Severity</b>: High</p>
+
+            <p><b>Mitigation</b>: We recommend to upgrade to Apache James 3.6.1 or higher, which fixes this vulnerability.</p>
+
+            <p>Note: Guice distributions are not affected.</p>
+        </subsection>
         <subsection name="CVE-2021-38542: Apache James vulnerable to STARTTLS command injection (IMAP and POP3)">
             <p>Apache James prior to release 3.6.1 is vulnerable to a buffering attack relying on the use of the STARTTLS
                 command. This can result in Man-in -the-middle command injection attacks, leading potentially to leakage
