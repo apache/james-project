@@ -66,13 +66,7 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
                 lock = storedLock;
             }
         }
-        final Lock lock1 = getLock(lock, lockType);
-        if (lock1.tryLock()) {
-            lock1.unlock();
-        } else {
-            new Exception("Lock already acquired").printStackTrace();
-        }
-        lock1.lock();
+        getLock(lock, lockType).lock();
         return path;
     }
 
