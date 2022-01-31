@@ -118,8 +118,8 @@ public class StripAttachment extends GenericMailet {
     @VisibleForTesting String removeAttachments;
     private String directoryName;
     private Optional<AttributeName> attributeName;
-    private Pattern regExPattern;
-    private Pattern notRegExPattern;
+    private Optional<Pattern> regExPattern;
+    private Optional<Pattern> notRegExPattern;
     private String mimeType;
     private boolean decodeFilename;
 
@@ -136,7 +136,7 @@ public class StripAttachment extends GenericMailet {
         regExPattern = regExFromParameter(PATTERN_PARAMETER_NAME);
         notRegExPattern = regExFromParameter(NOTPATTERN_PARAMETER_NAME);
         mimeType = getInitParameter(MIMETYPE_PARAMETER_NAME);
-        if (regExPattern == null && notRegExPattern == null && Strings.isNullOrEmpty(mimeType)) {
+        if (regExPattern.isEmpty() && notRegExPattern.isEmpty() && Strings.isNullOrEmpty(mimeType)) {
             throw new MailetException("At least one of '" + PATTERN_PARAMETER_NAME + "', '" + NOTPATTERN_PARAMETER_NAME + "' or '" + MIMETYPE_PARAMETER_NAME + 
                     "' parameter should be provided.");
         }
@@ -165,13 +165,11 @@ public class StripAttachment extends GenericMailet {
         logConfiguration();
     }
 
-    private Pattern regExFromParameter(String patternParameterName) throws MailetException {
+    private Optional<Pattern> regExFromParameter(String patternParameterName) throws MailetException {
         String patternString = getInitParameter(patternParameterName);
         try {
-            if (patternString != null) {
-                return Pattern.compile(patternString);
-            }
-            return null;
+            return Optional.ofNullable(patternString)
+                .map(Pattern::compile);
         } catch (Exception e) {
             throw new MailetException("Could not compile regex [" + patternString + "].");
         }
@@ -189,13 +187,9 @@ public class StripAttachment extends GenericMailet {
         if (LOGGER.isDebugEnabled()) {
             StringBuilder logMessage = new StringBuilder();
             logMessage.append("StripAttachment is initialised with regex pattern [");
-            if (regExPattern != null) {
-                logMessage.append(regExPattern.pattern());
-            }
+            regExPattern.ifPresent(pattern -> logMessage.append(pattern.pattern()));
             logMessage.append(" / ");
-            if (notRegExPattern != null) {
-                logMessage.append(notRegExPattern.pattern());
-            }
+            notRegExPattern.ifPresent(pattern -> logMessage.append(pattern.pattern()));
             logMessage.append(']');
 
             if (directoryName != null) {
@@ -426,15 +420,11 @@ public class StripAttachment extends GenericMailet {
     }
 
     private boolean patternsAreEquals() {
-        return regExPattern != null && notRegExPattern != null
-                && regExPattern.pattern().equals(notRegExPattern.pattern());
+        return regExPattern.map(Pattern::pattern).equals(notRegExPattern.map(Pattern::pattern));
     }
 
-    private Optional<Boolean> isMatchingPattern(String name, Pattern pattern) {
-        if (pattern != null) {
-            return Optional.of(pattern.matcher(name).matches());
-        }
-        return Optional.empty();
+    private Optional<Boolean> isMatchingPattern(String name, Optional<Pattern> pattern) {
+        return pattern.map(p -> p.matcher(name).matches());
     }
 
     /**
