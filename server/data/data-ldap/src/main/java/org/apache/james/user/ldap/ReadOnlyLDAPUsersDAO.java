@@ -222,7 +222,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return results;
     }
 
-    private ReadOnlyLDAPUser searchAndBuildUser(Username name) throws LDAPException {
+    private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username name) throws LDAPException {
         SearchResult searchResult = ldapConnectionPool.search(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
             createFilter(name.asString()),
@@ -233,15 +233,15 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .findFirst()
             .orElse(null);
         if (result == null) {
-            return null;
+            return Optional.empty();
         }
 
         if (!ldapConfiguration.getRestriction().isActivated()
             || userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
 
-            return new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool);
+            return Optional.of(new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool));
         }
-        return null;
+        return Optional.empty();
     }
 
     private Optional<ReadOnlyLDAPUser> buildUser(DN userDN) throws LDAPException {
@@ -278,9 +278,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     @Override
-    public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
+    public Optional<ReadOnlyLDAPUser> getUserByName(Username name) throws UsersRepositoryException {
         try {
-            return Optional.ofNullable(searchAndBuildUser(name));
+            return searchAndBuildUser(name);
         } catch (Exception e) {
             throw new UsersRepositoryException("Unable check user existence from ldap", e);
         }
