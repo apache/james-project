@@ -31,13 +31,12 @@
 
         <subsection name="Standard">
 
-          <p>100% pure Java Mail server designed to be a complete and portable enterprise
-            mail engine solution.</p>
+          <p>100% pure Java Mail server designed to be a complete enterprise mail engine solution.</p>
 
-          <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3, IMAP4, ManageSIEVE. We also plan to support JMAP.</p>
+          <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3, IMAP4. We also plan to support JMAP. ManageSIEVE support is experimental.</p>
 
           <p>Apache James Server is able to store user and message data either in any JPA-compatible database,
-            in Cassandra (allowing fast, reliable, even real-time replicated storage) and on a file-system (Maildir).</p>
+            in Cassandra (allowing fast, reliable, even real-time replicated storage) in combinaison with an objectstore (S3 compatible API).</p>
 
           <p>Provides a powerful, flexible mail application engine through support for the Apache Mailet
             API.  With its Mailet pipeline architecture, Apache James Server can be used not only to provide standard e-mail
@@ -64,7 +63,7 @@
         <subsection name="Manageable">
 
           <p>Manage domains, users,... via a <a href="manage-cli.html">command line client</a>, a <a href="manage-webadmin.html">
-            REST interface</a> or a well-known JMX tools - <a href="manage.html">read more</a>.See also <a href="metrics.html">
+            REST interface</a> or a well-known JMX tools - <a href="manage.html">read more</a>. See also <a href="metrics.html">
             metrics</a> in live with Grafana.</p>
 
           <p><img src="images/jmx-management/jmx-user-part.png" /></p>
@@ -93,11 +92,10 @@
 
         <subsection name="Developer-Friendly">
 
-          <p>Apache James Server 3.0 is now built on top of Spring 3.0 or Guice in replacement of
-            the <a href="http://avalon.apache.org/">Avalon</a> Application Framework.
-            With Spring, We keep the good development practices introduced by Avalon such as
-            Component Oriented Programming and  Inversion of Control. The stable and robust
-            Spring container provides a strong foundation for the Apache James Server.</p>
+          <p>Resources are abstracted and, accessed through defined interfaces.
+            We rely on good development practices such as Component Oriented Programming and  Inversion of Control.
+            Thanks to the modularity of the servers, you can use <a href="/howTo/custom-james-assembly.html">James as a toolkit to assemble your
+              own mail server</a>. </p>
 
           <p><img src="images/uml/org.apache.james-package-small.png" width="400px" /></p>
 
@@ -109,9 +107,8 @@
 
           <p>A special focus has been brought to the performance: Apache James Server can process more than
             100 mails per second. Deployed in production environments and has proven itself
-            to be a robust  and high performance mail solution. Tests indicate that
-            version 3.0 is able to maintain a constant mail throughput rate of thousands of
-            messages/minute for continuous periods  - <a href="feature-performance.html">read more</a></p>
+            to be a robust  and high performance mail solution. Versions 3.x onward is able to maintain a constant
+            mail throughput rate of thousands of messages/minute for continuous periods  - <a href="feature-performance.html">read more</a>.</p>
 
           <p><img src="images/jmx-monitoring/jmx-process-root.png"/></p>
 
