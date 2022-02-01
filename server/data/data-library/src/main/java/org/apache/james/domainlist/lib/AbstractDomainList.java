@@ -254,7 +254,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private String removeTrailingDot(String domain) {
-        if (domain.endsWith(".")) {
+        if (domain != null && domain.endsWith(".")) {
             return domain.substring(0, domain.length() - 1);
         }
         return domain;

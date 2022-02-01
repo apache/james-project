@@ -177,8 +177,8 @@ public class MailAddress implements java.io.Serializable {
         //must be called first!! (or at least prior to updating pos)
         stripSourceRoute(address, pos);
 
-        StringBuffer localPartSB = new StringBuffer();
-        StringBuffer domainSB = new StringBuffer();
+        StringBuilder localPartSB = new StringBuilder();
+        StringBuilder domainSB = new StringBuilder();
         //Begin parsing
         //<mailbox> ::= <local-part> "@" <domain>
 
@@ -224,7 +224,7 @@ public class MailAddress implements java.io.Serializable {
                 break;
             }
 
-            if (domainSB.toString().length() == 0) {
+            if (domainSB.length() == 0) {
                 throw new AddressException("No domain found at position " +
                         (pos + 1) + " in '" + address + "'", address, pos + 1);
             }
@@ -256,20 +256,20 @@ public class MailAddress implements java.io.Serializable {
         }
     }
 
-    private int parseUnquotedLocalPartOrThrowException(StringBuffer localPartSB, String address, int pos)
+    private int parseUnquotedLocalPartOrThrowException(StringBuilder localPartSB, String address, int pos)
             throws AddressException {
         pos = parseUnquotedLocalPart(localPartSB, address, pos);
-        if (localPartSB.toString().length() == 0) {
+        if (localPartSB.length() == 0) {
             throw new AddressException("No local-part (user account) found at position " +
                     (pos + 1) + " in '" + address + "'", address, pos + 1);
         }
         return pos;
     }
 
-    private int parseQuotedLocalPartOrThrowException(StringBuffer localPartSB, String address, int pos)
+    private int parseQuotedLocalPartOrThrowException(StringBuilder localPartSB, String address, int pos)
             throws AddressException {
         pos = parseQuotedLocalPart(localPartSB, address, pos);
-        if (localPartSB.toString().length() == 2) {
+        if (localPartSB.length() == 2) {
             throw new AddressException("No quoted local-part (user account) found at position " +
                     (pos + 2) + " in '" + address + "'", address, pos + 2);
         }
@@ -446,21 +446,20 @@ public class MailAddress implements java.io.Serializable {
         return toString().toLowerCase(Locale.US).hashCode();
     }
 
-    private int parseQuotedLocalPart(StringBuffer lpSB, String address, int pos) throws AddressException {
-        StringBuilder resultSB = new StringBuilder();
-        resultSB.append('\"');
+    private int parseQuotedLocalPart(StringBuilder lpSB, String address, int pos) throws AddressException {
+        lpSB.append('\"');
         pos++;
         //<quoted-string> ::=  """ <qtext> """
         //<qtext> ::=  "\" <x> | "\" <x> <qtext> | <q> | <q> <qtext>
         while (true) {
             if (address.charAt(pos) == '\"') {
-                resultSB.append('\"');
+                lpSB.append('\"');
                 //end of quoted string... move forward
                 pos++;
                 break;
             }
             if (address.charAt(pos) == '\\') {
-                resultSB.append('\\');
+                lpSB.append('\\');
                 pos++;
                 //<x> ::= any one of the 128 ASCII characters (no exceptions)
                 char x = address.charAt(pos);
@@ -468,7 +467,7 @@ public class MailAddress implements java.io.Serializable {
                     throw new AddressException("Invalid \\ syntaxed character at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
                 }
-                resultSB.append(x);
+                lpSB.append(x);
                 pos++;
             } else {
                 //<q> ::= any one of the 128 ASCII characters except <CR>,
@@ -479,23 +478,21 @@ public class MailAddress implements java.io.Serializable {
                             "characters exception <CR>, <LF>, quote (\"), or backslash (\\) at position " +
                             (pos + 1) + " in '" + address + "'");
                 }
-                resultSB.append(q);
+                lpSB.append(q);
                 pos++;
             }
         }
-        lpSB.append(resultSB);
         return pos;
     }
 
-    private int parseUnquotedLocalPart(StringBuffer lpSB, String address, int pos) throws AddressException {
-        StringBuilder resultSB = new StringBuilder();
+    private int parseUnquotedLocalPart(StringBuilder lpSB, String address, int pos) throws AddressException {
         //<dot-string> ::= <string> | <string> "." <dot-string>
         boolean lastCharDot = false;
         while (true) {
             //<string> ::= <char> | <char> <string>
             //<char> ::= <c> | "\" <x>
             if (address.charAt(pos) == '\\') {
-                resultSB.append('\\');
+                lpSB.append('\\');
                 pos++;
                 //<x> ::= any one of the 128 ASCII characters (no exceptions)
                 char x = address.charAt(pos);
@@ -503,14 +500,14 @@ public class MailAddress implements java.io.Serializable {
                     throw new AddressException("Invalid \\ syntaxed character at position " + (pos + 1) +
                             " in '" + address + "'", address, pos + 1);
                 }
-                resultSB.append(x);
+                lpSB.append(x);
                 pos++;
                 lastCharDot = false;
             } else if (address.charAt(pos) == '.') {
                 if (pos == 0) {
                     throw new AddressException("Local part must not start with a '.'");
                 }
-                resultSB.append('.');
+                lpSB.append('.');
                 pos++;
                 lastCharDot = true;
             } else if (address.charAt(pos) == '@') {
@@ -537,7 +534,7 @@ public class MailAddress implements java.io.Serializable {
                     }
                     i++;
                 }
-                resultSB.append(c);
+                lpSB.append(c);
                 pos++;
                 lastCharDot = false;
             }
@@ -546,17 +543,15 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("local-part (user account) ended with a \".\", which is invalid in address '" +
                     address + "'", address, pos);
         }
-        lpSB.append(resultSB);
         return pos;
     }
 
-    private int parseNumber(StringBuffer dSB, String address, int pos) throws AddressException {
+    private int parseNumber(StringBuilder dSB, String address, int pos) throws AddressException {
         //<number> ::= <d> | <d> <number>
 
-        StringBuilder resultSB = new StringBuilder();
         // we were passed the string with pos pointing the the # char.
         // take the first char (#), put it in the result buffer and increment pos
-        resultSB.append(address.charAt(pos));
+        dSB.append(address.charAt(pos));
         pos++;
         //We keep the position from the class level pos field
         while (true) {
@@ -572,22 +567,20 @@ public class MailAddress implements java.io.Serializable {
                 throw new AddressException("In domain, did not find a number in # address at position " +
                         (pos + 1) + " in '" + address + "'", address, pos + 1);
             }
-            resultSB.append(d);
+            dSB.append(d);
             pos++;
         }
-        if (resultSB.length() < 2) {
+        if (dSB.length() < 2) {
             throw new AddressException("In domain, did not find a number in # address at position " +
                     (pos + 1) + " in '" + address + "'", address, pos + 1);
         }
-        dSB.append(resultSB);
         return pos;
     }
 
-    private int parseDomainLiteral(StringBuffer dSB, String address, int pos) throws AddressException {
-        StringBuilder resultSB = new StringBuilder();
+    private int parseDomainLiteral(StringBuilder dSB, String address, int pos) throws AddressException {
         //we were passed the string with pos pointing the the [ char.
         // take the first char ([), put it in the result buffer and increment pos
-        resultSB.append(address.charAt(pos));
+        dSB.append(address.charAt(pos));
         pos++;
 
         //<dotnum> ::= <snum> "." <snum> "." <snum> "." <snum>
@@ -607,7 +600,7 @@ public class MailAddress implements java.io.Serializable {
                 snumSB.append(currentChar);
                 pos++;
             }
-            if (snumSB.toString().length() == 0) {
+            if (snumSB.length() == 0) {
                 throw new AddressException("Number not found at position " +
                         (pos + 1) + " in '" + address + "'", address, pos + 1);
             }
@@ -621,7 +614,7 @@ public class MailAddress implements java.io.Serializable {
                 throw new AddressException("Invalid number at position " +
                         (pos + 1) + " in '" + address + "'", address, pos + 1);
             }
-            resultSB.append(snumSB.toString());
+            dSB.append(snumSB.toString());
             if (address.charAt(pos) == ']') {
                 if (octet < 3) {
                     throw new AddressException("End of number reached too quickly at " +
@@ -630,7 +623,7 @@ public class MailAddress implements java.io.Serializable {
                 break;
             }
             if (address.charAt(pos) == '.') {
-                resultSB.append('.');
+                dSB.append('.');
                 pos++;
             }
         }
@@ -638,13 +631,12 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("Did not find closing bracket \"]\" in domain at position " +
                     (pos + 1) + " in '" + address + "'", address, pos + 1);
         }
-        resultSB.append(']');
+        dSB.append(']');
         pos++;
-        dSB.append(resultSB);
         return pos;
     }
 
-    private int parseDomain(StringBuffer dSB, String address, int pos) throws AddressException {
+    private int parseDomain(StringBuilder dSB, String address, int pos) throws AddressException {
         StringBuilder resultSB = new StringBuilder();
         //<name> ::= <a> <ldh-str> <let-dig>
         //<ldh-str> ::= <let-dig-hyp> | <let-dig-hyp> <ldh-str>
