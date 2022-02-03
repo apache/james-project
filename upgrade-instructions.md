@@ -27,7 +27,41 @@ Change list:
  - [MailDir removal](#maildir-removal)
  - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
  - [Restrict listening interface to loopback by default for webadmin](#restrict-listening-interface-to-loopback-by-default-for-webadmin)
+ - 
  
+### Change in behaviour for Bounce, NotifyPostmaster, NotifySender
+
+Date: 03/02/2022
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3712
+
+These mailets uses the mail being processed to send a new email to a third party.
+
+Prior to this change, the `prefix` property was prepended to the processed email and not to the one sent to the third party.
+Ie: the bounce recipient will not have the prefix.
+
+We changed that so that the `prefix` property is prepended to the new email and not to the processed one.
+Ie: the bounce recipient will now have the prefix.
+
+Users willing to retain the previous behaviour can do so by removing the `prefix` property from their mailet and add a 
+`AddSubjectPrefix` after their mailet. Please note that most user can (and likely should) omit those 
+modifications that are only mentioned here for the sake of completeness.
+
+Here is an example of how to retain the strict behaviour applied prior this change for `Bounce`:
+
+```
+<!-- what was -->
+<mailet matcher="All" class="Bounce>
+  <prefix>[OUPS] </prefix>
+</mailet>
+
+<!-- can now be written -->
+<mailet matcher="All" class="Bounce/>
+<mailet matcher="All" class="AddSubjectPrefix>
+  <subjectPrefix>[OUPS] </subjectPrefix>
+</mailet>
+```
+
 ### Restrict listening interface to loopback by default for webadmin
 
 Date: 11/01/2022

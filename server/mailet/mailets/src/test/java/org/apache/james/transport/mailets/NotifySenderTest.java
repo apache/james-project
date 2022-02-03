@@ -150,23 +150,49 @@ public class NotifySenderTest {
     }
 
     @Test
-    void notifySenderShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+    void notifySenderShouldNotAddPrefixToSubjectOfInFlightMailWhenPrefixIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName(MAILET_NAME)
-                .mailetContext(fakeMailContext)
-                .setProperty("prefix", "pre")
-                .build();
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("prefix", "pre")
+            .build();
         notifySender.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-                .name(MAILET_NAME)
-                .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .setSubject("My subject"))
-                .build();
+            .name(MAILET_NAME)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .recipient(MailAddressFixture.ANY_AT_JAMES2)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("My subject"))
+            .build();
 
         notifySender.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
+        assertThat(mail.getMessage().getSubject()).isEqualTo("My subject");
+    }
+
+    @Test
+    void notifySenderShouldAddPrefixToSubjectOfSentEmailWhenPrefixIsConfigured() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("prefix", "pre")
+            .build();
+        notifySender.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .recipient(MailAddressFixture.ANY_AT_JAMES2)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("My subject"))
+            .build();
+
+        notifySender.service(mail);
+
+        assertThat(fakeMailContext.getSentMails())
+            .first()
+            .extracting(s -> s.getSubject().get())
+            .isEqualTo("pre My subject");
     }
 }

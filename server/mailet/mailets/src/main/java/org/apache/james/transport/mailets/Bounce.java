@@ -260,6 +260,6 @@ public class Bounce extends GenericMailet implements RedirectNotify {
 
     @Override
     public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
-        return new MimeMessageModifier(originalMail.getMessage());
+        return new MimeMessageModifier(newMail.getMessage());
     }
 }
