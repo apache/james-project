@@ -210,7 +210,7 @@ public class BounceTest {
     }
 
     @Test
-    void bounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+    void bounceShouldNotAddPrefixToSubjectOfInFlightMailWhenPrefixIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -228,6 +228,31 @@ public class BounceTest {
 
         bounce.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
+        assertThat(mail.getMessage().getSubject()).isEqualTo("My subject");
+    }
+
+    @Test
+    void bounceShouldAddPrefixToSubjectOfSentEmailWhenPrefixIsConfigured() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("prefix", "pre")
+                .build();
+        bounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .recipient(MailAddressFixture.ANY_AT_JAMES2)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("My subject"))
+            .build();
+
+        bounce.service(mail);
+
+        assertThat(fakeMailContext.getSentMails())
+            .first()
+            .extracting(s -> s.getSubject().get())
+            .isEqualTo("pre My subject");
     }
 }
