@@ -57,7 +57,6 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.transport.util.RecipientsUtils;
@@ -557,10 +556,5 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
         part.setDisposition("Attachment");
         return part;
-    }
-
-    @Override
-    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
-        return new MimeMessageModifier(newMail.getMessage());
     }
 }

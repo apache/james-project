@@ -34,7 +34,6 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.RecipientsUtils;
@@ -431,11 +430,6 @@ public class Resend extends GenericMailet implements RedirectNotify {
     @Override
     public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
         return new MimeMessageUtils(newMail.getMessage()).subjectWithPrefix(subjectPrefix, originalMail, getInitParameters().getSubject());
-    }
-
-    @Override
-    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
-        return new MimeMessageModifier(newMail.getMessage());
     }
 
     @Override

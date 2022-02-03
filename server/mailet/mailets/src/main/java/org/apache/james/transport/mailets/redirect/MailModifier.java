@@ -30,6 +30,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
@@ -132,7 +133,7 @@ public class MailModifier {
     }
 
     public void setSubjectPrefix(Mail originalMail) throws MessagingException {
-        mailet.getMimeMessageModifier(mail, originalMail)
+        new MimeMessageModifier(mail.getMessage())
             .replaceSubject(mailet.getSubjectPrefix(mail, mailet.getInitParameters().getSubjectPrefix(), originalMail));
     }
 

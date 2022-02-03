@@ -35,7 +35,6 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.ReplyToUtils;
@@ -256,10 +255,5 @@ public class Bounce extends GenericMailet implements RedirectNotify {
         if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);
         }
-    }
-
-    @Override
-    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
-        return new MimeMessageModifier(newMail.getMessage());
     }
 }
