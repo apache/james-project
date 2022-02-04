@@ -93,11 +93,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
             if (Mail.GHOST.equals(mail.getState())) {
                 LifecycleUtil.dispose(mail);
             }
-            /*
-             * // check the mail needs further processing if
-             * (Mail.GHOST.equalsIgnoreCase(mail.getState()) == false) {
-             * service(mail); } else { LifecycleUtil.dispose(mail); }
-             */
         } catch (MessagingException e) {
             ex = e;
             throw e;
@@ -125,22 +120,10 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
      * {@link ConfigurationException}
      */
     private void checkProcessors() throws ConfigurationException {
-        boolean errorProcessorFound = false;
-        boolean rootProcessorFound = false;
-        for (String name : processors.keySet()) {
-            if (name.equals(Mail.DEFAULT)) {
-                rootProcessorFound = true;
-            } else if (name.equals(Mail.ERROR)) {
-                errorProcessorFound = true;
-            }
-
-            if (errorProcessorFound && rootProcessorFound) {
-                return;
-            }
-        }
-        if (!errorProcessorFound) {
+        if (!processors.containsKey(Mail.ERROR)) {
             throw new ConfigurationException("You need to configure a Processor with name " + Mail.ERROR);
-        } else if (!rootProcessorFound) {
+        }
+        if (!processors.containsKey(Mail.DEFAULT)) {
             throw new ConfigurationException("You need to configure a Processor with name " + Mail.DEFAULT);
         }
     }
