@@ -130,7 +130,7 @@ public class SpamAssassinListener implements SpamEventListener {
 
     private Stream<MailboxMessage> retrieveMessages(MessageMapper messageMapper, Mailbox mailbox, MessageRange range) {
         try {
-            return Iterators.toStream(messageMapper.findInMailbox(mailbox, range, MessageMapper.FetchType.Full, LIMIT));
+            return Iterators.toStream(messageMapper.findInMailbox(mailbox, range, MessageMapper.FetchType.FULL, LIMIT));
         } catch (MailboxException e) {
             LOGGER.warn("Can not retrieve message {} {}", mailbox.getMailboxId(), range.toString(), e);
             return Stream.empty();
@@ -149,7 +149,7 @@ public class SpamAssassinListener implements SpamEventListener {
 
     private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent, MailboxSession session) {
         return mapperFactory.getMessageIdMapper(session)
-            .find(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.Full)
+            .find(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.FULL)
             .stream()
             .map(Throwing.function(Message::getFullContent))
             .collect(ImmutableList.toImmutableList());

@@ -62,7 +62,7 @@ public interface Mapper {
         void run() throws MailboxException;
     }
 
-    static Transaction<Void> toTransaction(Operation operation) throws MailboxException {
+    static Transaction<Void> toTransaction(Operation operation) {
         return () -> {
             operation.run();
             return null;

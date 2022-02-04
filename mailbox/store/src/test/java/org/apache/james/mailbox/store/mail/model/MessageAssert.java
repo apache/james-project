@@ -59,7 +59,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
 
     public MessageAssert isEqualToWithoutUid(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
         isEqualToWithoutUidAndAttachment(expected, usedFetchType);
-        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
+        if (usedFetchType == MessageMapper.FetchType.FULL || usedFetchType == MessageMapper.FetchType.BODY) {
             if (!Objects.equal(actual.getAttachments(), expected.getAttachments())) {
                 failWithMessage("Expected attachments to be <%s> but was <%s>", expected.getAttachments(), actual.getAttachments());
             }
@@ -84,7 +84,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
         if (!Objects.equal(actual.getSubType(), expected.getSubType())) {
             failWithMessage("Expected Sub type to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
         }
-        if (usedFetchType == MessageMapper.FetchType.Full) {
+        if (usedFetchType == MessageMapper.FetchType.FULL) {
             if (!Objects.equal(actual.getFullContentOctets(), expected.getFullContentOctets())) {
                 failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
             }
@@ -92,12 +92,12 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
                 failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(expected.getFullContent(), StandardCharsets.UTF_8), IOUtils.toString(actual.getFullContent(), StandardCharsets.UTF_8));
             }
         }
-        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Headers) {
+        if (usedFetchType == MessageMapper.FetchType.FULL || usedFetchType == MessageMapper.FetchType.HEADERS) {
             if (!Objects.equal(IOUtils.toString(actual.getHeaderContent(), StandardCharsets.UTF_8), IOUtils.toString(expected.getHeaderContent(), StandardCharsets.UTF_8))) {
                 failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(expected.getHeaderContent(), StandardCharsets.UTF_8), IOUtils.toString(actual.getHeaderContent(), StandardCharsets.UTF_8));
             }
         }
-        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
+        if (usedFetchType == MessageMapper.FetchType.FULL || usedFetchType == MessageMapper.FetchType.BODY) {
             if (!Objects.equal(IOUtils.toString(actual.getBodyContent(), StandardCharsets.UTF_8), IOUtils.toString(expected.getBodyContent(), StandardCharsets.UTF_8))) {
                 failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent(), StandardCharsets.UTF_8), IOUtils.toString(actual.getBodyContent(), StandardCharsets.UTF_8));
             }

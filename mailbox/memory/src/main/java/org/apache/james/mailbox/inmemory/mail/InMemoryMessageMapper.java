@@ -151,7 +151,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) {
         List<MessageUid> filteredResult = new ArrayList<>();
 
-        Iterator<MailboxMessage> it = findInMailbox(mailbox, messageRange, FetchType.Metadata, UNLIMITED);
+        Iterator<MailboxMessage> it = findInMailbox(mailbox, messageRange, FetchType.METADATA, UNLIMITED);
 
         while (it.hasNext()) {
             MailboxMessage member = it.next();

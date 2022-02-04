@@ -128,7 +128,7 @@ public class MetaDataFixInconsistenciesService {
         }
 
         private Mono<Pop3MetadataStore.StatMetadata> buildStatMetadata() {
-            return cassandraMessageDAOV3.retrieveMessage(messageId, FetchType.Metadata)
+            return cassandraMessageDAOV3.retrieveMessage(messageId, FetchType.METADATA)
                 .switchIfEmpty(Mono.error(new MailboxException("Message not found: " + messageId)))
                 .map(messageRepresentation -> new Pop3MetadataStore.StatMetadata(messageId, messageRepresentation.getSize()));
         }

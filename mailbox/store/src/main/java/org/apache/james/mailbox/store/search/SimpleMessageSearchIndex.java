@@ -114,7 +114,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
     
     @Override
-    public Flux<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
+    public Flux<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searchResults(session, Flux.just(mailbox), query)
             .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
@@ -132,14 +132,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             // only fetching this uid range
             UidRange[] ranges = uidCrit.getOperator().getRange();
             for (UidRange r : ranges) {
-                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, UNLIMITED);
+                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.METADATA, UNLIMITED);
                 while (it.hasNext()) {
                     hitSet.add(it.next());
                 }
             }
         } else {
             // we have to fetch all messages
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED);
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.FULL, UNLIMITED);
             while (messages.hasNext()) {
                 MailboxMessage m = messages.next();
                 hitSet.add(m);
@@ -159,7 +159,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
     }
 
-    private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
+    private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) {
         return mailboxes.concatMap(mailbox -> Mono.fromCallable(() -> getSearchResultStream(session, query, mailbox))
                 .flatMapMany(Flux::fromStream)
                 .subscribeOn(Schedulers.elastic()))

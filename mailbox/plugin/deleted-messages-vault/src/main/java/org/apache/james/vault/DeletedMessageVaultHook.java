@@ -121,7 +121,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
 
     private Mono<Void> appendToTheVault(DeletedMessageMailboxContext deletedMessageMailboxContext) {
         return mapperFactory.getMessageIdMapper(session)
-            .findReactive(ImmutableList.of(deletedMessageMailboxContext.getMessageId()), MessageMapper.FetchType.Full)
+            .findReactive(ImmutableList.of(deletedMessageMailboxContext.getMessageId()), MessageMapper.FetchType.FULL)
             .next()
             .switchIfEmpty(Mono.error(() -> new RuntimeException("Cannot find " + deletedMessageMailboxContext.getMessageId())))
             .flatMap(mailboxMessage -> Mono.fromCallable(() -> Pair.of(mailboxMessage,

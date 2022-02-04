@@ -59,9 +59,9 @@ public final class CountingInputStream extends InputStream {
         int read = in.read(b, off, len);
         if (read > 0) {
             octetCount += read;
-            for (int i = off; i < off+ read; i++) {
+            for (int i = off; i < off + read; i++) {
                 if (b[i] == '\r') {
-                    lineCount ++;
+                    lineCount++;
                 }
             }
         }

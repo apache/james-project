@@ -34,7 +34,7 @@ public class FetchGroupConverter {
      */
     public static MessageMapper.FetchType getFetchType(FetchGroup group) {
         if (!group.getPartContentDescriptors().isEmpty()) {
-            return MessageMapper.FetchType.Full;
+            return MessageMapper.FetchType.FULL;
         }
 
         Collection<MessageMapper.FetchType> fetchTypes = group.profiles()
@@ -46,38 +46,38 @@ public class FetchGroupConverter {
     }
 
     public static MessageMapper.FetchType reduce(Collection<MessageMapper.FetchType> fetchTypes) {
-        boolean full = fetchTypes.contains(MessageMapper.FetchType.Full);
-        boolean headers = fetchTypes.contains(MessageMapper.FetchType.Headers);
-        boolean body = fetchTypes.contains(MessageMapper.FetchType.Body);
+        boolean full = fetchTypes.contains(MessageMapper.FetchType.FULL);
+        boolean headers = fetchTypes.contains(MessageMapper.FetchType.HEADERS);
+        boolean body = fetchTypes.contains(MessageMapper.FetchType.BODY);
 
         if (full) {
-            return MessageMapper.FetchType.Full;
+            return MessageMapper.FetchType.FULL;
         }
         if (headers && body) {
-            return MessageMapper.FetchType.Full;
+            return MessageMapper.FetchType.FULL;
         }
         if (headers) {
-            return MessageMapper.FetchType.Headers;
+            return MessageMapper.FetchType.HEADERS;
         }
         if (body) {
-            return MessageMapper.FetchType.Body;
+            return MessageMapper.FetchType.BODY;
         }
-        return MessageMapper.FetchType.Metadata;
+        return MessageMapper.FetchType.METADATA;
     }
 
     private static MessageMapper.FetchType toFetchType(Profile profile) {
         switch (profile) {
             case HEADERS:
-                return MessageMapper.FetchType.Headers;
+                return MessageMapper.FetchType.HEADERS;
             case BODY_CONTENT:
-                return MessageMapper.FetchType.Body;
+                return MessageMapper.FetchType.BODY;
             case FULL_CONTENT:
             case MIME_CONTENT:
             case MIME_HEADERS:
             case MIME_DESCRIPTOR:
                 // If we need the mimedescriptor we MAY need the full profile later too.
                 // This gives us no other choice then request it
-                return MessageMapper.FetchType.Full;
+                return MessageMapper.FetchType.FULL;
             default:
                 throw new NotImplementedException("Unsupported FetchGroup Profile" + profile);
         }

@@ -33,8 +33,8 @@ public final class InputStreamContent implements Content {
     private final Type type;
 
     public enum Type {
-        Full,
-        Body
+        FULL,
+        BODY
     }
     
     public InputStreamContent(Message m, Type type) throws IOException {
@@ -45,7 +45,7 @@ public final class InputStreamContent implements Content {
     @Override
     public long size() {
         switch (type) {
-        case Full:
+        case FULL:
             return m.getFullContentOctets();
 
         default:
@@ -57,7 +57,7 @@ public final class InputStreamContent implements Content {
     public InputStream getInputStream() throws IOException {
         // wrap the streams in a BoundedInputStream to make sure it really match with the stored size.
         switch (type) {
-        case Full:
+        case FULL:
             return m.getFullContent();
         default:
             return m.getBodyContent();

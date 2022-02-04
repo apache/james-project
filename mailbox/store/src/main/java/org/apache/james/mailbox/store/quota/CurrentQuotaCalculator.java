@@ -53,7 +53,7 @@ public class CurrentQuotaCalculator {
         MessageMapper mapper = factory.getMessageMapper(session);
 
         return Flux.from(quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session))
-            .flatMap(mailbox -> mapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED), NO_CONCURRENCY)
+            .flatMap(mailbox -> mapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED), NO_CONCURRENCY)
             .map(message -> new CurrentQuotas(QuotaCountUsage.count(1), QuotaSizeUsage.size(message.getFullContentOctets())))
             .reduce(CurrentQuotas.emptyQuotas(), CurrentQuotas::increase);
     }

@@ -456,7 +456,7 @@ public class StoreMailboxManager implements MailboxManager {
         Mono<Long> messageCountPublisher = Mono.from(messageMapper.getMailboxCountersReactive(mailbox))
             .map(MailboxCounters::getCount);
 
-        return quotaRootPublisher.zipWith(messageCountPublisher).flatMap(quotaRootWithMessageCount -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED)
+        return quotaRootPublisher.zipWith(messageCountPublisher).flatMap(quotaRootWithMessageCount -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)
             .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
             .collect(ImmutableList.toImmutableList())
             .flatMap(metadata -> {

@@ -72,7 +72,7 @@ public interface MessageMapper extends Mapper {
             throws MailboxException;
 
     default Flux<ComposedMessageIdWithMetaData> listMessagesMetadata(Mailbox mailbox, MessageRange set) {
-        return findInMailboxReactive(mailbox, set, FetchType.Metadata, UNLIMITED)
+        return findInMailboxReactive(mailbox, set, FetchType.METADATA, UNLIMITED)
             .map(message -> new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(
                     message.getMailboxId(),
@@ -239,30 +239,30 @@ public interface MessageMapper extends Mapper {
          *  {@link MailboxMessage#getTextualLineCount()}
          * </p>
          */
-        Metadata,
+        METADATA,
         /**
-         * Fetch the {@link #Metadata}, {@link Property}'s and the {@link #Headers}'s for the {@link MailboxMessage}. This includes:
+         * Fetch the {@link #METADATA}, {@link Property}'s and the {@link #HEADERS}'s for the {@link MailboxMessage}. This includes:
          * 
          * <p>
          * {@link MailboxMessage#getProperties()}
          * {@link MailboxMessage#getHeaderContent()}
          * </p>
          */
-        Headers,
+        HEADERS,
         /**
-         * Fetch the {@link #Metadata} and the Body for the {@link MailboxMessage}. This includes:
+         * Fetch the {@link #METADATA} and the Body for the {@link MailboxMessage}. This includes:
          * 
          * <p>
          *  {@link MailboxMessage#getBodyContent()}
          * </p>
          */
-        Body,
+        BODY,
         
         /**
          * Fetch the complete {@link MailboxMessage}
          * 
          */
-        Full;
+        FULL;
     }
 
 }
