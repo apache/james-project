@@ -122,7 +122,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         }
     }
 
-    private static final String softwaretype = "JAMES " + VERSION + " Server ";
+    private static final String SOFTWARE_TYPE = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
 
@@ -156,7 +156,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         
         super.doConfigure(configuration);
         
-        hello = softwaretype + getHelloName() + " is ready.";
+        hello = SOFTWARE_TYPE + getHelloName() + " is ready.";
         compress = configuration.getBoolean("compress", false);
         maxLineLength = configuration.getInt("maxLineLength", DEFAULT_MAX_LINE_LENGTH);
         inMemorySizeLimit = Math.toIntExact(Optional.ofNullable(configuration.getString("inMemorySizeLimit", null))
