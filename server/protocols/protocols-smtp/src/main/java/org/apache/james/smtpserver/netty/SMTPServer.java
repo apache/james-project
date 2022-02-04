@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * NIO SMTPServer which use Netty
  */
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocolAsyncServer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServer.class);
 
     public enum AuthenticationAnnounceMode {
         NEVER,

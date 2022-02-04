@@ -35,25 +35,25 @@ public class WelcomeMessageHandler implements ConnectHandler<SMTPSession> {
     
     @Override
     public Response onConnect(SMTPSession session) {
-        String smtpGreeting = session.getConfiguration().getGreeting();
+       return computeGreetings(session, session.getConfiguration().getGreeting());
+    }
 
-        SMTPResponse welcomeResponse;
+    private SMTPResponse computeGreetings(SMTPSession session, String smtpGreeting) {
         // if no greeting was configured use a default
         if (smtpGreeting == null) {
             // Initially greet the connector
-            welcomeResponse = new SMTPResponse(SMTPRetCode.SERVICE_READY,
-                          new StringBuilder(256)
-                          .append(session.getConfiguration().getHelloName())
-                          .append(" ").append(getServiceType(session)).append(" Server (")
-                          .append(session.getConfiguration().getSoftwareName())
-                          .append(") ready"));
+            return new SMTPResponse(SMTPRetCode.SERVICE_READY,
+                new StringBuilder(256)
+                    .append(session.getConfiguration().getHelloName())
+                    .append(" ").append(getServiceType()).append(" Server (")
+                    .append(session.getConfiguration().getSoftwareName())
+                    .append(") ready"));
         } else {
-            welcomeResponse = new SMTPResponse(SMTPRetCode.SERVICE_READY,smtpGreeting);
+            return new SMTPResponse(SMTPRetCode.SERVICE_READY, smtpGreeting);
         }
-        return welcomeResponse;
     }
 
-    protected String getServiceType(SMTPSession session) {
+    protected String getServiceType() {
         return SERVICE_TYPE;
     }
 }

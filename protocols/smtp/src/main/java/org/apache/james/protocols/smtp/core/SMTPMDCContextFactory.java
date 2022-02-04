@@ -47,8 +47,8 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 
     private MDCBuilder from(Object o) {
         return Optional.ofNullable(o)
-            .filter(object -> object instanceof SMTPSession)
-            .map(object -> (SMTPSession) object)
+            .filter(SMTPSession.class::isInstance)
+            .map(SMTPSession.class::cast)
             .map(SMTPMDCContextFactory::forSMTPSession)
             .orElse(MDCBuilder.create());
     }

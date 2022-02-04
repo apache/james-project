@@ -27,8 +27,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
@@ -73,16 +71,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             }
             return null;
         }
-
-        @Override
-        public void init(Configuration config) throws ConfigurationException {
-
-        }
-
-        @Override
-        public void destroy() {
-
-        }
     }
 
     public static final class DataLineFilterWrapper implements LineHandler<SMTPSession> {
@@ -99,16 +87,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         public Response onLine(SMTPSession session, ByteBuffer line) {
             line.rewind();
             return filter.onLine(session, line, next);
-        }
-
-        @Override
-        public void init(Configuration config) throws ConfigurationException {
-
-        }
-
-        @Override
-        public void destroy() {
-
         }
     }
    
@@ -162,14 +140,14 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).orElse(MaybeSender.nullSender());
-        MailEnvelope env = createEnvelope(session, sender, session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction).orElse(ImmutableList.of()));
+        MailEnvelope env = createEnvelope(sender, session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction).orElse(ImmutableList.of()));
         session.setAttachment(MAILENV, env, ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         
         return DATA_READY;
     }
     
-    protected MailEnvelope createEnvelope(SMTPSession session, MaybeSender sender, List<MailAddress> recipients) {
+    protected MailEnvelope createEnvelope(MaybeSender sender, List<MailAddress> recipients) {
         MailEnvelopeImpl env = new MailEnvelopeImpl();
         env.setRecipients(recipients);
         env.setSender(sender);

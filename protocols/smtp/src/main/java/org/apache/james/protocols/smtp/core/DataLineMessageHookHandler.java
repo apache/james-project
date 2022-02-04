@@ -164,7 +164,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
     }
 
     protected void checkMessageHookCount(List<?> messageHandlers) throws WiringException {
-        if (messageHandlers.size() == 0) {
+        if (messageHandlers.isEmpty()) {
             throw new WiringException("No messageHandler configured");
         }
     }

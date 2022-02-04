@@ -19,7 +19,6 @@
 
 package org.apache.james.smtpserver;
 
-import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.WelcomeMessageHandler;
 
 /**
@@ -33,7 +32,7 @@ public class JamesWelcomeMessageHandler extends WelcomeMessageHandler {
     private static final String SERVICE_TYPE = "JAMES SMTP Server";
 
     @Override
-    protected String getServiceType(SMTPSession session) {
+    protected String getServiceType() {
         return SERVICE_TYPE;
     }
 

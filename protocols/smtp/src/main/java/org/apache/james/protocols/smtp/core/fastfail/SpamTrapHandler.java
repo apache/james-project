@@ -60,13 +60,13 @@ public class SpamTrapHandler implements RcptHook {
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         String address = session.getRemoteAddress().getAddress().getHostAddress();
-        if (isBlocked(address, session)) {
+        if (isBlocked(address)) {
             return HookResult.DENY;
         } else {
          
             if (spamTrapRecips.contains(rcpt.toString().toLowerCase(Locale.US))) {
         
-                addIp(address, session);
+                addIp(address);
             
                 return HookResult.DENY;
             }
@@ -79,10 +79,9 @@ public class SpamTrapHandler implements RcptHook {
      * Check if ipAddress is in the blockList.
      * 
      * @param ip ipAddress to check
-     * @param session not null
      * @return true or false
      */
-    private boolean isBlocked(String ip, SMTPSession session) {
+    private boolean isBlocked(String ip) {
         Long rawTime = blockedIps.get(ip);
     
         if (rawTime != null) {
@@ -106,9 +105,8 @@ public class SpamTrapHandler implements RcptHook {
      * Add ipaddress to blockList
      * 
      * @param ip IpAddress to add
-     * @param session not null
      */
-    private void addIp(String ip, SMTPSession session) {
+    private void addIp(String ip) {
         long bTime = System.currentTimeMillis() + blockTime;
         
         LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);

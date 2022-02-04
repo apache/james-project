@@ -80,7 +80,6 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
 
         Username authUser = session.getUsername();
         Username sender = getUser(maybeSender.get());
-        Username username = getUser(maybeSender.get());
 
         return isSenderAllowed(authUser, sender);
     }

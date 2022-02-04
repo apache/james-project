@@ -37,13 +37,13 @@ public class TLDLookup {
      * collection of known mult-part TLDs change to contain characters other
      * than these, this string must be modified.
      */
-    private static final String tld = "[A-Za-z0-9\\-]*";
+    private static final String TLD = "[A-Za-z0-9\\-]*";
 
     /** Simple regular expression that matches a two-part TLD */
-    private static final String tld2 = tld + "\\." + tld;
+    private static final String TLD_2 = TLD + "\\." + TLD;
 
     /** Simple regular expression that matches a three-part TLD */
-    private static final String tld3 = tld + "\\." + tld + "\\." + tld;
+    private static final String TLD_3 = TLD + "\\." + TLD + "\\." + TLD;
 
     /** Array of all known multi-level TLDs */
     private static final String[] multiPartTLDs = initMultiPartTLDs();
@@ -87,7 +87,7 @@ public class TLDLookup {
         HashSet<String> set = new HashSet<>(900);
         for (String multiPartTLD : multiPartTLDs) {
             try {
-                if (multiPartTLD.matches("^" + tld2 + "$")) {
+                if (multiPartTLD.matches("^" + TLD_2 + "$")) {
                     set.add(multiPartTLD);
                 }
             } catch (Exception ex) {
@@ -107,7 +107,7 @@ public class TLDLookup {
         HashSet<String> set = new HashSet<>();
         for (String multiPartTLD : multiPartTLDs) {
             try {
-                if (multiPartTLD.matches("^" + tld3 + "$")) {
+                if (multiPartTLD.matches("^" + TLD_3 + "$")) {
                     LOGGER.debug("adding \"{}\"", multiPartTLD);
                     set.add(multiPartTLD);
                 }

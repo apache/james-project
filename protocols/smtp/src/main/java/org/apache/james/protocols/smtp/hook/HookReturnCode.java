@@ -35,14 +35,14 @@ public class HookReturnCode {
         DECLINED,
         NONE;
 
-        public static List<Action> ACTIVE_ACTIONS =
+        public static final List<Action> ACTIVE_ACTIONS =
             ImmutableList.of(HookReturnCode.Action.DENY, HookReturnCode.Action.DENYSOFT, HookReturnCode.Action.OK);
 
     }
 
     public enum ConnectionStatus {
-        Disconnected,
-        Connected
+        DISCONNECTED,
+        CONNECTED
     }
 
     public static HookReturnCode denySoft() {
@@ -62,11 +62,11 @@ public class HookReturnCode {
     }
 
     public static HookReturnCode connected(Action action) {
-        return new HookReturnCode(action, ConnectionStatus.Connected);
+        return new HookReturnCode(action, ConnectionStatus.CONNECTED);
     }
 
     public static HookReturnCode disconnected(Action action) {
-        return new HookReturnCode(action, ConnectionStatus.Disconnected);
+        return new HookReturnCode(action, ConnectionStatus.DISCONNECTED);
     }
 
     private final Action action;
@@ -86,7 +86,7 @@ public class HookReturnCode {
     }
 
     public boolean isDisconnected() {
-        return connectionStatus == ConnectionStatus.Disconnected;
+        return connectionStatus == ConnectionStatus.DISCONNECTED;
     }
 
     @Override

@@ -101,7 +101,7 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));
         } catch (Exception e) {
-            // ignore here;
+            // ignore here
         }
     }
 

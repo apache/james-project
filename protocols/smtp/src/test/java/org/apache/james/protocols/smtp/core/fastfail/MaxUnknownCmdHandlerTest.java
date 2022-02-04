@@ -89,6 +89,6 @@ public class MaxUnknownCmdHandlerTest {
         assertThat(resp).isEqualTo(HookReturnCode.declined());
         
         resp = handler.doUnknown(session, "what").getResult();
-        assertThat(resp).isEqualTo(new HookReturnCode(HookReturnCode.Action.DENY, HookReturnCode.ConnectionStatus.Disconnected));
+        assertThat(resp).isEqualTo(new HookReturnCode(HookReturnCode.Action.DENY, HookReturnCode.ConnectionStatus.DISCONNECTED));
     }
 }

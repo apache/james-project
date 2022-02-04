@@ -172,7 +172,7 @@ public class AuthCmdHandler
             return SYNTAX_ERROR;
         } else {
             String initialResponse = null;
-            if ((argument != null) && (argument.indexOf(" ") > 0)) {
+            if (argument.indexOf(" ") > 0) {
                 initialResponse = argument.substring(argument.indexOf(" ") + 1);
                 argument = argument.substring(0,argument.indexOf(" "));
             }
@@ -209,7 +209,7 @@ public class AuthCmdHandler
                 && session.supportsOAuth()) {
                 return doSASLAuthentication(session, initialResponse);
             } else {
-                return doUnknownAuth(session, authType, initialResponse);
+                return doUnknownAuth(authType);
             }
         }
     }
@@ -222,7 +222,7 @@ public class AuthCmdHandler
                 .filter(response -> !SMTPRetCode.AUTH_FAILED.equals(response.getRetCode()))
                 .findFirst()
                 .orElseGet(() -> failSasl(oidcSASLConfiguration, session)))
-            .orElse(doUnknownAuth(session, AUTH_TYPE_OAUTHBEARER, initialResponseString));
+            .orElse(doUnknownAuth(AUTH_TYPE_OAUTHBEARER));
     }
 
     private Response failSasl(OidcSASLConfiguration saslConfiguration, SMTPSession session) {
@@ -488,11 +488,9 @@ public class AuthCmdHandler
     /**
      * Handles the case of an unrecognized auth type.
      *
-     * @param session SMTP session object
      * @param authType the unknown auth type
-     * @param initialResponse the initial response line passed in with the AUTH command
      */
-    private Response doUnknownAuth(SMTPSession session, String authType, String initialResponse) {
+    private Response doUnknownAuth(String authType) {
         LOGGER.info("AUTH method {} is an unrecognized authentication type", authType);
         return UNKNOWN_AUTH_TYPE;
     }

@@ -76,7 +76,7 @@ public final class HookResult {
         .hookReturnCode(HookReturnCode.denySoft())
         .build();
     public static final HookResult DISCONNECT =  builder()
-        .hookReturnCode(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected))
+        .hookReturnCode(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.DISCONNECTED))
         .build();
 
     public static Builder builder() {
