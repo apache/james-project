@@ -52,7 +52,7 @@ public class And extends GenericCompositeMatcher {
     }
 
     private Set<MailAddress> computeIntersection(ImmutableList<Set<MailAddress>> individualMatchedResults) {
-        if (individualMatchedResults.size() == 0) {
+        if (individualMatchedResults.isEmpty()) {
             return ImmutableSet.of();
         }
         if (individualMatchedResults.size() == 1) {

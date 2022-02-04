@@ -100,6 +100,6 @@ class MailetConfigImplTest {
         while (iter.hasNext()) {
             params.add(iter.next());
         }
-        assertThat(1).isEqualTo(params.size());
+        assertThat(params.size()).isEqualTo(1);
     }
 }
