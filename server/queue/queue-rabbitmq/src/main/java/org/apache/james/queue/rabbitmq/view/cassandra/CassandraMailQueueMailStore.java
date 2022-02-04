@@ -87,8 +87,6 @@ public class CassandraMailQueueMailStore {
     }
 
     private BucketId computedBucketId(Mail mail) {
-        int mailKeyHashCode = mail.getName().hashCode();
-        int bucketIdValue = Math.abs(mailKeyHashCode) % configuration.getBucketCount();
-        return BucketId.of(bucketIdValue);
+        return BucketId.of(mail.getName(), configuration.getBucketCount());
     }
 }

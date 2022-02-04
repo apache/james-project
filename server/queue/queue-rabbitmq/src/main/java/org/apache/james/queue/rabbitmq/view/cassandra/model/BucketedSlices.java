@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -34,6 +35,17 @@ public class BucketedSlices {
 
         public static BucketId of(int bucketId) {
             return new BucketId(bucketId);
+        }
+
+        public static BucketId of(String value, int bucketCount) {
+            int mailKeyHashCode = value.hashCode();
+            return of(mailKeyHashCode, bucketCount);
+        }
+
+        @VisibleForTesting
+        public static BucketId of(int mailKeyHashCode, int bucketCount) {
+            int bucketIdValue = Math.abs(mailKeyHashCode % bucketCount);
+            return BucketId.of(bucketIdValue);
         }
 
         private final int value;

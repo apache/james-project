@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
@@ -60,6 +61,12 @@ class BucketedSlicesTest {
     void bucketIdShouldThrowWhenValueIsNegative() {
         assertThatThrownBy(() -> BucketId.of(-1))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void unluckyHashShouldNotThrow() {
+        assertThatCode(() -> BucketId.of(Integer.MIN_VALUE, 3))
+            .doesNotThrowAnyException();
     }
 
     @Test
