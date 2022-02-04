@@ -52,6 +52,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @BeforeEach
     public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        connectionFactory.setTrustAllPackages(false);
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setQueuePrefetch(0);
         connectionFactory.setPrefetchPolicy(prefetchPolicy);
