@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
@@ -50,8 +48,7 @@ import com.google.common.collect.ImmutableSet;
  * provided for criteria.
  * </p>
  */
-public class SearchQuery implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class SearchQuery {
     private static final String DATE_HEADER_NAME = "Date";
 
     /**
@@ -68,8 +65,7 @@ public class SearchQuery implements Serializable {
     /**
      * Allow to sort a {@link SearchQuery} response in different ways.
      */
-    public static class Sort implements Serializable {
-        private static final long serialVersionUID = 1L;
+    public static class Sort {
 
         public enum Order {
             REVERSE,
@@ -859,7 +855,7 @@ public class SearchQuery implements Serializable {
      * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
      * unlimited in either direction.
      */
-    public static class UidRange implements Serializable {
+    public static class UidRange {
 
         private final MessageUid lowValue;
         private final MessageUid highValue;
@@ -923,8 +919,7 @@ public class SearchQuery implements Serializable {
     /**
      * Marker superclass for criteria.
      */
-    public abstract static class Criterion implements Serializable {
-        private static final long serialVersionUID = 1L;
+    public abstract static class Criterion {
 
     }
 
@@ -937,8 +932,6 @@ public class SearchQuery implements Serializable {
      * indicates how the conjoined criteria should be related.
      */
     public static class ConjunctionCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
-
         private final Conjunction type;
 
         private final List<Criterion> criteria;
@@ -996,7 +989,6 @@ public class SearchQuery implements Serializable {
      * Any message.
      */
     public static class AllCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private static final AllCriterion ALL = new AllCriterion();
 
@@ -1038,7 +1030,6 @@ public class SearchQuery implements Serializable {
      * Message text.
      */
     public static class TextCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final Scope type;
 
@@ -1170,7 +1161,6 @@ public class SearchQuery implements Serializable {
      * Header value content search.
      */
     public static class HeaderCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final HeaderOperator operator;
 
@@ -1230,7 +1220,6 @@ public class SearchQuery implements Serializable {
      * Filters on the internal date.
      */
     public static class InternalDateCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final DateOperator operator;
 
@@ -1275,7 +1264,6 @@ public class SearchQuery implements Serializable {
      * Filters on the mod-sequence of the messages.
      */
     public static class ModSeqCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final NumericOperator operator;
 
@@ -1318,7 +1306,6 @@ public class SearchQuery implements Serializable {
     }
 
     public static class SizeCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final NumericOperator operator;
 
@@ -1364,7 +1351,6 @@ public class SearchQuery implements Serializable {
      * Filters on a custom flag valuation.
      */
     public static class CustomFlagCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final String flag;
 
@@ -1468,15 +1454,12 @@ public class SearchQuery implements Serializable {
      * Filters on a standard flag.
      */
     public static class FlagCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
-
-        // Flags not Flag because Flags are serializable and Flag is not
-        private final Flags flag;        
+        private final Flag flag;
         private final BooleanOperator operator;
 
         private FlagCriterion(Flag flag, BooleanOperator operator) {
             super();
-            this.flag = new Flags(flag);
+            this.flag = flag;
             this.operator = operator;
         }
 
@@ -1488,7 +1471,7 @@ public class SearchQuery implements Serializable {
         public Flag getFlag() {
            // safe because the Flags(Flag) does system flags, 
            // and James code also constructs FlagCriterion only with system flags
-           return flag.getSystemFlags()[0];
+           return flag;
         }
 
         /**
@@ -1530,7 +1513,6 @@ public class SearchQuery implements Serializable {
      * Filters on message identity.
      */
     public static class UidCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
 
         private final UidInOperator operator;
 
@@ -1573,7 +1555,7 @@ public class SearchQuery implements Serializable {
     /**
      * Search operator.
      */
-    public interface Operator extends Serializable {
+    public interface Operator {
     }
 
     /**
@@ -1583,7 +1565,6 @@ public class SearchQuery implements Serializable {
     }
 
     public static class AddressOperator implements HeaderOperator {
-        private static final long serialVersionUID = 1L;
 
         private final String address;
 
@@ -1629,7 +1610,6 @@ public class SearchQuery implements Serializable {
      * Contained value search.
      */
     public static class ContainsOperator implements HeaderOperator {
-        private static final long serialVersionUID = 1L;
 
         private final String value;
 
@@ -1675,7 +1655,6 @@ public class SearchQuery implements Serializable {
      * Existance search.
      */
     public static class ExistsOperator implements HeaderOperator {
-        private static final long serialVersionUID = 1L;
 
         private static final ExistsOperator EXISTS = new ExistsOperator();
 
@@ -1704,7 +1683,6 @@ public class SearchQuery implements Serializable {
      * Boolean value search.
      */
     public static class BooleanOperator implements Operator {
-        private static final long serialVersionUID = 1L;
 
         private static final BooleanOperator SET = new BooleanOperator(true);
 
@@ -1768,7 +1746,6 @@ public class SearchQuery implements Serializable {
      * Searches numeric values.
      */
     public static class NumericOperator implements Operator {
-        private static final long serialVersionUID = 1L;
 
         private final long value;
 
@@ -1832,7 +1809,6 @@ public class SearchQuery implements Serializable {
      * Operates on a date.
      */
     public static class DateOperator implements HeaderOperator {
-        private static final long serialVersionUID = 1L;
 
         public static final int BEFORE = 1;
 
@@ -1904,7 +1880,6 @@ public class SearchQuery implements Serializable {
      * Search for uids within set of ranges.
      */
     public static class UidInOperator implements Operator {
-        private static final long serialVersionUID = 1L;
 
         private final UidRange[] ranges;
 
