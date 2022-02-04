@@ -20,12 +20,10 @@
 package org.apache.james.mailbox.elasticsearch.v7.json;
 
 import java.time.ZoneId;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -58,7 +56,7 @@ public class MessageToElasticSearchJson {
         this(textExtractor, ZoneId.systemDefault(), indexAttachments);
     }
 
-    public String convertToJson(MailboxMessage message, List<Username> usernames) throws JsonProcessingException {
+    public String convertToJson(MailboxMessage message) throws JsonProcessingException {
         Preconditions.checkNotNull(message);
 
         return mapper.writeValueAsString(IndexableMessage.builder()
@@ -69,7 +67,7 @@ public class MessageToElasticSearchJson {
                 .build());
     }
 
-    public String convertToJsonWithoutAttachment(MailboxMessage message, List<Username> usernames) throws JsonProcessingException {
+    public String convertToJsonWithoutAttachment(MailboxMessage message) throws JsonProcessingException {
         return mapper.writeValueAsString(IndexableMessage.builder()
                 .message(message)
                 .extractor(textExtractor)
