@@ -34,34 +34,29 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractPriorityMatcher extends GenericMatcher {
     private final String priorityMatcherName;
-    private Integer priority;
+    private int priority;
 
-    public AbstractPriorityMatcher(String priorityMatcherName) {
+    protected AbstractPriorityMatcher(String priorityMatcherName) {
         this.priorityMatcherName = priorityMatcherName;
     }
 
     @Override
     public void init() throws MessagingException {
-        Integer priority = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
-        this.setPriority(priority);
+        priority = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) {
         return AttributeUtils.getValueAndCastFromMail(mail, MailPrioritySupport.MAIL_PRIORITY, Integer.class)
                 .filter(this::priorityMatch)
                 .map(any -> mail.getRecipients())
                 .orElse(ImmutableList.of());
     }
 
-    public abstract boolean priorityMatch(Integer mailPriorityValue);
+    public abstract boolean priorityMatch(int mailPriorityValue);
 
     public Integer getPriority() {
         return priority;
-    }
-
-    public void setPriority(Integer priority) {
-        this.priority = priority;
     }
 
     public String getPriorityMatcherName() {

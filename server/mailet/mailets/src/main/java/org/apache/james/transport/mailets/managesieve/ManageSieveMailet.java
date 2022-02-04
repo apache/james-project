@@ -194,18 +194,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     }
 
     private String computeHelp() throws MessagingException {
-        InputStream stream = null;
-        Scanner scanner = null;
-        try {
-            stream = helpURL.openStream();
-            scanner = new Scanner(stream, StandardCharsets.UTF_8);
+        try (InputStream stream = helpURL.openStream();
+                Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8)) {
             return scanner.useDelimiter("\\A").next();
         } catch (IOException ex) {
             throw new MessagingException("Unable to access help URL: " + helpURL.toExternalForm(), ex);
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
         }
     }
 

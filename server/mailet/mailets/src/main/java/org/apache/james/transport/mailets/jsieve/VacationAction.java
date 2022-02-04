@@ -50,12 +50,10 @@ public class VacationAction implements MailAction {
                 context.getScriptActivationDate().toLocalDate(),
                 context.getScriptInterpretationDate().toLocalDate()))
             .intValue();
-        if (isStillInVacation(actionVacation, dayDifference)) {
-            if (isValidForReply(mail, actionVacation, context)) {
-                if (!isMailingList(mail)) {
-                    sendVacationNotification(mail, actionVacation, context);
-                }
-            }
+        if (isStillInVacation(actionVacation, dayDifference)
+                && isValidForReply(mail, actionVacation, context)
+                && !isMailingList(mail)) {
+            sendVacationNotification(mail, actionVacation, context);
         }
     }
 

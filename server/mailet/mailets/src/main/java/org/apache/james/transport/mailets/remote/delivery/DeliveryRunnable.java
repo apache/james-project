@@ -101,12 +101,9 @@ public class DeliveryRunnable implements Disposable {
 
     private Mono<Void> runStep(MailQueue.MailQueueItem queueItem) {
         TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
-        try {
-            return processMail(queueItem)
-                .doOnSuccess(any -> timeMetric.stopAndPublish());
-        } catch (Throwable e) {
-            return Mono.error(e);
-        }
+
+        return processMail(queueItem)
+            .doOnSuccess(any -> timeMetric.stopAndPublish());
     }
 
     private Mono<Void> processMail(MailQueue.MailQueueItem queueItem) {
@@ -195,11 +192,11 @@ public class DeliveryRunnable implements Disposable {
         queue.enQueue(mail, delay);
     }
 
-    private Duration getNextDelay(int retry_count) {
-        if (retry_count > configuration.getDelayTimes().size()) {
+    private Duration getNextDelay(int retryCount) {
+        if (retryCount > configuration.getDelayTimes().size()) {
             return Delay.DEFAULT_DELAY_TIME;
         }
-        return configuration.getDelayTimes().get(retry_count - 1);
+        return configuration.getDelayTimes().get(retryCount - 1);
     }
 
     @Override

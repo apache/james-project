@@ -22,15 +22,13 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MetricsMailetTest {
+class MetricsMailetTest {
 
     public static final String MAILET_NAME = "Metric test";
     public static final String METRIC_NAME = "metricName";

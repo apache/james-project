@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -338,10 +339,9 @@ public class Resend extends GenericMailet implements RedirectNotify {
         // allowedInitParameters
         checkInitParameters(getAllowedInitParameters());
 
-        if (getInitParameters().isStatic()) {
-            if (getInitParameters().isDebug()) {
-                LOGGER.debug(getInitParameters().asString());
-            }
+        if (getInitParameters().isStatic()
+                && getInitParameters().isDebug()) {
+            LOGGER.debug(getInitParameters().asString());
         }
     }
 
@@ -407,13 +407,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
-        Optional<MailAddress> reversePath = getReversePath();
-        if (reversePath.isPresent()) {
-            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
-                return Optional.empty();
-            }
-        }
-        return reversePath;
+        return getReversePath().filter(Predicate.not(MailAddressUtils::isUnalteredOrReversePathOrSender));
     }
 
     @Override

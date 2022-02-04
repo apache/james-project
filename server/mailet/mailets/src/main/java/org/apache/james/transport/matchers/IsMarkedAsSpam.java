@@ -22,8 +22,6 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.Locale;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
@@ -56,10 +54,6 @@ public class IsMarkedAsSpam extends GenericMatcher {
     @Override
     public String getMatcherInfo() {
         return "Has org.apache.james.spamassassin.status per recipient header with a Yes value";
-    }
-
-    @Override
-    public void init() throws MessagingException {
     }
 
     @Override

@@ -51,11 +51,11 @@ import com.google.common.collect.ImmutableMultimap;
 public class DlpDomainRules {
 
     @VisibleForTesting static DlpDomainRules matchNothing() {
-        return DlpDomainRules.of(new Rule(DLPConfigurationItem.Id.of("always false"), (mail) -> false));
+        return DlpDomainRules.of(new Rule(DLPConfigurationItem.Id.of("always false"), mail -> false));
     }
 
     @VisibleForTesting static DlpDomainRules matchAll() {
-        return DlpDomainRules.of(new Rule(DLPConfigurationItem.Id.of("always true"), (mail) -> true));
+        return DlpDomainRules.of(new Rule(DLPConfigurationItem.Id.of("always true"), mail -> true));
     }
 
     private static DlpDomainRules of(Rule rule) {

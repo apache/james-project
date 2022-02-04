@@ -73,26 +73,17 @@ public class FileIntoAction implements MailAction {
     public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException {
         String destinationMailbox = anAction.getDestination();
         MailAddress recipient;
-        boolean delivered = false;
-        try {
-            recipient = ActionUtils.getSoleRecipient(aMail);
-            
-            if (!(destinationMailbox.length() > 0 
-                    && destinationMailbox.charAt(0) == HIERARCHY_DELIMITER)) {
-                destinationMailbox =  HIERARCHY_DELIMITER + destinationMailbox;
-            }
-            
-            final String mailbox = destinationMailbox.replace(HIERARCHY_DELIMITER, '/');
-            final String url = "mailbox://" + recipient.asString() + mailbox;
-            //TODO: copying this message so many times seems a waste
-            context.post(url, aMail);
-            delivered = true;
-        } catch (MessagingException ex) {
-            LOGGER.debug("Error while storing mail into {}.", destinationMailbox, ex);
-            throw ex;
+        recipient = ActionUtils.getSoleRecipient(aMail);
+
+        if (!(destinationMailbox.length() > 0
+            && destinationMailbox.charAt(0) == HIERARCHY_DELIMITER)) {
+            destinationMailbox =  HIERARCHY_DELIMITER + destinationMailbox;
         }
-        if (delivered) {
-            LOGGER.debug("Filed Message ID: {} into destination: \"{}\"", aMail.getMessage().getMessageID(), destinationMailbox);
-        }
+
+        String mailbox = destinationMailbox.replace(HIERARCHY_DELIMITER, '/');
+        String url = "mailbox://" + recipient.asString() + mailbox;
+
+        context.post(url, aMail);
+        LOGGER.debug("Filed Message ID: {} into destination: \"{}\"", aMail.getMessage().getMessageID(), destinationMailbox);
     }
 }

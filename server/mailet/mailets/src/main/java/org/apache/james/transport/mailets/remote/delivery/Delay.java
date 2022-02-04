@@ -26,7 +26,6 @@ import javax.mail.MessagingException;
 
 import org.apache.james.util.DurationParser;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -68,7 +67,6 @@ public class Delay {
         this(DEFAULT_ATTEMPTS, DEFAULT_DELAY_TIME);
     }
 
-    @VisibleForTesting
     Delay(int attempts, Duration delayTime) {
         this.attempts = attempts;
         this.delayTime = delayTime;

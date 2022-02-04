@@ -39,7 +39,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class RedirectTest {
+class RedirectTest {
 
     private static final String MAILET_NAME = "mailetName";
 

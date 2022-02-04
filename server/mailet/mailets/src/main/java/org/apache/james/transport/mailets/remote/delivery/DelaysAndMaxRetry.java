@@ -63,7 +63,7 @@ public class DelaysAndMaxRetry {
     }
 
     private static DelaysAndMaxRetry addExtraAttemptToLastDelay(int intendedMaxRetries, int extra, List<Delay> delayTimesList) throws MessagingException {
-        if (delayTimesList.size() != 0) {
+        if (!delayTimesList.isEmpty()) {
             Delay lastDelay = delayTimesList.get(delayTimesList.size() - 1);
             Duration lastDelayTime = lastDelay.getDelayTime();
             LOGGER.warn("Delay of {} is now attempted: {} times",

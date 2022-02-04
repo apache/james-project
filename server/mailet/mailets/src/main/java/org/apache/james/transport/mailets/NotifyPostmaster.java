@@ -174,10 +174,9 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
         // allowedInitParameters
         checkInitParameters(getAllowedInitParameters());
 
-        if (getInitParameters().isStatic()) {
-            if (getInitParameters().isDebug()) {
-                LOGGER.debug(getInitParameters().asString());
-            }
+        if (getInitParameters().isStatic()
+                && getInitParameters().isDebug()) {
+            LOGGER.debug(getInitParameters().asString());
         }
     }
 

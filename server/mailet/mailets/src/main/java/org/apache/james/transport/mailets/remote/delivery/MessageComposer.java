@@ -68,7 +68,7 @@ public class MessageComposer {
                     if (ex.getClass().getName().endsWith(".SMTPAddressFailedException")) {
                         try {
                             InternetAddress ia = (InternetAddress) invokeGetter(ex, "getAddress");
-                            sb.append(" ( ").append(ia).append(" - [").append(ex.getMessage().replaceAll("\\n", "")).append("] )");
+                            sb.append(" ( ").append(ia).append(" - [").append(ex.getMessage().replace("\\n", "")).append("] )");
                             smtpExFound = true;
                         } catch (IllegalStateException ise) {
                             // Error invoking the getAddress method
@@ -94,7 +94,7 @@ public class MessageComposer {
                     sb.append(Arrays.toString(exception.getValidUnsentAddresses()));
                 }
                 sb.append(" - [");
-                sb.append(exception.getMessage().replaceAll("\\n", ""));
+                sb.append(exception.getMessage().replace("\\n", ""));
                 sb.append("] )");
             }
             return sb.toString();
@@ -108,9 +108,7 @@ public class MessageComposer {
         out.print(permanentAsString(executionResult.isPermanent()) + " exception delivering mail (" + mail.getName()
             + ")" + retrieveExceptionLog(executionResult.getException().orElse(null)) + ": ");
         if (configuration.isDebug()) {
-            if (executionResult.getException().isPresent()) {
-                executionResult.getException().get().printStackTrace(out);
-            }
+            executionResult.getException().ifPresent(e -> e.printStackTrace(out));
         }
         return sout.toString();
     }
