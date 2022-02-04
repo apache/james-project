@@ -31,8 +31,8 @@ public class InboxAlreadyCreated extends MailboxExistsException {
         super(mailboxName);
     }
 
+    @Override
     public String toString() {
         return getMessage();
     }
-
 }

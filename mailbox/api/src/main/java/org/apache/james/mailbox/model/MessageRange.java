@@ -125,26 +125,17 @@ public class MessageRange implements Iterable<MessageUid> {
      */
     public boolean includes(MessageUid uid) {
         switch (type) {
-        case ALL:
-            return true;
-        case FROM:
-            if (getUidFrom().compareTo(uid) <= 0) {
+            case ALL:
                 return true;
-            }
-            return false;
-        case RANGE:
-            if (getUidFrom().compareTo(uid) <= 0 &&
-                    getUidTo().compareTo(uid) >= 0) {
-                return true;
-            }
-            return false;
-        case ONE:
-            if (getUidFrom().equals(uid)) {
-                return true;
-            }
-            return false;
-        default:
-            return false;
+            case FROM:
+                return getUidFrom().compareTo(uid) <= 0;
+            case RANGE:
+                return getUidFrom().compareTo(uid) <= 0
+                    && getUidTo().compareTo(uid) >= 0;
+            case ONE:
+                return getUidFrom().equals(uid);
+            default:
+                return false;
         }
     }
 
