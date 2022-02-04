@@ -103,12 +103,12 @@ public class AttachmentFileNameIs extends GenericMatcher {
             String fileName = st.nextToken();
             
             // check possible parameters at the beginning of the condition
-            if (theMasks.size() == 0 && fileName.equalsIgnoreCase(UNZIP_REQUEST_PARAMETER)) {
+            if (theMasks.isEmpty() && fileName.equalsIgnoreCase(UNZIP_REQUEST_PARAMETER)) {
                 unzipIsRequested = true;
                 LOGGER.info("zip file analysis requested");
                 continue;
             }
-            if (theMasks.size() == 0 && fileName.equalsIgnoreCase(DEBUG_REQUEST_PARAMETER)) {
+            if (theMasks.isEmpty() && fileName.equalsIgnoreCase(DEBUG_REQUEST_PARAMETER)) {
                 isDebug = true;
                 LOGGER.info("debug requested");
                 continue;

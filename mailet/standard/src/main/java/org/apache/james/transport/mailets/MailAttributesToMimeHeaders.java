@@ -63,7 +63,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
             .stream()
             .collect(ImmutableMap.toImmutableMap(
                 entry -> AttributeName.of(entry.getKey()),
-                entry -> entry.getValue()));
+                Entry::getValue));
     }
 
     @Override

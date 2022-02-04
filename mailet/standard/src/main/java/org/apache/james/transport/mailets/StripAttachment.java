@@ -24,6 +24,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -441,7 +443,10 @@ public class StripAttachment extends GenericMailet {
             File outputFile = outputFile(part, fileName);
 
             LOGGER.debug("saving content of {}...", outputFile.getName());
-            IOUtils.copy(part.getInputStream(), new FileOutputStream(outputFile));
+            try (InputStream inputStream = part.getInputStream();
+                 OutputStream outputStream = new FileOutputStream(outputFile)) {
+                IOUtils.copy(inputStream, outputStream);
+            }
 
             return Optional.of(outputFile.getName());
         } catch (Exception e) {
