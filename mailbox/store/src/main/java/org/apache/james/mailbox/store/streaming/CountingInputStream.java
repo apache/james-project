@@ -24,6 +24,8 @@ package org.apache.james.mailbox.store.streaming;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.james.util.io.InputStreamConsummer;
+
 /**
  * {@link InputStream} implementation which just consume the the wrapped {@link InputStream} and count
  * the lines which are contained within the wrapped stream
@@ -37,7 +39,6 @@ public final class CountingInputStream extends InputStream {
     private int octetCount;
 
     public CountingInputStream(InputStream in) {
-        super();
         this.in = in;
     }
 
@@ -51,6 +52,20 @@ public final class CountingInputStream extends InputStream {
             }
         }
         return next;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        int read = in.read(b, off, len);
+        if (read > 0) {
+            octetCount += read;
+            for (int i = off; i < off+ read; i++) {
+                if (b[i] == '\r') {
+                    lineCount ++;
+                }
+            }
+        }
+        return read;
     }
 
     /**
@@ -75,8 +90,6 @@ public final class CountingInputStream extends InputStream {
      * Reads - and discards - the rest of the stream
      */
     public void readAll() throws IOException {
-        while (read() > 0) {
-            ;
-        }
+        InputStreamConsummer.consume(this);
     }
 }
