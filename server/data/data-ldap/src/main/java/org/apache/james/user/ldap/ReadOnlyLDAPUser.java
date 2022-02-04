@@ -19,8 +19,6 @@
 
 package org.apache.james.user.ldap;
 
-import java.io.Serializable;
-
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ import com.unboundid.ldap.sdk.ResultCode;
  * @see ReadOnlyUsersLDAPRepository
  * 
  */
-public class ReadOnlyLDAPUser implements User, Serializable {
+public class ReadOnlyLDAPUser implements User {
     public static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUser.class);
 
     /**
