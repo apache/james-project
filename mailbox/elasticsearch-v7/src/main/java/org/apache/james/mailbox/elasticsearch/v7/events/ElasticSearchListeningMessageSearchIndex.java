@@ -162,7 +162,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
         try {
-            return messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser()));
+            return messageToElasticSearchJson.convertToJson(message);
         } catch (Exception e) {
             LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
                 mailbox.getName(),
@@ -170,7 +170,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 session.getUser().asString(),
                 message.getUid(),
                 e);
-            return messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser()));
+            return messageToElasticSearchJson.convertToJsonWithoutAttachment(message);
         }
     }
 

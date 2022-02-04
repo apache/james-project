@@ -75,8 +75,6 @@ import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.HEADE
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class MailboxMappingFactory {
-
-    private static final int MAXIMUM_TERM_LENGTH = 4096;
     private static final String STANDARD = "standard";
     private static final String STORE = "store";
 

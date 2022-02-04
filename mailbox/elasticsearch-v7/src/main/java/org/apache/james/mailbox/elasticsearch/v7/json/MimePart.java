@@ -146,7 +146,7 @@ public class MimePart {
             if (bodyContent.isPresent()) {
                 try {
                     return Optional.of(extractText(textExtractor, bodyContent.get()));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.warn("Failed parsing attachment", e);
                 }
             }
