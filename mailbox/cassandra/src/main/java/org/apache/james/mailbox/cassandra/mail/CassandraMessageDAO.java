@@ -95,7 +95,6 @@ public class CassandraMessageDAO {
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
     private final Cid.CidParser cidParser;
-    private final CassandraMessageId.Factory messageIdFactory;
     private final ConsistencyLevel consistencyLevel;
 
     @Inject
@@ -103,10 +102,8 @@ public class CassandraMessageDAO {
                                CassandraTypesProvider typesProvider,
                                BlobStore blobStore,
                                BlobId.Factory blobIdFactory,
-                               CassandraMessageId.Factory messageIdFactory,
                                CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.messageIdFactory = messageIdFactory;
         this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
@@ -271,7 +268,7 @@ public class CassandraMessageDAO {
     private MessageRepresentation message(Row row) {
         BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
         BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
-        CassandraMessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID));
+        CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID));
 
         return new MessageRepresentation(
                 messageId,
@@ -324,14 +321,14 @@ public class CassandraMessageDAO {
 
     private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
         switch (fetchType) {
-            case Full:
+            case FULL:
                 return getFullContent(headerId, bodyId);
-            case Headers:
+            case HEADERS:
                 return getContent(headerId, SIZE_BASED);
-            case Body:
+            case BODY:
                 return getContent(bodyId, LOW_COST)
                     .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
-            case Metadata:
+            case METADATA:
                 return Mono.just(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);

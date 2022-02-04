@@ -98,7 +98,7 @@ public class MessageDenormalizationMigration implements Migration {
     }
 
     private Mono<CassandraMessageMetadata> retrieveFullMetadata(CassandraMessageMetadata metadata) {
-        return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), MessageMapper.FetchType.Metadata)
+        return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), MessageMapper.FetchType.METADATA)
             .map(messageRepresentation -> CassandraMessageMetadata.builder()
                 .ids(metadata.getComposedMessageId())
                 .bodyStartOctet(messageRepresentation.getBodyStartOctet())

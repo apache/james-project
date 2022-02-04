@@ -257,10 +257,10 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<MailboxMessage> toMailboxMessage(CassandraMessageMetadata metadata, FetchType fetchType) {
-        if (fetchType == FetchType.Metadata && metadata.isComplete()) {
+        if (fetchType == FetchType.METADATA && metadata.isComplete()) {
             return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
         }
-        if (fetchType == FetchType.Headers && metadata.isComplete()) {
+        if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
                 .map(metadata::asMailboxMessage);
         }
@@ -312,8 +312,8 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData) {
         return delete(metaData)
-            .then(messageDAOV3.retrieveMessage(metaData, FetchType.Metadata)
-                .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metaData, FetchType.Metadata))))
+            .then(messageDAOV3.retrieveMessage(metaData, FetchType.METADATA)
+                .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metaData, FetchType.METADATA))))
             .map(pair -> pair.toMailboxMessage(metaData, ImmutableList.of()));
     }
 
@@ -479,6 +479,7 @@ public class CassandraMessageMapper implements MessageMapper {
         return setInMailbox(mailbox, original);
     }
 
+    @Override
     public List<MessageMetaData> copy(Mailbox mailbox, List<MailboxMessage> originals) throws MailboxException {
         return setInMailbox(mailbox, originals.stream()
             .map(original -> {

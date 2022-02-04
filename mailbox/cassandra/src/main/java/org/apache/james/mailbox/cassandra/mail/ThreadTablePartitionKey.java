@@ -51,4 +51,9 @@ public class ThreadTablePartitionKey {
         }
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, mimeMessageIds);
+    }
 }

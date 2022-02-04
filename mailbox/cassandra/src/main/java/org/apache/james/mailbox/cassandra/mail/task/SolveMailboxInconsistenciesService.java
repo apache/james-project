@@ -86,7 +86,7 @@ public class SolveMailboxInconsistenciesService {
         Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO);
     }
 
-    private static Inconsistency NO_INCONSISTENCY = (context, mailboxDAO1, pathV2DAO) -> Mono.just(Result.COMPLETED);
+    private static final Inconsistency NO_INCONSISTENCY = (context, mailboxDAO1, pathV2DAO) -> Mono.just(Result.COMPLETED);
 
     /**
      * The Mailbox is referenced in MailboxDAO but the corresponding

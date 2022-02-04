@@ -98,7 +98,6 @@ class CassandraMessageDAOTest {
             cassandra.getTypesProvider(),
             blobStore,
             blobIdFactory,
-            messageIdFactory,
             cassandraCluster.getCassandraConsistenciesConfiguration());
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
@@ -116,7 +115,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.METADATA));
 
         assertThat(attachmentRepresentation.getProperties().getTextualLineCount())
             .isEqualTo(0L);
@@ -132,7 +131,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.METADATA));
 
         assertThat(attachmentRepresentation.getProperties().getTextualLineCount()).isEqualTo(textualLineCount);
     }
@@ -144,7 +143,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Full));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.FULL));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent().getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT);
@@ -157,7 +156,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Body));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.BODY));
 
         byte[] expected = Bytes.concat(
             new byte[BODY_START],
@@ -173,7 +172,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Headers));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.HEADERS));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent().getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT.substring(0, BODY_START));

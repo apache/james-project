@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
  * This class intend to introduce a dedicated logger for the ghost mailbox bug.
  */
 public class GhostMailbox {
-    private static  final Logger LOGGER = LoggerFactory.getLogger(GhostMailbox.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GhostMailbox.class);
 
-    public static String MAILBOX_NAME = "mailboxName";
-    public static String TYPE = "type";
-    public static String MAILBOX_ID = "mailboxId";
+    public static final String MAILBOX_NAME = "mailboxName";
+    public static final String TYPE = "type";
+    public static final String MAILBOX_ID = "mailboxId";
 
     public static MDCStructuredLogger logger() {
         return MDCStructuredLogger.forLogger(LOGGER);

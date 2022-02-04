@@ -232,8 +232,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     }
 
     private Mono<MessageRepresentation> readMessage(CassandraMessageId id) {
-        return messageDAOV3.retrieveMessage(id, MessageMapper.FetchType.Metadata)
-            .switchIfEmpty(messageDAO.retrieveMessage(id, MessageMapper.FetchType.Metadata));
+        return messageDAOV3.retrieveMessage(id, MessageMapper.FetchType.METADATA)
+            .switchIfEmpty(messageDAO.retrieveMessage(id, MessageMapper.FetchType.METADATA));
     }
 
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {

@@ -86,7 +86,6 @@ class MessageV3MigrationTest {
             cassandra.getTypesProvider(),
             blobStore,
             blobIdFactory,
-            new CassandraMessageId.Factory(),
             cassandraCluster.getCassandraConsistenciesConfiguration());
         daoV3 = new CassandraMessageDAOV3(
             cassandra.getConf(),
@@ -112,13 +111,13 @@ class MessageV3MigrationTest {
         new MessageV3Migration(daoV2, daoV3).apply();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.Metadata).block().getMessageId())
+            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.METADATA).block().getMessageId())
                 .isEqualTo(message1.getMessageId());
-            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message2.getMessageId(), MessageMapper.FetchType.Metadata).block().getMessageId())
+            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message2.getMessageId(), MessageMapper.FetchType.METADATA).block().getMessageId())
                 .isEqualTo(message2.getMessageId());
-            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message3.getMessageId(), MessageMapper.FetchType.Metadata).block().getMessageId())
+            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message3.getMessageId(), MessageMapper.FetchType.METADATA).block().getMessageId())
                 .isEqualTo(message3.getMessageId());
-            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message4.getMessageId(), MessageMapper.FetchType.Metadata).block().getMessageId())
+            softly.assertThat(daoV3.retrieveMessage((CassandraMessageId) message4.getMessageId(), MessageMapper.FetchType.METADATA).block().getMessageId())
                 .isEqualTo(message4.getMessageId());
 
             softly.assertThat(daoV2.list().collectList().block()).isEmpty();
@@ -129,10 +128,10 @@ class MessageV3MigrationTest {
     void migrationTaskShouldPreserveMessageContent() throws Exception {
         SimpleMailboxMessage message1 = createMessage(messageIdFactory.generate());
         daoV2.save(message1).block();
-        MessageRepresentation original = daoV2.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.Metadata).block();
+        MessageRepresentation original = daoV2.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.METADATA).block();
 
         new MessageV3Migration(daoV2, daoV3).apply();
-        MessageRepresentation migrated = daoV3.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.Metadata).block();
+        MessageRepresentation migrated = daoV3.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.METADATA).block();
 
         assertThat(migrated).isEqualToComparingOnlyGivenFields(original, "messageId",
             "internalDate", "size", "bodyStartOctet", "properties", "attachments", "headerId", "bodyId");
