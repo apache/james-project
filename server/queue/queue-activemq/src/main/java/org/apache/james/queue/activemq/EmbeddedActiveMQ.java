@@ -72,6 +72,7 @@ public class EmbeddedActiveMQ {
 
     private ActiveMQConnectionFactory createActiveMQConnectionFactory(BlobTransferPolicy blobTransferPolicy) {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://james?create=false");
+        connectionFactory.setTrustAllPackages(false);
         connectionFactory.setBlobTransferPolicy(blobTransferPolicy);
         connectionFactory.setPrefetchPolicy(createActiveMQPrefetchPolicy());
         return connectionFactory;
