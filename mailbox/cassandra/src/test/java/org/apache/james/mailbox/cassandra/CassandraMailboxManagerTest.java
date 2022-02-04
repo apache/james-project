@@ -168,7 +168,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
                 CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
@@ -229,7 +229,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
                 CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
@@ -268,7 +268,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
                 CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
@@ -307,7 +307,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
                 CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
@@ -346,7 +346,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
                 CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
@@ -380,7 +380,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             SoftAssertions.assertSoftly(softly -> {
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
@@ -412,7 +412,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             SoftAssertions.assertSoftly(softly -> {
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
@@ -444,7 +444,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             SoftAssertions.assertSoftly(softly -> {
                 CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
+                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.METADATA)
                     .blockOptional()).isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())

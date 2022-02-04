@@ -30,7 +30,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    private static CassandraId.Factory ID_FACTORY = new CassandraId.Factory();
+    private static final CassandraId.Factory ID_FACTORY = new CassandraId.Factory();
 
     private static MailboxMergingTaskAdditionalInformationDTO fromDomainObject(MailboxMergingTask.Details details, String type) {
         return new MailboxMergingTaskAdditionalInformationDTO(

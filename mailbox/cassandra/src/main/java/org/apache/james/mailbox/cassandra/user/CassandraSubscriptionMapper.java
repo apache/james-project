@@ -80,7 +80,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
         return cassandraUtils.convertToStream(
             session.execute(selectStatement.bind()
                 .setString(USER, user.asString())))
-            .map((row) -> new Subscription(user, row.getString(MAILBOX)))
+            .map(row -> new Subscription(user, row.getString(MAILBOX)))
             .collect(Collectors.toList());
     }
 
@@ -89,7 +89,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
         return executor.executeRows(
             selectStatement.bind()
                 .setString(USER, user.asString()))
-            .map((row) -> new Subscription(user, row.getString(MAILBOX)));
+            .map(row -> new Subscription(user, row.getString(MAILBOX)));
     }
 
     @Override

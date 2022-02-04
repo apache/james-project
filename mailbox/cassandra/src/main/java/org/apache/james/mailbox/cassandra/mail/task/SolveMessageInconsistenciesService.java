@@ -61,7 +61,7 @@ public class SolveMessageInconsistenciesService {
         Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO);
     }
 
-    private static Inconsistency NO_INCONSISTENCY = (context, imapUidDAO, messageIdDAO) -> Mono.just(Task.Result.COMPLETED);
+    private static final Inconsistency NO_INCONSISTENCY = (context, imapUidDAO, messageIdDAO) -> Mono.just(Task.Result.COMPLETED);
 
     private static class FailedToRetrieveRecord implements Inconsistency {
         private final CassandraMessageMetadata message;
@@ -465,7 +465,7 @@ public class SolveMessageInconsistenciesService {
                 return detectOutdatedMessageIdEntry(mailboxId, messageId, messageIdRecord);
             })
             .switchIfEmpty(
-                detectOrphanImapUidEntry(messageFromImapUid, mailboxId, messageId));
+                detectOrphanImapUidEntry(mailboxId, messageId));
     }
 
     private Mono<Inconsistency> detectOutdatedMessageIdEntry(CassandraId mailboxId, CassandraMessageId messageId, CassandraMessageMetadata messageIdRecord) {
@@ -476,7 +476,7 @@ public class SolveMessageInconsistenciesService {
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
     }
 
-    private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraMessageMetadata messageFromImapUid, CassandraId mailboxId, CassandraMessageId messageId) {
+    private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraId mailboxId, CassandraMessageId messageId) {
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
             .next()
             .<Inconsistency>map(OrphanImapUidEntry::new)

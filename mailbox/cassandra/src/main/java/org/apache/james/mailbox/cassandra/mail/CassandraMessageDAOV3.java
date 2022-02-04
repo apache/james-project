@@ -392,14 +392,14 @@ public class CassandraMessageDAOV3 {
 
     private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
         switch (fetchType) {
-            case Full:
+            case FULL:
                 return getFullContent(headerId, bodyId);
-            case Headers:
+            case HEADERS:
                 return getContent(headerId, SIZE_BASED);
-            case Body:
+            case BODY:
                 return getContent(bodyId, LOW_COST)
                     .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
-            case Metadata:
+            case METADATA:
                 return Mono.just(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);

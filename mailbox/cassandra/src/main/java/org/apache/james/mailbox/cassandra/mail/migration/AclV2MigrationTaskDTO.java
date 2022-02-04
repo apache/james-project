@@ -33,7 +33,7 @@ public class AclV2MigrationTaskDTO implements TaskDTO {
         return new AclV2MigrationTaskDTO(type);
     }
 
-    public static final Function<AclV2Migration, TaskDTOModule<AclV2Migration.AclV2MigrationTask, AclV2MigrationTaskDTO>> MODULE = (migration) ->
+    public static final Function<AclV2Migration, TaskDTOModule<AclV2Migration.AclV2MigrationTask, AclV2MigrationTaskDTO>> MODULE = migration ->
         DTOModule
             .forDomainObject(AclV2Migration.AclV2MigrationTask.class)
             .convertToDTO(AclV2MigrationTaskDTO.class)

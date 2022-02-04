@@ -126,10 +126,10 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Mono<MailboxMessage> toMailboxMessage(CassandraMessageMetadata metadata, FetchType fetchType) {
-        if (fetchType == FetchType.Metadata && metadata.isComplete()) {
+        if (fetchType == FetchType.METADATA && metadata.isComplete()) {
             return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
         }
-        if (fetchType == FetchType.Headers && metadata.isComplete()) {
+        if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
                 .map(metadata::asMailboxMessage);
         }
@@ -239,7 +239,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .block();
     }
 
-
+    @Override
     public Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
         return Flux.fromIterable(ids.asMap()
             .entrySet())
@@ -276,7 +276,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) {
         return Flux.fromIterable(mailboxIds)
             .distinct()
-            .map(mailboxId -> (CassandraId) mailboxId)
+            .map(CassandraId.class::cast)
             .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts, ReactorUtils.DEFAULT_CONCURRENCY)
             .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getLeft, Pair::getRight));

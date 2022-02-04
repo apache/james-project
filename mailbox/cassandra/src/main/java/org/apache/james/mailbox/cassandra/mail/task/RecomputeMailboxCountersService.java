@@ -256,11 +256,9 @@ public class RecomputeMailboxCountersService {
                 }
             })
             .switchIfEmpty(Flux.<ComposedMessageIdWithMetaData>empty()
-                .doOnComplete(() -> {
-                    LOGGER.warn("Possible denormalization issue on {}. " +
-                            "Source of truth do not contain listed entry." +
-                            "This can also be due to concurrent modifications.",
-                        message.getComposedMessageId());
-                }));
+                .doOnComplete(() -> LOGGER.warn("Possible denormalization issue on {}. " +
+                        "Source of truth do not contain listed entry." +
+                        "This can also be due to concurrent modifications.",
+                    message.getComposedMessageId())));
     }
 }
