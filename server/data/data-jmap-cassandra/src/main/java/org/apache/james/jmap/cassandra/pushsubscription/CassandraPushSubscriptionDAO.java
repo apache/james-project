@@ -121,7 +121,7 @@ public class CassandraPushSubscriptionDAO {
             .setBool(VALIDATED, subscription.validated());
 
         OptionConverters.toJava(subscription.keys())
-            .map(keys -> insertSubscription.setString(ENCRYPT_PUBLIC_KEY, keys.p256dh())
+            .ifPresent(keys -> insertSubscription.setString(ENCRYPT_PUBLIC_KEY, keys.p256dh())
                 .setString(ENCRYPT_AUTH_SECRET, keys.auth()));
 
         return executor.executeVoid(insertSubscription)
