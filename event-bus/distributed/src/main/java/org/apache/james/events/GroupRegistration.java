@@ -108,7 +108,7 @@ class GroupRegistration implements Registration {
         receiverSubscriber = Optional
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
-                .then(Mono.fromCallable(() -> this.consumeWorkQueue()))
+                .then(Mono.fromCallable(this::consumeWorkQueue))
                 .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                 .block());
         return this;
@@ -186,7 +186,7 @@ class GroupRegistration implements Registration {
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {
         return Optional.ofNullable(acknowledgableDelivery.getProperties().getHeaders())
             .flatMap(headers -> Optional.ofNullable(headers.get(RETRY_COUNT)))
-            .filter(object -> object instanceof Integer)
+            .filter(Integer.class::isInstance)
             .map(Integer.class::cast)
             .orElse(DEFAULT_RETRY_COUNT);
     }
