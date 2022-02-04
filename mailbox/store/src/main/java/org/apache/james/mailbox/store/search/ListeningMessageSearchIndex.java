@@ -108,7 +108,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
     private Flux<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
         return factory.getMessageMapper(session)
-            .findInMailboxReactive(mailbox, range, FetchType.Full, UNLIMITED);
+            .findInMailboxReactive(mailbox, range, FetchType.FULL, UNLIMITED);
     }
 
     /**

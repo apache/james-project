@@ -82,7 +82,7 @@ public abstract class MessageMoveTest {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
-        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.Metadata, 1).next();
+        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         messageMapper.move(benwaWorkMailbox, messageToMove);
         
         assertThat(retrieveMessageFromStorage(benwaWorkMailbox, message1).getUid()).isEqualTo(message1.getUid());
@@ -93,7 +93,7 @@ public abstract class MessageMoveTest {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
-        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.Metadata, 1).next();
+        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         MessageMetaData messageMetaData = messageMapper.move(benwaWorkMailbox, messageToMove);
 
         Flags expectedFlags = message1.createFlags();
@@ -108,7 +108,7 @@ public abstract class MessageMoveTest {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
-        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.Metadata, 1).next();
+        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         messageMapper.move(benwaWorkMailbox, messageToMove);
 
         assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
@@ -120,7 +120,7 @@ public abstract class MessageMoveTest {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
-        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.Metadata, 1).next();
+        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         messageMapper.move(benwaWorkMailbox, messageToMove);
 
         assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
@@ -133,7 +133,7 @@ public abstract class MessageMoveTest {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
-        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.Metadata, 1).next();
+        MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         messageMapper.move(benwaWorkMailbox, messageToMove);
 
         assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
@@ -145,7 +145,7 @@ public abstract class MessageMoveTest {
     }
 
     private MailboxMessage retrieveMessageFromStorage(Mailbox mailbox, MailboxMessage message) throws MailboxException {
-        return messageMapper.findInMailbox(mailbox, MessageRange.one(message.getUid()), FetchType.Metadata, LIMIT).next();
+        return messageMapper.findInMailbox(mailbox, MessageRange.one(message.getUid()), FetchType.METADATA, LIMIT).next();
     }
     
     private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {

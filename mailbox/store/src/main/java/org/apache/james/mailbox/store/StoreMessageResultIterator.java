@@ -122,13 +122,13 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
     private int batchSizeFromFetchType(FetchType fetchType) {
         switch (fetchType) {
-        case Metadata:
+        case METADATA:
             return batchSizes.getFetchMetadata();
-        case Headers:
+        case HEADERS:
             return batchSizes.getFetchHeaders();
-        case Body:
+        case BODY:
             return batchSizes.getFetchBody();
-        case Full:
+        case FULL:
             return batchSizes.getFetchFull();
         }
         throw new RuntimeException("Unknown fetchTpe: " + fetchType);

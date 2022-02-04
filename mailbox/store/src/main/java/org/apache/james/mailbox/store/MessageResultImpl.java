@@ -139,7 +139,7 @@ public class MessageResultImpl implements MessageResult {
     @Override
     public final Content getFullContent() throws IOException {
         if (fullContent == null) {
-            fullContent = new InputStreamContent(message, Type.Full);
+            fullContent = new InputStreamContent(message, Type.FULL);
         }
         return fullContent;
     }
@@ -147,7 +147,7 @@ public class MessageResultImpl implements MessageResult {
     @Override
     public final Content getBody() throws IOException {
         if (bodyContent == null) {
-            bodyContent = new InputStreamContent(message, Type.Body);
+            bodyContent = new InputStreamContent(message, Type.BODY);
         }
         return bodyContent;
     }

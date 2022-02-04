@@ -37,18 +37,18 @@ class FetchGroupConverterTest {
 
     static Stream<Arguments> getFetchTypeShouldReturnCorrectValue() {
         return Stream.of(
-            Arguments.arguments(FetchGroup.MINIMAL, FetchType.Metadata),
-            Arguments.arguments(FetchGroup.HEADERS, FetchType.Headers),
-            Arguments.arguments(FetchGroup.BODY_CONTENT, FetchType.Body),
-            Arguments.arguments(FetchGroup.FULL_CONTENT, FetchType.Full),
-            Arguments.arguments(FetchGroup.BODY_CONTENT.with(Profile.HEADERS), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_CONTENT), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_HEADERS), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.noneOf(Profile.class)), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.HEADERS), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.BODY_CONTENT), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.FULL_CONTENT), FetchType.Full));
+            Arguments.arguments(FetchGroup.MINIMAL, FetchType.METADATA),
+            Arguments.arguments(FetchGroup.HEADERS, FetchType.HEADERS),
+            Arguments.arguments(FetchGroup.BODY_CONTENT, FetchType.BODY),
+            Arguments.arguments(FetchGroup.FULL_CONTENT, FetchType.FULL),
+            Arguments.arguments(FetchGroup.BODY_CONTENT.with(Profile.HEADERS), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_CONTENT), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_HEADERS), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.noneOf(Profile.class)), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.HEADERS), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.BODY_CONTENT), FetchType.FULL),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.FULL_CONTENT), FetchType.FULL));
     }
 
     @ParameterizedTest

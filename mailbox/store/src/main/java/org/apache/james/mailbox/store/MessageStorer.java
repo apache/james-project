@@ -92,7 +92,7 @@ public interface MessageStorer {
         }
 
         @Override
-        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
             Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
@@ -114,7 +114,7 @@ public interface MessageStorer {
                             }).sneakyThrow()));
         }
 
-        private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) {
             List<ParsedAttachment> attachments = extractAttachments(messageContent, maybeMessage);
             return attachmentMapperFactory.getAttachmentMapper(session)
                 .storeAttachmentsReactive(attachments, messageId);

@@ -83,7 +83,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
-        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
+        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.METADATA, UNLIMITED);
 
         if (!messages.hasNext()) {
             return ImmutableList.<UpdatedFlags>of().iterator();
@@ -152,7 +152,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
-        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED)
+        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.METADATA, UNLIMITED)
             .map(MailboxMessage::getUid);
     }
 }

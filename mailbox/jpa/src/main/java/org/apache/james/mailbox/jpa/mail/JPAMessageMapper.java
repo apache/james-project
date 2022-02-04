@@ -89,7 +89,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
-        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED)
+        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.METADATA, UNLIMITED)
             .map(MailboxMessage::getUid);
     }
 
@@ -295,7 +295,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             MessageRange set) throws MailboxException {
-        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMIT_MAX_SIZE);
+        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.METADATA, UNLIMIT_MAX_SIZE);
 
         MessageChangedFlags messageChangedFlags = messageMetadataMapper.updateFlags(mailbox, flagsUpdateCalculator, messages);
 

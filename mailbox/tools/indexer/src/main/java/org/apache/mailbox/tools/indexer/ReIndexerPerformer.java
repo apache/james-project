@@ -201,7 +201,7 @@ public class ReIndexerPerformer {
         MailboxSession session = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         return mailboxSessionMapperFactory.getMessageIdMapper(session)
-            .findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
+            .findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.FULL)
             .flatMap(mailboxMessage -> reIndex(mailboxMessage, session), DEFAULT_CONCURRENCY)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED))
@@ -242,7 +242,7 @@ public class ReIndexerPerformer {
 
     private Mono<MailboxMessage> fullyReadMessage(ReIndexingEntry entry) {
         return mailboxSessionMapperFactory.getMessageMapper(entry.getMailboxSession())
-            .findInMailboxReactive(entry.getMailbox(), MessageRange.one(entry.getUid()), MessageMapper.FetchType.Full, SINGLE_MESSAGE)
+            .findInMailboxReactive(entry.getMailbox(), MessageRange.one(entry.getUid()), MessageMapper.FetchType.FULL, SINGLE_MESSAGE)
             .next();
     }
 
@@ -326,7 +326,7 @@ public class ReIndexerPerformer {
     private Mono<Either<Failure, Result>> correctIfNeeded(ReIndexingEntry entry) {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(entry.getMailboxSession());
 
-        return messageMapper.findInMailboxReactive(entry.getMailbox(), MessageRange.one(entry.getUid()), MessageMapper.FetchType.Metadata, ONE)
+        return messageMapper.findInMailboxReactive(entry.getMailbox(), MessageRange.one(entry.getUid()), MessageMapper.FetchType.METADATA, ONE)
             .next()
             .flatMap(message -> isIndexUpToDate(entry.getMailbox(), message)
                 .flatMap(upToDate -> {

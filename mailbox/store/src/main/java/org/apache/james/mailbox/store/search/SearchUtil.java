@@ -107,17 +107,15 @@ public class SearchUtil {
      */
     public static String getDisplayAddress(String headerValue) {
         AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(headerValue));
-        if (addressList != null && addressList.isEmpty() == false) {
+        if (addressList != null && !addressList.isEmpty()) {
             Address address = addressList.get(0);
             if (address instanceof Mailbox) {
                 return getDisplayAddress((Mailbox) address);
             } else if (address instanceof Group) {
                 Group group = (Group) address;
-                if (group != null) {
-                    MailboxList mList = group.getMailboxes();
-                    if (mList != null && mList.isEmpty() == false) {
-                        return getDisplayAddress(mList.get(0));
-                    }
+                MailboxList mList = group.getMailboxes();
+                if (mList != null && !mList.isEmpty()) {
+                    return getDisplayAddress(mList.get(0));
                 }
             }
         }

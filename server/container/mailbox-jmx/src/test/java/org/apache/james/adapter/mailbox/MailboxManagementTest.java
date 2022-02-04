@@ -252,7 +252,7 @@ public class MailboxManagementTest {
 
         assertThat(mapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(1);
         Iterator<MailboxMessage> iterator = mapperFactory.getMessageMapper(session).findInMailbox(mailbox,
-                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
+                MessageRange.all(), MessageMapper.FetchType.FULL, LIMIT);
         MailboxMessage mailboxMessage = iterator.next();
 
         assertThat(IOUtils.toString(new FileInputStream(new File(emlpath)), StandardCharsets.UTF_8))
@@ -267,7 +267,7 @@ public class MailboxManagementTest {
 
         assertThat(mapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
         Iterator<MailboxMessage> iterator = mapperFactory.getMessageMapper(session).findInMailbox(mailbox,
-                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
+                MessageRange.all(), MessageMapper.FetchType.FULL, LIMIT);
         assertThat(iterator.hasNext()).isFalse();
     }
 

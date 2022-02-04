@@ -57,7 +57,7 @@ class MailboxMessageAssertTest {
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
-        MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Full);
+        MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.FULL);
     }
 
     @Test
@@ -75,7 +75,7 @@ class MailboxMessageAssertTest {
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
-        MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Headers);
+        MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.HEADERS);
     }
 
     @Test
@@ -93,7 +93,7 @@ class MailboxMessageAssertTest {
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
-        assertThatThrownBy(() -> MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Body))
+        assertThatThrownBy(() -> MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.BODY))
             .isInstanceOf(AssertionError.class);
     }
 

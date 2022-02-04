@@ -74,7 +74,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public Publisher<ComposedMessageIdWithMetaData> findMetadata(MessageId messageId) {
         return mailboxMapper.list()
-            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, UNLIMITED), DEFAULT_CONCURRENCY)
+            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.FULL, UNLIMITED), DEFAULT_CONCURRENCY)
             .map(message -> new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(
                     message.getMailboxId(),
@@ -94,7 +94,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxId> findMailboxes(MessageId messageId) {
-        return find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        return find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .stream()
             .map(MailboxMessage::getMailboxId)
             .collect(ImmutableList.toImmutableList());
@@ -116,7 +116,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(MessageId messageId) {
-        find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .forEach(Throwing.consumer(
                 message -> messageMapper.delete(
                     MailboxReactorUtils.block(mailboxMapper.findMailboxById(message.getMailboxId())),
@@ -125,7 +125,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
-        find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .stream()
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .forEach(Throwing.consumer(
@@ -137,7 +137,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds,
                                                             Flags newState, FlagsUpdateMode updateMode) {
-        return Mono.<Multimap<MailboxId, UpdatedFlags>>fromCallable(() -> find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        return Mono.<Multimap<MailboxId, UpdatedFlags>>fromCallable(() -> find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .stream()
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .map(updateMessage(newState, updateMode))

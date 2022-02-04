@@ -181,7 +181,7 @@ public class StoreRightManager implements RightManager {
         assertSharesBelongsToUserDomain(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
     }
 
-    public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) throws UnsupportedRightException {
+    public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) {
         Rfc4314Rights rights = myRights(mailbox, session);
 
         /*
@@ -292,7 +292,7 @@ public class StoreRightManager implements RightManager {
      * the connected user.
      */
     @VisibleForTesting
-    static MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) throws UnsupportedRightException {
+    static MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) {
         if (mailbox.generateAssociatedPath().belongsTo(mailboxSession)) {
             return acl;
         }

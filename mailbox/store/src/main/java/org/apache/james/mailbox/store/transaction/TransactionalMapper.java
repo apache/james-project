@@ -44,6 +44,7 @@ public abstract class TransactionalMapper implements Mapper {
         }
     }
 
+    @Override
     public final <T> Mono<T> executeReactive(Mono<T> transaction) {
         return Mono.fromRunnable(Throwing.runnable(this::begin).sneakyThrow())
             .then(transaction)

@@ -209,7 +209,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         return assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages)
-            .then(messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
+            .then(messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.METADATA)
                 .filter(inMailboxes(mailboxIds))
                 .collectList())
             .flatMap(messageList -> {
@@ -236,7 +236,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     public Mono<DeleteResult> delete(List<MessageId> messageIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
+        return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.METADATA)
             .collectList()
             .flatMap(messageList ->
                 getAllowedMailboxIds(mailboxSession,
@@ -323,7 +323,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     public void setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        List<MailboxMessage> currentMailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata);
+        List<MailboxMessage> currentMailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA);
 
 
         MailboxReactorUtils.block(messageMovesWithMailbox(MessageMoves.builder()
@@ -342,7 +342,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private Mono<List<MailboxMessage>> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        return messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .collect(ImmutableList.toImmutableList());
     }
 
