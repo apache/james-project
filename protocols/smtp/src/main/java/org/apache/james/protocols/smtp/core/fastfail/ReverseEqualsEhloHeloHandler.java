@@ -25,7 +25,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 
 public class ReverseEqualsEhloHeloHandler extends ResolvableEhloHeloHandler {
 
-    @Override
     protected boolean isBadHelo(SMTPSession session, String argument) {
         try {
             String reverse = resolve(session.getRemoteAddress().getAddress().getHostAddress());

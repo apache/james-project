@@ -49,7 +49,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     private static final String ESMTPA = "ESMTPA";
     private static final String ESMTP = "ESMTP";
 
-    private static DateTimeFormatter DATEFORMAT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
+    private static final DateTimeFormatter DATEFORMAT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
     private final ProtocolSession.AttachmentKey<Boolean> headersPrefixAdded = ProtocolSession.AttachmentKey.of("HEADERS_PREFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
@@ -80,10 +80,10 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     }
 
     /**
-     * The Received header is added in front of the received headers. So returns {@link Location#Suffix}
+     * The Received header is added in front of the received headers. So returns {@link Location#SUFFIX}
      */
     protected Location getLocation() {
-        return Location.Prefix;
+        return Location.PREFIX;
     }
 
     /**
@@ -135,7 +135,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
 
     @Override
     protected Response onSeparatorLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        if (getLocation() == Location.Suffix && !session.getAttachment(headersSuffixAdded, State.Transaction).isPresent()) {
+        if (getLocation() == Location.SUFFIX && !session.getAttachment(headersSuffixAdded, State.Transaction).isPresent()) {
             session.setAttachment(headersSuffixAdded, Boolean.TRUE, State.Transaction);
             return addHeaders(session, line, next);
         }
@@ -144,7 +144,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
 
     @Override
     protected Response onHeadersLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        if (getLocation() == Location.Prefix && !session.getAttachment(headersPrefixAdded, State.Transaction).isPresent()) {
+        if (getLocation() == Location.PREFIX && !session.getAttachment(headersPrefixAdded, State.Transaction).isPresent()) {
             session.setAttachment(headersPrefixAdded, Boolean.TRUE, State.Transaction);
             return addHeaders(session, line, next);
         }
@@ -168,8 +168,8 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     }
 
     enum Location {
-        Prefix,
-        Suffix
+        PREFIX,
+        SUFFIX
     }
 
     public static final class Header {

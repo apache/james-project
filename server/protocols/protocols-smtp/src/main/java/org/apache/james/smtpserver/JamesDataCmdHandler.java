@@ -59,7 +59,6 @@ public class JamesDataCmdHandler extends DataCmdHandler {
             return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error preparing to receive DATA.");
         }
 
-        // out = new PipedOutputStream(messageIn);
         session.pushLineHandler(getLineHandler());
 
         return new SMTPResponse(SMTPRetCode.DATA_READY, "Ok Send data ending with <CRLF>.<CRLF>");

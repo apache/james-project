@@ -19,8 +19,6 @@
 
 package org.apache.james.protocols.lmtp.core;
 
-import org.apache.james.protocols.smtp.SMTPSession;
-
 /**
  * Returns the WELCOME response to the client after it established a connection
  */
@@ -29,7 +27,7 @@ public class WelcomeMessageHandler extends org.apache.james.protocols.smtp.core.
     private static final String SERVICE_TYPE = "LMTP";
 
     @Override
-    protected String getServiceType(SMTPSession session) {
+    protected String getServiceType() {
         return SERVICE_TYPE;
     }
 }

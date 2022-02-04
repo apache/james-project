@@ -171,11 +171,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 return executeJamesMessageHooks(session, mail);
 
             } finally {
-                // Dispose the mail object and remove it
-                if (mail != null) {
-                    LifecycleUtil.dispose(mail);
-                    mail = null;
-                }
+                // Dispose the mail object and remove it\
+                LifecycleUtil.dispose(mail);
+                mail = null;
                 // do the clean up
                 session.resetState();
             }

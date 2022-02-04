@@ -51,7 +51,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
      *            The argument
      */
     protected void checkEhloHelo(SMTPSession session, String argument) {
-        if (isBadHelo(session, argument)) {
+        if (isBadHelo(argument)) {
             session.setAttachment(BAD_EHLO_HELO, true, State.Transaction);
         }
     }
@@ -60,7 +60,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
         return InetAddress.getByName(host).getHostName();
     }
 
-    protected boolean isBadHelo(SMTPSession session, String argument) {
+    protected boolean isBadHelo(String argument) {
         // try to resolv the provided helo. If it can not resolved do not
         // accept it.
         try {
@@ -72,14 +72,14 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
         
     }
 
-    protected boolean check(SMTPSession session,MailAddress rcpt) {
+    protected boolean check(SMTPSession session) {
         // not reject it
         return session.getAttachment(BAD_EHLO_HELO, State.Transaction).isPresent();
     }
 
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
-        if (check(session,rcpt)) {
+        if (check(session)) {
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.deny())
                 .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
