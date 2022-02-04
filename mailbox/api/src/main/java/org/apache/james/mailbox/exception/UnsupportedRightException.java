@@ -30,10 +30,11 @@ public class UnsupportedRightException extends MailboxSecurityException {
 
     private static final char INVALID_RIGHT = 0;
     private static final long serialVersionUID = 2959248897018370078L;
-    private char unsupportedRight = INVALID_RIGHT;
+    private final char unsupportedRight;
 
     public UnsupportedRightException() {
         super();
+        unsupportedRight = INVALID_RIGHT;
     }
 
     public UnsupportedRightException(char right) {
@@ -47,6 +48,7 @@ public class UnsupportedRightException extends MailboxSecurityException {
 
     public UnsupportedRightException(String msg, Exception cause) {
         super(msg, cause);
+        unsupportedRight = INVALID_RIGHT;
     }
 
     public char getUnsupportedRight() {

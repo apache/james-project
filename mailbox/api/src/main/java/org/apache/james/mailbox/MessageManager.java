@@ -464,7 +464,7 @@ public interface MessageManager {
          *
          * @return MailboxMetaData with default values for all fields
          */
-        public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
+        public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable, boolean modSeqPermanent) {
             ImmutableList<MessageUid> recents = ImmutableList.of();
             MessageUid uidNext = MessageUid.MIN_VALUE;
             ModSeq highestModSeq = ModSeq.first();

@@ -71,20 +71,14 @@ public class MailboxAnnotationKey {
         if (isVendorKey() && componentsNo < MINIMUM_COMPONENTS_OF_VENDOR) {
             return false;
         }
-        if (componentsNo < MINIMUM_COMPONENTS) {
-            return false;
-        }
-        return true;
+        return componentsNo >= MINIMUM_COMPONENTS;
     }
 
     private boolean isVendorKey() {
         String[] components = StringUtils.split(key, SLASH_CHARACTER);
 
-        if (components.length >= MINIMUM_COMPONENTS &&
-            VENDOR_COMPONENT.equalsIgnoreCase(components[SECOND_COMPONENT_INDEX])) {
-            return true;
-        }
-        return false;
+        return components.length >= MINIMUM_COMPONENTS
+            && VENDOR_COMPONENT.equalsIgnoreCase(components[SECOND_COMPONENT_INDEX]);
     }
 
     public int countComponents() {

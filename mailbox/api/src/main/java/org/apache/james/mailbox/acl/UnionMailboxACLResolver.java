@@ -180,20 +180,22 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                 /* query is a special name */
                 switch (aclKeyNameType) {
                 case special:
+                    /*
+                     * query owner matches authenticated because owner will
+                     * be resolved only if the user is authenticated
+                     */
                     if (aclKeyName.equals(queryUserOrGroupName)) {
                         /*
                          * authenticated matches authenticated and owner matches
                          * owner
                          */
                         return true;
-                    } else if (SpecialName.owner.name().equals(queryUserOrGroupName) && SpecialName.authenticated.name().equals(aclKeyName)) {
+                    } else {
                         /*
                          * query owner matches authenticated because owner will
                          * be resolved only if the user is authenticated
                          */
-                        return true;
-                    } else {
-                        return false;
+                        return SpecialName.owner.name().equals(queryUserOrGroupName) && SpecialName.authenticated.name().equals(aclKeyName);
                     }
                 case user:
                 case group:

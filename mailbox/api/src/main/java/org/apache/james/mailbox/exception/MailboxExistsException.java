@@ -43,6 +43,7 @@ public class MailboxExistsException extends MailboxException {
         return mailboxName;
     }
 
+    @Override
     public String toString() {
         return getMessage();
     }
