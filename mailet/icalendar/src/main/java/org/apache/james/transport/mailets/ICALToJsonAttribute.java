@@ -267,7 +267,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         Optional<MailAddress> fromMime = StreamUtils.ofOptional(
             Optional.ofNullable(mail.getMessage())
                 .map(Throwing.function(MimeMessage::getFrom).orReturn(new Address[]{})))
-            .map(address -> (InternetAddress) address)
+            .map(InternetAddress.class::cast)
             .map(InternetAddress::getAddress)
             .map(MaybeSender::getMailSender)
             .flatMap(MaybeSender::asStream)

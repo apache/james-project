@@ -90,15 +90,14 @@ public class ICSSanitizer extends GenericMailet {
     }
 
     private BodyPart sanitize(BodyPart bodyPart) throws MessagingException {
-        if (needsSanitizing(bodyPart)) {
-            if (bodyPart instanceof MimeBodyPart) {
-                MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
-                mimeBodyPart.setText(
-                    computeBodyFromOriginalCalendar(bodyPart),
-                    StandardCharsets.UTF_8.name(),
-                    bodyPart.getContentType().substring(TEXT_PREFIX_SIZE));
-                setFileNameIfNeeded(mimeBodyPart);
-            }
+        if (needsSanitizing(bodyPart)
+                && bodyPart instanceof MimeBodyPart) {
+            MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
+            mimeBodyPart.setText(
+                computeBodyFromOriginalCalendar(bodyPart),
+                StandardCharsets.UTF_8.name(),
+                bodyPart.getContentType().substring(TEXT_PREFIX_SIZE));
+            setFileNameIfNeeded(mimeBodyPart);
         }
         return bodyPart;
     }
