@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -123,6 +124,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     Serializer<Boolean> BOOLEAN_SERIALIZER = new BooleanSerializer();
@@ -151,6 +157,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     Serializer<String> STRING_SERIALIZER = new StringSerializer();
@@ -178,6 +189,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 
@@ -209,6 +225,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     Serializer<Long> LONG_SERIALIZER = new LongSerializer();
@@ -239,6 +260,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     Serializer<Float> FLOAT_SERIALIZER = new FloatSerializer();
@@ -266,6 +292,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 
@@ -297,6 +328,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     Serializer<ZonedDateTime> DATE_SERIALIZER = new DateSerializer();
@@ -324,6 +360,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 
@@ -380,6 +421,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     class UrlSerializer implements Serializer<URL> {
@@ -407,6 +453,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 
@@ -442,6 +493,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     class MapSerializer<U> implements Serializer<Map<String, AttributeValue<U>>> {
@@ -475,6 +531,11 @@ public interface Serializer<T> {
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
     }
 
     class OptionalSerializer<U> implements Serializer<Optional<AttributeValue<U>>> {
@@ -505,6 +566,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 
@@ -538,6 +604,11 @@ public interface Serializer<T> {
         @Override
         public boolean equals(Object other) {
             return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
         }
     }
 

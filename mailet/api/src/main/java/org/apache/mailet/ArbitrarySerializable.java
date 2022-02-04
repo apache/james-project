@@ -22,7 +22,7 @@ package org.apache.mailet;
 import java.util.Optional;
 
 public interface ArbitrarySerializable<T> {
-    public class Serializable<U> {
+    class Serializable<U> {
         private final AttributeValue<?> value;
         private final Class<? extends Deserializer<U>> factory;
 
@@ -40,7 +40,7 @@ public interface ArbitrarySerializable<T> {
         }
     }
 
-    public interface Deserializer<U> {
+    interface Deserializer<U> {
         Optional<U> deserialize(Serializable<U> serializable);
     }
     
