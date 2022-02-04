@@ -19,8 +19,6 @@
 
 package org.apache.james.events;
 
-import org.apache.james.events.Group;
-
 public class GroupRegistrationNotFound extends RuntimeException {
     private final Group group;
 

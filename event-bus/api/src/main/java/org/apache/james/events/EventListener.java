@@ -48,6 +48,7 @@ public interface EventListener {
     }
 
     interface ReactiveGroupEventListener extends ReactiveEventListener, GroupEventListener {
+        @Override
         default void event(Event event) throws Exception {
             Mono.from(reactiveEvent(event))
                 .subscribeOn(Schedulers.elastic())

@@ -19,8 +19,6 @@
 
 package org.apache.james.events;
 
-import org.apache.james.events.Group;
-
 public class GroupAlreadyRegistered extends RuntimeException {
     private final Group group;
 
