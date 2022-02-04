@@ -37,7 +37,6 @@ import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
@@ -113,7 +112,6 @@ class KeyRegistrationHandler {
             .ifPresent(Disposable::dispose);
     }
 
-    @VisibleForTesting
     void declareQueue() {
         declareQueue(sender);
     }

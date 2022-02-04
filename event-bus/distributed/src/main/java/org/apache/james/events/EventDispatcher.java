@@ -56,7 +56,7 @@ import reactor.util.function.Tuples;
 
 public class EventDispatcher {
     public static class DispatchingFailureGroup extends Group {
-        public static DispatchingFailureGroup INSTANCE = new DispatchingFailureGroup();
+        public static final DispatchingFailureGroup INSTANCE = new DispatchingFailureGroup();
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcher.class);
