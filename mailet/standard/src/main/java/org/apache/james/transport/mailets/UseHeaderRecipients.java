@@ -152,7 +152,7 @@ public class UseHeaderRecipients extends GenericMailet {
         return getMailAddressesFromHeadersParts(headerParts);
     }
 
-    private ImmutableList<MailAddress> getMailAddressesFromHeadersParts(Iterable<String> headerParts) throws AddressException {
+    private ImmutableList<MailAddress> getMailAddressesFromHeadersParts(Iterable<String> headerParts) {
         ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
         for (String headerPart : headerParts) {
             if (isDebug) {

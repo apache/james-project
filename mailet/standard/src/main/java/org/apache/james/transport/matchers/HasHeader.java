@@ -87,7 +87,7 @@ public class HasHeader extends GenericMatcher {
                     .entries()
                     .stream()
                     .filter(entry -> entry.getValue().getName().equals(headerName))
-                    .map(entry -> entry.getKey())
+                    .map(Map.Entry::getKey)
                     .collect(ImmutableSet.toImmutableSet());
         }
     }

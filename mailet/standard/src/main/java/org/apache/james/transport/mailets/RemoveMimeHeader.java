@@ -79,11 +79,10 @@ public class RemoveMimeHeader extends GenericMailet {
     }
 
     protected void removeSpecific(Mail mail) {
-        ImmutableList.copyOf(mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders()) // Copying to avoid concurrent modifications
-                .forEach(recipient -> {
-                    mail.getPerRecipientSpecificHeaders()
-                        .getHeadersForRecipient(recipient)
-                        .removeIf(next -> headers.contains(next.getName()));
-                });
+        // Copying to avoid concurrent modifications
+        ImmutableList.copyOf(mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
+            .forEach(recipient -> mail.getPerRecipientSpecificHeaders()
+                .getHeadersForRecipient(recipient)
+                .removeIf(next -> headers.contains(next.getName())));
     }
 }

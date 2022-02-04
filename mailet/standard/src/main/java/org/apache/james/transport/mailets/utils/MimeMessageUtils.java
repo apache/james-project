@@ -45,7 +45,7 @@ public class MimeMessageUtils {
         return prefixSubject(message.getSubject(), subjectPrefix);
     }
 
-    private Optional<String> prefixSubject(String subject, String subjectPrefix) throws MessagingException {
+    private Optional<String> prefixSubject(String subject, String subjectPrefix) {
         if (!Strings.isNullOrEmpty(subject)) {
             return Optional.of(Joiner.on(' ').join(subjectPrefix, subject));
         } else {
@@ -57,7 +57,7 @@ public class MimeMessageUtils {
         return buildNewSubject(subjectPrefix, originalMail.getMessage().getSubject(), subject);
     }
 
-    @VisibleForTesting Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
+    @VisibleForTesting Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) {
         String nullablePrefix = Strings.emptyToNull(subjectPrefix);
         if (nullablePrefix == null && subject == null) {
             return Optional.empty();

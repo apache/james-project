@@ -21,8 +21,6 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 
-import javax.mail.MessagingException;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
@@ -31,9 +29,9 @@ import com.google.common.collect.ImmutableMap;
 
 public class MappingArgument {
 
-    public static String CONFIGURATION_ERROR_MESSAGE = "Invalid format, please respect key1;value1,key2;value2 format";
+    public static final String CONFIGURATION_ERROR_MESSAGE = "Invalid format, please respect key1;value1,key2;value2 format";
 
-    public static ImmutableMap<String, String> parse(String mapping) throws MessagingException {
+    public static ImmutableMap<String, String> parse(String mapping) {
         Preconditions.checkArgument(mapping != null, "mapping should not be null");
 
         if (mapping.trim().isEmpty()) {

@@ -78,7 +78,7 @@ public class MimeDecodingMailet extends GenericMailet {
             .ifPresent(Throwing.<Attribute>consumer(attribute -> setAttribute(mail, attribute)).sneakyThrow());
     }
 
-    private void setAttribute(Mail mail, Attribute attribute) throws MailetException {
+    private void setAttribute(Mail mail, Attribute attribute) {
         Function<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>> convertToMapContent =
             Throwing
                 .<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>>function(entry ->
@@ -97,7 +97,7 @@ public class MimeDecodingMailet extends GenericMailet {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, byte[]> getAttributeContent(Attribute attribute) throws MailetException {
+    private Map<String, byte[]> getAttributeContent(Attribute attribute) {
         Object attributeValue = attribute.getValue().value();
         if (! (attributeValue instanceof Map)) {
             LOGGER.debug("Invalid attribute found into attribute {} class Map expected but {} found.",

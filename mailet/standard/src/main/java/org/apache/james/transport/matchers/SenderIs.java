@@ -60,7 +60,7 @@ public class SenderIs extends GenericMatcher {
             throw new MessagingException("SenderIs should have at least one address as parameter");
         }
         senders = MailAddressCollectionReader.read(getCondition());
-        if (senders.size() < 1) {
+        if (senders.isEmpty()) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
         }
     }
