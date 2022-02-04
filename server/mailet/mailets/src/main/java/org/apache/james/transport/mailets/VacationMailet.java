@@ -81,7 +81,7 @@ public class VacationMailet extends GenericMailet {
             if (!e.getMessage().equals("Empty address")) {
                 LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
         }
     }

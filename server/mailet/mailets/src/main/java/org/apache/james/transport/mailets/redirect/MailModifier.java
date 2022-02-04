@@ -116,10 +116,9 @@ public class MailModifier {
             mail.setRecipients(recipients
                 .stream()
                 .collect(ImmutableList.toImmutableList()));
-            if (mailet.getInitParameters().isDebug()) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("recipients set to: {}", (Object) recipients.toArray());
-                }
+            if (mailet.getInitParameters().isDebug()
+                    && LOGGER.isDebugEnabled()) {
+                LOGGER.debug("recipients set to: {}", (Object) recipients.toArray());
             }
         }
     }

@@ -143,7 +143,7 @@ public class SieveExecutor {
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             if (LOGGER.isDebugEnabled()) {
                 // This logging operation is potentially costly
-                LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+                LOGGER.debug("Evaluating {} against \"{}\"", aMailAdapter.toString(), recipient.asPrettyString());
             }
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException | ParseException ex) {

@@ -35,7 +35,7 @@ public class RedirectMailetInitParameters implements InitParameters {
         return initParameters;
     }
 
-    public static InitParameters from(GenericMailet mailet, Optional<TypeCode> defaultAttachmentType, Optional<TypeCode> defaultInLineType) {
+    public static InitParameters from(GenericMailet mailet, Optional<TypeCode> defaultAttachmentType) {
         RedirectMailetInitParameters initParameters = new RedirectMailetInitParameters(mailet, defaultAttachmentType, defaultAttachmentType);
         if (initParameters.isStatic()) {
             return LoadedOnceInitParameters.from(initParameters);

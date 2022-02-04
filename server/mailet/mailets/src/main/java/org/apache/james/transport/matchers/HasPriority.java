@@ -24,7 +24,7 @@ public class HasPriority extends AbstractPriorityMatcher {
     }
 
     @Override
-    public boolean priorityMatch(Integer mailPriorityValue) {
+    public boolean priorityMatch(int mailPriorityValue) {
         return this.getPriority() == mailPriorityValue;
     }
 

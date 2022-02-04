@@ -79,6 +79,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import scala.collection.mutable.StringBuilder;
+
 /**
  * <p>
  * Generates a Delivery Status Notification (DSN) as per RFC-3464 An Extensible Message Format for Delivery Status
@@ -196,10 +198,8 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         // allowedInitParameters
         checkInitParameters(getAllowedInitParameters());
 
-        if (getInitParameters().isStatic()) {
-            if (getInitParameters().isDebug()) {
-                LOGGER.debug(getInitParameters().asString());
-            }
+        if (getInitParameters().isStatic() && getInitParameters().isDebug()) {
+            LOGGER.debug(getInitParameters().asString());
         }
         messageString = getInitParameter("messageString",
                 "Hi. This is the James mail server at [machine].\nI'm afraid I wasn't able to deliver your message to the following addresses.\nThis is a permanent error; I've given up. Sorry it didn't work out.  Below\nI include the list of recipients and the reason why I was unable to deliver\nyour message.\n");
@@ -472,7 +472,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private MimeBodyPart createDSN(Mail originalMail) throws MessagingException {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         appendReportingMTA(buffer);
         buffer.append("Received-From-MTA: dns; " + originalMail.getRemoteHost())
@@ -504,7 +504,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         return bodyPart;
     }
 
-    private void appendReportingMTA(StringBuffer buffer) {
+    private void appendReportingMTA(StringBuilder buffer) {
         try {
             buffer.append("Reporting-MTA: dns; " + dns.getHostName(dns.getLocalHost()))
                 .append(LINE_BREAK);
@@ -513,7 +513,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
     }
 
-    private void appendRecipient(StringBuffer buffer, MailAddress mailAddress, String deliveryError, Date lastUpdated) {
+    private void appendRecipient(StringBuilder buffer, MailAddress mailAddress, String deliveryError, Date lastUpdated) {
         buffer.append(LINE_BREAK);
         buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
         buffer.append("Action: ").append(action.asString().toLowerCase(Locale.US)).append(LINE_BREAK);

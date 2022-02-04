@@ -128,8 +128,7 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
             }
             return matched;
         } catch (SQLException sqle) {
-            LOGGER.error("Error accessing database", sqle);
-            throw new MessagingException("Exception thrown", sqle);
+            throw new MessagingException("Error accessing database", sqle);
         } finally {
             theJDBCUtil.closeJDBCConnection(conn);
         }

@@ -84,7 +84,7 @@ public class ProcessRedirectNotify {
             if (keepMessageId) {
                 mailModifier.setMessageId(originalMessageId);
             }
-            finalize(newMail);
+            finalizeMail(newMail);
 
             if (senderDomainIsValid(newMail)) {
                 // Send it off...
@@ -106,7 +106,7 @@ public class ProcessRedirectNotify {
         }
     }
 
-    private void finalize(MailImpl mail) throws MessagingException {
+    private void finalizeMail(MailImpl mail) throws MessagingException {
         mail.getMessage().saveChanges();
         mail.removeAllAttributes();
     }

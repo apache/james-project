@@ -64,11 +64,10 @@ public class ActionUtils {
      * to the MTA.
      * 
      * @param aMail
-     * @param context not null
      * @param anAttributeSuffix
      * @throws MessagingException
      */
-    public static void detectAndHandleLocalLooping(Mail aMail, ActionContext context, String anAttributeSuffix)
+    public static void detectAndHandleLocalLooping(Mail aMail, String anAttributeSuffix)
             throws MessagingException {
         MailAddress thisRecipient = getSoleRecipient(aMail);
         AttributeName attributeName = AttributeName.of(ATTRIBUTE_PREFIX + anAttributeSuffix);

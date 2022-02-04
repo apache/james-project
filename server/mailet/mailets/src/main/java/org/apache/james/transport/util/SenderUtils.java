@@ -20,8 +20,6 @@ package org.apache.james.transport.util;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
@@ -38,11 +36,9 @@ public class SenderUtils {
         this.sender = sender;
     }
 
-    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
-        if (sender.isPresent()) {
-            if (isUnalteredOrSender(sender.get())) {
-                return originalMail.getMaybeSender().asOptional();
-            }
+    public Optional<MailAddress> getSender(Mail originalMail) {
+        if (sender.isPresent() && isUnalteredOrSender(sender.get())) {
+            return originalMail.getMaybeSender().asOptional();
         }
         return sender;
     }
