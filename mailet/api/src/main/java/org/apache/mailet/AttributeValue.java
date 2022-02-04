@@ -232,7 +232,7 @@ public class AttributeValue<T> {
     }
     
     public <U> Optional<AttributeValue<Map<String, AttributeValue<U>>>> asMapAttributeValueOf(Class<U> type) {
-        if (Map.class.isInstance(value)) {
+        if (value instanceof Map) {
             Map<String, AttributeValue<?>> aMap = (Map<String, AttributeValue<?>>) value;
             Map<String, AttributeValue<U>> castedMap = aMap.entrySet()
                 .stream()
