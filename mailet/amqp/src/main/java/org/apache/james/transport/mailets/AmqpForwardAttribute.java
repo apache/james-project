@@ -191,7 +191,7 @@ public class AmqpForwardAttribute extends GenericMailet {
     }
 
     @PreDestroy
-    public void cleanUp() throws Exception {
+    public void cleanUp() {
         sender.close();
         reactorRabbitMQChannelPool.close();
         connectionPool.close();

@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Flux;
@@ -100,7 +99,6 @@ public class SimpleConnectionPool implements AutoCloseable, Startable {
     private Set<ReconnectionHandler> reconnectionHandlers;
 
     @Inject
-    @VisibleForTesting
     public SimpleConnectionPool(RabbitMQConnectionFactory factory, Configuration configuration) {
         this.connectionFactory = factory;
         this.reconnectionHandlers = new HashSet<>();
