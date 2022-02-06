@@ -42,14 +42,12 @@ public class MDCBuilder {
 
     public static <T> T withMdc(MDCBuilder mdcBuilder, Supplier<T> answerSupplier) {
         try (Closeable closeable = mdcBuilder.build()) {
-            try {
-                return answerSupplier.get();
-            } catch (RuntimeException e) {
-                LOGGER.error("Got error, logging its context", e);
-                throw e;
-            }
+            return answerSupplier.get();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } catch (RuntimeException e) {
+            LOGGER.error("Got error, logging its context", e);
+            throw e;
         }
     }
 

@@ -19,16 +19,11 @@
 
 package org.apache.james.ai.classic;
 
-import java.io.File;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -54,72 +49,6 @@ class SqlResources {
     /** A set of all used String values */
     private static final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<>());
 
-    /**
-     * <p>
-     * Configures a DbResources object to provide SQL statements from a file.
-     * </p>
-     * <p>
-     * SQL statements returned may be specific to the particular type and
-     * version of the connected database, as well as the database driver.
-     * </p>
-     * <p>
-     * Parameters encoded as $(parameter} in the input file are replace by
-     * values from the parameters Map, if the named parameter exists. Parameter
-     * values may also be specified in the resourceSection element.
-     * </p>
-     * 
-     * @param sqlFile
-     *            the input file containing the string definitions
-     * @param sqlDefsSection
-     *            the xml element containing the strings to be used
-     * @param conn
-     *            the Jdbc DatabaseMetaData, taken from a database connection
-     * @param configParameters
-     *            a map of parameters (name-value string pairs) which are
-     *            replaced where found in the input strings
-     */
-    public void init(File sqlFile, String sqlDefsSection, Connection conn, Map<String, String> configParameters) throws Exception {
-        // Parse the sqlFile as an XML document.
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document sqlDoc = builder.parse(sqlFile);
-
-        init(sqlDoc, sqlDefsSection, conn, configParameters);
-    }
-
-    /**
-     * <p>
-     * Configures a DbResources object to provide SQL statements from an
-     * InputStream.
-     * </p>
-     * <p>
-     * SQL statements returned may be specific to the particular type and
-     * version of the connected database, as well as the database driver.
-     * </p>
-     * <p>
-     * Parameters encoded as $(parameter} in the input file are replace by
-     * values from the parameters Map, if the named parameter exists. Parameter
-     * values may also be specified in the resourceSection element.
-     * </p>
-     * 
-     * @param input
-     *            the input stream containing the xml
-     * @param sqlDefsSection
-     *            the xml element containing the strings to be used
-     * @param conn
-     *            the Jdbc DatabaseMetaData, taken from a database connection
-     * @param configParameters
-     *            a map of parameters (name-value string pairs) which are
-     *            replaced where found in the input strings
-     */
-    public void init(InputStream input, String sqlDefsSection, Connection conn, Map<String, String> configParameters) throws Exception {
-        // Parse the InputStream as an XML document.
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document sqlDoc = builder.parse(input);
-
-        init(sqlDoc, sqlDefsSection, conn, configParameters);
-    }
 
     /**
      * Configures a SqlResources object from an xml document.
