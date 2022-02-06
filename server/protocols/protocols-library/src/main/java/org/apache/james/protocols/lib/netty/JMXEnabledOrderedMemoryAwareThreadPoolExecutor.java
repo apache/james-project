@@ -94,6 +94,7 @@ public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemor
             unregisterMBean();
         }
         super.shutdown();
+        startTime.remove();
     }
 
     @Override
