@@ -150,7 +150,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new MailboxModule(),
         new TikaMailboxModule());
 
-    public static Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
+    public static final Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
         new MailetProcessingModule(),
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,

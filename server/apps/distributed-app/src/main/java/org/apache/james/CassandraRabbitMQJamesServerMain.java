@@ -124,11 +124,9 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new JmapEventBusModule(),
         WEBADMIN);
 
-    public static final Module PLUGINS = Modules.combine(
-        new CassandraQuotaMailingModule());
+    public static final Module PLUGINS = new CassandraQuotaMailingModule();
 
-    private static final Module BLOB_MODULE = Modules.combine(
-        new BlobExportMechanismModule());
+    private static final Module BLOB_MODULE = new BlobExportMechanismModule();
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
         binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
@@ -155,7 +153,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new TikaMailboxModule(),
         new SpamAssassinListenerModule());
 
-    public static Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
+    public static final Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
         new MailetProcessingModule(),
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,
