@@ -94,6 +94,7 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
             unregisterMBean();
         }
         super.shutdown();
+        startTime.remove();
     }
 
     @Override

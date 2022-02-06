@@ -101,6 +101,7 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
             unregisterMBean();
         }
         super.shutdown();
+        startTime.remove();
     }
 
     @Override
