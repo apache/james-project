@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
 
-public class CassandraCacheConfigurationTest {
+class CassandraCacheConfigurationTest {
 
     private static final byte[] EIGHT_KILOBYTES = Strings.repeat("01234567\n", 1000).getBytes(StandardCharsets.UTF_8);
     private static final Duration DEFAULT_TIME_OUT = Duration.ofSeconds(50);
