@@ -248,7 +248,7 @@ public class MailetContainerModule extends AbstractModule {
             private final Set<ProcessorsCheck> checks;
 
             public Or(Set<ProcessorsCheck> checks) {
-                Preconditions.checkArgument(checks.size() > 0);
+                Preconditions.checkArgument(!checks.isEmpty());
                 this.checks = checks;
             }
 
