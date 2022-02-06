@@ -29,56 +29,56 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class HashBlobIdTest {
+class HashBlobIdTest {
 
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(HashBlobId.class).verify();
     }
 
     @Test
-    public void fromShouldConstructBlobId() {
+    void fromShouldConstructBlobId() {
         String id = "111";
         assertThat(BLOB_ID_FACTORY.from(id))
             .isEqualTo(new HashBlobId(id));
     }
 
     @Test
-    public void fromShouldThrowOnNull() {
+    void fromShouldThrowOnNull() {
         assertThatThrownBy(() -> BLOB_ID_FACTORY.from(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldThrowOnEmpty() {
+    void fromShouldThrowOnEmpty() {
         assertThatThrownBy(() -> BLOB_ID_FACTORY.from(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void forPayloadShouldThrowOnNull() {
+    void forPayloadShouldThrowOnNull() {
         assertThatThrownBy(() -> BLOB_ID_FACTORY.forPayload((byte[]) null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void forPayloadShouldHashEmptyArray() {
+    void forPayloadShouldHashEmptyArray() {
         BlobId blobId = BLOB_ID_FACTORY.forPayload(new byte[0]);
 
         assertThat(blobId.asString()).isEqualTo("47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
     }
 
     @Test
-    public void forPayloadShouldHashArray() {
+    void forPayloadShouldHashArray() {
         BlobId blobId = BLOB_ID_FACTORY.forPayload("content".getBytes(StandardCharsets.UTF_8));
 
         assertThat(blobId.asString()).isEqualTo("7XACtDnprIRfIjV9giusFERzD722AW0+yUMil7nsn3M=");
     }
 
     @Test
-    public void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
+    void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
         byte[] payload1 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-1.pdf");
         byte[] payload2 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-2.pdf");
         BlobId blobId1 = BLOB_ID_FACTORY.forPayload(payload1);

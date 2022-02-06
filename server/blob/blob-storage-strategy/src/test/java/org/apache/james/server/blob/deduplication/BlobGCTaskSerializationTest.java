@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class BlobGCTaskSerializationTest {
+class BlobGCTaskSerializationTest {
     BlobStoreDAO blobStoreDAO;
     GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
     GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;

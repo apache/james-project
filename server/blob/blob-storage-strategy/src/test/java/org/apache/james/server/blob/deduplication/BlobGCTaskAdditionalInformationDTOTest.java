@@ -25,7 +25,7 @@ import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
-public class BlobGCTaskAdditionalInformationDTOTest {
+class BlobGCTaskAdditionalInformationDTOTest {
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {

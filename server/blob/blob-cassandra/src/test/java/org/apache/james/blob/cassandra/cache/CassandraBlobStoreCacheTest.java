@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
+class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobCacheModule.MODULE);

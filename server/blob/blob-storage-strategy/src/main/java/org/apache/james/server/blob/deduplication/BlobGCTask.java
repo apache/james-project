@@ -31,13 +31,10 @@ import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithm.Context
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reactor.core.scheduler.Schedulers;
 
 public class BlobGCTask implements Task {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlobGCTask.class);
     public static final TaskType TASK_TYPE = TaskType.of("BlobGCTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
