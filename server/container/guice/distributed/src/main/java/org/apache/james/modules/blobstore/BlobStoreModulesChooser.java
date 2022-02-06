@@ -44,7 +44,6 @@ import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -127,7 +126,6 @@ public class BlobStoreModulesChooser {
         }
     }
 
-    @VisibleForTesting
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))

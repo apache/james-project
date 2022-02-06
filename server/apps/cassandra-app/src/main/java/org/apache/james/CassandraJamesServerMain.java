@@ -121,8 +121,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new JmapEventBusModule(),
         WEBADMIN);
 
-    public static final Module PLUGINS = Modules.combine(
-        new CassandraQuotaMailingModule());
+    public static final Module PLUGINS = new CassandraQuotaMailingModule();
 
     private static final Module BLOB_MODULE = Modules.combine(
         new BlobStoreAPIModule(),
@@ -155,14 +154,14 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new TikaMailboxModule(),
         new SpamAssassinListenerModule());
 
-    public static Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
+    public static final Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,
         PLUGINS,
         new DKIMMailetModule());
 
-    protected static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
+    protected static final Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
         new MailetProcessingModule(),
         new CassandraBucketModule(),
         new CassandraBlobStoreModule(),
