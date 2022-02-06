@@ -135,10 +135,9 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
             if (validationFailure.isPresent()) {
                 throw new AlreadyExistInUsersRepositoryException(validationFailure.get().errorMessage());
             }
+        } catch (UsersRepositoryException e) {
+            throw e;
         } catch (Exception e) {
-            if (e instanceof UsersRepositoryException) {
-                throw (UsersRepositoryException) e;
-            }
             throw new UsersRepositoryException("Unexpected exception", e);
         }
     }
@@ -161,7 +160,7 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
             try {
                 Thread.sleep(verifyFailureDelay);
             } catch (InterruptedException e) {
-                // ignore
+                Thread.currentThread().interrupt();
             }
         }
 
