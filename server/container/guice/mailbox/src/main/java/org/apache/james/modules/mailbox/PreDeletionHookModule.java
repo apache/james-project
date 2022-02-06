@@ -46,7 +46,7 @@ public class PreDeletionHookModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Set<PreDeletionHook> createHooks(PreDeletionHooksConfiguration configuration, PreDeletionHookLoader loader) throws ClassNotFoundException {
+    Set<PreDeletionHook> createHooks(PreDeletionHooksConfiguration configuration, PreDeletionHookLoader loader) {
         return configuration.getHooksConfiguration()
             .stream()
             .map(Throwing.function(loader::createHook).sneakyThrow())

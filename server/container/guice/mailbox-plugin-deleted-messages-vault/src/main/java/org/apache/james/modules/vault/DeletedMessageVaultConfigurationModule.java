@@ -36,11 +36,6 @@ import com.google.inject.Provides;
 public class DeletedMessageVaultConfigurationModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultConfigurationModule.class);
 
-    @Override
-    protected void configure() {
-
-    }
-
     @Provides
     @Singleton
     VaultConfiguration providesVaultConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration2.ex.ConfigurationException {
