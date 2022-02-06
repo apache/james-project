@@ -32,7 +32,7 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class FileConfigurationProviderTest {
+class FileConfigurationProviderTest {
 
     private static final String CONFIG_KEY_1 = "test2";
     private static final String CONFIG_KEY_2 = "property";

@@ -39,7 +39,7 @@ public class InitializationOperations {
         this.configurables = configurables;
     }
 
-    public void initModules() throws Exception {
+    public void initModules() {
         Set<InitializationOperation> processed = processConfigurables();
         
         processOthers(processed);

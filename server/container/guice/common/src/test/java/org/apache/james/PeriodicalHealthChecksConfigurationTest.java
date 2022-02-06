@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class PeriodicalHealthChecksConfigurationTest {
+class PeriodicalHealthChecksConfigurationTest {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
     private static final String PERIOD = "10s";
