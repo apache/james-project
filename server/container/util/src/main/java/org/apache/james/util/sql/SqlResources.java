@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -81,6 +82,13 @@ public class SqlResources {
     public void init(File sqlFile, String sqlDefsSection, Connection conn, Map<String, String> configParameters) throws Exception {
         // Parse the sqlFile as an XML document.
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        // Disable XXE cf CWE-611 https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document sqlDoc = builder.parse(sqlFile);
 
@@ -115,6 +123,13 @@ public class SqlResources {
     public void init(InputStream input, String sqlDefsSection, Connection conn, Map<String, String> configParameters) throws Exception {
         // Parse the InputStream as an XML document.
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        // Disable XXE cf CWE-611 https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document sqlDoc = builder.parse(input);
 
