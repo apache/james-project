@@ -173,7 +173,7 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(PERIOD);
-        assertThat(loggingEvents.list).hasSize(0);
+        assertThat(loggingEvents.list).isEmpty();
     }
 
     @Test

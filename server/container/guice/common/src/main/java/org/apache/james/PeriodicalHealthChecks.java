@@ -94,16 +94,15 @@ public class PeriodicalHealthChecks implements Startable {
     }
 
     private void logUnhealthy(Result result) {
-        if (result.getError().isPresent()) {
-            LOGGER.error("UNHEALTHY: {} : {}",
-                result.getComponentName().getName(),
-                result.getCause().orElse(""),
-                result.getError().get());
-        } else {
-            LOGGER.error("UNHEALTHY: {} : {}",
-                result.getComponentName().getName(),
-                result.getCause().orElse(""));
-        }
+        result.getError()
+            .ifPresentOrElse(
+                e -> LOGGER.error("UNHEALTHY: {} : {}",
+                    result.getComponentName().getName(),
+                    result.getCause().orElse(""),
+                    e),
+                () -> LOGGER.error("UNHEALTHY: {} : {}",
+                    result.getComponentName().getName(),
+                    result.getCause().orElse("")));
     }
 
     private void logError(Throwable error, Object triggeringValue) {

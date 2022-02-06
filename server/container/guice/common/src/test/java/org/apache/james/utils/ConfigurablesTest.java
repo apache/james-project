@@ -28,7 +28,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ConfigurablesTest {
+class ConfigurablesTest {
 
     private Startables sut;
 

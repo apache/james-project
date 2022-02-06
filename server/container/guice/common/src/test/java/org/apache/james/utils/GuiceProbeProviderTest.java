@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class GuiceProbeProviderTest {
+class GuiceProbeProviderTest {
     private GuiceProbeProvider guiceProbeProvider;
     private GuiceProbe1 guiceProbe1;
 

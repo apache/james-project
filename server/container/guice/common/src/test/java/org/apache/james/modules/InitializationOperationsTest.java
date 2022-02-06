@@ -39,7 +39,7 @@ import com.google.inject.multibindings.Multibinder;
 
 class InitializationOperationsTest {
     @Test
-    void initModulesShouldNotFailWhenBindingsInWrongOrder() throws Exception {
+    void initModulesShouldNotFailWhenBindingsInWrongOrder() {
         Injector injector = Guice.createInjector(new StartablesModule(),
                 new UnorderedBindingsModule());
 
