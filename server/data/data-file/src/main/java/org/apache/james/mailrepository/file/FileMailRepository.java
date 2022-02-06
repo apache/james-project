@@ -207,7 +207,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
                 // If it wasn't locked, we need to unlock now
                 unlock(key);
                 synchronized (this) {
-                    notify();
+                    notifyAll();
                 }
             }
         }
