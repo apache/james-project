@@ -50,7 +50,48 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
   }${entityType.asString()}_${mailAddress.asString()}"
 }
 
-class PerRecipientRateLimitMailet @Inject()(rateLimiterFactory: RateLimiterFactory) extends GenericMailet {
+/**
+ * <p><b>PerRecipientRateLimit</b> allows defining and enforcing rate limits for the recipients of matching emails.</p>
+ *
+ * <ul>This allows writing rules like:
+ *   <li>A recipient can receive 10 emails per hour</li>
+ *   <li>A recipient can receive 100 MB of emails per hour</li>
+ * </ul>
+ *
+ * <p>Depending on its position and the matcher it is being combined with, those rate limiting rules could be applied to
+ * submitted emails, received emails or emitted email being relayed to third parties.</p>
+ *
+ *  <ul>Here are supported configuration parameters:
+ *    <li><b>keyPrefix</b>: An optional key prefix to apply to rate limiting. Choose distinct values if you specify
+ *    this mailet twice within your <code>mailetcontainer.xml</code> file. Defaults to none.</li>
+ *    <li><b>exceededProcessor</b>: Processor to which emails whose rate is exceeded should be redirected to. Defaults to error.
+ *    Use this to customize the behaviour upon exceeded rate.</li>
+ *    <li><b>duration</b>: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).</li>
+ *    <li><b>count</b>: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
+ *    <li><b>size</b>: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
+ *  </ul>
+ *
+ *  <p>For instance, to apply all the examples given above:</p>
+ *
+ *   <pre><code>
+ * &lt;mailet matcher=&quot;All&quot; class=&quot;PerRecipientRateLimit&quot;&gt;
+ *     &lt;keyPrefix&gt;myPrefix&lt;/keyPrefix&gt;
+ *     &lt;duration&gt;1h&lt;/duration&gt;
+ *     &lt;count&gt;10&lt;/count&gt;
+ *     &lt;size&gt;100M&lt;/size&gt;
+ *     &lt;exceededProcessor&gt;tooMuchMails&lt;/exceededProcessor&gt;
+ * &lt;/mailet&gt;
+ *   </code></pre>
+ *
+ *  <p>Note that to use this extension you need to place the rate-limiter JAR in the <code>extensions-jars</code> folder
+ *  and need to configure a viable option to invoke <code>RateLimiterFactory</code> which can be done by
+ *  loading <code>org.apache.james.rate.limiter.memory.MemoryRateLimiterModule</code> Guice module within the
+ *  <code>guice.extension.module</code> in <code>extensions.properties</code> configuration file. Note that other Rate
+ *  limiter implementation might require extra configuration parameters within your mailet.</p>
+ *
+ * @param rateLimiterFactory Allows instantiations of the underlying rate limiters.
+ */
+class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends GenericMailet {
   private var exceededProcessor: String = _
   private var rateLimiters: Seq[PerRecipientRateLimiter] = _
 
