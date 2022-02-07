@@ -104,6 +104,7 @@
             <mailet matcher="All" class="PerSenderRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
+                <precision>1h</precision>
                 <count>10</count>
                 <recipients>20</recipients>
                 <size>100M</size>

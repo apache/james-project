@@ -19,6 +19,8 @@
 
 package org.apache.james.rate.limiter.redis
 
+import java.time.Duration
+
 import com.google.inject.{AbstractModule, Provides}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
@@ -51,16 +53,14 @@ class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisRateLimiterConf
       new RedisSingleInstanceRateLimitjFactory(RedisClient.create(redisConfiguration.redisURI.value.last))
     }
 
-  override def withSpecification(rules: Rules): RateLimiter =
+  override def withSpecification(rules: Rules, precision: Option[Duration]): RateLimiter =
     RedisRateLimiter(rateLimitjFactory.getInstanceReactive(rules.rules
       .map(convert)
-      .map(withPrecision)
+      .map(withPrecision(_, precision))
       .toSet.asJava))
 
-  private def withPrecision(rule: RequestLimitRule): RequestLimitRule =
-    redisConfiguration.windowPrecision
-      .map(rule.withPrecision)
-      .getOrElse(rule)
+  private def withPrecision(rule: RequestLimitRule, precision: Option[Duration]): RequestLimitRule =
+    precision.map(rule.withPrecision).getOrElse(rule)
 
   private def convert(rule: Rule): RequestLimitRule = RequestLimitRule.of(rule.duration, rule.quantity.value)
 }

@@ -38,6 +38,11 @@ object DurationParsingUtil {
     .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
 }
 
+object PrecisionParsingUtil {
+  def parsePrecision(mailetConfig: MailetConfig): Option[Duration] = Option(mailetConfig.getInitParameter("precision"))
+    .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
+}
+
 sealed trait EntityType {
   def asString(): String
 

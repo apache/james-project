@@ -66,6 +66,7 @@ case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option
  *    <li><b>exceededProcessor</b>: Processor to which emails whose rate is exceeded should be redirected to. Defaults to error.
  *    Use this to customize the behaviour upon exceeded rate.</li>
  *    <li><b>duration</b>: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).</li>
+ *    <li><b>precision</b>: Defines the time precision that will be used to approximate the sliding window. A lower duration increases precision but requests more computing power. The precision must be greater than 1 second. Optional, default to duration means fixed window counters. Supported units includes s (second), m (minute), h (hour), d (day).</li>
  *    <li><b>count</b>: Count of emails allowed for all users during duration. Optional, if unspecified this rate limit is not applied.</li>
  *    <li><b>recipients</b>: Count of recipients allowed for all users during duration. Optional, if unspecified this rate limit is not applied.</li>
  *    <li><b>size</b>: Size of emails allowed for all users during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
@@ -79,6 +80,7 @@ case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option
  * &lt;mailet matcher=&quot;All&quot; class=&quot;GlobalRateLimit&quot;&gt;
  *     &lt;keyPrefix&gt;myPrefix&lt;/keyPrefix&gt;
  *     &lt;duration&gt;1h&lt;/duration&gt;
+ *     &lt;precision&gt;1h&lt;/precision&gt;
  *     &lt;count&gt;10&lt;/count&gt;
  *     &lt;recipients&gt;20&lt;/recipients&gt;
  *     &lt;size&gt;100M&lt;/size&gt;
@@ -105,11 +107,12 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
 
   override def init(): Unit = {
     val duration: Duration = parseDuration()
+    val precision: Option[Duration] = parsePrecision()
 
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
 
-    def globalRateLimiter(entityType: EntityType): GlobalRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration)
+    def globalRateLimiter(entityType: EntityType): GlobalRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration, precision)
 
     countRateLimiter = globalRateLimiter(Count)
     recipientsRateLimiter = globalRateLimiter(RecipientsType)
@@ -118,6 +121,7 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
   }
 
   def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
+  def parsePrecision(): Option[Duration] = PrecisionParsingUtil.parsePrecision(getMailetConfig)
 
   override def service(mail: Mail): Unit = {
     val pivot: RateLimitingResult = AcceptableRate
@@ -134,9 +138,10 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
     }
   }
 
-  private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix], duration: Duration): GlobalRateLimiter =
+  private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix],
+                                duration: Duration, precision: Option[Duration]): GlobalRateLimiter =
     GlobalRateLimiter(rateLimiter = entityType.extractRules(duration, getMailetConfig)
-      .map(rateLimiterFactory.withSpecification),
+      .map(rateLimiterFactory.withSpecification(_, precision)),
       keyPrefix = keyPrefix,
       entityType = entityType)
 }

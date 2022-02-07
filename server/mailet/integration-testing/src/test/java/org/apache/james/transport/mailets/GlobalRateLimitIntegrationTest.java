@@ -92,6 +92,7 @@ public class GlobalRateLimitIntegrationTest {
                     .matcher(All.class)
                     .mailet(GlobalRateLimit.class)
                     .addProperty("duration", "100s")
+                    .addProperty("precision", "1s")
                     .addProperty("count", "2")
                     .addProperty("recipients", "3")
                     .addProperty("size", "13K")
