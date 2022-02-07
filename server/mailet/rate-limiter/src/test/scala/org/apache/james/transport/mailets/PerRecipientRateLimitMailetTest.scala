@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets
 
 import org.apache.james.core.MailAddress
-import org.apache.james.rate.limiter.memory.MemoryRateLimiterFactoryProvider
+import org.apache.james.rate.limiter.memory.MemoryRateLimiterFactory
 import org.apache.mailet.base.test.{FakeMail, FakeMailContext, FakeMailetConfig}
 import org.apache.mailet.{Mail, MailetConfig}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
@@ -34,7 +34,7 @@ import scala.jdk.CollectionConverters._
 class PerRecipientRateLimitMailetTest {
 
   def testee(mailetConfig: MailetConfig) : PerRecipientRateLimitMailet = {
-    val mailet: PerRecipientRateLimitMailet = new PerRecipientRateLimitMailet(new MemoryRateLimiterFactoryProvider())
+    val mailet: PerRecipientRateLimitMailet = new PerRecipientRateLimitMailet(new MemoryRateLimiterFactory())
     mailet.init(mailetConfig)
     mailet
   }

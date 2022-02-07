@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets
 import java.time.Duration
 
 import javax.inject.Inject
-import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult}
+import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
 import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
 import org.reactivestreams.Publisher
@@ -88,14 +88,14 @@ case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option
  *   </code></pre>
  *
  *  <p>Note that to use this extension you need to place the rate-limiter JAR in the <code>extensions-jars</code> folder
- *  and need to configure a viable option to invoke <code>RateLimiterFactoryProvider</code> which can be done by
+ *  and need to configure a viable option to invoke <code>RateLimiterFactory</code> which can be done by
  *  loading <code>org.apache.james.rate.limiter.memory.MemoryRateLimiterModule</code> Guice module within the
  *  <code>guice.extension.module</code> in <code>extensions.properties</code> configuration file. Note that other Rate
  *  limiter implementation might require extra configuration parameters within your mailet.</p>
  *
- * @param rateLimiterFactoryProvider Allows instantiations of the underlying rate limiters.
+ * @param rateLimiterFactory Allows instantiations of the underlying rate limiters.
  */
-class GlobalRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactoryProvider) extends GenericMailet {
+class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends GenericMailet {
   private var countRateLimiter: GlobalRateLimiter = _
   private var recipientsRateLimiter: GlobalRateLimiter = _
   private var sizeRateLimiter: GlobalRateLimiter = _
@@ -104,7 +104,6 @@ class GlobalRateLimit @Inject()(rateLimiterFactoryProvider: RateLimiterFactoryPr
   private var keyPrefix: Option[KeyPrefix] = _
 
   override def init(): Unit = {
-    val rateLimiterFactory = rateLimiterFactoryProvider.create(getMailetConfig)
     val duration: Duration = parseDuration()
 
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)

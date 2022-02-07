@@ -26,12 +26,12 @@ import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.RedisURI
+import org.apache.commons.configuration2.Configuration
 import org.apache.james.rate.limiter.redis.RedisUris.RedisUris
-import org.apache.mailet.MailetConfig
 
 object RedisRateLimiterConfiguration {
-  def from(mailetConfig: MailetConfig): RedisRateLimiterConfiguration =
-    from(mailetConfig.getInitParameter("redisURL"))
+  def from(config: Configuration): RedisRateLimiterConfiguration =
+    from(config.getString("redisURL"))
 
   def from(redisUri: String, windowPrecision: Option[Duration] = None): RedisRateLimiterConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)

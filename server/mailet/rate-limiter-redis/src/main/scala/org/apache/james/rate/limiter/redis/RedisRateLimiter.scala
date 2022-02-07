@@ -19,14 +19,15 @@
 
 package org.apache.james.rate.limiter.redis
 
-import com.google.inject.AbstractModule
+import com.google.inject.{AbstractModule, Provides}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
 import io.lettuce.core.RedisClient
 import io.lettuce.core.cluster.RedisClusterClient
+import javax.inject.Inject
 import org.apache.james.rate.limiter.api.Increment.Increment
-import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
-import org.apache.mailet.MailetConfig
+import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}
+import org.apache.james.utils.PropertiesProvider
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
@@ -34,15 +35,15 @@ import scala.jdk.CollectionConverters._
 
 class RedisRateLimiterModule() extends AbstractModule {
   override def configure(): Unit =
-    bind(classOf[RateLimiterFactoryProvider])
-      .to(classOf[RedisRateLimiterFactoryProvider])
+    bind(classOf[RateLimiterFactory])
+      .to(classOf[RedisRateLimiterFactory])
+
+  @Provides
+  def provideConfig(propertiesProvider: PropertiesProvider): RedisRateLimiterConfiguration =
+    RedisRateLimiterConfiguration.from(propertiesProvider.getConfiguration("redis"))
 }
 
-class RedisRateLimiterFactoryProvider extends RateLimiterFactoryProvider {
-  override def create(mailetConfig: MailetConfig): RateLimiterFactory = new RedisRateLimiterFactory(RedisRateLimiterConfiguration.from(mailetConfig))
-}
-
-class RedisRateLimiterFactory(redisConfiguration: RedisRateLimiterConfiguration) extends RateLimiterFactory {
+class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisRateLimiterConfiguration) extends RateLimiterFactory {
   val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] =
     if (redisConfiguration.redisURI.value.size > 1) {
       new RedisClusterRateLimiterFactory(RedisClusterClient.create(redisConfiguration.redisURI.value.asJava))

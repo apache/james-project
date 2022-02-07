@@ -24,9 +24,9 @@ import java.time.Duration
 import com.google.inject.AbstractModule
 import es.moki.ratelimitj.core.limiter.request.{RequestLimitRule, RequestRateLimiter}
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter
+import javax.inject.Inject
 import org.apache.james.rate.limiter.api.Increment.Increment
-import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult, Rule, Rules}
-import org.apache.mailet.MailetConfig
+import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
@@ -34,15 +34,16 @@ import scala.jdk.CollectionConverters._
 
 class MemoryRateLimiterModule() extends AbstractModule {
   override def configure(): Unit =
-    bind(classOf[RateLimiterFactoryProvider])
-      .to(classOf[MemoryRateLimiterFactoryProvider])
+    bind(classOf[RateLimiterFactory])
+      .to(classOf[MemoryRateLimiterFactory])
 }
 
-class MemoryRateLimiterFactoryProvider() extends RateLimiterFactoryProvider {
-  override def create(mailetConfig: MailetConfig): RateLimiterFactory = new MemoryRateLimiterFactory()
-}
+class MemoryRateLimiterFactory (precision: Option[Duration] = None) extends RateLimiterFactory {
+  @Inject()
+  def this() = {
+    this(None)
+  }
 
-class MemoryRateLimiterFactory(precision: Option[Duration] = None) extends RateLimiterFactory {
   override def withSpecification(rules: Rules): RateLimiter = {
     MemoryRateLimiter(new InMemorySlidingWindowRequestRateLimiter(rules.rules
       .map(convert)

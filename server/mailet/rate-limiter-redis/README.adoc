@@ -13,31 +13,15 @@ for the underlying rate limiting.
 `extension.properties`:
 
 ----
-guice.extension.module=org.apache.james.rate.limiter.redis.R
+guice.extension.module=org.apache.james.rate.limiter.redis.RedisRateLimiterModule
 ----
 
-- 4. Use the rate limiting mailets within `mailetcontainer.xml`
+- 4. Provide a `redis.properties` file:
+
+----
+redisURL=redis://redis:6379
+----
+
+- 5. Use the rate limiting mailets within `mailetcontainer.xml`
 
 We provide a sample `docker-compose` demonstrating this setup.
-
-== Additionnal mailet parameters
-
-Mailets need to specify the `redisURL` tag.
-
-This consists in a list of urls to contact the Redis servers.
-
-Specifying a single URL will connect to a single Redis instance.
-
-Specifying a coma delimited list of URLs will connect to Redis as a cluster.
-
-Eg:
-
-```
-<mailet matcher="All" class="PerSenderRateLimit">
-    <redisURL>redis://localhost:6379</redisURL>
-    <keyPrefix>myPrefix</keyPrefix>
-    <duration>1h</duration>
-    <count>10</count>
-</mailet>
-``
-

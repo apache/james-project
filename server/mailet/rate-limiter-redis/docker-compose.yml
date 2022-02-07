@@ -14,4 +14,5 @@ services:
     volumes:
       - $PWD/target/james-server-rate-limiter-redis-3.7.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/james-server-rate-limiter-redis.jar
       - $PWD/extensions.properties:/root/conf/extensions.properties
+      - $PWD/redis.properties:/root/conf/redis.properties
       - $PWD/mailetcontainer.xml:/root/conf/mailetcontainer.xml
