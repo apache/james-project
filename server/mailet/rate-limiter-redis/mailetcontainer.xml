@@ -102,7 +102,6 @@
 
         <processor state="relay" enableJmx="true">
             <mailet matcher="All" class="PerSenderRateLimit">
-                <redisURL>redis://redis:6379</redisURL>
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <count>10</count>

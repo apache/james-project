@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.lifecycle.api.LifecycleUtil
-import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimiterFactoryProvider, RateLimitingKey, RateLimitingResult}
+import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
@@ -50,12 +50,11 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
   }${entityType.asString()}_${mailAddress.asString()}"
 }
 
-class PerRecipientRateLimitMailet @Inject()(rateLimiterFactoryProvider: RateLimiterFactoryProvider) extends GenericMailet {
+class PerRecipientRateLimitMailet @Inject()(rateLimiterFactory: RateLimiterFactory) extends GenericMailet {
   private var exceededProcessor: String = _
   private var rateLimiters: Seq[PerRecipientRateLimiter] = _
 
   override def init(): Unit = {
-    val rateLimiterFactory: RateLimiterFactory = rateLimiterFactoryProvider.create(getMailetConfig)
     val duration: Duration = parseDuration()
     val keyPrefix: Option[KeyPrefix] = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)

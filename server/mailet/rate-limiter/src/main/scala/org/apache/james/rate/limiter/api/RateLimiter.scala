@@ -26,7 +26,6 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import org.apache.james.rate.limiter.api.AllowedQuantity.AllowedQuantity
 import org.apache.james.rate.limiter.api.Increment.Increment
-import org.apache.mailet.MailetConfig
 import org.reactivestreams.Publisher
 
 trait RateLimitingKey {
@@ -76,10 +75,6 @@ trait RateLimiter {
 
 trait RateLimiterFactory {
    def withSpecification(rules: Rules): RateLimiter
-}
-
-trait RateLimiterFactoryProvider {
-  def create(mailetConfig: MailetConfig): RateLimiterFactory
 }
 
 sealed trait RateLimitingResult {
