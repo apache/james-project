@@ -97,10 +97,11 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
 
   override def init(): Unit = {
     val duration: Duration = parseDuration()
+    val precision: Option[Duration] = parsePrecision()
     val keyPrefix: Option[KeyPrefix] = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
 
-    def perRecipientRateLimiter(entityType: EntityType): Option[PerRecipientRateLimiter] = createRateLimiter(entityType, duration, rateLimiterFactory, keyPrefix)
+    def perRecipientRateLimiter(entityType: EntityType): Option[PerRecipientRateLimiter] = createRateLimiter(entityType, duration, precision, rateLimiterFactory, keyPrefix)
 
     rateLimiters = Seq(perRecipientRateLimiter(Size),
       perRecipientRateLimiter(Count))
@@ -131,11 +132,12 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
 
   @VisibleForTesting
   def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
+  def parsePrecision(): Option[Duration] = PrecisionParsingUtil.parsePrecision(getMailetConfig)
 
-  private def createRateLimiter(entityType: EntityType, duration: Duration,
+  private def createRateLimiter(entityType: EntityType, duration: Duration, precision: Option[Duration],
                                 rateLimiterFactory: RateLimiterFactory, keyPrefix: Option[KeyPrefix]): Option[PerRecipientRateLimiter] =
     entityType.extractRules(duration, getMailetConfig)
-      .map(rateLimiterFactory.withSpecification)
+      .map(rateLimiterFactory.withSpecification(_, precision))
       .map(PerRecipientRateLimiter(_, keyPrefix, entityType))
 
 

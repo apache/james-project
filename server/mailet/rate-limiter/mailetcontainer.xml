@@ -104,6 +104,7 @@
             <mailet matcher="All" class="GlobalRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
+                <precision>1h</precision>
                 <count>100</count>
                 <recipients>200</recipients>
                 <size>1000M</size>
@@ -113,6 +114,7 @@
             <mailet matcher="All" class="PerSenderRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
+                <precision>1h</precision>
                 <count>10</count>
                 <recipients>20</recipients>
                 <size>100M</size>

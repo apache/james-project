@@ -74,7 +74,7 @@ trait RateLimiter {
 }
 
 trait RateLimiterFactory {
-   def withSpecification(rules: Rules): RateLimiter
+   def withSpecification(rules: Rules, precision: Option[Duration]): RateLimiter
 }
 
 sealed trait RateLimitingResult {

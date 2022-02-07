@@ -82,6 +82,7 @@ public class PerSenderRateLimitIntegrationTest {
                     .matcher(All.class)
                     .mailet(PerSenderRateLimit.class)
                     .addProperty("duration", "100s")
+                    .addProperty("precision", "1s")
                     .addProperty("count", "1")
                     .addProperty("recipients", "2")
                     .addProperty("size", "6K")

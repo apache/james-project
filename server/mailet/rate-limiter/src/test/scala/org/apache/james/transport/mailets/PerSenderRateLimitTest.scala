@@ -41,6 +41,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "1")
       .build())
 
@@ -72,6 +73,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "1")
       .setProperty("exceededProcessor", "tooMuchMails")
       .build())
@@ -104,6 +106,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "1")
       .build())
 
@@ -135,6 +138,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("recipients", "4")
       .build())
 
@@ -175,6 +179,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("size", "100K")
       .build())
 
@@ -215,6 +220,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("totalSize", "1M")
       .build())
 
@@ -258,6 +264,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("totalSize", "1G")
       .build())
 
@@ -282,6 +289,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "2")
       .build())
 
@@ -306,6 +314,7 @@ class PerSenderRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("size", "100K")
       .setProperty("recipients", "3")
       .build())

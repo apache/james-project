@@ -24,7 +24,6 @@ import java.time.Duration
 import com.google.inject.AbstractModule
 import es.moki.ratelimitj.core.limiter.request.{RequestLimitRule, RequestRateLimiter}
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter
-import javax.inject.Inject
 import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.reactivestreams.Publisher
@@ -38,22 +37,15 @@ class MemoryRateLimiterModule() extends AbstractModule {
       .to(classOf[MemoryRateLimiterFactory])
 }
 
-class MemoryRateLimiterFactory (precision: Option[Duration] = None) extends RateLimiterFactory {
-  @Inject()
-  def this() = {
-    this(None)
-  }
-
-  override def withSpecification(rules: Rules): RateLimiter = {
+class MemoryRateLimiterFactory() extends RateLimiterFactory {
+  override def withSpecification(rules: Rules, precision: Option[Duration]): RateLimiter =
     MemoryRateLimiter(new InMemorySlidingWindowRequestRateLimiter(rules.rules
       .map(convert)
-      .map(withPrecision)
+      .map(withPrecision(_, precision))
       .toSet.asJava))
-  }
 
-  private def withPrecision(rule: RequestLimitRule): RequestLimitRule =
-    precision.map(rule.withPrecision)
-      .getOrElse(rule)
+  private def withPrecision(rule: RequestLimitRule, precision: Option[Duration]): RequestLimitRule =
+    precision.map(rule.withPrecision).getOrElse(rule)
 
   private def convert(rule: Rule): RequestLimitRule = RequestLimitRule.of(rule.duration, rule.quantity.value)
 }

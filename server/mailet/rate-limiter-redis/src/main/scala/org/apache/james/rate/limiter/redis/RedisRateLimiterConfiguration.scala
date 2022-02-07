@@ -19,8 +19,6 @@
 
 package org.apache.james.rate.limiter.redis
 
-import java.time.Duration
-
 import com.google.common.base.Preconditions
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
@@ -33,9 +31,9 @@ object RedisRateLimiterConfiguration {
   def from(config: Configuration): RedisRateLimiterConfiguration =
     from(config.getString("redisURL"))
 
-  def from(redisUri: String, windowPrecision: Option[Duration] = None): RedisRateLimiterConfiguration = {
+  def from(redisUri: String): RedisRateLimiterConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
-    RedisRateLimiterConfiguration(RedisUris.from(redisUri), windowPrecision)
+    RedisRateLimiterConfiguration(RedisUris.from(redisUri))
   }
 }
 
@@ -58,4 +56,4 @@ object RedisUris {
   def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
 }
 
-case class RedisRateLimiterConfiguration(redisURI: RedisUris, windowPrecision: Option[Duration] = None)
+case class RedisRateLimiterConfiguration(redisURI: RedisUris)

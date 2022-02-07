@@ -41,6 +41,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "1")
       .build())
 
@@ -72,6 +73,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "1")
       .setProperty("exceededProcessor", "tooMuchMails")
       .build())
@@ -104,6 +106,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "2")
       .build())
 
@@ -144,6 +147,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("recipients", "4")
       .build())
 
@@ -184,6 +188,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("size", "100K")
       .build())
 
@@ -224,6 +229,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("totalSize", "1M")
       .build())
 
@@ -267,6 +273,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("totalSize", "1G")
       .build())
 
@@ -291,6 +298,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
       .setProperty("count", "2")
       .build())
 
@@ -315,6 +323,7 @@ class GlobalRateLimitTest {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("GlobalRateLimit")
       .setProperty("duration", "1000s")
+      .setProperty("precision", "1s")
       .setProperty("size", "100K")
       .setProperty("totalSize", "150K")
       .setProperty("recipients", "3")
