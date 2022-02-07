@@ -39,7 +39,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
   @Inject
-  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[CapabilityFactory]) {
+  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[CapabilityFactory]) = {
     this(javaMethods.asScala.toSet, supportedCapabilities.asScala.map(x => x.id()).toSet)
   }
 

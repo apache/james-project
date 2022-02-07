@@ -30,7 +30,7 @@ import scala.jdk.CollectionConverters._
 
 class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
   @Inject
-  def this(defaultCapabilities: java.util.Set[CapabilityFactory]) {
+  def this(defaultCapabilities: java.util.Set[CapabilityFactory]) = {
     this(defaultCapabilities.asScala.toSet)
   }
 

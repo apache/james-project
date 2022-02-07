@@ -219,7 +219,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 class BlobResolvers(blobResolvers: Set[BlobResolver]) {
 
   @Inject
-  def this(blobResolvers: java.util.Set[BlobResolver]) {
+  def this(blobResolvers: java.util.Set[BlobResolver]) = {
     this(blobResolvers.asScala.toSet)
   }
 
