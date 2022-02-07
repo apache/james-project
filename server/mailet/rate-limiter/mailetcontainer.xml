@@ -121,6 +121,14 @@
                 <totalSize>200M</totalSize>
                 <exceededProcessor>tooMuchMails</exceededProcessor>
             </mailet>
+            <mailet matcher="All" class="PerRecipientRateLimitMailet">
+                <keyPrefix>myPrefix</keyPrefix>
+                <duration>1h</duration>
+                <precision>1h</precision>
+                <count>10</count>
+                <size>100M</size>
+                <exceededProcessor>tooMuchMails</exceededProcessor>
+            </mailet>
             <mailet match="All" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
