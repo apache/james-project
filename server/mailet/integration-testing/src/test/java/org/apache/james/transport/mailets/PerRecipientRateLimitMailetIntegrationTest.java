@@ -83,7 +83,7 @@ public class PerRecipientRateLimitMailetIntegrationTest {
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
-                    .mailet(PerRecipientRateLimitMailet.class)
+                    .mailet(PerRecipientRateLimit.class)
                     .addProperty("duration", "60s")
                     .addProperty("count", "1")
                     .addProperty("size", "6K")

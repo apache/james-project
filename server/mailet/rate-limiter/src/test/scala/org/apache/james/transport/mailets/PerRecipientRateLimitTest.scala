@@ -31,17 +31,17 @@ import org.mockito.{ArgumentCaptor, Mockito}
 
 import scala.jdk.CollectionConverters._
 
-class PerRecipientRateLimitMailetTest {
+class PerRecipientRateLimitTest {
 
-  def testee(mailetConfig: MailetConfig) : PerRecipientRateLimitMailet = {
-    val mailet: PerRecipientRateLimitMailet = new PerRecipientRateLimitMailet(new MemoryRateLimiterFactory())
+  def testee(mailetConfig: MailetConfig) : PerRecipientRateLimit = {
+    val mailet: PerRecipientRateLimit = new PerRecipientRateLimit(new MemoryRateLimiterFactory())
     mailet.init(mailetConfig)
     mailet
   }
 
   @Test
   def rateLimitingShouldBeAppliedPerRecipient(): Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -72,7 +72,7 @@ class PerRecipientRateLimitMailetTest {
 
   @Test
   def rateLimitingShouldNotBeAppliedWhenDoNotHaveRecipient() : Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -90,7 +90,7 @@ class PerRecipientRateLimitMailetTest {
 
   @Test
   def rateLimitingShouldFlowToTheIntendedProcessor() : Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -122,7 +122,7 @@ class PerRecipientRateLimitMailetTest {
 
   @Test
   def rateLimitingShouldNOTBeAppliedPerSender() : Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -154,7 +154,7 @@ class PerRecipientRateLimitMailetTest {
 
   @Test
   def shouldRateLimitSizeOfEmails(): Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("size", "100K")
@@ -200,7 +200,7 @@ class PerRecipientRateLimitMailetTest {
   def shouldRateLimitPerRecipient(): Unit = {
     val mailetContext = Mockito.spy(FakeMailContext.defaultContext)
 
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -251,7 +251,7 @@ class PerRecipientRateLimitMailetTest {
 
   @Test
   def shouldRateLimitedWhenAllRecipientsExceeded(): Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "1")
@@ -284,7 +284,7 @@ class PerRecipientRateLimitMailetTest {
   @Disabled("atomicity problem. https://github.com/apache/james-project/pull/851#issuecomment-1020792286")
   @Test
   def mailetShouldSupportBothCountAndSize(): Unit = {
-    val mailet: PerRecipientRateLimitMailet = testee(FakeMailetConfig.builder()
+    val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
       .mailetName("PerRecipientRateLimitMailet")
       .setProperty("duration", "20s")
       .setProperty("count", "2")
