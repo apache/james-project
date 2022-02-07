@@ -54,11 +54,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PerRecipientRateLimitMailetIntegrationTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PerRecipientRateLimitMailetIntegrationTest.class);
     private static final int SEARCH_LIMIT_DEFAULT = 100;
     private static final String SENDER = "sender@" + DEFAULT_DOMAIN;
     private static final String SENDER2 = "sender2@" + DEFAULT_DOMAIN;
@@ -114,15 +111,11 @@ public class PerRecipientRateLimitMailetIntegrationTest {
         jamesServer.shutdown();
     }
 
-    private void awaitFirstMessage() {
-        try {
-            imapClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-                .login(RECIPIENT, PASSWORD)
-                .select(TestIMAPClient.INBOX)
-                .awaitMessage(Constants.awaitAtMostOneMinute);
-        } catch (IOException e) {
-            LOGGER.error("Unexpected error", e);
-        }
+    private void awaitFirstMessage() throws IOException {
+        imapClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(Constants.awaitAtMostOneMinute);
     }
 
     @Test
