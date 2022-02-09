@@ -36,7 +36,6 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
-import org.jboss.netty.util.HashedWheelTimer;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
 
@@ -45,7 +44,6 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
     private Parser sieveParser;
-    private HashedWheelTimer hashedWheelTimer;
 
     @Inject
     public void setFileSystem(FileSystem fileSystem) {
@@ -67,11 +65,6 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
         this.sieveParser = sieveParser;
     }
 
-    @Inject
-    public void setHashedWheelTimer(HashedWheelTimer hashedWheelTimer) {
-        this.hashedWheelTimer = hashedWheelTimer;
-    }
-
 
     @Override
     @PostConstruct
@@ -88,7 +81,6 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
             server.setFileSystem(fileSystem);
-            server.setHashWheelTimer(hashedWheelTimer);
             server.configure(serverConfig);
             servers.add(server);
         }

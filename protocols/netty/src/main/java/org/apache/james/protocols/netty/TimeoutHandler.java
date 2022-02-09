@@ -18,26 +18,27 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.timeout.IdleState;
-import org.jboss.netty.handler.timeout.IdleStateHandler;
-import org.jboss.netty.util.Timer;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * {@link IdleStateHandler} implementation which disconnect the {@link Channel} after a configured
  * idle timeout. Be aware that this handle is not thread safe so it can't be shared across pipelines
  */
+@ChannelHandler.Sharable
 public class TimeoutHandler extends IdleStateHandler {
 
-    public TimeoutHandler(Timer timer, int readerIdleTimeSeconds) {
-        super(timer, readerIdleTimeSeconds, 0, 0);
+    public TimeoutHandler(int readerIdleTimeSeconds) {
+        super(readerIdleTimeSeconds, 0, 0);
     }
 
     @Override
-    protected void channelIdle(ChannelHandlerContext ctx, IdleState state, long lastActivityTimeMillis) throws Exception {
-        if (state.equals(IdleState.READER_IDLE)) {
-            ctx.getChannel().close();
+    protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) throws Exception {
+        if (evt.equals(IdleStateEvent.READER_IDLE_STATE_EVENT)) {
+            ctx.channel().close();
         }
     }
 

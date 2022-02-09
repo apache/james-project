@@ -20,23 +20,27 @@ package org.apache.james.imapserver.netty;
 
 import java.nio.charset.StandardCharsets;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.timeout.IdleState;
-import org.jboss.netty.handler.timeout.IdleStateAwareChannelHandler;
-import org.jboss.netty.handler.timeout.IdleStateEvent;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 
-public class ImapHeartbeatHandler extends IdleStateAwareChannelHandler {
+@ChannelHandler.Sharable
+public class ImapHeartbeatHandler extends IdleStateHandler {
 
-    private static final ChannelBuffer HEARTBEAT_BUFFER = ChannelBuffers
-        .unmodifiableBuffer(
-            ChannelBuffers.wrappedBuffer("* OK Hang in there..\r\n".getBytes(StandardCharsets.US_ASCII)));
+    private static final ByteBuf HEARTBEAT_BUFFER = Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("* OK Hang in there..\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+    ImapHeartbeatHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
+        super(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds);
+    }
 
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
-        if (e.getState().equals(IdleState.WRITER_IDLE)) {
-            e.getChannel().write(HEARTBEAT_BUFFER);
+        if (e.state().equals(IdleState.WRITER_IDLE)) {
+            ctx.channel().writeAndFlush(HEARTBEAT_BUFFER);
         }
         super.channelIdle(ctx, e);
     }

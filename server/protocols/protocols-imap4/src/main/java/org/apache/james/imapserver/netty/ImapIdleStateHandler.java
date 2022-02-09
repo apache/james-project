@@ -21,27 +21,38 @@ package org.apache.james.imapserver.netty;
 import java.net.InetSocketAddress;
 
 import org.apache.james.imap.api.process.ImapSession;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.timeout.IdleState;
-import org.jboss.netty.handler.timeout.IdleStateAwareChannelHandler;
-import org.jboss.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
+
 /**
- * {@link IdleStateAwareChannelHandler} which will call {@link ImapSession#logout()} if the
+ * {@link IdleStateHandler} which will call {@link ImapSession#logout()} if the
  * connected client did not receive or send any traffic in a given timeframe.
  */
-public class ImapIdleStateHandler extends IdleStateAwareChannelHandler implements NettyConstants {
+@ChannelHandler.Sharable
+public class ImapIdleStateHandler extends IdleStateHandler implements NettyConstants {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapIdleStateHandler.class);
+
+    public ImapIdleStateHandler(int allIdleTimeSeconds) {
+        this(0, 0, allIdleTimeSeconds);
+    }
+
+    public ImapIdleStateHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
+        super(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds);
+    }
 
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
 
         // check if the client did nothing for too long
-        if (e.getState().equals(IdleState.ALL_IDLE)) {
-            ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
-            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+        if (e.state().equals(IdleState.ALL_IDLE)) {
+            ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+            InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
 
             LOGGER.info("Logout client {} ({}) because it idled for too long...",
                 address.getHostName(),
@@ -51,7 +62,7 @@ public class ImapIdleStateHandler extends IdleStateAwareChannelHandler implement
             session.logout();
 
             // close the channel
-            ctx.getChannel().close();
+            ctx.channel().close();
 
         }
         

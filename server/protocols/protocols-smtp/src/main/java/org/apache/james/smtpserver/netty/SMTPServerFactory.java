@@ -32,7 +32,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.jboss.netty.util.HashedWheelTimer;
 
 public class SMTPServerFactory extends AbstractServerFactory {
 
@@ -40,16 +39,14 @@ public class SMTPServerFactory extends AbstractServerFactory {
     protected final ProtocolHandlerLoader loader;
     protected final FileSystem fileSystem;
     protected final SmtpMetricsImpl smtpMetrics;
-    private final HashedWheelTimer hashedWheelTimer;
 
     @Inject
     public SMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem,
-                             MetricFactory metricFactory, HashedWheelTimer hashedWheelTimer) {
+                             MetricFactory metricFactory) {
         this.dns = dns;
         this.loader = loader;
         this.fileSystem = fileSystem;
         this.smtpMetrics = new SmtpMetricsImpl(metricFactory);
-        this.hashedWheelTimer = hashedWheelTimer;
     }
 
     protected SMTPServer createServer() {
@@ -67,7 +64,6 @@ public class SMTPServerFactory extends AbstractServerFactory {
             server.setDnsService(dns);
             server.setProtocolHandlerLoader(loader);
             server.setFileSystem(fileSystem);
-            server.setHashWheelTimer(hashedWheelTimer);
             server.configure(serverConfig);
             servers.add(server);
         }

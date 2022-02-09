@@ -75,7 +75,6 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -88,7 +87,6 @@ class DSNTest {
     public static final Username BOB = Username.of("bob@localhost");
     public static final String PASSWORD = "bobpwd";
 
-    protected HashedWheelTimer hashedWheelTimer;
     protected MemoryDomainList domainList;
     protected MemoryUsersRepository usersRepository;
     protected SMTPServerTest.AlterableDNSServer dnsServer;
@@ -114,7 +112,6 @@ class DSNTest {
         createMailRepositoryStore();
 
         setUpFakeLoader();
-        hashedWheelTimer = new HashedWheelTimer();
         setUpSMTPServer();
     }
 
@@ -147,7 +144,6 @@ class DSNTest {
         smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
-        smtpServer.setHashWheelTimer(hashedWheelTimer);
         smtpServer.setProtocolHandlerLoader(chain);
     }
 
@@ -178,7 +174,6 @@ class DSNTest {
     @AfterEach
     void tearDown() {
         smtpServer.destroy();
-        hashedWheelTimer.stop();
     }
 
     @Test

@@ -26,14 +26,12 @@ import org.apache.james.protocols.netty.BasicChannelUpstreamHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.smtpserver.SMTPConstants;
-import org.jboss.netty.channel.ChannelHandler.Sharable;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.MessageEvent;
+
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
 
 /**
- * {@link ChannelUpstreamHandler} which is used by the SMTPServer
+ * {@link BasicChannelUpstreamHandler} which is used by the SMTPServer
  */
 @Sharable
 public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
@@ -51,20 +49,20 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
     }
 
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelConnected(ctx, e);
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
         smtpMetrics.getConnectionMetric().increment();
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        super.messageReceived(ctx, e);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        super.channelRead(ctx, msg);
         smtpMetrics.getCommandsMetric().increment();
     }
 
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelDisconnected(ctx, e);
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
         smtpMetrics.getConnectionMetric().decrement();
     }
 
@@ -74,7 +72,7 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
     @Override
     protected void cleanup(ChannelHandlerContext ctx) {
         // Make sure we dispose everything on exit on session close
-        SMTPSession smtpSession = (SMTPSession) ctx.getAttachment();
+        SMTPSession smtpSession = ctx.channel().attr(SMTPConstants.SMTP_SESSION_ATTRIBUTE_KEY).get();
 
         if (smtpSession != null) {
             smtpSession.getAttachment(SMTPConstants.MAIL, State.Transaction).ifPresent(LifecycleUtil::dispose);

@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import static org.jboss.netty.channel.Channels.pipeline;
-
 import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -37,20 +35,12 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
 import org.apache.james.util.Size;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
-import org.jboss.netty.handler.timeout.IdleStateHandler;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +48,21 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+
+
 /**
  * NIO IMAP Server which use Netty.
  */
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
+    private static final int TIMEOUT_TIMER_DISABLED = 0;
 
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
@@ -209,21 +209,25 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    protected ChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
         
-        return new ChannelPipelineFactory() {
-            
+        return new AbstractChannelPipelineFactory(group, getFrameHandlerFactory()) {
+
+            @Override
+            protected ChannelInboundHandlerAdapter createHandler() {
+                return createCoreHandler();
+            }
+
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
-            private final HashedWheelTimer timer = new HashedWheelTimer();
-            
+
             private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
 
             @Override
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = pipeline();
+            public void initChannel(Channel channel) throws Exception {
+                ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, timeoutUnit));
-                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler());
+                pipeline.addLast("idleHandler", new IdleStateHandler(TIMEOUT_TIMER_DISABLED, TIMEOUT_TIMER_DISABLED, timeout, timeoutUnit));
+                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 
                 pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(IMAPServer.this.connPerIP));
@@ -246,15 +250,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                ExecutionHandler ehandler = getExecutionHandler();
-                if (ehandler  != null) {
-                    pipeline.addLast(EXECUTION_HANDLER, ehandler);
-
-                }
                 pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit, literalSizeLimit));
 
-                pipeline.addLast(CORE_HANDLER, createCoreHandler());
-                return pipeline;
+                pipeline.addLast(CORE_HANDLER, createHandler());
             }
 
         };
@@ -266,7 +264,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
         Encryption secure = getEncryption();
         ImapChannelUpstreamHandler.ImapChannelUpstreamHandlerBuilder coreHandlerBuilder = ImapChannelUpstreamHandler.builder()
             .hello(hello)

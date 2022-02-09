@@ -28,32 +28,29 @@ import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.protocols.api.Encryption;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelLocal;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
-public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.ssl.SslHandler;
+
+@ChannelHandler.Sharable
+public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
 
     static final String SSL_HANDLER = "sslHandler";
 
     private final Logger logger;
-    private final ChannelLocal<Session> attributes;
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
 
     public ManageSieveChannelUpstreamHandler(
             ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
         this.logger = logger;
-        this.attributes = new ChannelLocal<>();
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
     }
@@ -63,20 +60,20 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        ChannelManageSieveResponseWriter attachment = (ChannelManageSieveResponseWriter) ctx.getAttachment();
-        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
-            String request = attachment.cumulate((String) e.getMessage());
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ChannelManageSieveResponseWriter attachment = ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get();
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
+            String request = attachment.cumulate((String) msg);
             if (request.isEmpty() || request.startsWith("\r\n")) {
                 return;
             }
 
-            Session manageSieveSession = attributes.get(ctx.getChannel());
+            Session manageSieveSession = ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get();
             String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
             attachment.resetCumulation();
             attachment.write(responseString);
             if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
-                turnSSLon(ctx.getChannel());
+                turnSSLon(ctx.channel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
             }
@@ -86,16 +83,16 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
-            logger.warn("Error while processing ManageSieve request", e.getCause());
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
+            logger.warn("Error while processing ManageSieve request", cause);
 
-            if (e.getCause() instanceof TooLongFrameException) {
+            if (cause instanceof TooLongFrameException) {
                 // Max line length exceeded
                 // See also JAMES-1190
-                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("NO Maximum command line length exceeded");
-            } else if (e.getCause() instanceof SessionTerminatedException) {
-                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("OK channel is closing");
+                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("NO Maximum command line length exceeded");
+            } else if (cause instanceof SessionTerminatedException) {
+                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK channel is closing");
                 logout(ctx);
             }
         }
@@ -103,48 +100,48 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     private void logout(ChannelHandlerContext ctx) {
         // logout on error not sure if that is the best way to handle it
-        attributes.remove(ctx.getChannel());
+        ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).getAndSet(null);
         // Make sure we close the channel after all the buffers were flushed out
-        Channel channel = ctx.getChannel();
-        if (channel.isConnected()) {
-            channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        Channel channel = ctx.channel();
+        if (channel.isActive()) {
+            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
-            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             logger.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
             if (isSSL()) {
                 session.setSslEnabled(true);
             }
-            attributes.set(ctx.getChannel(), session);
-            ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
-            super.channelBound(ctx, e);
-            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities() + "OK\r\n");
+            ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).set(session);
+            ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).set(new ChannelManageSieveResponseWriter(ctx.channel()));
+            super.channelActive(ctx);
+            ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write(manageSieveProcessor.getAdvertisedCapabilities() + "OK\r\n");
         }
     }
 
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
-            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             logger.info("Connection closed for {}", address.getAddress().getHostAddress());
-            attributes.remove(ctx.getChannel());
-            super.channelClosed(ctx, e);
+            ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).getAndSet(null);
+            super.channelInactive(ctx);
         }
     }
 
     private void turnSSLon(Channel channel) {
         if (secure != null) {
-            channel.setReadable(false);
+            channel.config().setAutoRead(false);
             SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
-            filter.getEngine().setUseClientMode(false);
-            channel.getPipeline().addFirst(SSL_HANDLER, filter);
-            channel.setReadable(true);
+            filter.engine().setUseClientMode(false);
+            channel.pipeline().addFirst(SSL_HANDLER, filter);
+            channel.config().setAutoRead(true);
         }
     }
 }

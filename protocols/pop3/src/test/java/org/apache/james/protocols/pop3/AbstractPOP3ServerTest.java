@@ -463,7 +463,7 @@ public abstract class AbstractPOP3ServerTest {
             String welcomeMessage = client.getReplyString();
             
             // check for valid syntax that include all info needed for APOP
-            assertThat(welcomeMessage.trim()).matches(Pattern.compile("\\+OK \\<-?\\d+\\.\\d+@.+\\> .+"));
+            assertThat(welcomeMessage.trim()).matches(Pattern.compile("\\+OK \\<-?[0-9A-Fa-f]+\\.\\d+@.+\\> .+"));
             
             assertThat(client.sendCommand("APOP invalid invalid")).isEqualTo(POP3Reply.ERROR);
             

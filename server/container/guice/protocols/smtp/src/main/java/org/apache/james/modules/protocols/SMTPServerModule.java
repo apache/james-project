@@ -21,7 +21,6 @@ package org.apache.james.modules.protocols;
 
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
-import org.apache.james.smtpserver.netty.OioSMTPServerFactory;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
@@ -37,7 +36,6 @@ public class SMTPServerModule extends AbstractModule {
     protected void configure() {
         install(new JSPFModule());
         bind(SMTPServerFactory.class).in(Scopes.SINGLETON);
-        bind(OioSMTPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
     }

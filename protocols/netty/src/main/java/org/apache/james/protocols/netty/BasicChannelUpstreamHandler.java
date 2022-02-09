@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import javax.net.ssl.SSLEngine;
 
+import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -40,26 +41,27 @@ import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
 import org.apache.james.util.MDCBuilder;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandler.Sharable;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.util.AttributeKey;
+
+
 /**
- * {@link ChannelUpstreamHandler} which is used by the SMTPServer and other line based protocols
+ * {@link ChannelInboundHandlerAdapter} which is used by the SMTPServer and other line based protocols
  */
 @Sharable
-public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
+public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelUpstreamHandler.class);
-    private static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
+    public static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_ATTRIBUTE_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
+    public static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY =
+            AttributeKey.valueOf("session");
 
     private final ProtocolMDCContextFactory mdcContextFactory;
     protected final Protocol protocol;
@@ -78,37 +80,18 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     }
 
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
         try (Closeable closeable = boundMDC.build()) {
             ProtocolSession session = createSession(ctx);
-            session.setAttachment(MDC_KEY, boundMDC, Connection);
-            ctx.setAttachment(session);
-            super.channelBound(ctx, e);
-        }
-    }
+            session.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
+            ctx.channel().attr(SESSION_ATTRIBUTE_KEY).set(session);
 
-    private MDCBuilder mdc(ChannelHandlerContext ctx) {
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-
-        return Optional.ofNullable(session)
-            .flatMap(s -> s.getAttachment(MDC_KEY, Connection))
-            .map(mdc -> mdcContextFactory.withContext(session)
-                .addToContext(mdc))
-            .orElseGet(MDCBuilder::create);
-    }
-
-    /**
-     * Call the {@link ConnectHandler} instances which are stored in the {@link ProtocolHandlerChain}
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdc(ctx).build()) {
             List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
             List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
-            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+
             LOGGER.info("Connection established from {}", session.getRemoteAddress().getAddress().getHostAddress());
             if (connectHandlers != null) {
                 for (ConnectHandler cHandler : connectHandlers) {
@@ -126,24 +109,35 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
                 }
             }
-            super.channelConnected(ctx, e);
+
+            super.channelActive(ctx);
         }
     }
 
+    private MDCBuilder mdc(ChannelHandlerContext ctx) {
+        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
 
+        return Optional.ofNullable(session)
+            .flatMap(s -> s.getAttachment(MDC_ATTRIBUTE_KEY, Connection))
+            .map(mdc -> mdcContextFactory.withContext(session)
+                .addToContext(mdc))
+            .orElseGet(MDCBuilder::create);
+    }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         try (Closeable closeable = mdc(ctx).build()) {
             List<DisconnectHandler> connectHandlers = chain.getHandlers(DisconnectHandler.class);
-            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+            ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
             if (connectHandlers != null) {
                 for (DisconnectHandler connectHandler : connectHandlers) {
                     connectHandler.onDisconnect(session);
                 }
             }
-            super.channelDisconnected(ctx, e);
+            LOGGER.info("Connection closed for {}", session.getRemoteAddress().getAddress().getHostAddress());
+            cleanup(ctx);
+            super.channelInactive(ctx);
         }
     }
 
@@ -153,19 +147,19 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try (Closeable closeable = mdc(ctx).build()) {
-            ProtocolSession pSession = (ProtocolSession) ctx.getAttachment();
+            ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
             LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
             LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
 
 
             if (lineHandlers.size() > 0) {
 
-                ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+                ByteBuf buf = (ByteBuf) msg;
                 LineHandler lHandler = (LineHandler) lineHandlers.getLast();
                 long start = System.currentTimeMillis();
-                Response response = lHandler.onLine(pSession, buf.toByteBuffer());
+                Response response = lHandler.onLine(pSession, buf.nioBuffer());
                 long executionTime = System.currentTimeMillis() - start;
 
                 for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
@@ -178,31 +172,21 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
             }
 
-            super.messageReceived(ctx, e);
+            ((ByteBuf) msg).release();
+            super.channelReadComplete(ctx);
         }
     }
 
-
-    @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdc(ctx).build()) {
-            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-            LOGGER.info("Connection closed for {}", session.getRemoteAddress().getAddress().getHostAddress());
-            cleanup(ctx);
-
-            super.channelClosed(ctx, e);
-        }
-    }
 
     /**
      * Cleanup the channel
      */
     protected void cleanup(ChannelHandlerContext ctx) {
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).getAndRemove();
         if (session != null) {
             session.resetState();
-            session = null;
         }
+        ctx.close();
     }
 
     
@@ -213,22 +197,22 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
             engine = secure.createSSLEngine();
         }
 
-        return protocol.newSession(new NettyProtocolTransport(ctx.getChannel(), engine));
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine));
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try (Closeable closeable = mdc(ctx).build()) {
-            Channel channel = ctx.getChannel();
-            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-            if (e.getCause() instanceof TooLongFrameException && session != null) {
+            Channel channel = ctx.channel();
+            ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
+            if (cause instanceof TooLongFrameException && session != null) {
                 Response r = session.newLineTooLongResponse();
                 ProtocolTransport transport = ((ProtocolSessionImpl) session).getProtocolTransport();
                 if (r != null) {
                     transport.writeResponse(r, session);
                 }
             } else {
-                if (channel.isConnected() && session != null) {
+                if (channel.isActive() && session != null) {
                     ProtocolTransport transport = ((ProtocolSessionImpl) session).getProtocolTransport();
 
                     Response r = session.newFatalErrorResponse();
@@ -237,12 +221,12 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                     }
                     transport.writeResponse(Response.DISCONNECT, session);
                 }
-                if (e.getCause() instanceof ClosedChannelException) {
-                    LOGGER.info("Channel closed before we could send in flight messages to the users (ClosedChannelException): {}", e.getCause().getMessage());
+                if (cause instanceof ClosedChannelException) {
+                    LOGGER.info("Channel closed before we could send in flight messages to the users (ClosedChannelException): {}", cause.getMessage());
                 } else {
-                    LOGGER.error("Unable to process request", e.getCause());
+                    LOGGER.error("Unable to process request", cause);
                 }
-                cleanup(ctx);
+                ctx.close();
             }
         }
     }
