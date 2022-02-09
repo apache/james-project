@@ -316,12 +316,8 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     private void enforceRoot(File file) throws StorageException {
-        try {
-            if (!file.getCanonicalPath().startsWith(root.getCanonicalPath())) {
-                throw new StorageException(new IllegalStateException("Path traversal attempted"));
-            }
-        } catch (IOException e) {
-            throw new StorageException(e);
+        if (!file.toPath().normalize().startsWith(root.toPath().normalize())) {
+            throw new StorageException(new IllegalStateException("Path traversal attempted"));
         }
     }
 
