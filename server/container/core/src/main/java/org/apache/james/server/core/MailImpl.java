@@ -62,6 +62,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Chars;
@@ -807,5 +808,10 @@ public class MailImpl implements Disposable, Mail {
     @Override
     public Mail duplicate() throws MessagingException {
         return MailImpl.duplicate(this);
+    }
+
+    @Override
+    public Map<AttributeName, Attribute> attributesMap() {
+        return ImmutableMap.copyOf(attributes);
     }
 }
