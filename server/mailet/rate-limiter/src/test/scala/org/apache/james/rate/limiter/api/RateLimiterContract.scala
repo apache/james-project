@@ -45,7 +45,7 @@ trait RateLimiterContract {
    SoftAssertions.assertSoftly(softly => {
     (1 to 4).foreach(_ => {
      val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
-     assertThat(actual).isEqualTo(AcceptableRate)
+     softly.assertThat[RateLimitingResult](actual).isEqualTo(AcceptableRate)
     })
    })
   }
