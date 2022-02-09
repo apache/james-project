@@ -55,7 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class PerRecipientRateLimitMailetIntegrationTest {
+class PerRecipientRateLimitMailetIntegrationTest {
     private static final int SEARCH_LIMIT_DEFAULT = 100;
     private static final String SENDER = "sender@" + DEFAULT_DOMAIN;
     private static final String SENDER2 = "sender2@" + DEFAULT_DOMAIN;
