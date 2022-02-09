@@ -1,0 +1,21 @@
+<clientConfig version="1.1">
+    <emailProvider id="MessagingEngine">
+        <domain>domain.tld</domain>
+        <displayName>My company</displayName>
+        <displayShortName>My company</displayShortName>
+        <incomingServer type="imap">
+            <hostname>imap.domain.tld</hostname>
+            <port>993</port>
+            <socketType>SSL</socketType>
+            <authentication>password-cleartext</authentication>
+            <username>%EMAILADDRESS%</username>
+        </incomingServer>
+        <outgoingServer type="smtp">
+            <hostname>smtp.domain.tld</hostname>
+            <port>465</port>
+            <socketType>SSL</socketType>
+            <authentication>password-cleartext</authentication>
+            <username>%EMAILADDRESS%</username>
+        </outgoingServer>
+    </emailProvider>
+</clientConfig>

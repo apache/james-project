@@ -109,9 +109,13 @@ will use the specified value.
 
 |===
 
-=== OIDC setup
+== OIDC setup
 James IMAP support XOAUTH2 authentication mechanism which allow authenticating against a OIDC providers.
 Please configure `auth.oidc` part to use this.
 
 We do supply an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of such a setup.
 It uses the Keycloak OIDC provider, but usage of similar technologies is definitely doable.
+
+== Mail user agents auto-configuration
+
+Check this example on link:https://github.com/apache/james-project/tree/master/examples/imap-autoconf[Mail user agents auto-configuration].
