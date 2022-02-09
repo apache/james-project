@@ -24,7 +24,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -38,22 +37,9 @@ public class NettySMTPServerTest extends AbstractSMTPServerTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
 
-    private HashedWheelTimer hashedWheelTimer;
-
-    @BeforeEach
-    void setup() {
-        hashedWheelTimer = new HashedWheelTimer();
-    }
-
-    @AfterEach
-    void teardown() {
-        hashedWheelTimer.stop();
-    }
-
-
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
-        NettyServer server = new NettyServer.Factory(hashedWheelTimer)
+        NettyServer server = new NettyServer.Factory()
                 .protocol(protocol)
                 .build();
         server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));

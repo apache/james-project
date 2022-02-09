@@ -27,22 +27,22 @@ import java.util.Optional;
 import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.util.MDCBuilder;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelLocal;
+
+import io.netty.channel.ChannelHandlerContext;
 
 public class ManageSieveMDCContext {
-    public static Closeable from(ChannelHandlerContext ctx, ChannelLocal<Session> attributes) {
+    public static Closeable from(ChannelHandlerContext ctx) {
         return MDCBuilder.create()
-            .addToContext(from(attributes.get(ctx.getChannel())))
+            .addToContext(from(ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get()))
             .addToContext(MDCBuilder.PROTOCOL, "MANAGE-SIEVE")
             .addToContext(MDCBuilder.IP, retrieveIp(ctx))
             .addToContext(MDCBuilder.HOST, retrieveHost(ctx))
-            .addToContext(MDCBuilder.SESSION_ID, Integer.toString(ctx.getChannel().getId()))
+            .addToContext(MDCBuilder.SESSION_ID, ctx.channel().id().asShortText())
             .build();
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {
-        SocketAddress remoteAddress = ctx.getChannel().getRemoteAddress();
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
         if (remoteAddress instanceof InetSocketAddress) {
             InetSocketAddress address = (InetSocketAddress) remoteAddress;
             return address.getAddress().getHostAddress();
@@ -51,7 +51,7 @@ public class ManageSieveMDCContext {
     }
 
     private static String retrieveHost(ChannelHandlerContext ctx) {
-        SocketAddress remoteAddress = ctx.getChannel().getRemoteAddress();
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
         if (remoteAddress instanceof InetSocketAddress) {
             InetSocketAddress address = (InetSocketAddress) remoteAddress;
             return address.getHostName();

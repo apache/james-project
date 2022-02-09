@@ -73,7 +73,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -163,7 +162,7 @@ class LmtpServerTest {
     }
 
     private LMTPServerFactory createLMTPServer(MockProtocolHandlerLoader loader, String configuration) throws Exception {
-        LMTPServerFactory lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory(), new HashedWheelTimer());
+        LMTPServerFactory lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory());
         lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream(configuration)));
         lmtpServerFactory.init();
         return lmtpServerFactory;

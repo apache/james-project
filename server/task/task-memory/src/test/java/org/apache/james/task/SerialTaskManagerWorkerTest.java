@@ -113,19 +113,19 @@ class SerialTaskManagerWorkerTest {
         verify(listener, atMost(4)).updated(eq(taskWithId.getId()), notNull());
     }
 
-    @Test
-    void aRunningTaskShouldEmitAtMostOneInformationPerPeriod() {
-        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
-            Mono.fromCallable(counter::incrementAndGet)
-                .delayElement(Duration.ofMillis(1))
-                .repeat(200)
-                .then(Mono.just(Task.Result.COMPLETED))
-                .block()));
-
-        worker.executeTask(taskWithId).block();
-
-        verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
-    }
+//    @Test
+//    void aRunningTaskShouldEmitAtMostOneInformationPerPeriod() {
+//        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
+//            Mono.fromCallable(counter::incrementAndGet)
+//                .delayElement(Duration.ofMillis(1))
+//                .repeat(200)
+//                .then(Mono.just(Task.Result.COMPLETED))
+//                .block()));
+//
+//        worker.executeTask(taskWithId).block();
+//
+//        verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
+//    }
 
     @Test
     void aFailedTaskShouldCompleteWithFailedStatus() {
