@@ -19,8 +19,9 @@
 package org.apache.james.imapserver.netty;
 
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
+
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
 
 public class SwitchableLineBasedFrameDecoderFactory implements ChannelHandlerFactory {
 

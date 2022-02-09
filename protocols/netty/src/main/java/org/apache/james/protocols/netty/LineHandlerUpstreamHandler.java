@@ -22,18 +22,19 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
- * {@link ChannelUpstreamHandler} implementation which will call a given {@link LineHandler} implementation
+ * {@link ChannelInboundHandlerAdapter} implementation which will call a given {@link LineHandler} implementation
  *
  * @param <S>
  */
-public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends SimpleChannelUpstreamHandler {
+@ChannelHandler.Sharable
+public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends ChannelInboundHandlerAdapter {
 
     private final LineHandler<S> handler;
     private final S session;
@@ -44,14 +45,16 @@ public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends Simpl
     }
     
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {        
-        ChannelBuffer buf = (ChannelBuffer) e.getMessage();      
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ByteBuf buf = (ByteBuf) msg;
 
-        Response response = handler.onLine(session, buf.toByteBuffer()); 
+        Response response = handler.onLine(session, buf.nioBuffer());
         if (response != null) {
             // TODO: This kind of sucks but I was not able to come up with something more elegant here
             ((ProtocolSessionImpl)session).getProtocolTransport().writeResponse(response, session);
         }
+
+        ((ByteBuf) msg).release();
     }
 
 }

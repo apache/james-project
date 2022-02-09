@@ -24,8 +24,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.handler.stream.ChunkedStream;
+
+import io.netty.channel.Channel;
+import io.netty.handler.stream.ChunkedStream;
 
 public class ChannelManageSieveResponseWriter implements CommandDetectionSession {
     private final Channel channel;
@@ -36,9 +37,9 @@ public class ChannelManageSieveResponseWriter implements CommandDetectionSession
     }
 
     public void write(String response) {
-        if (channel.isConnected()) {
+        if (channel.isActive()) {
             InputStream in = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8));
-            channel.write(new ChunkedStream(in));
+            channel.writeAndFlush(new ChunkedStream(in));
         }
     }
 

@@ -20,7 +20,6 @@
 package org.apache.james.modules.protocols;
 
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
-import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
@@ -36,7 +35,6 @@ public class LMTPServerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(LMTPServerFactory.class).in(Scopes.SINGLETON);
-        bind(OioLMTPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(LmtpGuiceProbe.class);
     }

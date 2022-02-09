@@ -36,7 +36,7 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -104,7 +104,7 @@ public class AbstractConfigurableAsyncServerTest {
         }
 
         @Override
-        protected ChannelUpstreamHandler createCoreHandler () {
+        protected ChannelInboundHandlerAdapter createCoreHandler () {
             return null;
         }
 

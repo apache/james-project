@@ -21,29 +21,30 @@ package org.apache.james.protocols.lib.netty;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  * Count connections
  */
-public class ConnectionCountHandler extends SimpleChannelUpstreamHandler {
+@ChannelHandler.Sharable
+public class ConnectionCountHandler extends ChannelInboundHandlerAdapter {
 
     public final AtomicInteger currentConnectionCount = new AtomicInteger();
     public final AtomicLong connectionsTillStartup = new AtomicLong();
 
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         currentConnectionCount.decrementAndGet();
-        super.channelClosed(ctx, e);
+        super.channelInactive(ctx);
     }
 
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         currentConnectionCount.incrementAndGet();
         connectionsTillStartup.incrementAndGet();
-        super.channelOpen(ctx, e);
+        super.channelActive(ctx);
     }
 
     /**

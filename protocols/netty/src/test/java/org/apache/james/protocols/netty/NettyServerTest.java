@@ -26,33 +26,20 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class NettyServerTest {
-    private HashedWheelTimer hashedWheelTimer;
-
-    @BeforeEach
-    void setup() {
-        hashedWheelTimer = new HashedWheelTimer();
-    }
-
-    @AfterEach
-    void teardown() {
-        hashedWheelTimer.stop();
-    }
-
     @Test
     void protocolShouldThrowWhenProtocolIsNull() {
-        assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer).protocol(null))
+        assertThatThrownBy(() -> new NettyServer.Factory().protocol(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void buildShouldThrowWhenProtocolIsNotGiven() {
-        assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer)
+        assertThatThrownBy(() -> new NettyServer.Factory()
             .build())
             .isInstanceOf(IllegalStateException.class);
     }
@@ -60,7 +47,7 @@ class NettyServerTest {
     @Test
     void buildShouldWorkWhenProtocolIsGiven() {
         Protocol protocol = mock(Protocol.class);
-        new NettyServer.Factory(hashedWheelTimer)
+        new NettyServer.Factory()
             .protocol(protocol)
             .build();
     }
@@ -70,7 +57,7 @@ class NettyServerTest {
         Protocol protocol = mock(Protocol.class);
         Encryption encryption = Encryption.createStartTls(SSLContext.getDefault());
         ChannelHandlerFactory channelHandlerFactory = mock(ChannelHandlerFactory.class);
-        new NettyServer.Factory(hashedWheelTimer)
+        new NettyServer.Factory()
             .protocol(protocol)
             .secure(encryption)
             .frameHandlerFactory(channelHandlerFactory)

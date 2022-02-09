@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.rfc8621.contract.custom.authentication.strategy;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT;
 import static io.restassured.RestAssured.given;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -39,7 +40,6 @@ import static org.apache.james.jmap.rfc8621.contract.Fixture.USER_TOKEN;
 import static org.apache.james.jmap.rfc8621.contract.Fixture.getHeadersWith;
 import static org.apache.james.jmap.rfc8621.contract.Fixture.toBase64;
 import static org.hamcrest.Matchers.equalTo;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.ACCEPT;
 
 import java.util.List;
 import java.util.Optional;

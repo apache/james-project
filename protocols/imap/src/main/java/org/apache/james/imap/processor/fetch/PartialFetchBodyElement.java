@@ -145,9 +145,12 @@ final class PartialFetchBodyElement implements BodyElement {
             // Correctly calculate in available bytes.
             // See IMAP-295
             checkOffset();
+            if (pos >= length) {
+                return 0;
+            }
             int i = in.available();
             if (i == -1) {
-                return -1;
+                return 0;
             } else {
                 if (i >= length) {
                     return (int) length - (int) pos;

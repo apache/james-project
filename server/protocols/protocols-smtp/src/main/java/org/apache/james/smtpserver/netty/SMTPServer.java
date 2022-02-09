@@ -46,9 +46,10 @@ import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.util.Size;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  * NIO SMTPServer which use Netty
@@ -387,7 +388,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
         return coreHandler;
     }
 

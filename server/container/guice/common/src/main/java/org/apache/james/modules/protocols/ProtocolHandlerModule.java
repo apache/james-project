@@ -28,7 +28,6 @@ public class ProtocolHandlerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new NettyServerModule());
         bind(ProtocolHandlerLoader.class).to(GuiceProtocolHandlerLoader.class);
     }
 

@@ -20,21 +20,21 @@ package org.apache.james.protocols.netty;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
 
 /**
- * {@link ChannelUpstreamHandler} which limit the concurrent connection. 
+ * {@link ChannelInboundHandlerAdapter} which limit the concurrent connection.
  * 
  * This handler must be used as singleton when adding it to the {@link ChannelPipeline} to work correctly
  *
  * TODO: Remove when its committed to NETTY. 
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
-public class ConnectionLimitUpstreamHandler extends SimpleChannelUpstreamHandler {
+@ChannelHandler.Sharable
+public class ConnectionLimitUpstreamHandler extends ChannelInboundHandlerAdapter {
 
     private final AtomicInteger connections = new AtomicInteger(0);
     private volatile int maxConnections = -1;
@@ -44,23 +44,23 @@ public class ConnectionLimitUpstreamHandler extends SimpleChannelUpstreamHandler
     }
 
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         if (maxConnections > 0) {
             int currentCount = connections.incrementAndGet();
             
             if (currentCount > maxConnections) {
-                ctx.getChannel().close();
+                ctx.close();
             }
         }
         
-        super.channelOpen(ctx, e);
+        super.channelActive(ctx);
     }
 
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (maxConnections > 0) {
             connections.decrementAndGet();
         }
-        super.channelClosed(ctx, e);
+        super.channelInactive(ctx);
     }
 }

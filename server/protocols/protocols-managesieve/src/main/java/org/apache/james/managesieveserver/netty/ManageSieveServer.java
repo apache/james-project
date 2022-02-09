@@ -19,7 +19,6 @@
 
 package org.apache.james.managesieveserver.netty;
 
-import static org.jboss.netty.channel.Channels.pipeline;
 
 import javax.net.ssl.SSLEngine;
 
@@ -32,18 +31,18 @@ import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.codec.string.StringDecoder;
-import org.jboss.netty.handler.codec.string.StringEncoder;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
-import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.CharsetUtil;
 
 public class ManageSieveServer extends AbstractConfigurableAsyncServer implements ManageSieveServerMBean {
 
@@ -78,22 +77,27 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
         return new ManageSieveChannelUpstreamHandler(manageSieveProcessor,
             getEncryption(),
             LOGGER);
     }
 
     @Override
-    protected ChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
 
-        return new ChannelPipelineFactory() {
+        return new AbstractChannelPipelineFactory(group, createFrameHandlerFactory()) {
+
+            @Override
+            protected ChannelInboundHandlerAdapter createHandler() {
+                return createCoreHandler();
+            }
 
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
 
             @Override
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = pipeline();
+            public void initChannel(Channel channel) throws Exception {
+                ChannelPipeline pipeline = channel.pipeline();
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
@@ -113,15 +117,9 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                ExecutionHandler ehandler = getExecutionHandler();
-                if (ehandler  != null) {
-                    pipeline.addLast(EXECUTION_HANDLER, ehandler);
-
-                }
                 pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
-                pipeline.addLast(CORE_HANDLER, createCoreHandler());
+                pipeline.addLast(CORE_HANDLER, createHandler());
                 pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
-                return pipeline;
             }
 
         };

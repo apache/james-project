@@ -28,11 +28,14 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.handler.codec.compression.ZlibDecoder;
-import org.jboss.netty.handler.codec.compression.ZlibEncoder;
-import org.jboss.netty.handler.codec.compression.ZlibWrapper;
-import org.jboss.netty.handler.ssl.SslHandler;
+
+import io.netty.channel.Channel;
+import io.netty.handler.codec.compression.JZlibDecoder;
+import io.netty.handler.codec.compression.JZlibEncoder;
+import io.netty.handler.codec.compression.ZlibDecoder;
+import io.netty.handler.codec.compression.ZlibEncoder;
+import io.netty.handler.codec.compression.ZlibWrapper;
+import io.netty.handler.ssl.SslHandler;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
@@ -142,13 +145,13 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         if (!supportStartTLS()) {
             return false;
         }
-        channel.setReadable(false);
+        channel.config().setAutoRead(false);
 
         SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
-        filter.getEngine().setUseClientMode(false);
-        channel.getPipeline().addFirst(SSL_HANDLER, filter);
+        filter.engine().setUseClientMode(false);
+        channel.pipeline().addFirst(SSL_HANDLER, filter);
 
-        channel.setReadable(true);
+        channel.config().setAutoRead(true);
 
         return true;
     }
@@ -169,39 +172,39 @@ public class NettyImapSession implements ImapSession, NettyConstants {
             return false;
         }
 
-        channel.setReadable(false);
-        ZlibDecoder decoder = new ZlibDecoder(ZlibWrapper.NONE);
-        ZlibEncoder encoder = new ZlibEncoder(ZlibWrapper.NONE, 5);
+        channel.config().setAutoRead(false);
+        ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
+        ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 
         // Check if we have the SslHandler in the pipeline already
         // if so we need to move the compress encoder and decoder
         // behind it in the chain
         // See JAMES-1186
-        if (channel.getPipeline().get(SSL_HANDLER) == null) {
-            channel.getPipeline().addFirst(ZLIB_DECODER, decoder);
-            channel.getPipeline().addFirst(ZLIB_ENCODER, encoder);
+        if (channel.pipeline().get(SSL_HANDLER) == null) {
+            channel.pipeline().addFirst(ZLIB_DECODER, decoder);
+            channel.pipeline().addFirst(ZLIB_ENCODER, encoder);
         } else {
-            channel.getPipeline().addAfter(SSL_HANDLER, ZLIB_DECODER, decoder);
-            channel.getPipeline().addAfter(SSL_HANDLER, ZLIB_ENCODER, encoder);
+            channel.pipeline().addAfter(SSL_HANDLER, ZLIB_DECODER, decoder);
+            channel.pipeline().addAfter(SSL_HANDLER, ZLIB_ENCODER, encoder);
         }
 
-        channel.setReadable(true);
+        channel.config().setAutoRead(true);
 
         return true;
     }
 
     @Override
     public void pushLineHandler(ImapLineHandler lineHandler) {
-        channel.setReadable(false);
-        channel.getPipeline().addBefore(REQUEST_DECODER, "lineHandler" + handlerCount++, new ImapLineHandlerAdapter(this, lineHandler));
-        channel.setReadable(true);
+        channel.config().setAutoRead(false);
+        channel.pipeline().addBefore(REQUEST_DECODER, "lineHandler" + handlerCount++, new ImapLineHandlerAdapter(this, lineHandler));
+        channel.config().setAutoRead(true);
     }
 
     @Override
     public void popLineHandler() {
-        channel.setReadable(false);
-        channel.getPipeline().remove("lineHandler" + --handlerCount);
-        channel.setReadable(true);
+        channel.config().setAutoRead(false);
+        channel.pipeline().remove("lineHandler" + --handlerCount);
+        channel.config().setAutoRead(true);
     }
 
     @Override
@@ -226,7 +229,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     @Override
     public boolean isTLSActive() {
-        return channel.getPipeline().get(SSL_HANDLER) != null;
+        return channel.pipeline().get(SSL_HANDLER) != null;
     }
 
     @Override
@@ -236,7 +239,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     @Override
     public boolean isCompressionActive() {
-        return channel.getPipeline().get(ZLIB_DECODER) != null;
+        return channel.pipeline().get(ZLIB_DECODER) != null;
     }
 
 }
