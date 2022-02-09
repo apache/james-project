@@ -22,15 +22,12 @@ package org.apache.james.imapserver.netty;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.MessageEvent;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 
 public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChannelHandler {
     public static final String PATTERN = ImapConstants.STARTTLS_COMMAND.getName().toLowerCase();
@@ -42,11 +39,11 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
     }
 
     @Override
-    public synchronized void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public synchronized void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (this.framingEnabled) {
-            super.messageReceived(ctx, e);
+            super.channelRead(ctx, msg);
         } else {
-            ctx.sendUpstream(e);
+            ctx.fireChannelRead(msg);
         }
     }
 
@@ -56,16 +53,17 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
 
     public synchronized void disableFraming(ChannelHandlerContext ctx) {
         this.framingEnabled = false;
-        if (this.cumulation != null && this.cumulation.readable()) {
-            final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());
-            this.cumulation = null;
-            Channels.fireMessageReceived(ctx, spareBytes);
+
+        if (internalBuffer().readableBytes() > 0) {
+            ByteBuf spareBytes = internalBuffer().retainedDuplicate();
+            internalBuffer().clear();
+            ctx.fireChannelRead(spareBytes);
         }
     }
 
     @Override
-    protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx, Channel channel) {
-        return (ImapSession) NettyConstants.attributes.get(ctx.getChannel());
+    protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx) {
+        return ctx.channel().attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).get();
     }
 
     @Override

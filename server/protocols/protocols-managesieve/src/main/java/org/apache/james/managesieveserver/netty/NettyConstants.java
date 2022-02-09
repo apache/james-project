@@ -16,35 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.lmtpserver.netty;
+package org.apache.james.managesieveserver.netty;
 
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.apache.james.managesieve.api.Session;
+
+import io.netty.util.AttributeKey;
 
 /**
- * LMTPServer which use old IO and not NIO. If you want to use NIO you should
- * use {@link LMTPServer}
+ * Just some constants which are used with the Netty implementation
  */
-public class OioLMTPServer extends LMTPServer {
-
-
-    public OioLMTPServer(LMTPMetricsImpl lmtpMetrics) {
-        super(lmtpMetrics);
-    }
-
-    @Override
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());
-    }
-
-    /**
-     * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     * 
-     */
-    @Override
-    protected ExecutionHandler createExecutionHandler() {
-        return null;
-    }
+public interface NettyConstants {
+    AttributeKey<ChannelManageSieveResponseWriter> RESPONSE_WRITER_ATTRIBUTE_KEY = AttributeKey.valueOf("ResponseWriter");
+    AttributeKey<Session> SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("Session");
 
 }

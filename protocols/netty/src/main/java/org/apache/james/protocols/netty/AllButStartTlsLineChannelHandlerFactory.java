@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
 
 public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
     private final String pattern;

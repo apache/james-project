@@ -47,19 +47,19 @@ import org.apache.james.protocols.api.ClientAuth;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.group.ChannelGroup;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.util.PemUtils;
+
 
 /**
  * Abstract base class for Servers for all James Servers
@@ -93,7 +93,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private String x509Algorithm = defaultX509algorithm;
 
     private FileSystem fileSystem;
-    private HashedWheelTimer timer;
 
     private boolean enabled;
 
@@ -127,7 +126,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
-    private ExecutionHandler executionHandler = null;
     private ChannelHandlerFactory frameHandlerFactory;
 
     private int maxExecutorThreads;
@@ -139,11 +137,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
-    }
-
-    @Inject
-    public void setHashWheelTimer(HashedWheelTimer timer) {
-        this.timer = timer;
     }
 
     protected void registerMBean() {
@@ -291,7 +284,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             buildSSLContext();
             preInit();
-            executionHandler = createExecutionHandler();
             frameHandlerFactory = createFrameHandlerFactory();
             bind();
             port = retrieveFirstBindedPort();
@@ -327,10 +319,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         if (isEnabled()) {
             unbind();
             postDestroy();
-
-            if (executionHandler != null) {
-                executionHandler.releaseExternalResources();
-            }
 
             unregisterMBean();
         }
@@ -572,42 +560,24 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         super.configureBootstrap(bootstrap);
         
         // enable tcp keep-alives
-        bootstrap.setOption("child.keepAlive", true);
+        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
     }
     
-    /**
-     * Create a new {@link ExecutionHandler} which is used to execute IO-Bound handlers
-     * 
-     * @return ehandler
-     */
-    protected ExecutionHandler createExecutionHandler() {
-        return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), getDefaultJMXName() + "-executor"));
-    }
-
     protected abstract ChannelHandlerFactory createFrameHandlerFactory();
 
-    /**
-     * Return the {@link ExecutionHandler} or null if non should be used. Be sure you call {@link #createExecutionHandler()} before
-     * 
-     * @return ehandler
-     */
-    protected ExecutionHandler getExecutionHandler() {
-        return executionHandler;
-    }
-    
     protected ChannelHandlerFactory getFrameHandlerFactory() {
         return frameHandlerFactory;
     }
 
-    protected abstract ChannelUpstreamHandler createCoreHandler();
+    protected abstract ChannelInboundHandlerAdapter createCoreHandler();
     
     @Override
-    protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
         return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group,
-            getEncryption(), getExecutionHandler(), getFrameHandlerFactory(), timer) {
+            getEncryption(), getFrameHandlerFactory()) {
 
             @Override
-            protected ChannelUpstreamHandler createHandler() {
+            protected ChannelInboundHandlerAdapter createHandler() {
                 return AbstractConfigurableAsyncServer.this.createCoreHandler();
 
             }

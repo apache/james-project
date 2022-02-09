@@ -18,7 +18,12 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import org.jboss.netty.channel.ChannelLocal;
+import java.util.Map;
+
+import org.apache.james.imap.api.process.ImapSession;
+
+import io.netty.util.AttributeKey;
+
 
 /**
  * Just some constants which are used with the Netty implementation
@@ -39,5 +44,8 @@ public interface NettyConstants {
     String EXECUTION_HANDLER = "executionHandler";
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
-    ChannelLocal<Object> attributes = new ChannelLocal<>();
+    AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
+    AttributeKey<Object> CONTEXT_ATTACHMENT_ATTRIBUTE_KEY = AttributeKey.valueOf("ContextAttachment");
+    AttributeKey<Map<String, Object>> FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY  = AttributeKey.valueOf("FrameDecoderMap");
+
 }

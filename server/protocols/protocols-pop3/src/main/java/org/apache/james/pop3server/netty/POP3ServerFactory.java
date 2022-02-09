@@ -11,13 +11,11 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.jboss.netty.util.HashedWheelTimer;
 
 public class POP3ServerFactory extends AbstractServerFactory {
 
     private ProtocolHandlerLoader loader;
     private FileSystem fileSystem;
-    private HashedWheelTimer hashedWheelTimer;
 
     @Inject
     public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
@@ -27,11 +25,6 @@ public class POP3ServerFactory extends AbstractServerFactory {
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
-    }
-
-    @Inject
-    public void setHashedWheelTimer(HashedWheelTimer hashedWheelTimer) {
-        this.hashedWheelTimer = hashedWheelTimer;
     }
 
     protected POP3Server createServer() {
@@ -48,7 +41,6 @@ public class POP3ServerFactory extends AbstractServerFactory {
             POP3Server server = createServer();
             server.setProtocolHandlerLoader(loader);
             server.setFileSystem(fileSystem);
-            server.setHashWheelTimer(hashedWheelTimer);
             server.configure(serverConfig);
             servers.add(server);
         }

@@ -30,12 +30,15 @@ import javax.net.ssl.SSLEngine;
 import org.apache.james.protocols.api.AbstractProtocolTransport;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.DefaultFileRegion;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedStream;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedStream;
+
 
 /**
  * A Netty implementation of a ProtocolTransport
@@ -53,17 +56,17 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress) channel.getRemoteAddress();
+        return (InetSocketAddress) channel.remoteAddress();
     }
 
     @Override
     public String getId() {
-        return Integer.toString(channel.getId());
+        return channel.id().toString();
     }
 
     @Override
     public boolean isTLSStarted() {
-        return channel.getPipeline().get(SslHandler.class) != null;
+        return channel.pipeline().get(SslHandler.class) != null;
     }
 
     @Override
@@ -75,7 +78,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     @Override
     public void popLineHandler() {
         if (lineHandlerCount > 0) {
-            channel.getPipeline().remove("lineHandler" + lineHandlerCount);
+            channel.pipeline().remove("lineHandler" + lineHandlerCount);
             lineHandlerCount--;
         }
     }
@@ -90,8 +93,8 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
      */
     private void prepareStartTLS() {
         SslHandler filter = new SslHandler(engine, true);
-        filter.getEngine().setUseClientMode(false);
-        channel.getPipeline().addFirst(HandlerConstants.SSL_HANDLER, filter);
+        filter.engine().setUseClientMode(false);
+        channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, filter);
     }
 
     @Override
@@ -99,13 +102,13 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         if (startTLS) {
             prepareStartTLS();
         }
-        channel.write(ChannelBuffers.wrappedBuffer(bytes));
-        
+
+        ChannelFuture future = channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
     }
 
     @Override
     protected void close() {
-        channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
 
@@ -118,31 +121,31 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
             if (in instanceof FileInputStream) {
                 FileChannel fChannel = ((FileInputStream) in).getChannel();
                 try {
-                    channel.write(new DefaultFileRegion(fChannel, 0, fChannel.size(), true));
+                    channel.writeAndFlush(new DefaultFileRegion(fChannel, 0, fChannel.size()));
 
                 } catch (IOException e) {
                     // We handle this later
-                    channel.write(new ChunkedStream(new ExceptionInputStream(e)));
+                    channel.writeAndFlush(new ChunkedStream(new ExceptionInputStream(e)));
                 }
                 return;
             }
         }
-        channel.write(new ChunkedStream(in));
+        channel.writeAndFlush(new ChunkedStream(in));
     }
 
     @Override
     public void setReadable(boolean readable) {
-        channel.setReadable(readable);
+        channel.config().setAutoRead(readable);
     }
 
     @Override
     public boolean isReadable() {
-        return channel.isReadable();
+        return channel.config().isAutoRead();
     }
 
     @Override
     public InetSocketAddress getLocalAddress() {
-        return (InetSocketAddress) channel.getLocalAddress();
+        return (InetSocketAddress) channel.localAddress();
     }
 
     @Override
@@ -153,7 +156,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         // it is executed with the same ExecutorHandler as the coreHandler (if one exist)
         // 
         // See JAMES-1277
-        channel.getPipeline().addBefore(HandlerConstants.CORE_HANDLER, "lineHandler" + lineHandlerCount, new LineHandlerUpstreamHandler(session, overrideCommandHandler));
+        channel.pipeline().addBefore(HandlerConstants.CORE_HANDLER, "lineHandler" + lineHandlerCount, new LineHandlerUpstreamHandler(session, overrideCommandHandler));
     }
     
    

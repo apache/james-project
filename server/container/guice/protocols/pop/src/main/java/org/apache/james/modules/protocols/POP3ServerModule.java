@@ -21,7 +21,6 @@ package org.apache.james.modules.protocols;
 
 import org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
-import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
@@ -37,7 +36,6 @@ public class POP3ServerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(POP3ServerFactory.class).in(Scopes.SINGLETON);
-        bind(OioPOP3ServerFactory.class).in(Scopes.SINGLETON);
         bind(DefaultMailboxAdapterFactory.class).in(Scopes.SINGLETON);
 
         bind(MailboxAdapterFactory.class).to(DefaultMailboxAdapterFactory.class);
