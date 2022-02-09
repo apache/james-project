@@ -77,7 +77,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,7 +100,6 @@ class SMTPSaslTest {
     public static final String INVALID_TOKEN = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.INVALID_TOKEN);
 
 
-    protected HashedWheelTimer hashedWheelTimer;
     protected MemoryDomainList domainList;
     protected MemoryUsersRepository usersRepository;
     protected SMTPServerTest.AlterableDNSServer dnsServer;
@@ -127,7 +125,6 @@ class SMTPSaslTest {
         createMailRepositoryStore();
 
         setUpFakeLoader();
-        hashedWheelTimer = new HashedWheelTimer();
         setUpSMTPServer();
 
         authServer = ClientAndServer.startClientAndServer(0);
@@ -175,7 +172,6 @@ class SMTPSaslTest {
         smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
-        smtpServer.setHashWheelTimer(hashedWheelTimer);
         smtpServer.setProtocolHandlerLoader(chain);
     }
 
@@ -215,7 +211,6 @@ class SMTPSaslTest {
     @AfterEach
     void tearDown() {
         smtpServer.destroy();
-        hashedWheelTimer.stop();
         authServer.stop();
     }
 

@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -31,21 +32,21 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
+
 /**
- * {@link FrameDecoder} which will decode via and {@link ImapDecoder} instance
+ * {@link ByteToMessageDecoder} which will decode via and {@link ImapDecoder} instance
  */
-public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConstants {
+public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants {
 
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
@@ -63,27 +64,27 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
     }
 
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ctx.setAttachment(new HashMap<String, Object>());
-        super.channelOpen(ctx, e);
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new HashMap<>());
+        super.channelActive(ctx);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        buffer.markReaderIndex();
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        in.markReaderIndex();
         boolean retry = false;
 
         ImapRequestLineReader reader;
         // check if we failed before and if we already know how much data we
         // need to sucess next run
-        Map<String, Object> attachment = (Map<String, Object>) ctx.getAttachment();
+        Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
         int size = -1;
         if (attachment.containsKey(NEEDED_DATA)) {
             retry = true;
             size = (Integer) attachment.get(NEEDED_DATA);
             // now see if the buffer hold enough data to process.
-            if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE && size > buffer.readableBytes()) {
+            if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE && size > in.readableBytes()) {
 
                 // check if we have a inMemorySize limit and if so if the
                 // expected size will fit into it
@@ -94,31 +95,31 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                     final File f;
                     int written;
 
-                    OutputStream out;
+                    OutputStream outputStream;
                     // check if we have created a temporary file already or if
                     // we need to create a new one
                     if (attachment.containsKey(STORED_DATA)) {
                         f = (File) attachment.get(STORED_DATA);
                         written = (Integer) attachment.get(WRITTEN_DATA);
-                        out = (OutputStream) attachment.get(OUTPUT_STREAM);
+                        outputStream = (OutputStream) attachment.get(OUTPUT_STREAM);
                     } else {
                         f = File.createTempFile("imap-literal", ".tmp");
                         attachment.put(STORED_DATA, f);
                         written = 0;
                         attachment.put(WRITTEN_DATA, written);
-                        out = new FileOutputStream(f, true);
-                        attachment.put(OUTPUT_STREAM, out);
+                        outputStream = new FileOutputStream(f, true);
+                        attachment.put(OUTPUT_STREAM, outputStream);
 
                     }
 
 
                     try {
-                        int amount = Math.min(buffer.readableBytes(), size - written);
-                        buffer.readBytes(out, amount);
+                        int amount = Math.min(in.readableBytes(), size - written);
+                        in.readBytes(outputStream, amount);
                         written += amount;
                     } catch (Exception e) {
                         try {
-                            out.close();
+                            outputStream.close();
                         } catch (IOException ignored) {
                             //ignore exception during close
                         }
@@ -127,31 +128,31 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                     // Check if all needed data was streamed to the file.
                     if (written == size) {
                         try {
-                            out.close();
+                            outputStream.close();
                         } catch (IOException ignored) {
                             //ignore exception during close
                         }
 
-                        reader = new NettyStreamImapRequestLineReader(channel, f, retry);
+                        reader = new NettyStreamImapRequestLineReader(ctx.channel(), f, retry);
                     } else {
                         attachment.put(WRITTEN_DATA, written);
-                        return null;
+                        return;
                     }
 
                 } else {
-                    buffer.resetReaderIndex();
-                    return null;
+                    in.resetReaderIndex();
+                    return;
                 }
 
             } else {
 
-                reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit);
+                reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, literalSizeLimit);
             }
         } else {
-            reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit);
+            reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, literalSizeLimit);
         }
 
-        ImapSession session = (ImapSession) attributes.get(channel);
+        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
 
         // check if the session was removed before to prevent a harmless NPE. See JAMES-1312
         // Also check if the session was logged out if so there is not need to try to decode it. See JAMES-1341
@@ -167,10 +168,10 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                     reader.consumeLine();
                 }
                 
-                ((SwitchableLineBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
+                ((SwitchableLineBasedFrameDecoder) ctx.channel().pipeline().get(FRAMER)).enableFraming();
                 
                 attachment.clear();
-                return message;
+                out.add(message);
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data
                 // yet
@@ -178,42 +179,21 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 // store the needed data size for later usage
                 attachment.put(NEEDED_DATA, neededData);
                 
-                final ChannelPipeline pipeline = channel.getPipeline();
-                final ChannelHandlerContext framerContext = pipeline.getContext(FRAMER);
+                final ChannelPipeline pipeline = ctx.channel().pipeline();
+                final ChannelHandlerContext framerContext = pipeline.context(FRAMER);
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
                 final SwitchableLineBasedFrameDecoder framer = (SwitchableLineBasedFrameDecoder) pipeline.get(FRAMER);
+
+                in.resetReaderIndex();
                 framer.disableFraming(framerContext);
-                
-                buffer.resetReaderIndex();
-                return null;
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
             // We now try to disconnect the client if still connected
-            if (channel.isConnected()) {
-                channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-            }
-            return null;
-        }
-    }
-
-    @Override
-    protected synchronized ChannelBuffer newCumulationBuffer(ChannelHandlerContext ctx, int minimumCapacity) {
-        Map<String, Object> attachment = (Map<String, Object>) ctx.getAttachment();
-        Object sizeAsObject = attachment.get(NEEDED_DATA);
-        if (sizeAsObject != null) {
-            @SuppressWarnings("unchecked")
-            int size = (Integer) sizeAsObject;
-
-            if (size > 0) {
-                int sanitizedInMemorySizeLimit = Math.max(0, inMemorySizeLimit);
-                int sanitizedSize = Math.min(sanitizedInMemorySizeLimit, size);
-
-                return ChannelBuffers.dynamicBuffer(sanitizedSize, ctx.getChannel().getConfig().getBufferFactory());
+            if (ctx.channel().isActive()) {
+                ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
             }
         }
-        return super.newCumulationBuffer(ctx, minimumCapacity);
     }
-
 }

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
 
 /**
  * Provide the keys under which the {@link ChannelHandler}'s are stored in the
@@ -36,8 +36,6 @@ public interface HandlerConstants {
     String CONNECTION_PER_IP_LIMIT_HANDLER = "connectionPerIpLimit";
 
     String FRAMER = "framer";
-
-    String EXECUTION_HANDLER = "executionHandler";
 
     String TIMEOUT_HANDLER = "timeoutHandler";
 

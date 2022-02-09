@@ -20,18 +20,20 @@ package org.apache.james.imapserver.netty;
 
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
- * {@link SimpleChannelUpstreamHandler} implementation which will delegate the
+ * {@link ChannelInboundHandlerAdapter} implementation which will delegate the
  * data received on
- * {@link #messageReceived(ChannelHandlerContext, MessageEvent)} to a
+ * {@link #channelRead(ChannelHandlerContext, Object)} to a
  * {@link ImapLineHandler#onLine(ImapSession, byte[])}
  */
-public class ImapLineHandlerAdapter extends SimpleChannelUpstreamHandler {
+@ChannelHandler.Sharable
+public class ImapLineHandlerAdapter extends ChannelInboundHandlerAdapter {
 
     private final ImapLineHandler lineHandler;
     private final ImapSession session;
@@ -42,8 +44,8 @@ public class ImapLineHandlerAdapter extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ByteBuf buf = (ByteBuf) msg;
         byte[] data;
         if (buf.hasArray()) {
             data = buf.array();

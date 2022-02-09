@@ -52,9 +52,7 @@ import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sun.mail.smtp.SMTPTransport;
@@ -66,12 +64,6 @@ public class NettyStartTlsSMTPServerTest {
 
     private SMTPSClient smtpsClient = null;
     private ProtocolServer server = null;
-    private HashedWheelTimer hashedWheelTimer;
-
-    @BeforeEach
-    void setup() {
-        hashedWheelTimer = new HashedWheelTimer();
-    }
 
     @AfterEach
     void tearDown() throws Exception {
@@ -81,11 +73,10 @@ public class NettyStartTlsSMTPServerTest {
         if (server != null) {
             server.unbind();
         }
-        hashedWheelTimer.stop();
     }
 
     private ProtocolServer createServer(Protocol protocol, Encryption enc) {
-        NettyServer server = new NettyServer.Factory(hashedWheelTimer)
+        NettyServer server = new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(enc)
                 .frameHandlerFactory(new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH))

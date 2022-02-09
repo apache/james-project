@@ -21,22 +21,24 @@ package org.apache.james.protocols.netty;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.protocols.api.ProtocolServer;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.util.ExternalResourceReleasable;
 
 import com.google.common.collect.ImmutableList;
+
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
+
+
 
 /**
  * Abstract base class for Servers which want to use async io
@@ -48,11 +50,12 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     private volatile int timeout = 120;
 
-    private ServerBootstrap bootstrap;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     private volatile boolean started;
     
-    private final ChannelGroup channels = new DefaultChannelGroup();
+    private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
     
@@ -85,18 +88,27 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             throw new RuntimeException("Please specify at least on socketaddress to which the server should get bound!");
         }
 
-        bootstrap = new ServerBootstrap(createSocketChannelFactory());
-        ChannelPipelineFactory factory = createPipelineFactory(channels);
-        
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.channel(NioServerSocketChannel.class);
+
+        bossGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup(ioWorker);
+
+        bootstrap.group(bossGroup, workerGroup);
+
+        ChannelInitializer<SocketChannel> factory = createPipelineFactory(channels);
+
         // Configure the pipeline factory.
-        bootstrap.setPipelineFactory(factory);
-        configureBootstrap(bootstrap);
+        bootstrap.childHandler(factory);
 
         for (InetSocketAddress address : addresses) {
-            channels.add(bootstrap.bind(address));
+            Channel channel = bootstrap.bind(address).sync().channel();
+            channels.add(channel);
         }
-        started = true;
 
+        configureBootstrap(bootstrap);
+
+        started = true;
     }
 
     /**
@@ -104,27 +116,25 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
      */
     protected void configureBootstrap(ServerBootstrap bootstrap) {
         // Bind and start to accept incoming connections.
-        bootstrap.setOption("backlog", backlog);
-        bootstrap.setOption("reuseAddress", true);
-        bootstrap.setOption("child.tcpNoDelay", true);
+        bootstrap.option(ChannelOption.SO_BACKLOG, backlog);
+        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+        bootstrap.option(ChannelOption.TCP_NODELAY, true);
     }
     
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new NioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor(), ioWorker);
-    }
-    
-
     @Override
     public synchronized void unbind() {
         if (started == false) {
             return;
         }
-        ChannelPipelineFactory factory = bootstrap.getPipelineFactory();
-        if (factory instanceof ExternalResourceReleasable) {
-            ((ExternalResourceReleasable) factory).releaseExternalResources();
+
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully();
         }
-        channels.close().awaitUninterruptibly();
-        bootstrap.releaseExternalResources();
+
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully();
+        }
+
         started = false;
     }
 
@@ -132,7 +142,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     public synchronized List<InetSocketAddress> getListenAddresses() {
         ImmutableList.Builder<InetSocketAddress> builder = ImmutableList.builder();
         for (Channel channel : ImmutableList.copyOf(channels.iterator())) {
-            builder.add((InetSocketAddress) channel.getLocalAddress());
+            builder.add((InetSocketAddress) channel.localAddress());
         }
         return builder.build();
     }
@@ -141,7 +151,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
      */
-    protected abstract ChannelPipelineFactory createPipelineFactory(ChannelGroup group);
+    protected abstract ChannelInitializer<SocketChannel> createPipelineFactory(ChannelGroup group);
 
     /**
      * Set the read/write timeout for the server. This will throw a {@link IllegalStateException} if the
@@ -176,24 +186,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     public int getTimeout() {
         return timeout;
     }
-    
-    /**
-     * Create a new {@link Executor} used for dispatch messages to the workers. One Thread will be used per port which is bound.
-     * This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     */
-    protected Executor createBossExecutor() {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return Executors.newCachedThreadPool(threadFactory);
-    }
-
-    /**
-     * Create a new {@link Executor} used for workers. This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     */
-    protected Executor createWorkerExecutor() {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return Executors.newCachedThreadPool(threadFactory);
-    }
-    
 
     @Override
     public boolean isBound() {

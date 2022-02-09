@@ -18,40 +18,44 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-
 import javax.net.ssl.SSLEngine;
 
 import org.apache.james.protocols.api.Encryption;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.util.HashedWheelTimer;
+
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.ssl.SslHandler;
+
 
 /**
  * Abstract base class for {@link ChannelPipeline} implementations which use TLS
  */
-public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
+@ChannelHandler.Sharable
+public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketChannel> extends AbstractChannelPipelineFactory<C> {
 
     private Encryption secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-                                                  int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler,
-                                                  ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
+                                                  int maxConnections, int maxConnectsPerIp, ChannelGroup group,
+                                                  ChannelHandlerFactory frameHandlerFactory) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
             int maxConnections, int maxConnectsPerIp, ChannelGroup group, Encryption secure,
-            ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
-        this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
+            ChannelHandlerFactory frameHandlerFactory) {
+        this(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory);
 
         this.secure = secure;
     }
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline pipeline =  super.getPipeline();
+    public void initChannel(C channel) throws Exception {
+        super.initChannel(channel);
+
+        ChannelPipeline pipeline = channel.pipeline();
 
         if (isSSLSocket()) {
             // We need to set clientMode to false.
@@ -60,7 +64,6 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
             engine.setUseClientMode(false);
             pipeline.addFirst(HandlerConstants.SSL_HANDLER, new SslHandler(engine));
         }
-        return pipeline;
     }
 
     /**

@@ -29,10 +29,11 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
-import org.jboss.netty.channel.Channel;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
+
+import io.netty.channel.Channel;
 
 public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader implements Closeable {
     private class FileLiteral implements Literal, Closeable {
