@@ -21,32 +21,22 @@ package org.apache.james.protocols.lib.netty;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.HandlerConstants;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.util.HashedWheelTimer;
+
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.group.ChannelGroup;
 
 /**
  * Abstract base class which should get used if you MAY need an {@link ExecutionHandler}
  * 
  *
  */
+@ChannelHandler.Sharable
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                                        ChannelGroup group, Encryption encryption,
-                                                       ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory,
-                                                       HashedWheelTimer hashedWheelTimer) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, eHandler, frameHandlerFactory, hashedWheelTimer);
-    }
-    
-    @Override
-    public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline pipeLine = super.getPipeline();
-        pipeLine.addBefore(HandlerConstants.CORE_HANDLER, "countHandler", getConnectionCountHandler());
-        
-        return pipeLine;
+                                                       ChannelHandlerFactory frameHandlerFactory) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, frameHandlerFactory);
     }
     
     /**

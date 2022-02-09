@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 
 public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFactory {
     private static final Boolean FAIL_FAST = true;

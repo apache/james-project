@@ -29,7 +29,8 @@ import org.apache.james.protocols.netty.BasicChannelUpstreamHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.protocols.pop3.POP3Protocol;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
+
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  * NIO POP3 Server which use Netty
@@ -85,7 +86,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
         return coreHandler; 
     }
 

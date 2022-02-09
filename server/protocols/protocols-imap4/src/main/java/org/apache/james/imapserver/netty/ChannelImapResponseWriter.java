@@ -26,15 +26,15 @@ import java.nio.channels.FileChannel;
 
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.Literal;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.DefaultFileRegion;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.compression.ZlibEncoder;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedNioFile;
-import org.jboss.netty.handler.stream.ChunkedStream;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.handler.codec.compression.ZlibEncoder;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedNioFile;
+import io.netty.handler.stream.ChunkedStream;
 
 /**
  * {@link ImapResponseWriter} implementation which writes the data to a
@@ -56,28 +56,28 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
 
     @Override
     public void write(byte[] buffer) throws IOException {
-        if (channel.isConnected()) {
-            channel.write(ChannelBuffers.wrappedBuffer(buffer));
+        if (channel.isActive()) {
+            channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
         }
     }
 
     @Override
     public void write(Literal literal) throws IOException {
-        if (channel.isConnected()) {
+        if (channel.isActive()) {
             InputStream in = literal.getInputStream();
-            if (in instanceof FileInputStream && channel.getFactory() instanceof NioServerSocketChannelFactory) {
+            if (in instanceof FileInputStream) {
                 FileChannel fc = ((FileInputStream) in).getChannel();
                 // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
                 //
                 // See JAMES-1305 and JAMES-1306
-                ChannelPipeline cp = channel.getPipeline();
+                ChannelPipeline cp = channel.pipeline();
                 if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
-                    channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
+                    channel.writeAndFlush(new DefaultFileRegion(fc, fc.position(), literal.size()));
                 } else {
-                    channel.write(new ChunkedNioFile(fc, 8192));
+                    channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
                 }
             } else {
-                channel.write(new ChunkedStream(literal.getInputStream()));
+                channel.writeAndFlush(new ChunkedStream(literal.getInputStream()));
             }
         }
     }

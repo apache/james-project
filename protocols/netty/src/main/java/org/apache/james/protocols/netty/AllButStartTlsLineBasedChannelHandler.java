@@ -23,19 +23,24 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.util.AttributeKey;
+
 
 public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder {
     private static final Boolean FAIL_FAST = true;
     private final ChannelPipeline pipeline;
     private final String pattern;
+
+    private static final AttributeKey<CommandDetectionSession> sessionAttributeKey =
+            AttributeKey.valueOf("session");
 
     public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
         super(maxFrameLength, stripDelimiter, !FAIL_FAST);
@@ -44,8 +49,8 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     }
 
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        CommandDetectionSession session = retrieveSession(ctx, channel);
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        CommandDetectionSession session = retrieveSession(ctx);
 
         if (session == null || session.needsCommandInjectionDetection()) {
             String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
@@ -53,14 +58,14 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
                 throw new CommandInjectionDetectedException();
             }
         }
-        return super.decode(ctx, channel, buffer);
+        return super.decode(ctx, buffer);
     }
 
-    protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx, Channel channel) {
-        return (CommandDetectionSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
+    protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx) {
+        return pipeline.context(HandlerConstants.CORE_HANDLER).channel().attr(sessionAttributeKey).get();
     }
 
-    private String readAll(ChannelBuffer buffer) {
+    private String readAll(ByteBuf buffer) {
         return buffer.toString(StandardCharsets.US_ASCII);
     }
 

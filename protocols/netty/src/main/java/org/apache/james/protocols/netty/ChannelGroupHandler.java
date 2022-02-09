@@ -19,31 +19,22 @@
 
 package org.apache.james.protocols.netty;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.channel.group.ChannelGroup;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.group.ChannelGroup;
 
 /**
  * Add channels to the channel group after the channel was opened.
  * 
  * This handler is thread-safe and thus can be shared across pipelines
  */
-public final class ChannelGroupHandler extends SimpleChannelUpstreamHandler {
+@ChannelHandler.Sharable
+public final class ChannelGroupHandler extends ChannelInboundHandlerAdapter {
     private final ChannelGroup channels;
     
     public ChannelGroupHandler(ChannelGroup channels) {
         this.channels = channels;
     }
    
-    @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        // Add all open channels to the global group so that they are
-        // closed on shutdown.
-        channels.add(e.getChannel());
-        
-        // call the next handler in the chain
-        super.channelOpen(ctx, e);
-    }
 
 }

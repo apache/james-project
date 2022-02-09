@@ -32,7 +32,6 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.jboss.netty.util.HashedWheelTimer;
 
 public class IMAPServerFactory extends AbstractServerFactory {
 
@@ -41,17 +40,15 @@ public class IMAPServerFactory extends AbstractServerFactory {
     protected final ImapEncoder encoder;
     protected final ImapProcessor processor;
     protected final ImapMetrics imapMetrics;
-    private final HashedWheelTimer hashedWheelTimer;
 
     @Inject
     public IMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor,
-                             MetricFactory metricFactory, HashedWheelTimer hashedWheelTimer) {
+                             MetricFactory metricFactory) {
         this.fileSystem = fileSystem;
         this.decoder = decoder;
         this.encoder = encoder;
         this.processor = processor;
         this.imapMetrics = new ImapMetrics(metricFactory);
-        this.hashedWheelTimer = hashedWheelTimer;
     }
 
     protected IMAPServer createServer() {
@@ -67,7 +64,6 @@ public class IMAPServerFactory extends AbstractServerFactory {
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             IMAPServer server = createServer();
             server.setFileSystem(fileSystem);
-            server.setHashWheelTimer(hashedWheelTimer);
             server.configure(serverConfig);
             servers.add(server);
         }

@@ -549,7 +549,7 @@ class MockSMTPServerTest {
         assertThatThrownBy(() -> new SMTPMessageSender(DOMAIN)
                 .connect("localhost", port))
             .isInstanceOf(ConnectException.class)
-            .hasMessageContaining("(Connection refused)");
+            .hasMessageContaining("Connection refused");
     }
 
     @Test

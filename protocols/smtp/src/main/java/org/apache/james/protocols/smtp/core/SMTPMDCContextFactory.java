@@ -28,7 +28,8 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.util.MDCBuilder;
-import org.jboss.netty.channel.ChannelHandlerContext;
+
+import io.netty.channel.ChannelHandlerContext;
 
 public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 

@@ -119,6 +119,10 @@
             <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jzlib</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <scope>test</scope>
@@ -128,8 +132,13 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>sslcontext-kickstart-for-pem</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
+            <artifactId>netty-handler</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

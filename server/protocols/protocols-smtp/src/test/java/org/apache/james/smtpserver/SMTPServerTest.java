@@ -89,7 +89,6 @@ import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -189,7 +188,6 @@ public class SMTPServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
-    protected HashedWheelTimer hashedWheelTimer;
     protected MemoryDomainList domainList;
     protected MemoryUsersRepository usersRepository;
     protected AlterableDNSServer dnsServer;
@@ -228,7 +226,6 @@ public class SMTPServerTest {
         // slf4j can't set programmatically any log level. It's just a facade
         // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
         smtpConfiguration = new SMTPTestConfiguration();
-        hashedWheelTimer = new HashedWheelTimer();
         setUpSMTPServer();
     }
 
@@ -261,7 +258,6 @@ public class SMTPServerTest {
         smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
-        smtpServer.setHashWheelTimer(hashedWheelTimer);
         smtpServer.setProtocolHandlerLoader(chain);
     }
 
@@ -373,7 +369,6 @@ public class SMTPServerTest {
         if (smtpServer.isStarted()) {
             smtpServer.destroy();
         }
-        hashedWheelTimer.stop();
     }
 
     public void verifyLastMail(String sender, String recipient, MimeMessage msg) throws Exception {

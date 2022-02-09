@@ -26,7 +26,6 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
-import org.apache.james.imapserver.netty.OioIMAPServerFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -49,7 +48,6 @@ public class IMAPServerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(IMAPServerFactory.class).in(Scopes.SINGLETON);
-        bind(OioIMAPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
     }

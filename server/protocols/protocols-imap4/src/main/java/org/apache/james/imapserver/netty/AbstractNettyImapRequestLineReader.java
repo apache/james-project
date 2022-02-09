@@ -19,13 +19,14 @@
 package org.apache.james.imapserver.netty;
 
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 
 public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader {
     private final Channel channel;
-    private final ChannelBuffer cRequest = ChannelBuffers.wrappedBuffer("+ Ok\r\n".getBytes());
+    private final ByteBuf cRequest = Unpooled.wrappedBuffer("+ Ok\r\n".getBytes());
     private final boolean retry;
 
     public AbstractNettyImapRequestLineReader(Channel channel, boolean retry) {
@@ -40,7 +41,7 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
         // request..
 
         if (!retry) {
-            channel.write(cRequest);
+            channel.writeAndFlush(cRequest);
         }
     }
 
