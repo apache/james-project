@@ -209,7 +209,7 @@ public class GlobalRateLimitIntegrationTest {
         assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT1, PASSWORD)
             .select(TestIMAPClient.INBOX)
-            .awaitMessage(awaitAtMostOneMinute)
+            .awaitMessageCount(awaitAtMostOneMinute, 2)
             .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(2);
     }
 
@@ -272,7 +272,7 @@ public class GlobalRateLimitIntegrationTest {
         assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT1, PASSWORD)
             .select(TestIMAPClient.INBOX)
-            .awaitMessage(awaitAtMostOneMinute)
+            .awaitMessageCount(awaitAtMostOneMinute, 2)
             .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(2);
     }
 
@@ -335,7 +335,7 @@ public class GlobalRateLimitIntegrationTest {
         assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT1, PASSWORD)
             .select(TestIMAPClient.INBOX)
-            .awaitMessage(awaitAtMostOneMinute)
+            .awaitMessageCount(awaitAtMostOneMinute, 2)
             .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(2);
 
         assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
