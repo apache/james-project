@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+
+  james:
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./keystore:/root/conf/keystore
+    ports:
+      - "465:465"
+      - "993:993"
+      - "8000:8000"
+  autoconf:
+    image: nginx
+    container_name: autoconf
+    volumes:
+     - ./content:/usr/share/nginx/html
+    ports:
+     - "80:80"

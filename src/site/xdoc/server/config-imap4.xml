@@ -105,6 +105,10 @@
         <p>We do supply an <a href="https://github.com/apache/james-project/tree/master/examples/oidc">example</a> of such a setup. It uses the
             <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider, but usage of similar technologies is definitely doable.</p>
     </subsection>
+
+    <subsection name="Mail user agents auto-configuration">
+        <p>Check this example on <a href="https://github.com/apache/james-project/tree/master/examples/imap-autoconf">Mail user agents auto-configuration</a>.</p>
+    </subsection>
 </section>
 
 </body>

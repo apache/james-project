@@ -142,3 +142,17 @@ The list of tested JMAP clients are:
  RFC-8621 is planned.
  - Experiments had been run on top of [LTT.RS](https://github.com/iNPUTmice/lttrs-android). Version in the Accept
  headers needs to be explicitly set to `rfc-8621`. [Read more](https://github.com/linagora/james-project/pull/4089).
+
+== JMAP auto-configuration
+
+link:https://datatracker.ietf.org/doc/html/rfc8620[RFC-8620] defining JMAP core RFC defines precisely service location.
+
+James already redirects `http://jmap.domain.tld/.well-known/jmap` to the JMAP session.
+
+You can further help your clients by publishing extra SRV records.
+
+Eg:
+
+----
+_jmap._tcp.domain.tld. 3600        IN    SRV    0 1 443 jmap.domain.tld.
+----

@@ -71,3 +71,7 @@ This example uses:
  - [Thunderbird](https://www.thunderbird.net/en-US/) as a Mail User Agent. (version 91.4.1)
  
 Of course alternative technologies can be used.
+
+## Auto-configuration of Mail User Agents
+
+[This example](imap-autoconf) demonstrates how to deploy auto-configuration for various mail user agents.
