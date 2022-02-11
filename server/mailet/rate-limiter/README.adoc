@@ -149,3 +149,36 @@ For instance, to apply all the examples given above:
 ----
 
 When the rate is exceeded, a new mail with recipients that are exceeded recipients will be moved to processor *tooMuchMails* which send a bounce message notifies that the rate limit exceeded.
+
+=== Throttling
+
+It's possible to combine RateLimit mailet with `Requeue` mailet to allow for a (very basic) throttler and smoothing the traffic to the expected rate.
+The throttler work by re-enqueue mail.
+
+The supported configuration parameters for the `Requeue` mailet are:
+
+- *queue*: a Mail Queue name (optional, default to spool).
+- *processor*: a target processor (optional, defaults to root).
+- *delay*: a delay when en-queueing mail (optional, defaults to none). Supported units include: s (second), m (minute), h (hour), d (day).
+- *consume*: a processor to which current email should be redirected to (optional, defaults to ghost).
+
+For instance, throttle senders to 10 mails per hour, smoothing the traffic as required:
+
+----
+<processor name="root">
+    <mailet matcher="All" class="PerSenderRateLimit">
+        <duration>1h</duration>
+        <count>10</count>
+        <exceededProcessor>tooMuchEmails</exceededProcessor>
+    </mailet>
+    <!-- Go to transport for instance -->
+</processor>
+
+<processor name="tooMuchEmails">
+    <mailet matcher="All" class="Requeue">
+        <queue>spool</spool>
+        <processor>root</processor>
+        <delay>1h</delay>
+    </mailet>
+</processor>
+----
