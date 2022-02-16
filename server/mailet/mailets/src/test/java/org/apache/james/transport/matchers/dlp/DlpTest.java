@@ -37,10 +37,13 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dlp.api.DLPConfigurationItem.Id;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 class DlpTest {
@@ -58,7 +61,7 @@ class DlpTest {
 
     @Test
     void matchShouldReturnEmptyWhenNoRecipient() throws Exception {
-        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS);
+        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS, new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder().name("name").sender(RECIPIENT1).build();
 
@@ -67,7 +70,7 @@ class DlpTest {
 
     @Test
     void matchShouldReturnEmptyWhenNoSender() throws Exception {
-        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS);
+        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS, new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder().name("name").recipient(RECIPIENT1).build();
 
@@ -76,14 +79,14 @@ class DlpTest {
 
     @Test
     void matchShouldThrowOnNullMail() {
-        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS);
+        Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS, new NoopGaugeRegistry());
 
         assertThatThrownBy(() -> dlp.match(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void matchShouldReturnEmptyWhenNoRuleMatch() throws Exception {
-        Dlp dlp = new Dlp(MATCH_NOTHING_FOR_ALL_DOMAINS);
+        Dlp dlp = new Dlp(MATCH_NOTHING_FOR_ALL_DOMAINS, new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder()
             .name("name")
@@ -100,7 +103,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().senderRule(Id.of("match sender"), Pattern.compile(ANY_AT_JAMES.asString())).build()));
+                DlpDomainRules.builder().senderRule(Id.of("match sender"), Pattern.compile(ANY_AT_JAMES.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder().name("name").sender(ANY_AT_JAMES).recipient(RECIPIENT1).build();
 
@@ -112,7 +115,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().recipientRule(Id.of("match all recipient"), Pattern.compile(".*")).build()));
+                DlpDomainRules.builder().recipientRule(Id.of("match all recipient"), Pattern.compile(".*")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder().name("name").sender(MailAddress.nullSender()).recipient(RECIPIENT1).build();
 
@@ -124,7 +127,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().senderRule(Id.of("match sender"), Pattern.compile(ANY_AT_JAMES.asString())).build()));
+                DlpDomainRules.builder().senderRule(Id.of("match sender"), Pattern.compile(ANY_AT_JAMES.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -144,7 +147,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT1.asString())).build()));
+                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT1.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder()
             .name("name")
@@ -156,12 +159,44 @@ class DlpTest {
         assertThat(dlp.match(mail)).contains(RECIPIENT1, RECIPIENT2);
     }
 
+
+    @Test
+    void matchShouldReturnRecipientsWhenCached() throws Exception {
+        Dlp dlp = new Dlp(
+            asRulesLoaderFor(
+                JAMES_APACHE_ORG_DOMAIN,
+                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT1.asString())).build()), new NoopGaugeRegistry());
+
+        dlp.init(FakeMatcherConfig.builder()
+            .condition("cache:60s")
+            .matcherName("DLP")
+            .build());
+
+        FakeMail mail1 = FakeMail.builder()
+            .name("name")
+            .sender(ANY_AT_JAMES)
+            .recipient(RECIPIENT1)
+            .recipient(RECIPIENT2)
+            .build();
+        FakeMail mail2 = FakeMail.builder()
+            .name("name")
+            .sender(ANY_AT_JAMES)
+            .recipient(RECIPIENT1)
+            .recipient(RECIPIENT2)
+            .build();
+
+        SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(dlp.match(mail1)).contains(RECIPIENT1, RECIPIENT2);
+                softly.assertThat(dlp.match(mail2)).contains(RECIPIENT1, RECIPIENT2);
+            });
+    }
+
     @Test
     void matchShouldReturnRecipientsWhenToHeaderMatches() throws Exception {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()));
+                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -181,7 +216,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()));
+                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -201,7 +236,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()));
+                DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT2.asString())).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -221,7 +256,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().contentRule(Id.of("match subject"), Pattern.compile("pony")).build()));
+                DlpDomainRules.builder().contentRule(Id.of("match subject"), Pattern.compile("pony")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -241,7 +276,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()));
+                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -262,7 +297,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()));
+                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -282,7 +317,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()));
+                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -307,7 +342,7 @@ class DlpTest {
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
-                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()));
+                DlpDomainRules.builder().contentRule(Id.of("match content"), Pattern.compile("horse")).build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -339,7 +374,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .senderRule(Id.of("match content"), Pattern.compile(RECIPIENT2.asString()))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -372,7 +407,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("match content"), Pattern.compile(RECIPIENT2.asString()))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -405,7 +440,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .contentRule(Id.of("match content"), Pattern.compile("poné"))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -429,7 +464,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .contentRule(Id.of("match content"), Pattern.compile("poné"))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail
             .builder()
@@ -453,7 +488,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("id1"), Pattern.compile(RECIPIENT1.asString()))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         MimeMessageBuilder meaninglessText = MimeMessageBuilder
             .mimeMessageBuilder()
@@ -479,7 +514,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("id1"), Pattern.compile("Benoît"))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         MimeMessageBuilder meaninglessText = MimeMessageBuilder
             .mimeMessageBuilder()
@@ -505,7 +540,7 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .senderRule(Id.of("id1"), Pattern.compile("Benoît"))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         MimeMessageBuilder meaninglessText = MimeMessageBuilder
             .mimeMessageBuilder()
@@ -533,7 +568,7 @@ class DlpTest {
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("should not match recipient"), Pattern.compile(RECIPIENT3.asString()))
                     .senderRule(Id.of(attributeValue), Pattern.compile(JAMES_APACHE_ORG))
-                    .build()));
+                    .build()), new NoopGaugeRegistry());
 
         FakeMail mail = FakeMail.builder()
             .name("name")
