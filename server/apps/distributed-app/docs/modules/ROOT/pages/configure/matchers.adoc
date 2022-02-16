@@ -14,6 +14,8 @@ include::partial$AtMost.adoc[]
 
 include::partial$AtMostPriority.adoc[]
 
+include::partial$DLP.adoc[]
+
 include::partial$FetchedFrom.adoc[]
 
 include::partial$HasAttachment.adoc[]
