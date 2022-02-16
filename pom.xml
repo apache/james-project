@@ -2933,6 +2933,8 @@
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>4.5.6</version>
                     <configuration>
+                        <fork>false</fork>
+                        <recompileMode>incremental</recompileMode>
                         <source>${target.jdk}</source>
                         <target>${target.jdk}</target>
                         <args>
@@ -2943,6 +2945,12 @@
                             <arg>-explaintypes</arg>
                             <arg>-Ywarn-unused</arg>
                         </args>
+                        <jvmArgs>
+                            <jvmArg>-Xss128m</jvmArg>
+                            <jvmArg>-Xms4g</jvmArg>
+                            <jvmArg>-Xmx4g</jvmArg>
+                            <jvmArg>-XX:MaxMetaspaceSize=2g</jvmArg>
+                        </jvmArgs>
                         <compilerPlugins>
                             <compilerPlugin>
                                 <groupId>org.scalameta</groupId>

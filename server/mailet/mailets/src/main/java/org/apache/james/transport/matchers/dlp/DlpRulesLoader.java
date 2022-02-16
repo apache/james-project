@@ -19,11 +19,19 @@
 
 package org.apache.james.transport.matchers.dlp;
 
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.api.DLPRules;
+import org.apache.james.metrics.api.GaugeRegistry;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import reactor.core.publisher.Mono;
 
@@ -52,6 +60,36 @@ public interface DlpRulesLoader {
                     builder.rule(type, item.getId(), item.getRegexp())
                 ));
             return builder.build();
+        }
+    }
+
+    class Caching implements DlpRulesLoader {
+        private final LoadingCache<Domain, DlpDomainRules> cache;
+
+        public Caching(DlpRulesLoader wrapped, GaugeRegistry gaugeRegistry, Duration cacheDuration) {
+            cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(cacheDuration)
+                .recordStats()
+                .build(new CacheLoader<>() {
+                    @Override
+                    public DlpDomainRules load(Domain domain) {
+                        return wrapped.load(domain);
+                    }
+                });
+
+            gaugeRegistry.register("dlp.cache.hitRate", () -> cache.stats().hitRate());
+            gaugeRegistry.register("dlp.cache.missCount", () -> cache.stats().missCount());
+            gaugeRegistry.register("dlp.cache.hitCount", () -> cache.stats().hitCount());
+            gaugeRegistry.register("dlp.cache.size", cache::size);
+        }
+
+        @Override
+        public DlpDomainRules load(Domain domain) {
+            try {
+                return cache.get(domain);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
