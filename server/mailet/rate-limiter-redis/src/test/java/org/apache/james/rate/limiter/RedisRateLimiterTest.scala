@@ -33,7 +33,7 @@ class RedisRateLimiterTest extends RateLimiterContract {
 
   @BeforeEach
   def setup(redis: DockerRedis): Unit = {
-    redisRateLimiterConfiguration = RedisRateLimiterConfiguration.from(redis.redisURI().toString)
+    redisRateLimiterConfiguration = RedisRateLimiterConfiguration.from(redis.redisURI().toString, false)
   }
 
   override def testee(): RateLimiterFactory = new RedisRateLimiterFactory(redisRateLimiterConfiguration)

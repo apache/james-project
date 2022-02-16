@@ -28,12 +28,16 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.james.rate.limiter.redis.RedisUris.RedisUris
 
 object RedisRateLimiterConfiguration {
-  def from(config: Configuration): RedisRateLimiterConfiguration =
-    from(config.getString("redisURL"))
+  val CLUSTER_ENABLED_DEFAULT = false
 
-  def from(redisUri: String): RedisRateLimiterConfiguration = {
+  def from(config: Configuration): RedisRateLimiterConfiguration =
+    from(config.getString("redisURL"),
+      config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT))
+
+  def from(redisUri: String, isCluster: Boolean): RedisRateLimiterConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
-    RedisRateLimiterConfiguration(RedisUris.from(redisUri))
+    Preconditions.checkNotNull(isCluster)
+    RedisRateLimiterConfiguration(RedisUris.from(redisUri), isCluster)
   }
 }
 
@@ -56,4 +60,4 @@ object RedisUris {
   def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
 }
 
-case class RedisRateLimiterConfiguration(redisURI: RedisUris)
+case class RedisRateLimiterConfiguration(redisURI: RedisUris, isCluster: Boolean)
