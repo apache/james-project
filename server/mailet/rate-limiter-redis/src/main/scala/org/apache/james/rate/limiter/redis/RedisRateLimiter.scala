@@ -47,7 +47,7 @@ class RedisRateLimiterModule() extends AbstractModule {
 
 class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisRateLimiterConfiguration) extends RateLimiterFactory {
   val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] =
-    if (redisConfiguration.redisURI.value.size > 1) {
+    if (redisConfiguration.isCluster) {
       new RedisClusterRateLimiterFactory(RedisClusterClient.create(redisConfiguration.redisURI.value.asJava))
     } else {
       new RedisSingleInstanceRateLimitjFactory(RedisClient.create(redisConfiguration.redisURI.value.last))
