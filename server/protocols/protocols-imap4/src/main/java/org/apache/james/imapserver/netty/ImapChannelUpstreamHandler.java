@@ -285,7 +285,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 }
             }
 
-            super.channelRead(ctx, msg);
+            super.channelReadComplete(ctx);
         }
     }
 
