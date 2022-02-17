@@ -38,6 +38,10 @@ import io.netty.handler.timeout.IdleStateHandler;
 public class ImapIdleStateHandler extends IdleStateHandler implements NettyConstants {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapIdleStateHandler.class);
 
+    public ImapIdleStateHandler(int allIdleTimeSeconds) {
+        this(0, 0, allIdleTimeSeconds);
+    }
+
     public ImapIdleStateHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
         super(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds);
     }

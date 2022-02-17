@@ -95,31 +95,31 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     final File f;
                     int written;
 
-                    OutputStream os;
+                    OutputStream outputStream;
                     // check if we have created a temporary file already or if
                     // we need to create a new one
                     if (attachment.containsKey(STORED_DATA)) {
                         f = (File) attachment.get(STORED_DATA);
                         written = (Integer) attachment.get(WRITTEN_DATA);
-                        os = (OutputStream) attachment.get(OUTPUT_STREAM);
+                        outputStream = (OutputStream) attachment.get(OUTPUT_STREAM);
                     } else {
                         f = File.createTempFile("imap-literal", ".tmp");
                         attachment.put(STORED_DATA, f);
                         written = 0;
                         attachment.put(WRITTEN_DATA, written);
-                        os = new FileOutputStream(f, true);
-                        attachment.put(OUTPUT_STREAM, os);
+                        outputStream = new FileOutputStream(f, true);
+                        attachment.put(OUTPUT_STREAM, outputStream);
 
                     }
 
 
                     try {
                         int amount = Math.min(in.readableBytes(), size - written);
-                        in.readBytes(os, amount);
+                        in.readBytes(outputStream, amount);
                         written += amount;
                     } catch (Exception e) {
                         try {
-                            os.close();
+                            outputStream.close();
                         } catch (IOException ignored) {
                             //ignore exception during close
                         }
@@ -128,7 +128,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     // Check if all needed data was streamed to the file.
                     if (written == size) {
                         try {
-                            os.close();
+                            outputStream.close();
                         } catch (IOException ignored) {
                             //ignore exception during close
                         }
@@ -196,23 +196,4 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             }
         }
     }
-
-    //    @Override
-    //    protected synchronized ByteBuf newCumulationBuffer(ChannelHandlerContext ctx, int minimumCapacity) {
-    //        Map<String, Object> attachment = (Map<String, Object>) ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
-    //        Object sizeAsObject = attachment.get(NEEDED_DATA);
-    //        if (sizeAsObject != null) {
-    //            @SuppressWarnings("unchecked")
-    //            int size = (Integer) sizeAsObject;
-    //
-    //            if (size > 0) {
-    //                int sanitizedInMemorySizeLimit = Math.max(0, inMemorySizeLimit);
-    //                int sanitizedSize = Math.min(sanitizedInMemorySizeLimit, size);
-    //
-    //                return ChannelBuffers.dynamicBuffer(sanitizedSize, ctx.channel().config().getBufferFactory());
-    //            }
-    //        }
-    //        return super.newCumulationBuffer(ctx, minimumCapacity);
-    //    }
-
 }

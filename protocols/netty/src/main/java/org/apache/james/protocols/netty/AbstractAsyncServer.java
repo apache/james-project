@@ -44,7 +44,6 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 
 
-
 /**
  * Abstract base class for Servers which want to use async io
  */
@@ -141,12 +140,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             workerGroup.shutdownGracefully();
         }
 
-        //        ChannelPipelineFactory factory = bootstrap.getPipelineFactory();
-        //        if (factory instanceof ExternalResourceReleasable) {
-        //            ((ExternalResourceReleasable) factory).releaseExternalResources();
-        //        }
-        //        channels.close().awaitUninterruptibly();
-        //        bootstrap.releaseExternalResources();
         started = false;
     }
 

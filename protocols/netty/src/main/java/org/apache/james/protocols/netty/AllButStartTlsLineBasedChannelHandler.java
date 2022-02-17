@@ -39,7 +39,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     private final ChannelPipeline pipeline;
     private final String pattern;
 
-    private final AttributeKey<CommandDetectionSession> sessionAttributeKey =
+    private static final AttributeKey<CommandDetectionSession> sessionAttributeKey =
             AttributeKey.valueOf("session");
 
     public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {

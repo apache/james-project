@@ -86,7 +86,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
 
-        return new AbstractChannelPipelineFactory(0,0, 0, group, createFrameHandlerFactory()) {
+        return new AbstractChannelPipelineFactory(group, createFrameHandlerFactory()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {

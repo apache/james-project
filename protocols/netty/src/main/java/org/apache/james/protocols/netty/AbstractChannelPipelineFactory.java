@@ -38,7 +38,12 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
     private final ChannelGroupHandler groupHandler;
     private final int timeout;
     private final ChannelHandlerFactory frameHandlerFactory;
-    
+
+    public AbstractChannelPipelineFactory(ChannelGroup channels,
+                                          ChannelHandlerFactory frameHandlerFactory) {
+        this(0, 0, 0, channels, frameHandlerFactory);
+    }
+
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels,
                                           ChannelHandlerFactory frameHandlerFactory) {
         this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);

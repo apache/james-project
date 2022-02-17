@@ -62,6 +62,7 @@ import io.netty.handler.timeout.IdleStateHandler;
  */
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
+    private static final int TIMEOUT_TIMER_DISABLED = 0;
 
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
@@ -210,7 +211,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
         
-        return new AbstractChannelPipelineFactory(0, 0, 0, group, getFrameHandlerFactory()) {
+        return new AbstractChannelPipelineFactory(group, getFrameHandlerFactory()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
@@ -225,8 +226,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             public void initChannel(Channel channel) throws Exception {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(0, 0, timeout, timeoutUnit));
-                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(0,0, timeout));
+                pipeline.addLast("idleHandler", new IdleStateHandler(TIMEOUT_TIMER_DISABLED, TIMEOUT_TIMER_DISABLED, timeout, timeoutUnit));
+                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 
                 pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(IMAPServer.this.connPerIP));
