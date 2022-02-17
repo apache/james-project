@@ -56,6 +56,13 @@ class MessageParserTest {
     }
 
     @Test
+    void getAttachmentsShouldIgnoreInlineWhenMixedMultipart() throws Exception {
+        List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/inlined-mixed.eml"));
+
+        assertThat(attachments).hasSize(2);
+    }
+
+    @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenOneAttachment() throws Exception {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 

@@ -93,15 +93,14 @@ public class MessageParser {
     public List<ParsedAttachment> retrieveAttachments(Message message) throws IOException {
         Body body = message.getBody();
         try {
-            if (isAttachment(message, Context.BODY)) {
-                return ImmutableList.of(retrieveAttachment(message));
-            }
-
             if (body instanceof Multipart) {
                 Multipart multipartBody = (Multipart) body;
                 return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
                     .collect(ImmutableList.toImmutableList());
             } else {
+                if (isAttachment(message, Context.BODY)) {
+                    return ImmutableList.of(retrieveAttachment(message));
+                }
                 return ImmutableList.of();
             }
         } finally {
