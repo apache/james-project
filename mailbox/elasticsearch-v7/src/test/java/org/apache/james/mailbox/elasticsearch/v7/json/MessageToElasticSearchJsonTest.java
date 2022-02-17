@@ -129,7 +129,7 @@ class MessageToElasticSearchJsonTest {
         mail.setUid(UID);
         mail.setModSeq(MOD_SEQ);
 
-        assertThatJson(messageToElasticSearchJson.convertToJson(mail, ImmutableList.of(USERNAME)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(mail))
             .when(IGNORING_ARRAY_ORDER)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/inlined-mixed.json"));
     }
