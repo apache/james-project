@@ -67,7 +67,7 @@ import com.google.inject.Module;
 
 import io.restassured.RestAssured;
 
-public class RabbitMQWebAdminServerBlobGCIntegrationTest {
+class RabbitMQWebAdminServerBlobGCIntegrationTest {
     private static final ZonedDateTime TIMESTAMP = ZonedDateTime.parse("2015-10-30T16:12:00Z");
 
     public static class ClockExtension implements GuiceModuleTestExtension {
@@ -143,7 +143,7 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
         mailboxProbe.appendMessage(
             USERNAME,
             MailboxPath.inbox(Username.of(USERNAME)),
-            mailInputStream,
+            mailInputStream.newStream(0, -1),
             new Date(),
             false,
             new Flags());
@@ -177,7 +177,7 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
         mailboxProbe.appendMessage(
             USERNAME,
             MailboxPath.inbox(Username.of(USERNAME)),
-            mailInputStream,
+            mailInputStream.newStream(0, -1),
             new Date(),
             false,
             new Flags());
@@ -210,7 +210,7 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
         mailboxProbe.appendMessage(
             USERNAME,
             MailboxPath.inbox(Username.of(USERNAME)),
-            mailInputStream,
+            mailInputStream.newStream(0, -1),
             new Date(),
             false,
             new Flags());
@@ -242,7 +242,7 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
         mailboxProbe.appendMessage(
             USERNAME,
             MailboxPath.inbox(Username.of(USERNAME)),
-            mailInputStream,
+            mailInputStream.newStream(0, -1),
             new Date(),
             false,
             new Flags());
@@ -251,7 +251,7 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
         mailboxProbe.appendMessage(
             USERNAME,
             MailboxPath.forUser(Username.of(USERNAME), "CustomBox"),
-            mailInputStream,
+            mailInputStream.newStream(0, -1),
             new Date(),
             false,
             new Flags());
@@ -273,9 +273,9 @@ public class RabbitMQWebAdminServerBlobGCIntegrationTest {
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
             .body("type", is("BlobGCTask"))
-            .body("additionalInformation.referenceSourceCount", is(2))
+            .body("additionalInformation.referenceSourceCount", is(3))
             .body("additionalInformation.blobCount", is(3))
-            .body("additionalInformation.gcedBlobCount", is(2))
+            .body("additionalInformation.gcedBlobCount", is(0))
             .body("additionalInformation.errorCount", is(0));
     }
 }
