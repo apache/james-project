@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.regex.Pattern;
 
 import javax.jms.JMSException;
 
@@ -44,12 +45,13 @@ import org.apache.james.filesystem.api.FileSystem;
  * {@link BlobMessage}
  */
 public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadStrategy, ActiveMQSupport {
+    private static final Pattern PATTERN = Pattern.compile("[:\\\\/*?|<>]");
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final FileSystem fileSystem;
     private final BlobTransferPolicy policy;
     private final int splitCount;
     private final Object lock = new Object();
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     public FileSystemBlobStrategy(BlobTransferPolicy policy, FileSystem fileSystem, int splitCount) {
         this.fileSystem = fileSystem;
@@ -116,7 +118,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
         // Make sure it works on windows in all cases and make sure
         // we use the JMS Message ID as filename so we are safe in the case
         // we try to stream from and to the same mail
-        String filename = message.getJMSMessageID().replaceAll("[:\\\\/*?|<>]", "_");
+        String filename = PATTERN.matcher(message.getJMSMessageID()).replaceAll("_");
         int i = RANDOM.nextInt(splitCount) + 1;
 
         String queueUrl = policy.getUploadUrl() + "/" + i;
