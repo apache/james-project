@@ -53,7 +53,7 @@
                     The generated startup warning log can be deactivated via the <code>cassandra.blob.store.disable.startup.warning</code> environment
                     variable being positioned to <code>false</code>.
                 </dd>
-                <dt><strong>deduplication/enable</strong></dt>
+                <dt><strong>deduplication.enable</strong></dt>
                 <dd>Mandatory. Supported value: true and false.</dd>
                 <dd>If you choose to enable deduplication, the mails with the same content will be stored only once.</dd>
                 <dd>Warning: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all</dd>
