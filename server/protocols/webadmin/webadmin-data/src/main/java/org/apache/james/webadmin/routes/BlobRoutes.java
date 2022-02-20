@@ -47,7 +47,7 @@ public class BlobRoutes implements Routes {
 
     public static final String BASE_PATH = "/blobs";
     public static final int EXPECTED_BLOB_COUNT_DEFAULT = 1_000_000;
-    public static final double ASSOCIATED_PROBABILITY_DEFAULT = 0.8;
+    public static final double ASSOCIATED_PROBABILITY_DEFAULT = 0.01;
 
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
