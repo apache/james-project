@@ -19,9 +19,12 @@
 
 package org.apache.james.modules.blobstore;
 
+import java.io.FileNotFoundException;
 import java.time.Clock;
 import java.util.Set;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
@@ -38,6 +41,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 
 import com.google.inject.AbstractModule;
@@ -48,6 +52,8 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
 public class BlobDeduplicationGCModule extends AbstractModule {
+    private static final String NAME = "blob";
+    private static final String LEGACY = "blobstore";
 
     @Override
     protected void configure() {
@@ -68,8 +74,13 @@ public class BlobDeduplicationGCModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration() {
-        return GenerationAwareBlobId.Configuration.DEFAULT;
+    public GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration properties = propertiesProvider.getConfigurations(NAME, LEGACY);
+            return GenerationAwareBlobId.Configuration.parse(properties);
+        } catch (FileNotFoundException e) {
+            return GenerationAwareBlobId.Configuration.DEFAULT;
+        }
     }
 
     @ProvidesIntoSet

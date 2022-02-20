@@ -37,8 +37,8 @@ import com.google.common.io.ByteSource;
 public class GenerationAwareBlobId implements BlobId {
 
     public static class Configuration {
-        private static final Duration DEFAULT_DURATION = Duration.ofDays(30);
-        private static final int DEFAULT_FAMILY = 1;
+        public static final Duration DEFAULT_DURATION = Duration.ofDays(30);
+        public static final int DEFAULT_FAMILY = 1;
         public static final Configuration DEFAULT = builder()
             .duration(DEFAULT_DURATION)
             .family(DEFAULT_FAMILY);
