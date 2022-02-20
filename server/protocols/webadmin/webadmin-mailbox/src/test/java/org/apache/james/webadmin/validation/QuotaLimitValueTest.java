@@ -39,7 +39,7 @@ class QuotaLimitValueTest {
     @Test
     void quotaCountShouldParseZero() {
         assertThat(Quotas.quotaCount("0").asLong())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test
@@ -68,7 +68,7 @@ class QuotaLimitValueTest {
     @Test
     void quotaSizeShouldParseZero() {
         assertThat(Quotas.quotaSize("0").asLong())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test

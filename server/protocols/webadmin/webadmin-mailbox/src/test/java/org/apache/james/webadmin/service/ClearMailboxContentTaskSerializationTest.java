@@ -28,7 +28,7 @@ import org.apache.james.webadmin.validation.MailboxName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ClearMailboxContentTaskSerializationTest {
+class ClearMailboxContentTaskSerializationTest {
     private UserMailboxesService userMailboxesService;
     private static final Username USERNAME = Username.of("bob@domain.tld");
     private static final MailboxName MAILBOX_NAME = new MailboxName("mbn1");

@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class WebAdminReprocessingContextInformationDTO implements AdditionalInformationDTO {
     public static class WebAdminErrorRecoveryIndexationDTO extends WebAdminReprocessingContextInformationDTO {
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask, WebAdminErrorRecoveryIndexationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask, WebAdminErrorRecoveryIndexationDTO> serializationModule() {
             return DTOModule.forDomainObject(ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.class)
                 .convertToDTO(WebAdminErrorRecoveryIndexationDTO.class)
                 .toDomainObjectConverter(dto -> {
@@ -60,7 +60,7 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
     }
 
     public static class WebAdminFullIndexationDTO extends WebAdminReprocessingContextInformationDTO {
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask, WebAdminFullIndexationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask, WebAdminFullIndexationDTO> serializationModule() {
             return DTOModule.forDomainObject(ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.class)
                 .convertToDTO(WebAdminFullIndexationDTO.class)
                 .toDomainObjectConverter(dto -> {

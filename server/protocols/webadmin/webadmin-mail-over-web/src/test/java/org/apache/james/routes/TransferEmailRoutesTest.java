@@ -26,13 +26,11 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
-import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -45,13 +43,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import reactor.core.publisher.Flux;
 
-public class TransferEmailRoutesTest {
+class TransferEmailRoutesTest {
 
     private WebAdminServer webAdminServer;
 
@@ -88,7 +87,7 @@ public class TransferEmailRoutesTest {
 
 
     @Test
-    public void whenToIsMissingInRequestThenRequestFails() {
+    void whenToIsMissingInRequestThenRequestFails() {
         given()
                 .body(ClassLoaderUtils.getSystemResourceAsString("message/rfc822/message-without-tos.eml"))
                 .when()
@@ -104,7 +103,7 @@ public class TransferEmailRoutesTest {
     }
 
     @Test
-    public void statusCode201ReturnedWhenSendingMailWithAllRequiredFields() {
+    void statusCode201ReturnedWhenSendingMailWithAllRequiredFields() {
         given()
                 .body(ClassLoaderUtils.getSystemResourceAsString("message/rfc822/message.eml"))
                 .when()
@@ -124,7 +123,7 @@ public class TransferEmailRoutesTest {
     }
 
     @Test
-    public void requestFailsOnEmptyBody() {
+    void requestFailsOnEmptyBody() {
         given()
                 .body("")
                 .when()

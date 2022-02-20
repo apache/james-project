@@ -53,7 +53,6 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
@@ -296,25 +295,4 @@ public class UserQuotaRoutes implements Routes {
         }
         return username;
     }
-
-    private QuotaDTO parseQuotaDTO(Request request) {
-        try {
-            return jsonExtractor.parse(request.body());
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Quota should be positive or unlimited (-1)")
-                .cause(e)
-                .haltError();
-        } catch (JsonExtractException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Malformed JSON input")
-                .cause(e)
-                .haltError();
-        }
-    }
-
 }

@@ -74,7 +74,6 @@ public class MailRepositoriesRoutes implements Routes {
 
     public static final String MAIL_REPOSITORIES = "mailRepositories";
     private static final TaskRegistrationKey REPROCESS_ACTION = TaskRegistrationKey.of("reprocess");
-    private static final String ACTION_PARAMETER = "action";
 
     private final JsonTransformer jsonTransformer;
     private final MailRepositoryStoreService repositoryStoreService;
@@ -354,7 +353,7 @@ public class MailRepositoriesRoutes implements Routes {
             .omitEmptyStrings()
             .splitToList(additionalFieldsParam)
             .stream()
-            .map((field) -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
+            .map(field -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
             .collect(ImmutableSet.toImmutableSet());
     }
 

@@ -43,8 +43,6 @@ public class EventDeadLettersRoutes implements Routes {
     public static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
     private static final String INSERTION_ID_PARAMETER = ":insertionId";
-
-    private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
     private static final TaskRegistrationKey RE_DELIVER = TaskRegistrationKey.of("reDeliver");
 
     private final EventDeadLettersService eventDeadLettersService;

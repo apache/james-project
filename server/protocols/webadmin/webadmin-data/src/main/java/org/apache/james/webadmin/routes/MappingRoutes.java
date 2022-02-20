@@ -91,7 +91,7 @@ public class MappingRoutes implements Routes {
 
         return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
             .asStream()
-            .map(mapping -> MappingValueDTO.fromMapping(mapping))
+            .map(MappingValueDTO::fromMapping)
             .collect(ImmutableList.toImmutableList());
     }
 }

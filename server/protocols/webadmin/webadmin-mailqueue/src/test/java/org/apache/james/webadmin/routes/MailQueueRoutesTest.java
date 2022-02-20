@@ -240,7 +240,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnMailsWhenSome() throws Exception {
+            void listMailsShouldReturnMailsWhenSome() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 queue.enQueue(Mails.defaultMail().name("name").build());
                 queue.enQueue(Mails.defaultMail().name("name").build());
@@ -254,7 +254,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnMailDetailsWhenSome() throws Exception {
+            void listMailsShouldReturnMailDetailsWhenSome() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
@@ -276,7 +276,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnEmptyWhenNoDelayedMailsAndAskFor() throws Exception {
+            void listMailsShouldReturnEmptyWhenNoDelayedMailsAndAskFor() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
@@ -292,7 +292,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnCurrentMailsWhenMailsAndAskForNotDelayed() throws Exception {
+            void listMailsShouldReturnCurrentMailsWhenMailsAndAskForNotDelayed() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
@@ -308,7 +308,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnDelayedMailsWhenAskFor() throws Exception {
+            void listMailsShouldReturnDelayedMailsWhenAskFor() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10, TimeUnit.MINUTES);
@@ -324,7 +324,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnOneMailWhenMailsAndAskForALimitOfOne() throws Exception {
+            void listMailsShouldReturnOneMailWhenMailsAndAskForALimitOfOne() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
@@ -347,7 +347,7 @@ class MailQueueRoutesTest {
     class GetMailQueue {
 
         @Test
-        public void getMailQueueShouldReturnTheMailQueueDataWhenMailQueueExists() throws Exception {
+        void getMailQueueShouldReturnTheMailQueueDataWhenMailQueueExists() throws Exception {
             MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
             queue.enQueue(Mails.defaultMail().name("name").build());
 
@@ -520,7 +520,7 @@ class MailQueueRoutesTest {
         @Nested
         class SideEffects {
             @Test
-            public void forcingDelayedMailsDeliveryShouldActuallyChangePropertyOnMails() throws Exception {
+            void forcingDelayedMailsDeliveryShouldActuallyChangePropertyOnMails() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10L, TimeUnit.MINUTES);
@@ -667,7 +667,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsTasksShouldHaveDetailsWhenSenderIsGiven() throws Exception {
+            void deleteMailsTasksShouldHaveDetailsWhenSenderIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -706,7 +706,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsTasksShouldHaveDetailsWhenNameIsGiven() throws Exception {
+            void deleteMailsTasksShouldHaveDetailsWhenNameIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -743,7 +743,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsTasksShouldHaveDetailsWhenRecipientIsGiven() throws Exception {
+            void deleteMailsTasksShouldHaveDetailsWhenRecipientIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -792,7 +792,7 @@ class MailQueueRoutesTest {
         class SideEffects {
 
             @Test
-            public void deleteMailsShouldDeleteMailsWhenSenderIsGiven() throws Exception {
+            void deleteMailsShouldDeleteMailsWhenSenderIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -828,7 +828,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldDeleteMailsWhenNameIsGiven() throws Exception {
+            void deleteMailsShouldDeleteMailsWhenNameIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -862,7 +862,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldDeleteMailsWhenRecipientIsGiven() throws Exception {
+            void deleteMailsShouldDeleteMailsWhenRecipientIsGiven() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 queue.enQueue(FakeMail.builder()
@@ -905,7 +905,7 @@ class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldDeleteMailsWhenTheyAreMatching() throws Exception {
+            void deleteMailsShouldDeleteMailsWhenTheyAreMatching() throws Exception {
                 MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 String recipient = "recipient@james.org";
                 queue.enQueue(Mails.defaultMail()
@@ -970,7 +970,7 @@ class MailQueueRoutesTest {
         }
 
         @Test
-        public void clearMailQueueShouldHaveDetailsWhenNoQueryParameters() throws Exception {
+        void clearMailQueueShouldHaveDetailsWhenNoQueryParameters() throws Exception {
             MemoryMailQueueFactory.MemoryCacheableMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
             queue.enQueue(FakeMail.builder()

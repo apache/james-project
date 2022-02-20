@@ -40,7 +40,7 @@ class MailAddressParser {
             String decodedAddress = URLDecoder.decode(address, StandardCharsets.UTF_8.displayName());
             return new MailAddress(decodedAddress);
         } catch (AddressException e) {
-            LOGGER.error("The " + addressType + " " + address + " is not an email address");
+            LOGGER.error("The {} {} is not an email address", addressType, address);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)

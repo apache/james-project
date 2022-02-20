@@ -73,7 +73,7 @@ import io.restassured.RestAssured;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class JmapUploadRoutesTest {
+class JmapUploadRoutesTest {
 
     private static final String BASE_PATH = "/jmap/uploads";
     private static final ContentType CONTENT_TYPE = ContentType.of("text/html");
@@ -272,9 +272,7 @@ public class JmapUploadRoutesTest {
         List<BucketName> bucketNameList = Flux.from(blobStore.listBuckets()).collectList().block();
 
         assertThat(bucketNameList)
-            .contains(unExpiredBucketName1, unExpiredBucketName2);
-
-        assertThat(bucketNameList)
+            .contains(unExpiredBucketName1, unExpiredBucketName2)
             .doesNotContain(expiredBucketName1, expiredBucketName2);
     }
 

@@ -36,6 +36,7 @@ public class InaccessibleFieldException extends Exception {
         return field;
     }
 
+    @Override
     public Exception getCause() {
         return cause;
     }

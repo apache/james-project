@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
@@ -34,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
+    public static AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO> serializationModule() {
         return DTOModule.forDomainObject(SingleMailboxReindexingTask.AdditionalInformation.class)
             .convertToDTO(WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> {

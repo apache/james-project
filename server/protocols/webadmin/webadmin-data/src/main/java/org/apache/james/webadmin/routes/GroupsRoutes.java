@@ -62,8 +62,6 @@ public class GroupsRoutes implements Routes {
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
     private static final String USER_ADDRESS = "userAddress";
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
-    private static final String MAILADDRESS_ASCII_DISCLAIMER = "Note that email addresses are restricted to ASCII character set. " +
-        "Mail addresses not matching this criteria will be rejected.";
     private static final String GROUP_ADDRESS_TYPE = "group";
     private static final String USER_ADDRESS_TYPE = "group member";
 
@@ -96,7 +94,7 @@ public class GroupsRoutes implements Routes {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
     }
 
-    public HaltException addToGroup(Request request, Response response) throws Exception {
+    public HaltException addToGroup(Request request, Response response) {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);

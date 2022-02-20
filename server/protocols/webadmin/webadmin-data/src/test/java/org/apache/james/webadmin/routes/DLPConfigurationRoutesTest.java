@@ -866,7 +866,7 @@ class DLPConfigurationRoutesTest {
     @Nested
     class DefineFetch {
         @Test
-        public void fetchShouldBeOK() throws Exception {
+        void fetchShouldBeOK() {
             storeRules();
 
             String jsonAsString =
@@ -893,7 +893,7 @@ class DLPConfigurationRoutesTest {
         }
 
         @Test
-        public void fetchOnUnknownDomainShouldBe404() throws Exception {
+        void fetchOnUnknownDomainShouldBe404() {
             storeRules();
 
             when()
@@ -907,7 +907,7 @@ class DLPConfigurationRoutesTest {
         }
 
         @Test
-        public void fetchOnUnknownDomainAndRuleShouldBe404() throws Exception {
+        void fetchOnUnknownDomainAndRuleShouldBe404() {
             when()
                 .get("strange.com/rules/666")
             .then()
@@ -919,7 +919,7 @@ class DLPConfigurationRoutesTest {
         }
 
         @Test
-        public void fetchOnUnknownRuleIdShouldBe404() throws Exception {
+        void fetchOnUnknownRuleIdShouldBe404() {
             storeRules();
 
             when()

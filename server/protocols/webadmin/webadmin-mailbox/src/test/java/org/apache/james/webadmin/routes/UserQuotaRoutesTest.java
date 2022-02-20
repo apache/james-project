@@ -847,7 +847,7 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnBothWhenValueSpecified(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        void getQuotaShouldReturnBothWhenValueSpecified(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
 
@@ -880,7 +880,7 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOccupation(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        void getQuotaShouldReturnOccupation(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
             InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
@@ -909,7 +909,7 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOccupationWhenUnlimited(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        void getQuotaShouldReturnOccupationWhenUnlimited(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
             InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
@@ -938,7 +938,7 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOnlySpecifiedValues(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        void getQuotaShouldReturnOnlySpecifiedValues(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
 
@@ -968,7 +968,7 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
 
             maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(1111));

@@ -64,8 +64,6 @@ public class AliasRoutes implements Routes {
     private static final String ALIAS_SOURCE_ADDRESS = "aliasSourceAddress";
     private static final String USER_IN_ALIAS_SOURCES_ADDRESSES_PATH = ALIAS_ADDRESS_PATH + SEPARATOR +
         "sources" + SEPARATOR + ":" + ALIAS_SOURCE_ADDRESS;
-    private static final String MAILADDRESS_ASCII_DISCLAIMER = "Note that email addresses are restricted to ASCII character set. " +
-        "Mail addresses not matching this criteria will be rejected.";
     private static final String ADDRESS_TYPE = "alias";
 
     private final DomainList domainList;

@@ -27,7 +27,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
-public class CreateMissingParentsTaskAdditionalInformationDTOTest {
+class CreateMissingParentsTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final CreateMissingParentsTask.AdditionalInformation DOMAIN_OBJECT = new CreateMissingParentsTask.AdditionalInformation(
          INSTANT, ImmutableSet.of(TestId.of(1).serialize()), 1L, ImmutableSet.of(), 0L);

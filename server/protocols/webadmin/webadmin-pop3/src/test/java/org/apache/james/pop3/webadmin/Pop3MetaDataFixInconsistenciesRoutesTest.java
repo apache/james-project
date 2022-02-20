@@ -81,7 +81,7 @@ import com.google.common.collect.ImmutableList;
 import io.restassured.RestAssured;
 import spark.Service;
 
-public class Pop3MetaDataFixInconsistenciesRoutesTest {
+class Pop3MetaDataFixInconsistenciesRoutesTest {
 
     private static final class Pop3MetaDataFixInconsistenciesRoute implements Routes {
 

@@ -71,7 +71,7 @@ public class DeletedMessagesVaultExportTaskDTO implements TaskDTO {
         }
 
         DeletedMessagesVaultExportTaskDTO createDTO(DeletedMessagesVaultExportTask task, String type) {
-            return new DeletedMessagesVaultExportTaskDTO(type, task.getUserExportFrom().asString(), queryTranslator.toDTO(task.exportQuery), task.getExportTo().asString());
+            return new DeletedMessagesVaultExportTaskDTO(type, task.getUserExportFrom().asString(), queryTranslator.toDTO(task.getExportQuery()), task.getExportTo().asString());
         }
     }
 
