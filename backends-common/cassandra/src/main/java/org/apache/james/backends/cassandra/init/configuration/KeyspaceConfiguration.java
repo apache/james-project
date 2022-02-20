@@ -46,11 +46,6 @@ public class KeyspaceConfiguration {
         }
     }
 
-    private static final String DEFAULT_KEYSPACE = "apache_james";
-    private static final int DEFAULT_REPLICATION_FACTOR = 1;
-
-    private static final boolean DEFAULT_SSL = false;
-
     public static Builder.RequireKeyspace builder() {
         return name -> replicationFactor -> durableWrites -> new KeyspaceConfiguration(name, replicationFactor, durableWrites);
     }

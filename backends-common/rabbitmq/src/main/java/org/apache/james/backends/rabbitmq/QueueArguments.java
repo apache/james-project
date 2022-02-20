@@ -40,7 +40,7 @@ public class QueueArguments {
         }
     }
 
-    public static ImmutableMap<String, Object> NO_ARGUMENTS = ImmutableMap.of();
+    public static final ImmutableMap<String, Object> NO_ARGUMENTS = ImmutableMap.of();
 
     public static Builder builder() {
         return new Builder();

@@ -206,8 +206,6 @@ public class ClusterConfiguration {
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
     public static final int DEFAULT_CASSANDRA_PORT = 9042;
 
-    private static final boolean DEFAULT_SSL = false;
-
     public static Builder builder() {
         return new Builder();
     }

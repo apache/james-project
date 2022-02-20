@@ -55,8 +55,9 @@ public class CassandraConsistenciesConfiguration {
                 return ConsistencyLevel.SERIAL;
             case "LOCAL_SERIAL":
                 return ConsistencyLevel.LOCAL_SERIAL;
+            default:
+                throw new IllegalArgumentException("'" + value + "' is not a value ConsistencyLevel");
         }
-        throw new IllegalArgumentException("'" + value + "' is not a value ConsistencyLevel");
     }
 
     public static CassandraConsistenciesConfiguration fromConfiguration(CassandraConfiguration configuration) {
