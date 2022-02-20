@@ -19,19 +19,19 @@
 
 package org.apache.james.modules.blobstore.validation;
 
+import static org.apache.james.server.blob.deduplication.StorageStrategy.DEDUPLICATION;
+import static org.apache.james.server.blob.deduplication.StorageStrategy.PASSTHROUGH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration.BlobStoreImplName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-public class StorageStrategyValidationEventSourcingSystemTest {
+class StorageStrategyValidationEventSourcingSystemTest {
     private StorageStrategyValidationEventSourcingSystem testee;
     private InMemoryEventStore eventStore;
 
@@ -43,64 +43,40 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void startingForTheFirstTimeShouldSucceedWhenPassThrough() {
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .passthrough()
-            .noCryptoConfig());
+        StartUpCheck.CheckResult checkResult = testee.validate(() -> PASSTHROUGH);
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 
     @Test
     void startingForTheFirstTimeShouldSucceedWhenDeduplication() {
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .deduplication()
-            .noCryptoConfig());
+        StartUpCheck.CheckResult checkResult = testee.validate(() -> DEDUPLICATION);
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 
     @Test
     void startingShouldSucceedWhenTurningOnDeduplication() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .passthrough()
-            .noCryptoConfig());
+        testee.validate(() -> PASSTHROUGH);
 
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .deduplication()
-            .noCryptoConfig());
+        StartUpCheck.CheckResult checkResult = testee.validate(() -> DEDUPLICATION);
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 
     @Test
     void startingShouldFailWhenTurningOffDeduplication() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .deduplication()
-            .noCryptoConfig());
+        testee.validate(() -> DEDUPLICATION);
 
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .passthrough()
-            .noCryptoConfig());
+        StartUpCheck.CheckResult checkResult = testee.validate(() -> PASSTHROUGH);
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.BAD);
     }
 
     @Test
     void validatingSeveralTimeTheSameStrategyShouldNotAddEventsToTheHistory() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .deduplication()
-            .noCryptoConfig());
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
-            .disableCache()
-            .deduplication()
-            .noCryptoConfig());
+        testee.validate(() -> DEDUPLICATION);
+        testee.validate(() -> DEDUPLICATION);
 
         History history = Mono.from(eventStore.getEventsOfAggregate(RegisterStorageStrategyCommandHandler.AGGREGATE_ID)).block();
 

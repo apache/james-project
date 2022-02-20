@@ -35,6 +35,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck;
 import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
 import org.apache.james.modules.blobstore.validation.StorageStrategyModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,35 +84,35 @@ class BlobStoreConfigurationValidationStartUpCheckTest {
     @ParameterizedTest
     @MethodSource("storageStrategies")
     void firstStartUpShouldReturnAGoodResult(BlobStoreConfiguration blobStoreConfiguration) {
-        BlobStoreConfigurationValidationStartUpCheck check = new BlobStoreConfigurationValidationStartUpCheck(blobStoreConfiguration, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck check = new BlobStoreConfigurationValidationStartUpCheck(() -> blobStoreConfiguration.storageStrategy(), eventsourcingStorageStrategy);
         assertThat(check.check().getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 
     @ParameterizedTest
     @MethodSource("storageStrategies")
     void startingUpTwiceWithTheStrategyShouldReturnGoodResults(BlobStoreConfiguration blobStoreConfiguration) {
-        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(blobStoreConfiguration, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> blobStoreConfiguration.storageStrategy(), eventsourcingStorageStrategy);
         assertThat(checkFirstStartUp.check().getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
 
-        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(blobStoreConfiguration, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> blobStoreConfiguration.storageStrategy(), eventsourcingStorageStrategy);
         assertThat(checkSecondStartUp.check().getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 
     @Test
     void startingUpWithDeduplicationThenPassthroughTheStrategyShouldReturnABadResult() {
-        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(DEDUPLICATION_STRATEGY, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> DEDUPLICATION_STRATEGY.storageStrategy(), eventsourcingStorageStrategy);
         checkFirstStartUp.check();
 
-        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(PASSTHROUGH_STRATEGY, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> PASSTHROUGH_STRATEGY.storageStrategy(), eventsourcingStorageStrategy);
         assertThat(checkSecondStartUp.check().getResultType()).isEqualTo(StartUpCheck.ResultType.BAD);
     }
 
     @Test
     void startingUpWithPassthroughThenDeduplicationTheStrategyShouldReturnAGoodResult() {
-        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(PASSTHROUGH_STRATEGY, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkFirstStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> PASSTHROUGH_STRATEGY.storageStrategy(), eventsourcingStorageStrategy);
         checkFirstStartUp.check();
 
-        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(DEDUPLICATION_STRATEGY, eventsourcingStorageStrategy);
+        BlobStoreConfigurationValidationStartUpCheck checkSecondStartUp = new BlobStoreConfigurationValidationStartUpCheck(() -> DEDUPLICATION_STRATEGY.storageStrategy(), eventsourcingStorageStrategy);
         assertThat(checkSecondStartUp.check().getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
 

@@ -17,7 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.blobstore;
+package org.apache.james;
+
+import static org.apache.james.blob.api.MetricableBlobStore.BLOB_STORE_IMPLEMENTATION;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +28,9 @@ import org.apache.james.blob.aes.AESBlobStoreDAO;
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
-import org.apache.james.blob.cassandra.cache.CachedBlobStore;
-import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
-import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
-import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
+import org.apache.james.modules.blobstore.BlobDeduplicationGCModule;
+import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
-import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.CassandraBucketModule;
-import org.apache.james.modules.objectstorage.DefaultBucketModule;
-import org.apache.james.modules.objectstorage.S3BlobStoreModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
@@ -49,27 +44,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 public class BlobStoreModulesChooser {
-    private static final String UNENCRYPTED = "unencrypted";
-
-    static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            install(new CassandraBlobStoreDependenciesModule());
-            install(new CassandraBucketModule());
-
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(CassandraBlobStoreDAO.class);
-        }
-    }
-
-    static class ObjectStorageBlobStoreDAODeclarationModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            install(new S3BlobStoreModule());
-            install(new DefaultBucketModule());
-
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class);
-        }
-    }
+    static final String UNENCRYPTED = "unencrypted";
 
     static class NoEncryptionModule extends AbstractModule {
         @Provides
@@ -101,23 +76,10 @@ public class BlobStoreModulesChooser {
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
-            .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
             .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
-            .add(new StoragePolicyConfigurationSanityEnforcementModule())
             .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))
-            .add(binder -> binder.bind(StorageStrategySupplier.class).toInstance(choosingConfiguration::storageStrategy))
+            .add(binder -> binder.bind(BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier.class).toInstance(choosingConfiguration::storageStrategy))
             .build();
-    }
-
-    public static Module chooseBlobStoreDAOModule(BlobStoreConfiguration.BlobStoreImplName implementation) {
-        switch (implementation) {
-            case CASSANDRA:
-                return new CassandraBlobStoreDAODeclarationModule();
-            case S3:
-                return new ObjectStorageBlobStoreDAODeclarationModule();
-            default:
-                throw new RuntimeException("Unsupported blobStore implementation " + implementation);
-        }
     }
 
     public static Module chooseEncryptionModule(Optional<CryptoConfig> cryptoConfig) {
@@ -129,12 +91,12 @@ public class BlobStoreModulesChooser {
         switch (storageStrategy) {
             case DEDUPLICATION:
                 Module deduplicationBlobModule = binder -> binder.bind(BlobStore.class)
-                    .annotatedWith(Names.named(CachedBlobStore.BACKEND))
+                    .annotatedWith(Names.named(BLOB_STORE_IMPLEMENTATION))
                     .to(DeDuplicationBlobStore.class);
                 return ImmutableList.of(new BlobDeduplicationGCModule(), deduplicationBlobModule);
             case PASSTHROUGH:
                 Module passThroughBlobModule = binder -> binder.bind(BlobStore.class)
-                    .annotatedWith(Names.named(CachedBlobStore.BACKEND))
+                    .annotatedWith(Names.named(BLOB_STORE_IMPLEMENTATION))
                     .to(PassThroughBlobStore.class);
                 return ImmutableList.of(new BlobStoreAPIModule(), passThroughBlobModule);
             default:

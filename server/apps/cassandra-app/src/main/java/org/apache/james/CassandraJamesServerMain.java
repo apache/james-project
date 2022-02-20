@@ -36,9 +36,7 @@ import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
-import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.CassandraBlobStoreModule;
 import org.apache.james.modules.mailbox.CassandraBucketModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
@@ -123,9 +121,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
 
     public static final Module PLUGINS = new CassandraQuotaMailingModule();
 
-    private static final Module BLOB_MODULE = Modules.combine(
-        new BlobStoreAPIModule(),
-        new BlobExportMechanismModule());
+    private static final Module BLOB_MODULE = new BlobExportMechanismModule();
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
         binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends org.apache.james.json.DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
@@ -187,6 +183,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
     public static GuiceJamesServer createServer(CassandraJamesServerConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .combineWith(BlobStoreModulesChooser.chooseModules(configuration.getBlobStoreConfiguration()))
             .combineWith(SearchModuleChooser.chooseModules(configuration.searchConfiguration()))
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()));

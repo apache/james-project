@@ -39,6 +39,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         private Optional<SearchConfiguration> searchConfiguration;
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
+        private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
 
         private Builder() {
@@ -46,6 +47,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             configurationPath = Optional.empty();
             searchConfiguration = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            blobStoreConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -76,6 +78,11 @@ public class CassandraJamesServerConfiguration implements Configuration {
             return this;
         }
 
+        public Builder blobStore(BlobStoreConfiguration blobStoreConfiguration) {
+            this.blobStoreConfiguration = Optional.of(blobStoreConfiguration);
+            return this;
+        }
+
         public Builder searchConfiguration(SearchConfiguration searchConfiguration) {
             this.searchConfiguration = Optional.of(searchConfiguration);
             return this;
@@ -95,6 +102,9 @@ public class CassandraJamesServerConfiguration implements Configuration {
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
                 () -> SearchConfiguration.parse(new PropertiesProvider(fileSystem, configurationPath))));
 
+            BlobStoreConfiguration blobStoreConfiguration = this.blobStoreConfiguration.orElseGet(Throwing.supplier(
+                () -> BlobStoreConfiguration.parse(
+                    new PropertiesProvider(fileSystem, configurationPath))));
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)
@@ -103,7 +113,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
-            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, usersRepositoryChoice);
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice);
         }
     }
 
@@ -114,12 +124,14 @@ public class CassandraJamesServerConfiguration implements Configuration {
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
     private final SearchConfiguration searchConfiguration;
+    private final BlobStoreConfiguration blobStoreConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
 
-    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
+        this.blobStoreConfiguration = blobStoreConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
     }
 
@@ -139,5 +151,9 @@ public class CassandraJamesServerConfiguration implements Configuration {
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
         return usersRepositoryImplementation;
+    }
+
+    public BlobStoreConfiguration getBlobStoreConfiguration() {
+        return blobStoreConfiguration;
     }
 }

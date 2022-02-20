@@ -17,31 +17,38 @@
  * under the License.                                           *
  ***************************************************************/
 
-package org.apache.james.modules.blobstore;
+package org.apache.james.modules.blobstore.validation;
+
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
+import org.apache.james.server.blob.deduplication.StorageStrategy;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class BlobStoreConfigurationValidationStartUpCheck implements StartUpCheck {
+    @FunctionalInterface
+    public interface StorageStrategySupplier extends Supplier<StorageStrategy> {
+
+    }
+
     private static final String BLOB_STORE_CONFIGURATION_VALIDATION = "blobStore-configuration-validation";
-    private final BlobStoreConfiguration blobStoreConfiguration;
+    private final StorageStrategySupplier storageStrategySupplier;
     private final EventsourcingStorageStrategy eventsourcingStorageStrategy;
 
     @VisibleForTesting
     @Inject
-    BlobStoreConfigurationValidationStartUpCheck(BlobStoreConfiguration blobStoreConfiguration, EventsourcingStorageStrategy eventsourcingStorageStrategy) {
-        this.blobStoreConfiguration = blobStoreConfiguration;
+    public BlobStoreConfigurationValidationStartUpCheck(StorageStrategySupplier storageStrategySupplier, EventsourcingStorageStrategy eventsourcingStorageStrategy) {
+        this.storageStrategySupplier = storageStrategySupplier;
         this.eventsourcingStorageStrategy = eventsourcingStorageStrategy;
     }
 
     @Override
     public CheckResult check() {
         try {
-            eventsourcingStorageStrategy.registerStorageStrategy(blobStoreConfiguration.storageStrategy());
+            eventsourcingStorageStrategy.registerStorageStrategy(storageStrategySupplier.get());
             return CheckResult.builder()
                 .checkName(BLOB_STORE_CONFIGURATION_VALIDATION)
                 .resultType(ResultType.GOOD)

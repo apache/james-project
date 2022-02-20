@@ -17,13 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james;
 
-import org.apache.james.blob.api.BlobStore;
+import static org.apache.james.BlobStoreModulesChooser.UNENCRYPTED;
+
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,11 +32,6 @@ public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraBlobStoreDAO.class).in(Scopes.SINGLETON);
-        bind(DeDuplicationBlobStore.class).in(Scopes.SINGLETON);
-
-        bind(BlobStoreDAO.class).to(CassandraBlobStoreDAO.class);
-        bind(BlobStore.class)
-            .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
-            .to(DeDuplicationBlobStore.class);
+        bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(CassandraBlobStoreDAO.class);
     }
 }
