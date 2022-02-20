@@ -19,14 +19,9 @@
 package org.apache.james.server.task.json.dto;
 
 import org.apache.james.json.DTOModule;
-import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
 public class AdditionalInformationDTOModule<T extends TaskExecutionDetails.AdditionalInformation, U extends AdditionalInformationDTO> extends DTOModule<T, U> {
-
-    public static <TaskTypeT extends Task> Builder<TaskTypeT> forAdditionalInformation(Class<TaskTypeT> taskType) {
-        return new Builder<>(taskType);
-    }
 
     public AdditionalInformationDTOModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
         super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);

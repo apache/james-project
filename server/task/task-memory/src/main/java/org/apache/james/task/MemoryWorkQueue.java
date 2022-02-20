@@ -57,7 +57,7 @@ public class MemoryWorkQueue implements WorkQueue {
     public void close() throws IOException {
         try {
             subscription.dispose();
-        } catch (Throwable ignore) {
+        } catch (Exception ignore) {
             //avoid failing during close
         }
         worker.close();
