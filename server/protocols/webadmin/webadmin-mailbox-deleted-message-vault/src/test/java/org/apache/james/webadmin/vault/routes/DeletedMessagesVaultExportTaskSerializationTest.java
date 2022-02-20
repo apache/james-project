@@ -69,7 +69,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
         factory = new DeletedMessagesVaultExportTaskDTO.Factory(exportService, queryTranslator);
         equalityTester = (a, b) -> {
             assertThat(a).isEqualToComparingOnlyGivenFields(b, "userExportFrom", "exportTo");
-            assertThat(queryTranslator.toDTO(a.exportQuery)).isEqualTo(queryTranslator.toDTO(b.exportQuery));
+            assertThat(queryTranslator.toDTO(a.getExportQuery())).isEqualTo(queryTranslator.toDTO(b.getExportQuery()));
         };
     }
 

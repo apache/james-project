@@ -69,12 +69,10 @@ import spark.Service;
 public class MailQueueRoutes implements Routes {
 
     public static final String BASE_URL = "/mailQueues";
-    @VisibleForTesting static final String MAIL_QUEUE_NAME = ":mailQueueName";
-    @VisibleForTesting static final String MAILS = "/mails";
+    static final String MAIL_QUEUE_NAME = ":mailQueueName";
+    static final String MAILS = "/mails";
     
     private static final String DELAYED_QUERY_PARAM = "delayed";
-    private static final String LIMIT_QUERY_PARAM = "limit";
-    @VisibleForTesting static final int DEFAULT_LIMIT_VALUE = 100;
     private static final String SENDER_QUERY_PARAM = "sender";
     private static final String NAME_QUERY_PARAM = "name";
     private static final String RECIPIENT_QUERY_PARAM = "recipient";
@@ -253,7 +251,7 @@ public class MailQueueRoutes implements Routes {
             jsonTransformer);
     }
 
-    private String forceDelayedMailsDelivery(Request request, Response response) throws JsonExtractException, MailQueueException {
+    private String forceDelayedMailsDelivery(Request request, Response response) throws MailQueueException {
         assertDelayedParamIsTrue(request);
         assertPayloadContainsDelayedEntry(request);
         try (ManageableMailQueue mailQueue = assertMailQueueExists(request)) {

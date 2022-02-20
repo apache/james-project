@@ -26,7 +26,7 @@ public class RunningOptions {
         return new RunningOptions(messageRatePerSecond);
     }
 
-    public static RunningOptions DEFAULT = new RunningOptions(10);
+    public static final RunningOptions DEFAULT = new RunningOptions(10);
 
     private final int messagesPerSecond;
 

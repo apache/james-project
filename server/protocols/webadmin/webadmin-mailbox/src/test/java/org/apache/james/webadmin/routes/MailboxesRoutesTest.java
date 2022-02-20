@@ -174,9 +174,9 @@ class MailboxesRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer,
                     DTOConverter.of(
-                        WebAdminErrorRecoveryIndexationDTO.serializationModule(mailboxIdFactory),
-                        WebAdminFullIndexationDTO.serializationModule(mailboxIdFactory),
-                        WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory),
+                        WebAdminErrorRecoveryIndexationDTO.serializationModule(),
+                        WebAdminFullIndexationDTO.serializationModule(),
+                        WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(),
                         SingleMessageReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory))),
                 new MailboxesRoutes(taskManager,
                     jsonTransformer,

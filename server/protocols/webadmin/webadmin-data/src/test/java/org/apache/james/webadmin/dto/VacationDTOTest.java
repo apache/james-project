@@ -19,31 +19,32 @@
 
 package org.apache.james.webadmin.dto;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.apache.james.vacation.api.Vacation;
-import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.apache.james.vacation.api.Vacation;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
-public class VacationDTOTest {
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class VacationDTOTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(VacationDTO.class).verify();
     }
 
     @Test
-    public void fromShouldThrowOnNull() {
+    void fromShouldThrowOnNull() {
         assertThatThrownBy(() -> VacationDTO.from(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromShouldSetAllFields() {
+    void fromShouldSetAllFields() {
         Vacation vacation = Vacation.builder()
             .enabled(false)
             .fromDate(Optional.of(ZonedDateTime.parse("2021-09-13T10:00:00Z")))

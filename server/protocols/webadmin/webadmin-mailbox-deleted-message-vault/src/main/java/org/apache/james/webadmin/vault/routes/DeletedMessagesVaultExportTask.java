@@ -34,8 +34,6 @@ import org.apache.james.vault.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public class DeletedMessagesVaultExportTask implements Task {
 
     static final TaskType TYPE = TaskType.of("deleted-messages-export");
@@ -76,8 +74,7 @@ public class DeletedMessagesVaultExportTask implements Task {
 
     private final ExportService exportService;
     private final Username userExportFrom;
-    @VisibleForTesting
-    final Query exportQuery;
+    private final Query exportQuery;
     private final MailAddress exportTo;
     private final AtomicLong totalExportedMessages;
 
@@ -87,6 +84,11 @@ public class DeletedMessagesVaultExportTask implements Task {
         this.exportQuery = exportQuery;
         this.exportTo = exportTo;
         this.totalExportedMessages = new AtomicLong();
+    }
+
+
+    public Query getExportQuery() {
+        return exportQuery;
     }
 
     @Override

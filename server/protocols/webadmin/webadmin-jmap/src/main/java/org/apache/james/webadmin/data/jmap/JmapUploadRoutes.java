@@ -30,8 +30,6 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.data.jmap.UploadRepositoryCleanupTask.CleanupScope;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -39,9 +37,6 @@ import spark.Request;
 import spark.Service;
 
 public class JmapUploadRoutes implements Routes {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmapUploadRoutes.class);
-
     public static final String BASE_PATH = "/jmap/uploads";
 
     private final CassandraUploadRepository uploadRepository;

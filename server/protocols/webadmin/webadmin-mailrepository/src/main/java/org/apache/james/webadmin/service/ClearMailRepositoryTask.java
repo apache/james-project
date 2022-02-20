@@ -123,7 +123,7 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     private void removeAllInAllRepositories() throws MessagingException {
-        mailRepositories.forEach(Throwing.consumer(MailRepository::removeAll));
+        mailRepositories.forEach(Throwing.consumer(MailRepository::removeAll).sneakyThrow());
     }
 
     @Override

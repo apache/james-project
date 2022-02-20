@@ -46,12 +46,12 @@ public class CassandraMigrationRoutes implements Routes {
     private static final String VERSION_BASE_LATEST = VERSION_BASE + "/latest";
     private static final String VERSION_UPGRADE_BASE = VERSION_BASE + "/upgrade";
     private static final String VERSION_UPGRADE_TO_LATEST_BASE = VERSION_UPGRADE_BASE + "/latest";
+    public static final String MIGRATION_REQUEST_CAN_NOT_BE_DONE = "The migration requested can not be performed";
 
     private final CassandraMigrationService cassandraMigrationService;
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
-    public static String MIGRATION_REQUEST_CAN_NOT_BE_DONE = "The migration requested can not be performed";
 
     @Inject
     public CassandraMigrationRoutes(CassandraMigrationService cassandraMigrationService,

@@ -38,13 +38,13 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO.serializationModule(mailboxIdFactory);
+        return WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO.serializationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO.serializationModule(mailboxIdFactory);
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation() {
+        return WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO.serializationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
@@ -56,7 +56,7 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMailboxReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
@@ -68,6 +68,6 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule();
     }
 }

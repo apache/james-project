@@ -28,7 +28,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class CreateMissingParentsTaskSerializationTest {
+class CreateMissingParentsTaskSerializationTest {
     MailboxManager mailboxManager;
 
     @BeforeEach

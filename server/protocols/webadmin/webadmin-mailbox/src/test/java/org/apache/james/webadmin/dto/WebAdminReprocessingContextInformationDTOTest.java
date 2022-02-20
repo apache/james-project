@@ -78,7 +78,7 @@ class WebAdminReprocessingContextInformationDTOTest {
 
         String json =
             JsonGenericSerializer.forModules(WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO
-                .serializationModule(new TestId.Factory()))
+                .serializationModule())
                 .withoutNestedType()
                 .serialize(domainObject);
 
@@ -89,7 +89,7 @@ class WebAdminReprocessingContextInformationDTOTest {
     @Test
     void deserializeErrorRecoveryShouldNotBeSupported() {
         assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO
-            .serializationModule(new TestId.Factory()))
+            .serializationModule())
             .withoutNestedType()
             .deserialize(serializedErrorRecoveryAdditionalInformation))
             .isInstanceOf(InvalidDefinitionException.class);
@@ -107,7 +107,7 @@ class WebAdminReprocessingContextInformationDTOTest {
 
         String json =
             JsonGenericSerializer.forModules(WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO
-                .serializationModule(new TestId.Factory()))
+                .serializationModule())
                 .withoutNestedType()
                 .serialize(domainObject);
 
@@ -118,7 +118,7 @@ class WebAdminReprocessingContextInformationDTOTest {
     @Test
     void deserializeFullShouldNotBeSupported() {
         assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO
-            .serializationModule(new TestId.Factory()))
+            .serializationModule())
             .withoutNestedType()
             .deserialize(serializedFullAdditionalInformation))
             .isInstanceOf(InvalidDefinitionException.class);

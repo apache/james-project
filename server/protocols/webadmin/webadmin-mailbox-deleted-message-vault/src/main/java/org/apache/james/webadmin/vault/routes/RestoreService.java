@@ -60,7 +60,7 @@ class RestoreService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreService.class);
     private static final Predicate<Throwable> CONTENT_NOT_FOUND_PREDICATE =
-        throwable -> throwable instanceof DeletedMessageContentNotFoundException;
+        DeletedMessageContentNotFoundException.class::isInstance;
 
     private final DeletedMessageVault deletedMessageVault;
     private final MailboxManager mailboxManager;

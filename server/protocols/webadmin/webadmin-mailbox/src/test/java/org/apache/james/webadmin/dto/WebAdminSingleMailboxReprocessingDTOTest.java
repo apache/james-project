@@ -72,7 +72,7 @@ class WebAdminSingleMailboxReprocessingDTOTest {
 
         String json =
             JsonGenericSerializer.forModules(WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO
-                .serializationModule(new TestId.Factory()))
+                .serializationModule())
                 .withoutNestedType()
                 .serialize(domainObject);
 
@@ -83,7 +83,7 @@ class WebAdminSingleMailboxReprocessingDTOTest {
     @Test
     void deserializeShouldNotBeSupported() {
         assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO
-            .serializationModule(new TestId.Factory()))
+            .serializationModule())
             .withoutNestedType()
             .deserialize(serializedAdditionalInformation))
             .isInstanceOf(InvalidDefinitionException.class);

@@ -39,9 +39,6 @@ public class CassandraMappingsRoutes implements Routes {
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
-    private static final String INVALID_ACTION_ARGUMENT_REQUEST = "Invalid action argument for performing operation on mappings data";
-    private static final String ACTION_REQUEST_CAN_NOT_BE_DONE = "The action requested for performing operation on mappings data cannot be performed";
-
     @Inject
     CassandraMappingsRoutes(CassandraMappingsService cassandraMappingsService, TaskManager taskManager, JsonTransformer jsonTransformer) {
         this.cassandraMappingsService = cassandraMappingsService;

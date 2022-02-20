@@ -19,8 +19,17 @@
 
 package org.apache.james.webadmin.routes;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
 import org.apache.james.DefaultVacationService;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -45,18 +54,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
-import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.when;
-import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-
-public class VacationRoutesTest {
+class VacationRoutesTest {
 
     private static final String BOB = "bob@example.org";
     private static final String ALICE = "alice@example.org";

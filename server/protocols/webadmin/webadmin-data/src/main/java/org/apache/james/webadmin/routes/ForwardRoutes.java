@@ -63,8 +63,6 @@ public class ForwardRoutes implements Routes {
     private static final String FORWARD_DESTINATION_ADDRESS = "forwardDestinationAddress";
     private static final String USER_IN_FORWARD_DESTINATION_ADDRESSES_PATH = FORWARD_ADDRESS_PATH + SEPARATOR +
         "targets" + SEPARATOR + ":" + FORWARD_DESTINATION_ADDRESS;
-    private static final String MAILADDRESS_ASCII_DISCLAIMER = "Note that email addresses are restricted to ASCII character set. " +
-        "Mail addresses not matching this criteria will be rejected.";
     private static final String FORWARD_BASE_ADDRESS_TYPE = "base forward";
     private static final String FORWARD_DESTINATION_ADDRESS_TYPE = "target forward";
 

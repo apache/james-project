@@ -52,7 +52,6 @@ import spark.Service;
 public class DomainMappingsRoutes implements Routes {
     public static final String DOMAIN_MAPPINGS = "/domainMappings";
     private static final String FROM_DOMAIN = "fromDomain";
-    private static final String SPECIFIC_MAPPING_PATH = SEPARATOR + "/{" + FROM_DOMAIN + "}";
     private static final String SPECIFIC_MAPPING = DOMAIN_MAPPINGS + SEPARATOR + ":" + FROM_DOMAIN;
 
     private final RecipientRewriteTable recipientRewriteTable;

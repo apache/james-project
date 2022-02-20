@@ -46,11 +46,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import reactor.core.publisher.Mono;
 import spark.Service;
 
-public class SolveMailboxInconsistenciesRequestToTaskTest {
+class SolveMailboxInconsistenciesRequestToTaskTest {
     private final class JMAPRoutes implements Routes {
         private final SolveMailboxInconsistenciesService service;
         private final TaskManager taskManager;

@@ -54,8 +54,8 @@ public class PreviousReIndexingService {
             throw new TaskNotYetFinishedException(executionDetails.getStatus());
         }
         return executionDetails.getAdditionalInformation()
-            .filter(additionalInformation -> additionalInformation instanceof IndexingDetailInformation)
-            .map(additionalInformation -> (IndexingDetailInformation) additionalInformation)
+            .filter(IndexingDetailInformation.class::isInstance)
+            .map(IndexingDetailInformation.class::cast)
             .orElseThrow(() -> new NotAnIndexingRetriableTask(executionDetails.getType()));
     }
 }

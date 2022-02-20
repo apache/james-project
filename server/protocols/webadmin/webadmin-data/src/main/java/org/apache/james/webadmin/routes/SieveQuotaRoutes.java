@@ -46,7 +46,6 @@ public class SieveQuotaRoutes implements Routes {
     public static final String DEFAULT_QUOTA_PATH = ROOT_PATH + SEPARATOR + "default";
     private static final String USER_ID = "userId";
     private static final String USER_SIEVE_QUOTA_PATH = Joiner.on(SEPARATOR).join(ROOT_PATH, "users", ":" + USER_ID);
-    private static final String REQUESTED_SIZE = "requestedSize";
 
     private final SieveQuotaRepository sieveQuotaRepository;
     private final UsersRepository usersRepository;
