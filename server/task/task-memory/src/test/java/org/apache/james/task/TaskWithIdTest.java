@@ -23,10 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public class TaskWithIdTest {
+class TaskWithIdTest {
 
     @Test
-    public void twoTasksWithSameIdShouldBeEqual() {
+    void twoTasksWithSameIdShouldBeEqual() {
         TaskId id = TaskId.generateTaskId();
         Task task1 = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
         Task task2 = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
@@ -36,7 +36,7 @@ public class TaskWithIdTest {
     }
 
     @Test
-    public void sameTaskWithDifferentIdShouldNotBeEqual() {
+    void sameTaskWithDifferentIdShouldNotBeEqual() {
         TaskId id1 = TaskId.generateTaskId();
         TaskId id2 = TaskId.generateTaskId();
         Task task = new MemoryReferenceTask(() -> Task.Result.COMPLETED);

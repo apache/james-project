@@ -72,7 +72,7 @@ class WebAdminUserReprocessingDTOTest {
 
         String json =
             JsonGenericSerializer.forModules(WebAdminUserReindexingTaskAdditionalInformationDTO
-                .serializationModule(new TestId.Factory()))
+                .serializationModule())
                 .withoutNestedType()
                 .serialize(domainObject);
 
@@ -83,7 +83,7 @@ class WebAdminUserReprocessingDTOTest {
     @Test
     void deserializeShouldNotBeSupported() {
         assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminUserReindexingTaskAdditionalInformationDTO
-            .serializationModule(new TestId.Factory()))
+            .serializationModule())
             .withoutNestedType()
             .deserialize(serializedAdditionalInformation))
             .isInstanceOf(InvalidDefinitionException.class);
