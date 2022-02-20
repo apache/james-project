@@ -290,20 +290,20 @@ public class RabbitMQConfiguration {
         }
     }
 
-    private static String USE_SSL = "ssl.enabled";
-    private static String HOSTS = "hosts";
-    private static String USE_QUORUM_QUEUES = "quorum.queues.enable";
-    private static String QUORUM_QUEUES_REPLICATION_FACTOR = "quorum.queues.replication.factor";
-    private static String USE_SSL_MANAGEMENT = "ssl.management.enabled";
+    private static final String USE_SSL = "ssl.enabled";
+    private static final String HOSTS = "hosts";
+    private static final String USE_QUORUM_QUEUES = "quorum.queues.enable";
+    private static final String QUORUM_QUEUES_REPLICATION_FACTOR = "quorum.queues.replication.factor";
+    private static final String USE_SSL_MANAGEMENT = "ssl.management.enabled";
 
-    private static String SSL_TRUST_STORE_PATH = "ssl.truststore";
-    private static String SSL_TRUST_STORE_PASSWORD = "ssl.truststore.password";
-    private static String SSL_VALIDATION_STRATEGY = "ssl.validation.strategy";
-    private static String SSL_HOSTNAME_VERIFIER = "ssl.hostname.verifier";
+    private static final String SSL_TRUST_STORE_PATH = "ssl.truststore";
+    private static final String SSL_TRUST_STORE_PASSWORD = "ssl.truststore.password";
+    private static final String SSL_VALIDATION_STRATEGY = "ssl.validation.strategy";
+    private static final String SSL_HOSTNAME_VERIFIER = "ssl.hostname.verifier";
 
-    private static String SSL_KEY_STORE_PATH = "ssl.keystore";
-    private static String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
-    private static String QUEUE_TTL = "notification.queue.ttl";
+    private static final String SSL_KEY_STORE_PATH = "ssl.keystore";
+    private static final String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
+    private static final String QUEUE_TTL = "notification.queue.ttl";
 
     public static class ManagementCredentials {
 

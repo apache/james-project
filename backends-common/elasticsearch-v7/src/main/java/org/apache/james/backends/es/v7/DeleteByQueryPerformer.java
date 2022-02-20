@@ -23,8 +23,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import reactor.core.publisher.Mono;
 
 public class DeleteByQueryPerformer {
@@ -32,7 +30,6 @@ public class DeleteByQueryPerformer {
     private final ReactorElasticSearchClient client;
     private final WriteAliasName aliasName;
 
-    @VisibleForTesting
     DeleteByQueryPerformer(ReactorElasticSearchClient client, WriteAliasName aliasName) {
         this.client = client;
         this.aliasName = aliasName;

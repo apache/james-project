@@ -63,8 +63,8 @@ public class ClusterFactory {
 
         Cluster cluster = clusterBuilder.build();
         try {
-            configuration.getQueryLoggerConfiguration().map(queryLoggerConfiguration ->
-                cluster.register(queryLoggerConfiguration.getQueryLogger()));
+            configuration.getQueryLoggerConfiguration()
+                .ifPresent(queryLoggerConfiguration -> cluster.register(queryLoggerConfiguration.getQueryLogger()));
             ensureContactable(cluster);
             return cluster;
         } catch (Exception e) {

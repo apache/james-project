@@ -21,8 +21,6 @@ package org.apache.james.backends.cassandra.versions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +41,7 @@ class CassandraSchemaVersionDAOTest {
     @Test
     void getCurrentSchemaVersionShouldReturnEmptyWhenTableIsEmpty() {
         assertThat(testee.getCurrentSchemaVersion().block())
-            .isEqualTo(Optional.empty());
+            .isEmpty();
     }
 
     @Test

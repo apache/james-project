@@ -393,13 +393,13 @@ public interface RabbitMQManagementAPI {
             .getSslConfiguration()
             .getStrategy();
 
-        final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
+        final TrustStrategy trustAll = (x509Certificates, authType) -> true;
 
         switch (strategy) {
             case DEFAULT:
                 break;
             case IGNORE:
-                sslContextBuilder.loadTrustMaterial(TRUST_ALL);
+                sslContextBuilder.loadTrustMaterial(trustAll);
                 break;
             case OVERRIDE:
                 applyTrustStore(sslContextBuilder, configuration);

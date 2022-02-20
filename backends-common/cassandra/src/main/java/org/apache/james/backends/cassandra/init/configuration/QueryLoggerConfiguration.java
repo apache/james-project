@@ -174,11 +174,9 @@ public class QueryLoggerConfiguration {
     public QueryLogger getQueryLogger() {
         QueryLogger.Builder builder = QueryLogger.builder();
 
-        percentileTracker.map(percentileTracker ->
-            slowQueryLatencyThresholdPercentile.map(slowQueryLatencyThresholdPercentile ->
-                builder.withDynamicThreshold(percentileTracker, slowQueryLatencyThresholdPercentile)
-            )
-        );
+        percentileTracker.ifPresent(percentileTracker ->
+            slowQueryLatencyThresholdPercentile.ifPresent(slowQueryLatencyThresholdPercentile ->
+                builder.withDynamicThreshold(percentileTracker, slowQueryLatencyThresholdPercentile)));
 
         constantThreshold.ifPresent(builder::withConstantThreshold);
         constantThreshold.ifPresent(builder::withConstantThreshold);
