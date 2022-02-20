@@ -19,13 +19,15 @@
 
 package org.apache.james.modules.blobstore.validation;
 
+import java.util.function.Supplier;
+
 import javax.inject.Inject;
 
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.server.blob.deduplication.StorageStrategy;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -43,8 +45,8 @@ public class StorageStrategyValidationEventSourcingSystem {
             eventStore);
     }
 
-    public CheckResult validate(BlobStoreConfiguration blobStoreConfiguration) {
-        return Mono.from(eventSourcingSystem.dispatch(new RegisterStorageStrategy(blobStoreConfiguration.storageStrategy())))
+    public CheckResult validate(Supplier<StorageStrategy> storageStrategySupplier) {
+        return Mono.from(eventSourcingSystem.dispatch(new RegisterStorageStrategy(storageStrategySupplier.get())))
             .thenReturn(CheckResult.builder()
                 .checkName(CHECK)
                 .resultType(StartUpCheck.ResultType.GOOD)
