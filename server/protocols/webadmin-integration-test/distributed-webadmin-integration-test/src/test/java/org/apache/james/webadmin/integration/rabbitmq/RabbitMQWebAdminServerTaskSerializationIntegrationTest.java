@@ -751,7 +751,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.gcedBlobCount", is(0))
             .body("additionalInformation.errorCount", is(0))
             .body("additionalInformation.bloomFilterExpectedBlobCount", is(1000000))
-            .body("additionalInformation.bloomFilterAssociatedProbability", is(0.8F));
+            .body("additionalInformation.bloomFilterAssociatedProbability", is(0.01F));
     }
 
     private MailboxAdded createMailboxAdded() {

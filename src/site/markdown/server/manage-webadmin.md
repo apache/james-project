@@ -3534,8 +3534,11 @@ curl -XDELETE http://ip:port/blobs?scope=unreferenced
 Additional parameters include Bloom filter tuning parameters:
 
  - **associatedProbability**: Allow to define the targeted false positive rate. Note that subsequent runs do not have the
-same false-positives.
- - **expectedBlobCount**: Expected count of blobs used to size the bloom filters.
+same false-positives. Defaults to `0.01`.
+ - **expectedBlobCount**: Expected count of blobs used to size the bloom filters. Defaults to `1.000.000`.
+ 
+These settings directly impacts the memory footprint of the bloom filter. [Simulators](https://hur.st/bloomfilter/) can
+help understand those parameters.
 
 The created task has the following additional information:
 
