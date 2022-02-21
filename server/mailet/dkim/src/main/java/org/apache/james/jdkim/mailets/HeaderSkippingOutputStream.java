@@ -36,6 +36,7 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
         super(out);
     }
 
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
         if (inHeaders) {
             for (int i = off; i < off + len; i++) {
@@ -57,6 +58,7 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
         }
     }
 
+    @Override
     public void write(int b) throws IOException {
         if (inHeaders) {
             if (skipTo[pos] == b) {

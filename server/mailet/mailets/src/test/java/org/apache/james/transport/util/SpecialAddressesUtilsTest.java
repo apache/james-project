@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class SpecialAddressesUtilsTest {
+class SpecialAddressesUtilsTest {
 
     private MailAddress postmaster;
     private SpecialAddressesUtils testee;

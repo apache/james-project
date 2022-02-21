@@ -60,7 +60,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-public class ManageSieveMailetTestCase {
+class ManageSieveMailetTestCase {
 
     public static final Username USERNAME = Username.of("test@localhost");
     public static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");

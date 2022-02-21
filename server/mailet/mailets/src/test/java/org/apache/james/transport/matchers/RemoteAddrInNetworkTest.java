@@ -32,7 +32,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class RemoteAddrInNetworkTest {
+class RemoteAddrInNetworkTest {
     private RemoteAddrInNetwork matcher;
     private FakeMail fakeMail;
     private MailAddress testRecipient;

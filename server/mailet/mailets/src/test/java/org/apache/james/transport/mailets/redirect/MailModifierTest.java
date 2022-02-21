@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.redirect;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
@@ -25,7 +26,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.server.core.MailImpl;
 import org.junit.jupiter.api.Test;
 
-public class MailModifierTest {
+class MailModifierTest {
 
     @Test
     void buildShouldThrowWhenMailetIsNull() {
@@ -55,10 +56,12 @@ public class MailModifierTest {
 
     @Test
     void buildShouldWorkWhenEverythingProvided() {
-        MailModifier.builder()
-            .mailet(mock(RedirectNotify.class))
-            .mail(mock(MailImpl.class))
-            .dns(mock(DNSService.class))
-            .build();
+        assertThatCode(() ->
+            MailModifier.builder()
+                .mailet(mock(RedirectNotify.class))
+                .mail(mock(MailImpl.class))
+                .dns(mock(DNSService.class))
+                .build())
+            .doesNotThrowAnyException();
     }
 }

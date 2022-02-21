@@ -73,7 +73,7 @@ public class Bouncer {
 
     private Optional<Attribute> computeErrorCode(Exception ex) {
         return Optional.ofNullable(ex)
-            .filter(e -> e instanceof MessagingException)
+            .filter(MessagingException.class::isInstance)
             .map(MessagingException.class::cast)
             .map(EnhancedMessagingException::new)
             .flatMap(EnhancedMessagingException::getReturnCode)

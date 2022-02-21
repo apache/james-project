@@ -39,7 +39,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class NotifySenderTest {
+class NotifySenderTest {
 
     private static final String MAILET_NAME = "mailetName";
 

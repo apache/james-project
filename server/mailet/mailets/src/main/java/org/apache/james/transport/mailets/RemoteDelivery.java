@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -39,7 +38,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
-import org.apache.james.transport.mailets.remote.delivery.RemoteDeliverySocketFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -172,13 +170,6 @@ public class RemoteDelivery extends GenericMailet {
     public void init() throws MessagingException {
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.createQueue(configuration.getOutGoingQueueName());
-        try {
-            if (configuration.isBindUsed()) {
-                RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());
-            }
-        } catch (UnknownHostException e) {
-            LOGGER.error("Invalid bind setting ({}): ", configuration.getBindAddress(), e);
-        }
         deliveryRunnable = new DeliveryRunnable(queue,
             configuration,
             dnsServer,

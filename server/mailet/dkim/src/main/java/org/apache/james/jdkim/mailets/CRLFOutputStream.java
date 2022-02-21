@@ -68,6 +68,7 @@ public class CRLFOutputStream extends FilterOutputStream {
      * @throws IOException
      *             if an error occurs writing the byte
      */
+    @Override
     public void write(int b) throws IOException {
         switch (b) {
             case '\r':
@@ -107,6 +108,7 @@ public class CRLFOutputStream extends FilterOutputStream {
     /**
      * @see java.io.FilterOutputStream#write(byte[], int, int)
      */
+    @Override
     public synchronized void write(byte[] buffer, int offset, int length)
             throws IOException {
         /* optimized */

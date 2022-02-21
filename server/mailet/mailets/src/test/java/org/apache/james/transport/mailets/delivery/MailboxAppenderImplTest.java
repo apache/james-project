@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-public class MailboxAppenderImplTest {
+class MailboxAppenderImplTest {
 
     public static final Username USER = Username.of("user");
     public static final String FOLDER = "folder";

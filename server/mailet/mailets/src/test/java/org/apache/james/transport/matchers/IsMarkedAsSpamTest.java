@@ -29,7 +29,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class IsMarkedAsSpamTest {
+class IsMarkedAsSpamTest {
     private IsMarkedAsSpam matcher;
 
     @BeforeEach
