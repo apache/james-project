@@ -53,10 +53,10 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
 
     public synchronized void disableFraming(ChannelHandlerContext ctx) {
         this.framingEnabled = false;
-        if (actualReadableBytes() > 0) {
-            final ByteBuf spareBytes = internalBuffer().readBytes(actualReadableBytes());
-            ctx.fireChannelRead(spareBytes);
-        }
+
+        ByteBuf spareBytes = internalBuffer().retainedDuplicate();
+        internalBuffer().clear();
+        ctx.fireChannelRead(spareBytes);
     }
 
     @Override

@@ -184,9 +184,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
                 final SwitchableLineBasedFrameDecoder framer = (SwitchableLineBasedFrameDecoder) pipeline.get(FRAMER);
-                framer.disableFraming(framerContext);
-                
+
                 in.resetReaderIndex();
+                framer.disableFraming(framerContext);
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
