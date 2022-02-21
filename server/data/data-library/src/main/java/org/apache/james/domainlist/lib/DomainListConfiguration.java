@@ -129,7 +129,7 @@ public class DomainListConfiguration {
     }
 
     public static final Duration DEFAULT_EXPIRACY = Duration.ofSeconds(10);
-    public static DomainListConfiguration DEFAULT = builder().build();
+    public static final DomainListConfiguration DEFAULT = builder().build();
 
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
