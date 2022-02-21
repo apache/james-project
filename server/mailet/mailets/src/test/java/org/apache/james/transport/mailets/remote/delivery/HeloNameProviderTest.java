@@ -30,7 +30,7 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class HeloNameProviderTest {
+class HeloNameProviderTest {
 
     public static final String DOMAIN = "domain";
 

@@ -53,7 +53,7 @@ class ResourceLocatorTest {
     }
 
     @Test
-    public void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
+    void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
         when(sieveRepository.getActive(USERNAME)).thenThrow(new ScriptNotFoundException());
         when(usersRepository.getUsername(mailAddress)).thenReturn(Username.of(RECEIVER_LOCALHOST));
 
@@ -62,7 +62,7 @@ class ResourceLocatorTest {
     }
 
     @Test
-    public void resourceLocatorImplShouldWork() throws Exception {
+    void resourceLocatorImplShouldWork() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
         when(sieveRepository.getActive(USERNAME)).thenReturn(inputStream);
         when(usersRepository.getUsername(mailAddress)).thenReturn(Username.of(RECEIVER_LOCALHOST));

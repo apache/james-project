@@ -43,7 +43,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getPassThroughShouldReturnTrueWhenSetToTrue() throws Exception {
+    void getPassThroughShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("passThrough", "true")
@@ -56,7 +56,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getPassThroughShouldReturnFalseWhenSetToFalse() throws Exception {
+    void getPassThroughShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("passThrough", "false")
@@ -69,7 +69,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getPassThroughShouldReturnFalseWhenNotSet() throws Exception {
+    void getPassThroughShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -81,7 +81,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getFakeDomainCheckShouldReturnTrueWhenSetToTrue() throws Exception {
+    void getFakeDomainCheckShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("fakeDomainCheck", "true")
@@ -94,7 +94,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getFakeDomainCheckShouldReturnFalseWhenSetToFalse() throws Exception {
+    void getFakeDomainCheckShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("fakeDomainCheck", "false")
@@ -107,7 +107,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getFakeDomainCheckShouldReturnFalseWhenNotSet() throws Exception {
+    void getFakeDomainCheckShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -119,7 +119,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getInLineTypeShouldReturnValueWhenSet() throws Exception {
+    void getInLineTypeShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("inline", "none")
@@ -132,7 +132,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getInLineTypeShouldReturnNoneWhenNotSet() throws Exception {
+    void getInLineTypeShouldReturnNoneWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -144,7 +144,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getAttachmentTypeShouldReturnValueWhenSet() throws Exception {
+    void getAttachmentTypeShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("attachment", "unaltered")
@@ -157,7 +157,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getAttachmentTypeShouldReturnMessageWhenNotSet() throws Exception {
+    void getAttachmentTypeShouldReturnMessageWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -169,7 +169,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getMessageShouldReturnMessageValueWhenSet() throws Exception {
+    void getMessageShouldReturnMessageValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("message", "my message")
@@ -182,7 +182,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getMessageShouldReturnEmptyWhenNotSet() throws Exception {
+    void getMessageShouldReturnEmptyWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -190,11 +190,11 @@ class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
-        assertThat(message).isEqualTo("");
+        assertThat(message).isEmpty();
     }
 
     @Test
-    public void getSubjectShouldReturnValueWhenSet() throws Exception {
+    void getSubjectShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("subject", "my subject")
@@ -207,7 +207,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSubjectShouldReturnNullWhenNotSet() throws Exception {
+    void getSubjectShouldReturnNullWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -219,7 +219,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSubjectPrefixShouldReturnValueWhenSet() throws Exception {
+    void getSubjectPrefixShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("prefix", "my prefix")
@@ -232,7 +232,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSubjectPrefixShouldReturnNullWhenNotSet() throws Exception {
+    void getSubjectPrefixShouldReturnNullWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -244,7 +244,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isAttachErrorShouldReturnTrueWhenSetToTrue() throws Exception {
+    void isAttachErrorShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("attachError", "true")
@@ -257,7 +257,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isAttachErrorShouldReturnFalseWhenSetToFalse() throws Exception {
+    void isAttachErrorShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("attachError", "false")
@@ -270,7 +270,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isAttachErrorShouldReturnFalseWhenNotSet() throws Exception {
+    void isAttachErrorShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -282,7 +282,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isReplyShouldReturnTrueWhenSetToTrue() throws Exception {
+    void isReplyShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("isReply", "true")
@@ -295,7 +295,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isReplyShouldReturnFalseWhenSetToFalse() throws Exception {
+    void isReplyShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("isReply", "false")
@@ -308,7 +308,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isReplyShouldReturnFalseWhenNotSet() throws Exception {
+    void isReplyShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -320,7 +320,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnValueWhenSet() throws Exception {
+    void getRecipientsShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("recipients", "user@james.org, user2@james.org")
@@ -333,7 +333,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnAbsentWhenEmpty() throws Exception {
+    void getRecipientsShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("recipients", "")
@@ -346,7 +346,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnAbsentWhenNotSet() throws Exception {
+    void getRecipientsShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -358,7 +358,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getToShouldReturnValueWhenSet() throws Exception {
+    void getToShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("to", "user@james.org, user2@james.org")
@@ -371,7 +371,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getToShouldReturnAbsentWhenEmpty() throws Exception {
+    void getToShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("to", "")
@@ -384,7 +384,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getToShouldReturnAbsentWhenNotSet() throws Exception {
+    void getToShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -396,7 +396,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReversePathShouldReturnValueWhenSet() throws Exception {
+    void getReversePathShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("reversePath", "user@james.org, user2@james.org")
@@ -409,7 +409,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReversePathShouldReturnAbsentWhenEmpty() throws Exception {
+    void getReversePathShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("reversePath", "")
@@ -422,7 +422,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReversePathShouldReturnAbsentWhenNotSet() throws Exception {
+    void getReversePathShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -434,7 +434,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSenderShouldReturnValueWhenSet() throws Exception {
+    void getSenderShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("sender", "user@james.org, user2@james.org")
@@ -447,7 +447,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSenderShouldReturnAbsentWhenEmpty() throws Exception {
+    void getSenderShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("sender", "")
@@ -460,7 +460,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getSenderShouldReturnAbsentWhenNotSet() throws Exception {
+    void getSenderShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -472,7 +472,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReplyToShouldReturnValueWhenSet() throws Exception {
+    void getReplyToShouldReturnValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("replyTo", "user@james.org, user2@james.org")
@@ -485,7 +485,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReplyToShouldReturnreplytoValueWhenSet() throws Exception {
+    void getReplyToShouldReturnreplytoValueWhenSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("replyto", "user@james.org, user2@james.org")
@@ -498,7 +498,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReplyToShouldReturnAbsentWhenEmpty() throws Exception {
+    void getReplyToShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("replyTo", "")
@@ -511,7 +511,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void getReplyToShouldReturnAbsentWhenNotSet() throws Exception {
+    void getReplyToShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -523,7 +523,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isDebugShouldReturnTrueWhenSetToTrue() throws Exception {
+    void isDebugShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("debug", "true")
@@ -536,7 +536,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isDebugShouldReturnFalseWhenSetToFalse() throws Exception {
+    void isDebugShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("debug", "false")
@@ -549,7 +549,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isDebugShouldReturnFalseWhenNotSet() throws Exception {
+    void isDebugShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
@@ -561,7 +561,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isStaticShouldReturnTrueWhenSetToTrue() throws Exception {
+    void isStaticShouldReturnTrueWhenSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("static", "true")
@@ -574,7 +574,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isStaticShouldReturnFalseWhenSetToFalse() throws Exception {
+    void isStaticShouldReturnFalseWhenSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("static", "false")
@@ -587,7 +587,7 @@ class RedirectMailetInitParametersTest {
     }
 
     @Test
-    public void isStaticShouldReturnFalseWhenNotSet() throws Exception {
+    void isStaticShouldReturnFalseWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();

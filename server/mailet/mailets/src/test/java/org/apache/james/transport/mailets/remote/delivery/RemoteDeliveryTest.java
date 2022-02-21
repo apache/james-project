@@ -55,7 +55,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class RemoteDeliveryTest {
+class RemoteDeliveryTest {
 
     public static class MailProjection {
         public static MailProjection from(Mail mail) {

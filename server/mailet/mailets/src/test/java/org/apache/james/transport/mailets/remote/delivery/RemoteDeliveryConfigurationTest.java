@@ -33,7 +33,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
-public class RemoteDeliveryConfigurationTest {
+class RemoteDeliveryConfigurationTest {
 
     @Test
     void isDebugShouldBeFalseByDefault() {
@@ -107,7 +107,7 @@ public class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getSmtpTimeout())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test
@@ -177,7 +177,7 @@ public class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getConnectionTimeout())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test
@@ -379,7 +379,7 @@ public class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDnsProblemRetry())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test
@@ -389,7 +389,7 @@ public class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDnsProblemRetry())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test

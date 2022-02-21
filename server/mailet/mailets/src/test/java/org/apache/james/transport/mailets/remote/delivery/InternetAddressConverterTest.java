@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class InternetAddressConverterTest {
+class InternetAddressConverterTest {
 
     @Test
     void convertShouldWorkWithEmptyAddressList() {

@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
 
-public class RequeueTest {
+class RequeueTest {
     private Mail mailSample;
     private MailQueueFactory<?> mailQueueFactory;
     private MailQueue spoolQueue;
@@ -179,7 +179,7 @@ public class RequeueTest {
             .block();
 
         assertThat(mailQueueItem).isNotNull();
-        assertThat(Duration.between(enqueueTime, dequeueTime.get()).abs().toSeconds()).isEqualTo(0);
+        assertThat(Duration.between(enqueueTime, dequeueTime.get()).abs().toSeconds()).isZero();
     }
 
     @Test

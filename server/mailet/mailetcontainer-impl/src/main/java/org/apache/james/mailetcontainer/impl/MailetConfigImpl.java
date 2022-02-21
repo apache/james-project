@@ -44,10 +44,7 @@ public class MailetConfigImpl implements MailetConfig {
     /** The mailet name */
     private String name;
 
-    // This would probably be better.
-    // Properties params = new Properties();
-    // Instead, we're tied to the Configuration object
-    /** The mailet Avalon Configuration */
+    /** The mailet Configuration */
     private Configuration configuration;
 
     /**

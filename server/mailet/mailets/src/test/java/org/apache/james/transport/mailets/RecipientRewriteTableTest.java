@@ -65,7 +65,7 @@ class RecipientRewriteTableTest {
     }
 
     @Test
-    public void serviceShouldThrowExceptionWithNullMail() {
+    void serviceShouldThrowExceptionWithNullMail() {
         assertThatThrownBy(() -> mailet.service(null))
             .isInstanceOf(NullPointerException.class);
     }

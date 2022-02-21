@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-public class RepeatTest {
+class RepeatTest {
 
     public static final String ELEMENT = "a";
 

@@ -22,29 +22,21 @@ package org.apache.james.transport.mailets;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.util.MimeMessageUtil;
@@ -94,7 +86,7 @@ class RecipientRewriteTableProcessorTest {
     }
 
     @Test
-    public void handleMappingsShouldThrowExceptionWhenMappingsContainAtLeastOneNoneDomainObjectButCannotGetDefaultDomain() throws Exception {
+    void handleMappingsShouldThrowExceptionWhenMappingsContainAtLeastOneNoneDomainObjectButCannotGetDefaultDomain() throws Exception {
         mappings = MappingsImpl.builder()
                 .add(MailAddressFixture.ANY_AT_JAMES.toString())
                 .add(NONEDOMAIN)

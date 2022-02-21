@@ -246,7 +246,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
         }
     }
 
-    private void passThrough(Mail originalMail) throws MessagingException {
+    private void passThrough(Mail originalMail) {
         if (getInitParameters().isDebug()) {
             LOGGER.debug("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
         }

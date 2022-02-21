@@ -178,7 +178,7 @@ public class ProcessRedirectNotify {
      *         true for the sender host part
      */
     @SuppressWarnings("deprecation")
-    private boolean senderDomainIsValid(Mail mail) throws MessagingException {
+    private boolean senderDomainIsValid(Mail mail) {
         return !mailet.getInitParameters().getFakeDomainCheck()
                 || !mail.hasSender()
                 || !mailet.getMailetContext()

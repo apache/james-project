@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class MailAddressUtilsTest {
+class MailAddressUtilsTest {
 
     @Test
     void fromShouldThrowWhenInternetAddressesIsNull() {

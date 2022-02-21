@@ -142,7 +142,7 @@ public class RejectAction implements MailAction {
             MailImpl mail = MailImpl.builder()
                 .name(MailImpl.getId())
                 .addRecipients(Arrays.stream(recipientAddresses)
-                    .map(address -> (InternetAddress) address)
+                    .map(InternetAddress.class::cast)
                     .map(Throwing.function(MailAddress::new))
                     .collect(ImmutableList.toImmutableList()))
                 .mimeMessage(reply)

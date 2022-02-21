@@ -129,8 +129,7 @@ public class MailDispatcher {
         // This only works because there is a placeholder inserted by MimeMessageWrapper
         message.setHeader(RFC2822Headers.RETURN_PATH, mail.getMaybeSender().asPrettyString());
 
-        List<MailAddress> errors = deliver(mail, message);
-        return errors;
+        return deliver(mail, message);
     }
 
     private List<MailAddress> deliver(Mail mail, MimeMessage message) {

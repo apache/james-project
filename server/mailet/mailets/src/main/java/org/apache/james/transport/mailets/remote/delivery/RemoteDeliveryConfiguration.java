@@ -237,11 +237,7 @@ public class RemoteDeliveryConfiguration {
         props.put("mail." + protocol + ".localhost", heloNameProvider.getHeloName());
         props.put("mail." + protocol + ".starttls.enable", String.valueOf(startTLS));
         if (isBindUsed()) {
-            // undocumented JavaMail 1.2 feature, smtp transport will use
-            // our socket factory, which will also set the local address
-            props.put("mail." + protocol + ".socketFactory.class", RemoteDeliverySocketFactory.class);
-            // Don't fallback to the standard socket factory on error, do throw an exception
-            props.put("mail." + protocol + ".socketFactory.fallback", "false");
+            props.put("mail." + protocol + ".localaddress", bindAddress);
         }
         if (authUser != null) {
             props.put("mail." + protocol + ".auth", "true");

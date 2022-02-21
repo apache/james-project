@@ -37,7 +37,7 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ToRepositoryTest {
+class ToRepositoryTest {
     public static final String REPOSITORY_PATH = "file://var/mail/any";
 
     private ToRepository mailet;

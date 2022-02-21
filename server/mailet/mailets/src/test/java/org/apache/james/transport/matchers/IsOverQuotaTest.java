@@ -41,7 +41,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class IsOverQuotaTest {
+class IsOverQuotaTest {
     private IsOverQuota testee;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
     private DefaultUserQuotaRootResolver quotaRootResolver;

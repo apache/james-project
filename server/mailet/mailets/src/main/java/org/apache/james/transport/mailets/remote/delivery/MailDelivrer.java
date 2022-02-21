@@ -187,7 +187,7 @@ public class MailDelivrer {
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {
         LOGGER.debug("Exception delivering message ({}) - {}", mail.getName(), me.getMessage());
-        if ((me.getNextException() != null) && (me.getNextException() instanceof IOException)) {
+        if (me.getNextException() instanceof IOException) {
             // If it's an IO exception with no nested exception, it's probably
             // some socket or weird I/O related problem.
             return me;

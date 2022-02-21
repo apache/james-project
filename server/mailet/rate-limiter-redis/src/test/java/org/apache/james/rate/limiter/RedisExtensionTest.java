@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.lettuce.core.api.sync.RedisCommands;
 
-public class RedisExtensionTest {
+class RedisExtensionTest {
 
     @RegisterExtension
     static RedisExtension redisExtension = new RedisExtension();

@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
 
-public class MessageAlteringUtilsTest {
+class MessageAlteringUtilsTest {
 
     @Test
     void buildShouldThrowWhenMailetIsNull() {

@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class RemoteDeliveryFailedWithSMTPCodeTest {
+class RemoteDeliveryFailedWithSMTPCodeTest {
 
     private static final String CONDITION = "521";
     public static final int SMTP_ERROR_CODE_521 = 521;
