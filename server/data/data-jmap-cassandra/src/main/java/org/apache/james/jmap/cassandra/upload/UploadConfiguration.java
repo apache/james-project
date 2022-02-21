@@ -25,7 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class UploadConfiguration {
-    public static UploadConfiguration SINGLETON = new UploadConfiguration(Duration.ofDays(7));
+    public static final UploadConfiguration SINGLETON = new UploadConfiguration(Duration.ofDays(7));
 
     private final Duration uploadTtlDuration;
 
