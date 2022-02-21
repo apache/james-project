@@ -90,7 +90,7 @@ public abstract class AbstractLifecycleBeanPostProcessor<T> implements BeanPostP
 
     /**
      * Method which gets executed if the bean implement the LifeCycleInterface.
-     * Override this if you wish perform any action. Default is todo nothing
+     * Override this if you wish perform any action. Default is to do nothing
      * 
      * @param bean
      *            the actual bean
@@ -102,7 +102,7 @@ public abstract class AbstractLifecycleBeanPostProcessor<T> implements BeanPostP
 
     /**
      * Method which gets executed if the bean implement the LifeCycleInterface.
-     * Override this if you wish perform any action. Default is todo nothing
+     * Override this if you wish perform any action. Default is to do nothing
      * 
      * @param bean
      *            the actual bean

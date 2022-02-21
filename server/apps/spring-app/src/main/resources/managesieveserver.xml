@@ -63,29 +63,6 @@
          
         <!-- Set the maximum simultaneous incoming connections per IP for this service -->
         <connectionLimitPerIP>0</connectionLimitPerIP>
-
-        <!--  Uncomment this if you want to verify sender addresses, ensuring that -->
-        <!--  the sender address matches the user who has authenticated. -->
-        <!--  This prevents a user of your mail server from acting as someone else -->
-        <!--  If unspecified, default value is true -->
-        <!--
-        <verifyIdentity>true</verifyIdentity>
-         -->
-
-        <!--  This sets the maximum allowed message size (in kilobytes) for this -->
-        <!--  ManageSieve service. If unspecified, the value defaults to 0, which means no limit. -->
-        <maxmessagesize>0</maxmessagesize>
-         
-        <!--  This sets wether to enforce the use of HELO/EHLO salutation before a -->
-        <!--  MAIL command is accepted. If unspecified, the value defaults to true -->
-        <!-- 
-        <heloEhloEnforcement>true</heloEhloEnforcement>
-         -->
-         
-        <!-- WARNING: This is Non-RFC compliant (default value: true) -->
-        <!-- See: http://wiki.apache.org/james/StandardsComplianceStatement -->
-        <!-- TODO: CHANGE TO OFFICIAL URL LATER -->
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
   
    </managesieveserver>
 
