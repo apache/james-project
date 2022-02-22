@@ -172,7 +172,8 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
 
             }
 
-            super.channelRead(ctx, msg);
+            ((ByteBuf) msg).release();
+            super.channelReadComplete(ctx);
         }
     }
 
@@ -185,6 +186,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
         if (session != null) {
             session.resetState();
         }
+        ctx.close();
     }
 
     
@@ -224,7 +226,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
                 } else {
                     LOGGER.error("Unable to process request", cause);
                 }
-                cleanup(ctx);
+                ctx.close();
             }
         }
     }
