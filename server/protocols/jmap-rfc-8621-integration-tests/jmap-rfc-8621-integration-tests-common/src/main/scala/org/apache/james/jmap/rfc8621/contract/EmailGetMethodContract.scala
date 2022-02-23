@@ -19,15 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-import java.time.{Duration, ZonedDateTime}
-import java.util.Date
-import java.util.concurrent.TimeUnit
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
-import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
@@ -54,6 +48,12 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+import java.nio.charset.StandardCharsets
+import java.time.{Duration, ZonedDateTime}
+import java.util.Date
+import java.util.concurrent.TimeUnit
+import javax.mail.Flags
 
 object EmailGetMethodContract {
   private def createTestMessage: Message = Message.Builder
@@ -4472,7 +4472,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Main test message...\\r\\n",
+         |                                "value": "Main test message...\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
