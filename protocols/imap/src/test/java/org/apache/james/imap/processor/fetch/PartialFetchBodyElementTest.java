@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class PartialFetchBodyElementTest {
@@ -39,8 +40,7 @@ class PartialFetchBodyElementTest {
     }
 
     @Test
-    void testSizeShouldBeNumberOfOctetsWhenSizeMoreWhenStartIsZero()
-            throws Exception {
+    void testSizeShouldBeNumberOfOctetsWhenSizeMoreWhenStartIsZero() throws Exception {
         final long moreThanNumberOfOctets = NUMBER_OF_OCTETS + 1;
         PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 0, NUMBER_OF_OCTETS);
         when(mockBodyElement.size()).thenReturn(moreThanNumberOfOctets);
@@ -49,8 +49,7 @@ class PartialFetchBodyElementTest {
     }
 
     @Test
-    void testSizeShouldBeSizeWhenNumberOfOctetsMoreWhenStartIsZero()
-            throws Exception {
+    void testSizeShouldBeSizeWhenNumberOfOctetsMoreWhenStartIsZero() throws Exception {
         final long lessThanNumberOfOctets = NUMBER_OF_OCTETS - 1;
         PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 0, NUMBER_OF_OCTETS);
         when(mockBodyElement.size()).thenReturn(lessThanNumberOfOctets);
@@ -59,8 +58,7 @@ class PartialFetchBodyElementTest {
     }
 
     @Test
-    void testWhenStartPlusNumberOfOctetsIsMoreThanSizeSizeShouldBeSizeMinusStart()
-            throws Exception {
+    void testWhenStartPlusNumberOfOctetsIsMoreThanSizeSizeShouldBeSizeMinusStart() throws Exception {
         final long size = 60;
         PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 10, NUMBER_OF_OCTETS);
         when(mockBodyElement.size()).thenReturn(size);
@@ -70,7 +68,7 @@ class PartialFetchBodyElementTest {
 
     @Test
     void testWhenStartPlusNumberOfOctetsIsLessThanSizeSizeShouldBeNumberOfOctetsMinusStart()
-            throws Exception {
+        throws Exception {
         final long size = 100;
         PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 10, NUMBER_OF_OCTETS);
         when(mockBodyElement.size()).thenReturn(size);
@@ -88,12 +86,31 @@ class PartialFetchBodyElementTest {
     }
 
     @Test
-    void testSizeShouldBeNumberOfOctetsWhenStartMoreThanOctets()
-            throws Exception {
+    void testSizeShouldBeNumberOfOctetsWhenStartMoreThanOctets() throws Exception {
         final long size = 2000;
         PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 1000, NUMBER_OF_OCTETS);
         when(mockBodyElement.size()).thenReturn(size);
 
         assertThat(element.size()).describedAs("Content size is less than start. Size should be zero.").isEqualTo(NUMBER_OF_OCTETS);
+    }
+
+    @Test
+    void testSizeShouldBeNumberOfOctetsWhenSizeMoreWhenStartIsZeroAndNoLimitSpecified() throws Exception {
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 0, Long.MAX_VALUE);
+        when(mockBodyElement.size()).thenReturn(NUMBER_OF_OCTETS);
+
+        assertThat(element.size()).describedAs("Size is more than number of octets so should be number of octets")
+            .isEqualTo(NUMBER_OF_OCTETS);
+    }
+
+    @Disabled("JAMES-3715 A bug due to usage of Long.MAX to represent a value that is absent prevents this" +
+        "from working decently. Returns 9223372036854775807L which cannot be parsed nor handled by IMAP clients.")
+    @Test
+    void testWhenStartPlusNumberOfOctetsIsMoreThanSizeSizeShouldBeSizeMinusStartAndNoLimitSpecified() throws Exception {
+        final long size = 60;
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 10, Long.MAX_VALUE);
+        when(mockBodyElement.size()).thenReturn(size);
+
+        assertThat(element.size()).describedAs("Size is less than number of octets so should be size").isEqualTo(50);
     }
 }
