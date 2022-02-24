@@ -19,10 +19,17 @@
 
 package org.apache.james.rate.limiter;
 
+import javax.inject.Singleton;
+
 import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.rate.limiter.redis.RedisRateLimiterConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.Provides;
 
 public class RedisExtension implements GuiceModuleTestExtension {
     private static final DockerRedis DOCKER_REDIS_SINGLETON = new DockerRedis();
@@ -40,6 +47,17 @@ public class RedisExtension implements GuiceModuleTestExtension {
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         DOCKER_REDIS_SINGLETON.flushAll();
+    }
+
+    @Override
+    public Module getModule() {
+        return new AbstractModule() {
+            @Provides
+            @Singleton
+            public RedisRateLimiterConfiguration provideConfig() {
+                return RedisRateLimiterConfiguration.from(dockerRedis().redisURI().toString(), false);
+            }
+        };
     }
 
     public DockerRedis dockerRedis() {
