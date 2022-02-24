@@ -22,6 +22,7 @@ package org.apache.james.imap.processor.fetch;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 
@@ -31,10 +32,10 @@ import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 final class PartialFetchBodyElement implements BodyElement {
     private final BodyElement delegate;
     private final long firstOctet;
-    private final long numberOfOctets;
+    private final Optional<Long> numberOfOctets;
     private final String name;
 
-    public PartialFetchBodyElement(BodyElement delegate, long firstOctet, long numberOfOctets) {
+    public PartialFetchBodyElement(BodyElement delegate, long firstOctet, Optional<Long> numberOfOctets) {
         this.delegate = delegate;
         this.firstOctet = firstOctet;
         this.numberOfOctets = numberOfOctets;
@@ -49,14 +50,14 @@ final class PartialFetchBodyElement implements BodyElement {
     @Override
     public long size() throws IOException {
         final long size = delegate.size();
-        final long lastOctet = this.numberOfOctets + firstOctet;
+
         if (firstOctet > size) {
             return  0;
-        } else if (size > lastOctet) {
-            return numberOfOctets;
-        } else {
-            return size - firstOctet;
         }
+
+        return numberOfOctets
+            .map(requestedSize -> Math.min(requestedSize, size - firstOctet))
+            .orElse(size - firstOctet);
     }
 
     @Override

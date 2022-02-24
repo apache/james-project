@@ -204,8 +204,6 @@ class IMAPServerTest {
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
         }
 
-        @Disabled("JAMES-3715 A bug due to usage of Long.MAX to represent a value that is absent prevents this" +
-            "from working decently.")
         @Test
         void fetchShouldRetrieveMessageWhenOffsetAndNoLimitSpecified() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
