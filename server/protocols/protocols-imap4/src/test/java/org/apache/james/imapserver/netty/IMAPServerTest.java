@@ -141,6 +141,85 @@ class IMAPServerTest {
     }
 
     @Nested
+    class PartialFetch {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void fetchShouldRetrieveMessage() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                    .select("INBOX")
+                    .readFirstMessage())
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
+        }
+
+        @Test
+        void fetchShouldRetrieveMessageWhenOffsetAndLimitExceedingMessageSize() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                    .select("INBOX")
+                    .readFirstMessageInMailbox("BODY[]<8.20>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+        }
+
+        @Test
+        void fetchShouldRetrieveMessageWhenOffsetAndLimitEqualMessageSize() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                    .select("INBOX")
+                    .readFirstMessageInMailbox("BODY[]<8.13>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+        }
+
+        @Test
+        void fetchShouldRetrieveMessageWhenOffsetAndLimitBelowMessageSize() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                    .select("INBOX")
+                    .readFirstMessageInMailbox("BODY[]<8.12>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
+        }
+
+        @Disabled("JAMES-3715 A bug due to usage of Long.MAX to represent a value that is absent prevents this" +
+            "from working decently.")
+        @Test
+        void fetchShouldRetrieveMessageWhenOffsetAndNoLimitSpecified() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                    .select("INBOX")
+                    .readFirstMessageInMailbox("BODY[]<8>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+        }
+    }
+
+    @Nested
     class NoLimit {
         IMAPServer imapServer;
         private int port;

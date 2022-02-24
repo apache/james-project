@@ -220,7 +220,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         return imapClient.getReplyString();
     }
 
-    private String readFirstMessageInMailbox(String parameters) throws IOException {
+    public String readFirstMessageInMailbox(String parameters) throws IOException {
         imapClient.fetch("1:1", parameters);
         return imapClient.getReplyString();
     }
