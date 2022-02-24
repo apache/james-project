@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -275,7 +274,7 @@ public final class FetchResponseBuilder {
         if (firstOctet == null) {
             return fullResult;
         }
-        final long numberOfOctetsAsLong = Objects.requireNonNullElse(numberOfOctets, Long.MAX_VALUE);
+        final Optional<Long> numberOfOctetsAsLong = Optional.ofNullable(numberOfOctets);
         final long firstOctetAsLong = firstOctet;
         return new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
     }
