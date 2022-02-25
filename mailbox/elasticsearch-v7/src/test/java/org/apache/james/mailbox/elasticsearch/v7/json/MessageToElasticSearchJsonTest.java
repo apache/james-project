@@ -113,6 +113,28 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    void inlinedMultipartEmailShouldBeWellConvertedToJson() throws IOException {
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+        MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml"))),
+                new Flags(),
+                propertyBuilder.build(),
+                MAILBOX_ID);
+        mail.setUid(UID);
+        mail.setModSeq(MOD_SEQ);
+
+        assertThatJson(messageToElasticSearchJson.convertToJson(mail))
+            .when(IGNORING_ARRAY_ORDER)
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/inlined-mixed.json"));
+    }
+
+    @Test
     void invalidCharsetShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),

@@ -1,0 +1,77 @@
+{
+    "attachments": [{
+        "mediaType": "application",
+        "subtype": "json",
+        "fileName": "yyy.txt",
+        "fileExtension": "txt",
+        "contentDisposition": "attachment",
+        "textContent": null
+    }, {
+        "mediaType": "application",
+        "subtype": "json",
+        "fileName": "xxx.txt",
+        "fileExtension": "txt",
+        "contentDisposition": "attachment",
+        "textContent": null
+    }],
+    "bcc": [],
+    "htmlBody": null,
+    "textBody": "Main test message...\n",
+    "cc": [],
+    "date": "2015-06-07T00:00:00+0200",
+    "from": [{
+        "name": "Bob",
+        "address": "bob@domain.tld"
+    }],
+    "hasAttachment": false,
+    "headers": [{
+        "name": "date",
+        "value": "Wed, 26 Jan 2022 12:21:37 +0100"
+    }, {
+        "name": "from",
+        "value": "Bob <bob@domain.tld>"
+    }, {
+        "name": "to",
+        "value": "Alice <alice@domain.tld>"
+    }, {
+        "name": "subject",
+        "value": "My subject"
+    }, {
+        "name": "message-id",
+        "value": "<20220126112137.wookj26xellphlam@W0248292>"
+    }, {
+        "name": "mime-version",
+        "value": "1.0"
+    }, {
+        "name": "content-type",
+        "value": "multipart/mixed; boundary=\"7f4cfz6rtfqdbqxn\""
+    }, {
+        "name": "content-disposition",
+        "value": "inline"
+    }, {
+        "name": "content-transfer-encoding",
+        "value": "8bit"
+    }],
+    "mailboxId": "18",
+    "mediaType": "plain",
+    "messageId": "184",
+    "threadId": "184",
+    "modSeq": 42,
+    "sentDate": "2022-01-26T12:21:37+0100",
+    "size": 25,
+    "subject": ["My subject"],
+    "subtype": "text",
+    "to": [{
+        "name": "Alice",
+        "address": "alice@domain.tld"
+    }],
+    "uid": 25,
+    "userFlags": [],
+    "mimeMessageID": "<20220126112137.wookj26xellphlam@W0248292>",
+    "isAnswered": false,
+    "isDeleted": false,
+    "isDraft": false,
+    "isFlagged": false,
+    "isRecent": false,
+    "isUnread": true
+}

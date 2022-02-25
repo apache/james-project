@@ -19,15 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-import java.time.{Duration, ZonedDateTime}
-import java.util.Date
-import java.util.concurrent.TimeUnit
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
-import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
@@ -54,6 +48,12 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+import java.nio.charset.StandardCharsets
+import java.time.{Duration, ZonedDateTime}
+import java.util.Date
+import java.util.concurrent.TimeUnit
+import javax.mail.Flags
 
 object EmailGetMethodContract {
   private def createTestMessage: Message = Message.Builder
@@ -4387,6 +4387,92 @@ trait EmailGetMethodContract {
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "I am the text plain part!\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def attachmentValuesForInlinedMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["bodyValues", "attachments"],
+         |      "fetchTextBodyValues": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [
+         |
+         |                ],
+         |                "list": [
+         |                    {
+         |                        "id": "${messageId.serialize}",
+         |                         "attachments": [
+         |                            {
+         |                                "charset": "us-ascii",
+         |                                "disposition": "attachment",
+         |                                "size": 102,
+         |                                "partId": "3",
+         |                                "blobId": "${messageId.serialize}_3",
+         |                                "type": "application/json"
+         |                            },
+         |                            {
+         |                                "charset": "us-ascii",
+         |                                "disposition": "attachment",
+         |                                "size": 102,
+         |                                "partId": "4",
+         |                                "blobId": "${messageId.serialize}_4",
+         |                                "type": "application/json"
+         |                            }
+         |                        ],
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "Main test message...\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
