@@ -54,6 +54,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3605 Reconnection handlers for RabbitMQ consumers
  - JAMES-3604 RabbitMQ connections should be cluster aware
  - JAMES-3607 Functional healthcheck exercising mail reception
+ - JAMES-3693 Extension: mailets for rate limiting (Redis/Memory)
+ - JAMES-3711 Implement a Requeue mailet
+ - JAMES-3680 Implement support for OAUTH SASL authentication for IMAP and SMTP
+ - JAMES-3680 Allow to disable SMTP/IMAP plain auth, SMTP requireSSL setting
+ - JAMES-3680 LDAP support for James memory server
+ - JAMES-3687 MailQueue written on top of Apache Pulsar
+ - JAMES-3680 JMAP: Modularize authentication strategies and provide a XUserAuthenticationStrategy
+ - JAMES-2912 RemoteDelivery: add a onSuccess processor (#776)
+ - JAMES-3674 Support PBKDF2 as a strong password-hashing algorithm
  
 ### Removed
  - JAMES-3578 Drop Cassandra schema version prior version 8 (see upgrade instructions)
@@ -66,6 +75,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3631 Drop no longer used MailRepository tables
  - Terminate Apache James HUPA
  - [REFACTORING] Remove unused BayesianAnalyzer and related class (#526)
+ - JAMES-3261 Remove unused MPT scripts within /server/apps/spring (#775)
  
 ### Changed
  - JAMES-3621 Re-organise server application
@@ -93,7 +103,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - [UPGRADE] Security upgrade: common-compress to 1.21
  - JAMES-2625 Remove stacktrace upon ClosedChannelException
  - JAMES-3261 Add some system properties for TLS (#588)
- - Multiple miscaleneous dependency upgrades:
+ - Multiple miscaleneous dependency upgrades
+ - JAMES-3708 Stricter domain and address parsing
+ - JAMES-3709 Refactoring POP3 command handlers to share common code
+ - JAMES-3705 Refactoring POP3 handlers to be more extensible
+ - JAMES-3704 Improve mail diagnostics on system edge
+ - JAMES-3694 Add a TTL on RabbitMQ queues (optional)
+ - JAMES-3690 Allow to restrict the host webadmin is listening on
+ - JAMES-3680 JMAP capability should be aware of request URL prefixes (#807)
+ - JAMES-3261 Add /root/extensions-jars as a volume for improved discovery (#774)
+ - JAMES-3679 Set mailbox recent gc_grace_second to zero (#768)
  
 ### Performance
  - JAMES-3466 Provision default mailboxes only when listing all mailboxes
@@ -173,6 +192,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - [PERFORMANCE] SetMessagesUpdateProcessor processing can be done lazily
  - [PERFORMANCE] Optimize Username parsing
  - [PERFORMANCE] JMAP: Fasten accept header parsing
+ - [PERF] Re-use a regex in FileSystemBlobStrategy
+ - JAMES-3713 Enable rules caching for DLP
+ - JAMES-343 Performance: Use ImmutableMap copy upon DSN parameters lookup (#881)
+ - [PERF] Improve reactive code for LocalDelivery
+ - [PERF] AutomaticallySentMailDetectorImpl should rely on a lenient parser
 
 ### Fixed
  - JAMES-3589 Fix mailet processing logic upon partial matches by dropping Apache Camel mailetcontainer implementation
@@ -253,6 +277,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3624 RFC 8887 (JMAP over WebSocket) Request needs property 'id' (is 'requestId')
 - JAMES-3620 Memory leak at org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler
 - JAMES-3611 SearchUtil getBaseSubject do not sanitize empty subject
+- JAMES-3714 Attachments of EML with inlined multiparts is badly handle (JMAP draft)
+- [SONAR] Multiple warnings reported by Sonar had been solved
+- JAMES-3708 Invalid mail address: NPE in RemoteDelivery
+- JAMES-3712 Bounce should prefix bounced message
+- JAMES-3709 NPE in POP3 TOP command handler
+- JAMES-3432 Uploads should return JSON content type (#862)
+- JAMES-3689 (MailQueue) fix removal by recipient in more cases (#825)
+- JAMES-3676 SendMailHandler should manage all errors upon enqueue
+- JAMES-3676 ReactorUtils.toInputStream should cancel publisher subscriptions upon partial reads
+- JAMES-3678 CURRENT_HELO_MODE was also mixing connection and transaction state
+- JAMES-3677 JMAP BackReference should allow pointing to specific array elements (#765)
 
 ### Documentation
  - JAMES-3405 Document Prometheus metric config (#373)
@@ -286,6 +321,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Details guide to assemble your own tailor made James server
  - JAMES-3617 Document Prometheus/Grafana setup and provide dashboards (#549)
  - JAMES-3614 The homepage should comply with the ASF release policy
+ - [DOCUMENTATION] Example for deploying MUA auto-configuration (#882)
+ - [DOCUMENTATION] Refresh James "design goal page" (#857)
+ - [CONTRIBUTING] Add a new committer section
+ - JAMES-3680 Example detailing OIDC setup for IMAP, SMTP and JMAP
+ - JAMES-3692 Write a security checklist (#835)
+ - [SITE] Fill the security page following recent CVE announces
  
 ### Third party software
  - Upgrading to Apache Tika 1.26 is recommended
