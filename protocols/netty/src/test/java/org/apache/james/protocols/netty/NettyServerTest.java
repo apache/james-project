@@ -26,8 +26,6 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class NettyServerTest {

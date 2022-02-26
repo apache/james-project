@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -37,7 +38,9 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ImmediateEventExecutor;
+
 
 
 /**
@@ -124,21 +127,23 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     @Override
     public synchronized void unbind() {
-        if (started == false) {
+        if (!started) {
             return;
         }
 
+        List<Future<?>> futures = new ArrayList<>();
         if (bossGroup != null) {
-            bossGroup.shutdownGracefully();
+            futures.add(bossGroup.shutdownGracefully());
         }
 
         if (workerGroup != null) {
-            workerGroup.shutdownGracefully();
+            futures.add(workerGroup.shutdownGracefully());
         }
 
         if (channels != null) {
-            channels.close();
+            futures.add(channels.close());
         }
+        futures.forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
 
         started = false;
     }
