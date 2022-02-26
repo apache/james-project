@@ -19,6 +19,7 @@
 
 package org.apache.james.imapserver.netty;
 
+import static javax.mail.Folder.READ_WRITE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
+import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Session;
@@ -78,6 +80,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+
+import com.sun.mail.imap.IMAPFolder;
 
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 import nl.altindag.ssl.exception.PrivateKeyParseException;
@@ -213,6 +217,50 @@ class IMAPServerTest {
                     .readFirstMessage())
                 .contains("\r\n" + _129K_MESSAGE + ")\r\n");
         }
+    }
+
+    @Nested
+    class Compress {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerCompress.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void shouldNotThrowWhenCompressionEnabled() throws Exception {
+            InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
+            mailboxManager.createMailbox(
+                MailboxPath.inbox(USER),
+                mailboxSession);
+            mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
+
+            Properties props = new Properties();
+            props.put("mail.imap.user", USER.asString());
+            props.put("mail.imap.host", "127.0.0.1");
+            props.put("mail.imap.auth.mechanisms", "LOGIN");
+            props.put("mail.imap.compress.enable", true);
+            final Session session = Session.getInstance(props);
+            final Store store = session.getStore("imap");
+            store.connect("127.0.0.1", port, USER.asString(), USER_PASS);
+            final FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(FetchProfile.Item.ENVELOPE);
+            final IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
+            inbox.open(READ_WRITE);
+
+            inbox.getMessageByUID(1);
+        }
+
     }
 
     @Nested
