@@ -2938,8 +2938,7 @@
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>4.5.6</version>
                     <configuration>
-                        <fork>false</fork>
-                        <recompileMode>incremental</recompileMode>
+                        <recompileMode>all</recompileMode>
                         <source>${target.jdk}</source>
                         <target>${target.jdk}</target>
                         <args>
