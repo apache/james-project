@@ -21,12 +21,8 @@ package org.apache.james.protocols.netty;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.protocols.api.ProtocolServer;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -191,24 +187,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     public int getTimeout() {
         return timeout;
     }
-    
-    /**
-     * Create a new {@link Executor} used for dispatch messages to the workers. One Thread will be used per port which is bound.
-     * This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     */
-    protected Executor createBossExecutor() {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return Executors.newCachedThreadPool(threadFactory);
-    }
-
-    /**
-     * Create a new {@link Executor} used for workers. This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     */
-    protected Executor createWorkerExecutor() {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return Executors.newCachedThreadPool(threadFactory);
-    }
-    
 
     @Override
     public boolean isBound() {
