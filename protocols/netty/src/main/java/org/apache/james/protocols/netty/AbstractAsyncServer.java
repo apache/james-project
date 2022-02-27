@@ -50,7 +50,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     private volatile int timeout = 120;
 
-    private ServerBootstrap bootstrap;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -89,7 +88,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             throw new RuntimeException("Please specify at least on socketaddress to which the server should get bound!");
         }
 
-        bootstrap = new ServerBootstrap();
+        ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.channel(NioServerSocketChannel.class);
 
         bossGroup = new NioEventLoopGroup();
