@@ -81,14 +81,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     public static final String HELLO_NAME = "helloName";
 
     public static final int DEFAULT_MAX_EXECUTOR_COUNT = 16;
-    
-    // By default, use the Sun X509 algorithm that comes with the Sun JCE
-    // provider for SSL
-    // certificates
-    private static final String defaultX509algorithm = "SunX509";
-
-    // The X.509 certificate algorithm
-    private String x509Algorithm = defaultX509algorithm;
 
     private FileSystem fileSystem;
 
@@ -263,7 +255,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 throw new ConfigurationException("keystore or (privateKey and certificates) needs to get configured");
             }
             secret = config.getString("tls.secret", null);
-            x509Algorithm = config.getString("tls.algorithm", defaultX509algorithm);
 
             truststore = config.getString("tls.clientAuth.truststore", null);
             truststoreType = config.getString("tls.clientAuth.truststoreType", "JKS");
