@@ -97,7 +97,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         bootstrap.channel(NioServerSocketChannel.class);
 
         bossGroup = new NioEventLoopGroup();
-        workerGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup(ioWorker);
 
         bootstrap.group(bossGroup, workerGroup);
 
