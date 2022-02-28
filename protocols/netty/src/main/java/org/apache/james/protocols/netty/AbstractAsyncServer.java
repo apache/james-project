@@ -63,7 +63,10 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
     
     private List<InetSocketAddress> addresses = new ArrayList<>();
+
     protected String jmxName;
+
+    private boolean gracefulShutdown = true;
     
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) {
@@ -71,7 +74,11 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         }
         this.addresses = ImmutableList.copyOf(addresses);
     }
-    
+
+    public void setGracefulShutdown(boolean gracefulShutdown) {
+        this.gracefulShutdown = gracefulShutdown;
+    }
+
     /**
      * Set the IO-worker thread count to use. Default is nCores * 2
      */
@@ -143,7 +150,10 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         if (channels != null) {
             futures.add(channels.close());
         }
-        futures.forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
+
+        if (gracefulShutdown) {
+            futures.forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
+        }
 
         started = false;
     }

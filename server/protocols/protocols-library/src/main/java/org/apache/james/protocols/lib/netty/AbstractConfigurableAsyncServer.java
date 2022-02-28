@@ -263,6 +263,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
         }
 
+        Optional.ofNullable(config.getBoolean("gracefulShutdown", null)).ifPresent(this::setGracefulShutdown);
+
         doConfigure(config);
 
     }
