@@ -39,6 +39,7 @@
                 <splitExecution>true</splitExecution>
             </handler>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </lmtpserver>
 
 </lmtpservers>

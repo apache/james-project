@@ -35,5 +35,6 @@
             <handler class="org.apache.james.smtpserver.dsn.DSNRcptParameterHook"/>
             <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </lmtpserver>
 </lmtpservers>

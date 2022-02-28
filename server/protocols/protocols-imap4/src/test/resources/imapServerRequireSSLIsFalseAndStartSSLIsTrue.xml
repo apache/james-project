@@ -11,4 +11,5 @@
         <plainAuthEnabled>true</plainAuthEnabled>
         <requireSSL>false</requireSSL>
     </auth>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

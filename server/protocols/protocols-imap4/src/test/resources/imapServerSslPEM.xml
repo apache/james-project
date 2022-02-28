@@ -7,4 +7,5 @@
         <certificates>certs.self-signed.csr</certificates>
         <secret>123456</secret>
     </tls>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

@@ -36,6 +36,7 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
 
 

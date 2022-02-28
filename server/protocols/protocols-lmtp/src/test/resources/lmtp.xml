@@ -30,5 +30,6 @@
         <handlerchain>
             <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </lmtpserver>
 </lmtpservers>

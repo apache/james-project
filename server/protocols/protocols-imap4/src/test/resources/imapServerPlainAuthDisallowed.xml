@@ -8,4 +8,5 @@
         <algorithm>SunX509</algorithm>
     </tls>
     <plainAuthDisallowed>true</plainAuthDisallowed>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

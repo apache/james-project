@@ -4,4 +4,5 @@
     <bind>0.0.0.0:0</bind>
     <tls socketTLS="false" startTLS="true">
     </tls>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

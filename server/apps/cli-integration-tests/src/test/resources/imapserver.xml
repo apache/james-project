@@ -35,6 +35,7 @@ under the License.
         </tls>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <gracefulShutdown>false</gracefulShutdown>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapserver-ssl</jmxName>
@@ -50,5 +51,6 @@ under the License.
         </tls>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <gracefulShutdown>false</gracefulShutdown>
     </imapserver>
 </imapservers>

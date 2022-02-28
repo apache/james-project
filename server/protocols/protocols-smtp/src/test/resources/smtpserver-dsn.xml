@@ -48,6 +48,7 @@
             <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
 
 

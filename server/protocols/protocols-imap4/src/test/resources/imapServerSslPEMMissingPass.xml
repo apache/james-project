@@ -6,4 +6,5 @@
         <privateKey>private.key</privateKey>
         <certificates>certs.self-signed.csr</certificates>
     </tls>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>
