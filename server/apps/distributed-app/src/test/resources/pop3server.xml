@@ -38,5 +38,6 @@
         <handlerchain>
             <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </pop3server>
 </pop3servers>

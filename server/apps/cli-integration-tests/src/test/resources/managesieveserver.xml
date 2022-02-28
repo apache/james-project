@@ -57,7 +57,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
-  
+        <gracefulShutdown>false</gracefulShutdown>
    </managesieveserver>
 
 </managesieveservers>

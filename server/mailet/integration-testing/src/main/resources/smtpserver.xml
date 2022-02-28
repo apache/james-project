@@ -52,6 +52,7 @@
             <handler class="{{hookFqcn}}"/>
             {{/hooks}}
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-TLS</jmxName>
@@ -95,6 +96,7 @@
             <handler class="{{hookFqcn}}"/>
             {{/hooks}}
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
 </smtpservers>
 

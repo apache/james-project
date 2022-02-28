@@ -30,5 +30,6 @@
         <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
             <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </lmtpserver>
 </lmtpservers>

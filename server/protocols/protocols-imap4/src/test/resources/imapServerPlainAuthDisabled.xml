@@ -10,4 +10,5 @@
     <auth>
         <plainAuthEnabled>false</plainAuthEnabled>
     </auth>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

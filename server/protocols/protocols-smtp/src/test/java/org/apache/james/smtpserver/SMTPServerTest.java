@@ -259,6 +259,7 @@ public class SMTPServerTest {
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
         smtpServer.setProtocolHandlerLoader(chain);
+        smtpServer.setGracefulShutdown(false);
     }
 
     protected void init(SMTPTestConfiguration testConfiguration) throws Exception {

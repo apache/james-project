@@ -46,6 +46,7 @@
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-TLS</jmxName>
@@ -74,6 +75,7 @@
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-authenticated</jmxName>
@@ -102,6 +104,7 @@
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
 </smtpservers>
 

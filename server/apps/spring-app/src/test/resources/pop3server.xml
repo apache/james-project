@@ -73,6 +73,7 @@
            <!-- know what you are doing -->
            <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
        </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
 
     </pop3server>
 

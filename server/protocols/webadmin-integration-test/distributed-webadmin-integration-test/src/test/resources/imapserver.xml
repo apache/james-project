@@ -36,5 +36,6 @@ under the License.
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
+        <gracefulShutdown>false</gracefulShutdown>
     </imapserver>
 </imapservers>

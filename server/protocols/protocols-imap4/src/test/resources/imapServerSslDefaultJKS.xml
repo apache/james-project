@@ -7,4 +7,5 @@
         <secret>123456</secret>
         <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
     </tls>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>
