@@ -1,0 +1,45 @@
+---
+layout: post
+title:  "Apache James Server 3.7.0"
+date:   2022-03-21  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.7.0 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The Apache James PMC would like to thanks all contributors who made this release possible!
+
+## Announcement
+
+As of Apache James version 3.7.0 we removed support for maildir storage format. Users relying on maildir are encouraged 
+to switch to other backends. Maildir can still be used as part of the 3.6.x release train.
+
+## Most noticeable changes
+
+The Apache James PMC is pleased to announce the additions of the following components/features in Apache James 3.7.0:
+
+ - Multiple bug fixes. We hopefully significantly improved James overall stability.
+ - Multiple performance enhancements. This new release ships a blazing fast server!
+ - Multiple additions had been made to our [JMAP][JMAP] implementation including:
+   - Implementation of RFC-9007 for composing MDN messages with JMAP
+   - Support for JMAP integration with Web Push (RFC-8030), including encryption
+   - Multiple additional JMAP methods: Email/import, Identity/set, etc...
+   - Periodical cleanup of JMAP uploads
+ - Ease TLS configuration by accepting PEM keys. This makes it easier to use Let's encrypt and certbot.
+ - Task to delete unreferenced blobs when blob deduplication is enabled on top of the Distributed James server.
+ - Use of PBKDF2 as a strong password-hashing algorithm
+ - Allow disabling SMTP/IMAP plain auth for increased security
+ - Addition of a James product dedicated to mail processing relying on Apache Pulsar for its mail queue (experimental)
+ - Support for IMAP SASL OAUTH authentication mechanism. Used successfully with OIDC!
+ - Extension for rate limiting upon email processing (memory and redis backend)
+
+## Release changelog
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+[JMAP]: https://jmap.io
+[CHANGELOG]: https://github.com/apache/james-project/blob/master/CHANGELOG.md#362---2022-01-26
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
