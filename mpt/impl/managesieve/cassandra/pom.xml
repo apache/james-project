@@ -28,7 +28,7 @@
 
     <artifactId>apache-james-mpt-managesieve-cassandra</artifactId>
 
-    <name>Apache James MPT ManageSieve Cassandra</name>
+    <name>Apache James :: MPT :: ManageSieve :: Cassandra</name>
 
 
     <dependencies>

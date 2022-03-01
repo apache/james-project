@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
-    <name>Apache James MPT Imap Mailbox - ElasticSearch</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: ElasticSearch</name>
 
     <dependencies>
         <dependency>

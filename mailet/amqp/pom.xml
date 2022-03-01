@@ -30,7 +30,7 @@
     <artifactId>apache-mailet-amqp</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: AMQP Mailet</name>
+    <name>Apache James :: Mailet :: AMQP</name>
     <description>Provides a mailet forwarding mail attributes over AMQP</description>
     <inceptionYear>2021</inceptionYear>
 

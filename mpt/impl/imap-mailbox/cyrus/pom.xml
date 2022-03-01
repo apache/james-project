@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-cyrus</artifactId>
-    <name>Apache James MPT Imap Mailbox - Cyrus</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: Cyrus</name>
 
     <dependencies>
         <dependency>

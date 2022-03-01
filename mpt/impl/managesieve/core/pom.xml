@@ -27,7 +27,7 @@
 
     <artifactId>apache-james-mpt-managesieve-core</artifactId>
 
-    <name>Apache James MPT ManageSieve Core</name>
+    <name>Apache James :: MPT :: ManageSieve :: Core</name>
 
     <dependencies>
         <dependency>

@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>james-server-webadmin-pop3</artifactId>
-    <name>POP3 :: WebAdmin</name>
+    <name>Apache James :: Server :: WebAdmin :: POP3</name>
     <description>Expose task to fix inconsistencies of POP3Metadata</description>
 
     <dependencies>

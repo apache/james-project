@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
-    <name>Apache James MPT Imap Mailbox - LuceneSearch</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: LuceneSearch</name>
 
     <dependencies>
         <dependency>

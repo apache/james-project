@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-cassandra</artifactId>
-    <name>Apache James MPT Imap Mailbox - Cassandra</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: Cassandra</name>
 
     <dependencies>
         <dependency>

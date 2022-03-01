@@ -27,6 +27,7 @@
     </parent>
 
     <artifactId>custom-mailets-implementation</artifactId>
+    <name>Apache James :: Server :: Guice :: Mailet :: Custom testing mailets :: implement</name>
 
     <dependencies>
         <dependency>

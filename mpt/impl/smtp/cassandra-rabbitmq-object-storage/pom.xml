@@ -28,7 +28,7 @@
     <artifactId>apache-james-mpt-smtp-cassandra-rabbitmq-object-storage</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James MPT SMTP Cassandra RabbitMQ Object Storage</name>
+    <name>Apache James :: MPT :: SMTP :: Cassandra - RabbitMQ - Object Storage</name>
 
     <dependencies>
         <dependency>

@@ -30,7 +30,7 @@
     <artifactId>apache-mailet-crypto</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Crypto Mailets</name>
+    <name>Apache James :: Mailet :: Crypto</name>
     <description>Apache James Cryptographic Mailets is a collection of mailets which use cryptography.
         This includes matching signatures, decrypting, encrypting and signing.</description>
     <url>http://james.apache.org/mailet/crypto/</url>

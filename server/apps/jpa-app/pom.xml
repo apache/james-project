@@ -31,7 +31,7 @@
     <artifactId>james-server-jpa-app</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JPA - guice injection</name>
+    <name>Apache James :: Server :: JPA - Application</name>
     <description>An advanced email server - JPA backend with guice injection</description>
 
     <properties>

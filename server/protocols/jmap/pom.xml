@@ -27,6 +27,7 @@
     </parent>
 
     <artifactId>james-server-jmap</artifactId>
+    <name>Apache James :: Server :: JMAP</name>
 
     <dependencies>
         <dependency>

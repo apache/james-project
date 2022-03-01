@@ -27,7 +27,7 @@
     </parent>
     <artifactId>apache-james-mpt-all</artifactId>
     <packaging>pom</packaging>
-    <name>Apache James MPT All</name>
+    <name>Apache James :: MPT :: All</name>
 
     <description>This module assembles distributions 
 MPT is a functional test framework specialised for the ASCII line-base protocols common in mail.</description>

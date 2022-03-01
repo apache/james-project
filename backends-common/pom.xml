@@ -29,7 +29,7 @@
     <artifactId>james-backends-common</artifactId>
     <packaging>pom</packaging>
 
-    <name>Apache JAMES backends common</name>
+    <name>Apache James :: Backends Common</name>
     <description>Apache James Backends: common utils to access backends</description>
     <inceptionYear>2015</inceptionYear>
 

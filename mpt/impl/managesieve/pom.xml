@@ -29,7 +29,7 @@
     <artifactId>apache-james-mpt-managesieve</artifactId>
     <packaging>pom</packaging>
 
-    <name>Apache James MPT ManageSieve</name>
+    <name>Apache James :: MPT :: ManageSieve</name>
 
     <modules>
         <module>cassandra</module>

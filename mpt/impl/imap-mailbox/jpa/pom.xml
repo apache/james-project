@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-jpa</artifactId>
-    <name>Apache James MPT Imap Mailbox - JPA</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: JPA</name>
 
     <dependencies>
         <dependency>

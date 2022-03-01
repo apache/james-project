@@ -29,7 +29,7 @@
     <artifactId>apache-mailet</artifactId>
     <packaging>pom</packaging>
 
-    <name>Apache James :: Mailets parent and aggregator</name>
+    <name>Apache James :: Mailet</name>
     <description>Apache James Mailets parent and aggregator</description>
     <url>http://james.apache.org/mailet/</url>
     <inceptionYear>2008</inceptionYear>

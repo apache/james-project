@@ -30,7 +30,7 @@
     <artifactId>apache-mailet-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Mailet API</name>
+    <name>Apache James :: Mailet :: API</name>
     <description>The Apache Mailet API is a flexible specification for mail processing agents.</description>
     <url>http://james.apache.org/mailet/api/</url>
     <inceptionYear>2007</inceptionYear>

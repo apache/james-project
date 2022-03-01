@@ -30,7 +30,7 @@
 
     <packaging>pom</packaging>
 
-    <name>Apache James MPT</name>
+    <name>Apache James :: MPT</name>
     <description>Functional test framework specialised for the ASCII line-base protocols common in mail.</description>
     <url>http://james.apache.org/mpt/</url>
     <inceptionYear>2008</inceptionYear>
