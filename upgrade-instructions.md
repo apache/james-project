@@ -12,9 +12,18 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.6.x and 3.7.x will be reported here.
+Changes to apply between 3.7.x and 3.8.x will be reported here.
 
 Change list:
+
+ - No changes yet
+
+## 3.7.0 version
+
+Changes to apply between 3.6.2 and 3.7.0 are reported here.
+
+Change list:
+
  - [Adding the threadId to the ElasticSearch index](#adding-the-threadid-to-the-elasticsearch-index)
  - [Rework message denormalization](#rework-message-denormalization)
  - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
@@ -27,7 +36,6 @@ Change list:
  - [MailDir removal](#maildir-removal)
  - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
  - [Restrict listening interface to loopback by default for webadmin](#restrict-listening-interface-to-loopback-by-default-for-webadmin)
- - 
  
 ### Change in behaviour for Bounce, NotifyPostmaster, NotifySender
 
