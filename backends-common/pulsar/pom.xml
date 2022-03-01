@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-backends-pulsar</artifactId>
-    <name>Apache James Pulsar backend</name>
+    <name>Apache James :: Backends Common :: Pulsar</name>
 
     <dependencies>
         <dependency>

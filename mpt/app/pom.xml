@@ -29,7 +29,7 @@
 
     <artifactId>apache-james-mpt-app</artifactId>
 
-    <name>Apache James MPT Application</name>
+    <name>Apache James :: MPT :: Application</name>
     <description>Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
 scriptable functional testing of ASCII based line protocols. This application provides easy executable
 interfaces to the MPT library.</description>

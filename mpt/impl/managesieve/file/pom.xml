@@ -28,7 +28,7 @@
 
     <artifactId>apache-james-mpt-managesieve-file</artifactId>
 
-    <name>Apache James MPT ManageSieve File</name>
+    <name>Apache James :: MPT :: ManageSieve :: File</name>
 
     <dependencies>
         <dependency>

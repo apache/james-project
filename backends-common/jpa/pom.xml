@@ -26,6 +26,7 @@
     </parent>
 
     <artifactId>apache-james-backends-jpa</artifactId>
+    <name>Apache James :: Backends Common :: JPA</name>
 
     <dependencies>
         <dependency>

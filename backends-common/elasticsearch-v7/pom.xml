@@ -26,6 +26,7 @@
     </parent>
 
     <artifactId>apache-james-backends-es-v7</artifactId>
+    <name>Apache James :: Backends Common :: ES-V7</name>
 
     <dependencies>
         <dependency>

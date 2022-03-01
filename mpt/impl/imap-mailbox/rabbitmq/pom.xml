@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-rabbitmq</artifactId>
-    <name>Apache James MPT Imap Mailbox - RabbitMQ EventBus</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: RabbitMQ EventBus</name>
 
     <dependencies>
         <dependency>

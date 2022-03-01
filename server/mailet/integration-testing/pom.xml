@@ -30,7 +30,7 @@
     <artifactId>james-server-mailets-integration-testing</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Mailets Integration Testing</name>
+    <name>Apache James :: Server :: Mailet :: Integration Testing</name>
 
     <dependencies>
         <dependency>

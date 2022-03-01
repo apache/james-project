@@ -28,7 +28,7 @@
 
     <artifactId>event-sourcing-core</artifactId>
 
-    <name>Apache James :: Event sourcing :: core</name>
+    <name>Apache James :: Event sourcing :: Core</name>
     <description>James Event Sourcing system</description>
 
     <dependencies>

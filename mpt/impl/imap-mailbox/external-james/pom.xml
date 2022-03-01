@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-external-james</artifactId>
-    <name>Apache James MPT Imap Mailbox - External James</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: External James</name>
 
     <dependencies>
         <dependency>

@@ -28,7 +28,7 @@
 
     <artifactId>event-sourcing-pojo</artifactId>
 
-    <name>Apache James :: Event sourcing :: pojo</name>
+    <name>Apache James :: Event sourcing :: Pojo</name>
     <description>James event sourcing types</description>
 
     <dependencies>

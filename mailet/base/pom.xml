@@ -30,7 +30,7 @@
     <artifactId>apache-mailet-base</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Basic Mailet Toolkit</name>
+    <name>Apache James :: Mailet :: Basic Toolkit</name>
     <description>Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
         aimed at developers and testers of mailets. This toolkit is extensively used elsewhere in
         James.</description>

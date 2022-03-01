@@ -28,7 +28,7 @@
     <artifactId>apache-james-mpt-smtp-core</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James MPT SMTP Core</name>
+    <name>Apache James :: MPT :: SMTP :: Core</name>
 
     <dependencies>
         <dependency>

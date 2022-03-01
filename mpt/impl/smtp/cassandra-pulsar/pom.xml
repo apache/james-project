@@ -28,7 +28,7 @@
     <artifactId>apache-james-mpt-smtp-cassandra-pulsar</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James MPT SMTP Cassandra</name>
+    <name>Apache James :: MPT :: SMTP :: Cassandra - Pulsar</name>
 
     <dependencies>
         <dependency>

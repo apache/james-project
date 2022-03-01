@@ -30,7 +30,7 @@
 
     <artifactId>apache-james-mpt-imapmailbox</artifactId>
     <packaging>pom</packaging>
-    <name>Apache James MPT Imap Mailbox</name>
+    <name>Apache James :: MPT :: Imap Mailbox</name>
 
     <modules>
         <module>cassandra</module>

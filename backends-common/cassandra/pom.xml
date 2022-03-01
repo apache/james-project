@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-backends-cassandra</artifactId>
-    <name>Apache James Cassandra backend</name>
+    <name>Apache James :: Backends Common :: Cassandra</name>
 
     <properties>
         <cassandra.driver.version>3.11.0</cassandra.driver.version>

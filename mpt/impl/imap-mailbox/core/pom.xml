@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-    <name>Apache James MPT Imap Mailbox Core</name>
+    <name>Apache James :: MPT :: Imap Mailbox :: Core</name>
 
     <dependencies>
         <dependency>

@@ -28,8 +28,7 @@
     </parent>
 
     <artifactId>james-server-protocols-pop3-distributed</artifactId>
-
-    <name>POP3 distributed server</name>
+    <name>Apache James :: Server :: POP3 :: Distributed</name>
     <description>Distributed friendly implementation of a POP3 server. The use of messageId as an identifier enables
         to use safely Cassandra multi-datacenters set up</description>
 

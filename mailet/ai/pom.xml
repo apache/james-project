@@ -30,7 +30,7 @@
     <artifactId>apache-mailet-ai</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: AI Mailets</name>
+    <name>Apache James :: Mailet :: AI</name>
     <description>Collects mail processors making use of artificial intelligence (AI) methods.</description>
     <url>http://james.apache.org/mailet/ai</url>
     <inceptionYear>2011</inceptionYear>

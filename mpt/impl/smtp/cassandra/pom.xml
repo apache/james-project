@@ -28,7 +28,7 @@
     <artifactId>apache-james-mpt-smtp-cassandra</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James MPT SMTP Cassandra</name>
+    <name>Apache James :: MPT :: SMTP :: Cassandra</name>
 
     <dependencies>
         <dependency>

@@ -28,7 +28,7 @@
 
     <artifactId>apache-james-mpt-smtp</artifactId>
     <packaging>pom</packaging>
-    <name>Apache James MPT SMTP</name>
+    <name>Apache James :: MPT :: SMTP</name>
 
     <modules>
         <module>cassandra</module>

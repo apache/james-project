@@ -27,7 +27,7 @@
 
     <artifactId>apache-mailet-icalendar</artifactId>
 
-    <name>Apache James :: ICalendar Mailets</name>
+    <name>Apache James :: Mailet :: ICalendar</name>
 
     <dependencies>
         <dependency>

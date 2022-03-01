@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-backends-rabbitmq</artifactId>
-    <name>Apache James RabbitMQ backend</name>
+    <name>Apache James :: Backends Common :: RabbitMQ</name>
 
     <dependencies>
         <dependency>

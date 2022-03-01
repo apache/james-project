@@ -30,7 +30,7 @@
     <artifactId>james-server-rate-limiter</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Mailets :: Rate limiter</name>
+    <name>Apache James :: Server :: Mailet :: Rate limiter</name>
     <description>Rate limiting for Apache James email processing</description>
 
     <dependencies>

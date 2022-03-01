@@ -28,8 +28,7 @@
 
     <artifactId>third-party</artifactId>
     <packaging>pom</packaging>
-
-    <name>Apache JAMES third party</name>
+    <name>Apache James :: Third Party</name>
     <description>Common utilities for integrating with third party software</description>
     <inceptionYear>2018</inceptionYear>
 

@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>james-server-guice-utils</artifactId>
-
+    <name>Apache James :: Server :: Guice :: Utils</name>
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
