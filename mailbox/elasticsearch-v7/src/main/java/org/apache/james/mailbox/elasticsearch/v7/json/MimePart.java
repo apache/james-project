@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
@@ -34,7 +35,6 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -62,9 +61,10 @@ public class MimePart {
         private Optional<String> fileExtension;
         private Optional<String> contentDisposition;
         private Optional<Charset> charset;
-        private TextExtractor textExtractor;
+        private Predicate<ContentType> shouldCaryOverContent;
 
-        private Builder() {
+        private Builder(Predicate<ContentType> shouldCaryOverContent) {
+            this.shouldCaryOverContent = shouldCaryOverContent;
             children = Lists.newArrayList();
             headerCollectionBuilder = HeaderCollection.builder();
             this.bodyContent = Optional.empty();
@@ -74,7 +74,6 @@ public class MimePart {
             this.fileExtension = Optional.empty();
             this.contentDisposition = Optional.empty();
             this.charset = Optional.empty();
-            this.textExtractor = new DefaultTextExtractor();
         }
 
         @Override
@@ -121,26 +120,31 @@ public class MimePart {
         }
 
         @Override
-        public MimePartContainerBuilder using(TextExtractor textExtractor) {
-            Preconditions.checkArgument(textExtractor != null, "Provided text extractor should not be null");
-            this.textExtractor = textExtractor;
-            return this;
-        }
-
-        @Override
         public MimePartContainerBuilder charset(Charset charset) {
             this.charset = Optional.of(charset);
             return this;
         }
 
+        private Optional<ContentType> computeContentType() {
+            if (mediaType.isPresent() && subType.isPresent()) {
+                return Optional.of(ContentType.of(
+                    ContentType.MimeType.of(mediaType.get(), subType.get()),
+                    charset));
+            } else {
+                return Optional.empty();
+            }
+        }
+
         @Override
         public ParsedMimePart build() {
+            final Optional<ContentType> contentType = computeContentType();
             return new ParsedMimePart(
                 headerCollectionBuilder.build(),
-                bodyContent,
+                bodyContent.filter(any -> shouldCaryOverContent.test(contentType.orElse(null))),
                 charset,
                 mediaType,
                 subType,
+                contentType,
                 fileName,
                 fileExtension,
                 contentDisposition,
@@ -154,6 +158,7 @@ public class MimePart {
         private final Optional<Charset> charset;
         private final Optional<MediaType> mediaType;
         private final Optional<SubType> subType;
+        private Optional<ContentType> contentType;
         private final Optional<String> fileName;
         private final Optional<String> fileExtension;
         private final Optional<String> contentDisposition;
@@ -161,17 +166,19 @@ public class MimePart {
 
         public ParsedMimePart(HeaderCollection headerCollection, Optional<InputStream> bodyContent, Optional<Charset> charset,
                               Optional<MediaType> mediaType,
-                              Optional<SubType> subType, Optional<String> fileName, Optional<String> fileExtension,
+                              Optional<SubType> subType, Optional<ContentType> contentType, Optional<String> fileName, Optional<String> fileExtension,
                               Optional<String> contentDisposition, List<ParsedMimePart> attachments) {
             this.headerCollection = headerCollection;
-            this.bodyContent = bodyContent.map(Throwing.function(IOUtils::toByteArray));
             this.mediaType = mediaType;
             this.subType = subType;
+            this.contentType = contentType;
             this.fileName = fileName;
             this.fileExtension = fileExtension;
             this.contentDisposition = contentDisposition;
             this.attachments = attachments;
             this.charset = charset;
+
+            this.bodyContent = bodyContent.map(Throwing.function(IOUtils::toByteArray));
         }
 
         public Mono<MimePart> asMimePart(TextExtractor textExtractor) {
@@ -196,7 +203,7 @@ public class MimePart {
             if (shouldPerformTextExtraction()) {
                 return textExtractor.extractContentReactive(
                     new ByteArrayInputStream(bodyContent.get()),
-                    computeContentType().orElse(null));
+                    contentType.orElse(null));
             }
             return Mono.fromCallable(() -> new ParsedContent(
                 Optional.ofNullable(IOUtils.toString(new ByteArrayInputStream(bodyContent.get()), charset.orElse(StandardCharsets.UTF_8))),
@@ -215,19 +222,10 @@ public class MimePart {
             return isTextBody() && subType.map(SubType.of("html")::equals).orElse(false);
         }
 
-        private Optional<ContentType> computeContentType() {
-            if (mediaType.isPresent() && subType.isPresent()) {
-                return Optional.of(ContentType.of(
-                    ContentType.MimeType.of(mediaType.get(), subType.get()),
-                    charset));
-            } else {
-                return Optional.empty();
-            }
-        }
     }
     
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(Predicate<ContentType> shouldCaryOverContent) {
+        return new Builder(shouldCaryOverContent);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MimePart.class);

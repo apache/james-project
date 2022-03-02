@@ -22,7 +22,6 @@ package org.apache.james.mailbox.elasticsearch.v7.json;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
@@ -30,8 +29,6 @@ import org.apache.james.mime4j.stream.Field;
 public interface MimePartContainerBuilder {
 
     MimePart.ParsedMimePart build();
-
-    MimePartContainerBuilder using(TextExtractor textExtractor);
 
     MimePartContainerBuilder addToHeaders(Field field);
 

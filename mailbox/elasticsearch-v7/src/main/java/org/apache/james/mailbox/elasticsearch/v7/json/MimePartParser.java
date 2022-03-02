@@ -78,7 +78,7 @@ public class MimePartParser {
                 stackCurrent();
                 break;
             case T_START_HEADER:
-                currentlyBuildMimePart = MimePart.builder();
+                currentlyBuildMimePart = MimePart.builder(textExtractor::applicable);
                 break;
             case T_FIELD:
                 currentlyBuildMimePart.addToHeaders(stream.getField());
@@ -107,7 +107,7 @@ public class MimePartParser {
     }
     
     private void closeMimePart() {
-        MimePart.ParsedMimePart bodyMimePart = currentlyBuildMimePart.using(textExtractor).build();
+        MimePart.ParsedMimePart bodyMimePart = currentlyBuildMimePart.build();
         if (!builderStack.isEmpty()) {
             builderStack.peek().addChild(bodyMimePart);
         } else {

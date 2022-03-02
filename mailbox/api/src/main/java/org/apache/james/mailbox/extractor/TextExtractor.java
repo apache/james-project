@@ -26,6 +26,9 @@ import org.apache.james.mailbox.model.ContentType;
 import reactor.core.publisher.Mono;
 
 public interface TextExtractor {
+    default boolean applicable(ContentType contentType) {
+        return true;
+    }
 
     ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception;
 
