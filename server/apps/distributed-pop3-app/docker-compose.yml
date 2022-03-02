@@ -9,7 +9,6 @@ services:
       - tika
       - rabbitmq
       - s3
-    entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
     image: apache/james:distributed-pop3-latest
     container_name: james
     hostname: james.local
@@ -23,18 +22,10 @@ services:
       - "993:993"
       - "8000:8000"
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    environment:
-      - discovery.type=single-node
-
   cassandra:
     image: cassandra:3.11.10
     ports:
       - "9042:9042"
-
-  tika:
-    image: apache/tika:1.26
 
   rabbitmq:
     image: rabbitmq:3.8.18-management
