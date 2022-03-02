@@ -36,10 +36,14 @@ import org.apache.james.mailbox.model.ContentType;
  * Costs less calculations that TikaTextExtractor, but result is not that good.
  */
 public class DefaultTextExtractor implements TextExtractor {
+    @Override
+    public boolean applicable(ContentType contentType) {
+        return contentType != null && contentType.asString().startsWith("text/");
+    }
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
-        if (contentType != null && contentType.asString().startsWith("text/")) {
+        if (applicable(contentType)) {
             Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
             return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), new HashMap<>());
         } else {

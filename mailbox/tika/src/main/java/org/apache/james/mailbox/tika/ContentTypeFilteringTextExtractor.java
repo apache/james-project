@@ -41,6 +41,11 @@ public class ContentTypeFilteringTextExtractor implements TextExtractor {
     }
 
     @Override
+    public boolean applicable(ContentType contentType) {
+        return !isBlacklisted(contentType.mimeType());
+    }
+
+    @Override
     public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         if (isBlacklisted(contentType.mimeType())) {
             return ParsedContent.empty();

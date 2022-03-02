@@ -45,6 +45,14 @@ public class JsoupTextExtractor implements TextExtractor {
     private static final MimeType TEXT_PLAIN = MimeType.of("text/plain");
 
     @Override
+    public boolean applicable(ContentType contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        return contentType.mimeType().equals(TEXT_HTML) || contentType.mimeType().equals(TEXT_PLAIN);
+    }
+
+    @Override
     public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         if (inputStream == null || contentType == null) {
             return ParsedContent.empty();

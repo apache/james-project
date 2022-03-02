@@ -22,7 +22,6 @@ package org.apache.james.mailbox.elasticsearch.v7.json;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
@@ -38,10 +37,6 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
     @Override
     public MimePart.ParsedMimePart build() {
         return rootMimePart;
-    }
-
-    @Override public MimePartContainerBuilder using(TextExtractor textExtractor) {
-        return this;
     }
 
     @Override

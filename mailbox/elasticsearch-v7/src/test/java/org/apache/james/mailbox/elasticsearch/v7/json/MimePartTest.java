@@ -32,7 +32,7 @@ class MimePartTest {
 
     @Test
     void buildShouldWorkWhenTextualContentFromParserIsEmpty() {
-        MimePart.builder()
+        MimePart.builder(contentType -> true)
             .addBodyContent(new ByteArrayInputStream(new byte[] {}))
             .addMediaType(MediaType.of("text"))
             .addSubType(SubType.of("plain"))
@@ -42,7 +42,7 @@ class MimePartTest {
     @Test
     void buildShouldWorkWhenTextualContentFromParserIsNonEmpty() {
         String body = "text";
-        MimePart mimePart = MimePart.builder()
+        MimePart mimePart = MimePart.builder(contentType -> true)
             .addBodyContent(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)))
             .addMediaType(MediaType.of("text"))
             .addSubType(SubType.of("plain"))
