@@ -56,6 +56,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 class IndexableMessageTest {
     static final MessageUid MESSAGE_UID = MessageUid.of(154);
 
@@ -108,7 +110,8 @@ class IndexableMessageTest {
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getHasAttachment()).isTrue();
@@ -140,7 +143,8 @@ class IndexableMessageTest {
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getHasAttachment()).isFalse();
@@ -170,7 +174,8 @@ class IndexableMessageTest {
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getAttachments()).isEmpty();
@@ -200,7 +205,8 @@ class IndexableMessageTest {
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getAttachments()).isNotEmpty();
@@ -226,10 +232,10 @@ class IndexableMessageTest {
             .thenReturn(MESSAGE_UID);
 
         TextExtractor textExtractor = mock(TextExtractor.class);
-        when(textExtractor.extractContent(any(), any()))
-            .thenReturn(new ParsedContent(Optional.of("first attachment content"), ImmutableMap.of()))
-            .thenThrow(new RuntimeException("second cannot be parsed"))
-            .thenReturn(new ParsedContent(Optional.of("third attachment content"), ImmutableMap.of()));
+        when(textExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.just(new ParsedContent(Optional.of("first attachment content"), ImmutableMap.of())))
+            .thenReturn(Mono.error(new RuntimeException("second cannot be parsed")))
+            .thenReturn(Mono.just(new ParsedContent(Optional.of("third attachment content"), ImmutableMap.of())));
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
@@ -237,7 +243,8 @@ class IndexableMessageTest {
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
-                .build();
+                .build()
+                .block();
 
         // Then
         String NO_TEXTUAL_BODY = "The textual body is not present";
@@ -273,7 +280,8 @@ class IndexableMessageTest {
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getMessageId()).isNull();
@@ -306,7 +314,8 @@ class IndexableMessageTest {
             .extractor(textExtractor)
             .zoneId(ZoneId.of("Europe/Paris"))
             .indexAttachments(IndexAttachments.YES)
-            .build();
+            .build()
+            .block();
 
         // Then
         assertThat(indexableMessage.getThreadId()).isNull();
@@ -336,7 +345,8 @@ class IndexableMessageTest {
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
-                .build();
+                .build()
+                .block();
 
         // Then
         assertThat(indexableMessage.getMessageId()).isNull();
@@ -368,7 +378,8 @@ class IndexableMessageTest {
             .extractor(textExtractor)
             .zoneId(ZoneId.of("Europe/Paris"))
             .indexAttachments(IndexAttachments.YES)
-            .build();
+            .build()
+            .block();
 
         // Then
         assertThat(indexableMessage.getThreadId()).isNull();
@@ -401,7 +412,8 @@ class IndexableMessageTest {
             .extractor(new DefaultTextExtractor())
             .zoneId(ZoneId.of("Europe/Paris"))
             .indexAttachments(IndexAttachments.NO)
-            .build();
+            .build()
+            .block();
 
         // Then
         assertThat(indexableMessage.getThreadId()).isEqualTo("42");

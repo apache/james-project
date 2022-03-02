@@ -18,18 +18,23 @@
  ****************************************************************/
 package org.apache.james.mailbox.tika;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.Optional;
+import java.time.Duration;
 
-import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
 
 public class TikaHttpClientImpl implements TikaHttpClient {
 
@@ -38,10 +43,14 @@ public class TikaHttpClientImpl implements TikaHttpClient {
 
     private final TikaConfiguration tikaConfiguration;
     private final URI recursiveMetaData;
+    private final HttpClient httpClient;
 
     public TikaHttpClientImpl(TikaConfiguration tikaConfiguration) throws URISyntaxException {
         this.tikaConfiguration = tikaConfiguration;
         this.recursiveMetaData = buildURI(tikaConfiguration).resolve(RECURSIVE_METADATA_AS_TEXT_ENDPOINT);
+
+        httpClient = HttpClient.create()
+            .responseTimeout(Duration.ofMillis(tikaConfiguration.getTimeoutInMillis()));
     }
 
     private URI buildURI(TikaConfiguration tikaConfiguration) throws URISyntaxException {
@@ -53,23 +62,31 @@ public class TikaHttpClientImpl implements TikaHttpClient {
     }
 
     @Override
-    public Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, org.apache.james.mailbox.model.ContentType contentType) {
-        try {
-            ContentType httpContentType = ContentType.create(contentType.mimeType().asString(),
-                contentType.charset()
-                    .map(Charset::name)
-                    .orElse(null));
-            return Optional.ofNullable(
-                    Request.Put(recursiveMetaData)
-                        .socketTimeout(tikaConfiguration.getTimeoutInMillis())
-                        .bodyStream(inputStream, httpContentType)
-                        .execute()
-                        .returnContent()
-                        .asStream());
-        } catch (IOException e) {
-            LOGGER.warn("Failing to call Tika for content type {}", contentType, e);
-            return Optional.empty();
-        }
+    public Mono<InputStream> recursiveMetaDataAsJson(InputStream inputStream, org.apache.james.mailbox.model.ContentType contentType) {
+        ContentType httpContentType = ContentType.create(contentType.mimeType().asString(),
+            contentType.charset()
+                .map(Charset::name)
+                .orElse(null));
+
+        return httpClient
+            .headers(headers -> headers.set(HttpHeaderNames.CONTENT_TYPE, httpContentType.toString()))
+            .put()
+            .uri(recursiveMetaData)
+            .send(ReactorUtils.toChunks(inputStream, 16 * 1024)
+                .map(Unpooled::wrappedBuffer)
+                .subscribeOn(Schedulers.elastic()))
+            .responseSingle((resp, content) -> {
+                if (resp.status().code() == 200) {
+                    return content.asInputStream();
+                } else {
+                    LOGGER.warn("Failing to call Tika for content type {} status {}", contentType, resp.status().code());
+                    return Mono.empty();
+                }
+            })
+            .onErrorResume(e -> {
+                LOGGER.warn("Failing to call Tika for content type {}", contentType, e);
+                return Mono.empty();
+            });
     }
 
 }

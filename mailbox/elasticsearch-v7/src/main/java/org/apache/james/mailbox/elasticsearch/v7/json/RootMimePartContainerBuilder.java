@@ -33,10 +33,10 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RootMimePartContainerBuilder.class);
 
-    private MimePart rootMimePart;
+    private MimePart.ParsedMimePart rootMimePart;
 
     @Override
-    public MimePart build() {
+    public MimePart.ParsedMimePart build() {
         return rootMimePart;
     }
 
@@ -57,7 +57,7 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
     }
 
     @Override
-    public MimePartContainerBuilder addChild(MimePart mimePart) {
+    public MimePartContainerBuilder addChild(MimePart.ParsedMimePart mimePart) {
         if (rootMimePart == null) {
             rootMimePart = mimePart;
         } else {

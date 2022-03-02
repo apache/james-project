@@ -162,23 +162,22 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         RoutingKey from = routingKeyFactory.from(mailbox.getMailboxId());
         DocumentId id = indexIdFor(mailbox.getMailboxId(), message.getUid());
 
-        return Mono.fromCallable(() -> generateIndexedJson(mailbox, message, session))
+        return generateIndexedJson(mailbox, message, session)
             .flatMap(jsonContent -> elasticSearchIndexer.index(id, jsonContent, from))
             .then();
     }
 
-    private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
-        try {
-            return messageToElasticSearchJson.convertToJson(message);
-        } catch (Exception e) {
-            LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
-                mailbox.getName(),
-                mailbox.getMailboxId().serialize(),
-                session.getUser().asString(),
-                message.getUid(),
-                e);
-            return messageToElasticSearchJson.convertToJsonWithoutAttachment(message);
-        }
+    private Mono<String> generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) {
+        return messageToElasticSearchJson.convertToJson(message)
+            .onErrorResume(e -> {
+                LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
+                    mailbox.getName(),
+                    mailbox.getMailboxId().serialize(),
+                    session.getUser().asString(),
+                    message.getUid(),
+                    e);
+                return messageToElasticSearchJson.convertToJsonWithoutAttachment(message);
+            });
     }
 
     @Override

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.tika;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -54,7 +53,9 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
-public class CachingTextExtractorTest {
+import reactor.core.publisher.Mono;
+
+class CachingTextExtractorTest {
 
     private static final ParsedContent RESULT = new ParsedContent(Optional.of("content"), ImmutableMap.of());
     public static final String BIG_STRING = Strings.repeat("0123456789", 103 * 1024);
@@ -69,7 +70,7 @@ public class CachingTextExtractorTest {
     private TextExtractor wrappedTextExtractor;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         wrappedTextExtractor = mock(TextExtractor.class);
         textExtractor = new CachingTextExtractor(wrappedTextExtractor,
             TikaConfiguration.DEFAULT_CACHE_EVICTION_PERIOD,
@@ -77,15 +78,15 @@ public class CachingTextExtractorTest {
             new RecordingMetricFactory(),
             new NoopGaugeRegistry());
 
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(RESULT);
+        when(wrappedTextExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.just(RESULT));
     }
 
     @Test
     void extractContentShouldCallUnderlyingTextExtractor() throws Exception {
         textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE);
 
-        verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
+        verify(wrappedTextExtractor, times(1)).extractContentReactive(any(), any());
         verifyNoMoreInteractions(wrappedTextExtractor);
     }
 
@@ -94,77 +95,28 @@ public class CachingTextExtractorTest {
         textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE);
         textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE);
 
-        verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
+        verify(wrappedTextExtractor, times(1)).extractContentReactive(any(), any());
         verifyNoMoreInteractions(wrappedTextExtractor);
     }
 
     @Test
-    void extractContentShouldPropagateCheckedException() throws Exception {
+    void extractContentShouldPropagateCheckedException() {
         IOException ioException = new IOException("Any");
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenThrow(ioException);
+        when(wrappedTextExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.error(ioException));
 
         assertThatThrownBy(() -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
-            .isEqualTo(ioException);
+            .hasCause(ioException);
     }
 
     @Test
-    void extractContentShouldPropagateRuntimeException() throws Exception {
+    void extractContentShouldPropagateRuntimeException() {
         RuntimeException runtimeException = new RuntimeException("Any");
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenThrow(runtimeException);
+        when(wrappedTextExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.error(runtimeException));
 
         assertThatThrownBy(() -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
             .isEqualTo(runtimeException);
-    }
-
-    @Test
-    void cacheShouldEvictEntriesWhenFull() throws Exception {
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(_2MiB_RESULT);
-
-        IntStream.range(0, 10)
-            .mapToObj(STREAM_GENERATOR::apply)
-            .forEach(Throwing.consumer(inputStream -> textExtractor.extractContent(inputStream, CONTENT_TYPE)));
-
-        assertThat(textExtractor.size())
-            .isLessThanOrEqualTo(5);
-    }
-
-    @Test
-    void olderEntriesShouldBeEvictedFirst() throws Exception {
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(_2MiB_RESULT);
-
-        IntStream.range(0, 10)
-            .mapToObj(STREAM_GENERATOR::apply)
-            .forEach(Throwing.consumer(inputStream -> textExtractor.extractContent(inputStream, CONTENT_TYPE)));
-
-        reset(wrappedTextExtractor);
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(_2MiB_RESULT);
-
-        textExtractor.extractContent(STREAM_GENERATOR.apply(1), CONTENT_TYPE);
-
-        verify(wrappedTextExtractor).extractContent(any(), any());
-    }
-
-    @Test
-    void youngerEntriesShouldBePreservedByEviction() throws Exception {
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(_2MiB_RESULT);
-
-        IntStream.range(0, 10)
-            .mapToObj(STREAM_GENERATOR::apply)
-            .forEach(Throwing.consumer(inputStream -> textExtractor.extractContent(inputStream, CONTENT_TYPE)));
-
-        reset(wrappedTextExtractor);
-        when(wrappedTextExtractor.extractContent(any(), any()))
-            .thenReturn(_2MiB_RESULT);
-
-        textExtractor.extractContent(STREAM_GENERATOR.apply(9), CONTENT_TYPE);
-
-        verifyZeroInteractions(wrappedTextExtractor);
     }
 
     @Test
@@ -191,7 +143,7 @@ public class CachingTextExtractorTest {
             .threadCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
+        verify(wrappedTextExtractor, times(1)).extractContentReactive(any(), any());
     }
 
 }
