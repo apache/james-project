@@ -52,6 +52,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 public class TikaTextExtractor implements TextExtractor {
     private static final ContentType.MediaType TEXT = ContentType.MediaType.of("text");
 
@@ -77,24 +79,30 @@ public class TikaTextExtractor implements TextExtractor {
     }
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
+    public Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
         if (contentType.mediaType().equals(TEXT)) {
-            return jsoupTextExtractor.extractContent(inputStream, contentType);
+            return jsoupTextExtractor.extractContentReactive(inputStream, contentType);
         }
-        return metricFactory.decorateSupplierWithTimerMetric("tikaTextExtraction", Throwing.supplier(
-            () -> performContentExtraction(inputStream, contentType))
-            .sneakyThrow());
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("tikaTextExtraction",
+            performContentExtraction(inputStream, contentType)));
     }
 
-    public ParsedContent performContentExtraction(InputStream inputStream, ContentType contentType) throws IOException {
-        ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
-        return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
+    @Override
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
+        return extractContentReactive(inputStream, contentType)
+            .block();
     }
 
-    private ContentAndMetadata convert(Optional<InputStream> maybeInputStream) throws IOException {
+    public Mono<ParsedContent> performContentExtraction(InputStream inputStream, ContentType contentType) {
+        Mono<ContentAndMetadata> contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
+        return contentAndMetadata
+            .map(result -> new ParsedContent(result.getContent(), result.getMetadata()));
+    }
+
+    private Mono<ContentAndMetadata> convert(Mono<InputStream> maybeInputStream) {
         return maybeInputStream
                 .map(Throwing.function(inputStream -> objectMapper.readValue(inputStream, ContentAndMetadata.class)))
-                .orElse(ContentAndMetadata.empty());
+                .switchIfEmpty(Mono.just(ContentAndMetadata.empty()));
     }
 
     @VisibleForTesting

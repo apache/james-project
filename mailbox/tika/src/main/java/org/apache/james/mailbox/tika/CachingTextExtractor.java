@@ -20,11 +20,10 @@
 package org.apache.james.mailbox.tika;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -34,17 +33,18 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.github.benmanes.caffeine.cache.AsyncCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalListener;
+import com.github.benmanes.caffeine.cache.Weigher;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.Weigher;
 import com.google.common.hash.Hashing;
-import com.google.common.util.concurrent.UncheckedExecutionException;
+
+import reactor.core.publisher.Mono;
 
 public class CachingTextExtractor implements TextExtractor {
     private final TextExtractor underlying;
-    private final Cache<String, ParsedContent> cache;
+    private final AsyncCache<String, ParsedContent> cache;
     private final Metric weightMetric;
 
     public CachingTextExtractor(TextExtractor underlying, Duration cacheEvictionPeriod, Long cacheWeightInBytes,
@@ -52,20 +52,22 @@ public class CachingTextExtractor implements TextExtractor {
         this.underlying = underlying;
         this.weightMetric = metricFactory.generate("textExtractor.cache.weight");
 
-        Weigher<String, ParsedContent> weigher =
-            (key, parsedContent) -> computeWeight(parsedContent);
         RemovalListener<String, ParsedContent> removalListener =
-            notification -> Optional.ofNullable(notification.getValue())
+            (key, value, removalCause) -> Optional.ofNullable(value)
                 .map(this::computeWeight)
                 .ifPresent(weightMetric::remove);
 
-        this.cache = CacheBuilder.newBuilder()
-            .expireAfterAccess(cacheEvictionPeriod.toMillis(), TimeUnit.MILLISECONDS)
+        Weigher<String, ParsedContent> weigher =
+            (key, parsedContent) -> computeWeight(parsedContent);
+
+        cache = Caffeine.newBuilder()
+            .expireAfterAccess(Duration.ofMillis(cacheEvictionPeriod.toMillis()))
             .maximumWeight(cacheWeightInBytes)
             .weigher(weigher)
+            .evictionListener(removalListener)
             .recordStats()
-            .removalListener(removalListener)
-            .build();
+            .buildAsync();
+
         recordStats(gaugeRegistry);
     }
 
@@ -73,28 +75,28 @@ public class CachingTextExtractor implements TextExtractor {
         gaugeRegistry
             .register(
                 "textExtractor.cache.hit.rate",
-                () -> cache.stats().hitRate())
+                () -> cache.synchronous().stats().hitRate())
             .register(
                 "textExtractor.cache.hit.count",
-                () -> cache.stats().hitCount());
+                () -> cache.synchronous().stats().hitCount());
             gaugeRegistry.register(
                 "textExtractor.cache.load.count",
-                () -> cache.stats().loadCount())
+                () -> cache.synchronous().stats().loadCount())
             .register(
                 "textExtractor.cache.eviction.count",
-                () -> cache.stats().evictionCount())
+                () -> cache.synchronous().stats().evictionCount())
             .register(
                 "textExtractor.cache.load.exception.rate",
-                () -> cache.stats().loadExceptionRate())
+                () -> cache.synchronous().stats().loadFailureRate())
             .register(
                 "textExtractor.cache.load.miss.rate",
-                () -> cache.stats().missRate())
+                () -> cache.synchronous().stats().missRate())
             .register(
                 "textExtractor.cache.load.miss.count",
-                () -> cache.stats().missCount())
+                () -> cache.synchronous().stats().missCount())
             .register(
                 "textExtractor.cache.size",
-                cache::size);
+                cache.synchronous()::estimatedSize);
     }
 
     private int computeWeight(ParsedContent parsedContent) {
@@ -109,21 +111,25 @@ public class CachingTextExtractor implements TextExtractor {
     }
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
-        byte[] bytes = IOUtils.toByteArray(inputStream);
-        String key = Hashing.sha256().hashBytes(bytes).toString();
-
+    public Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
         try {
-            return cache.get(key, () -> retrieveAndUpdateWeight(bytes, contentType));
-        } catch (ExecutionException | UncheckedExecutionException e) {
-            throw unwrap(e);
+            byte[] bytes = IOUtils.toByteArray(inputStream);
+            String key = Hashing.sha256().hashBytes(bytes).toString();
+
+            return Mono.fromFuture(cache.get(key, (a, b) -> retrieveAndUpdateWeight(bytes, contentType).toFuture()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private ParsedContent retrieveAndUpdateWeight(byte[] bytes, ContentType contentType) throws Exception {
-        ParsedContent parsedContent = underlying.extractContent(new ByteArrayInputStream(bytes), contentType);
-        weightMetric.add(computeWeight(parsedContent));
-        return parsedContent;
+    @Override
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) {
+        return extractContentReactive(inputStream, contentType).block();
+    }
+
+    private Mono<ParsedContent> retrieveAndUpdateWeight(byte[] bytes, ContentType contentType) {
+        return underlying.extractContentReactive(new ByteArrayInputStream(bytes), contentType)
+            .doOnNext(next -> weightMetric.add(computeWeight(next)));
     }
 
     private Exception unwrap(Exception e) {
@@ -135,6 +141,6 @@ public class CachingTextExtractor implements TextExtractor {
 
     @VisibleForTesting
     long size() {
-        return cache.size();
+        return cache.synchronous().estimatedSize();
     }
 }

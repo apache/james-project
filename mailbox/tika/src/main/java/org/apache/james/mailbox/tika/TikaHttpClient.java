@@ -19,11 +19,12 @@
 package org.apache.james.mailbox.tika;
 
 import java.io.InputStream;
-import java.util.Optional;
 
 import org.apache.james.mailbox.model.ContentType;
 
+import reactor.core.publisher.Mono;
+
 public interface TikaHttpClient {
 
-    Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, ContentType contentType);
+    Mono<InputStream> recursiveMetaDataAsJson(InputStream inputStream, ContentType contentType);
 }

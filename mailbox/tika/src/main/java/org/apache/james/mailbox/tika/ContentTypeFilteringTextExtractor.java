@@ -28,6 +28,8 @@ import org.apache.james.mailbox.model.ContentType.MimeType;
 
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
+
 public class ContentTypeFilteringTextExtractor implements TextExtractor {
 
     private final TextExtractor textExtractor;
@@ -44,6 +46,14 @@ public class ContentTypeFilteringTextExtractor implements TextExtractor {
             return ParsedContent.empty();
         }
         return textExtractor.extractContent(inputStream, contentType);
+    }
+
+    @Override
+    public Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
+        if (isBlacklisted(contentType.mimeType())) {
+            return Mono.just(ParsedContent.empty());
+        }
+        return textExtractor.extractContentReactive(inputStream, contentType);
     }
 
     private boolean isBlacklisted(MimeType contentType) {

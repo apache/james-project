@@ -29,7 +29,7 @@ import org.apache.james.mime4j.stream.Field;
 
 public interface MimePartContainerBuilder {
 
-    MimePart build();
+    MimePart.ParsedMimePart build();
 
     MimePartContainerBuilder using(TextExtractor textExtractor);
 
@@ -37,7 +37,7 @@ public interface MimePartContainerBuilder {
 
     MimePartContainerBuilder addBodyContent(InputStream bodyContent);
 
-    MimePartContainerBuilder addChild(MimePart mimePart);
+    MimePartContainerBuilder addChild(MimePart.ParsedMimePart mimePart);
 
     MimePartContainerBuilder addFileName(String fileName);
 

@@ -2091,6 +2091,11 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>3.0.5</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.dpaukov</groupId>
                 <artifactId>combinatoricslib3</artifactId>
                 <version>3.3.2</version>
