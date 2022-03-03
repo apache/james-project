@@ -177,7 +177,6 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-
     /**
      * Cleanup the channel
      */
@@ -188,10 +187,8 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
         }
         ctx.close();
     }
-
     
-    
-    protected ProtocolSession createSession(ChannelHandlerContext ctx) throws Exception {
+    protected ProtocolSession createSession(ChannelHandlerContext ctx) {
         SSLEngine engine = null;
         if (secure != null) {
             engine = secure.createSSLEngine();
@@ -230,5 +227,4 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
             }
         }
     }
-
 }

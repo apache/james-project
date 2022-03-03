@@ -75,8 +75,8 @@ public interface ProtocolMDCContextFactory {
 
     static MDCBuilder from(Object o) {
         return Optional.ofNullable(o)
-            .filter(object -> object instanceof ProtocolSession)
-            .map(object -> (ProtocolSession) object)
+            .filter(ProtocolSession.class::isInstance)
+            .map(ProtocolSession.class::cast)
             .map(ProtocolMDCContextFactory::forSession)
             .orElse(MDCBuilder.create());
     }
