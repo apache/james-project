@@ -102,12 +102,12 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         // Configure the pipeline factory.
         bootstrap.childHandler(factory);
 
+        configureBootstrap(bootstrap);
+
         for (InetSocketAddress address : addresses) {
             Channel channel = bootstrap.bind(address).sync().channel();
             channels.add(channel);
         }
-
-        configureBootstrap(bootstrap);
 
         started = true;
     }
@@ -124,7 +124,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     @Override
     public synchronized void unbind() {
-        if (started == false) {
+        if (!started) {
             return;
         }
 

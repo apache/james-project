@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
-import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -47,6 +46,7 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
@@ -114,8 +114,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
 
     private String[] enabledCipherSuites;
-
-    private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ChannelHandlerFactory frameHandlerFactory;
 
@@ -399,50 +397,41 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      */
     protected void buildSSLContext() throws Exception {
         if (useStartTLS || useSSL) {
-            FileInputStream fis = null;
             SSLFactory.Builder sslFactoryBuilder = SSLFactory.builder()
                 .withSslContextAlgorithm("TLS");
-            try {
-                if (keystore != null) {
-                    char[] passwordAsCharArray = Optional.ofNullable(secret)
-                        .orElse("")
-                        .toCharArray();
-                    sslFactoryBuilder.withIdentityMaterial(
-                        fileSystem.getFile(keystore).toPath(),
-                        passwordAsCharArray,
-                        passwordAsCharArray,
-                        keystoreType);
-                } else {
-                    X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
-                        fileSystem.getResource(certificates),
-                        fileSystem.getResource(privateKey),
-                        Optional.ofNullable(secret)
-                            .map(String::toCharArray)
-                            .orElse(null));
+            if (keystore != null) {
+                char[] passwordAsCharArray = Optional.ofNullable(secret)
+                    .orElse("")
+                    .toCharArray();
+                sslFactoryBuilder.withIdentityMaterial(
+                    fileSystem.getFile(keystore).toPath(),
+                    passwordAsCharArray,
+                    passwordAsCharArray,
+                    keystoreType);
+            } else {
+                X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
+                    fileSystem.getResource(certificates),
+                    fileSystem.getResource(privateKey),
+                    Optional.ofNullable(secret)
+                        .map(String::toCharArray)
+                        .orElse(null));
 
-                    sslFactoryBuilder.withIdentityMaterial(keyManager);
-                }
+                sslFactoryBuilder.withIdentityMaterial(keyManager);
+            }
 
-                if (clientAuth != null) {
-                    if (truststore != null) {
-                        sslFactoryBuilder.withTrustMaterial(
-                            fileSystem.getFile(truststore).toPath(),
-                            truststoreSecret,
-                            truststoreType);
-                    }
-                }
+            if (clientAuth != null && truststore != null) {
+                sslFactoryBuilder.withTrustMaterial(
+                    fileSystem.getFile(truststore).toPath(),
+                    truststoreSecret,
+                    truststoreType);
+            }
 
-                SSLContext context = sslFactoryBuilder.build().getSslContext();
+            SSLContext context = sslFactoryBuilder.build().getSslContext();
 
-                if (useStartTLS) {
-                    encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
-                } else {
-                    encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
-                }
-            } finally {
-                if (fis != null) {
-                    fis.close();
-                }
+            if (useStartTLS) {
+                encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
+            } else {
+                encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
             }
         }
     }
@@ -511,20 +500,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
 
     @Override
-    public long getHandledConnections() {
-        return countHandler.getConnectionsTillStartup();
-    }
-
-    @Override
-    public int getCurrentConnections() {
-        return countHandler.getCurrentConnectionCount();
-    }
-
-    protected ConnectionCountHandler getConnectionCountHandler() {
-        return countHandler;
-    }
-
-    @Override
     public String[] getBoundAddresses() {
 
         List<InetSocketAddress> addresses = getListenAddresses();
@@ -555,7 +530,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
+        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
             getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
@@ -563,12 +538,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 return AbstractConfigurableAsyncServer.this.createCoreHandler();
 
             }
-
-            @Override
-            protected ConnectionCountHandler getConnectionCountHandler() {
-                return AbstractConfigurableAsyncServer.this.getConnectionCountHandler();
-            }
-
         };
     }
     

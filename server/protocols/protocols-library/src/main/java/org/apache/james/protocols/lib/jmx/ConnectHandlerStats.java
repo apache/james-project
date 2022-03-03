@@ -81,7 +81,7 @@ public class ConnectHandlerStats extends StandardMBean implements HandlerStatsMB
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));
         } catch (Exception e) {
-            // ignore here;
+            // ignore here
         }
     }
 

@@ -350,18 +350,9 @@ public class SMTPServerTest {
 
     }
 
-    private void ensureIsDisconnected(SMTPClient client) throws IOException, InterruptedException {
-        int initialConnections = smtpServer.getCurrentConnections();
+    private void ensureIsDisconnected(SMTPClient client) throws IOException {
         client.quit();
         client.disconnect();
-        assertIsDisconnected(initialConnections);
-    }
-
-    private void assertIsDisconnected(int initialConnections) throws InterruptedException {
-        int iterations = 0;
-        while (smtpServer.getCurrentConnections() >= initialConnections && iterations++ < MAX_ITERATIONS) {
-            Thread.sleep(HALF_SECOND);
-        }
     }
 
     @AfterEach

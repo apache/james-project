@@ -20,8 +20,16 @@
 package org.apache.james.managesieveserver.netty;
 
 
+import static org.apache.james.protocols.netty.HandlerConstants.CONNECTION_LIMIT_HANDLER;
+import static org.apache.james.protocols.netty.HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER;
+
+import java.util.Optional;
+
 import javax.net.ssl.SSLEngine;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
@@ -49,13 +57,12 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     static final String SSL_HANDLER = "sslHandler";
     static final String FRAMER = "framer";
     static final String CORE_HANDLER = "coreHandler";
-    static final String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
-    static final String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
-    static final String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
     static final String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
 
     private final int maxLineLength;
     private final ManageSieveProcessor manageSieveProcessor;
+    private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
+    private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
 
     public ManageSieveServer(int maxLineLength, ManageSieveProcessor manageSieveProcessor) {
         this.maxLineLength = maxLineLength;
@@ -68,6 +75,14 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
+        super.doConfigure(config);
+
+        connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
+        connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
+    }
+
+    @Override
     protected String getDefaultJMXName() {
         return "managesieveserver";
     }
@@ -76,7 +91,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         return new ManageSieveChannelUpstreamHandler(manageSieveProcessor,
             getEncryption(),
-            LOGGER);
+            LOGGER, maxLineLength);
     }
 
     @Override
@@ -101,13 +116,14 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
                 }
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(ManageSieveServer.this.connectionLimit));
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(ManageSieveServer.this.connPerIP));
+
+                connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(CONNECTION_LIMIT_HANDLER, handler));
+                connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, handler));
+
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
                 pipeline.addLast(getExecutorGroup(), FRAMER, getFrameHandlerFactory().create(pipeline));
-                pipeline.addLast(getExecutorGroup(), CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
                 pipeline.addLast(getExecutorGroup(), CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
                 pipeline.addLast(getExecutorGroup(), "stringDecoder", new StringDecoder(CharsetUtil.UTF_8));

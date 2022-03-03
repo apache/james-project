@@ -33,7 +33,6 @@ import org.apache.james.protocols.api.handler.LineHandler;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.ssl.SslHandler;
@@ -96,7 +95,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
             prepareStartTLS();
         }
 
-        ChannelFuture future = channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
+        channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
     }
 
     @Override
@@ -110,18 +109,16 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         if (startTLS) {
             prepareStartTLS();
         }
-        if (!isTLSStarted()) {
-            if (in instanceof FileInputStream) {
-                FileChannel fChannel = ((FileInputStream) in).getChannel();
-                try {
-                    channel.writeAndFlush(new DefaultFileRegion(fChannel, 0, fChannel.size()));
+        if (!isTLSStarted() && in instanceof FileInputStream) {
+            FileChannel fChannel = ((FileInputStream) in).getChannel();
+            try {
+                channel.writeAndFlush(new DefaultFileRegion(fChannel, 0, fChannel.size()));
 
-                } catch (IOException e) {
-                    // We handle this later
-                    channel.writeAndFlush(new ChunkedStream(new ExceptionInputStream(e)));
-                }
-                return;
+            } catch (IOException e) {
+                // We handle this later
+                channel.writeAndFlush(new ChunkedStream(new ExceptionInputStream(e)));
             }
+            return;
         }
         channel.writeAndFlush(new ChunkedStream(in));
     }

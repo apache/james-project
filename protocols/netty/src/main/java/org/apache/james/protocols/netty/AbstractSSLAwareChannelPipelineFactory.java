@@ -56,9 +56,8 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
     public void initChannel(C channel) throws Exception {
         super.initChannel(channel);
 
-        ChannelPipeline pipeline = channel.pipeline();
-
         if (isSSLSocket()) {
+            ChannelPipeline pipeline = channel.pipeline();
             // We need to set clientMode to false.
             // See https://issues.apache.org/jira/browse/JAMES-1025
             SSLEngine engine = secure.createSSLEngine();

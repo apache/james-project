@@ -249,6 +249,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     bodypartBuilder.setBody(loadedAttachment.content, attachment.`type`.value)
       .setField(contentTypeField(attachment, blob))
       .setContentDisposition(attachment.disposition.getOrElse(Disposition.ATTACHMENT).value)
+      .setContentTransferEncoding("base64")
     attachment.cid.map(_.asField).foreach(bodypartBuilder.addField)
     attachment.location.map(_.asField).foreach(bodypartBuilder.addField)
     attachment.language.map(_.asField).foreach(bodypartBuilder.addField)
