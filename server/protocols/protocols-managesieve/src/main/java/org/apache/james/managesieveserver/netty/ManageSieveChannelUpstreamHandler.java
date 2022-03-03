@@ -29,6 +29,7 @@ import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.protocols.api.Encryption;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -41,17 +42,19 @@ import io.netty.handler.ssl.SslHandler;
 
 @ChannelHandler.Sharable
 public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveChannelUpstreamHandler.class);
 
     static final String SSL_HANDLER = "sslHandler";
 
-    private final Logger logger;
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
+    private final int maxLineLength;
 
-    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
-        this.logger = logger;
+    public ManageSieveChannelUpstreamHandler(
+        ManageSieveProcessor manageSieveProcessor, Encryption secure, int maxLineLength) {
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
+        this.maxLineLength = maxLineLength;
     }
 
     private boolean isSSL() {
@@ -65,6 +68,9 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             String request = attachment.cumulate((String) msg);
             if (request.isEmpty() || request.startsWith("\r\n")) {
                 return;
+            }
+            if (request.length() > maxLineLength) {
+                throw new TooLongFrameException();
             }
 
             Session manageSieveSession = ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get();
@@ -85,7 +91,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
-            logger.warn("Error while processing ManageSieve request", cause);
+            LOGGER.warn("Error while processing ManageSieve request", cause);
 
             if (cause instanceof TooLongFrameException) {
                 // Max line length exceeded
@@ -112,7 +118,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-            logger.info("Connection established from {}", address.getAddress().getHostAddress());
+            LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
             if (isSSL()) {
@@ -129,7 +135,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-            logger.info("Connection closed for {}", address.getAddress().getHostAddress());
+            LOGGER.info("Connection closed for {}", address.getAddress().getHostAddress());
             ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).getAndSet(null);
             super.channelInactive(ctx);
         }
