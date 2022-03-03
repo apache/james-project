@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
-import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -398,50 +397,43 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      */
     protected void buildSSLContext() throws Exception {
         if (useStartTLS || useSSL) {
-            FileInputStream fis = null;
             SSLFactory.Builder sslFactoryBuilder = SSLFactory.builder()
                 .withSslContextAlgorithm("TLS");
-            try {
-                if (keystore != null) {
-                    char[] passwordAsCharArray = Optional.ofNullable(secret)
-                        .orElse("")
-                        .toCharArray();
-                    sslFactoryBuilder.withIdentityMaterial(
-                        fileSystem.getFile(keystore).toPath(),
-                        passwordAsCharArray,
-                        passwordAsCharArray,
-                        keystoreType);
-                } else {
-                    X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
-                        fileSystem.getResource(certificates),
-                        fileSystem.getResource(privateKey),
-                        Optional.ofNullable(secret)
-                            .map(String::toCharArray)
-                            .orElse(null));
+            if (keystore != null) {
+                char[] passwordAsCharArray = Optional.ofNullable(secret)
+                    .orElse("")
+                    .toCharArray();
+                sslFactoryBuilder.withIdentityMaterial(
+                    fileSystem.getFile(keystore).toPath(),
+                    passwordAsCharArray,
+                    passwordAsCharArray,
+                    keystoreType);
+            } else {
+                X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
+                    fileSystem.getResource(certificates),
+                    fileSystem.getResource(privateKey),
+                    Optional.ofNullable(secret)
+                        .map(String::toCharArray)
+                        .orElse(null));
 
-                    sslFactoryBuilder.withIdentityMaterial(keyManager);
-                }
+                sslFactoryBuilder.withIdentityMaterial(keyManager);
+            }
 
-                if (clientAuth != null) {
-                    if (truststore != null) {
-                        sslFactoryBuilder.withTrustMaterial(
-                            fileSystem.getFile(truststore).toPath(),
-                            truststoreSecret,
-                            truststoreType);
-                    }
+            if (clientAuth != null) {
+                if (truststore != null) {
+                    sslFactoryBuilder.withTrustMaterial(
+                        fileSystem.getFile(truststore).toPath(),
+                        truststoreSecret,
+                        truststoreType);
                 }
+            }
 
-                SSLContext context = sslFactoryBuilder.build().getSslContext();
+            SSLContext context = sslFactoryBuilder.build().getSslContext();
 
-                if (useStartTLS) {
-                    encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
-                } else {
-                    encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
-                }
-            } finally {
-                if (fis != null) {
-                    fis.close();
-                }
+            if (useStartTLS) {
+                encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
+            } else {
+                encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
             }
         }
     }
