@@ -32,9 +32,9 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> extends ChannelInitializer<C> {
     public static final int MAX_LINE_LENGTH = 8192;
 
-    protected final ConnectionLimitUpstreamHandler connectionLimitHandler;
-    protected final ConnectionPerIpLimitUpstreamHandler connectionPerIpLimitHandler;
     private final int timeout;
+    private final int maxConnectsPerIp;
+    private final int connectionLimit;
     private final ChannelHandlerFactory frameHandlerFactory;
 
     public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory) {
@@ -43,10 +43,10 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                           ChannelHandlerFactory frameHandlerFactory) {
-        this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
-        this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
         this.timeout = timeout;
         this.frameHandlerFactory = frameHandlerFactory;
+        this.maxConnectsPerIp = maxConnectsPerIp;
+        this.connectionLimit = maxConnections;
     }
     
     
@@ -55,11 +55,9 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = channel.pipeline();
 
-        pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, connectionLimitHandler);
+        ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
+        ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, maxConnectsPerIp);
 
-        pipeline.addLast(HandlerConstants.CONNECTION_PER_IP_LIMIT_HANDLER, connectionPerIpLimitHandler);
-
-        
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
         pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
        

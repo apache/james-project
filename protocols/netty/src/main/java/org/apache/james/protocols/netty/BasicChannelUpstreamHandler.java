@@ -154,10 +154,10 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
             LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
 
 
-            if (lineHandlers.size() > 0) {
+            if (!lineHandlers.isEmpty()) {
 
                 ByteBuf buf = (ByteBuf) msg;
-                LineHandler lHandler = (LineHandler) lineHandlers.getLast();
+                LineHandler lHandler = lineHandlers.getLast();
                 long start = System.currentTimeMillis();
                 Response response = lHandler.onLine(pSession, buf.nioBuffer());
                 long executionTime = System.currentTimeMillis() - start;
