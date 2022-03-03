@@ -99,8 +99,10 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
                 }
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(ManageSieveServer.this.connectionLimit));
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(ManageSieveServer.this.connPerIP));
+
+                ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
+                ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, connPerIP);
+
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436

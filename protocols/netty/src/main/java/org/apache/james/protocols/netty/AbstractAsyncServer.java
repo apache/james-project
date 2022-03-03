@@ -124,7 +124,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     @Override
     public synchronized void unbind() {
-        if (started == false) {
+        if (!started) {
             return;
         }
 
