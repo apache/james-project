@@ -32,13 +32,10 @@ import java.util.Map;
  */
 public class POP3BeforeSMTPHelper {
 
-    private POP3BeforeSMTPHelper() {
-    }
-
     /**
      * The map in which the ipAddresses and timestamp stored
      */
-    public static final Map<String, Instant> ipMap = Collections.synchronizedMap(new HashMap<>());
+    public static final Map<String, Instant> IP_MAP = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Default expire time in ms (60 hour)
@@ -53,7 +50,7 @@ public class POP3BeforeSMTPHelper {
      * @return true if authorized. Else false
      */
     public static boolean isAuthorized(String ipAddress) {
-        return ipMap.containsKey(ipAddress);
+        return IP_MAP.containsKey(ipAddress);
     }
 
     /**
@@ -63,14 +60,7 @@ public class POP3BeforeSMTPHelper {
      *            The ipAddress
      */
     public static void addIPAddress(String ipAddress) {
-        ipMap.put(ipAddress, Instant.now());
-    }
-
-    /**
-     * @see #removeExpiredIP(Duration)
-     */
-    public static void removeExpiredIP() {
-        removeExpiredIP(EXPIRE_TIME);
+        IP_MAP.put(ipAddress, Instant.now());
     }
 
     /**
@@ -82,12 +72,12 @@ public class POP3BeforeSMTPHelper {
      *            handled as expired
      */
     public static void removeExpiredIP(Duration clearTime) {
-        synchronized (ipMap) {
-            Iterator<String> storedIP = ipMap.keySet().iterator();
+        synchronized (IP_MAP) {
+            Iterator<String> storedIP = IP_MAP.keySet().iterator();
 
             while (storedIP.hasNext()) {
                 String key = storedIP.next();
-                Instant storedTime = ipMap.get(key);
+                Instant storedTime = IP_MAP.get(key);
 
                 // remove the ip from the map when it is expired
                 if (Instant.now().minus(clearTime).isAfter(storedTime)) {
@@ -96,16 +86,9 @@ public class POP3BeforeSMTPHelper {
                     // a ConcurrentModificationException
                     storedIP.remove();
 
-                    ipMap.remove(key);
+                    IP_MAP.remove(key);
                 }
             }
         }
-    }
-
-    /**
-     * Remove all ipAddresses from the authorized map
-     */
-    public static void clearIP() {
-        ipMap.clear();
     }
 }
