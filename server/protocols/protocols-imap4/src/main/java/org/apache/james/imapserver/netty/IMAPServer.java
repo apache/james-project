@@ -237,7 +237,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
                 }
-                pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
 
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
