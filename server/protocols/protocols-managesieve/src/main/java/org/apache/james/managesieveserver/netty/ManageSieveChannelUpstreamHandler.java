@@ -47,12 +47,14 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     private final Logger logger;
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
+    private final int maxLineLength;
 
     public ManageSieveChannelUpstreamHandler(
-            ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
+        ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger, int maxLineLength) {
         this.logger = logger;
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
+        this.maxLineLength = maxLineLength;
     }
 
     private boolean isSSL() {
@@ -66,6 +68,9 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             String request = attachment.cumulate((String) msg);
             if (request.isEmpty() || request.startsWith("\r\n")) {
                 return;
+            }
+            if (request.length() > maxLineLength) {
+                throw new TooLongFrameException();
             }
 
             Session manageSieveSession = ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get();
