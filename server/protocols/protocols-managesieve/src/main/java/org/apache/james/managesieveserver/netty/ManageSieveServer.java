@@ -56,7 +56,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     static final String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
     static final String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
     static final String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
-    static final String EXECUTION_HANDLER = "executionHandler";
 
     private final int maxLineLength;
     private final ManageSieveProcessor manageSieveProcessor;
