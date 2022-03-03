@@ -138,6 +138,23 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     }
 
     @Test
+    default void browseShouldReturnEmptyWhenSingleDequeueMessage() throws Exception {
+        var mail = defaultMail()
+                .name("name")
+                .build();
+        enQueue(mail);
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        mailQueueItem.done(true);
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+
+        assertThat(items)
+                .toIterable()
+                .isEmpty();
+    }
+
+    @Test
     default void browseShouldReturnElementsInOrder() throws Exception {
         enQueue(defaultMail()
             .name("name1")
