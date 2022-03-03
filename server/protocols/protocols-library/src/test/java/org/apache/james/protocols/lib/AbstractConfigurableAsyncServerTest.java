@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,13 +38,12 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
-public class AbstractConfigurableAsyncServerTest {
+class AbstractConfigurableAsyncServerTest {
 
     private static class MemoryFileSystem implements FileSystem {
 
@@ -139,18 +140,18 @@ public class AbstractConfigurableAsyncServerTest {
     private TestableConfigurableAsyncServer testServer;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         memoryFileSystem = new MemoryFileSystem();
     }
 
     @Test
-    public void testServerDisabled() throws Exception {
+    void testServerDisabled() throws Exception {
         initTestServer("testServerDisabled.xml");
         assertThat(testServer.isEnabled()).isFalse();
     }
 
     @Test
-    public void testEmpty() throws Exception {
+    void testEmpty() throws Exception {
         initTestServer("testServerDefaults.xml");
         assertThat(testServer.isEnabled()).isTrue();
 
@@ -163,15 +164,15 @@ public class AbstractConfigurableAsyncServerTest {
         assertThat(testServer.getTimeout()).isEqualTo(AbstractConfigurableAsyncServer.DEFAULT_TIMEOUT);
         assertThat(testServer.getBacklog()).isEqualTo(AbstractConfigurableAsyncServer.DEFAULT_BACKLOG);
 
-        assertThat(testServer.getMaximumConcurrentConnections()).isEqualTo(0); // no default limit
-        assertThat(testServer.getConnPerIp()).isEqualTo(0); // no default limit
+        assertThat(testServer.getMaximumConcurrentConnections()).isZero(); // no default limit
+        assertThat(testServer.getConnPerIp()).isZero(); // no default limit
 
         testServer.buildSSLContext();
         assertThat(testServer.getEncryption()).isNull(); // no TLS by default
     }
 
     @Test
-    public void testServerPlain() throws Exception {
+    void testServerPlain() throws Exception {
         initTestServer("testServerPlain.xml");
         assertThat(testServer.isEnabled()).isTrue();
 
@@ -192,7 +193,7 @@ public class AbstractConfigurableAsyncServerTest {
     }
 
     @Test
-    public void testServerTLS() throws Exception {
+    void testServerTLS() throws Exception {
         memoryFileSystem.put("file://conf/keystore", "keystore");
 
         initTestServer("testServerTLS.xml");
@@ -206,7 +207,7 @@ public class AbstractConfigurableAsyncServerTest {
     }
 
     @Test
-    public void testServerStartTLS() throws Exception {
+    void testServerStartTLS() throws Exception {
         memoryFileSystem.put("file://conf/keystore", "keystore");
 
         initTestServer("testServerStartTLS.xml");
@@ -220,7 +221,7 @@ public class AbstractConfigurableAsyncServerTest {
     }
 
     @Test
-    public void testServerTLSNeedClientAuth() throws Exception {
+    void testServerTLSNeedClientAuth() throws Exception {
         memoryFileSystem.put("file://conf/keystore", "keystore");
         memoryFileSystem.put("file://conf/truststore", "keystore");
 
@@ -233,7 +234,7 @@ public class AbstractConfigurableAsyncServerTest {
     }
 
     @Test
-    public void testServerTLSDefaultClientAuth() throws Exception {
+    void testServerTLSDefaultClientAuth() throws Exception {
         memoryFileSystem.put("file://conf/keystore", "keystore");
         // memoryFileSystem.put("file://conf/truststore", "keystore");
 
