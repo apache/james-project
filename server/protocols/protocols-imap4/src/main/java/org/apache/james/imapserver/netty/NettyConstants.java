@@ -36,9 +36,6 @@ public interface NettyConstants {
     String FRAMER = "framer";
     String TIMEOUT_HANDLER = "timeoutHandler";
     String CORE_HANDLER = "coreHandler";
-    String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
-    String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
-    String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
     String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 

@@ -29,16 +29,6 @@ public interface ServerMBean {
     int getMaximumConcurrentConnections();
 
     /**
-     * Return the current connection count
-     */
-    int getCurrentConnections();
-
-    /**
-     * Return the count of handled connections till startup
-     */
-    long getHandledConnections();
-
-    /**
      * Return true if the server is enabled
      */
     boolean isEnabled();
