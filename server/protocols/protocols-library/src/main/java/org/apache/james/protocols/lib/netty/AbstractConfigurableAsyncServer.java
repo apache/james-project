@@ -47,6 +47,7 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,8 +111,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     protected String jmxName;
 
     private String[] enabledCipherSuites;
-
-    private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ChannelHandlerFactory frameHandlerFactory;
 
@@ -498,20 +497,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
 
     @Override
-    public long getHandledConnections() {
-        return countHandler.getConnectionsTillStartup();
-    }
-
-    @Override
-    public int getCurrentConnections() {
-        return countHandler.getCurrentConnectionCount();
-    }
-
-    protected ConnectionCountHandler getConnectionCountHandler() {
-        return countHandler;
-    }
-
-    @Override
     public String[] getBoundAddresses() {
 
         List<InetSocketAddress> addresses = getListenAddresses();
@@ -542,18 +527,13 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
+        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
             getEncryption(), getFrameHandlerFactory()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return AbstractConfigurableAsyncServer.this.createCoreHandler();
 
-            }
-
-            @Override
-            protected ConnectionCountHandler getConnectionCountHandler() {
-                return AbstractConfigurableAsyncServer.this.getConnectionCountHandler();
             }
 
         };
