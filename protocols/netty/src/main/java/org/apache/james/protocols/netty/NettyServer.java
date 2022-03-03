@@ -28,7 +28,6 @@ import org.apache.james.protocols.api.Protocol;
 import com.google.common.base.Preconditions;
 
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.group.ChannelGroup;
 
 
 
@@ -118,13 +117,12 @@ public class NettyServer extends AbstractAsyncServer {
     }
 
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory() {
 
         return new AbstractSSLAwareChannelPipelineFactory(
             getTimeout(),
             maxCurConnections,
             maxCurConnectionsPerIP,
-            group,
             secure,
             getFrameHandlerFactory()) {
 

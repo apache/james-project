@@ -54,7 +54,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     private EventLoopGroup workerGroup;
 
     private volatile boolean started;
-    
+
     private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
@@ -96,10 +96,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
         bootstrap.group(bossGroup, workerGroup);
 
-        ChannelInitializer<SocketChannel> factory = createPipelineFactory(channels);
-
         // Configure the pipeline factory.
-        bootstrap.childHandler(factory);
+        bootstrap.childHandler(createPipelineFactory());
 
         for (InetSocketAddress address : addresses) {
             Channel channel = bootstrap.bind(address).sync().channel();
@@ -151,7 +149,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
      */
-    protected abstract ChannelInitializer<SocketChannel> createPipelineFactory(ChannelGroup group);
+    protected abstract ChannelInitializer<SocketChannel> createPipelineFactory();
 
     /**
      * Set the read/write timeout for the server. This will throw a {@link IllegalStateException} if the

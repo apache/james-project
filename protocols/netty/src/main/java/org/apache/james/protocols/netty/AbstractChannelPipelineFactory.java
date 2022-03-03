@@ -22,7 +22,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
@@ -35,20 +34,17 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
     protected final ConnectionLimitUpstreamHandler connectionLimitHandler;
     protected final ConnectionPerIpLimitUpstreamHandler connectionPerIpLimitHandler;
-    private final ChannelGroupHandler groupHandler;
     private final int timeout;
     private final ChannelHandlerFactory frameHandlerFactory;
 
-    public AbstractChannelPipelineFactory(ChannelGroup channels,
-                                          ChannelHandlerFactory frameHandlerFactory) {
-        this(0, 0, 0, channels, frameHandlerFactory);
+    public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory) {
+        this(0, 0, 0, frameHandlerFactory);
     }
 
-    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels,
+    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                           ChannelHandlerFactory frameHandlerFactory) {
         this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
         this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
-        this.groupHandler = new ChannelGroupHandler(channels);
         this.timeout = timeout;
         this.frameHandlerFactory = frameHandlerFactory;
     }
@@ -58,7 +54,6 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
     protected void initChannel(C channel) throws Exception {
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = channel.pipeline();
-        pipeline.addLast(HandlerConstants.GROUP_HANDLER, groupHandler);
 
         pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, connectionLimitHandler);
 

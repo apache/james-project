@@ -27,7 +27,6 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
-import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslHandler;
@@ -83,16 +81,14 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory() {
 
-        return new AbstractChannelPipelineFactory(group, createFrameHandlerFactory()) {
+        return new AbstractChannelPipelineFactory(createFrameHandlerFactory()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return createCoreHandler();
             }
-
-            private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
 
             @Override
             public void initChannel(Channel channel) throws Exception {
@@ -106,7 +102,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
                 }
-                pipeline.addLast(GROUP_HANDLER, groupHandler);
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(ManageSieveServer.this.connectionLimit));
                 pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(ManageSieveServer.this.connPerIP));
                 // Add the text line decoder which limit the max line length,
