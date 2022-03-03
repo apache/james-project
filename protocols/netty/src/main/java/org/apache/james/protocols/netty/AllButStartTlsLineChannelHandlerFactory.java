@@ -23,7 +23,7 @@ import io.netty.channel.ChannelPipeline;
 
 public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
     private final String pattern;
-    private int maxFrameLength;
+    private final int maxFrameLength;
 
     public AllButStartTlsLineChannelHandlerFactory(String pattern, int maxFrameLength) {
         this.pattern = pattern;
