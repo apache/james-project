@@ -66,7 +66,7 @@ public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAd
             AtomicInteger oldAtomicCount = connections.putIfAbsent(remoteIp, atomicCount);
             // if another thread put a new counter for this ip, we must use the other one.
             if (oldAtomicCount != null) {
-                atomicCount = oldAtomicCount;
+                oldAtomicCount.incrementAndGet();
             }
         } else {
             Integer count = atomicCount.incrementAndGet();
