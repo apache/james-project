@@ -106,7 +106,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     }
 
 
-    private void registerHandlersPackage(HandlersPackage handlersPackage, HierarchicalConfiguration<ImmutableNode> handlerConfig, List<HierarchicalConfiguration<ImmutableNode>> children) throws ConfigurationException {
+    private void registerHandlersPackage(HandlersPackage handlersPackage, HierarchicalConfiguration<ImmutableNode> handlerConfig, List<HierarchicalConfiguration<ImmutableNode>> children) {
         List<String> c = handlersPackage.getHandlers();
 
         for (String cName : c) {

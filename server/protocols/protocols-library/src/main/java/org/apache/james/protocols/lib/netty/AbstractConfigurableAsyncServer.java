@@ -419,13 +419,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 sslFactoryBuilder.withIdentityMaterial(keyManager);
             }
 
-            if (clientAuth != null) {
-                if (truststore != null) {
-                    sslFactoryBuilder.withTrustMaterial(
-                        fileSystem.getFile(truststore).toPath(),
-                        truststoreSecret,
-                        truststoreType);
-                }
+            if (clientAuth != null && truststore != null) {
+                sslFactoryBuilder.withTrustMaterial(
+                    fileSystem.getFile(truststore).toPath(),
+                    truststoreSecret,
+                    truststoreType);
             }
 
             SSLContext context = sslFactoryBuilder.build().getSslContext();
