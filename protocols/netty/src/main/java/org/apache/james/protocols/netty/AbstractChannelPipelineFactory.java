@@ -33,9 +33,9 @@ import io.netty.util.concurrent.EventExecutorGroup;
 public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> extends ChannelInitializer<C> {
     public static final int MAX_LINE_LENGTH = 8192;
 
-    protected final ConnectionLimitUpstreamHandler connectionLimitHandler;
-    protected final ConnectionPerIpLimitUpstreamHandler connectionPerIpLimitHandler;
     private final int timeout;
+    private final int maxConnectsPerIp;
+    private final int connectionLimit;
     private final ChannelHandlerFactory frameHandlerFactory;
     private final EventExecutorGroup eventExecutorGroup;
 
@@ -45,11 +45,11 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                           ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
-        this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
         this.timeout = timeout;
         this.frameHandlerFactory = frameHandlerFactory;
         this.eventExecutorGroup = eventExecutorGroup;
+        this.maxConnectsPerIp = maxConnectsPerIp;
+        this.connectionLimit = maxConnections;
     }
     
     
@@ -58,11 +58,9 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = channel.pipeline();
 
-        pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, connectionLimitHandler);
+        ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
+        ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, maxConnectsPerIp);
 
-        pipeline.addLast(HandlerConstants.CONNECTION_PER_IP_LIMIT_HANDLER, connectionPerIpLimitHandler);
-
-        
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
         pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
        

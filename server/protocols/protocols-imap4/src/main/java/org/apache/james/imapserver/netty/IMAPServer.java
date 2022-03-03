@@ -219,9 +219,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             public void initChannel(Channel channel) throws Exception {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(IMAPServer.this.connPerIP));
+                ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
+                ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, connPerIP);
 
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
