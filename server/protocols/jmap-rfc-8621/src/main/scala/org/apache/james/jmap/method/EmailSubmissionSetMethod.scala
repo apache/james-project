@@ -256,8 +256,8 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       submissionId = EmailSubmissionId.generate
       message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
       envelope <- SMono.fromTry(resolveEnvelope(message, request.envelope))
-      validation <- SMono.fromTry(validate(mailboxSession)(message, envelope))
-      mail <- SMono.fromCallable(() => {
+      _ <- SMono.fromTry(validate(mailboxSession)(message, envelope))
+      mail = {
         val mailImpl = MailImpl.builder()
           .name(submissionId.value)
           .addRecipients(envelope.rcptTo.map(_.email).asJava)
@@ -266,8 +266,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           .build()
         mailImpl.setMessageNoCopy(message)
         mailImpl
-      })
-      enqueue <- SMono(queue.enqueueReactive(mail)).`then`(SMono.just(submissionId))
+      }
+      _ <- SMono(queue.enqueueReactive(mail))
+        .`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.elastic()))
+        .`then`(SMono.just(submissionId))
     } yield {
       EmailSubmissionCreationResponse(submissionId) -> request.emailId
     }
