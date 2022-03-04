@@ -37,7 +37,11 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2.MailDTO;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -103,9 +107,17 @@ public class CassandraMailRepository implements MailRepository {
         MimeMessagePartsId parts = blobIds(mailDTO);
 
         return mimeMessageStore.read(parts)
-            .map(mimeMessage -> mailDTO.getMailBuilder()
-                .mimeMessage(mimeMessage)
-                .build());
+            .map(Throwing.function(mimeMessage -> {
+                MailImpl mail = mailDTO.getMailBuilder()
+                    .build();
+
+                if (mimeMessage instanceof MimeMessageWrapper) {
+                    mail.setMessageNoCopy((MimeMessageWrapper) mimeMessage);
+                } else {
+                    mail.setMessage(mimeMessage);
+                }
+                return mail;
+            }));
     }
 
     private MimeMessagePartsId blobIds(MailDTO mailDTO) {
