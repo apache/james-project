@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -86,13 +87,21 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<MailDto> retrieveMail(MailRepositoryPath path, MailKey mailKey, Set<AdditionalField> additionalAttributes) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException, InaccessibleFieldException {
-        return fecthMail(path, mailKey)
-            .map(Throwing.function((Mail mail) -> MailDto.fromMail(mail, additionalAttributes)).sneakyThrow());
+        Optional<Mail> mail = fecthMail(path, mailKey);
+        try {
+            return mail.map(Throwing.function((Mail aMail) -> MailDto.fromMail(aMail, additionalAttributes)).sneakyThrow());
+        } finally {
+            LifecycleUtil.dispose(mail);
+        }
     }
 
     public Optional<MimeMessage> retrieveMessage(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        return fecthMail(path, mailKey)
-            .map(Throwing.function(Mail::getMessage).sneakyThrow());
+        Optional<Mail> mail = fecthMail(path, mailKey);
+        try {
+            return mail.map(Throwing.function(Mail::getMessage).sneakyThrow());
+        } finally {
+            LifecycleUtil.dispose(mail);
+        }
     }
 
     public void deleteMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
