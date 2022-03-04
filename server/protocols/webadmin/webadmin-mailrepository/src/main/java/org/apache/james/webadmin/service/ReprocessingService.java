@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -68,6 +69,8 @@ public class ReprocessingService {
                 repository.remove(mail);
             } catch (Exception e) {
                 throw new RuntimeException("Error encountered while reprocessing mail " + mail.getName(), e);
+            } finally {
+                LifecycleUtil.dispose(mail);
             }
         }
 
