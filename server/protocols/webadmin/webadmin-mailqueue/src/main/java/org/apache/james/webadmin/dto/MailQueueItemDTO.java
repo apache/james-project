@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.ManageableMailQueue;
 
 import com.google.common.base.Preconditions;
@@ -38,12 +39,16 @@ public class MailQueueItemDTO {
     }
 
     public static MailQueueItemDTO from(ManageableMailQueue.MailQueueItemView mailQueueItemView) {
-        return builder()
+        try {
+            return builder()
                 .name(mailQueueItemView.getMail().getName())
                 .sender(mailQueueItemView.getMail().getMaybeSender().asOptional())
                 .recipients(mailQueueItemView.getMail().getRecipients())
                 .nextDelivery(mailQueueItemView.getNextDelivery())
                 .build();
+        } finally {
+            LifecycleUtil.dispose(mailQueueItemView);
+        }
     }
 
     public static class Builder {

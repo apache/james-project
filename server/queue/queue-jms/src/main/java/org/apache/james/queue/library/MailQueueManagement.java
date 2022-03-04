@@ -34,6 +34,7 @@ import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueManagementMBean;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -158,6 +159,7 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
             map.put(names[10], nextDelivery);
             CompositeDataSupport c = new CompositeDataSupport(new CompositeType(Mail.class.getName(), "Queue Mail", names, descs, types), map);
             data.add(c);
+            LifecycleUtil.dispose(mView);
         }
         it.close();
         return data;
