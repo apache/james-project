@@ -116,7 +116,8 @@ public class CassandraMailQueueMailDelete {
 
     private Mono<SlicingContext> deleteEmailsFromBrowseProjection(MailQueueName mailQueueName, SlicingContext slicingContext) {
         return enqueuedMailsDAO.selectEnqueuedMails(mailQueueName, Slice.of(slicingContext.getTimeRangeStart()), slicingContext.getBucketId())
-            .flatMap(item -> deletedMailsDao.removeDeletedMark(mailQueueName, item.getEnqueuedItem().getEnqueueId()), DEFAULT_CONCURRENCY)
+            .flatMap(item -> deletedMailsDao.removeDeletedMark(mailQueueName, item.getEnqueuedItem().getEnqueueId())
+                .then(Mono.fromRunnable(item::dispose).subscribeOn(Schedulers.elastic())), DEFAULT_CONCURRENCY)
             .then()
             .thenReturn(slicingContext);
     }
