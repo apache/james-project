@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
@@ -35,12 +36,11 @@ import io.netty.channel.ChannelPipeline;
  */
 @ChannelHandler.Sharable
 public class ConnectionLimitUpstreamHandler extends ChannelInboundHandlerAdapter {
-    private static final String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
-
-    public static void addToPipeline(ChannelPipeline pipeline, int connPerIP) {
+    public static Optional<ConnectionLimitUpstreamHandler> forCount(int connPerIP) {
         if (connPerIP > 0) {
-            pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(connPerIP));
+            return Optional.of(new ConnectionLimitUpstreamHandler(connPerIP));
         }
+        return Optional.empty();
     }
 
     private final AtomicInteger connections = new AtomicInteger(0);

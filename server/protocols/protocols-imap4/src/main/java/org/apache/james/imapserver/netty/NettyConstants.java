@@ -36,7 +36,6 @@ public interface NettyConstants {
     String FRAMER = "framer";
     String TIMEOUT_HANDLER = "timeoutHandler";
     String CORE_HANDLER = "coreHandler";
-    String GROUP_HANDLER = "groupHandler";
     String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.util.Optional;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
@@ -33,8 +35,8 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
     public static final int MAX_LINE_LENGTH = 8192;
 
     private final int timeout;
-    private final int maxConnectsPerIp;
-    private final int connectionLimit;
+    private final Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler;
+    private final Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler;
     private final ChannelHandlerFactory frameHandlerFactory;
 
     public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory) {
@@ -45,8 +47,8 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
                                           ChannelHandlerFactory frameHandlerFactory) {
         this.timeout = timeout;
         this.frameHandlerFactory = frameHandlerFactory;
-        this.maxConnectsPerIp = maxConnectsPerIp;
-        this.connectionLimit = maxConnections;
+        this.connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(maxConnections);
+        this.connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(maxConnectsPerIp);
     }
     
     
@@ -55,8 +57,8 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = channel.pipeline();
 
-        ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
-        ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, maxConnectsPerIp);
+        connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
+        connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
 
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
         pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
