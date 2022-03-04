@@ -40,6 +40,7 @@ import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class RabbitMQMailQueue implements ManageableMailQueue {
 
@@ -138,6 +139,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     public Flux<String> republishNotProcessedMails(Instant olderThan) {
         Function<CassandraMailQueueBrowser.CassandraMailQueueItemView, Mono<String>> requeue = item ->
             enqueuer.reQueue(item)
+                .then(Mono.fromRunnable(item::dispose).subscribeOn(Schedulers.elastic()))
                 .thenReturn(item.getMail().getName());
 
         return mailQueueView.browseOlderThanReactive(olderThan)
