@@ -39,6 +39,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.protocols.netty.HandlerConstants;
 import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,6 +135,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private int timeout;
     private int literalSizeLimit;
     private AuthenticationConfiguration authenticationConfiguration;
+    private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
+    private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
     public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
@@ -170,6 +173,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
         authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
+        connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
+        connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
 
         processor.configure(getImapConfiguration(configuration));
     }
@@ -216,12 +221,12 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             }
 
             @Override
-            public void initChannel(Channel channel) throws Exception {
+            public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
 
-                ConnectionLimitUpstreamHandler.addToPipeline(pipeline, connectionLimit);
-                ConnectionPerIpLimitUpstreamHandler.addToPipeline(pipeline, connPerIP);
+                connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
+                connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
 
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
