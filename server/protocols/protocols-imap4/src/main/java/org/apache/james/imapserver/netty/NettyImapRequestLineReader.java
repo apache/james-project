@@ -62,18 +62,15 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * char
      */
     @Override
-    public char nextChar() throws DecodingException {
+    public char nextChar() {
         if (!nextSeen) {
-            int next;
-
             if (buffer.isReadable()) {
-                next = buffer.readByte();
+                nextChar = (char) buffer.readByte();
                 read++;
+                nextSeen = true;
             } else {
                 throw new NotEnoughDataException();
             }
-            nextSeen = true;
-            nextChar = (char) next;
         }
         return nextChar;
     }
