@@ -38,6 +38,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.mime4j.dom.Disposable;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
@@ -175,7 +177,7 @@ public class CassandraMailQueueBrowser {
             .map(BucketId::of);
     }
 
-    public static class CassandraMailQueueItemView implements ManageableMailQueue.MailQueueItemView {
+    public static class CassandraMailQueueItemView implements ManageableMailQueue.MailQueueItemView, Disposable {
         private final EnqueuedItem enqueuedItem;
         private final Mail mail;
 
@@ -204,6 +206,11 @@ public class CassandraMailQueueBrowser {
         @Override
         public Optional<ZonedDateTime> getNextDelivery() {
             return Optional.empty();
+        }
+
+        @Override
+        public void dispose() {
+            LifecycleUtil.dispose(mail);
         }
     }
 }
