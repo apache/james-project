@@ -37,4 +37,8 @@ public interface HandlerConstants {
 
     String CHUNK_HANDLER = "chunkHandler";
 
+    String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
+
+    String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
+
 }

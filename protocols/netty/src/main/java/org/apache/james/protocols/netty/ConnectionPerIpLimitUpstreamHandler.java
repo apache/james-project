@@ -19,6 +19,7 @@
 package org.apache.james.protocols.netty;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,12 +39,11 @@ import io.netty.channel.ChannelPipeline;
  */
 @ChannelHandler.Sharable
 public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAdapter {
-    private static final String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
-
-    public static void addToPipeline(ChannelPipeline pipeline, int connPerIP) {
+    public static Optional<ConnectionPerIpLimitUpstreamHandler> forCount(int connPerIP) {
         if (connPerIP > 0) {
-            pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(connPerIP));
+            return Optional.of(new ConnectionPerIpLimitUpstreamHandler(connPerIP));
         }
+        return Optional.empty();
     }
 
     private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<>();
