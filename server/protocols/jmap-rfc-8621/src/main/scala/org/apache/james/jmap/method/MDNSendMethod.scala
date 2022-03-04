@@ -33,7 +33,7 @@ import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.LOGGER
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
-import org.apache.james.lifecycle.api.Startable
+import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mdn.fields.{ExtensionField, FinalRecipient, OriginalRecipient, Text}
@@ -149,13 +149,19 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       mdnRelatedMessageResultAlready <- validateMDNNotAlreadySent(mdnRelatedMessageResult)
       messageRelated = parseAsMessage(mdnRelatedMessageResultAlready)
       mailAndResponseAndId <- buildMailAndResponse(identity, session.getUser.asString(), requestEntry, messageRelated)
-      _ <- Try(queue.enQueue(mailAndResponseAndId._1)).toEither
+      _ <- Try(enqueue(mailAndResponseAndId._1)).toEither
     } yield {
       MDNSendCreateSuccess(
         mdnCreationId = mdnSendCreationId,
         createResponse = mailAndResponseAndId._2,
         forEmailId = mdnRelatedMessageResultAlready.getMessageId)
     }
+
+  private def enqueue(mail: MailImpl): Unit = try {
+    queue.enQueue(mail)
+  } finally {
+    LifecycleUtil.dispose(mail)
+  }
 
   private def retrieveRelatedMessageResult(session: MailboxSession, requestEntry: MDNSendCreateRequest): Either[MDNSendNotFoundException, MessageResult] =
     messageIdManager.getMessage(requestEntry.forEmailId.originalMessageId, FetchGroup.FULL_CONTENT, session)
