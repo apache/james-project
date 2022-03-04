@@ -22,11 +22,12 @@ package org.apache.james.queue.rabbitmq.view.cassandra.model;
 import java.time.Instant;
 import java.util.Objects;
 
+import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 
 import com.google.common.base.Preconditions;
 
-public class EnqueuedItemWithSlicingContext {
+public class EnqueuedItemWithSlicingContext implements Disposable {
 
     public static class SlicingContext {
 
@@ -114,6 +115,11 @@ public class EnqueuedItemWithSlicingContext {
 
     public EnqueuedItem getEnqueuedItem() {
         return enqueuedItem;
+    }
+
+    @Override
+    public void dispose() {
+        enqueuedItem.dispose();
     }
 
     @Override
