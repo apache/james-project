@@ -38,6 +38,7 @@ import org.apache.mailet.Mail;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class MessageSender {
     public static class MessageMimeMessageSource extends MimeMessageSource {
@@ -75,7 +76,7 @@ public class MessageSender {
     public Mono<Void> sendMessage(MetaDataWithContent message, Envelope envelope, MailboxSession session) {
         return Mono.usingWhen(Mono.fromCallable(() -> buildMail(message, envelope)),
             mail -> sendMessage(message.getMessageId(), mail, session),
-            mail -> Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)));
+            mail -> Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.elastic()));
     }
 
     @VisibleForTesting
