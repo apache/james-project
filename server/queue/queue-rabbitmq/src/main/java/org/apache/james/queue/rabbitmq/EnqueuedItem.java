@@ -23,11 +23,13 @@ import java.time.Instant;
 import java.util.Objects;
 
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
 
 import com.google.common.base.Preconditions;
 
-public class EnqueuedItem {
+public class EnqueuedItem implements Disposable {
 
     interface Builder {
 
@@ -119,6 +121,11 @@ public class EnqueuedItem {
 
     public MimeMessagePartsId getPartsId() {
         return partsId;
+    }
+
+    @Override
+    public void dispose() {
+        LifecycleUtil.dispose(mail);
     }
 
     @Override
