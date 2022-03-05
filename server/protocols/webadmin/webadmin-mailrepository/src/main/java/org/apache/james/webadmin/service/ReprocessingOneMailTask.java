@@ -28,7 +28,6 @@ import javax.mail.MessagingException;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -39,16 +38,14 @@ public class ReprocessingOneMailTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
-        private final String targetQueue;
+        private final ReprocessingService.Configuration configuration;
         private final MailKey mailKey;
-        private final Optional<String> targetProcessor;
         private final Instant timestamp;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, MailQueueName targetQueue, MailKey mailKey, Optional<String> targetProcessor, Instant timestamp) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, ReprocessingService.Configuration configuration, MailKey mailKey, Instant timestamp) {
             this.repositoryPath = repositoryPath;
-            this.targetQueue = targetQueue.asString();
+            this.configuration = configuration;
             this.mailKey = mailKey;
-            this.targetProcessor = targetProcessor;
             this.timestamp = timestamp;
         }
 
@@ -56,12 +53,8 @@ public class ReprocessingOneMailTask implements Task {
             return mailKey.asString();
         }
 
-        public String getTargetQueue() {
-            return targetQueue;
-        }
-
-        public Optional<String> getTargetProcessor() {
-            return targetProcessor;
+        public ReprocessingService.Configuration getConfiguration() {
+            return configuration;
         }
 
         public String getRepositoryPath() {
@@ -90,29 +83,26 @@ public class ReprocessingOneMailTask implements Task {
 
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
-    private final MailQueueName targetQueue;
+    private final ReprocessingService.Configuration configuration;
     private final MailKey mailKey;
-    private final Optional<String> targetProcessor;
     private final AdditionalInformation additionalInformation;
 
     public ReprocessingOneMailTask(ReprocessingService reprocessingService,
                                    MailRepositoryPath repositoryPath,
-                                   MailQueueName targetQueue,
+                                   ReprocessingService.Configuration configuration,
                                    MailKey mailKey,
-                                   Optional<String> targetProcessor,
                                    Clock clock) {
         this.reprocessingService = reprocessingService;
         this.repositoryPath = repositoryPath;
-        this.targetQueue = targetQueue;
+        this.configuration = configuration;
         this.mailKey = mailKey;
-        this.targetProcessor = targetProcessor;
-        this.additionalInformation = new AdditionalInformation(repositoryPath, targetQueue, mailKey, targetProcessor, clock.instant());
+        this.additionalInformation = new AdditionalInformation(repositoryPath, configuration, mailKey, clock.instant());
     }
 
     @Override
     public Result run() {
         try {
-            reprocessingService.reprocess(repositoryPath, mailKey, targetProcessor, targetQueue);
+            reprocessingService.reprocess(repositoryPath, mailKey, configuration);
             return Result.COMPLETED;
         } catch (MessagingException | MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while reprocessing repository", e);
@@ -129,16 +119,12 @@ public class ReprocessingOneMailTask implements Task {
         return repositoryPath;
     }
 
-    MailQueueName getTargetQueue() {
-        return targetQueue;
-    }
-
     MailKey getMailKey() {
         return mailKey;
     }
 
-    Optional<String> getTargetProcessor() {
-        return targetProcessor;
+    public ReprocessingService.Configuration getConfiguration() {
+        return configuration;
     }
 
     @Override

@@ -35,16 +35,19 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
             .convertToDTO(ReprocessingAllMailsTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ReprocessingAllMailsTask.AdditionalInformation(
                 MailRepositoryPath.from(dto.repositoryPath),
-                MailQueueName.of(dto.targetQueue),
-                dto.targetProcessor,
+                new ReprocessingService.Configuration(
+                    MailQueueName.of(dto.getTargetQueue()),
+                    dto.getTargetProcessor(),
+                    dto.isConsume()),
                 dto.initialCount,
                 dto.remainingCount,
                 dto.timestamp))
             .toDTOConverter((details, type) -> new ReprocessingAllMailsTaskAdditionalInformationDTO(
                 type,
                 details.getRepositoryPath(),
-                details.getTargetQueue(),
-                details.getTargetProcessor(),
+                details.getConfiguration().getMailQueueName().asString(),
+                details.getConfiguration().getTargetProcessor(),
+                Optional.of(details.getConfiguration().isConsume()),
                 details.getInitialCount(),
                 details.getRemainingCount(),
                 details.timestamp()))
@@ -56,6 +59,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     private final String repositoryPath;
     private final String targetQueue;
     private final Optional<String> targetProcessor;
+    private final boolean consume;
     private final long initialCount;
     private final long remainingCount;
     private final Instant timestamp;
@@ -65,6 +69,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         @JsonProperty("repositoryPath") String repositoryPath,
         @JsonProperty("targetQueue") String targetQueue,
         @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+        @JsonProperty("consume") Optional<Boolean> consume,
         @JsonProperty("initialCount") long initialCount,
         @JsonProperty("remainingCount") long remainingCount,
         @JsonProperty("timestamp") Instant timestamp) {
@@ -75,6 +80,11 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
         this.timestamp = timestamp;
+        this.consume = consume.orElse(true);
+    }
+
+    public boolean isConsume() {
+        return consume;
     }
 
     @Override

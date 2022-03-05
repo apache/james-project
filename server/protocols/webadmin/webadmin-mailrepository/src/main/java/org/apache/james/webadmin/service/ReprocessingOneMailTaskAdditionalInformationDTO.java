@@ -36,16 +36,19 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
             .convertToDTO(ReprocessingOneMailTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ReprocessingOneMailTask.AdditionalInformation(
                 MailRepositoryPath.from(dto.repositoryPath),
-                MailQueueName.of(dto.targetQueue),
+                new ReprocessingService.Configuration(
+                    MailQueueName.of(dto.targetQueue),
+                    dto.targetProcessor,
+                    dto.isConsume()),
                 new MailKey(dto.mailKey),
-                dto.targetProcessor,
                 dto.timestamp))
             .toDTOConverter((details, type) -> new ReprocessingOneMailTaskAdditionalInformationDTO(
                 type,
                 details.getRepositoryPath(),
-                details.getTargetQueue(),
+                details.getConfiguration().getMailQueueName().asString(),
                 details.getMailKey(),
-                details.getTargetProcessor(),
+                Optional.of(details.getConfiguration().isConsume()),
+                details.getConfiguration().getTargetProcessor(),
                 details.timestamp()))
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
@@ -56,20 +59,27 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
+    private final boolean consume;
     private final Instant timestamp;
 
     public ReprocessingOneMailTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                            @JsonProperty("repositoryPath") String repositoryPath,
                                                            @JsonProperty("targetQueue") String targetQueue,
                                                            @JsonProperty("mailKey") String mailKey,
+                                                           @JsonProperty("consume") Optional<Boolean> consume,
                                                            @JsonProperty("targetProcessor") Optional<String> targetProcessor,
                                                            @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
+        this.consume = consume.orElse(true);
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
         this.timestamp = timestamp;
+    }
+
+    public boolean isConsume() {
+        return consume;
     }
 
     @Override

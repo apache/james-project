@@ -322,11 +322,15 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Task reprocessAll(Request request) throws UnsupportedEncodingException, MailRepositoryStore.MailRepositoryStoreException {
         MailRepositoryPath path = decodedRepositoryPath(request);
-        Optional<String> targetProcessor = parseTargetProcessor(request);
-        MailQueueName targetQueue = parseTargetQueue(request);
 
         Long repositorySize = repositoryStoreService.size(path).orElse(0L);
-        return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, targetQueue, targetProcessor);
+        return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, extractConfiguration(request));
+    }
+
+    private ReprocessingService.Configuration extractConfiguration(Request request) {
+        return new ReprocessingService.Configuration(parseTargetQueue(request),
+            parseTargetProcessor(request),
+            parseConsume(request).orElse(true));
     }
 
     public void defineReprocessOne() {
@@ -340,10 +344,7 @@ public class MailRepositoriesRoutes implements Routes {
         MailRepositoryPath path = decodedRepositoryPath(request);
         MailKey key = new MailKey(request.params("key"));
 
-        Optional<String> targetProcessor = parseTargetProcessor(request);
-        MailQueueName targetQueue = parseTargetQueue(request);
-
-        return new ReprocessingOneMailTask(reprocessingService, path, targetQueue, key, targetProcessor, Clock.systemUTC());
+        return new ReprocessingOneMailTask(reprocessingService, path, extractConfiguration(request), key, Clock.systemUTC());
     }
 
     private Set<AdditionalField> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
@@ -359,6 +360,11 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Optional<String> parseTargetProcessor(Request request) {
         return Optional.ofNullable(request.queryParams("processor"));
+    }
+
+    private Optional<Boolean> parseConsume(Request request) {
+        return Optional.ofNullable(request.queryParams("consume"))
+            .map(Boolean::parseBoolean);
     }
 
     private MailQueueName parseTargetQueue(Request request) {
