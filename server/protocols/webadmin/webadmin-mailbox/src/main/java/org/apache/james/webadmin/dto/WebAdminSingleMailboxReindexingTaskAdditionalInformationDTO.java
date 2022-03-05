@@ -51,7 +51,7 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
-    private final WebAdminReprocessingContextInformationDTO reprocessingContextInformationDTO;
+    private final WebAdminIndexationContextInformationDTO reprocessingContextInformationDTO;
     private final String mailboxId;
 
     @JsonCreator
@@ -63,7 +63,7 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
                                                                         ReIndexingExecutionFailures failures,
                                                                         Instant timestamp) {
         this.mailboxId = mailboxId;
-        this.reprocessingContextInformationDTO = new WebAdminReprocessingContextInformationDTO(
+        this.reprocessingContextInformationDTO = new WebAdminIndexationContextInformationDTO(
             type, runningOptions, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
     }
 

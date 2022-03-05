@@ -28,7 +28,7 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReindexingFailureDTO;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReindexingFailureDTO;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,7 +42,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
             .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(Username.of(dto.getUser()),
                 dto.getSuccessfullyReprocessedMailCount(),
                 dto.getFailedReprocessedMailCount(),
-                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getMessageFailures(), dto.getMailboxFailures().orElse(ImmutableList.of())),
+                ReIndexingContextInformationDTO.deserializeFailures(factory, dto.getMessageFailures(), dto.getMailboxFailures().orElse(ImmutableList.of())),
                 dto.getTimestamp(),
                 dto.getRunningOptions()
                     .map(RunningOptionsDTO::toDomainObject)
@@ -54,7 +54,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
                 Optional.empty(),
-                Optional.of(ReprocessingContextInformationDTO.serializeFailures(details.failures())),
+                Optional.of(ReIndexingContextInformationDTO.serializeFailures(details.failures())),
                 Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(ImmutableList.toImmutableList())),
                 details.timestamp(),
                 Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
@@ -62,7 +62,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
-    private final ReprocessingContextInformationDTO reprocessingContextInformationDTO;
+    private final ReIndexingContextInformationDTO reIndexingContextInformationDTO;
     private final String user;
 
     @JsonCreator
@@ -77,7 +77,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
                                                        @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions
                                                        ) {
         this.user = user;
-        this.reprocessingContextInformationDTO = new ReprocessingContextInformationDTO(type,
+        this.reIndexingContextInformationDTO = new ReIndexingContextInformationDTO(type,
             successfullyReprocessedMailCount,
             failedReprocessedMailCount,
             failures,
@@ -89,11 +89,11 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
 
     @Override
     public String getType() {
-        return reprocessingContextInformationDTO.getType();
+        return reIndexingContextInformationDTO.getType();
     }
 
     public Instant getTimestamp() {
-        return reprocessingContextInformationDTO.getTimestamp();
+        return reIndexingContextInformationDTO.getTimestamp();
     }
 
     public String getUser() {
@@ -101,22 +101,22 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
     }
 
     public int getSuccessfullyReprocessedMailCount() {
-        return reprocessingContextInformationDTO.getSuccessfullyReprocessedMailCount();
+        return reIndexingContextInformationDTO.getSuccessfullyReprocessedMailCount();
     }
 
     public int getFailedReprocessedMailCount() {
-        return reprocessingContextInformationDTO.getFailedReprocessedMailCount();
+        return reIndexingContextInformationDTO.getFailedReprocessedMailCount();
     }
 
     public List<ReindexingFailureDTO> getMessageFailures() {
-        return reprocessingContextInformationDTO.getMessageFailures();
+        return reIndexingContextInformationDTO.getMessageFailures();
     }
 
     public Optional<List<String>> getMailboxFailures() {
-        return reprocessingContextInformationDTO.getMailboxFailures();
+        return reIndexingContextInformationDTO.getMailboxFailures();
     }
 
     public Optional<RunningOptionsDTO> getRunningOptions() {
-        return reprocessingContextInformationDTO.getRunningOptions();
+        return reIndexingContextInformationDTO.getRunningOptions();
     }
 }

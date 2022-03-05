@@ -24,7 +24,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
-import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO;
+import org.apache.james.webadmin.dto.WebAdminIndexationContextInformationDTO;
 import org.apache.james.webadmin.dto.WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.dto.WebAdminUserReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
@@ -38,13 +38,13 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO.serializationModule();
+        return WebAdminIndexationContextInformationDTO.WebAdminErrorRecoveryIndexationDTO.serializationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation() {
-        return WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO.serializationModule();
+        return WebAdminIndexationContextInformationDTO.WebAdminFullIndexationDTO.serializationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)

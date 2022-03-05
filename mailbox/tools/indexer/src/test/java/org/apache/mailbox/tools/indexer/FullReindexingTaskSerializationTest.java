@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -91,9 +91,9 @@ class FullReindexingTaskSerializationTest {
         RunningOptions runningOptions = RunningOptions.builder()
             .mode(RunningOptions.Mode.FIX_OUTDATED)
             .build();
-        ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, runningOptions);
+        ReIndexingContextInformationForFullReindexingTask details = new ReIndexingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, runningOptions);
 
-        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForFullReindexingTask.module(new TestId.Factory()))
+        JsonSerializationVerifier.dtoModule(ReIndexingContextInformationForFullReindexingTask.module(new TestId.Factory()))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
@@ -101,11 +101,11 @@ class FullReindexingTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        ReprocessingContextInformationForFullReindexingTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReprocessingContextInformationForFullReindexingTask.module(new TestId.Factory()))
+        ReIndexingContextInformationForFullReindexingTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReIndexingContextInformationForFullReindexingTask.module(new TestId.Factory()))
             .withoutNestedType()
             .deserialize(legacySerializedAdditionalInformation);
 
-        ReprocessingContextInformationForFullReindexingTask expected = new ReprocessingContextInformationForFullReindexingTask(
+        ReIndexingContextInformationForFullReindexingTask expected = new ReIndexingContextInformationForFullReindexingTask(
             42,
             2,
             new ReIndexingExecutionFailures(ImmutableList.of(

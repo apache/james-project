@@ -26,7 +26,7 @@ import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.TaskExecutionDetails;
 
-public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
+public class ReIndexingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
 
     private final int successfullyReprocessedMailCount;
     private final int failedReprocessedMailCount;
@@ -34,8 +34,8 @@ public class ReprocessingContextInformation implements TaskExecutionDetails.Addi
     private final Instant timestamp;
     private final RunningOptions runningOptions;
 
-    ReprocessingContextInformation(int successfullyReprocessedMailCount, int failedReprocessedMailCount,
-                                   ReIndexingExecutionFailures failures, Instant timestamp, RunningOptions runningOptions) {
+    ReIndexingContextInformation(int successfullyReprocessedMailCount, int failedReprocessedMailCount,
+                                 ReIndexingExecutionFailures failures, Instant timestamp, RunningOptions runningOptions) {
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
         this.failedReprocessedMailCount = failedReprocessedMailCount;
         this.failures = failures;
