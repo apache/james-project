@@ -120,9 +120,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 responder.respond(response);
             } else {
                 okComplete(request, responder);
-
             }
             idleActive.set(false);
+            responder.flush();
         });
 
         // Check if we should send heartbeats
@@ -144,6 +144,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         // See IMAP-272
                         StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
                         responder.respond(response);
+                        responder.flush();
 
                         // schedule the heartbeat again for the next interval
                         heartbeatExecutor.schedule(this, heartbeatInterval, heartbeatIntervalUnit);
@@ -181,6 +182,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         @Override
         public void event(Event event) {
                 unsolicitedResponses(session, responder, false);
+                responder.flush();
         }
 
         @Override

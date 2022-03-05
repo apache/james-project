@@ -57,5 +57,9 @@ public interface ImapProcessor {
          * @param message <code>not null</code>
          */
         void respond(ImapResponseMessage message);
+
+        default void flush() {
+
+        }
     }
 }

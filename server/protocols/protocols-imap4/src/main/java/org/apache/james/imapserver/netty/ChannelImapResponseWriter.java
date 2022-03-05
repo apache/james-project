@@ -57,7 +57,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     @Override
     public void write(byte[] buffer) throws IOException {
         if (channel.isActive()) {
-            channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
+            channel.write(Unpooled.wrappedBuffer(buffer));
         }
     }
 
@@ -72,16 +72,18 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
                 // See JAMES-1305 and JAMES-1306
                 ChannelPipeline cp = channel.pipeline();
                 if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
-                    channel.writeAndFlush(new DefaultFileRegion(fc, fc.position(), literal.size()));
+                    channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
                 } else {
-                    channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
+                    channel.write(new ChunkedNioFile(fc, 8192));
                 }
             } else {
-                channel.writeAndFlush(new ChunkedStream(literal.getInputStream()));
+                channel.write(new ChunkedStream(literal.getInputStream()));
             }
         }
     }
-    
-    
 
+    @Override
+    public void flush() {
+        channel.flush();
+    }
 }

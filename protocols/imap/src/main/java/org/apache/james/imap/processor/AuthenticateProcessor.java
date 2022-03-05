@@ -79,8 +79,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     doPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
                     responder.respond(new AuthenticateResponse());
+                    responder.flush();
                     session.pushLineHandler((requestSession, data) -> {
                         doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                        responder.flush();
                         // remove the handler now
                         requestSession.popLineHandler();
                     });
@@ -94,6 +96,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 responder.respond(new AuthenticateResponse());
                 session.pushLineHandler((requestSession, data) -> {
                     doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                    responder.flush();
                     requestSession.popLineHandler();
                 });
             }

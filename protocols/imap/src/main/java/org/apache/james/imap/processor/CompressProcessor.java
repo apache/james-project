@@ -56,6 +56,7 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
                     responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.ILLEGAL_ARGUMENTS));
                 } else {
                     responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE));
+                    responder.flush();
 
                     if (session.startCompression()) {
                         session.setAttribute(COMPRESSED, true);

@@ -49,4 +49,7 @@ public interface ImapResponseWriter {
      */
     void write(byte[] buffer) throws IOException;
 
+    default void flush() {
+        
+    }
 }
