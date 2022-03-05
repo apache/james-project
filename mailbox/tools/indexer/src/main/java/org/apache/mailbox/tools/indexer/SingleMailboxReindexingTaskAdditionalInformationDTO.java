@@ -40,7 +40,7 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
             .toDomainObjectConverter(dto -> new SingleMailboxReindexingTask.AdditionalInformation(factory.fromString(dto.getMailboxId()),
                 dto.getSuccessfullyReprocessedMailCount(),
                 dto.getFailedReprocessedMailCount(),
-                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getMessageFailures(), dto.getMailboxFailures().orElse(ImmutableList.of())),
+                ReIndexingContextInformationDTO.deserializeFailures(factory, dto.getMessageFailures(), dto.getMailboxFailures().orElse(ImmutableList.of())),
                 dto.getTimestamp(),
                 dto.getRunningOptions()
                     .map(RunningOptionsDTO::toDomainObject)
@@ -52,7 +52,7 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
                 Optional.empty(),
-                Optional.of(ReprocessingContextInformationDTO.serializeFailures(details.failures())),
+                Optional.of(ReIndexingContextInformationDTO.serializeFailures(details.failures())),
                 Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(ImmutableList.toImmutableList())),
                 details.timestamp(),
                 Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))
@@ -61,7 +61,7 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
-    private final ReprocessingContextInformationDTO reprocessingContextInformationDTO;
+    private final ReIndexingContextInformationDTO reIndexingContextInformationDTO;
     private final String mailboxId;
 
     @JsonCreator
@@ -69,13 +69,13 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
                                                                 @JsonProperty("mailboxId") String mailboxId,
                                                                 @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                                                 @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
-                                                                @JsonProperty("failures") Optional<List<ReprocessingContextInformationDTO.ReindexingFailureDTO>> failures,
-                                                                @JsonProperty("messageFailures") Optional<List<ReprocessingContextInformationDTO.ReindexingFailureDTO>> messageFailures,
+                                                                @JsonProperty("failures") Optional<List<ReIndexingContextInformationDTO.ReindexingFailureDTO>> failures,
+                                                                @JsonProperty("messageFailures") Optional<List<ReIndexingContextInformationDTO.ReindexingFailureDTO>> messageFailures,
                                                                 @JsonProperty("mailboxFailures") Optional<List<String>> mailboxFailures,
                                                                 @JsonProperty("timestamp") Instant timestamp,
                                                                 @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.mailboxId = mailboxId;
-        this.reprocessingContextInformationDTO = new ReprocessingContextInformationDTO(
+        this.reIndexingContextInformationDTO = new ReIndexingContextInformationDTO(
             type,
             successfullyReprocessedMailCount,
             failedReprocessedMailCount,
@@ -88,11 +88,11 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
 
     @Override
     public String getType() {
-        return reprocessingContextInformationDTO.getType();
+        return reIndexingContextInformationDTO.getType();
     }
 
     public Instant getTimestamp() {
-        return reprocessingContextInformationDTO.getTimestamp();
+        return reIndexingContextInformationDTO.getTimestamp();
     }
 
     public String getMailboxId() {
@@ -100,22 +100,22 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
     }
 
     public int getSuccessfullyReprocessedMailCount() {
-        return reprocessingContextInformationDTO.getSuccessfullyReprocessedMailCount();
+        return reIndexingContextInformationDTO.getSuccessfullyReprocessedMailCount();
     }
 
     public int getFailedReprocessedMailCount() {
-        return reprocessingContextInformationDTO.getFailedReprocessedMailCount();
+        return reIndexingContextInformationDTO.getFailedReprocessedMailCount();
     }
 
-    public List<ReprocessingContextInformationDTO.ReindexingFailureDTO> getMessageFailures() {
-        return reprocessingContextInformationDTO.getMessageFailures();
+    public List<ReIndexingContextInformationDTO.ReindexingFailureDTO> getMessageFailures() {
+        return reIndexingContextInformationDTO.getMessageFailures();
     }
 
     public Optional<List<String>> getMailboxFailures() {
-        return reprocessingContextInformationDTO.getMailboxFailures();
+        return reIndexingContextInformationDTO.getMailboxFailures();
     }
 
     public Optional<RunningOptionsDTO> getRunningOptions() {
-        return reprocessingContextInformationDTO.getRunningOptions();
+        return reIndexingContextInformationDTO.getRunningOptions();
     }
 }

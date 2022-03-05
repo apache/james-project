@@ -108,7 +108,7 @@ class MessageRoutesTest {
     }
 
     @Nested
-    class MessageReprocessing {
+    class MessageReIndexing {
         @Nested
         class Validation {
             @Test

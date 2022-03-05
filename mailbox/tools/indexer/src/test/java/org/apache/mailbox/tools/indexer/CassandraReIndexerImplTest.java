@@ -53,8 +53,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Task;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -154,7 +154,7 @@ public class CassandraReIndexerImplTest {
             Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
             task.run();
 
-            ReprocessingContextInformationForFullReindexingTask information = (ReprocessingContextInformationForFullReindexingTask) task.details().get();
+            ReIndexingContextInformationForFullReindexingTask information = (ReIndexingContextInformationForFullReindexingTask) task.details().get();
             assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
         }
 
@@ -279,7 +279,7 @@ public class CassandraReIndexerImplTest {
                 ReIndexer.RunningOptions.DEFAULT);
             task.run();
 
-            ReprocessingContextInformationForErrorRecoveryIndexationTask information = (ReprocessingContextInformationForErrorRecoveryIndexationTask) task.details().get();
+            ReIndexingContextInformationForErrorRecoveryIndexationTask information = (ReIndexingContextInformationForErrorRecoveryIndexationTask) task.details().get();
             assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
         }
 
@@ -303,7 +303,7 @@ public class CassandraReIndexerImplTest {
                 ReIndexer.RunningOptions.DEFAULT);
             task.run();
 
-            ReprocessingContextInformationForErrorRecoveryIndexationTask information = (ReprocessingContextInformationForErrorRecoveryIndexationTask) task.details().get();
+            ReIndexingContextInformationForErrorRecoveryIndexationTask information = (ReIndexingContextInformationForErrorRecoveryIndexationTask) task.details().get();
             assertThat(information.failures().messageFailures()).containsExactly(new ReIndexingFailure(mailbox.getId(), appendResult.getId().getUid()));
         }
 
@@ -323,7 +323,7 @@ public class CassandraReIndexerImplTest {
             Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
             task.run();
 
-            ReprocessingContextInformationForFullReindexingTask information = (ReprocessingContextInformationForFullReindexingTask) task.details().get();
+            ReIndexingContextInformationForFullReindexingTask information = (ReIndexingContextInformationForFullReindexingTask) task.details().get();
             assertThat(information.failures().messageFailures()).containsExactly(new ReIndexingFailure(mailbox.getId(), appendResult.getId().getUid()));
         }
     }

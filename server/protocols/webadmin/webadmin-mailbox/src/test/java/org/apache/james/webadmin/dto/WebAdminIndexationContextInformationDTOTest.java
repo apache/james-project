@@ -30,18 +30,25 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.google.common.collect.ImmutableList;
 
-class WebAdminSingleMailboxReprocessingDTOTest {
+class WebAdminIndexationContextInformationDTOTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
-    private final String serializedAdditionalInformation = "{" +
-        "  \"type\":\"mailbox-reindexing\"," +
-        "  \"mailboxId\":\"1\"," +
+    private final String serializedErrorRecoveryAdditionalInformation = "{" +
+        "  \"type\":\"error-recovery-indexation\"," +
+        "  \"runningOptions\":{\"messagesPerSecond\":50,\"mode\":\"REBUILD_ALL\"}," +
+        "  \"successfullyReprocessedMailCount\":42," +
+        "  \"failedReprocessedMailCount\":2," +
+        "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"mailboxFailures\":[\"3\", \"4\"]," +
+        "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedFullAdditionalInformation = "{" +
+        "  \"type\":\"full-reindexing\"," +
         "  \"runningOptions\":{\"messagesPerSecond\":50,\"mode\":\"REBUILD_ALL\"}," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
@@ -60,10 +67,9 @@ class WebAdminSingleMailboxReprocessingDTOTest {
     private final ReIndexingExecutionFailures executionFailures = new ReIndexingExecutionFailures(messageFailures, mailboxFailures);
 
     @Test
-    void shouldSerializeAdditionalInformation() throws Exception {
-        SingleMailboxReindexingTask.AdditionalInformation domainObject =
-            new SingleMailboxReindexingTask.AdditionalInformation(
-                mailboxId,
+    void shouldSerializeErrorRecoveryAdditionalInformation() throws Exception {
+        ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask domainObject =
+            new ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask(
                 42,
                 2,
                 executionFailures,
@@ -71,21 +77,50 @@ class WebAdminSingleMailboxReprocessingDTOTest {
                 ReIndexer.RunningOptions.DEFAULT);
 
         String json =
-            JsonGenericSerializer.forModules(WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO
+            JsonGenericSerializer.forModules(WebAdminIndexationContextInformationDTO.WebAdminErrorRecoveryIndexationDTO
                 .serializationModule())
                 .withoutNestedType()
                 .serialize(domainObject);
 
         assertThatJson(json)
-            .isEqualTo(serializedAdditionalInformation);
+            .isEqualTo(serializedErrorRecoveryAdditionalInformation);
     }
 
     @Test
-    void deserializeShouldNotBeSupported() {
-        assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO
+    void deserializeErrorRecoveryShouldNotBeSupported() {
+        assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminIndexationContextInformationDTO.WebAdminErrorRecoveryIndexationDTO
             .serializationModule())
             .withoutNestedType()
-            .deserialize(serializedAdditionalInformation))
+            .deserialize(serializedErrorRecoveryAdditionalInformation))
+            .isInstanceOf(InvalidDefinitionException.class);
+    }
+
+    @Test
+    void shouldSerializeFullAdditionalInformation() throws Exception {
+        ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask domainObject =
+            new ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask(
+                42,
+                2,
+                executionFailures,
+                TIMESTAMP,
+                ReIndexer.RunningOptions.DEFAULT);
+
+        String json =
+            JsonGenericSerializer.forModules(WebAdminIndexationContextInformationDTO.WebAdminFullIndexationDTO
+                .serializationModule())
+                .withoutNestedType()
+                .serialize(domainObject);
+
+        assertThatJson(json)
+            .isEqualTo(serializedFullAdditionalInformation);
+    }
+
+    @Test
+    void deserializeFullShouldNotBeSupported() {
+        assertThatThrownBy(() -> JsonGenericSerializer.forModules(WebAdminIndexationContextInformationDTO.WebAdminFullIndexationDTO
+            .serializationModule())
+            .withoutNestedType()
+            .deserialize(serializedFullAdditionalInformation))
             .isInstanceOf(InvalidDefinitionException.class);
     }
 }

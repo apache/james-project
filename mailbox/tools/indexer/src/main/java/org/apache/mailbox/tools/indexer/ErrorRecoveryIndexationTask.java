@@ -77,20 +77,20 @@ public class ErrorRecoveryIndexationTask implements Task {
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final ReprocessingContext reprocessingContext;
+    private final ReIndexingContext reIndexingContext;
     private final ReIndexingExecutionFailures previousFailures;
     private final RunningOptions runningOptions;
 
     public ErrorRecoveryIndexationTask(ReIndexerPerformer reIndexerPerformer, ReIndexingExecutionFailures previousFailures, RunningOptions runningOptions) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.previousFailures = previousFailures;
-        this.reprocessingContext = new ReprocessingContext();
+        this.reIndexingContext = new ReIndexingContext();
         this.runningOptions = runningOptions;
     }
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndexErrors(reprocessingContext, previousFailures, runningOptions).block();
+        return reIndexerPerformer.reIndexErrors(reIndexingContext, previousFailures, runningOptions).block();
     }
 
     @Override
@@ -108,10 +108,10 @@ public class ErrorRecoveryIndexationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask(
-            reprocessingContext.successfullyReprocessedMailCount(),
-            reprocessingContext.failedReprocessingMailCount(),
-            reprocessingContext.failures(),
+        return Optional.of(new ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask(
+            reIndexingContext.successfullyReprocessedMailCount(),
+            reIndexingContext.failedReprocessingMailCount(),
+            reIndexingContext.failures(),
             Clock.systemUTC().instant(),
             runningOptions));
     }

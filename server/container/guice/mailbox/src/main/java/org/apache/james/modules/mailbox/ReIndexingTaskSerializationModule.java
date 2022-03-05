@@ -33,7 +33,7 @@ import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskDTO;
@@ -80,12 +80,12 @@ public class ReIndexingTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory);
+        return ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.module(mailboxIdFactory);
+        return ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
