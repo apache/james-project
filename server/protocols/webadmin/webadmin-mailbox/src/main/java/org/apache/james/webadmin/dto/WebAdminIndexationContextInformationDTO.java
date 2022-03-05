@@ -29,15 +29,15 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTask;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO;
 import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
 
 import com.google.common.collect.ImmutableList;
 
-public class WebAdminReprocessingContextInformationDTO implements AdditionalInformationDTO {
-    public static class WebAdminErrorRecoveryIndexationDTO extends WebAdminReprocessingContextInformationDTO {
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask, WebAdminErrorRecoveryIndexationDTO> serializationModule() {
-            return DTOModule.forDomainObject(ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.class)
+public class WebAdminIndexationContextInformationDTO implements AdditionalInformationDTO {
+    public static class WebAdminErrorRecoveryIndexationDTO extends WebAdminIndexationContextInformationDTO {
+        public static AdditionalInformationDTOModule<ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask, WebAdminErrorRecoveryIndexationDTO> serializationModule() {
+            return DTOModule.forDomainObject(ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask.class)
                 .convertToDTO(WebAdminErrorRecoveryIndexationDTO.class)
                 .toDomainObjectConverter(dto -> {
                     throw new NotImplementedException("Deserialization not implemented for this DTO");
@@ -59,9 +59,9 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
         }
     }
 
-    public static class WebAdminFullIndexationDTO extends WebAdminReprocessingContextInformationDTO {
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask, WebAdminFullIndexationDTO> serializationModule() {
-            return DTOModule.forDomainObject(ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.class)
+    public static class WebAdminFullIndexationDTO extends WebAdminIndexationContextInformationDTO {
+        public static AdditionalInformationDTOModule<ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask, WebAdminFullIndexationDTO> serializationModule() {
+            return DTOModule.forDomainObject(ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask.class)
                 .convertToDTO(WebAdminFullIndexationDTO.class)
                 .toDomainObjectConverter(dto -> {
                     throw new NotImplementedException("Deserialization not implemented for this DTO");
@@ -91,9 +91,9 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
     private final List<String> mailboxFailures;
     protected final Instant timestamp;
 
-    WebAdminReprocessingContextInformationDTO(String type, RunningOptionsDTO runningOptions, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
-                                              ReIndexingExecutionFailures failures,
-                                              Instant timestamp) {
+    WebAdminIndexationContextInformationDTO(String type, RunningOptionsDTO runningOptions, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
+                                            ReIndexingExecutionFailures failures,
+                                            Instant timestamp) {
         this.type = type;
         this.runningOptions = runningOptions;
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;

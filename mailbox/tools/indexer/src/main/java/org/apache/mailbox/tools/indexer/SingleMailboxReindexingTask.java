@@ -38,7 +38,7 @@ public class SingleMailboxReindexingTask implements Task {
 
     public static final TaskType TYPE = TaskType.of("mailbox-reindexing");
 
-    public static class AdditionalInformation extends ReprocessingContextInformation {
+    public static class AdditionalInformation extends ReIndexingContextInformation {
         private final MailboxId mailboxId;
 
         @VisibleForTesting
@@ -76,21 +76,21 @@ public class SingleMailboxReindexingTask implements Task {
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final MailboxId mailboxId;
-    private final ReprocessingContext reprocessingContext;
+    private final ReIndexingContext reIndexingContext;
     private final RunningOptions runningOptions;
 
     @Inject
     public SingleMailboxReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxId mailboxId, RunningOptions runningOptions) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxId = mailboxId;
-        this.reprocessingContext = new ReprocessingContext();
+        this.reIndexingContext = new ReIndexingContext();
         this.runningOptions = runningOptions;
     }
 
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.reIndexSingleMailbox(mailboxId, reprocessingContext, runningOptions)
+            return reIndexerPerformer.reIndexSingleMailbox(mailboxId, reIndexingContext, runningOptions)
                 .block();
         } catch (Exception e) {
             return Result.PARTIAL;
@@ -115,9 +115,9 @@ public class SingleMailboxReindexingTask implements Task {
         return Optional.of(
             new SingleMailboxReindexingTask.AdditionalInformation(
                 mailboxId,
-                reprocessingContext.successfullyReprocessedMailCount(),
-                reprocessingContext.failedReprocessingMailCount(),
-                reprocessingContext.failures(),
+                reIndexingContext.successfullyReprocessedMailCount(),
+                reIndexingContext.failedReprocessingMailCount(),
+                reIndexingContext.failures(),
                 Clock.systemUTC().instant(),
                 runningOptions)
         );

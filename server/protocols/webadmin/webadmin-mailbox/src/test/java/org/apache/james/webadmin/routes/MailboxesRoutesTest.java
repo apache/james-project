@@ -82,8 +82,8 @@ import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO;
-import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO;
+import org.apache.james.webadmin.dto.WebAdminIndexationContextInformationDTO.WebAdminErrorRecoveryIndexationDTO;
+import org.apache.james.webadmin.dto.WebAdminIndexationContextInformationDTO.WebAdminFullIndexationDTO;
 import org.apache.james.webadmin.dto.WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -202,11 +202,11 @@ class MailboxesRoutesTest {
     }
 
     @Nested
-    class FullReprocessing {
+    class FullReIndexing {
         @Nested
         class Validation {
             @Test
-            void fullReprocessingShouldFailWithNoTask() {
+            void fullReIndexingShouldFailWithNoTask() {
                 when()
                     .post("/mailboxes")
                 .then()
@@ -218,7 +218,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingShouldFailWithBadTask() {
+            void fullReIndexingShouldFailWithBadTask() {
                 when()
                     .post("/mailboxes?task=bad")
                 .then()
@@ -233,7 +233,7 @@ class MailboxesRoutesTest {
         @Nested
         class TaskDetails {
             @Test
-            void fullReprocessingShouldNotFailWhenNoMail() {
+            void fullReIndexingShouldNotFailWhenNoMail() {
                 String taskId = with()
                     .post("/mailboxes?task=reIndex")
                     .jsonPath()
@@ -257,7 +257,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingShouldReturnTaskDetailsWhenMail() throws Exception {
+            void fullReIndexingShouldReturnTaskDetailsWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 mailboxManager.createMailbox(INBOX, systemSession).get();
                 mailboxManager.getMailbox(INBOX, systemSession)
@@ -288,7 +288,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+            void fullReIndexingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 mailboxManager.createMailbox(INBOX, systemSession).get();
                 mailboxManager.getMailbox(INBOX, systemSession)
@@ -320,7 +320,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+            void fullReIndexingShouldReturnTaskDetailsWhenFailing() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
@@ -356,7 +356,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+            void userReIndexingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -380,7 +380,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingWithCorrectModeShouldReturnTaskDetailsWhenMails() throws Exception {
+            void fullReIndexingWithCorrectModeShouldReturnTaskDetailsWhenMails() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -431,7 +431,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingShouldAcceptRebuildAllNoCleanupMode() throws Exception {
+            void fullReIndexingShouldAcceptRebuildAllNoCleanupMode() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -485,7 +485,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingWithCorrectModeShouldFixInconsistenciesInES() throws Exception {
+            void fullReIndexingWithCorrectModeShouldFixInconsistenciesInES() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -526,7 +526,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingNoCleanupShouldNoopWhenNoInconsistencies() throws Exception {
+            void fullReIndexingNoCleanupShouldNoopWhenNoInconsistencies() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -554,7 +554,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingNoCleanupShouldSolveInconsistencies() throws Exception {
+            void fullReIndexingNoCleanupShouldSolveInconsistencies() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -591,7 +591,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void fullReprocessingWithCorrectModeShouldNotChangeDocumentsInESWhenNoInconsistencies() throws Exception {
+            void fullReIndexingWithCorrectModeShouldNotChangeDocumentsInESWhenNoInconsistencies() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -621,7 +621,7 @@ class MailboxesRoutesTest {
             @Disabled("JAMES-3202 Limitation of the current correct mode reindexation. We only check metadata and fix "
                 + "inconsistencies with ES, but we don't check for inconsistencies from ES to metadata")
             @Test
-            void fullReprocessingWithCorrectModeShouldRemoveOrphanMessagesInES() throws Exception {
+            void fullReIndexingWithCorrectModeShouldRemoveOrphanMessagesInES() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -662,7 +662,7 @@ class MailboxesRoutesTest {
         @Nested
         class SideEffects {
             @Test
-            void fullReprocessingShouldPerformReprocessingWhenMail() throws Exception {
+            void fullReIndexingShouldPerformReIndexingWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
@@ -699,11 +699,11 @@ class MailboxesRoutesTest {
     }
 
     @Nested
-    class MailboxReprocessing {
+    class MailboxReIndexing {
         @Nested
         class Validation {
             @Test
-            void mailboxReprocessingShouldFailWithNoTask() throws Exception {
+            void mailboxReIndexingShouldFailWithNoTask() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -718,7 +718,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingShouldFailWithBadTask() throws Exception {
+            void mailboxReIndexingShouldFailWithBadTask() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -733,7 +733,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingShouldFailWithBadMailboxId() {
+            void mailboxReIndexingShouldFailWithBadMailboxId() {
                 when()
                     .post("/mailboxes/bad?task=reIndex")
                 .then()
@@ -744,7 +744,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingShouldFailWithNonExistentMailboxId() {
+            void mailboxReIndexingShouldFailWithNonExistentMailboxId() {
                 when()
                     .post("/mailboxes/36?task=reIndex")
                 .then()
@@ -758,7 +758,7 @@ class MailboxesRoutesTest {
         @Nested
         class TaskDetails {
             @Test
-            void mailboxReprocessingShouldNotFailWhenNoMail() throws Exception {
+            void mailboxReIndexingShouldNotFailWhenNoMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -786,7 +786,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingShouldReturnTaskDetailsWhenMail() throws Exception {
+            void mailboxReIndexingShouldReturnTaskDetailsWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 mailboxManager.getMailbox(INBOX, systemSession)
@@ -817,7 +817,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+            void mailboxReIndexingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 mailboxManager.getMailbox(INBOX, systemSession)
@@ -850,7 +850,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+            void mailboxReIndexingShouldReturnTaskDetailsWhenFailing() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
@@ -887,7 +887,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+            void userReIndexingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -913,7 +913,7 @@ class MailboxesRoutesTest {
 
 
             @Test
-            void mailboxReprocessingWithCorrectModeShouldReturnTaskDetailsWhenMails() throws Exception {
+            void mailboxReIndexingWithCorrectModeShouldReturnTaskDetailsWhenMails() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -966,7 +966,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingWithCorrectModeShouldFixInconsistenciesInES() throws Exception {
+            void mailboxReIndexingWithCorrectModeShouldFixInconsistenciesInES() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -1009,7 +1009,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void mailboxReprocessingWithCorrectModeShouldNotChangeDocumentsInESWhenNoInconsistencies() throws Exception {
+            void mailboxReIndexingWithCorrectModeShouldNotChangeDocumentsInESWhenNoInconsistencies() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -1041,7 +1041,7 @@ class MailboxesRoutesTest {
             @Disabled("JAMES-3202 Limitation of the current correct mode reindexation. We only check metadata and fix "
                 + "inconsistencies with ES, but we don't check for inconsistencies from ES to metadata")
             @Test
-            void mailboxReprocessingWithCorrectModeShouldRemoveOrphanMessagesInES() throws Exception {
+            void mailboxReIndexingWithCorrectModeShouldRemoveOrphanMessagesInES() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 Mailbox mailbox = mailboxManager.getMailbox(mailboxId, systemSession).getMailboxEntity();
@@ -1084,7 +1084,7 @@ class MailboxesRoutesTest {
         @Nested
         class SideEffects {
             @Test
-            void mailboxReprocessingShouldPerformReprocessingWhenMail() throws Exception {
+            void mailboxReIndexingShouldPerformReIndexingWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
@@ -1122,11 +1122,11 @@ class MailboxesRoutesTest {
     }
 
     @Nested
-    class MessageReprocessing {
+    class MessageReIndexing {
         @Nested
         class Validation {
             @Test
-            void messageReprocessingShouldFailWithNoTask() throws Exception {
+            void messageReIndexingShouldFailWithNoTask() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -1141,7 +1141,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void messageReprocessingShouldFailWithBadTask() throws Exception {
+            void messageReIndexingShouldFailWithBadTask() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -1156,7 +1156,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void messageReprocessingShouldFailWithBadMailboxId() {
+            void messageReIndexingShouldFailWithBadMailboxId() {
                 when()
                     .post("/mailboxes/bad/mails/7?task=reIndex")
                 .then()
@@ -1167,7 +1167,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void messageReprocessingShouldFailWithNonExistentMailboxId() {
+            void messageReIndexingShouldFailWithNonExistentMailboxId() {
                 when()
                     .post("/mailboxes/36/mails/7?task=reIndex")
                 .then()
@@ -1178,7 +1178,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void messageReprocessingShouldFailWithBadUid() {
+            void messageReIndexingShouldFailWithBadUid() {
                 when()
                     .post("/mailboxes/36/mails/bad?task=reIndex")
                 .then()
@@ -1192,7 +1192,7 @@ class MailboxesRoutesTest {
         @Nested
         class TaskDetails {
             @Test
-            void messageReprocessingShouldNotFailWhenUidNotFound() throws Exception {
+            void messageReIndexingShouldNotFailWhenUidNotFound() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -1217,7 +1217,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void messageReprocessingShouldReturnTaskDetailsWhenMail() throws Exception {
+            void messageReIndexingShouldReturnTaskDetailsWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
@@ -1250,7 +1250,7 @@ class MailboxesRoutesTest {
         @Nested
         class SideEffects {
             @Test
-            void mailboxReprocessingShouldPerformReprocessingWhenMail() throws Exception {
+            void mailboxReIndexingShouldPerformReIndexingWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
@@ -1530,7 +1530,7 @@ class MailboxesRoutesTest {
             }
 
             @Test
-            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+            void userReIndexingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
@@ -1570,7 +1570,7 @@ class MailboxesRoutesTest {
         @Nested
         class SideEffects {
             @Test
-            void fixingReprocessingShouldPerformReprocessingWhenMail() throws Exception {
+            void fixingReIndexingShouldPerformReIndexingWhenMail() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)

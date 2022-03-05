@@ -28,13 +28,13 @@ import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.collect.ImmutableList;
 
-class ReprocessingContext {
+class ReIndexingContext {
     private final AtomicInteger successfullyReprocessedMails;
     private final AtomicInteger failedReprocessingMails;
     private final ConcurrentLinkedDeque<ReIndexingExecutionFailures.ReIndexingFailure> failures;
     private final ConcurrentLinkedDeque<MailboxId> mailboxFailures;
 
-    ReprocessingContext() {
+    ReIndexingContext() {
         failedReprocessingMails = new AtomicInteger(0);
         successfullyReprocessedMails = new AtomicInteger(0);
         failures = new ConcurrentLinkedDeque<>();
