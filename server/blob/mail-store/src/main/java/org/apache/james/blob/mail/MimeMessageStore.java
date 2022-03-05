@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.mail;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.blob.mail.MimeMessagePartsId.BODY_BLOB_TYPE;
 import static org.apache.james.blob.mail.MimeMessagePartsId.HEADER_BLOB_TYPE;
@@ -104,7 +105,7 @@ public class MimeMessageStore {
                                 throw new IOException("Failed accessing body size", e);
                             }
                         }
-                    }, SIZE_BASED))));
+                    }, LOW_COST))));
         }
     }
 
