@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -40,27 +39,21 @@ public class ReprocessingAllMailsTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
-        private final String targetQueue;
-        private final Optional<String> targetProcessor;
+        private final ReprocessingService.Configuration configuration;
         private final long initialCount;
         private final long remainingCount;
         private final Instant timestamp;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, MailQueueName targetQueue, Optional<String> targetProcessor, long initialCount, long remainingCount, Instant timestamp) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, ReprocessingService.Configuration configuration, long initialCount, long remainingCount, Instant timestamp) {
             this.repositoryPath = repositoryPath;
-            this.targetQueue = targetQueue.asString();
-            this.targetProcessor = targetProcessor;
+            this.configuration = configuration;
             this.initialCount = initialCount;
             this.remainingCount = remainingCount;
             this.timestamp = timestamp;
         }
 
-        public String getTargetQueue() {
-            return targetQueue;
-        }
-
-        public Optional<String> getTargetProcessor() {
-            return targetProcessor;
+        public ReprocessingService.Configuration getConfiguration() {
+            return configuration;
         }
 
         public String getRepositoryPath() {
@@ -97,17 +90,15 @@ public class ReprocessingAllMailsTask implements Task {
 
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
-    private final MailQueueName targetQueue;
-    private final Optional<String> targetProcessor;
+    private final ReprocessingService.Configuration configuration;
     private final long repositorySize;
     private final AtomicLong processedCount;
 
     public ReprocessingAllMailsTask(ReprocessingService reprocessingService, long repositorySize,
-                                    MailRepositoryPath repositoryPath, MailQueueName targetQueue, Optional<String> targetProcessor) {
+                                    MailRepositoryPath repositoryPath, ReprocessingService.Configuration configuration) {
         this.reprocessingService = reprocessingService;
         this.repositoryPath = repositoryPath;
-        this.targetQueue = targetQueue;
-        this.targetProcessor = targetProcessor;
+        this.configuration = configuration;
         this.repositorySize = repositorySize;
         this.processedCount = new AtomicLong(0);
     }
@@ -119,7 +110,7 @@ public class ReprocessingAllMailsTask implements Task {
     @Override
     public Result run() {
         try {
-            reprocessingService.reprocessAll(repositoryPath, targetProcessor, targetQueue, this::notifyProgress);
+            reprocessingService.reprocessAll(repositoryPath, configuration, this::notifyProgress);
             return Result.COMPLETED;
         } catch (MessagingException | MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while reprocessing repository", e);
@@ -135,12 +126,8 @@ public class ReprocessingAllMailsTask implements Task {
         return repositorySize;
     }
 
-    Optional<String> getTargetProcessor() {
-        return targetProcessor;
-    }
-
-    MailQueueName getTargetQueue() {
-        return targetQueue;
+    ReprocessingService.Configuration getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -151,7 +138,7 @@ public class ReprocessingAllMailsTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new AdditionalInformation(
-            repositoryPath, targetQueue, targetProcessor, repositorySize, repositorySize - processedCount.get(),
+            repositoryPath, configuration, repositorySize, repositorySize - processedCount.get(),
             Clock.systemUTC().instant()));
     }
 

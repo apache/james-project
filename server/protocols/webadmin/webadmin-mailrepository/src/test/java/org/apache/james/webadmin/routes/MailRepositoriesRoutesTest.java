@@ -1133,6 +1133,7 @@ class MailRepositoriesRoutesTest {
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", is(emptyOrNullString()))
             .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
+            .body("additionalInformation.consume", is(true))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1157,6 +1158,7 @@ class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
+            .param("consume", false)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
@@ -1174,6 +1176,7 @@ class MailRepositoriesRoutesTest {
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", is(transport))
             .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE.asString()))
+            .body("additionalInformation.consume", is(false))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1241,6 +1244,39 @@ class MailRepositoriesRoutesTest {
         assertThat(mailRepository.list())
             .toIterable()
             .isEmpty();
+    }
+
+    @Test
+    void reprocessingAllTaskShouldNotClearMailRepositoryWhenNotConsume() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        String transport = "transport";
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE.asString())
+            .param("processor", transport)
+            .param("consume", false)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(mailRepository.list())
+            .toIterable()
+            .hasSize(2);
     }
 
     @Test
@@ -1519,6 +1555,7 @@ class MailRepositoriesRoutesTest {
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", is(emptyOrNullString()))
             .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
+            .body("additionalInformation.consume", is(true))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1543,6 +1580,7 @@ class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
+            .param("consume", false)
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
@@ -1559,6 +1597,7 @@ class MailRepositoriesRoutesTest {
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", is(transport))
             .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE.asString()))
+            .body("additionalInformation.consume", is(false))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1779,6 +1818,58 @@ class MailRepositoriesRoutesTest {
         assertThat(customQueue.browse())
             .toIterable()
             .isEmpty();
+    }
+
+    @Test
+    void reprocessingOneTaskShouldNotRemoveEmailWhenNotConsume() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_2)
+            .build());
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE.asString())
+            .param("consume", false)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(mailRepository.size())
+            .isEqualTo(2);
+    }
+
+    @Test
+    void reprocessingOneTaskShouldRemoveEmailWhenConsume() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_2)
+            .build());
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE.asString())
+            .param("consume", true)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(mailRepository.size())
+            .isEqualTo(1);
     }
 
     @Test

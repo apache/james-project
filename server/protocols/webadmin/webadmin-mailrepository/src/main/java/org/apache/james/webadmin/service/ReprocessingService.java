@@ -53,20 +53,46 @@ public class ReprocessingService {
         }
     }
 
+    public static class Configuration {
+        private final MailQueueName mailQueueName;
+        private final Optional<String> targetProcessor;
+        private final boolean consume;
+
+        public Configuration(MailQueueName mailQueueName, Optional<String> targetProcessor, boolean consume) {
+            this.mailQueueName = mailQueueName;
+            this.targetProcessor = targetProcessor;
+            this.consume = consume;
+        }
+
+        public MailQueueName getMailQueueName() {
+            return mailQueueName;
+        }
+
+        public Optional<String> getTargetProcessor() {
+            return targetProcessor;
+        }
+
+        public boolean isConsume() {
+            return consume;
+        }
+    }
+
     static class Reprocessor implements Closeable {
         private final MailQueue mailQueue;
-        private final Optional<String> targetProcessor;
+        private final Configuration configuration;
 
-        Reprocessor(MailQueue mailQueue, Optional<String> targetProcessor) {
+        Reprocessor(MailQueue mailQueue, Configuration configuration) {
             this.mailQueue = mailQueue;
-            this.targetProcessor = targetProcessor;
+            this.configuration = configuration;
         }
 
         private void reprocess(MailRepository repository, Mail mail) {
             try {
-                targetProcessor.ifPresent(mail::setState);
+                configuration.getTargetProcessor().ifPresent(mail::setState);
                 mailQueue.enQueue(mail);
-                repository.remove(mail);
+                if (configuration.isConsume()) {
+                    repository.remove(mail);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Error encountered while reprocessing mail " + mail.getName(), e);
             } finally {
@@ -94,8 +120,8 @@ public class ReprocessingService {
         this.mailRepositoryStoreService = mailRepositoryStoreService;
     }
 
-    public void reprocessAll(MailRepositoryPath path, Optional<String> targetProcessor, MailQueueName targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        try (Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor)) {
+    public void reprocessAll(MailRepositoryPath path, Configuration configuration, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        try (Reprocessor reprocessor = new Reprocessor(getMailQueue(configuration.getMailQueueName()), configuration)) {
             mailRepositoryStoreService
                 .getRepositories(path)
                 .forEach(Throwing.consumer((MailRepository repository) ->
@@ -107,8 +133,8 @@ public class ReprocessingService {
         }
     }
 
-    public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, MailQueueName targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        try (Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor)) {
+    public void reprocess(MailRepositoryPath path, MailKey key, Configuration configuration) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        try (Reprocessor reprocessor = new Reprocessor(getMailQueue(configuration.getMailQueueName()), configuration)) {
             Pair<MailRepository, Mail> mailPair = mailRepositoryStoreService
                 .getRepositories(path)
                 .map(Throwing.function(repository -> Pair.of(repository, Optional.ofNullable(repository.retrieve(key)))))

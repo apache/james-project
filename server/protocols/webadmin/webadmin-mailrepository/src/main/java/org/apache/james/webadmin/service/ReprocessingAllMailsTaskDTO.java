@@ -46,9 +46,9 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 typeName,
                 domainObject.getRepositorySize(),
                 domainObject.getRepositoryPath().urlEncoded(),
-                domainObject.getTargetQueue().asString(),
-                domainObject.getTargetProcessor()
-            );
+                domainObject.getConfiguration().getMailQueueName().asString(),
+                Optional.of(domainObject.getConfiguration().isConsume()),
+                domainObject.getConfiguration().getTargetProcessor());
         } catch (Exception e) {
             throw new ReprocessingAllMailsTask.UrlEncodingFailureSerializationException(domainObject.getRepositoryPath());
         }
@@ -58,17 +58,20 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
     private final long repositorySize;
     private final String repositoryPath;
     private final String targetQueue;
+    private final boolean consume;
     private final Optional<String> targetProcessor;
 
     public ReprocessingAllMailsTaskDTO(@JsonProperty("type") String type,
                                        @JsonProperty("repositorySize") long repositorySize,
                                        @JsonProperty("repositoryPath") String repositoryPath,
                                        @JsonProperty("targetQueue") String targetQueue,
+                                       @JsonProperty("consume") Optional<Boolean> consume,
                                        @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
         this.type = type;
         this.repositorySize = repositorySize;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
+        this.consume = consume.orElse(true);
         this.targetProcessor = targetProcessor;
     }
 
@@ -78,9 +81,10 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 reprocessingService,
                 repositorySize,
                 MailRepositoryPath.fromEncoded(repositoryPath),
-                MailQueueName.of(targetQueue),
-                targetProcessor
-            );
+                new ReprocessingService.Configuration(
+                    MailQueueName.of(targetQueue),
+                    targetProcessor,
+                    consume));
         } catch (Exception e) {
             throw new ReprocessingAllMailsTask.InvalidMailRepositoryPathDeserializationException(repositoryPath);
         }
@@ -101,6 +105,10 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
 
     public String getTargetQueue() {
         return targetQueue;
+    }
+
+    public boolean isConsume() {
+        return consume;
     }
 
     public Optional<String> getTargetProcessor() {
