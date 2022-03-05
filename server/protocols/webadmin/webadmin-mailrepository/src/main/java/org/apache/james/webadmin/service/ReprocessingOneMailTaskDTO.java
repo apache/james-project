@@ -47,10 +47,10 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
             return new ReprocessingOneMailTaskDTO(
                 typeName,
                 domainObject.getRepositoryPath().urlEncoded(),
-                domainObject.getTargetQueue().asString(),
+                domainObject.getConfiguration().getMailQueueName().asString(),
                 domainObject.getMailKey().asString(),
-                domainObject.getTargetProcessor()
-            );
+                domainObject.getConfiguration().getTargetProcessor(),
+                Optional.of(domainObject.getConfiguration().isConsume()));
         } catch (Exception e) {
             throw new ReprocessingOneMailTask.UrlEncodingFailureSerializationException(domainObject.getRepositoryPath());
         }
@@ -61,28 +61,32 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
+    private final boolean consume;
 
     public ReprocessingOneMailTaskDTO(@JsonProperty("type") String type,
                                       @JsonProperty("repositoryPath") String repositoryPath,
                                       @JsonProperty("targetQueue") String targetQueue,
                                       @JsonProperty("mailKey") String mailKey,
-                                      @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
+                                      @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                      @JsonProperty("boolean") Optional<Boolean> consume) {
         this.type = type;
         this.repositoryPath = repositoryPath;
         this.mailKey = mailKey;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
+        this.consume = consume.orElse(true);
     }
 
     public ReprocessingOneMailTask fromDTO(ReprocessingService reprocessingService, Clock clock) {
         return new ReprocessingOneMailTask(
             reprocessingService,
             getMailRepositoryPath(),
-            MailQueueName.of(targetQueue),
+            new ReprocessingService.Configuration(
+                MailQueueName.of(targetQueue),
+                targetProcessor,
+                consume),
             new MailKey(mailKey),
-            targetProcessor,
-            clock
-        );
+            clock);
     }
 
     private MailRepositoryPath getMailRepositoryPath() {
@@ -108,6 +112,10 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
     public String getTargetQueue() {
         return targetQueue;
+    }
+
+    public boolean isConsume() {
+        return consume;
     }
 
     public Optional<String> getTargetProcessor() {
