@@ -51,7 +51,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
-    private final WebAdminReprocessingContextInformationDTO reprocessingContextInformationDTO;
+    private final WebAdminIndexationContextInformationDTO reprocessingContextInformationDTO;
     private final String username;
 
     @JsonCreator
@@ -63,7 +63,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
                                                                ReIndexingExecutionFailures failures,
                                                                Instant timestamp) {
         this.username = username;
-        this.reprocessingContextInformationDTO = new WebAdminReprocessingContextInformationDTO(
+        this.reprocessingContextInformationDTO = new WebAdminIndexationContextInformationDTO(
             type,
             runningOptions,
             successfullyReprocessedMailCount,

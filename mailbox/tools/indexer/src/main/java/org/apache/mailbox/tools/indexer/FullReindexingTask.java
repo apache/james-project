@@ -36,19 +36,19 @@ public class FullReindexingTask implements Task {
     public static final TaskType FULL_RE_INDEXING = TaskType.of("full-reindexing");
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final ReprocessingContext reprocessingContext;
+    private final ReIndexingContext reIndexingContext;
     private final RunningOptions runningOptions;
 
     @Inject
     public FullReindexingTask(ReIndexerPerformer reIndexerPerformer, RunningOptions runningOptions) {
         this.reIndexerPerformer = reIndexerPerformer;
-        this.reprocessingContext = new ReprocessingContext();
+        this.reIndexingContext = new ReIndexingContext();
         this.runningOptions = runningOptions;
     }
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndexAllMessages(reprocessingContext, runningOptions)
+        return reIndexerPerformer.reIndexAllMessages(reIndexingContext, runningOptions)
             .onErrorResume(e -> Mono.just(Result.PARTIAL))
             .block();
     }
@@ -64,10 +64,10 @@ public class FullReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask(
-            reprocessingContext.successfullyReprocessedMailCount(),
-            reprocessingContext.failedReprocessingMailCount(),
-            reprocessingContext.failures(),
+        return Optional.of(new ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask(
+            reIndexingContext.successfullyReprocessedMailCount(),
+            reIndexingContext.failedReprocessingMailCount(),
+            reIndexingContext.failures(),
             Clock.systemUTC().instant(),
             runningOptions));
     }

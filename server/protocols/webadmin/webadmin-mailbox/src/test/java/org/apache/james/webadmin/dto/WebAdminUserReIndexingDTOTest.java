@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.google.common.collect.ImmutableList;
 
-class WebAdminUserReprocessingDTOTest {
+class WebAdminUserReIndexingDTOTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
     private final String serializedAdditionalInformation = "{" +

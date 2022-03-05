@@ -1444,8 +1444,7 @@ class UserMailboxesRoutesTest {
     }
 
     @Nested
-    class UserReprocessing {
-        static final int BATCH_SIZE = 1;
+    class UserReIndexing {
         static final int SEARCH_SIZE = 1;
 
         @RegisterExtension

@@ -30,7 +30,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
+import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReIndexingContextInformationForErrorRecoveryIndexationTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -90,8 +90,8 @@ class ErrorRecoveryIndexationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        ReprocessingContextInformationForErrorRecoveryIndexationTask details = new ReprocessingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, executionFailures, TIMESTAMP, RunningOptions.DEFAULT);
-        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
+        ReIndexingContextInformationForErrorRecoveryIndexationTask details = new ReIndexingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, executionFailures, TIMESTAMP, RunningOptions.DEFAULT);
+        JsonSerializationVerifier.dtoModule(ReIndexingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
@@ -102,8 +102,8 @@ class ErrorRecoveryIndexationTaskSerializationTest {
         RunningOptions runningOptions = RunningOptions.builder()
             .mode(RunningOptions.Mode.FIX_OUTDATED)
             .build();
-        ReprocessingContextInformationForErrorRecoveryIndexationTask details = new ReprocessingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, executionFailures, TIMESTAMP, runningOptions);
-        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
+        ReIndexingContextInformationForErrorRecoveryIndexationTask details = new ReIndexingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, executionFailures, TIMESTAMP, runningOptions);
+        JsonSerializationVerifier.dtoModule(ReIndexingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
             .bean(details)
             .json(serializedAdditionalInformationWithCorrectMode)
             .verify();
@@ -111,11 +111,11 @@ class ErrorRecoveryIndexationTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        ReprocessingContextInformationForErrorRecoveryIndexationTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.module(new TestId.Factory()))
+        ReIndexingContextInformationForErrorRecoveryIndexationTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReIndexingContextInformationForErrorRecoveryIndexationTask.module(new TestId.Factory()))
             .withoutNestedType()
             .deserialize(legacySerializedAdditionalInformation);
 
-        ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask expected = new ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask(
+        ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask expected = new ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask(
             42,
             2,
             new ReIndexingExecutionFailures(failures, ImmutableList.of()),
