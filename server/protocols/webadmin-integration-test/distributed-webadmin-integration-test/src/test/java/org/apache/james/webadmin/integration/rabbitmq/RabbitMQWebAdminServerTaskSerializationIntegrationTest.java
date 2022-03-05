@@ -344,6 +344,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("reprocessing-one"))
             .body("additionalInformation.repositoryPath", is(mailRepositoryUrl.asString()))
             .body("additionalInformation.targetQueue", is(notNullValue()))
+            .body("additionalInformation.consume", is(notNullValue()))
             .body("additionalInformation.mailKey", is(mailKey))
             .body("additionalInformation.targetProcessor", is(nullValue()));
     }
