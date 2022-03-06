@@ -41,6 +41,7 @@ public interface NettyConstants {
     String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
     String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
     String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
+    String EXECUTION_HANDLER = "executionHandler";
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");

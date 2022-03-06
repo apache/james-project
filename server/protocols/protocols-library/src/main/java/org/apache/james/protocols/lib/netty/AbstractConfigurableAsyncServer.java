@@ -80,6 +80,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     /** The name of the parameter defining the service hello name. */
     public static final String HELLO_NAME = "helloName";
 
+    public static final int DEFAULT_MAX_EXECUTOR_COUNT = 16;
+
     private FileSystem fileSystem;
 
     private boolean enabled;
@@ -115,6 +117,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ChannelHandlerFactory frameHandlerFactory;
+
+    private int maxExecutorThreads;
 
     private MBeanServer mbeanServer;
 
@@ -184,6 +188,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         jmxName = config.getString("jmxName", getDefaultJMXName());
         int ioWorker = config.getInt("ioWorkerCount", DEFAULT_IO_WORKER_COUNT);
         setIoWorkerCount(ioWorker);
+
+        maxExecutorThreads = config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT);
 
         
         configureHelloName(config);

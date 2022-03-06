@@ -249,7 +249,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
             try {
                 try {
-                    cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+                    if (cp.get(NettyConstants.EXECUTION_HANDLER) != null) {
+                        cp.addBefore(NettyConstants.EXECUTION_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+                    } else {
+                        cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+                    }
                 } catch (IllegalArgumentException e) {
                     LOGGER.info("heartbeat handler is already part of this pipeline", e);
                 }
