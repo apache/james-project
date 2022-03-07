@@ -261,7 +261,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //          expunges have not happened, or happen only toward the end of the
         //          mailbox.
         //
-        respondVanished(selected, ranges, modSeq, metaData, responder);
+        respondVanished(selected, ranges, responder);
     }
 
     @VisibleForTesting

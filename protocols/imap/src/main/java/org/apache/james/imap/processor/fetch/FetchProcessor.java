@@ -112,7 +112,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             if (vanished) {
                 // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses. 
                 //       If we do so we could prolly save one mailbox access which should give use some more speed up
-                respondVanished(session.getSelected(), ranges, changedSince, metaData.get(), responder);
+                respondVanished(session.getSelected(), ranges, responder);
             }
             processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
 
