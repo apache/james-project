@@ -68,7 +68,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter im
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
-    private final Deque<LineHandlerUpstreamHandler> behaviourOverrides = new ConcurrentLinkedDeque<>();
+    private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
 
     public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
         this(mdcContextFactory, protocol, null);
@@ -150,7 +150,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter im
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        LineHandlerUpstreamHandler override = Iterables.getFirst(behaviourOverrides, null);
+        ChannelInboundHandlerAdapter override = Iterables.getFirst(behaviourOverrides, null);
         if (override != null) {
             override.channelRead(ctx, msg);
             return;
@@ -240,7 +240,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter im
     }
 
     @Override
-    public void pushLineHandler(LineHandlerUpstreamHandler lineHandlerUpstreamHandler) {
+    public void pushLineHandler(ChannelInboundHandlerAdapter lineHandlerUpstreamHandler) {
         behaviourOverrides.addFirst(lineHandlerUpstreamHandler);
     }
 
