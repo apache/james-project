@@ -29,6 +29,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.StartTLSRequest;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.util.MDCBuilder;
 
@@ -49,13 +50,10 @@ public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest>
     @Override
     protected void doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
         if (session.supportStartTLS()) {
-            responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
-            session.startTLS();
-
+            session.startTLS((ImmutableStatusResponse) factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
         } else {
             responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
         }
-
     }
 
     @Override
