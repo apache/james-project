@@ -82,6 +82,12 @@ class UidValidityTest {
     }
 
     @Test
+    void fromSupplierShouldNotThrowWhenMinValue() {
+        assertThatCode(() -> UidValidity.fromSupplier(() -> Long.MIN_VALUE))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void fromSupplierShouldNotThrowWhenUpperBoundInclusiveIsGenerated() {
         assertThatCode(() -> UidValidity.fromSupplier(() -> 4294967295L))
             .doesNotThrowAnyException();
