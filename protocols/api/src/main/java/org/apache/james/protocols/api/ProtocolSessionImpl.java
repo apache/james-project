@@ -213,11 +213,6 @@ public class ProtocolSessionImpl implements ProtocolSession {
     }
 
     @Override
-    public int getPushedLineHandlerCount() {
-        return transport.getPushedLineHandlerCount();
-    }
-
-    @Override
     public <T extends ProtocolSession> void pushLineHandler(LineHandler<T> overrideCommandHandler) {
         transport.pushLineHandler(overrideCommandHandler, this);
     }

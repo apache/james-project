@@ -56,6 +56,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServer.class);
+    private SMTPProtocol transport;
 
     public enum AuthenticationAnnounceMode {
         NEVER,
@@ -186,8 +187,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     private DNSService dns;
     private String authorizedAddresses;
-    
-    private SMTPChannelUpstreamHandler coreHandler;
 
     public SMTPServer(SmtpMetrics smtpMetrics) {
         this.smtpMetrics = smtpMetrics;
@@ -211,15 +210,12 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             authorizedNetworks = new NetMatcher(networks, dns);
             LOGGER.info("Authorized addresses: {}", authorizedNetworks);
         }
-        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData) {
-
+        transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData) {
             @Override
             public ProtocolSession newSession(ProtocolTransport transport) {
                 return new ExtendedSMTPSession(theConfigData, transport);
             }
-            
         };
-        coreHandler = new SMTPChannelUpstreamHandler(transport, getEncryption(), smtpMetrics, getExecutorGroup());
     }
 
     @Override
@@ -389,7 +385,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return coreHandler;
+        return new SMTPChannelUpstreamHandler(transport, getEncryption(), smtpMetrics, getExecutorGroup());
     }
 
     @Override

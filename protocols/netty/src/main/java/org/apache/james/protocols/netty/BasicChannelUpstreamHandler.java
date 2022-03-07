@@ -22,9 +22,11 @@ import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 
 import java.io.Closeable;
 import java.nio.channels.ClosedChannelException;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.net.ssl.SSLEngine;
 
@@ -44,21 +46,19 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.EventExecutorGroup;
-
 
 /**
  * {@link ChannelInboundHandlerAdapter} which is used by the SMTPServer and other line based protocols
  */
-@Sharable
-public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
+public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter implements LineHandlerAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelUpstreamHandler.class);
     public static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_ATTRIBUTE_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
     public static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY =
@@ -68,18 +68,17 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
-    private final EventExecutorGroup eventExecutors;
+    private final Deque<LineHandlerUpstreamHandler> behaviourOverrides = new ConcurrentLinkedDeque<>();
 
-    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, EventExecutorGroup eventExecutors) {
-        this(mdcContextFactory, protocol, null, eventExecutors);
+    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
+        this(mdcContextFactory, protocol, null);
     }
 
-    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure, EventExecutorGroup eventExecutors) {
+    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure) {
         this.mdcContextFactory = mdcContextFactory;
         this.protocol = protocol;
         this.chain = protocol.getProtocolChain();
         this.secure = secure;
-        this.eventExecutors = eventExecutors;
     }
 
 
@@ -151,6 +150,12 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        LineHandlerUpstreamHandler override = Iterables.getFirst(behaviourOverrides, null);
+        if (override != null) {
+            override.channelRead(ctx, msg);
+            return;
+        }
+
         try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
             LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
@@ -200,7 +205,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
             engine = secure.createSSLEngine();
         }
 
-        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine, eventExecutors));
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine));
     }
 
     @Override
@@ -231,6 +236,18 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
                 }
                 ctx.close();
             }
+        }
+    }
+
+    @Override
+    public void pushLineHandler(LineHandlerUpstreamHandler lineHandlerUpstreamHandler) {
+        behaviourOverrides.addFirst(lineHandlerUpstreamHandler);
+    }
+
+    @Override
+    public void popLineHandler() {
+        if (!behaviourOverrides.isEmpty()) {
+            behaviourOverrides.removeFirst();
         }
     }
 

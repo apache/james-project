@@ -92,11 +92,6 @@ public class AbstractProtocolTransportTest {
             }
             
             @Override
-            public int getPushedLineHandlerCount() {
-                throw new UnsupportedOperationException();
-            }
-            
-            @Override
             public InetSocketAddress getLocalAddress() {
                 throw new UnsupportedOperationException();
             }

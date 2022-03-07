@@ -38,7 +38,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedStream;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -48,13 +47,10 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     
     private final Channel channel;
     private final SSLEngine engine;
-    private final EventExecutorGroup eventExecutors;
-    private int lineHandlerCount = 0;
     
-    public NettyProtocolTransport(Channel channel, SSLEngine engine, EventExecutorGroup eventExecutors) {
+    public NettyProtocolTransport(Channel channel, SSLEngine engine) {
         this.channel = channel;
         this.engine = engine;
-        this.eventExecutors = eventExecutors;
     }
 
     @Override
@@ -80,15 +76,9 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
 
     @Override
     public void popLineHandler() {
-        if (lineHandlerCount > 0) {
-            channel.pipeline().remove("lineHandler" + lineHandlerCount);
-            lineHandlerCount--;
-        }
-    }
-
-    @Override
-    public int getPushedLineHandlerCount() {
-        return lineHandlerCount;
+        LineHandlerAware channelHandler = (LineHandlerAware) channel.pipeline()
+            .get(HandlerConstants.CORE_HANDLER);
+        channelHandler.popLineHandler();
     }
 
     /**
@@ -154,12 +144,9 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
-        lineHandlerCount++;
-        // Add the linehandler in front of the coreHandler so we can be sure 
-        // it is executed with the same ExecutorHandler as the coreHandler (if one exist)
-        // 
-        // See JAMES-1277
-        channel.pipeline().addBefore(eventExecutors, HandlerConstants.CORE_HANDLER, "lineHandler" + lineHandlerCount, new LineHandlerUpstreamHandler(session, overrideCommandHandler));
+        LineHandlerAware channelHandler = (LineHandlerAware) channel.pipeline()
+            .get(HandlerConstants.CORE_HANDLER);
+        channelHandler.pushLineHandler(new LineHandlerUpstreamHandler(session, overrideCommandHandler));
     }
     
    
