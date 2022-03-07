@@ -551,7 +551,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
         }
         UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
-        responder.respond(new VanishedResponse(vanishedIdRanges, true));
+        if (vanishedIdRanges.length > 0) {
+            responder.respond(new VanishedResponse(vanishedIdRanges, true));
+        }
     }
     
     
