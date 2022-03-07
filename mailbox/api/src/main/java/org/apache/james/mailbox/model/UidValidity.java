@@ -38,14 +38,14 @@ public class UidValidity {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3074 for details
      */
-    public static  UidValidity generate() {
+    public static UidValidity generate() {
         return fromSupplier(RANDOM::nextLong);
     }
 
     @VisibleForTesting
     static UidValidity fromSupplier(Supplier<Long> longSupplier) {
-        long randomValue = Math.abs(longSupplier.get());
-        long sanitizedRandomValue = 1 + (randomValue % (UPPER_EXCLUSIVE_BOUND - 1));
+        long randomValue = longSupplier.get();
+        long sanitizedRandomValue = Math.abs(1 + (randomValue % (UPPER_EXCLUSIVE_BOUND - 1)));
         return of(sanitizedRandomValue);
     }
 
@@ -56,7 +56,7 @@ public class UidValidity {
      * Strongly favor uses of  {@link #ofValid(long)}
      */
     public static UidValidity of(long uidValidity) {
-        Preconditions.checkArgument(isValid(uidValidity), "uidValidity needs to be a non-zero unsigned 32-bit integer");
+        Preconditions.checkArgument(isValid(uidValidity), "uidValidity needs to be a non-zero unsigned 32-bit integer, got %s", uidValidity);
         return new UidValidity(uidValidity);
     }
 
