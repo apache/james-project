@@ -29,6 +29,7 @@ import org.apache.james.smtpserver.SMTPConstants;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * {@link BasicChannelUpstreamHandler} which is used by the SMTPServer
@@ -38,13 +39,13 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
 
     private final SmtpMetrics smtpMetrics;
 
-    public SMTPChannelUpstreamHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics) {
-        super(new SMTPMDCContextFactory(), protocol, encryption);
+    public SMTPChannelUpstreamHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+        super(new SMTPMDCContextFactory(), protocol, encryption, eventExecutorGroup);
         this.smtpMetrics = smtpMetrics;
     }
 
-    public SMTPChannelUpstreamHandler(Protocol protocol, SmtpMetrics smtpMetrics) {
-        super(new SMTPMDCContextFactory(), protocol);
+    public SMTPChannelUpstreamHandler(Protocol protocol, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+        super(new SMTPMDCContextFactory(), protocol, eventExecutorGroup);
         this.smtpMetrics = smtpMetrics;
     }
 

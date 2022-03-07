@@ -28,8 +28,9 @@ import org.apache.james.protocols.api.Protocol;
 import com.google.common.base.Preconditions;
 
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
-
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 
 
 /**
@@ -104,7 +105,7 @@ public class NettyServer extends AbstractAsyncServer {
     }
 
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
+        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure, new DefaultEventExecutorGroup(2));
     }
     
     @Override
@@ -126,7 +127,8 @@ public class NettyServer extends AbstractAsyncServer {
             maxCurConnectionsPerIP,
             group,
             secure,
-            getFrameHandlerFactory()) {
+            getFrameHandlerFactory(),
+            new DefaultEventLoopGroup(16)) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {

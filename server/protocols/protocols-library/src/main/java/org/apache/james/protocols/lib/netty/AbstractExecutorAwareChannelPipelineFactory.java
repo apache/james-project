@@ -24,6 +24,7 @@ import org.apache.james.protocols.netty.ChannelHandlerFactory;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * Abstract base class which should get used if you MAY need an {@link ExecutionHandler}
@@ -35,8 +36,8 @@ public abstract class AbstractExecutorAwareChannelPipelineFactory extends Abstra
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                                        ChannelGroup group, Encryption encryption,
-                                                       ChannelHandlerFactory frameHandlerFactory) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, frameHandlerFactory);
+                                                       ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, frameHandlerFactory, eventExecutorGroup);
     }
     
     /**
