@@ -534,49 +534,32 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     /**
      * Send VANISHED responses if needed. 
      */
-    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, long changedSince, MailboxMetaData metaData, Responder responder) throws MailboxException {
-        // RFC5162 4.2. Server Implementations Storing Minimal State
-        //  
-        //      A server that stores the HIGHESTMODSEQ value at the time of the last
-        //      EXPUNGE can omit the VANISHED response when a client provides a
-        //      MODSEQ value that is equal to, or higher than, the current value of
-        //      this datum, that is, when there have been no EXPUNGEs.
-        //
-        //      A client providing message sequence match data can reduce the scope
-        //      as above.  In the case where there have been no expunges, the server
-        //      can ignore this data.
-        if (metaData.getHighestModSeq().asLong() > changedSince) {
-            SearchQuery.Builder searchQuery = SearchQuery.builder();
-            SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
-            Set<MessageUid> vanishedUids = new HashSet<>();
-            for (int i = 0; i < ranges.size(); i++) {
-                MessageRange r = ranges.get(i);
-                SearchQuery.UidRange nr;
-                if (r.getType() == Type.ONE) {
-                    nr = new SearchQuery.UidRange(r.getUidFrom());
-                } else {
-                    nr = new SearchQuery.UidRange(r.getUidFrom(), r.getUidTo());
-                }
-                MessageUid from = nr.getLowValue();
-                MessageUid to = nr.getHighValue();
-                while (from.compareTo(to) <= 0) {
-                    MessageUid copy = from;
-                    selectedMailbox.msn(from).fold(
-                        () -> vanishedUids.add(copy),
-                        msn -> {
-                            // ignore still there
-                            return true;
-                        });
-                    from = from.next();
-                }
-                nRanges[i] = nr;
-
+    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) throws MailboxException {
+        Set<MessageUid> vanishedUids = new HashSet<>();
+        for (int i = 0; i < ranges.size(); i++) {
+            MessageRange r = ranges.get(i);
+            SearchQuery.UidRange nr;
+            if (r.getType() == Type.ONE) {
+                nr = new SearchQuery.UidRange(r.getUidFrom());
+            } else {
+                nr = new SearchQuery.UidRange(r.getUidFrom(), r.getUidTo());
             }
-            UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
-            responder.respond(new VanishedResponse(vanishedIdRanges, true));
+            MessageUid from = nr.getLowValue();
+            MessageUid to = nr.getHighValue();
+            while (from.compareTo(to) <= 0) {
+                MessageUid copy = from;
+                selectedMailbox.msn(from).fold(
+                    () -> vanishedUids.add(copy),
+                    msn -> {
+                        // ignore still there
+                        return true;
+                    });
+                from = from.next();
+            }
+
         }
-        
-        
+        UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
+        responder.respond(new VanishedResponse(vanishedIdRanges, true));
     }
     
     

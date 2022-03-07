@@ -1497,11 +1497,8 @@ class IMAPServerTest {
                 .isEmpty();
         }
 
-        @Disabled("JAMES-3722 We currently take the latests modseq as the 'latest modseq for which a deletion occured'" +
-            " which is not currently stored, thus we never return deletions unless there are new messages / flags changes" +
-            " causing the modseq to change")
         @Test
-        void selectShouldReturnDeletedMessagesWhenNoSubsequentModifucation() throws Exception {
+        void selectShouldReturnDeletedMessagesWhenNoSubsequentModification() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
