@@ -98,9 +98,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
     private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException {
-
         ClientSpecifiedUidValidity lastKnownUidValidity = request.getLastKnownUidValidity();
-        Long modSeq = request.getKnownModSeq();
         IdRange[] knownSequences = request.getKnownSequenceSet();
         UidRange[] knownUids = request.getKnownUidSet();
 
@@ -157,10 +155,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         // The same is true if none are given ;)
         if (metaData.isModSeqPermanent() && !lastKnownUidValidity.isUnknown()) {
             if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
-                
-                final MailboxManager mailboxManager = getMailboxManager();
-                final MailboxSession mailboxSession = session.getMailboxSession();
-                final MessageManager mailbox = mailboxManager.getMailbox(fullMailboxPath, mailboxSession);
 
                 //  If the provided UIDVALIDITY matches that of the selected mailbox, the
                 //  server then checks the last known modification sequence.
@@ -168,7 +162,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 //  The server sends the client any pending flag changes (using FETCH
                 //  responses that MUST contain UIDs) and expunges those that have
                 //  occurred in this mailbox since the provided modification sequence.
-
                 UidRange[] uidSet = request.getUidSet();
 
                 if (uidSet == null) {
@@ -181,7 +174,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 }
                 
                 if (uidSet != null) {
-                    respondVanished(session, responder, modSeq, knownSequences, knownUids, metaData, selected, mailboxSession, mailbox, uidSet);
+                    respondVanished(session, responder, knownSequences, knownUids, selected, uidSet);
                 }
                 taggedOk(responder, request, metaData, HumanReadableText.SELECT);
             } else {
@@ -197,7 +190,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         SearchResUtil.resetSavedSequenceSet(session);
     }
 
-    private void respondVanished(ImapSession session, Responder responder, Long modSeq, IdRange[] knownSequences, UidRange[] knownUids, MailboxMetaData metaData, SelectedMailbox selected, MailboxSession mailboxSession, MessageManager mailbox, UidRange[] uidSet) throws MailboxException {
+    private void respondVanished(ImapSession session, Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) throws MailboxException {
         // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
         //
         // Message sequence match data:
