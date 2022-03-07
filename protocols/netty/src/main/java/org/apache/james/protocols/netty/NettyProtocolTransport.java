@@ -38,6 +38,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedStream;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -47,11 +48,13 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     
     private final Channel channel;
     private final SSLEngine engine;
+    private final EventExecutorGroup eventExecutors;
     private int lineHandlerCount = 0;
     
-    public NettyProtocolTransport(Channel channel, SSLEngine engine) {
+    public NettyProtocolTransport(Channel channel, SSLEngine engine, EventExecutorGroup eventExecutors) {
         this.channel = channel;
         this.engine = engine;
+        this.eventExecutors = eventExecutors;
     }
 
     @Override
@@ -156,7 +159,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         // it is executed with the same ExecutorHandler as the coreHandler (if one exist)
         // 
         // See JAMES-1277
-        channel.pipeline().addBefore(HandlerConstants.CORE_HANDLER, "lineHandler" + lineHandlerCount, new LineHandlerUpstreamHandler(session, overrideCommandHandler));
+        channel.pipeline().addBefore(eventExecutors, HandlerConstants.CORE_HANDLER, "lineHandler" + lineHandlerCount, new LineHandlerUpstreamHandler(session, overrideCommandHandler));
     }
     
    

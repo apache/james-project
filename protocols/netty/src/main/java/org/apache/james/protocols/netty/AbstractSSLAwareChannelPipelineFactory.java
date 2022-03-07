@@ -27,6 +27,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -39,14 +40,15 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
                                                   int maxConnections, int maxConnectsPerIp, ChannelGroup group,
-                                                  ChannelHandlerFactory frameHandlerFactory) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory);
+                                                  ChannelHandlerFactory frameHandlerFactory,
+                                                  EventExecutorGroup eventExecutorGroup) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory, eventExecutorGroup);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
             int maxConnections, int maxConnectsPerIp, ChannelGroup group, Encryption secure,
-            ChannelHandlerFactory frameHandlerFactory) {
-        this(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory);
+            ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
+        this(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory, eventExecutorGroup);
 
         this.secure = secure;
     }

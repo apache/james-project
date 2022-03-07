@@ -25,6 +25,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * Abstract base class for {@link ChannelInitializer} implementations
@@ -38,19 +39,21 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
     private final ChannelGroupHandler groupHandler;
     private final int timeout;
     private final ChannelHandlerFactory frameHandlerFactory;
+    private final EventExecutorGroup eventExecutorGroup;
 
     public AbstractChannelPipelineFactory(ChannelGroup channels,
-                                          ChannelHandlerFactory frameHandlerFactory) {
-        this(0, 0, 0, channels, frameHandlerFactory);
+                                          ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
+        this(0, 0, 0, channels, frameHandlerFactory, eventExecutorGroup);
     }
 
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels,
-                                          ChannelHandlerFactory frameHandlerFactory) {
+                                          ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
         this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
         this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
         this.groupHandler = new ChannelGroupHandler(channels);
         this.timeout = timeout;
         this.frameHandlerFactory = frameHandlerFactory;
+        this.eventExecutorGroup = eventExecutorGroup;
     }
     
     
@@ -66,13 +69,13 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
         
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
-        pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
+        pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
        
         // Add the ChunkedWriteHandler to be able to write ChunkInput
         pipeline.addLast(HandlerConstants.CHUNK_HANDLER, new ChunkedWriteHandler());
         pipeline.addLast(HandlerConstants.TIMEOUT_HANDLER, new TimeoutHandler(timeout));
 
-        pipeline.addLast(HandlerConstants.CORE_HANDLER, createHandler());
+        pipeline.addLast(eventExecutorGroup, HandlerConstants.CORE_HANDLER, createHandler());
     }
 
     
