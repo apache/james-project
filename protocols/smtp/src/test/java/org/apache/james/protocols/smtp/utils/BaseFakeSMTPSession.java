@@ -123,11 +123,6 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public int getPushedLineHandlerCount() {
-        throw new UnsupportedOperationException("Unimplemented Stub Method");
-    }
-
-    @Override
     public Response newLineTooLongResponse() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }

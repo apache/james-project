@@ -41,8 +41,8 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
      * The configuration data to be passed to the handler
      */
     private final ProtocolConfiguration theConfigData = new POP3Configuration();
-    private BasicChannelUpstreamHandler coreHandler;
-    
+    private POP3Protocol protocol;
+
     @Override
     protected int getDefaultPort() {
         return 110;
@@ -76,8 +76,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     @Override
     protected void preInit() throws Exception {
         super.preInit();
-        POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData);
-        coreHandler = new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption(), getExecutorGroup());
+        protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData);
     }
 
     @Override
@@ -87,7 +86,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return coreHandler; 
+        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption());
     }
 
     @Override

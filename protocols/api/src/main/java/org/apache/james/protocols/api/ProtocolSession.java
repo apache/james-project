@@ -231,10 +231,4 @@ public interface ProtocolSession extends CommandDetectionSession {
      * Pop the last command handler 
      */
     void popLineHandler();
-    
-    /**
-     * Return the size of the pushed {@link LineHandler}
-     * @return size of the pushed line handler
-     */
-    int getPushedLineHandlerCount();
 }
