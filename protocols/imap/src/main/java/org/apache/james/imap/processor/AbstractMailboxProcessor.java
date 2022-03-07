@@ -61,7 +61,6 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
-import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
@@ -536,16 +535,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      */
     protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) throws MailboxException {
         Set<MessageUid> vanishedUids = new HashSet<>();
-        for (int i = 0; i < ranges.size(); i++) {
-            MessageRange r = ranges.get(i);
-            SearchQuery.UidRange nr;
-            if (r.getType() == Type.ONE) {
-                nr = new SearchQuery.UidRange(r.getUidFrom());
-            } else {
-                nr = new SearchQuery.UidRange(r.getUidFrom(), r.getUidTo());
-            }
-            MessageUid from = nr.getLowValue();
-            MessageUid to = nr.getHighValue();
+        for (MessageRange range : ranges) {
+            MessageUid from = range.getUidFrom();
+            MessageUid to = range.getUidTo();
             while (from.compareTo(to) <= 0) {
                 MessageUid copy = from;
                 selectedMailbox.msn(from).fold(
