@@ -51,6 +51,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -67,16 +68,18 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
+    private final EventExecutorGroup eventExecutors;
 
-    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
-        this(mdcContextFactory, protocol, null);
+    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, EventExecutorGroup eventExecutors) {
+        this(mdcContextFactory, protocol, null, eventExecutors);
     }
 
-    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure) {
+    public BasicChannelUpstreamHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure, EventExecutorGroup eventExecutors) {
         this.mdcContextFactory = mdcContextFactory;
         this.protocol = protocol;
         this.chain = protocol.getProtocolChain();
         this.secure = secure;
+        this.eventExecutors = eventExecutors;
     }
 
 
@@ -197,7 +200,7 @@ public class BasicChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
             engine = secure.createSSLEngine();
         }
 
-        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine));
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine, eventExecutors));
     }
 
     @Override

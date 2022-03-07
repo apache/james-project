@@ -142,7 +142,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig);
-        return new SMTPChannelUpstreamHandler(protocol, lmtpMetrics);
+        return new SMTPChannelUpstreamHandler(protocol, lmtpMetrics, getExecutorGroup());
     }
 
     @Override

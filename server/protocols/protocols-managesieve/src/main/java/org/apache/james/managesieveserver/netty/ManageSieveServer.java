@@ -86,7 +86,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
 
-        return new AbstractChannelPipelineFactory(group, createFrameHandlerFactory()) {
+        return new AbstractChannelPipelineFactory(group, createFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
@@ -113,13 +113,13 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(FRAMER, getFrameHandlerFactory().create(pipeline));
-                pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
-                pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
+                pipeline.addLast(getExecutorGroup(), FRAMER, getFrameHandlerFactory().create(pipeline));
+                pipeline.addLast(getExecutorGroup(), CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
+                pipeline.addLast(getExecutorGroup(), CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
-                pipeline.addLast(CORE_HANDLER, createHandler());
-                pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
+                pipeline.addLast(getExecutorGroup(), "stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
+                pipeline.addLast(getExecutorGroup(), CORE_HANDLER, createHandler());
+                pipeline.addLast(getExecutorGroup(), "stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
             }
 
         };

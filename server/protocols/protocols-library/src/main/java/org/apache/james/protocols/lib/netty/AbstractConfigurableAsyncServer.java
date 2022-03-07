@@ -48,6 +48,7 @@ import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.util.PemUtils;
 
@@ -118,7 +121,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     private ChannelHandlerFactory frameHandlerFactory;
 
-    private int maxExecutorThreads;
+    private EventExecutorGroup executorGroup;
 
     private MBeanServer mbeanServer;
 
@@ -189,8 +192,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         int ioWorker = config.getInt("ioWorkerCount", DEFAULT_IO_WORKER_COUNT);
         setIoWorkerCount(ioWorker);
 
-        maxExecutorThreads = config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT);
-
+        executorGroup = new DefaultEventExecutorGroup(config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT),
+            NamedThreadFactory.withName(jmxName));
         
         configureHelloName(config);
 
@@ -266,6 +269,10 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     }
 
+    protected EventExecutorGroup getExecutorGroup() {
+        return executorGroup;
+    }
+
     @PostConstruct
     public final void init() throws Exception {
 
@@ -308,6 +315,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         if (isEnabled()) {
             unbind();
             postDestroy();
+            executorGroup.shutdownGracefully();
 
             unregisterMBean();
         }
@@ -550,7 +558,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
         return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group,
-            getEncryption(), getFrameHandlerFactory()) {
+            getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
