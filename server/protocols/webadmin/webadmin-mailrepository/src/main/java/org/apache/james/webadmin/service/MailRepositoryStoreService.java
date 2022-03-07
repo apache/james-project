@@ -87,7 +87,7 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<MailDto> retrieveMail(MailRepositoryPath path, MailKey mailKey, Set<AdditionalField> additionalAttributes) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException, InaccessibleFieldException {
-        Optional<Mail> mail = fecthMail(path, mailKey);
+        Optional<Mail> mail = fetchMail(path, mailKey);
         try {
             return mail.map(Throwing.function((Mail aMail) -> MailDto.fromMail(aMail, additionalAttributes)).sneakyThrow());
         } finally {
@@ -96,7 +96,7 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<MimeMessage> retrieveMessage(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        Optional<Mail> mail = fecthMail(path, mailKey);
+        Optional<Mail> mail = fetchMail(path, mailKey);
         try {
             return mail.map(Throwing.function(Mail::getMessage).sneakyThrow());
         } finally {
@@ -127,7 +127,7 @@ public class MailRepositoryStoreService {
         return repositories.stream();
     }
 
-    private Optional<Mail> fecthMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    private Optional<Mail> fetchMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         return getRepositories(path)
             .map(Throwing.function((MailRepository repository) -> Optional.ofNullable(repository.retrieve(mailKey))).sneakyThrow())
             .flatMap(Optional::stream)
