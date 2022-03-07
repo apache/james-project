@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 public class FakeImapSession implements ImapSession {
@@ -118,7 +119,7 @@ public class FakeImapSession implements ImapSession {
     }
     
     @Override
-    public boolean startTLS() {
+    public boolean startTLS(ImmutableStatusResponse response) {
         return false;
     }
 

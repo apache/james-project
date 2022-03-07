@@ -18,18 +18,27 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.encode.ImapResponseWriter;
+import org.apache.james.imap.encode.StatusResponseEncoder;
+import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
+import org.apache.james.imap.encode.main.DefaultLocalizer;
+import org.apache.james.imap.message.Literal;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.compression.JZlibDecoder;
 import io.netty.handler.codec.compression.JZlibEncoder;
@@ -141,13 +150,20 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startTLS() {
+    public boolean startTLS(ImmutableStatusResponse statusResponse) {
         if (!supportStartTLS()) {
             return false;
         }
         channel.config().setAutoRead(false);
+        try {
+            new StatusResponseEncoder(new DefaultLocalizer()).encode(statusResponse,
+                new ImapResponseComposerImpl(new EventLoopImapResponseWriter(channel), 2048));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
+
         filter.engine().setUseClientMode(false);
         channel.pipeline().addFirst(SSL_HANDLER, filter);
 
@@ -155,6 +171,27 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
         return true;
     }
+
+    public static class EventLoopImapResponseWriter implements ImapResponseWriter {
+        private final Channel channel;
+
+        public EventLoopImapResponseWriter(Channel channel) {
+            this.channel = channel;
+        }
+
+        @Override
+        public void write(byte[] buffer) {
+            if (channel.isActive()) {
+                channel.pipeline().firstContext().writeAndFlush(Unpooled.wrappedBuffer(buffer));
+            }
+        }
+
+        @Override
+        public void write(Literal literal) {
+            throw new NotImplementedException();
+        }
+    }
+
 
     @Override
     public boolean supportStartTLS() {

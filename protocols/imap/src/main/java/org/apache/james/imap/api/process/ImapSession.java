@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
@@ -156,7 +157,7 @@ public interface ImapSession extends CommandDetectionSession {
      * 
      * @return true if the encryption of the session was successfully
      */
-    boolean startTLS();
+    boolean startTLS(ImmutableStatusResponse startTlsResponse);
 
     /**
      * Return true if the session is bound to a TLS encrypted socket.
