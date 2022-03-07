@@ -48,6 +48,8 @@ import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslHandler;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
+    private static final int BUFFER_SIZE = 2048;
+
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private SelectedMailbox selectedMailbox;
     private final Map<String, Object> attributesByKey = new HashMap<>();
@@ -155,12 +157,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
             return false;
         }
         channel.config().setAutoRead(false);
-        try {
-            new StatusResponseEncoder(new DefaultLocalizer()).encode(statusResponse,
-                new ImapResponseComposerImpl(new EventLoopImapResponseWriter(channel), 2048));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        writeOnTheEventLoop(statusResponse);
 
         SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
 
@@ -170,6 +167,15 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         channel.config().setAutoRead(true);
 
         return true;
+    }
+
+    private void writeOnTheEventLoop(ImmutableStatusResponse statusResponse) {
+        try {
+            new StatusResponseEncoder(new DefaultLocalizer()).encode(statusResponse,
+                new ImapResponseComposerImpl(new EventLoopImapResponseWriter(channel), BUFFER_SIZE));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class EventLoopImapResponseWriter implements ImapResponseWriter {
@@ -204,12 +210,13 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startCompression() {
+    public boolean startCompression(ImmutableStatusResponse response) {
         if (!isCompressionSupported()) {
             return false;
         }
 
         channel.config().setAutoRead(false);
+        writeOnTheEventLoop(response);
         ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
         ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 

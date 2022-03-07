@@ -193,7 +193,7 @@ public interface ImapSession extends CommandDetectionSession {
      * 
      * @return success
      */
-    boolean startCompression();
+    boolean startCompression(ImmutableStatusResponse response);
 
     /**
      * Push in a new {@link ImapLineHandler} which is called for the next line received
