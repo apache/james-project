@@ -39,6 +39,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
+import java.util.List;
+import java.util.Properties;
+import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -58,6 +62,7 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -68,9 +73,12 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -95,6 +103,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -1423,6 +1432,113 @@ class IMAPServerTest {
             if (condition.test(line)) {
                 return result.build();
             }
+        }
+    }
+
+    @Nested
+    class QResync {
+        IMAPServer imapServer;
+        private int port;
+        private MailboxSession mailboxSession;
+        private MessageManager inbox;
+        private SocketChannel clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+            mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Disabled("JAMES-3722 We currently return empty vanished response whose syntax is invalid." +
+            "We don't match RFC-3501 sequence-set formal syntax that guaranty at least one element")
+        @Test
+        void selectShouldNotAnswerEmptyVanishedResponses() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            IntStream.range(0, 37)
+                .forEach(Throwing.intConsumer(i -> memoryIntegrationResources.getMailboxManager()
+                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                    .appendMessage(MessageManager.AppendCommand.builder()
+                        .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            readBytes(server);
+            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d 88 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("VANISHED"))
+                .isEmpty();
+        }
+
+        @Disabled("JAMES-3722 We currently take the latests modseq as the 'latest modseq for which a deletion occured'" +
+            " which is not currently stored, thus we never return deletions unless there are new messages / flags changes" +
+            " causing the modseq to change")
+        @Test
+        void selectShouldReturnDeletedMessagesWhenNoSubsequentModifucation() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            IntStream.range(0, 37)
+                .forEach(Throwing.intConsumer(i -> memoryIntegrationResources.getMailboxManager()
+                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                    .appendMessage(MessageManager.AppendCommand.builder()
+                        .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            readBytes(server);
+            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
         }
     }
 }
