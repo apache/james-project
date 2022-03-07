@@ -30,16 +30,13 @@ import com.google.common.base.Preconditions;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
 
 
 /**
  * Generic NettyServer 
  */
 public class NettyServer extends AbstractAsyncServer {
-
     public static class Factory {
-
         private Protocol protocol;
         private Optional<Encryption> secure;
         private Optional<ChannelHandlerFactory> frameHandlerFactory;
@@ -77,11 +74,7 @@ public class NettyServer extends AbstractAsyncServer {
     protected final Encryption secure;
     protected final Protocol protocol;
     private final ChannelHandlerFactory frameHandlerFactory;
-
-    private ChannelInboundHandlerAdapter coreHandler;
-
     private int maxCurConnections;
-
     private int maxCurConnectionsPerIP;
    
     private NettyServer(Protocol protocol, Encryption secure, ChannelHandlerFactory frameHandlerFactory) {
@@ -105,12 +98,11 @@ public class NettyServer extends AbstractAsyncServer {
     }
 
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure, new DefaultEventExecutorGroup(2));
+        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
     }
     
     @Override
     public synchronized void bind() throws Exception {
-        coreHandler = createCoreHandler();
         super.bind();
     }
 
@@ -132,7 +124,7 @@ public class NettyServer extends AbstractAsyncServer {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
-                return coreHandler;
+                return createCoreHandler();
             }
         };
 

@@ -73,11 +73,6 @@ public interface ProtocolTransport {
      * Push a {@link LineHandler} in.
      */
     void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session);
-
-    /**
-     * Return the count of pushed {@link LineHandler}'s
-     */
-    int getPushedLineHandlerCount();
     
     
     /**
