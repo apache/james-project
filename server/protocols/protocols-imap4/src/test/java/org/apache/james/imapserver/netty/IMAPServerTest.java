@@ -1461,8 +1461,6 @@ class IMAPServerTest {
             imapServer.destroy();
         }
 
-        @Disabled("JAMES-3722 We currently return empty vanished response whose syntax is invalid." +
-            "We don't match RFC-3501 sequence-set formal syntax that guaranty at least one element")
         @Test
         void selectShouldNotAnswerEmptyVanishedResponses() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
