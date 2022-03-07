@@ -28,6 +28,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.netty.LineHandlerAware;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.compression.JZlibDecoder;
@@ -44,7 +45,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final Encryption secure;
     private final boolean compress;
     private final Channel channel;
-    private int handlerCount;
     private final boolean requiredSSL;
     private final boolean plainAuthEnabled;
     private final SessionId sessionId;
@@ -195,16 +195,14 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     @Override
     public void pushLineHandler(ImapLineHandler lineHandler) {
-        channel.config().setAutoRead(false);
-        channel.pipeline().addBefore(REQUEST_DECODER, "lineHandler" + handlerCount++, new ImapLineHandlerAdapter(this, lineHandler));
-        channel.config().setAutoRead(true);
+        LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
+        handler.pushLineHandler(new ImapLineHandlerAdapter(this, lineHandler));
     }
 
     @Override
     public void popLineHandler() {
-        channel.config().setAutoRead(false);
-        channel.pipeline().remove("lineHandler" + --handlerCount);
-        channel.config().setAutoRead(true);
+        LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
+        handler.popLineHandler();
     }
 
     @Override

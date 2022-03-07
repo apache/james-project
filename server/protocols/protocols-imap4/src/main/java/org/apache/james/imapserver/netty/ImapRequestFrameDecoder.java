@@ -23,22 +23,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.protocols.netty.LineHandlerAware;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
@@ -46,16 +51,17 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 /**
  * {@link ByteToMessageDecoder} which will decode via and {@link ImapDecoder} instance
  */
-public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants {
-
-    private final ImapDecoder decoder;
-    private final int inMemorySizeLimit;
-    private final int literalSizeLimit;
+public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants, LineHandlerAware {
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
     private static final String STORED_DATA = "STORED_DATA";
     private static final String WRITTEN_DATA = "WRITTEN_DATA";
     private static final String OUTPUT_STREAM = "OUTPUT_STREAM";
+
+    private final ImapDecoder decoder;
+    private final int inMemorySizeLimit;
+    private final int literalSizeLimit;
+    private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit) {
         this.decoder = decoder;
@@ -72,6 +78,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     @Override
     @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        ChannelInboundHandlerAdapter override = Iterables.getFirst(behaviourOverrides, null);
+        if (override != null) {
+            override.channelRead(ctx, in);
+            return;
+        }
+
         in.markReaderIndex();
         boolean retry = false;
 
@@ -194,6 +206,18 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             if (ctx.channel().isActive()) {
                 ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
             }
+        }
+    }
+
+    @Override
+    public void pushLineHandler(ChannelInboundHandlerAdapter lineHandlerUpstreamHandler) {
+        behaviourOverrides.addFirst(lineHandlerUpstreamHandler);
+    }
+
+    @Override
+    public void popLineHandler() {
+        if (!behaviourOverrides.isEmpty()) {
+            behaviourOverrides.removeFirst();
         }
     }
 }
