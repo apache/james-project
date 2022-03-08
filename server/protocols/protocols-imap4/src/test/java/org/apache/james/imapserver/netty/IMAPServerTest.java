@@ -1605,8 +1605,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 IMAP stack failed to parse FETCH command with two modifiers and thus do" +
-            "not conform to the example of the RFC-5162")
         @Test
         void fetchShouldSupportVanishedModifiedWithEarlierTag() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
