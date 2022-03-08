@@ -1501,5 +1501,28 @@ class IMAPServerTest {
                 .filteredOn(s -> s.contains("* OK [CLOSED]"))
                 .hasSize(1);
         }
+
+        @Test
+        void closeShouldNotReturnHighestModseqWhenUsingQResync() throws Exception {
+            // See https://www.rfc-editor.org/errata_search.php?rfc=5162
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 CLOSE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("a3 OK CLOSE completed.")))
+                .isNotNull();
+        }
     }
 }
