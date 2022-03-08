@@ -35,9 +35,12 @@ import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity;
 import org.apache.james.mailbox.MessageUid;
 
+import com.google.common.base.CharMatcher;
+
 public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
     private static final String CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString();
     private static final String QRESYNC = ImapConstants.SUPPORTS_QRESYNC.asString();
+    private static final CharMatcher NUMERIC = CharMatcher.inRange('0', '9');
 
     public AbstractSelectionCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
         super(command, statusResponseFactory);
@@ -89,15 +92,18 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                        
                     // Consume the SP
                     request.consumeChar(' ');
-                    uidSet = request.parseUidRange();
-                    
-                    // Check for *
-                    checkUidRanges(uidSet, false);
+                    if (NUMERIC.matches(request.nextChar())) {
+                        uidSet = request.parseUidRange();
+                        // Check for *
+                        checkUidRanges(uidSet, false);
+                    }
                     
                     nc = request.nextChar();
-                    if (nc == ' ')  {
+                    if (nc == ' ') {
                         request.consumeChar(' ');
-                        
+                    }
+                    nc = request.nextChar();
+                    if (nc == '(') {
                         // This is enclosed in () so remove (
                         request.consumeChar('(');
                         knownSequenceSet = request.parseIdRange();
