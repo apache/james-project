@@ -351,7 +351,7 @@ public abstract class ImapRequestLineReader {
         return consumeWord(validator, false);
     }
 
-    private String consumeWord(CharacterValidator validator, boolean stripParen) throws DecodingException {
+    public String consumeWord(CharacterValidator validator, boolean stripParen) throws DecodingException {
         StringBuilder atom = new StringBuilder();
 
         char next = nextWordChar();

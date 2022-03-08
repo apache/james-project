@@ -81,37 +81,38 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             }
             request.consumeChar(')');
             
-            
             next = nextNonSpaceChar(request);
             if (next == '(') {
                 request.consumeChar('(');
-
-                next = request.nextChar();
-                switch (next) {
-                case 'C':
-                    // Now check for the CHANGEDSINCE option which is part of CONDSTORE
-                    request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CHANGEDSINCE));
-                    fetch.changedSince(request.number(true));
-                    break;
-                case 'V':
-                    // Check for the VANISHED option which is part of QRESYNC
-                    request.consumeWord(StringMatcherCharacterValidator.ignoreCase(VANISHED));
-                    fetch.vanished(true);
-                    break;
-                default:
-                    break;
-                }
-               
-                
+                parseModifier(request, fetch);
+                nextNonSpaceChar(request);
+                parseModifier(request, fetch);
+                nextNonSpaceChar(request);
                 request.consumeChar(')');
-
             }
         } else {
             addNextElement(request, fetch);
-
         }
 
         return fetch.build();
+    }
+
+    private void parseModifier(ImapRequestLineReader request, FetchData.Builder fetch) throws DecodingException {
+        char next = request.nextChar();
+        switch (next) {
+        case 'C':
+            // Now check for the CHANGEDSINCE option which is part of CONDSTORE
+            request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CHANGEDSINCE));
+            fetch.changedSince(request.number(true));
+            break;
+        case 'V':
+            // Check for the VANISHED option which is part of QRESYNC
+            request.consumeWord(StringMatcherCharacterValidator.ignoreCase(VANISHED), true);
+            fetch.vanished(true);
+            break;
+        default:
+            break;
+        }
     }
 
     private void addNextElement(ImapRequestLineReader reader, FetchData.Builder fetch) throws DecodingException {
