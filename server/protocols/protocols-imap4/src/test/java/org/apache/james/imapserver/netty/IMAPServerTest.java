@@ -32,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Predicate;
@@ -76,6 +77,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -1014,8 +1016,10 @@ class IMAPServerTest {
 
             server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("+ Idling")))
-                .isNotNull();
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("+ Idling")))
+                .isNotNull());
         }
 
         @Test
@@ -1034,11 +1038,73 @@ class IMAPServerTest {
             readStringUntil(server, s -> s.contains("+ Idling"));
 
             server.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
-            assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
-                .isNotNull();
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
         }
 
         @Test
+        void idleShouldBeInterruptibleWhenBatched() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
+        }
+
+        @Test
+        void idleShouldResponsesShouldBeOrdered() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            // Assert continuation is sent before IDLE completion result
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                    .filteredOn(s -> s.contains("+ Idling"))
+                    .hasSize(1));
+        }
+
+        @Test
+        void idleShouldReturnUnderstandableErrorMessageWhenBadDone() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\nBAD\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
+                    .isNotNull());
+        }
+
+        // Repeated run to detect more reliably data races
+        @RepeatedTest(50)
         void idleShouldReturnUpdates() throws Exception {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, port));
@@ -1055,8 +1121,9 @@ class IMAPServerTest {
 
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
 
-            assertThat(readStringUntil(server, s -> s.contains("* 1 EXISTS")))
-                .isNotNull();
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(server, s -> s.contains("* 1 EXISTS")))
+                .isNotNull());
         }
     }
 
