@@ -387,7 +387,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             sessionMailbox = session.getSelected();
             
         } else {
-            // TODO: Check if we need to handle CONDSTORE there too 
             sessionMailbox = currentMailbox;
         }
         final MailboxMetaData metaData = mailbox.getMetaData(!openReadOnly, mailboxSession, MailboxMetaData.FetchGroup.FIRST_UNSEEN);
