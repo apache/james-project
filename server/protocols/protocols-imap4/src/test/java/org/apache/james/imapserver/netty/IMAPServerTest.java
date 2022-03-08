@@ -57,7 +57,6 @@ import javax.mail.search.SubjectTerm;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -1328,9 +1327,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 Known sequence sets are buggy and never restrict vanished replies." +
-            "Known sequence sets are a way to restrict the scope of vanished responses for servers " +
-            "not storing deletion sequences.")
         @Test
         void knownUidSetShouldBeUsedToRestrictVanishedResponses() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
@@ -1366,9 +1362,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 Known sequence sets are buggy and never restrict vanished replies." +
-            "Known sequence sets are a way to restrict the scope of vanished responses for servers " +
-            "not storing deletion sequences.")
         @Test
         void knownUidSetShouldTorelateDeletedMessages() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
