@@ -20,8 +20,10 @@
 package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
@@ -278,20 +280,27 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             .reduce((t3_1, t3_2) -> t3_2)
             .orElse(MessageUid.MIN_VALUE);
 
-        // Ok now its time to filter out the IdRanges which we are not interested in
-        List<UidRange> filteredUidSet = new ArrayList<>();
-        for (UidRange r : uidSet) {
-            if (r.getLowVal().compareTo(firstKnownUid) < 0) {
-                if (r.getHighVal().compareTo(firstKnownUid) > 0) {
-                    filteredUidSet.add(new UidRange(firstKnownUid, r.getHighVal()));
-                }
-            } else {
-                filteredUidSet.add(r);
-            }
-        }
-        return filteredUidSet.toArray(UidRange[]::new);
+        return filter(uidSet, firstKnownUid);
     }
 
+    private UidRange[] filter(UidRange[] uidSet, MessageUid lowerBound) {
+        return Arrays.stream(uidSet)
+            .flatMap(range -> filter(range, lowerBound))
+            .collect(ImmutableList.toImmutableList())
+            .toArray(UidRange[]::new);
+    }
+
+    private Stream<UidRange> filter(UidRange range, MessageUid lowerBound) {
+        if (range.getLowVal().compareTo(lowerBound) < 0) {
+            if (range.getHighVal().compareTo(lowerBound) > 0) {
+                return Stream.of(new UidRange(lowerBound, range.getHighVal()));
+            } else {
+                return Stream.empty();
+            }
+        } else {
+            return Stream.of(range);
+        }
+    }
 
     private void highestModSeq(Responder responder, MailboxMetaData metaData) {
         final StatusResponse untaggedOk;
