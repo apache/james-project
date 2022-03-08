@@ -17,7 +17,10 @@
                 <encoder>
                         <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
                 </encoder>
-                <immediateFlush>true</immediateFlush>
+                <immediateFlush>false</immediateFlush>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                        <level>ERROR</level>
+                </filter>
         </appender>
 
         <root level="WARN">
