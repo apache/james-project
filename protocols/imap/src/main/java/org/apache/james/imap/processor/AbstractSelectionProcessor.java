@@ -238,9 +238,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             }
         }
 
-        // TODO: Reconsider if we can do something to make the handling better. Maybe at least cache the triplets for the expunged
-        //       while have the server running. This could maybe allow us to not return every expunged message all the time
-        //
         //      As we don't store the <<MSN, UID>, <MODSEQ>> in a permanent way its the best to just ignore it here.
         //
         //      From RFC5162 4.1. Server Implementations That Don't Store Extra State
