@@ -63,6 +63,7 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -1574,7 +1575,83 @@ class IMAPServerTest {
             server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 5:11,28:36 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:11,32"))
+                .hasSize(1);
+        }
+
+        @Disabled("JAMES-3722 Known sequence sets are buggy and never restrict vanished replies." +
+            "Known sequence sets are a way to restrict the scope of vanished responses for servers " +
+            "not storing deletion sequences.")
+        @Test
+        void knownUidSetShouldBeUsedToRestrictVanishedResponses() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            // MSN 1 => UID 2 MATCH
+            // MSN 13 => UID 17 MATCH
+            // MSN 28 => UID 30 MISMATCH stored value is 34
+            // Thus we know we can skip resynchronisation for UIDs up to 17
+            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,30)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
+                .hasSize(1);
+        }
+
+        @Disabled("JAMES-3722 Known sequence sets are buggy and never restrict vanished replies." +
+            "Known sequence sets are a way to restrict the scope of vanished responses for servers " +
+            "not storing deletion sequences.")
+        @Test
+        void knownUidSetShouldTorelateDeletedMessages() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            // MSN 1 => UID 2 MATCH
+            // MSN 13 => UID 17 MATCH
+            // MSN 28 => UID 32 MISMATCH stored value is 34 (32 not being stored)
+            // Thus we know we can skip resynchronisation for UIDs up to 17
+            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,32)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
                 .hasSize(1);
         }
 
