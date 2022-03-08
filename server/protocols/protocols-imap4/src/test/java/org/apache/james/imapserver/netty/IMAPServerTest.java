@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import javax.mail.FetchProfile;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Session;
@@ -56,7 +57,6 @@ import javax.mail.search.SubjectTerm;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -72,6 +72,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
@@ -1203,6 +1204,7 @@ class IMAPServerTest {
 
             clientConnection = SocketChannel.open();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            setUpTestingData();
         }
 
         @AfterEach
@@ -1212,15 +1214,6 @@ class IMAPServerTest {
 
         @Test
         void selectShouldNotAnswerEmptyVanishedResponses() throws Exception {
-            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
-            IntStream.range(0, 37)
-                .forEach(Throwing.intConsumer(i -> memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder()
-                        .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
-
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
@@ -1235,8 +1228,7 @@ class IMAPServerTest {
             server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            readBytes(server);
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
             server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d 88 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
@@ -1246,17 +1238,7 @@ class IMAPServerTest {
 
         @Test
         void selectShouldReturnDeletedMessagesWhenNoSubsequentModification() throws Exception {
-            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
-            IntStream.range(0, 37)
-                .forEach(Throwing.intConsumer(i -> memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder()
-                        .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
-
-            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+            inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
@@ -1276,12 +1258,250 @@ class IMAPServerTest {
             server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            readBytes(server);
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
             server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
+        }
+
+        @Test
+        void selectShouldCombineIntoRangesWhenRespondingVanished() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
+                    MessageUid.of(25), MessageUid.of(26),
+                    MessageUid.of(32)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
+                .hasSize(1);
+        }
+
+        private void setUpTestingData() {
+            IntStream.range(0, 37)
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+        }
+
+        @Test
+        void fetchShouldAllowChangedSinceModifier() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+                .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 10)"))
+                .hasSize(1);
+        }
+
+        @Test
+        void fetchShouldNotReturnChangedItemsOutOfRange() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            inbox.setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+                .filteredOn(s -> s.contains("FLAGS")) // No FLAGS FETCH responses
+                .hasSize(1);
+        }
+
+        @Disabled("JAMES-3722 IMAP stack failed to parse FETCH command with two modifiers and thus do" +
+            "not conform to the example of the RFC-5162")
+        @Test
+        void fetchShouldSupportVanishedModifiedWithEarlierTag() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 14"))
+                .hasSize(1);
+        }
+
+        @Test
+        void unsolicitedNotificationsShouldBeSent() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+
+            inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+            server.write(ByteBuffer.wrap(String.format("I00104 NOOP\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK NOOP completed.")))
+                .filteredOn(s -> s.contains("* VANISHED 14"))
+                .hasSize(1);
+        }
+
+        @Test
+        void expungeShouldReturnVanishedWhenQResyncIsActive() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+
+            server.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+                .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+                .hasSize(1);
+        }
+
+        @Test
+        void uidExpungeShouldReturnExpungededWhenQResyncIsActive() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+
+            server.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+                .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+                .hasSize(1);
+        }
+
+        @Disabled("JAMES-3722 Closed notifications were never sent upon implicit selected mailbox changes")
+        @Test
+        void implicitMailboxSelectionChangesShouldReturnClosedNotifications() throws Exception {
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 SELECT other\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("a3 OK [READ-WRITE] SELECT completed.")))
+                .filteredOn(s -> s.contains("* OK [CLOSED]"))
                 .hasSize(1);
         }
     }
