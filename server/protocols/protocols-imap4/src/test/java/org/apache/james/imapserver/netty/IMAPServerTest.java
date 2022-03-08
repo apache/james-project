@@ -1517,11 +1517,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 SELECT + QRESYNC did not comply with formal syntax: sequence match data can theorically" +
-            "be specified without known uids. CF:" +
-            "   select-param        =  \"QRESYNC\" SP \"(\" uidvalidity SP" +
-            "           mod-sequence-value [SP known-uids]" +
-            "           [SP seq-match-data]")
         @Test
         void selectShouldReturnDeletedMessagesWhenSequenceMatchDataAndNoKnownUid() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
