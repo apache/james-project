@@ -1731,7 +1731,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 Closed notifications were never sent upon implicit selected mailbox changes")
         @Test
         void implicitMailboxSelectionChangesShouldReturnClosedNotifications() throws Exception {
             memoryIntegrationResources.getMailboxManager()

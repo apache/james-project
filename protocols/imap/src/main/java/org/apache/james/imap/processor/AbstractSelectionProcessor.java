@@ -116,7 +116,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             return;
         }
 
-        final MailboxMetaData metaData = selectMailbox(fullMailboxPath, session);
+        final MailboxMetaData metaData = selectMailbox(fullMailboxPath, session, responder);
         final SelectedMailbox selected = session.getSelected();
         MessageUid firstUnseen = metaData.getFirstUnseen();
         
@@ -136,7 +136,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
                 break;
             }
-            firstUnseen = selectMailbox(fullMailboxPath, session).getFirstUnseen();
+            firstUnseen = selectMailbox(fullMailboxPath, session, responder).getFirstUnseen();
             retryCount++;
             
         }
@@ -384,7 +384,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(existsResponse);
     }
 
-    private MailboxMetaData selectMailbox(MailboxPath mailboxPath, ImapSession session) throws MailboxException {
+    private MailboxMetaData selectMailbox(MailboxPath mailboxPath, ImapSession session, Responder responder) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
@@ -398,8 +398,9 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             // Response with the CLOSE return-code when the currently selected mailbox is closed implicitly using the SELECT/EXAMINE command on another mailbox
             //
             // See rfc5162 3.7. CLOSED Response Code
-            if (currentMailbox != null) {
-                getStatusResponseFactory().untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed());
+            if (currentMailbox != null && EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
+                responder.respond(getStatusResponseFactory()
+                    .untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed()));
             }
             session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox));
 
