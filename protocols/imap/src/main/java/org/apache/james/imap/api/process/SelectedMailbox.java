@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -41,6 +42,10 @@ public interface SelectedMailbox {
      * Deselect the Mailbox
      */
     void deselect();
+
+    void registerIdle(EventListener idle);
+
+    void unregisterIdle();
 
     /**
      * Return the msg index of the given uid or {@link NullableMessageSequenceNumber#noMessage()} instance if no
