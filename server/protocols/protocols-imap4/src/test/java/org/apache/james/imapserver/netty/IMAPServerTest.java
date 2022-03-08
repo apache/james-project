@@ -39,9 +39,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
-import java.util.List;
-import java.util.Properties;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import javax.mail.FetchProfile;
@@ -92,6 +89,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -1737,6 +1735,44 @@ class IMAPServerTest {
             assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
                 .hasSize(1);
+        }
+
+        @Test
+        void enableQRESYNCShouldReturnHighestModseq() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+                .getHighestModSeq();
+
+            UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
+
+            inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
+                    MessageUid.of(25), MessageUid.of(26),
+                    MessageUid.of(32)), mailboxSession);
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap("I00104 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a2 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            List<String> replies = readStringUntil(server, s -> s.contains("a2 OK ENABLE completed."));
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(replies)
+                    .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 41] Highest"))
+                    .hasSize(1);
+                softly.assertThat(replies)
+                    .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
+                    .hasSize(1);
+            });
         }
 
         private void setUpTestingData() {
