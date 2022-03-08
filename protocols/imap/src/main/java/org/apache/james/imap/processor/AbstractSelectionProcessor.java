@@ -21,7 +21,9 @@ package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -61,6 +63,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+
+import io.vavr.Tuple;
 
 abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<R> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
@@ -259,63 +263,33 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
     @VisibleForTesting
     UidRange[] recomputeUidSet(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
-        // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
-        List<MessageUid> knownUidsList = new ArrayList<>();
-        for (UidRange range : knownUids) {
-            for (MessageUid uid : range) {
-                knownUidsList.add(uid);
+        int size = Math.min(knownSequences.length, knownUids.length);
+        MessageUid firstKnownUid = IntStream.range(0, size)
+            .mapToObj(i -> Pair.of(knownSequences[i], knownUids[i]))
+            // We are guarantied of the ranges being individual items
+            .map(pair -> Pair.of(pair.getLeft().getLowVal(), pair.getRight().getLowVal()))
+            // T3(MSN, UID, MATCH)
+            .map(pair -> Tuple.of(pair.getLeft(), pair.getRight(),
+                selected.uid(pair.getLeft().intValue())
+                    .filter(selectedUid -> selectedUid.equals(pair.getRight()))
+                    .isPresent()))
+            .takeWhile(t3 -> t3._3)
+            .map(t3 -> t3._2)
+            .reduce((t3_1, t3_2) -> t3_2)
+            .orElse(MessageUid.MIN_VALUE);
+
+        // Ok now its time to filter out the IdRanges which we are not interested in
+        List<UidRange> filteredUidSet = new ArrayList<>();
+        for (UidRange r : uidSet) {
+            if (r.getLowVal().compareTo(firstKnownUid) < 0) {
+                if (r.getHighVal().compareTo(firstKnownUid) > 0) {
+                    filteredUidSet.add(new UidRange(firstKnownUid, r.getHighVal()));
+                }
+            } else {
+                filteredUidSet.add(r);
             }
         }
-
-        // loop over the known sequences and check the UID for MSN X again the known UID X
-        MessageUid firstUid = MessageUid.MIN_VALUE;
-        int index = 0;
-        for (IdRange knownSequence : knownSequences) {
-            boolean done = false;
-            for (Long msn : knownSequence) {
-
-                // Check if we have uids left to check against
-                if (knownUidsList.size() > index) {
-                    int msnAsInt = msn.intValue();
-                    MessageUid knownUid = knownUidsList.get(index);
-
-                    // Check if the uid match if not we are done here
-                    done = selected.uid(msnAsInt)
-                        .filter(selectedUid -> selectedUid.equals(knownUid))
-                        .isPresent();
-                    if (done) {
-                        break;
-                    } else {
-                        firstUid = knownUid;
-                    }
-                    index += 1;
-                } else {
-                    done = true;
-                    break;
-                }
-            }
-
-            // We found the first uid to start with
-            if (done) {
-                firstUid = firstUid.next();
-
-                // Ok now its time to filter out the IdRanges which we are not interested in
-                List<UidRange> filteredUidSet = new ArrayList<>();
-                for (UidRange r : uidSet) {
-                    if (r.getLowVal().compareTo(firstUid) < 0) {
-                        if (r.getHighVal().compareTo(firstUid) > 0) {
-                            filteredUidSet.add(new UidRange(firstUid, r.getHighVal()));
-                        }
-                    } else {
-                        filteredUidSet.add(r);
-                    }
-                }
-                uidSet = filteredUidSet.toArray(UidRange[]::new);
-
-                break;
-            }
-        }
-        return uidSet;
+        return filteredUidSet.toArray(UidRange[]::new);
     }
 
 
