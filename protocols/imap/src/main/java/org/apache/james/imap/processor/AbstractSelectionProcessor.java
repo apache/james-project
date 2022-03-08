@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -63,6 +64,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -168,23 +170,15 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 //  The server sends the client any pending flag changes (using FETCH
                 //  responses that MUST contain UIDs) and expunges those that have
                 //  occurred in this mailbox since the provided modification sequence.
-                UidRange[] uidSet = request.getUidSet();
 
-                if (uidSet == null) {
-                    // See mailbox had some messages stored before, if not we don't need to query at all
-                    MessageUid uidNext = metaData.getUidNext();
-                    if (!uidNext.isFirst()) {
-                        // Use UIDNEXT -1 as max uid as stated in the QRESYNC RFC
-                        uidSet = new UidRange[] {new UidRange(MessageUid.MIN_VALUE, uidNext.previous())};
-                    }
-                }
-                
-                if (uidSet != null) {
-                    respondVanished(session, responder, knownSequences, knownUids, selected, uidSet);
-                }
+                uidSet(request, metaData)
+                    .ifPresent(Throwing.<UidRange[]>consumer(
+                        uidSet -> respondVanished(session, responder, knownSequences, knownUids, selected, uidSet))
+                        .sneakyThrow());
+
                 taggedOk(responder, request, metaData, HumanReadableText.SELECT);
             } else {
-                
+
                 taggedOk(responder, request, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
             }
         } else {
@@ -194,6 +188,19 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         // Reset the saved sequence-set after successful SELECT / EXAMINE
         // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
         SearchResUtil.resetSavedSequenceSet(session);
+    }
+
+    private Optional<UidRange[]> uidSet(AbstractMailboxSelectionRequest request, MailboxMetaData metaData) {
+        return Optional.ofNullable(request.getUidSet())
+            .or(() -> {
+                // See mailbox had some messages stored before, if not we don't need to query at all
+                MessageUid uidNext = metaData.getUidNext();
+                if (!uidNext.isFirst()) {
+                    // Use UIDNEXT -1 as max uid as stated in the QRESYNC RFC
+                    return Optional.of(new UidRange[] {new UidRange(MessageUid.MIN_VALUE, uidNext.previous())});
+                }
+                return Optional.empty();
+            });
     }
 
     private void respondVanished(ImapSession session, Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) throws MailboxException {
@@ -342,8 +349,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             });
         }
         return true;
-
-
     }
 
     private void uidValidity(Responder responder, MailboxMetaData metaData) {
@@ -393,7 +398,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         addRecent(metaData, sessionMailbox);
         return metaData;
     }
-
 
     private void addRecent(MailboxMetaData metaData, SelectedMailbox sessionMailbox) {
         final List<MessageUid> recentUids = metaData.getRecent();
