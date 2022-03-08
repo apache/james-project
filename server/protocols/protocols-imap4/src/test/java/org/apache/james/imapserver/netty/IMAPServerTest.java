@@ -20,6 +20,7 @@
 package org.apache.james.imapserver.netty;
 
 import static javax.mail.Folder.READ_WRITE;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,8 +28,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -81,6 +87,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import com.google.common.collect.ImmutableList;
 import com.sun.mail.imap.IMAPFolder;
 
 import nl.altindag.ssl.exception.GenericKeyStoreException;
@@ -968,6 +975,108 @@ class IMAPServerTest {
 
             folder.close(false);
             store.close();
+        }
+    }
+
+    @Nested
+    class Idle {
+        IMAPServer imapServer;
+        private int port;
+        private MailboxSession mailboxSession;
+        private MessageManager inbox;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+            mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void idleShouldSendInitialContinuation() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(server, s -> s.contains("+ Idling")))
+                .isNotNull();
+        }
+
+        @Test
+        void idleShouldBeInterruptible() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("+ Idling"));
+
+            server.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
+            assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                .isNotNull();
+        }
+
+        @Test
+        void idleShouldReturnUpdates() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(server, s -> s.contains("+ Idling"));
+
+            inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
+
+            assertThat(readStringUntil(server, s -> s.contains("* 1 EXISTS")))
+                .isNotNull();
+        }
+    }
+
+    private byte[] readBytes(SocketChannel channel) throws IOException {
+        ByteBuffer line = ByteBuffer.allocate(1024);
+        channel.read(line);
+        line.rewind();
+        byte[] bline = new byte[line.remaining()];
+        line.get(bline);
+        return bline;
+    }
+
+    private List<String> readStringUntil(SocketChannel channel, Predicate<String> condition) throws IOException {
+        ImmutableList.Builder<String> result = ImmutableList.builder();
+        while (true) {
+            String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
+            result.add(line);
+            if (condition.test(line)) {
+                return result.build();
+            }
         }
     }
 }
