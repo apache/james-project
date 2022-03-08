@@ -75,6 +75,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
 
     private static final Void VOID = null;
+    private static final Flag UNINTERESTING_FLAGS = Flag.RECENT;
 
     @VisibleForTesting
     static class ApplicableFlags {
@@ -126,7 +127,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private final UidMsnConverter uidMsnConverter;
     private final Set<MessageUid> recentUids = new TreeSet<>();
     private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
-    private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final Object applicableFlagsLock = new Object();
 
@@ -263,16 +263,12 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         final Iterator<Flags.Flag> it = updated.modifiedSystemFlags().iterator();
         if (it.hasNext()) {
             final Flags.Flag flag = it.next();
-            if (flag.equals(uninterestingFlag)) {
-                result = false;
-            } else {
-                result = true;
-            }
+            result = !flag.equals(UNINTERESTING_FLAGS);
         } else {
             result = false;
         }
         // See if we need to check the user flags
-        if (result == false) {
+        if (!result) {
             final Iterator<String> userIt = updated.userFlagIterator();
             result = userIt.hasNext();
         }
