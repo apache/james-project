@@ -83,7 +83,7 @@ public class DefaultProcessorChain {
         AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory, metricFactory);
         StoreProcessor storeProcessor = new StoreProcessor(appendProcessor, mailboxManager, statusResponseFactory, metricFactory);
         NoopProcessor noopProcessor = new NoopProcessor(storeProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
+        IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, metricFactory);
         StatusProcessor statusProcessor = new StatusProcessor(idleProcessor, mailboxManager, statusResponseFactory, metricFactory);
         LSubProcessor lsubProcessor = new LSubProcessor(statusProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
         XListProcessor xlistProcessor = new XListProcessor(lsubProcessor, mailboxManager, statusResponseFactory, mailboxTyper, metricFactory);

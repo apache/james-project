@@ -31,9 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.events.Event;
-import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
-import org.apache.james.events.Registration;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -49,31 +47,29 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
-import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
+
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private static final String DONE = "DONE";
 
-    private final EventBus eventBus;
     private TimeUnit heartbeatIntervalUnit;
     private long heartbeatInterval;
     private boolean enableIdle;
     private ScheduledExecutorService heartbeatExecutor;
 
-    public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+    public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+                         MetricFactory metricFactory) {
         super(IdleRequest.class, next, mailboxManager, factory, metricFactory);
-        this.eventBus = eventBus;
     }
 
     @Override
@@ -92,13 +88,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     @Override
     protected void processRequest(IdleRequest request, ImapSession session, Responder responder) {
         SelectedMailbox sm = session.getSelected();
-        Registration registration;
         if (sm != null) {
-            registration = Mono.from(eventBus.register(new IdleMailboxListener(session, responder), new MailboxIdRegistrationKey(sm.getMailboxId())))
-                .subscribeOn(Schedulers.elastic())
-                .block();
-        } else {
-            registration = null;
+            sm.registerIdle(new IdleMailboxListener(session, responder));
         }
 
         final AtomicBoolean idleActive = new AtomicBoolean(true);
@@ -111,16 +102,20 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 line = "";
             }
 
-            if (registration != null) {
-                registration.unregister();
+            if (sm != null) {
+                sm.unregisterIdle();
             }
             session1.popLineHandler();
             if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                StatusResponse response = getStatusResponseFactory().taggedBad(request.getTag(), request.getCommand(), HumanReadableText.INVALID_COMMAND);
+                String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
+                StatusResponse response = getStatusResponseFactory()
+                    .taggedBad(request.getTag(), request.getCommand(),
+                        new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
+                            "failed. " + message));
+                LOGGER.info(message);
                 responder.respond(response);
             } else {
                 okComplete(request, responder);
-
             }
             idleActive.set(false);
         });

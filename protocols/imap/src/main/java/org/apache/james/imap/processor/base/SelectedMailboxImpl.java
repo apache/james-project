@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -61,6 +62,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -129,7 +131,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final Object applicableFlagsLock = new Object();
-
+    private final AtomicReference<EventListener> idleEventListener = new AtomicReference<>();
     private boolean recentUidRemoved = false;
     private boolean isDeletedByOtherSession = false;
     private boolean sizeChanged = false;
@@ -161,6 +163,16 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
             .collect(ImmutableList.toImmutableList())
             .block();
         uidMsnConverter.addAll(uids);
+    }
+
+    @Override
+    public void registerIdle(EventListener idle) {
+        idleEventListener.set(idle);
+    }
+
+    @Override
+    public void unregisterIdle() {
+        idleEventListener.set(null);
     }
 
     @Override
@@ -372,8 +384,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     
     @Override
-    public synchronized void event(Event event) {
+    public void event(Event event) {
+        eventSynchronized(event);
+        Optional.ofNullable(idleEventListener.get())
+            .ifPresent(Throwing.<EventListener>consumer(listener -> listener.event(event)).sneakyThrow());
+    }
 
+    private synchronized void eventSynchronized(Event event) {
         if (event instanceof MailboxEvent) {
             MailboxEvent mailboxEvent = (MailboxEvent) event;
             mailboxEvent(mailboxEvent);
