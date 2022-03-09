@@ -144,8 +144,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
                 .build();
         enQueue(mail);
 
-        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
-        mailQueueItem.done(true);
+        Flux.from(getManageableMailQueue().deQueue())
+                .doOnNext(Throwing.consumer(item -> item.done(true)))
+                .blockFirst();
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
