@@ -52,7 +52,7 @@ public class JamesDataCmdHandler extends DataCmdHandler {
     @Override
     protected SMTPResponse doDATA(SMTPSession session, String argument) {
         try {
-            MimeMessageInputStreamSource mmiss = new MimeMessageInputStreamSource(MailImpl.getId());
+            MimeMessageInputStreamSource mmiss = MimeMessageInputStreamSource.create(MailImpl.getId());
             session.setAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, mmiss, State.Transaction);
         } catch (Exception e) {
             LOGGER.warn("Error creating mimemessagesource for incoming data", e);

@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.io.output.ThresholdingOutputStream;
+import org.apache.james.lifecycle.api.Disposable;
 
 /**
  * An almost copy of {@link DeferredFileOutputStream} with buffered file stream.
@@ -46,7 +47,7 @@ import org.apache.commons.io.output.ThresholdingOutputStream;
   *
   * @link https://issues.apache.org/jira/browse/JAMES-2343
  */
-public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
+public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream implements Disposable {
 
     /**
      * The output stream to which data will be written prior to the theshold
@@ -260,5 +261,11 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
                 IOUtils.closeQuietly(fis);
             }
         }
+    }
+
+    @Override
+    public void dispose() {
+        // Fasten GC of the big byte array
+        memoryOutputStream = null;
     }
 }
