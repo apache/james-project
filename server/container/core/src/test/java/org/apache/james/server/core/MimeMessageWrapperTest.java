@@ -92,7 +92,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Override
     protected TestableMimeMessageWrapper getMessageFromSources(String sources) throws Exception {
-        MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
+        MimeMessageInputStreamSource mmis = MimeMessageInputStreamSource.create("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new TestableMimeMessageWrapper(mmis);
     }
 
@@ -348,7 +348,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void getMessageSizeShouldBeAccurateWhenHeadersAreModified() throws Exception {
-        MimeMessageWrapper wrapper = new MimeMessageWrapper(new MimeMessageInputStreamSource(MailImpl.getId(),
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(MimeMessageInputStreamSource.create(MailImpl.getId(),
             ClassLoaderUtils.getSystemResourceAsSharedStream("JAMES-1593.eml")));
         wrapper.setHeader("header", "vss");
 
@@ -358,7 +358,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void getMessageSizeShouldBeAccurateWhenHeadersAreModifiedAndOtherEncoding() throws Exception {
-        MimeMessageWrapper wrapper = new MimeMessageWrapper(new MimeMessageInputStreamSource(MailImpl.getId(),
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(MimeMessageInputStreamSource.create(MailImpl.getId(),
             ClassLoaderUtils.getSystemResourceAsSharedStream("mail-containing-unicode-characters.eml")));
         wrapper.setHeader("header", "vss");
 
