@@ -130,7 +130,7 @@ public class MimeMessageStore {
         return new Factory(blobStore);
     }
 
-    private static class MimeMessageBytesSource extends MimeMessageSource implements Disposable {
+    private static class MimeMessageBytesSource implements MimeMessageSource, Disposable {
         private final CloseableByteSource headers;
         private final CloseableByteSource body;
         private final String sourceId;

@@ -39,7 +39,7 @@ import org.apache.james.util.sql.JDBCUtil;
  * InputStream to the JDBC field/record, possibly sequenced with the file
  * stream.
  */
-public class MimeMessageJDBCSource extends MimeMessageSource {
+public class MimeMessageJDBCSource implements MimeMessageSource {
 
     /**
      * Whether 'deep debugging' is turned on.
@@ -186,7 +186,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
             // There was no SQL statement for this repository... figure it out
             // the hard way
             System.err.println("no SQL statement to find size");
-            return size = super.getMessageSize();
+            return size = MimeMessageSource.super.getMessageSize();
         }
         Connection conn = null;
         PreparedStatement retrieveMessageSize = null;

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * payload of an {@link ObjectMessage}. Its important that the payload is a byte
  * array otherwise it will throw an {@link ClassCastException}
  */
-public class MimeMessageObjectMessageSource extends MimeMessageSource implements Disposable {
+public class MimeMessageObjectMessageSource implements MimeMessageSource, Disposable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MimeMessageObjectMessageSource.class);
 

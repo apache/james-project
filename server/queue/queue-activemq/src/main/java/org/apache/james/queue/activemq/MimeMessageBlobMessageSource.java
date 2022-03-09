@@ -29,7 +29,7 @@ import org.apache.james.server.core.MimeMessageSource;
 /**
  *
  */
-public class MimeMessageBlobMessageSource extends MimeMessageSource implements ActiveMQSupport {
+public class MimeMessageBlobMessageSource implements MimeMessageSource, ActiveMQSupport {
 
     private final String sourceId;
     private final BlobMessage message;
@@ -61,7 +61,7 @@ public class MimeMessageBlobMessageSource extends MimeMessageSource implements A
             // if the size is < 1 we seems to not had it stored in the property, so
             // fallback to super implementation
             if (size == -1) {
-                super.getMessageSize();
+                MimeMessageSource.super.getMessageSize();
             }
             return size;
         } catch (JMSException e) {

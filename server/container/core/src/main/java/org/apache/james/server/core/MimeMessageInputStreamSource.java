@@ -44,7 +44,7 @@ import org.apache.james.util.SizeFormat;
  *
  * This class is not thread safe!
  */
-public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
+public class MimeMessageInputStreamSource extends Disposable.LeakAware implements MimeMessageSource, Disposable {
     /**
      * 100kb threshold for the stream.
      */
@@ -191,6 +191,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
             }
             out = null;
         }
+        disposed();
     }
 
 }
