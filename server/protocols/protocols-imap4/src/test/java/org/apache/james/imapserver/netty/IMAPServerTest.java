@@ -986,6 +986,7 @@ class IMAPServerTest {
         private int port;
         private MailboxSession mailboxSession;
         private MessageManager inbox;
+        private SocketChannel clientConnection;
 
         @BeforeEach
         void beforeEach() throws Exception {
@@ -995,134 +996,115 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
         }
 
         @AfterEach
-        void tearDown() {
+        void tearDown() throws Exception {
             imapServer.destroy();
+            clientConnection.close();
         }
 
         @Test
         void idleShouldSendInitialContinuation() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
-
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
 
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("+ Idling")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
                 .isNotNull());
         }
 
         @Test
         void idleShouldBeInterruptible() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
 
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("+ Idling"));
-
-            server.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
                     .isNotNull());
         }
 
         @Test
         void idleShouldBeInterruptibleWhenBatched() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
-
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
                     .isNotNull());
         }
 
         @Test
         void idleShouldResponsesShouldBeOrdered() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
-
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             // Assert continuation is sent before IDLE completion result
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("a3 OK IDLE completed.")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
                     .filteredOn(s -> s.contains("+ Idling"))
                     .hasSize(1));
         }
 
         @Test
         void idleShouldReturnUnderstandableErrorMessageWhenBadDone() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
-
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\nBAD\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nBAD\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
                     .isNotNull());
         }
 
         // Repeated run to detect more reliably data races
         @RepeatedTest(50)
         void idleShouldReturnUpdates() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
-
-            server.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("+ Idling"));
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
 
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(readStringUntil(server, s -> s.contains("* 1 EXISTS")))
+                assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
                 .isNotNull());
         }
     }
