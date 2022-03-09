@@ -44,8 +44,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -62,11 +62,16 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final int inMemorySizeLimit;
     private final int literalSizeLimit;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
+    private final EventExecutorGroup eventExecutors;
+    private int maxFrameLength;
 
-    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit) {
+    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, EventExecutorGroup eventExecutors,
+                                   int maxFrameLength) {
         this.decoder = decoder;
         this.inMemorySizeLimit = inMemorySizeLimit;
         this.literalSizeLimit = literalSizeLimit;
+        this.eventExecutors = eventExecutors;
+        this.maxFrameLength = maxFrameLength;
     }
 
     @Override
@@ -180,7 +185,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     reader.consumeLine();
                 }
                 
-                ((SwitchableLineBasedFrameDecoder) ctx.channel().pipeline().get(FRAMER)).enableFraming();
+                enableFraming(ctx);
                 
                 attachment.clear();
                 out.add(message);
@@ -190,15 +195,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 int neededData = e.getNeededSize();
                 // store the needed data size for later usage
                 attachment.put(NEEDED_DATA, neededData);
-                
-                final ChannelPipeline pipeline = ctx.channel().pipeline();
-                final ChannelHandlerContext framerContext = pipeline.context(FRAMER);
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
-                final SwitchableLineBasedFrameDecoder framer = (SwitchableLineBasedFrameDecoder) pipeline.get(FRAMER);
-
+                disableFraming(ctx);
+                if (in.readableBytes() > 0) {
+                    ByteBuf spareBytes = in.retainedDuplicate();
+                    internalBuffer().clear();
+                    ctx.fireChannelRead(spareBytes);
+                }
                 in.resetReaderIndex();
-                framer.disableFraming(framerContext);
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
@@ -206,6 +211,22 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             if (ctx.channel().isActive()) {
                 ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
             }
+        }
+    }
+
+    public void disableFraming(ChannelHandlerContext ctx) {
+        ctx.channel().config().setAutoRead(false);
+        ctx.channel().eventLoop().execute(() -> ctx.channel().pipeline().remove(FRAMER));
+        ctx.channel().config().setAutoRead(true);
+    }
+
+    public void enableFraming(ChannelHandlerContext ctx) {
+        if (ctx.channel().pipeline().get(FRAMER) == null) {
+            ctx.channel().config().setAutoRead(false);
+            ctx.channel().eventLoop().execute(() ->
+                ctx.channel().pipeline().addBefore(eventExecutors, REQUEST_DECODER, FRAMER,
+                        new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false)));
+            ctx.channel().config().setAutoRead(true);
         }
     }
 
