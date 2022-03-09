@@ -25,7 +25,7 @@ import java.io.InputStream;
 import org.apache.james.repository.api.StreamRepository;
 import org.apache.james.server.core.MimeMessageSource;
 
-public class MimeMessageStreamRepositorySource extends MimeMessageSource {
+public class MimeMessageStreamRepositorySource implements MimeMessageSource {
 
     // Define how to get to the data
 
@@ -89,7 +89,7 @@ public class MimeMessageStreamRepositorySource extends MimeMessageSource {
             if (sr instanceof org.apache.james.repository.file.FilePersistentStreamRepository) {
                 size = ((org.apache.james.repository.file.FilePersistentStreamRepository) sr).getSize(key);
             } else {
-                size = super.getMessageSize();
+                size = MimeMessageSource.super.getMessageSize();
             }
         }
         return size;

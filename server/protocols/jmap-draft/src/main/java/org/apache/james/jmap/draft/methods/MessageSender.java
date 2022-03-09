@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class MessageSender {
-    public static class MessageMimeMessageSource extends MimeMessageSource {
+    public static class MessageMimeMessageSource implements MimeMessageSource {
         private final String id;
         private final MetaDataWithContent message;
 
