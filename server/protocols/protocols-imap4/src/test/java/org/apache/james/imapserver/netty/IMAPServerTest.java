@@ -1186,7 +1186,6 @@ class IMAPServerTest {
     @Nested
     class QResync {
         IMAPServer imapServer;
-        private int port;
         private MailboxSession mailboxSession;
         private MessageManager inbox;
         private SocketChannel clientConnection;
@@ -1194,7 +1193,7 @@ class IMAPServerTest {
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServer.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
+            int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
@@ -1203,11 +1202,16 @@ class IMAPServerTest {
             clientConnection = SocketChannel.open();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
             setUpTestingData();
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
         }
 
         @AfterEach
-        void tearDown() {
+        void tearDown() throws Exception {
             imapServer.destroy();
+            clientConnection.close();
         }
 
         @Test
@@ -1219,17 +1223,13 @@ class IMAPServerTest {
                 .getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMailboxEntity().getUidValidity();
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d 88 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d 88 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("VANISHED"))
                 .isEmpty();
         }
@@ -1249,17 +1249,13 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
                 .hasSize(1);
         }
@@ -1279,17 +1275,13 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
                 .hasSize(1);
         }
@@ -1310,17 +1302,13 @@ class IMAPServerTest {
                 MessageUid.of(25), MessageUid.of(26),
                 MessageUid.of(32)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 5:11,28:36 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 5:11,28:36 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:11,32"))
                 .hasSize(1);
         }
@@ -1341,21 +1329,17 @@ class IMAPServerTest {
                 MessageUid.of(25), MessageUid.of(26),
                 MessageUid.of(32)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
             // MSN 1 => UID 2 MATCH
             // MSN 13 => UID 17 MATCH
             // MSN 28 => UID 30 MISMATCH stored value is 34
             // Thus we know we can skip resynchronisation for UIDs up to 17
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,30)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,30)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
                 .hasSize(1);
         }
@@ -1376,21 +1360,17 @@ class IMAPServerTest {
                 MessageUid.of(25), MessageUid.of(26),
                 MessageUid.of(32)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
             // MSN 1 => UID 2 MATCH
             // MSN 13 => UID 17 MATCH
             // MSN 28 => UID 32 MISMATCH stored value is 34 (32 not being stored)
             // Thus we know we can skip resynchronisation for UIDs up to 17
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,32)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,32)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
                 .hasSize(1);
         }
@@ -1410,17 +1390,13 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
                 .hasSize(1);
         }
@@ -1440,17 +1416,13 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
                 .hasSize(1);
         }
@@ -1471,17 +1443,13 @@ class IMAPServerTest {
                     MessageUid.of(25), MessageUid.of(26),
                     MessageUid.of(32)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
-
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
                 .hasSize(1);
         }
@@ -1502,18 +1470,14 @@ class IMAPServerTest {
                     MessageUid.of(25), MessageUid.of(26),
                     MessageUid.of(32)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap("I00104 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap("I00104 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            server.write(ByteBuffer.wrap(("a2 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-
-            List<String> replies = readStringUntil(server, s -> s.contains("a2 OK ENABLE completed."));
+            List<String> replies = readStringUntil(clientConnection, s -> s.contains("a2 OK ENABLE completed."));
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(replies)
                     .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 41] Highest"))
@@ -1532,16 +1496,12 @@ class IMAPServerTest {
 
         @Test
         void fetchShouldAllowChangedSinceModifier() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
@@ -1549,34 +1509,30 @@ class IMAPServerTest {
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
                 .getHighestModSeq();
-            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
                 .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 10)"))
                 .hasSize(1);
         }
 
         @Test
         void fetchShouldNotReturnChangedItemsOutOfRange() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             inbox.setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
                 .getHighestModSeq();
-            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
                 .filteredOn(s -> s.contains("FLAGS")) // No FLAGS FETCH responses
                 .hasSize(1);
         }
@@ -1585,16 +1541,12 @@ class IMAPServerTest {
         void fetchShouldSupportVanishedModifiedWithEarlierTag() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
 
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
@@ -1604,25 +1556,21 @@ class IMAPServerTest {
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
                 .getHighestModSeq();
-            server.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK FETCH completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
                 .filteredOn(s -> s.contains("* VANISHED (EARLIER) 14"))
                 .hasSize(1);
         }
 
         @Test
         void unsolicitedNotificationsShouldBeSent() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
@@ -1634,25 +1582,21 @@ class IMAPServerTest {
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
                 .getHighestModSeq();
-            server.write(ByteBuffer.wrap(String.format("I00104 NOOP\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 NOOP\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK NOOP completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK NOOP completed.")))
                 .filteredOn(s -> s.contains("* VANISHED 14"))
                 .hasSize(1);
         }
 
         @Test
         void expungeShouldReturnVanishedWhenQResyncIsActive() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
@@ -1667,25 +1611,21 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
-            server.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
                 .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
                 .hasSize(1);
         }
 
         @Test
         void uidExpungeShouldReturnExpungededWhenQResyncIsActive() throws Exception {
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
-
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
@@ -1700,9 +1640,9 @@ class IMAPServerTest {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
-            server.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
                 .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
                 .hasSize(1);
         }
@@ -1711,20 +1651,17 @@ class IMAPServerTest {
         void implicitMailboxSelectionChangesShouldReturnClosedNotifications() throws Exception {
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a3 SELECT other\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 SELECT other\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("a3 OK [READ-WRITE] SELECT completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK [READ-WRITE] SELECT completed.")))
                 .filteredOn(s -> s.contains("* OK [CLOSED]"))
                 .hasSize(1);
         }
@@ -1734,21 +1671,18 @@ class IMAPServerTest {
             // See https://www.rfc-editor.org/errata_search.php?rfc=5162
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
-            SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, port));
-            readBytes(server);
 
-            server.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
-            readBytes(server);
-            server.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
 
-            server.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
-            readStringUntil(server, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
-            server.write(ByteBuffer.wrap(("a3 CLOSE\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap(("a3 CLOSE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            assertThat(readStringUntil(server, s -> s.contains("a3 OK CLOSE completed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK CLOSE completed.")))
                 .isNotNull();
         }
     }
