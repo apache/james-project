@@ -25,40 +25,14 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 
 public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChannelHandler {
     public static final String PATTERN = ImapConstants.STARTTLS_COMMAND.getName().toLowerCase();
 
-    private volatile boolean framingEnabled = true;
-
     public SwitchableLineBasedFrameDecoder(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter) {
         super(pipeline, maxFrameLength, stripDelimiter, PATTERN);
-    }
-
-    @Override
-    public synchronized void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (this.framingEnabled) {
-            super.channelRead(ctx, msg);
-        } else {
-            ctx.fireChannelRead(msg);
-        }
-    }
-
-    public synchronized void enableFraming() {
-        this.framingEnabled = true;
-    }
-
-    public synchronized void disableFraming(ChannelHandlerContext ctx) {
-        this.framingEnabled = false;
-
-        if (internalBuffer().readableBytes() > 0) {
-            ByteBuf spareBytes = internalBuffer().retainedDuplicate();
-            internalBuffer().clear();
-            ctx.fireChannelRead(spareBytes);
-        }
     }
 
     @Override

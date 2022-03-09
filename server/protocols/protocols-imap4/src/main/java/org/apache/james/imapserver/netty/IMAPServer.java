@@ -250,7 +250,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
                 pipeline.addLast(getExecutorGroup(), CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                pipeline.addLast(getExecutorGroup(), REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit, literalSizeLimit));
+                pipeline.addLast(getExecutorGroup(), REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
+                    literalSizeLimit, getExecutorGroup(), maxLineLength));
 
                 pipeline.addLast(getExecutorGroup(), CORE_HANDLER, createCoreHandler());
             }
