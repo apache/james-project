@@ -59,8 +59,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.sksamuel.pulsar4s.ConsumerMessage;
@@ -72,8 +70,6 @@ import scala.jdk.javaapi.OptionConverters;
 
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
-
-    public static Logger logger = LoggerFactory.getLogger("org.apache.james");
 
     PulsarMailQueue mailQueue;
 
@@ -143,12 +139,12 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @Test
     void badMessagesShouldNotAlterDelivery(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
         new JavaClient(pulsar.getConfiguration().brokerUri(),
-            String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
-            .send("BAD").get();
+                String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+                .send("BAD").get();
 
         getMailQueue().enQueue(defaultMail()
-            .name("name")
-            .build());
+                .name("name")
+                .build());
 
         MailQueue.MailQueueItem mail = Flux.from(getMailQueue().deQueue()).onErrorResume(e -> Mono.empty()).take(1).single().block();
         assertThat(mail.getMail().getName()).isEqualTo("name");
@@ -158,12 +154,12 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @Test
     void badMessagesShouldBeMovedToADeadLetterTopic(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
         new JavaClient(pulsar.getConfiguration().brokerUri(),
-            String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
-            .send("BAD").get();
+                String.format("persistent://%s/James-%s", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+                .send("BAD").get();
 
         getMailQueue().enQueue(defaultMail()
-            .name("name")
-            .build());
+                .name("name")
+                .build());
 
         try {
             Flux.from(getMailQueue().deQueue()).take(1).single().block();
@@ -171,9 +167,9 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
             // Expected to fail
         }
         Optional<String> deadletterMessage = OptionConverters.toJava(new JavaClient(pulsar.getConfiguration().brokerUri(),
-            String.format("persistent://%s/James-%s/dead-letter", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
-            .consumeOne())
-            .map(ConsumerMessage::value);
+                        String.format("persistent://%s/James-%s/dead-letter", pulsar.getConfiguration().namespace().asString(), mailQueueName.asString()))
+                        .consumeOne())
+                .map(ConsumerMessage::value);
         assertThat(deadletterMessage).contains("BAD");
     }
 
@@ -240,7 +236,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         assertThat(mailQueueItem.getMail().getName())
                 .isEqualTo(expectedName);
 
-        Awaitility.await().untilAsserted(() -> assertThatStoreIsEmpty());
+        Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
     @Test
@@ -264,7 +260,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
 
         MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         mailQueueItem.done(true);
-        Awaitility.await().untilAsserted(() -> assertThatStoreIsEmpty());
+        Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
     private void assertThatStoreIsEmpty() {
@@ -280,4 +276,23 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @Override
     public void flushShouldPreserveBrowseOrder() {
     }
+
+    @Test
+    public void browseShouldReturnEmptyWhenSingleDequeueMessageEvenWhenStoreIsGuaranteedEmpty() throws Exception {
+        enQueue(defaultMail()
+                .name("name")
+                .build());
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        mailQueueItem.done(true);
+
+        Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+
+        assertThat(items)
+                .toIterable()
+                .isEmpty();
+    }
+
 }

@@ -23,18 +23,17 @@ import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
-import akka.stream.{Attributes, OverflowStrategy}
-import akka.util.Timeout
-import akka.{Done, NotUsed}
-import com.sksamuel.pulsar4s._
-import com.sksamuel.pulsar4s.akka.streams
-import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
 import javax.mail.MessagingException
 import javax.mail.internet.MimeMessage
+
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
+import scala.jdk.DurationConverters._
+import scala.math.Ordered.orderingToOrdered
+
 import org.apache.james.backends.pulsar.{PulsarConfiguration, PulsarReader}
-import org.apache.james.blob.api.{BlobId, Store}
+import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.core.{MailAddress, MaybeSender}
 import org.apache.james.metrics.api.{GaugeRegistry, MetricFactory}
@@ -47,13 +46,17 @@ import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
 import org.reactivestreams.Publisher
-import play.api.libs.json._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future, Promise}
-import scala.jdk.CollectionConverters._
-import scala.jdk.DurationConverters._
-import scala.math.Ordered.orderingToOrdered
+import akka.actor.{ActorRef, ActorSystem}
+import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
+import akka.stream.{Attributes, OverflowStrategy}
+import akka.util.Timeout
+import akka.{Done, NotUsed}
+import com.sksamuel.pulsar4s._
+import com.sksamuel.pulsar4s.akka.streams
+import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
+
+import play.api.libs.json._
 
 private[pulsar] object serializers {
   implicit val headerFormat: Format[Header] = Json.format[Header]
@@ -257,6 +260,7 @@ class PulsarMailQueue(
           val partsId = metadata.partsId
           Source
             .fromPublisher(readMimeMessage(partsId))
+            .collect{ case Some(message) => message }
             .map(message => (readMail(metadata, message), partsId, committableMessage))
       }
   }
@@ -537,9 +541,9 @@ class PulsarMailQueue(
   /**
    * @inheritdoc
    */
-  override def browse(): ManageableMailQueue.MailQueueIterator = { //FIXME
-    val outTopicReader = PulsarReader.forTopic(outTopic)
-    val scheduledTopicReader = PulsarReader.forTopic(scheduledTopic)
+  override def browse(): ManageableMailQueue.MailQueueIterator = {
+    val outTopicReader = PulsarReader.forTopic(outTopic, lastMessage(outTopic).map(_.sequenceId))
+    val scheduledTopicReader = PulsarReader.forTopic(scheduledTopic, lastMessage(scheduledTopic).map(_.sequenceId))
 
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
 
@@ -561,6 +565,7 @@ class PulsarMailQueue(
           .bodyBlobId(blobIdFactory.from(metadata.bodyBlobId))
           .build()
         Source.fromPublisher(readMimeMessage(partsId))
+          .collect{ case Some(message) => message }
           .map(message => readMail(metadata, message))
       })
 
@@ -622,9 +627,11 @@ class PulsarMailQueue(
         throw new MailQueue.MailQueueException("Error while saving blob", e)
     }
 
-  private def readMimeMessage(partsId: MimeMessagePartsId): Publisher[MimeMessage] =
+  private def readMimeMessage(partsId: MimeMessagePartsId): Publisher[Option[MimeMessage]] =
     try {
       mimeMessageStore.read(partsId)
+        .map[Option[MimeMessage]](Some(_))
+        .onErrorReturn(classOf[ObjectNotFoundException], None)
     } catch {
       case e: MessagingException =>
         throw new MailQueue.MailQueueException("Error while reading blob", e)
