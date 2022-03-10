@@ -52,13 +52,9 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
         UidRange[] uidSet = null;
         UidRange[] knownUidSet = null;
         IdRange[] knownSequenceSet = null;
-        
-        char c = Character.UNASSIGNED;
-        try {
-            c = request.nextWordChar();
-        } catch (DecodingException e) {
-            // This is expected if the request has no options like CONDSTORE and QRESYNC
-        }
+
+        char c = request.nextWordCharLenient()
+            .orElse((char) Character.UNASSIGNED);
         
         // Ok an option was found
         if (c == '(') {

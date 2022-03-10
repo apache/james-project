@@ -34,6 +34,7 @@ import java.nio.charset.CodingErrorAction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -91,6 +92,20 @@ public abstract class ImapRequestLineReader {
         }
 
         return next;
+    }
+
+    public Optional<Character> nextWordCharLenient() throws DecodingException {
+        char next = nextChar();
+        while (next == ' ') {
+            consume();
+            next = nextChar();
+        }
+
+        if (next == '\r' || next == '\n') {
+            return Optional.empty();
+        }
+
+        return Optional.of(next);
     }
 
     /**
