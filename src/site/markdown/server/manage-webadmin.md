@@ -2985,6 +2985,9 @@ Additional query parameters are supported:
  - `queue` allows you to target the mail queue you want to enqueue the mails in. Defaults to `spool`.
  - `processor` allows you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
  Defaults to the `state` field of each processed email.
+ - `consume` (boolean defaulting to `true`) whether the reprocessing should consume the mail in its originating mail repository. Passing
+ this value to `false` allows non destructive reprocessing as you keep a copy of the email in the mail repository and can be valuable
+ when debugging.
 
 
 For instance:
@@ -3034,6 +3037,9 @@ Additional query parameters are supported:
  - `queue` allows you to target the mail queue you want to enqueue the mails in. Defaults to `spool`.
  - `processor` allows you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
  Defaults to the `state` field of each processed email.
+ - `consume` (boolean defaulting to `true`) whether the reprocessing should consume the mail in its originating mail repository. Passing
+ this value to `false` allows non destructive reprocessing as you keep a copy of the email in the mail repository and can be valuable
+ when debugging.
 
 While `processor` being an optional parameter, not specifying it will result reprocessing the mails in their current state ([see documentation about processors and state](https://james.apache.org/server/feature-mailetcontainer.html#Processors)).
 Consequently, only few cases will give a different result, definitively storing them out of the mail repository.
