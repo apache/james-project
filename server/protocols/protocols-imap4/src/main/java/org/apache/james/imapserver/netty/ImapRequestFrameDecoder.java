@@ -45,7 +45,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 
 /**
@@ -62,15 +61,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final int inMemorySizeLimit;
     private final int literalSizeLimit;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
-    private final EventExecutorGroup eventExecutors;
-    private int maxFrameLength;
+    private final int maxFrameLength;
 
-    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, EventExecutorGroup eventExecutors,
-                                   int maxFrameLength) {
+    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
         this.inMemorySizeLimit = inMemorySizeLimit;
         this.literalSizeLimit = literalSizeLimit;
-        this.eventExecutors = eventExecutors;
         this.maxFrameLength = maxFrameLength;
     }
 
@@ -224,7 +220,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         if (ctx.channel().pipeline().get(FRAMER) == null) {
             ctx.channel().config().setAutoRead(false);
             ctx.channel().eventLoop().execute(() ->
-                ctx.channel().pipeline().addBefore(eventExecutors, REQUEST_DECODER, FRAMER,
+                ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
                         new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false)));
             ctx.channel().config().setAutoRead(true);
         }
