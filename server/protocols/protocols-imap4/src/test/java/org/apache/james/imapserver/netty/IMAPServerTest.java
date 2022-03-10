@@ -1569,7 +1569,6 @@ class IMAPServerTest {
                 .hasSize(1);
         }
 
-        @Disabled("JAMES-3722 SELECT do not supports CONDSTORE to be immediately followed by a ')'")
         @Test
         void selectShouldAcceptCondstore() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
@@ -1581,7 +1580,6 @@ class IMAPServerTest {
                 .isNotNull();
         }
 
-        @Disabled("JAMES-3722 SELECT do not supports CONDSTORE to be immediately followed by a ')'")
         @Test
         void selectShouldEnableCondstore() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));

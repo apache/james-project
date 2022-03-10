@@ -67,7 +67,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
             switch (n) {
             case 'C':
                 // It starts with C so it should be CONDSTORE
-                request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CONDSTORE));
+                request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CONDSTORE), true);
                 condstore = true;
                 break;
             case 'Q':
