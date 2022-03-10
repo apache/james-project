@@ -230,7 +230,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(getExecutorGroup(), FRAMER, getFrameHandlerFactory().create(pipeline));
+                pipeline.addLast(FRAMER, getFrameHandlerFactory().create(pipeline));
                
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
@@ -243,10 +243,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 }
                 pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
 
-                pipeline.addLast(getExecutorGroup(), CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
+                pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
                 pipeline.addLast(getExecutorGroup(), REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
-                    literalSizeLimit, getExecutorGroup(), maxLineLength));
+                    literalSizeLimit, maxLineLength));
 
                 pipeline.addLast(getExecutorGroup(), CORE_HANDLER, createCoreHandler());
             }
