@@ -54,7 +54,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 
 
 /**
@@ -62,7 +61,6 @@ import io.netty.handler.timeout.IdleStateHandler;
  */
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
-    private static final int TIMEOUT_TIMER_DISABLED = 0;
 
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
@@ -220,13 +218,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
 
-            private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
-
             @Override
             public void initChannel(Channel channel) throws Exception {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(TIMEOUT_TIMER_DISABLED, TIMEOUT_TIMER_DISABLED, timeout, timeoutUnit));
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 
