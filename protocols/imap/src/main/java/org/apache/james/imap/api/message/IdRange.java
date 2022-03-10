@@ -20,15 +20,15 @@
 package org.apache.james.imap.api.message;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.model.MessageRange;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a range of UID or MSN values.
@@ -108,9 +108,11 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     }
 
     public static String toString(IdRange[] ranges) {
-        return Optional.ofNullable(ranges)
-            .map(ImmutableList::copyOf)
-            .toString();
+        return "(" + Optional.ofNullable(ranges)
+            .map(array -> Arrays.stream(array)
+                .map(IdRange::toString)
+                .collect(Collectors.joining(",")))
+            .orElse("") + ")";
     }
 
     public static IdRange from(MessageRange messageRange) {
