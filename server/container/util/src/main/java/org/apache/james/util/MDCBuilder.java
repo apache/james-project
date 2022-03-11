@@ -146,11 +146,13 @@ public class MDCBuilder {
 
     @VisibleForTesting
     Map<String, String> buildContextMap() {
+        ImmutableList<MDCBuilder> nested = nestedBuilder.build();
+        if (nested.isEmpty()) {
+            return contextMap.build();
+        }
+
         ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
-
-        nestedBuilder.build()
-            .forEach(mdcBuilder -> result.putAll(mdcBuilder.buildContextMap()));
-
+        nested.forEach(mdcBuilder -> result.putAll(mdcBuilder.buildContextMap()));
         return result
             .putAll(contextMap.build())
             .build();
