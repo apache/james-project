@@ -97,7 +97,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
         if (command != null) {
             composer.commandName(command);
         }
-        if (text != null && !"".equals(text)) {
+        if (text != null && !text.isEmpty()) {
             composer.message(text);
         }
         composer.end();
