@@ -752,15 +752,16 @@ public class StoreMessageManager implements MessageManager {
 
         List<UpdatedFlags> updatedFlags = messageMapper.resetRecent(getMailboxEntity());
 
-        eventBus.dispatch(EventFactory.flagsUpdated()
-                .randomEventId()
-                .mailboxSession(mailboxSession)
-                .mailbox(getMailboxEntity())
-                .updatedFlags(updatedFlags)
-                .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-            .subscribeOn(Schedulers.elastic())
-            .block();
+        if (!updatedFlags.isEmpty()) {
+            eventBus.dispatch(EventFactory.flagsUpdated()
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(getMailboxEntity())
+                    .updatedFlags(updatedFlags)
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .block();
+        }
 
         return updatedFlags.stream()
             .map(UpdatedFlags::getUid)
