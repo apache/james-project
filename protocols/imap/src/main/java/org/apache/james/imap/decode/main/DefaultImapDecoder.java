@@ -112,7 +112,10 @@ public class DefaultImapDecoder implements ImapDecoder {
             return unknownCommand(tag, session);
         }
         ImapMessage message = command.parse(request, tag, session);
-        session.setAttribute(INVALID_COMMAND_COUNT, 0);
+        Object count = session.getAttribute(INVALID_COMMAND_COUNT);
+        if (count == null || (int) count > 0) {
+            session.setAttribute(INVALID_COMMAND_COUNT, 0);
+        }
         return message;
     }
 }
