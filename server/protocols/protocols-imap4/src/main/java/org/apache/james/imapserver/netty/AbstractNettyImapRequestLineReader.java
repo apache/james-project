@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.imap.decode.ImapRequestLineReader;
 
 import io.netty.buffer.ByteBuf;
@@ -25,8 +27,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 
 public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader {
+    private static final ByteBuf CONTINUATION_REQUEST = Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("+ Ok\r\n".getBytes(StandardCharsets.US_ASCII)));
+
     private final Channel channel;
-    private final ByteBuf cRequest = Unpooled.wrappedBuffer("+ Ok\r\n".getBytes());
     private final boolean retry;
 
     public AbstractNettyImapRequestLineReader(Channel channel, boolean retry) {
@@ -41,7 +44,7 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
         // request..
 
         if (!retry) {
-            channel.writeAndFlush(cRequest);
+            channel.writeAndFlush(CONTINUATION_REQUEST);
         }
     }
 
