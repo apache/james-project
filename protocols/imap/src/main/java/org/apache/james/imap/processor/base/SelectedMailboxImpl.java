@@ -26,7 +26,6 @@ import static io.vavr.Predicates.instanceOf;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +62,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -338,8 +338,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<>(flagUpdateUids));
-        
+        return ImmutableSortedSet.copyOf(flagUpdateUids);
     }
 
     @Override
@@ -347,8 +346,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<>(expungedUids));
-        
+        return ImmutableSortedSet.copyOf(expungedUids);
     }
 
     @Override
