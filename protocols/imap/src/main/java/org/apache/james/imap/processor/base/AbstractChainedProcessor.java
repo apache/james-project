@@ -54,7 +54,9 @@ public abstract class AbstractChainedProcessor<M extends ImapMessage> implements
             M acceptableMessage = (M) message;
             try (Closeable closeable = addContextToMDC(acceptableMessage)) {
                 try {
-                    LOGGER.debug("Processing {}", message.toString());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Processing {}", message.toString());
+                    }
                     doProcess(acceptableMessage, responder, session);
                 } catch (RuntimeException e) {
                     LOGGER.error("Error while processing IMAP request", e);
