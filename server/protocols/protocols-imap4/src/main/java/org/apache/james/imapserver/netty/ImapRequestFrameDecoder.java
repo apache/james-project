@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
@@ -62,6 +63,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final int literalSizeLimit;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
     private final int maxFrameLength;
+    private final AtomicBoolean framingEnabled = new AtomicBoolean(true);
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -214,10 +216,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         ctx.channel().config().setAutoRead(false);
         ctx.channel().eventLoop().execute(() -> ctx.channel().pipeline().remove(FRAMER));
         ctx.channel().config().setAutoRead(true);
+        framingEnabled.set(false);
     }
 
     public void enableFraming(ChannelHandlerContext ctx) {
-        if (ctx.channel().pipeline().get(FRAMER) == null) {
+        if (!framingEnabled.get()) {
+            framingEnabled.set(true);
             ctx.channel().config().setAutoRead(false);
             ctx.channel().eventLoop().execute(() ->
                 ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
