@@ -7,3 +7,36 @@ Note that in some rare cases this might not work,
 when a property affects very early JVM start behaviour.
 
 For testing purposes, you may specify a different file path via the command line option `-Dextra.props=/some/other/jvm.properties`.
+
+== Control the threshold memory
+This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.
+
+In `jvm.properties`
+----
+james.message.memory.threshold=12K
+----
+
+(Optional). String (size, integer + size units, example: `12 KIB`, supported units are bytes KIB MIB GIB TIB). Defaults to 100KIB.
+
+== Enable the copy of message in memory
+Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold
+be copied to temporary files?
+
+----
+james.message.usememorycopy=true
+----
+
+Optional. Boolean. Defaults to false. Recommended value is false.
+
+== Running resource leak detection
+It is used to detect a resource not be disposed of before it's garbage-collected.
+
+In `jvm.properties`
+----
+james.lifecycle.leak.detection.mode=advanced
+----
+
+Allowed mode values are: none, simple, advanced, testing
+
+The purpose of each mode is introduced in `config-system.xml`
+

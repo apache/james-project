@@ -181,6 +181,15 @@
                 <dt><strong>james.message.usememorycopy</strong></dt>
                 <dd>Optional. Boolean. Defaults to false. Recommended value is false. <br/>
                     Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold be copied to temporary files?</dd>
+
+                <dt><strong>james.lifecycle.leak.detection.mode</strong></dt>
+                <dd>Optional. Allowed values are: none, simple, advanced, testing. Defaults to simple. <br/>
+                    Mode level of resource leak detection. It is used to detect a resource not be disposed of before it's garbage-collected. Example `MimeMessageInputStreamSource` <br/>
+                        - none: Disables resource leak detection.<br/>
+                        - simple: Enables output a simplistic error log if a leak is encountered and would free the resources (default). <br/>
+                        - advanced: Enables output an advanced error log implying the place of allocation of the underlying object and would free resources. <br/>
+                        - testing: Enables output an advanced error log implying the place of allocation of the underlying object and rethrow an error, that action is being taken by the development team. <br/>
+                </dd>
             </dl>
 
             </subsection>
