@@ -106,7 +106,7 @@ public class FetchData {
     }
 
     private final EnumSet<Item> itemToFetch;
-    private final Set<BodyFetchElement> bodyElements;
+    private final ImmutableSet<BodyFetchElement> bodyElements;
     private final boolean setSeen;
     private final long changedSince;
     private final boolean vanished;
@@ -181,7 +181,7 @@ public class FetchData {
             .add("body", contains(Item.BODY))
             .add("bodyStructure", contains(Item.BODY_STRUCTURE))
             .add("setSeen", setSeen)
-            .add("bodyElements", ImmutableSet.copyOf(bodyElements))
+            .add("bodyElements", bodyElements)
             .add("modSeq", contains(Item.MODSEQ))
             .add("changedSince", changedSince)
             .add("vanished", vanished)
