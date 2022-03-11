@@ -117,9 +117,7 @@ public class ResultUtils {
 
     @VisibleForTesting
     static boolean haveValidContent(FetchGroup fetchGroup) {
-        return fetchGroup.profiles()
-            .stream()
-            .allMatch(SUPPORTED_GROUPS::contains);
+        return SUPPORTED_GROUPS.containsAll(fetchGroup.profiles());
     }
 
     private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
