@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -37,7 +38,12 @@ public class FetchGroupConverter {
             return MessageMapper.FetchType.FULL;
         }
 
-        Collection<MessageMapper.FetchType> fetchTypes = group.profiles()
+        EnumSet<Profile> profiles = group.profiles();
+        if (profiles.size() == 1) {
+            return toFetchType(profiles.iterator().next());
+        }
+
+        Collection<MessageMapper.FetchType> fetchTypes = profiles
             .stream()
             .map(FetchGroupConverter::toFetchType)
             .collect(ImmutableList.toImmutableList());
