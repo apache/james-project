@@ -1441,8 +1441,8 @@ class IMAPServerTest {
 
         @AfterEach
         void tearDown() throws Exception {
-            imapServer.destroy();
             clientConnection.close();
+            imapServer.destroy();
         }
 
         private void setUpTestingData() {
@@ -1709,8 +1709,8 @@ class IMAPServerTest {
 
         @AfterEach
         void tearDown() throws Exception {
-            imapServer.destroy();
             clientConnection.close();
+            imapServer.destroy();
         }
 
         @Test
