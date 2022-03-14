@@ -91,7 +91,8 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldCloseUnclosedResources() {
+    void leakDetectionShouldCloseUnclosedResources() throws NoSuchFieldException, IllegalAccessException {
+        forceChangeLevel(LeakAware.Level.SIMPLE);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
         resourceSample = null;
@@ -104,7 +105,8 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldNotReportClosedObjects() {
+    void leakDetectionShouldNotReportClosedObjects() throws NoSuchFieldException, IllegalAccessException {
+        forceChangeLevel(LeakAware.Level.SIMPLE);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
         resourceSample.dispose();
