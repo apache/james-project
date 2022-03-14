@@ -1004,8 +1004,8 @@ class IMAPServerTest {
 
         @AfterEach
         void tearDown() throws Exception {
-            imapServer.destroy();
             clientConnection.close();
+            imapServer.destroy();
         }
 
         @Test
@@ -1058,7 +1058,7 @@ class IMAPServerTest {
         }
 
         @Test
-        void idleShouldResponsesShouldBeOrdered() throws Exception {
+        void idleResponsesShouldBeOrdered() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
 
