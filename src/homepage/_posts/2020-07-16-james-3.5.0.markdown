@@ -103,5 +103,5 @@ More details about the property is at [java mail doc](https://javaee.github.io/j
 [ElasticSearch]: https://www.elastic.co/elasticsearch/
 [RabbitMQ]: https://www.rabbitmq.com/
 [objectStorage (S3/Swift)]: https://wiki.openstack.org/wiki/Swift
-[docker-compose]: https://github.com/apache/james-project/blob/master/dockerfiles/run/docker-compose.yml
+[docker-compose]: https://github.com/apache/james-project/blob/3.5.x/dockerfiles/run/docker-compose.yml
 [standard installation guide]: /server/install/guice-cassandra-rabbitmq-swift.html
