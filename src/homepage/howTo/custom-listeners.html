@@ -101,7 +101,7 @@ layout: howTo
                 <p>First, get template JPA product configuration:</p>
                 <pre><code>
 $ git clone https://github.com/apache/james-project
-$ cp -rf james-project/dockerfiles/run/guice/jpa/destination/conf conf
+$ cp -rf james-project/server/apps/jpa-app/sample-configuration conf
                 </code></pre>
 
                 <p>Then create the keystore file in the conf/ directory with the default password <code>james72laBalle</code>
@@ -124,7 +124,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
                 <p>Finally, starting a James Server by docker compose</p>
                 <p>Getting James docker-compose.yml</p>
                 <pre><code>
-$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+$ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/jpa-app/docker-compose.yml
                 </code></pre>
                 <p>Using James Guice JPA instead of the default product</p>
                 <pre><code>

@@ -152,7 +152,7 @@ layout: howTo
                 <p>First let's retrieve a valid configuration:</p>
 
                 <pre><code>$ git clone https://github.com/apache/james-project
-$ cp -rf james-project/dockerfiles/run/guice/jpa/destination/conf conf
+$ cp -rf james-project/server/apps/jpa-app/sample-configuration conf
 $ mv keystore conf/keystore</code></pre>
 
                 <p>Modify all protocol configuration files to match your keystore password (imapserver.xml, lmtpserver.xml, managesieveserver.xml, pop3server.xml, smtpserver.xml).</p>

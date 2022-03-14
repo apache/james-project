@@ -54,7 +54,7 @@ or paste the files into Grafana dashboards folder (/var/lib/grafana/dashboards b
 
 You then need to enable James to report its stats into ElasticSearch.
 Modify your James ElasticSearch configuration file accordingly.
-To help you doing this, you can take a look to [GitHub](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties).
+To help you doing this, you can take a look to [GitHub](https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/sample-configuration/elasticsearch.properties).
 Note that you need to run a guice version of James.
 
 ## Presentation of the different boards
