@@ -163,7 +163,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
         filter.engine().setUseClientMode(false);
         channel.pipeline().addFirst(SSL_HANDLER, filter);
-
+        stopDetectingCommandInjection();
         channel.config().setAutoRead(true);
 
         return true;
