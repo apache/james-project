@@ -56,7 +56,7 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
 
     protected String removeTag(String input) {
         String trimmedInput = input.trim();
-        int tagEnd = input.indexOf(' ');
+        int tagEnd = trimmedInput.indexOf(' ');
         if (tagEnd < 0) {
             return input;
         }
