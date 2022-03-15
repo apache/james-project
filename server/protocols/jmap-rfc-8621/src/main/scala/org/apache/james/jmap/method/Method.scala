@@ -32,8 +32,6 @@ import reactor.core.scala.publisher.SFlux
 
 case class AccountNotFoundException(invocation: Invocation) extends IllegalArgumentException
 
-case class TooLargeException(actualSize: Long, maximumSize: Long) extends Exception(s"Attempt to create a message of $actualSize bytes while the maximum allowed is $maximumSize")
-
 case class InvocationWithContext(invocation: Invocation, processingContext: ProcessingContext) {
   def recordInvocation: InvocationWithContext = InvocationWithContext(invocation, processingContext.recordInvocation(invocation))
 }
