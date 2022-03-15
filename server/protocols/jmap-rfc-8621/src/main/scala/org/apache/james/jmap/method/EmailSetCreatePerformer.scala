@@ -70,11 +70,11 @@ object EmailSetCreatePerformer {
       case e: BlobNotFoundException => SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
+      case e: TooLargeException => SetError.tooLarge(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }
-case class SizeExceededException(actualSize: Long, maximumSize: Long) extends IllegalArgumentException(s"Attempt to create a message of $actualSize bytes while the maximum allowed is $maximumSize")
 
 class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         blobResolvers: BlobResolvers,
@@ -118,7 +118,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     }
   }
 
-  private def asAppendCommand(request: EmailCreationRequest, message: Message): Either[IllegalArgumentException, AppendCommand]  =
+  private def asAppendCommand(request: EmailCreationRequest, message: Message): Either[Exception, AppendCommand]  =
     Right(
       AppendCommand.builder()
         .recent()
@@ -128,6 +128,6 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
       .flatMap(appendCommand =>
         configuration.getMaximumSendSize.toScala
           .filter(limit => appendCommand.getMsgIn.size() > limit)
-          .map(limit => Left(SizeExceededException(appendCommand.getMsgIn.size(), limit)))
+          .map(limit => Left(TooLargeException(appendCommand.getMsgIn.size(), limit)))
           .getOrElse(Right(appendCommand)))
 }

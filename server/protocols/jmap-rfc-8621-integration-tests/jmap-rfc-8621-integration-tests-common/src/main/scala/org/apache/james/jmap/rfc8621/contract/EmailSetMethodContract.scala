@@ -1471,7 +1471,7 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(
         s"""{
-           |    "type": "invalidArguments"
+           |    "type": "tooLarge"
            |}""".stripMargin)
 
     // Message size is date-time and matchine (Message-Id) dependant
