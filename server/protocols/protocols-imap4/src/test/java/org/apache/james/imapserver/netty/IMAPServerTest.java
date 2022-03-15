@@ -337,6 +337,52 @@ class IMAPServerTest {
 
             inbox.getMessageByUID(1);
         }
+    }
+
+    @Nested
+    class CompressWithSSL {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerSSLCompress.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void shouldNotThrowWhenCompressionEnabled() throws Exception {
+            InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
+            mailboxManager.createMailbox(
+                MailboxPath.inbox(USER),
+                mailboxSession);
+            mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
+
+            Properties props = new Properties();
+            props.put("mail.imaps.user", USER.asString());
+            props.put("mail.imaps.host", "127.0.0.1");
+            props.put("mail.imaps.auth.mechanisms", "LOGIN");
+            props.put("mail.imaps.compress.enable", true);
+            props.put("mail.imaps.ssl.enable", "true");
+            props.put("mail.imaps.ssl.trust", "*");
+            props.put("mail.imaps.ssl.checkserveridentity", "false");
+            final Session session = Session.getInstance(props);
+            final Store store = session.getStore("imaps");
+            store.connect("127.0.0.1", port, USER.asString(), USER_PASS);
+            final FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(FetchProfile.Item.ENVELOPE);
+            final IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
+            inbox.open(READ_WRITE);
+
+            inbox.getMessageByUID(1);
+        }
 
     }
 

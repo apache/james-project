@@ -1,0 +1,20 @@
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="true" startTLS="false">
+        <keystore>classpath://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        <algorithm>SunX509</algorithm>
+    </tls>
+    <compress>true</compress>
+    <connectionBacklog>200</connectionBacklog>
+    <connectionLimit>0</connectionLimit>
+    <connectionLimitPerIP>0</connectionLimitPerIP>
+    <idleTimeInterval>120</idleTimeInterval>
+    <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+    <enableIdle>true</enableIdle>
+    <inMemorySizeLimit>64K</inMemorySizeLimit>
+    <literalSizeLimit>128K</literalSizeLimit>
+    <plainAuthDisallowed>false</plainAuthDisallowed>
+</imapserver>
