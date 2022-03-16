@@ -63,12 +63,14 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
 import org.apache.james.mailbox.MailboxSession;
@@ -104,12 +106,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.sun.mail.imap.IMAPFolder;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelOption;
 import io.netty.handler.codec.compression.JdkZlibDecoder;
 import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
@@ -421,15 +428,54 @@ class IMAPServerTest {
 
     }
 
+    public static class BlindTrustManager implements X509TrustManager {
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {
+
+        }
+
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+
+
+        }
+    }
+
+    public static ListAppender<ILoggingEvent> getListAppenderForClass(Class clazz) {
+        Logger logger = (Logger) LoggerFactory.getLogger(clazz);
+
+        ListAppender<ILoggingEvent> loggingEventListAppender = new ListAppender<>();
+        loggingEventListAppender.start();
+
+        logger.addAppender(loggingEventListAppender);
+        return loggingEventListAppender;
+    }
+
+
     @Nested
     class StartTLS {
         IMAPServer imapServer;
         private int port;
+        private Connection connection;
+        private ConcurrentLinkedDeque<String> responses;
 
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServerStartTLS.xml");
             port = imapServer.getListenAddresses().get(0).getPort();
+            connection = TcpClient.create()
+                .noSSL()
+                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
+                .option(ChannelOption.TCP_NODELAY, true)
+                .connectNow();
+            responses = new ConcurrentLinkedDeque<>();
+            connection.inbound().receive().asString()
+                .doOnNext(s -> System.out.println("A: " + s))
+                .doOnNext(responses::addLast)
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
         }
 
         @AfterEach
@@ -475,6 +521,28 @@ class IMAPServerTest {
             int imapCode = imapClient.sendCommand("STARTTLS\r\n");
 
             assertThat(imapCode).isEqualTo(IMAPReply.NO);
+        }
+
+        private void send(String format) {
+            connection.outbound()
+                .send(Mono.just(Unpooled.wrappedBuffer(format
+                    .getBytes(StandardCharsets.UTF_8))))
+                .then()
+                .subscribe();
+        }
+
+        @RepeatedTest(10)
+        void concurrencyShouldNotLeadToCommandInjection() throws Exception {
+            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractChainedProcessor.class);
+
+            send("a0 STARTTLS\r\n");
+            send("a1 NOOP\r\n");
+
+            Thread.sleep(50);
+
+            assertThat(listAppender.list)
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
+                .isEmpty();
         }
     }
 
@@ -1058,21 +1126,6 @@ class IMAPServerTest {
 
             folder.close(false);
             store.close();
-        }
-    }
-
-    public static class BlindTrustManager implements X509TrustManager {
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-
-        }
-
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-
-
         }
     }
 
@@ -1677,6 +1730,7 @@ class IMAPServerTest {
         line.rewind();
         byte[] bline = new byte[line.remaining()];
         line.get(bline);
+        System.out.println("O: " + IOUtils.toString(bline));
         return bline;
     }
 
