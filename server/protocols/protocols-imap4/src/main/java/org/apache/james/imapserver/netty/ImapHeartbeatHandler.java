@@ -19,6 +19,7 @@
 package org.apache.james.imapserver.netty;
 
 import java.nio.charset.StandardCharsets;
+import java.util.function.Supplier;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -31,7 +32,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 @ChannelHandler.Sharable
 public class ImapHeartbeatHandler extends IdleStateHandler {
 
-    private static final ByteBuf HEARTBEAT_BUFFER = Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("* OK Hang in there..\r\n".getBytes(StandardCharsets.US_ASCII)));
+    private static final Supplier<ByteBuf> HEARTBEAT_BUFFER = () -> Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("* OK Hang in there..\r\n".getBytes(StandardCharsets.US_ASCII)));
 
     ImapHeartbeatHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
         super(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds);
@@ -40,7 +41,7 @@ public class ImapHeartbeatHandler extends IdleStateHandler {
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
         if (e.state().equals(IdleState.WRITER_IDLE)) {
-            ctx.channel().writeAndFlush(HEARTBEAT_BUFFER);
+            ctx.channel().writeAndFlush(HEARTBEAT_BUFFER.get());
         }
         super.channelIdle(ctx, e);
     }
