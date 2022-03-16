@@ -157,7 +157,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
             return false;
         }
         channel.config().setAutoRead(false);
-        writeOnTheEventLoop(statusResponse);
+        write(statusResponse);
 
         SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
 
@@ -169,7 +169,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return true;
     }
 
-    private void writeOnTheEventLoop(ImmutableStatusResponse statusResponse) {
+    private void write(ImmutableStatusResponse statusResponse) {
         try {
             new StatusResponseEncoder(new DefaultLocalizer()).encode(statusResponse,
                 new ImapResponseComposerImpl(new EventLoopImapResponseWriter(channel), BUFFER_SIZE));
@@ -188,7 +188,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         @Override
         public void write(byte[] buffer) {
             if (channel.isActive()) {
-                channel.pipeline().firstContext().writeAndFlush(Unpooled.wrappedBuffer(buffer));
+                channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
             }
         }
 
@@ -216,7 +216,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
 
         channel.config().setAutoRead(false);
-        writeOnTheEventLoop(response);
+        write(response);
         ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
         ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 
