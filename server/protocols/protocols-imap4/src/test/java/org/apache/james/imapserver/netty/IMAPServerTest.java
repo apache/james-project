@@ -29,12 +29,15 @@ import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 
 import javax.mail.FetchProfile;
@@ -48,6 +51,9 @@ import javax.mail.search.FromStringTerm;
 import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -92,8 +98,17 @@ import org.mockserver.model.HttpResponse;
 import com.google.common.collect.ImmutableList;
 import com.sun.mail.imap.IMAPFolder;
 
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.compression.JdkZlibDecoder;
+import io.netty.handler.codec.compression.JdkZlibEncoder;
+import io.netty.handler.codec.compression.ZlibWrapper;
+import io.netty.handler.ssl.SslContextBuilder;
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 import nl.altindag.ssl.exception.PrivateKeyParseException;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.Connection;
+import reactor.netty.tcp.TcpClient;
 
 class IMAPServerTest {
     private static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
@@ -1023,6 +1038,242 @@ class IMAPServerTest {
 
             folder.close(false);
             store.close();
+        }
+    }
+
+    public static class BlindTrustManager implements X509TrustManager {
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {
+
+        }
+
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+
+
+        }
+    }
+
+    @Nested
+    class IdleSSL {
+        IMAPServer imapServer;
+        private MailboxSession mailboxSession;
+        private MessageManager inbox;
+        private Socket clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerSSL.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+            mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[] { new BlindTrustManager() }, null);
+            clientConnection = ctx.getSocketFactory().createSocket();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            byte[] buffer = new byte[8193];
+            clientConnection.getInputStream().read(buffer);
+        }
+
+        @AfterEach
+        void tearDown() throws Exception {
+            clientConnection.close();
+            imapServer.destroy();
+        }
+
+        @Test
+        void idleShouldSendInitialContinuation() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write("a3 IDLE\r\n".getBytes(StandardCharsets.UTF_8));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
+                    .isNotNull());
+        }
+
+        @Test
+        void idleShouldBeInterruptible() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write(("a3 IDLE\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+            clientConnection.getOutputStream().write("DONE\r\n".getBytes(StandardCharsets.UTF_8));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
+        }
+
+        @Test
+        void idleShouldBeInterruptibleWhenBatched() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write("a3 IDLE\r\nDONE\r\n".getBytes(StandardCharsets.UTF_8));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
+        }
+
+        @Test
+        void idleResponsesShouldBeOrdered() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write("a3 IDLE\r\nDONE\r\n".getBytes(StandardCharsets.UTF_8));
+
+            // Assert continuation is sent before IDLE completion result
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .filteredOn(s -> s.contains("+ Idling"))
+                    .hasSize(1));
+        }
+
+        @Test
+        void idleShouldReturnUnderstandableErrorMessageWhenBadDone() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write("a3 IDLE\r\nBAD\r\n".getBytes(StandardCharsets.UTF_8));
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
+                    .isNotNull());
+        }
+
+        // Repeated run to detect more reliably data races
+        @RepeatedTest(50)
+        void idleShouldReturnUpdates() throws Exception {
+            clientConnection.getOutputStream().write(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8));
+            readBytes(clientConnection);
+
+            clientConnection.getOutputStream().write("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            clientConnection.getOutputStream().write("a3 IDLE\r\n".getBytes(StandardCharsets.UTF_8));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+            inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
+
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
+                    .isNotNull());
+        }
+
+        private byte[] readBytes(Socket channel) throws IOException {
+            byte[] buffer = new byte[8193];
+            int read = channel.getInputStream().read(buffer);
+            String s = new String(buffer, 0, read, StandardCharsets.US_ASCII);
+            return s.getBytes(StandardCharsets.US_ASCII);
+        }
+
+        private List<String> readStringUntil(Socket channel, Predicate<String> condition) throws IOException {
+            ImmutableList.Builder<String> result = ImmutableList.builder();
+            while (true) {
+                String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
+                result.add(line);
+                if (condition.test(line)) {
+                    return result.build();
+                }
+            }
+        }
+    }
+
+    @Nested
+    class IdleSSLCompress {
+        IMAPServer imapServer;
+        private Connection connection;
+        private ConcurrentLinkedDeque<String> responses;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerSSLCompress.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            connection = TcpClient.create()
+                .secure(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager())))
+                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
+                .connectNow();
+            responses = new ConcurrentLinkedDeque<>();
+            readBytes(connection);
+        }
+
+        @AfterEach
+        void tearDown() {
+            try {
+                connection.disposeNow();
+            } finally {
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void idleShouldBeInterruptible() {
+            send(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS));
+
+            send("a1 COMPRESS DEFLATE\r\n");
+
+            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a1 OK COMPRESS DEFLATE active")));
+            responses.clear();
+
+            connection.addHandlerFirst(new JdkZlibDecoder(ZlibWrapper.ZLIB_OR_NONE));
+            connection.addHandlerFirst(new JdkZlibEncoder(ZlibWrapper.NONE, 5));
+
+            send("a2 SELECT INBOX\r\n");
+            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a2 OK [READ-WRITE] SELECT completed.")));
+            responses.clear();
+
+            send("a3 IDLE\r\n");
+            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("+ Idling")));
+            assertThat(responses).hasSize(1); // No pollution
+            responses.clear();
+
+            send("DONE\r\n");
+            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a3 OK IDLE completed.")));
+            assertThat(responses).hasSize(1); // No pollution
+        }
+
+        private void send(String format) {
+            connection.outbound()
+                .send(Mono.just(Unpooled.wrappedBuffer(format
+                    .getBytes(StandardCharsets.UTF_8))))
+                .then()
+                .subscribe();
+        }
+
+        private void readBytes(Connection connection) {
+            connection.inbound().receive().asString()
+                .doOnNext(responses::addLast)
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
         }
     }
 

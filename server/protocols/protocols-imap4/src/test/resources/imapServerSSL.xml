@@ -1,3 +1,4 @@
+
 <imapserver enabled="true">
     <jmxName>imapserver</jmxName>
     <bind>0.0.0.0:0</bind>
@@ -16,5 +17,4 @@
     <inMemorySizeLimit>64K</inMemorySizeLimit>
     <literalSizeLimit>128K</literalSizeLimit>
     <plainAuthDisallowed>false</plainAuthDisallowed>
-    <compress>true</compress>
 </imapserver>
