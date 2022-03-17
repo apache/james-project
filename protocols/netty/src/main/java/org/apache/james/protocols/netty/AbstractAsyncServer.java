@@ -93,7 +93,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.channel(NioServerSocketChannel.class);
 
-        bossGroup = new NioEventLoopGroup(NamedThreadFactory.withName(jmxName + "-boss"));
+        bossGroup = new NioEventLoopGroup(2, NamedThreadFactory.withName(jmxName + "-boss"));
         workerGroup = new NioEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
 
         bootstrap.group(bossGroup, workerGroup);
