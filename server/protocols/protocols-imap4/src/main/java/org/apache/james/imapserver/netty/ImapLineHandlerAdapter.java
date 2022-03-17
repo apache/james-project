@@ -46,13 +46,8 @@ public class ImapLineHandlerAdapter extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf buf = (ByteBuf) msg;
-        byte[] data;
-        if (buf.hasArray()) {
-            data = buf.array();
-        } else {
-            data = new byte[buf.readableBytes()];
-            buf.readBytes(data);
-        }
+        byte[] data = new byte[buf.readableBytes()];
+        buf.readBytes(data);
         lineHandler.onLine(session, data);
     }
 
