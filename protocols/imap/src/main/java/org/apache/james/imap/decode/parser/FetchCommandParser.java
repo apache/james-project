@@ -84,10 +84,9 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             next = nextNonSpaceChar(request);
             if (next == '(') {
                 request.consumeChar('(');
-                parseModifier(request, fetch);
-                nextNonSpaceChar(request);
-                parseModifier(request, fetch);
-                nextNonSpaceChar(request);
+                while (parseModifier(request, fetch)) {
+                    nextNonSpaceChar(request);
+                }
                 request.consumeChar(')');
             }
         } else {
@@ -97,21 +96,21 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         return fetch.build();
     }
 
-    private void parseModifier(ImapRequestLineReader request, FetchData.Builder fetch) throws DecodingException {
+    private boolean parseModifier(ImapRequestLineReader request, FetchData.Builder fetch) throws DecodingException {
         char next = request.nextChar();
         switch (next) {
         case 'C':
             // Now check for the CHANGEDSINCE option which is part of CONDSTORE
             request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CHANGEDSINCE));
             fetch.changedSince(request.number(true));
-            break;
+            return true;
         case 'V':
             // Check for the VANISHED option which is part of QRESYNC
             request.consumeWord(StringMatcherCharacterValidator.ignoreCase(VANISHED), true);
             fetch.vanished(true);
-            break;
+            return true;
         default:
-            break;
+            return false;
         }
     }
 
