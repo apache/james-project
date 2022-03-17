@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -60,6 +61,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
     
     private List<InetSocketAddress> addresses = new ArrayList<>();
+    protected String jmxName;
     
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) {
@@ -91,8 +93,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.channel(NioServerSocketChannel.class);
 
-        bossGroup = new NioEventLoopGroup();
-        workerGroup = new NioEventLoopGroup(ioWorker);
+        bossGroup = new NioEventLoopGroup(NamedThreadFactory.withName(jmxName + "-boss"));
+        workerGroup = new NioEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
 
         bootstrap.group(bossGroup, workerGroup);
 
