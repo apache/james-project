@@ -215,4 +215,8 @@ If disabled, Lightweight transactions will no longer be used upon messages opera
 As message flags updates relies so far on a read-before-write model, it exposes yourself to data races leading to
 potentially update loss. Better performance are expected
 by turning it off. Reads performed as part of write transaction are also performed with a relaxed consistency.
+
+| mailrepository.strong.consistency
+| Optional. Boolean, defaults to true. Allows not to use lightweight transactions in CassandraMailRepository.
+| If disabled we implement an idempotent behaviour (duplicates are overridden, missing entries upon deletes are ignored).
 |===

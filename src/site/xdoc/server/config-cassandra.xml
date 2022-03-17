@@ -183,6 +183,9 @@
         <dt><strong>optimistic.consistency.level.enabled</strong></dt>
         <dd>Optional. Defaults to false. Allows specifying consistency level ONE for reads in Cassandra BlobStore.
             Falls back to default read consistency level if the blob is missing.</dd>
+        <dt><strong>mailrepository.strong.consistency</strong></dt>
+        <dd>Optional. Defaults to true. Allows not to use lightweight transactions in CassandraMailRepository.
+            If disabled we implement an idempotent behaviour (duplicates are overridden, missing entries upon deletes are ignored).</dd>
       </dl>
 
 

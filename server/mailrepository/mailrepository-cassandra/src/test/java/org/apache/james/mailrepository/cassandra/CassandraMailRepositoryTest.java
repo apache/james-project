@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
@@ -62,7 +63,7 @@ class CassandraMailRepositoryTest {
         @BeforeEach
         void setup(CassandraCluster cassandra) {
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
-            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough();
@@ -83,6 +84,18 @@ class CassandraMailRepositoryTest {
         }
 
         @Test
+        @Disabled("depend on setting turn on/off lightweight transaction")
+        @Override
+        public void storeShouldHaveNoEffectOnSizeWhenAlreadyStoredMail() {
+        }
+
+        @Test
+        @Disabled("depend on setting turn on/off lightweight transaction")
+        @Override
+        public void removeShouldHaveNoEffectOnSizeWhenUnknownKeys() {
+        }
+
+        @Test
         void removeShouldDeleteStoredBlobs(CassandraCluster cassandra) throws Exception {
             MailRepository testee = retrieveRepository();
 
@@ -100,7 +113,7 @@ class CassandraMailRepositoryTest {
         @BeforeEach
         void setup(CassandraCluster cassandra) {
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
-            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .deduplication();
@@ -118,6 +131,18 @@ class CassandraMailRepositoryTest {
         @Disabled("key is unique in Cassandra")
         @Override
         public void sizeShouldBeIncrementedByOneWhenDuplicates() {
+        }
+
+        @Test
+        @Disabled("depend on setting turn on/off lightweight transaction")
+        @Override
+        public void storeShouldHaveNoEffectOnSizeWhenAlreadyStoredMail() {
+        }
+
+        @Test
+        @Disabled("depend on setting turn on/off lightweight transaction")
+        @Override
+        public void removeShouldHaveNoEffectOnSizeWhenUnknownKeys() {
         }
 
         @Test
