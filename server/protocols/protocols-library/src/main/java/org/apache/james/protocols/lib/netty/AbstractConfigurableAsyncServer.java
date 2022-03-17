@@ -113,7 +113,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     protected Encryption encryption;
 
-    protected String jmxName;
 
     private String[] enabledCipherSuites;
 
