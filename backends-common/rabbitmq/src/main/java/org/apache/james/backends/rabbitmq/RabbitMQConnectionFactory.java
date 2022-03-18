@@ -39,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Address;
@@ -66,6 +67,7 @@ public class RabbitMQConnectionFactory {
     private ConnectionFactory from(RabbitMQConfiguration rabbitMQConfiguration) {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setThreadFactory(NamedThreadFactory.withName("rabbitmq-driver"));
             connectionFactory.setUri(rabbitMQConfiguration.getUri());
             connectionFactory.setHandshakeTimeout(rabbitMQConfiguration.getHandshakeTimeoutInMs());
             connectionFactory.setShutdownTimeout(rabbitMQConfiguration.getShutdownTimeoutInMs());
