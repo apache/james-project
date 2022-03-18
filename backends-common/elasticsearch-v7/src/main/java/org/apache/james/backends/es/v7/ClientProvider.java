@@ -48,6 +48,7 @@ import org.apache.james.backends.es.v7.ElasticSearchConfiguration.HostScheme;
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration.SSLConfiguration.HostNameVerifier;
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
@@ -74,6 +75,8 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             configureAuthentication(builder);
             configureHostScheme(builder);
             configureTimeout(builder);
+
+            builder.setThreadFactory(NamedThreadFactory.withName("ElasticSearch-driver"));
 
             return builder;
         }
