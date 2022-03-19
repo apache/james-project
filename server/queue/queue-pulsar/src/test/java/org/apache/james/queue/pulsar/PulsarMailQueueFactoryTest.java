@@ -21,7 +21,7 @@ package org.apache.james.queue.pulsar;
 
 import java.util.Optional;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarConfiguration;

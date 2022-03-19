@@ -29,7 +29,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration.ManagementCredentials;
 import org.apache.mailet.Attribute;

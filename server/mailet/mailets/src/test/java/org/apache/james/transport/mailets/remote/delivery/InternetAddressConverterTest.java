@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.remote.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;

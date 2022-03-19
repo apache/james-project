@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionDiscard;

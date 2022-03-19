@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collection;
 
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;

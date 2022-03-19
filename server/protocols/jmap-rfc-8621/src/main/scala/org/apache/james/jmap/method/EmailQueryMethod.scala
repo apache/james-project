@@ -23,7 +23,7 @@ import java.time.ZonedDateTime
 import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import javax.mail.Flags.Flag.DELETED
+import jakarta.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}

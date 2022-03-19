@@ -26,10 +26,10 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;

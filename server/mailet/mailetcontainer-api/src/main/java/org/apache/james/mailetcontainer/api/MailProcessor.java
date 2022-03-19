@@ -19,6 +19,8 @@
 
 package org.apache.james.mailetcontainer.api;
 
+import jakarta.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 
 /**
@@ -52,10 +54,10 @@ public interface MailProcessor {
      * @param mail
      *            - the Mail object that contains the message and routing
      *            information
-     * @throws javax.mail.MessagingException
+     * @throws MessagingException
      *             - if a message or address parsing exception occurs or an
      *             exception that interferes with the mailet's normal operation
      */
-    void service(Mail mail) throws javax.mail.MessagingException;
+    void service(Mail mail) throws MessagingException;
 
 }

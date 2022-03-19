@@ -53,7 +53,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Duration, ZonedDateTime}
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import javax.mail.Flags
+import jakarta.mail.Flags
 
 object EmailGetMethodContract {
   private def createTestMessage: Message = Message.Builder

@@ -24,10 +24,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 
-import javax.activation.UnsupportedDataTypeException;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeUtility;
+import jakarta.activation.UnsupportedDataTypeException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeUtility;
 
 /**
  * Utility class to provide optimized write methods for the various MimeMessage
@@ -149,7 +149,7 @@ public class MimeMessageUtil {
             try {
                 bis = message.getRawInputStream();
                 bos = bodyOs;
-            } catch (javax.mail.MessagingException ignored) {
+            } catch (MessagingException ignored) {
                 throw udte;
             }
         }

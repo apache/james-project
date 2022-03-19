@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.core
 
-import javax.mail.Flags
-import javax.mail.Flags.Flag
+import jakarta.mail.Flags
+import jakarta.mail.Flags.Flag
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.apache.james.jmap.mail.KeywordsFactory.{LENIENT_KEYWORDS_FACTORY, STRICT_KEYWORDS_FACTORY}
 import org.apache.james.jmap.mail.{Keyword, Keywords}

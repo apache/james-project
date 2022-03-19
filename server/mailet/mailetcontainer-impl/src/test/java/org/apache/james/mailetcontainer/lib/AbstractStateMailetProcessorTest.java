@@ -25,7 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

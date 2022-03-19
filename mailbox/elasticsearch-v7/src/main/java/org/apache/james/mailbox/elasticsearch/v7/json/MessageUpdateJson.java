@@ -21,7 +21,7 @@
 
 package org.apache.james.mailbox.elasticsearch.v7.json;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.ModSeq;
 

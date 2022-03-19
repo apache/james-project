@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.jmap.draft.model.Filter;
 import org.apache.james.jmap.draft.model.FilterCondition;

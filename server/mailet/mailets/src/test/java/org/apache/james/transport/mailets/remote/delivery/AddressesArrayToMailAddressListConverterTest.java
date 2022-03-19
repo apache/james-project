@@ -21,8 +21,8 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Address;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.Address;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;

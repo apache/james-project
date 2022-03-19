@@ -19,7 +19,7 @@
 
 package com.custom.mailets;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.ExcludeFromDocumentation;
 import org.apache.mailet.Mail;

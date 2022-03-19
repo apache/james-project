@@ -26,8 +26,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
+
+import jakarta.mail.Flags;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;

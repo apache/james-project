@@ -24,7 +24,7 @@ import java.util.Date
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import javax.mail.Flags
+import jakarta.mail.Flags
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription

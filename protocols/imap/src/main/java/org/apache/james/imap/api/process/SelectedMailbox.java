@@ -22,7 +22,7 @@ package org.apache.james.imap.api.process;
 import java.util.Collection;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MessageUid;

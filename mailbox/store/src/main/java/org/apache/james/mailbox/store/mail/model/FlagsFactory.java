@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;

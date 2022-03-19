@@ -20,34 +20,34 @@
 <supplementalDataModels>
   <supplement>
     <project>
-      <groupId>javax.mail</groupId>
-      <artifactId>mail</artifactId>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>jakarta.mail</artifactId>
       <name>Java Mail API</name>
       <organization>
-        <name>Sun Microsystems</name>
-        <url>http://java.sun.com/</url>
+        <name>Jakarta</name>
+        <url>https://eclipse-ee4j.github.io/mail/</url>
       </organization>
       <licenses>
         <license>
-          <name>Common Development and Distribution License (CDDL) v1.0</name>
-          <url>https://glassfish.dev.java.net/public/CDDLv1.0.html</url>
+          <name>Jakarta Mail License</name>
+          <url>https://eclipse-ee4j.github.io/mail/JakartaMail-License</url>
         </license>
       </licenses>
     </project>
   </supplement>
   <supplement>
     <project>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
+      <groupId>com.sun.activation</groupId>
+      <artifactId>jakarta.activation</artifactId>
       <name>JavaBeans Activation Framework (JAF)</name>
       <organization>
-        <name>Sun Microsystems</name>
-        <url>http://java.sun.com/</url>
+        <name>Jakarta</name>
+        <url>https://eclipse-ee4j.github.io/mail/</url>
       </organization>
       <licenses>
         <license>
-          <name>Common Development and Distribution License (CDDL) v1.0</name>
-          <url>https://glassfish.dev.java.net/public/CDDLv1.0.html</url>
+          <name>Jakarta Mail License</name>
+          <url>https://eclipse-ee4j.github.io/mail/JakartaMail-License</url>
         </license>
       </licenses>
     </project>

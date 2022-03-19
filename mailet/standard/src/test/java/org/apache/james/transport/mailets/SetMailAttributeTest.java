@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;

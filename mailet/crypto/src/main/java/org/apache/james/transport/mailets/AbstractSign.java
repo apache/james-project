@@ -28,13 +28,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.ParseException;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.ParseException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -73,7 +74,7 @@ import com.google.common.base.Objects;
  * <li>{@link #initSignerName}, {@link #setSignerName} and {@link #getSignerName} manage the name
  * of the signer to be shown in the explanation text.</li>
  * <li>{@link #isOkToSign} controls whether the mail can be signed or not.</li>
- * <li>The abstract method {@link #getWrapperBodyPart} returns the massaged {@link javax.mail.internet.MimeBodyPart}
+ * <li>The abstract method {@link #getWrapperBodyPart} returns the massaged {@link jakarta.mail.internet.MimeBodyPart}
  * that will be signed, or null if the message has to be signed "as is".</li>
  * </ul>
  *
@@ -618,7 +619,7 @@ public abstract class AbstractSign extends GenericMailet {
     }
 
     /**
-     * Creates the {@link javax.mail.internet.MimeBodyPart} that will be signed.
+     * Creates the {@link jakarta.mail.internet.MimeBodyPart} that will be signed.
      * For example, may attach a text file explaining the meaning of the signature,
      * or an XML file containing information that can be checked by other MTAs.
      * @param mail The mail to massage.

@@ -20,7 +20,7 @@
 
 package org.apache.mailet;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 /**
  * A Mailet processes mail messages.

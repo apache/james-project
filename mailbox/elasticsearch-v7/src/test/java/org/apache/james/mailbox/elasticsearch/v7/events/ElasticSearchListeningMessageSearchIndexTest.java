@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;

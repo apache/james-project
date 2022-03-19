@@ -32,7 +32,7 @@ import java.util.Optional
 import java.util.concurrent.atomic.AtomicReference
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMessage
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.Try

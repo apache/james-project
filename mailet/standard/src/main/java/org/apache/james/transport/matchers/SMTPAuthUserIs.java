@@ -24,6 +24,8 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
+import jakarta.mail.MessagingException;
+
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
@@ -48,7 +50,7 @@ public class SMTPAuthUserIs extends GenericMatcher {
     private Collection<String> users;
 
     @Override
-    public void init() throws javax.mail.MessagingException {
+    public void init() throws MessagingException {
         StringTokenizer st = new StringTokenizer(getCondition(), ", \t", false);
         users = new java.util.HashSet<>();
         while (st.hasMoreTokens()) {

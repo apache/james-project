@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;

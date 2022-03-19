@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

@@ -24,7 +24,7 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.Locale;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;

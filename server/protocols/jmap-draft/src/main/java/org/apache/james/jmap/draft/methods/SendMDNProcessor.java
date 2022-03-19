@@ -25,8 +25,9 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
-import javax.mail.MessagingException;
+
+import jakarta.mail.Flags;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.jmap.draft.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.jmap.draft.exceptions.MessageNotFoundException;

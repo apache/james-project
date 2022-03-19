@@ -44,8 +44,9 @@ import java.util.StringTokenizer;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 import javax.sql.DataSource;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;

@@ -26,9 +26,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Part;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.Part;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.javax.MultipartUtil;

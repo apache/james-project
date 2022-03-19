@@ -20,7 +20,7 @@
 
 package org.apache.james.transport.mailets.jsieve.delivery;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.core.MailAddress;

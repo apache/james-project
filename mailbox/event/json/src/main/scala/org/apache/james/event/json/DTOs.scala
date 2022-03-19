@@ -22,8 +22,8 @@ package org.apache.james.event.json
 import java.time.Instant
 import java.util.Date
 
-import javax.mail.Flags.Flag
-import javax.mail.{Flags => JavaMailFlags}
+import jakarta.mail.Flags.Flag
+import jakarta.mail.{Flags => JavaMailFlags}
 import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaLimitValue, QuotaUsageValue}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag

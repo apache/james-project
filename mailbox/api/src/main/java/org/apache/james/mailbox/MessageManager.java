@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
+import jakarta.mail.Flags;
+import jakarta.mail.internet.SharedInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;

@@ -23,7 +23,7 @@ import java.util.function.Consumer
 
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
-import javax.mail.Flags
+import jakarta.mail.Flags
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer

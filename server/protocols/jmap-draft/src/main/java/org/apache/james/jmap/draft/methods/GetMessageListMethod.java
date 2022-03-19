@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static javax.mail.Flags.Flag.DELETED;
+import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.util.ReactorUtils.context;
 
 import java.time.ZonedDateTime;

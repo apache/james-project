@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.mail.Message;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.Message;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;

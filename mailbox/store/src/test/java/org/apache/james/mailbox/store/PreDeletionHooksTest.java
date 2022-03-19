@@ -34,7 +34,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;

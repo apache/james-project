@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.NoSuchElementException;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.event.json.DTOs;
 import org.junit.jupiter.api.Test;

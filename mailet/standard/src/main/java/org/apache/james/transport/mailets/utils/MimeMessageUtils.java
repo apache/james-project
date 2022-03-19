@@ -22,9 +22,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 

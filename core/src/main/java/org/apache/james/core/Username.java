@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;

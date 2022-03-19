@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;

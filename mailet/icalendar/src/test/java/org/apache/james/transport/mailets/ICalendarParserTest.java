@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.Attribute;

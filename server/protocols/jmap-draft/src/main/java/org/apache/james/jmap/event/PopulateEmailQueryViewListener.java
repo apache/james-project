@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.event;
 
-import static javax.mail.Flags.Flag.DELETED;
+import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.io.IOException;

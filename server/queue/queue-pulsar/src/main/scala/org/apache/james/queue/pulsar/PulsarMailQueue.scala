@@ -23,8 +23,8 @@ import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
-import javax.mail.MessagingException
-import javax.mail.internet.MimeMessage
+import jakarta.mail.MessagingException
+import jakarta.mail.internet.MimeMessage
 
 import scala.concurrent._
 import scala.concurrent.duration._

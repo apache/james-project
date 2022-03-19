@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
-import static javax.mail.Flags.Flag.RECENT;
+import static jakarta.mail.Flags.Flag.RECENT;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;

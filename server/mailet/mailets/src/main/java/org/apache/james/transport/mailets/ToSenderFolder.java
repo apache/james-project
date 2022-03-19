@@ -20,7 +20,8 @@ package org.apache.james.transport.mailets;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

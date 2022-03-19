@@ -20,7 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -73,7 +74,7 @@ public class ToRepository extends GenericMailet {
     }
 
     @Override
-    public void service(Mail mail) throws javax.mail.MessagingException {
+    public void service(Mail mail) throws MessagingException {
         String logBuffer = "Storing mail " + mail.getName() + " in " + repositoryPath;
         LOGGER.info(logBuffer);
         repository.store(mail);

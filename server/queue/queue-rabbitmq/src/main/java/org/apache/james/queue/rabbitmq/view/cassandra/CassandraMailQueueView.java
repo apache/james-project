@@ -24,7 +24,8 @@ import static org.apache.james.util.FunctionalUtils.negate;
 import java.time.Instant;
 
 import javax.inject.Inject;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;

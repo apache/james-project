@@ -20,7 +20,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Set;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
 

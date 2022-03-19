@@ -34,7 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;

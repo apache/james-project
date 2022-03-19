@@ -24,8 +24,8 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.TestingSession;

@@ -72,9 +72,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Domain;

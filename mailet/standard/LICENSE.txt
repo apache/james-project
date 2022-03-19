@@ -181,11 +181,11 @@
    THIS PRODUCT ALSO INCLUDES THIRD PARTY SOFTWARE REDISTRIBUTED UNDER THE
    FOLLOWING LICENSES:
      
-   JavaBeans Activation Framework, CDDL License
-     http://glassfish.dev.java.net/public/CDDLv1.0.html
+   Jakarta Activation, Jakarta Mail License
+     https://eclipse-ee4j.github.io/mail/JakartaMail-License
      
-   JavaMail, CDDL License
-     http://glassfish.dev.java.net/public/CDDLv1.0.html
+   Jakarta Mail, Jakarta Mail License
+     https://eclipse-ee4j.github.io/mail/JakartaMail-License
      
    JUnit, Common Public License - v 1.0
      http://www.junit.org/

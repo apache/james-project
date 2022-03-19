@@ -20,7 +20,7 @@ package org.apache.james.mailbox.mock;
 
 import java.util.stream.IntStream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;

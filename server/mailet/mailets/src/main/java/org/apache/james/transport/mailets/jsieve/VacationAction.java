@@ -24,8 +24,8 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;

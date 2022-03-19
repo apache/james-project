@@ -26,9 +26,9 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.Address
-import javax.mail.Message.RecipientType
-import javax.mail.internet.{InternetAddress, MimeMessage}
+import jakarta.mail.Address
+import jakarta.mail.Message.RecipientType
+import jakarta.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}

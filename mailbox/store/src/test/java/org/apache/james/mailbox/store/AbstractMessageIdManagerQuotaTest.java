@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;

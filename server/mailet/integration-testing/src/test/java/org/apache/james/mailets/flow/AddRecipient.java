@@ -21,7 +21,7 @@ package org.apache.james.mailets.flow;
 
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;

@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Attribute;

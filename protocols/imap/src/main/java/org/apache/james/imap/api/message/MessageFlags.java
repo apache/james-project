@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 /**
  * The set of flags associated with a message.
- * javax.mail.Flags instead of having our own.
+ * jakarta.mail.Flags instead of having our own.
  * 
  * <p>
  * Reference: RFC 2060 - para 2.3

@@ -35,8 +35,9 @@ import java.util.Optional;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeUtility;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeUtility;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;

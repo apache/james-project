@@ -37,7 +37,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.elasticsearch.v7.json.HeaderCollection;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants;

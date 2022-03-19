@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.io.IOUtils;

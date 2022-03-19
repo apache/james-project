@@ -30,7 +30,8 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

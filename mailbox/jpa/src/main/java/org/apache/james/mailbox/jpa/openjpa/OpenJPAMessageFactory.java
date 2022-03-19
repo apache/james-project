@@ -22,7 +22,7 @@ package org.apache.james.mailbox.jpa.openjpa;
 import java.util.Date;
 import java.util.List;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;

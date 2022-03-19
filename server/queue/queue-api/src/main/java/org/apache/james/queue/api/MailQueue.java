@@ -23,7 +23,7 @@ import java.io.Closeable;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;

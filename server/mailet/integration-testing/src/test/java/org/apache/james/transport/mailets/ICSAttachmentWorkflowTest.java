@@ -29,7 +29,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;

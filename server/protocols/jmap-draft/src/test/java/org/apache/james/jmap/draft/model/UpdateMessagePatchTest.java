@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.junit.Rule;

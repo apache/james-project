@@ -22,9 +22,9 @@ package org.apache.james.transport.matchers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
@@ -54,7 +54,7 @@ public class HasExceptionTest {
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
-                .condition("javax.mail.internet.AddressException")
+                .condition("jakarta.mail.internet.AddressException")
                 .build();
 
         testee.init(matcherConfig);
@@ -68,7 +68,7 @@ public class HasExceptionTest {
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
-                .condition("javax.mail.MessagingException")
+                .condition("jakarta.mail.MessagingException")
                 .build();
 
         testee.init(matcherConfig);
@@ -82,7 +82,7 @@ public class HasExceptionTest {
 
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("HasException")
-                .condition("javax.mail.MessagingException")
+                .condition("jakarta.mail.MessagingException")
                 .build());
 
         assertThat(testee.match(mockedMail)).isEmpty();
@@ -90,11 +90,11 @@ public class HasExceptionTest {
 
     @Test
     public void matchShouldReturnEmptyWhenSuperclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new javax.mail.MessagingException())));
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
-                .condition("javax.mail.internet.AddressException")
+                .condition("jakarta.mail.internet.AddressException")
                 .build();
 
         testee.init(matcherConfig);
@@ -150,7 +150,7 @@ public class HasExceptionTest {
     
     @Test
     public void initShouldRaiseMessagingExceptionWhenClassNameIsNotFullyQualified() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new javax.mail.MessagingException())));
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
