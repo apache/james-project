@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.startsWith;
 
 import java.io.File;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;

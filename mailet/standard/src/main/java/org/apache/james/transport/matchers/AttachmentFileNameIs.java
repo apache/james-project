@@ -30,10 +30,10 @@ import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Part;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.Part;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.codec.DecodeMonitor;

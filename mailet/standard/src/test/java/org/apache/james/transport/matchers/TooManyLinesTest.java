@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;

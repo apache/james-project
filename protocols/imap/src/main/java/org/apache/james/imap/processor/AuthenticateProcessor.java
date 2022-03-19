@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
@@ -93,14 +93,14 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     doPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
                     session.executeSafely(() -> {
-                        responder.respond(new AuthenticateResponse());
+                    responder.respond(new AuthenticateResponse());
                         responder.flush();
-                        session.pushLineHandler((requestSession, data) -> {
-                            doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
-                            // remove the handler now
-                            requestSession.popLineHandler();
+                    session.pushLineHandler((requestSession, data) -> {
+                        doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                        // remove the handler now
+                        requestSession.popLineHandler();
                             responder.flush();
-                        });
+                    });
                     });
                 }
             }
@@ -110,13 +110,13 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 doOAuth(irRequest.getInitialClientResponse(), session, request, responder);
             } else {
                 session.executeSafely(() -> {
-                    responder.respond(new AuthenticateResponse());
+                responder.respond(new AuthenticateResponse());
                     responder.flush();
-                    session.pushLineHandler((requestSession, data) -> {
-                        doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
-                        requestSession.popLineHandler();
+                session.pushLineHandler((requestSession, data) -> {
+                    doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                    requestSession.popLineHandler();
                         responder.flush();
-                    });
+                });
                 });
             }
         } else {
@@ -220,7 +220,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                         session, request, responder, authenticatedUser, associatedUser);
                 } else {
                     authSuccess(authenticatedUser, session, request, responder);
-                }
+        }
             }, () -> manageFailureCount(session, request, responder));
     }
 

@@ -22,8 +22,8 @@ package org.apache.james.transport.mailets.utils;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 public class MimeMessageModifier {
 

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.codec.DecodeMonitor;
@@ -147,7 +147,7 @@ public class HasHeader extends GenericMatcher {
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Set<MailAddress> matchingRecipients = new HashSet<>();
         boolean first = true;
         for (HeaderCondition headerCondition : headerConditions) {

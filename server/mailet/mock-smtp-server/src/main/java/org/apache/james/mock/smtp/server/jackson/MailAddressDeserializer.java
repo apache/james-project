@@ -21,7 +21,7 @@ package org.apache.james.mock.smtp.server.jackson;
 
 import java.io.IOException;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 

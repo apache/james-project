@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.junit.jupiter.api.Test;
 

@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;

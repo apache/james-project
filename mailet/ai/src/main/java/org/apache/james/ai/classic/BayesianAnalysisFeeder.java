@@ -26,10 +26,11 @@ import java.sql.Connection;
 import java.util.Enumeration;
 
 import javax.annotation.Resource;
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
+
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -311,7 +312,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
             LOGGER.error("SQLException: ", se);
         } catch (java.io.IOException ioe) {
             LOGGER.error("IOException: ", ioe);
-        } catch (javax.mail.MessagingException me) {
+        } catch (MessagingException me) {
             LOGGER.error("MessagingException: ", me);
         } finally {
             // Rollback our changes if necessary.
@@ -327,14 +328,14 @@ public class BayesianAnalysisFeeder extends GenericMailet {
         }
     }
 
-    private void clearAllHeaders(MimeMessage message) throws javax.mail.MessagingException {
+    private void clearAllHeaders(MimeMessage message) throws MessagingException {
         Enumeration<Header> headers = message.getAllHeaders();
 
         while (headers.hasMoreElements()) {
             Header header = headers.nextElement();
             try {
                 message.removeHeader(header.getName());
-            } catch (javax.mail.MessagingException me) {
+            } catch (MessagingException me) {
                 LOGGER.error("Cannot remove header.", me);
             }
         }

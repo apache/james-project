@@ -21,7 +21,7 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;

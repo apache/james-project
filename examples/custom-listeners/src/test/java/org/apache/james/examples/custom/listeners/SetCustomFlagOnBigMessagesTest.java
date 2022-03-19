@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;

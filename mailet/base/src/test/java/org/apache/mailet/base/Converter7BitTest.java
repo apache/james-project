@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.BodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.util.MimeMessageUtil;

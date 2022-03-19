@@ -108,7 +108,7 @@ public class ReprocessingAllMailsTask implements Task {
     public Result run() {
         return reprocessingService.reprocessAll(repositoryPath, configuration, this::notifyProgress)
             .block();
-    }
+        }
 
     MailRepositoryPath getRepositoryPath() {
         return repositoryPath;

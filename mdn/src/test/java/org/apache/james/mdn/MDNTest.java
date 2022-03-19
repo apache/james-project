@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;

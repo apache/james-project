@@ -38,7 +38,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.api.BucketName;

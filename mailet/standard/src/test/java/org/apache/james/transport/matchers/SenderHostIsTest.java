@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

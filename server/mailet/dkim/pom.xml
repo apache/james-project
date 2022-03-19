@@ -81,8 +81,8 @@
                     <artifactId>log4j</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.geronimo.javamail</groupId>
-                    <artifactId>geronimo-javamail_1.4_mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

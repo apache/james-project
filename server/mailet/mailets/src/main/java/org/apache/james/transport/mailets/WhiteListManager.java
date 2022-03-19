@@ -38,15 +38,16 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
-import javax.mail.Address;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
+
+import jakarta.mail.Address;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -199,7 +200,7 @@ public class WhiteListManager extends GenericMailet {
             LOGGER.debug("whitelistManagerAddress: {}", whitelistManagerAddressString);
             try {
                 whitelistManagerAddress = new MailAddress(whitelistManagerAddressString);
-            } catch (javax.mail.internet.ParseException pe) {
+            } catch (jakarta.mail.internet.ParseException pe) {
                 throw new MessagingException("Bad whitelistManagerAddress", pe);
             }
 
@@ -452,7 +453,7 @@ public class WhiteListManager extends GenericMailet {
                         MailAddress recipientMailAddress;
                         try {
                             recipientMailAddress = new MailAddress(st.nextToken());
-                        } catch (javax.mail.internet.ParseException pe) {
+                        } catch (jakarta.mail.internet.ParseException pe) {
                             continue;
                         }
                         String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
@@ -571,7 +572,7 @@ public class WhiteListManager extends GenericMailet {
                         MailAddress recipientMailAddress;
                         try {
                             recipientMailAddress = new MailAddress(st.nextToken());
-                        } catch (javax.mail.internet.ParseException pe) {
+                        } catch (jakarta.mail.internet.ParseException pe) {
                             continue;
                         }
                         String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);

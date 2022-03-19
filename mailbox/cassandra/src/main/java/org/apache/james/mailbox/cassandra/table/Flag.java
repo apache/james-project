@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.table;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.google.common.collect.ImmutableMap;

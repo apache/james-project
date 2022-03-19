@@ -27,7 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;

@@ -34,7 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.SortedMap;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;

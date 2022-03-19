@@ -24,7 +24,8 @@ import java.time.Clock;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

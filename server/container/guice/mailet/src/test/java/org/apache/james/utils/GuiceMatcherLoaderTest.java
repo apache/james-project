@@ -25,7 +25,7 @@ import static org.apache.james.filesystem.api.FileSystemFixture.THROWING_FILE_SY
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.transport.matchers.All;
 import org.apache.mailet.Matcher;

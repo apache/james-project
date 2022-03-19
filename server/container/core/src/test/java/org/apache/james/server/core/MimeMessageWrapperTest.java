@@ -29,10 +29,10 @@ import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.LifecycleUtil;

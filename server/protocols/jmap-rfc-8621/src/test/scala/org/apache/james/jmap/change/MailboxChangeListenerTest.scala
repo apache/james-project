@@ -23,7 +23,7 @@ package org.apache.james.jmap.change
 import java.time.{Clock, ZonedDateTime}
 
 import com.google.common.collect.ImmutableList
-import javax.mail.Flags
+import jakarta.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.events.{Event, EventBus, InVMEventBus, MemoryEventDeadLetters, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
@@ -426,7 +426,7 @@ class MailboxChangeListenerTest {
       Thread.sleep(200)
       assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
         .containsExactly(inboxId)
-    }
+  }
 
     @Test
     def unSubscribeMailboxShouldStoreMailboxUnSubscribedEvent(): Unit = {
@@ -794,12 +794,12 @@ class MailboxChangeListenerTest {
     private def dummyState(): State = {
       val state = stateFactory.generate()
       emailChangeRepository.save(EmailChange.builder()
-        .accountId(ACCOUNT_ID)
-        .state(state)
-        .date(ZonedDateTime.now)
+          .accountId(ACCOUNT_ID)
+          .state(state)
+          .date(ZonedDateTime.now)
         .isShared(false)
-        .created(TestMessageId.of(0))
-        .build)
+          .created(TestMessageId.of(0))
+          .build)
         .block()
       state
     }

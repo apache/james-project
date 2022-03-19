@@ -34,7 +34,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;

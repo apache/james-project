@@ -32,7 +32,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;

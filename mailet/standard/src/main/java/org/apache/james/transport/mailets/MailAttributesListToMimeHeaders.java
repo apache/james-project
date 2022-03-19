@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;

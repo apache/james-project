@@ -29,8 +29,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.mail.Flags.Flag;
+import jakarta.inject.Inject;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -87,10 +87,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         Capability.of("ESEARCH"),
         Capability.of("SEARCHRES"),
         Capability.of("PARTIAL"));
-
+    
     @Inject
     public SearchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+            MetricFactory metricFactory) {
         super(SearchRequest.class, mailboxManager, factory, metricFactory);
     }
 
@@ -135,88 +135,88 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     private Mono<Optional<ModSeq>> computeHighestModSeqIfNeeded(ImapSession session, Responder responder, MessageManager mailbox, MailboxSession msession, Collection<MessageUid> uids) {
-        // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
-        //
-        // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
-        if (session.getAttribute(SEARCH_MODSEQ) != null) {
+            // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
+            //
+            // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
+            if (session.getAttribute(SEARCH_MODSEQ) != null) {
             try {
                 return mailbox.getMetaDataReactive(IGNORE, msession, EnumSet.of(MailboxMetaData.Item.HighestModSeq))
                     .flatMap(metaData -> {
-                        // Enable CONDSTORE as this is a CONDSTORE enabling command
-                        condstoreEnablingCommand(session, responder,  metaData, true);
+                // Enable CONDSTORE as this is a CONDSTORE enabling command
+                condstoreEnablingCommand(session, responder,  metaData, true);                
                         return findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
                     })
                     .switchIfEmpty(Mono.empty());
             } catch (MailboxException e) {
                 throw new RuntimeException(e);
             }
-        } else {
+            } else {
             return Mono.just(Optional.empty());
-        }
+            }
     }
 
     private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, Collection<MessageUid> uids, Optional<ModSeq> highestModSeq) {
         LongList ids = asResults(session, request.isUseUids(), uids);
 
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
-        if (resultOptions == null || resultOptions.isEmpty()) {
+            if (resultOptions == null || resultOptions.isEmpty()) {
             return new SearchResponse(ids, highestModSeq.orElse(null));
-        } else {
+            } else {
             return handleResultOptions(request, session, highestModSeq.orElse(null), ids);
-        }
-    }
-
+                }
+                }
+                
     private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, ModSeq highestModSeq, LongList ids) {
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
-
+                
         IdRange[] idRanges = asRanges(
             request.getSearchOperation()
                 .getPartialRange()
                 .map(partialRange -> partialRange.filter(ids))
                 .orElse(ids));
 
-        boolean esearch = false;
-        for (SearchResultOption resultOption : resultOptions) {
-            if (SearchResultOption.SAVE != resultOption) {
-                esearch = true;
-                break;
-            }
-        }
-
-        if (esearch) {
-            long min = -1;
-            long max = -1;
+                boolean esearch = false;
+                for (SearchResultOption resultOption : resultOptions) {
+                    if (SearchResultOption.SAVE != resultOption) {
+                        esearch = true;
+                        break;
+                    }
+                }
+                
+                if (esearch) {
+                    long min = -1;
+                    long max = -1;
             long count = ids.size();
 
             if (!ids.isEmpty()) {
                 min = ids.getLong(0);
                 max = ids.getLong(ids.size() - 1);
-            }
-
-            // Save the sequence-set for later usage. This is part of SEARCHRES
-            if (resultOptions.contains(SearchResultOption.SAVE)) {
+                    } 
+                   
+                    // Save the sequence-set for later usage. This is part of SEARCHRES 
+                    if (resultOptions.contains(SearchResultOption.SAVE)) {
                 if (resultOptions.contains(SearchResultOption.ALL) || resultOptions.contains(SearchResultOption.COUNT) || resultOptions.contains(SearchResultOption.PARTIAL)) {
-                    // if the options contain ALL or COUNT we need to save the complete sequence-set
-                    SearchResUtil.saveSequenceSet(session, idRanges);
-                } else {
-                    List<IdRange> savedRanges = new ArrayList<>();
+                            // if the options contain ALL or COUNT we need to save the complete sequence-set
+                            SearchResUtil.saveSequenceSet(session, idRanges);
+                        } else {
+                            List<IdRange> savedRanges = new ArrayList<>();
                     if (resultOptions.contains(SearchResultOption.MIN) && min > 0) {
-                        // Store the MIN
-                        savedRanges.add(new IdRange(min));
-                    }
+                                // Store the MIN
+                                savedRanges.add(new IdRange(min));  
+                            } 
                     if (resultOptions.contains(SearchResultOption.MAX) && max > 0) {
-                        // Store the MAX
-                        savedRanges.add(new IdRange(max));
+                                // Store the MAX
+                                savedRanges.add(new IdRange(max));
+                            }
+                            SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
+                        }
                     }
-                    SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
-                }
-            }
             return new ESearchResponse(min, max, count,
                 allRange(resultOptions, idRanges),
                 partialRange(resultOptions, idRanges), highestModSeq, request.getTag(), request.isUseUids(), resultOptions, request.getSearchOperation().getPartialRange());
-        } else {
-            // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
-            SearchResUtil.saveSequenceSet(session, idRanges);
+                } else {
+                    // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
+                    SearchResUtil.saveSequenceSet(session, idRanges);
             return new SearchResponse(ids, highestModSeq);
         }
     }
@@ -224,9 +224,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     private IdRange[] allRange(List<SearchResultOption> resultOptions, IdRange[] idRanges) {
         if (resultOptions.contains(SearchResultOption.PARTIAL)) {
             return null;
-        }
+                }
         return idRanges;
-    }
+            }
 
     private IdRange[] partialRange(List<SearchResultOption> resultOptions, IdRange[] idRanges) {
         if (resultOptions.contains(SearchResultOption.PARTIAL)) {
@@ -254,11 +254,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             if (id == highBound + 1) {
                 highBound = id;
                 continue;
-            }
+        }
             idsAsRanges.add(new IdRange(lowBound, highBound));
             lowBound = id;
             highBound = id;
-        }
+    }
         if (lowBound != -1 && highBound != -1) {
             idsAsRanges.add(new IdRange(lowBound, highBound));
         }
@@ -277,8 +277,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             for (MessageUid uid: uids) {
                 session.getSelected().msn(uid)
                     .ifPresent(l -> result.add(l.asInt()));
-            }
         }
+    }
         return result;
     }
 
@@ -305,8 +305,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 return b;
             }).map(Optional::of)
             .switchIfEmpty(Mono.fromCallable(Optional::empty));
-    }
-
+                }
+            
     private SearchQuery toQuery(SearchKey key, ImapSession session) throws MessageRangeException {
         SearchQuery.Criterion criterion = toCriterion(key, session);
         SearchQuery.Builder builder = SearchQuery.builder();

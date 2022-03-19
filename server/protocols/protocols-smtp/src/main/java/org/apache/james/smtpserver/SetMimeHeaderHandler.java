@@ -19,7 +19,8 @@
 
 package org.apache.james.smtpserver;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -76,7 +77,7 @@ public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
                 message.saveChanges();
             }
 
-        } catch (javax.mail.MessagingException me) {
+        } catch (MessagingException me) {
             LOGGER.error(me.getMessage());
         }
 

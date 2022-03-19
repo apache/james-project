@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.mailet.Mailet;

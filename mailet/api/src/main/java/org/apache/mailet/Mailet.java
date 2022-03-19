@@ -22,7 +22,7 @@ package org.apache.mailet;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import com.google.common.collect.ImmutableList;
 
@@ -139,6 +139,6 @@ public interface Mailet {
      */
     default Collection<ProcessingState> requiredProcessingState() {
         return ImmutableList.of();
-    }
+}
 
 }

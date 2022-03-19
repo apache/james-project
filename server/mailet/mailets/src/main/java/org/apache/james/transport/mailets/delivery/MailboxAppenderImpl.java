@@ -24,9 +24,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Optional;
 
-import javax.mail.Flags;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Flags;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
@@ -135,7 +135,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
 
     private MessageManager.AppendCommand.Builder appendCommand(Optional<Flags> flags) {
         MessageManager.AppendCommand.Builder builder = MessageManager.AppendCommand.builder()
-            .recent()
+                    .recent()
             .delivery();
         return flags.map(builder::withFlags)
             .orElse(builder);
@@ -179,7 +179,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
     }
 
     private void closeProcessing(MailboxSession session) {
-        mailboxManager.endProcessingRequest(session);
-    }
+            mailboxManager.endProcessingRequest(session);
+        }
 
 }

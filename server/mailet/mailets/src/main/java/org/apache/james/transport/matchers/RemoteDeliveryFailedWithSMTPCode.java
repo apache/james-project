@@ -23,7 +23,7 @@ import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVER
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.AttributeUtils;

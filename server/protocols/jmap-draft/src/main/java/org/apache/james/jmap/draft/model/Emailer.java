@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.address.AddressList;

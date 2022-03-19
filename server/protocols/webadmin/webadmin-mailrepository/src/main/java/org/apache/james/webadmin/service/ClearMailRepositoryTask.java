@@ -25,6 +25,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import jakarta.mail.MessagingException;
+
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -149,6 +151,6 @@ public class ClearMailRepositoryTask implements Task {
                 .reduce(0L, Long::sum);
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             throw new RuntimeException(e);
-        }
     }
+}
 }

@@ -26,7 +26,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.internet.MimeUtility;
+import jakarta.mail.internet.MimeUtility;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse;

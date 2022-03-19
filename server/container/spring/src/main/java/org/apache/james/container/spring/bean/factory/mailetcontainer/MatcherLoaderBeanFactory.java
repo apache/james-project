@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.container.spring.bean.factory.mailetcontainer;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.mailetcontainer.api.MatcherLoader;
 import org.apache.mailet.Matcher;

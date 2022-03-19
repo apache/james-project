@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.slf4j.Logger;

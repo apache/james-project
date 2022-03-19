@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.api;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;

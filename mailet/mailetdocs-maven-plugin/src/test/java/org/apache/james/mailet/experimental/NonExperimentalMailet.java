@@ -19,7 +19,7 @@
 
 package org.apache.james.mailet.experimental;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 

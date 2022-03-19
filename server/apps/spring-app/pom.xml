@@ -84,8 +84,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -95,8 +95,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -106,8 +106,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -121,8 +121,8 @@
                     <artifactId>hadoop-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -141,8 +141,8 @@
             <artifactId>james-server-core</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -151,8 +151,8 @@
             <artifactId>james-server-data-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -163,8 +163,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -200,8 +200,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -230,8 +230,8 @@
             <artifactId>james-server-dnsservice-library</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -241,8 +241,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -270,8 +270,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -281,8 +281,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.geronimo.javamail</groupId>
-                    <artifactId>geronimo-javamail_1.4_mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -291,8 +291,8 @@
             <artifactId>james-server-mailetcontainer-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -302,8 +302,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -317,8 +317,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -350,8 +350,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -376,8 +376,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -392,8 +392,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -407,8 +407,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -417,8 +417,8 @@
             <artifactId>james-server-queue-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -428,8 +428,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -438,8 +438,8 @@
             <artifactId>james-server-spring</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -453,8 +453,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

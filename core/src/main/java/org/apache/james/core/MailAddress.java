@@ -23,8 +23,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -380,8 +380,8 @@ public class MailAddress implements java.io.Serializable {
     public Optional<InternetAddress> toInternetAddress() {
         try {
             return Optional.of(new InternetAddress(toString()));
-        } catch (javax.mail.internet.AddressException ae) {
-            LOGGER.warn("A valid address '{}' as per James criterial fails to parse as a javax.mail InternetAdrress", asString());
+        } catch (AddressException ae) {
+            LOGGER.warn("A valid address '{}' as per James criterial fails to parse as a jakarta.mail InternetAdrress", asString());
             return Optional.empty();
         }
     }

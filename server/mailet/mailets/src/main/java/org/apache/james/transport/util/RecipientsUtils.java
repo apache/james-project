@@ -20,7 +20,7 @@ package org.apache.james.transport.util;
 
 import java.util.List;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;

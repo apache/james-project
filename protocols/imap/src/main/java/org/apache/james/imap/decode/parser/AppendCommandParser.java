@@ -26,8 +26,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import javax.inject.Inject;
-import javax.mail.Flags;
+import jakarta.inject.Inject;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;

@@ -32,7 +32,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;

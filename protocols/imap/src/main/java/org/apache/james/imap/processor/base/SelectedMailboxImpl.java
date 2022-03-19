@@ -35,8 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.StampedLock;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;

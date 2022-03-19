@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;

@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.util.io.ZeroedInputStream;
 import org.junit.jupiter.api.AfterEach;

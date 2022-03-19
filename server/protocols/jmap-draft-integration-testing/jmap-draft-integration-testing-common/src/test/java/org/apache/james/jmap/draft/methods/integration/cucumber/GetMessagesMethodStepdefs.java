@@ -38,7 +38,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;

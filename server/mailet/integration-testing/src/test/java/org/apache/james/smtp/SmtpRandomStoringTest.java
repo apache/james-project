@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.Username;

@@ -23,7 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;

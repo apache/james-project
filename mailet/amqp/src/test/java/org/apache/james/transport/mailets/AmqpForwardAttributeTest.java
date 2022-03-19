@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration.ManagementCredentials;
 import org.apache.james.metrics.tests.RecordingMetricFactory;

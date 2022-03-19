@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.remote.delivery;
 import java.time.Duration;
 import java.util.List;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.util.DurationParser;
 

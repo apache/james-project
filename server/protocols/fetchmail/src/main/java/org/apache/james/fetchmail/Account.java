@@ -22,8 +22,8 @@ package org.apache.james.fetchmail;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.Session;
-import javax.mail.internet.ParseException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.ParseException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;

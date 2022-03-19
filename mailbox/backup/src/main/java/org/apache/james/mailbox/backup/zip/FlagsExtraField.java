@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
 import org.apache.james.util.StreamUtils;

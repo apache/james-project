@@ -32,10 +32,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.Flags;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;

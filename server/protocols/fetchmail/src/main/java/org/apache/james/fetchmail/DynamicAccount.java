@@ -19,7 +19,7 @@
 
 package org.apache.james.fetchmail;
 
-import javax.mail.Session;
+import jakarta.mail.Session;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 

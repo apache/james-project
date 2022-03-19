@@ -29,9 +29,9 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.mail.MessagingException;
-import javax.mail.Part;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Part;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.transport.SMIMEKeyHolder;

@@ -39,8 +39,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.AuditTrail;

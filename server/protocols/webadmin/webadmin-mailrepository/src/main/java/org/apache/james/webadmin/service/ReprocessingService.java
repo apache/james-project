@@ -27,7 +27,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;

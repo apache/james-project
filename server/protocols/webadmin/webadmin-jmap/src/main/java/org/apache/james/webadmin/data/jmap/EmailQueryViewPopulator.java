@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import static javax.mail.Flags.Flag.DELETED;
+import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
 import java.io.IOException;

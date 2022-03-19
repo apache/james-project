@@ -22,7 +22,7 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
@@ -47,7 +47,7 @@ public class RecipientIs extends GenericRecipientMatcher {
     private Collection<Optional<MailAddress>> recipients;
 
     @Override
-    public void init() throws javax.mail.MessagingException {
+    public void init() throws MessagingException {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("RecipientIs should have a condition  composed of a list of mail addresses");
         }

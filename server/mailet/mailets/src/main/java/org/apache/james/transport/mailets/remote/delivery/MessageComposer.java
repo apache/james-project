@@ -25,9 +25,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.mailet.Mail;
 

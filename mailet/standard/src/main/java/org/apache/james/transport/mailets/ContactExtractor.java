@@ -22,12 +22,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.mail.Address;
-import javax.mail.Message;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Address;
+import jakarta.mail.Message;
+import jakarta.mail.Message.RecipientType;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.util.MimeUtil;

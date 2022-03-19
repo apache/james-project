@@ -28,8 +28,8 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;

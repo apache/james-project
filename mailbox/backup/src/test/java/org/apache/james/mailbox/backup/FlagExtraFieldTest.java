@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.backup.zip.FlagsExtraField;
 import org.junit.jupiter.api.Nested;

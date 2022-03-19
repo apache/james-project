@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;

@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -178,7 +178,7 @@ public class RecipientRewriteTableProcessor {
             mappingTypes = types;
         } else {
             mappingTypes = EnumSet.allOf(Mapping.Type.class);
-        }
+    }
     }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {

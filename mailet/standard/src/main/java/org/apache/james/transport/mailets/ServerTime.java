@@ -21,8 +21,9 @@
 
 package org.apache.james.transport.mailets;
 
-import javax.mail.Address;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -45,10 +46,10 @@ public class ServerTime extends GenericMailet {
      *
      * @param mail the mail being processed
      *
-     * @throws javax.mail.MessagingException if an error is encountered while formulating the reply message
+     * @throws MessagingException if an error is encountered while formulating the reply message
      */
     @Override
-    public void service(Mail mail) throws javax.mail.MessagingException {
+    public void service(Mail mail) throws MessagingException {
         if (!mail.hasSender()) {
             return;
         }

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.ModSeq;
 

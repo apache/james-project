@@ -184,7 +184,7 @@
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
     <module name="ImportOrder">
-      <property name="groups" value="/^java\./,javax,org,com"/>
+      <property name="groups" value="/^java\./,javax,jakarta,org,com"/>
       <property name="ordered" value="true"/>
       <property name="separated" value="true"/>
       <property name="option" value="top"/>

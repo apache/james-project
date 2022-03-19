@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
