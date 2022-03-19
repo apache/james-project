@@ -22,7 +22,7 @@ package org.apache.james.mailbox;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 public class FlagsBuilder {
 

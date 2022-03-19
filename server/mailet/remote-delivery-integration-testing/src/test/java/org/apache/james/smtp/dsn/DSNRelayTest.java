@@ -118,7 +118,7 @@ class DSNRelayTest {
         jamesServer.shutdown();
     }
 
-    @Disabled("JAMES-3431 No javax.mail support for ORCPT DSN parameter...")
+    @Disabled("JAMES-3431 No jakarta.mail support for ORCPT DSN parameter...")
     @Test
     void orcptIsUnsupported(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");

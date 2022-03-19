@@ -20,8 +20,8 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-import javax.mail.Flags;
+import jakarta.inject.Inject;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -42,7 +42,7 @@ import org.apache.james.mailbox.MessageManager;
 public class StoreCommandParser extends AbstractUidCommandParser {
 
     private static final String UNCHANGEDSINCE = "UNCHANGEDSINCE";
-
+    
     @Inject
     public StoreCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STORE_COMMAND, statusResponseFactory);

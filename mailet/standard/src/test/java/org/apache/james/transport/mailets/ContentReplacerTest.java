@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;

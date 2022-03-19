@@ -29,7 +29,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.mail.internet.InternetAddress;
+
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;

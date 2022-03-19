@@ -21,7 +21,7 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.message.response.FlagsResponse;
 

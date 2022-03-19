@@ -31,8 +31,9 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 import javax.sql.DataSource;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

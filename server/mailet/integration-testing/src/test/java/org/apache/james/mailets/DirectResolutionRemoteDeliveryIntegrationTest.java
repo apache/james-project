@@ -120,7 +120,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     @Test
     void shouldRejectInvalidAddressesUponSubmission(@TempDir File temporaryFolder) throws Exception {
         /*
-        a..b@domain.com triggered a parsing error within javax.mail, the exception was ignored and substituted with null,
+        a..b@domain.com triggered a parsing error within jakarta.mail, the exception was ignored and substituted with null,
         resulting in a NPE in RemoteDelivery. Instead we now reject it as part of SMTP reception emails we cannot handle.
         This could be used to make the delivery of all remote recipients fail while local recipient succeeds.
          */

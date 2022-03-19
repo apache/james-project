@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMessage
 import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
@@ -193,7 +193,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
   private def buildMailAndMimeMessage(sender: String, recipient: String, subject: String, mdn: MDN): (MailImpl, MimeMessage) = {
     val mimeMessage: MimeMessage = mdn.asMimeMessage()
     mimeMessage.setFrom(sender)
-    mimeMessage.setRecipients(javax.mail.Message.RecipientType.TO, recipient)
+    mimeMessage.setRecipients(jakarta.mail.Message.RecipientType.TO, recipient)
     mimeMessage.setSubject(subject)
     mimeMessage.saveChanges()
 

@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;

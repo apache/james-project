@@ -22,7 +22,7 @@ package org.apache.james.mailrepository.api;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;

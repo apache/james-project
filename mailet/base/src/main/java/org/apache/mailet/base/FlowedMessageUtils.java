@@ -21,9 +21,9 @@ package org.apache.mailet.base;
 
 import java.io.IOException;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.ContentType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

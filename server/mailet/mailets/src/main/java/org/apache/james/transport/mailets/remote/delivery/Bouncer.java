@@ -26,8 +26,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Attribute;

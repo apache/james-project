@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -190,9 +190,9 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
                 .setInputStream(new FileInputStream(getResource().getOut().getFile()))
                 .setBufferSize(2048)
                 .get();
-            getResource().streams.add(in);
-            return in;
-        }
+        getResource().streams.add(in);
+        return in;
+    }
     }
 
     /**

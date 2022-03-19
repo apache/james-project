@@ -29,9 +29,9 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.Address
-import javax.mail.Message.RecipientType
-import javax.mail.internet.{InternetAddress, MimeMessage}
+import jakarta.mail.Address
+import jakarta.mail.Message.RecipientType
+import jakarta.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
@@ -252,7 +252,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =
-    for {
+   for {
       message <- SFlux(messageIdManager.getMessagesReactive(List(request.emailId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .next
         .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
@@ -392,22 +392,22 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         .map(Boolean.unbox(_)).map(!_), Queues.SMALL_BUFFER_SIZE)
       .collectSeq()
       .flatMap(forbiddenMailFrom => {
-        if (forbiddenMailFrom.nonEmpty) {
+    if (forbiddenMailFrom.nonEmpty) {
           SMono.just(Failure(ForbiddenMailFromException(forbiddenMailFrom.toList)))
-        } else if (envelope.rcptTo.isEmpty) {
+    } else if (envelope.rcptTo.isEmpty) {
           SMono.just(Failure(NoRecipientException()))
-        } else {
+    } else {
           SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(envelope.mailFrom.email)))
             .filter(bool => bool.equals(false))
             .map(_ => Failure(ForbiddenFromException(envelope.mailFrom.email.asString)))
             .switchIfEmpty(SMono.just(Success(mimeMessage)))
-        }
+    }
       })
       .handle[MimeMessage]((aTry, sink) => {
         aTry match {
           case Success(mimeMessage) => sink.next(mimeMessage)
           case Failure(ex) => sink.error(ex)
-        }
+  }
       })
 
   private def resolveEnvelope(mimeMessage: MimeMessage, maybeEnvelope: Option[Envelope]): Try[Envelope] =
@@ -436,5 +436,5 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def recordCreationIdInProcessingContext(emailSubmissionCreationId: EmailSubmissionCreationId,
                                                   processingContext: ProcessingContext,
                                                   emailSubmissionId: EmailSubmissionId): ProcessingContext =
-    processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
+      processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
 }

@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.stream.Stream;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -92,10 +92,10 @@ class MailAddressTest {
                 "server-dev@#123.apache.org",
                 "server-dev@[127.0.1.1.1]",
                 "server-dev@[127.0.1.-1]",
-                "\"a..b\"@domain.com", // Javax.mail is unable to handle this so we better reject it
-                "server-dev\\.@james.apache.org", // Javax.mail is unable to handle this so we better reject it
+                "\"a..b\"@domain.com", // jakarta.mail is unable to handle this so we better reject it
+                "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
-                // According to wikipedia these addresses are valid but as javax.mail is unable
+                // According to wikipedia these addresses are valid but as jakarta.mail is unable
                 // to work with them we shall rather reject them (note that this is not breaking retro-compatibility)
                 "Loïc.Accentué@voilà.fr8",
                 "pelé@exemple.com",

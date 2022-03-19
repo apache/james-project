@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;

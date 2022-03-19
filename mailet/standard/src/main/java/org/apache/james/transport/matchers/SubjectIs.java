@@ -23,7 +23,8 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
@@ -35,7 +36,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class SubjectIs extends GenericMatcher {
     @Override
-    public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage mm = mail.getMessage();
         String subject = mm.getSubject();
         if (subject != null && subject.equals(getCondition())) {

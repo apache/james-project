@@ -21,14 +21,14 @@
 package org.apache.mailet;
 
 /** 
- * A specialized subclass of javax.mail.URLName, which provides
+ * A specialized subclass of jakarta.mail.URLName, which provides
  * the name of a URL as well as its corresponding host name.
  * 
  * @since Mailet API v2.3
  * @deprecated
  */
 @Deprecated
-public class HostAddress extends javax.mail.URLName {
+public class HostAddress extends jakarta.mail.URLName {
     private final String hostname;
 
     /**

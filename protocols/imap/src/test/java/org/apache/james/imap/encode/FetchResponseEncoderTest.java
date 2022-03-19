@@ -21,7 +21,7 @@ package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;

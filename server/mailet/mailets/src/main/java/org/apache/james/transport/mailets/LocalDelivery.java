@@ -23,7 +23,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;

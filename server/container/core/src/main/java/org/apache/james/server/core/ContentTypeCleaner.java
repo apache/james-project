@@ -20,7 +20,7 @@ package org.apache.james.server.core;
 
 import java.util.regex.Pattern;
 
-import javax.mail.internet.MimePart;
+import jakarta.mail.internet.MimePart;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

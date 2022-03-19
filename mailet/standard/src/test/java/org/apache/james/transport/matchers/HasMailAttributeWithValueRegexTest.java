@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;

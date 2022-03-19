@@ -19,10 +19,10 @@
 
 package org.apache.james.javax;
 
-import javax.activation.DataSource;
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
-import javax.mail.internet.MimeMultipart;
+import jakarta.activation.DataSource;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.ContentType;
+import jakarta.mail.internet.MimeMultipart;
 
 /**
  * Class <code>MimeMultipartReport</code> implements JavaMail support
@@ -48,7 +48,7 @@ public class MimeMultipartReport extends MimeMultipart {
     /**
      * Constructs a MimeMultipartReport from the passed DataSource.
      * @param aDataSource
-     * @throws javax.mail.MessagingException
+     * @throws MessagingException
      */
     public MimeMultipartReport(DataSource aDataSource) throws MessagingException {
         super(aDataSource);

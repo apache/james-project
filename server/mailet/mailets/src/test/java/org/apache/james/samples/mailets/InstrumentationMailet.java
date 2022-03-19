@@ -22,15 +22,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
 
-import javax.mail.Address;
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMessage.RecipientType;
-import javax.mail.internet.NewsAddress;
+import jakarta.mail.Address;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage.RecipientType;
+import jakarta.mail.internet.NewsAddress;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;

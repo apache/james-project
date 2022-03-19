@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import java.io.File;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailets.TemporaryJamesServer;

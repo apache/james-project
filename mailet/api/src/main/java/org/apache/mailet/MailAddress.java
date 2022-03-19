@@ -19,8 +19,8 @@
 
 package org.apache.mailet;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 @Deprecated
 public class MailAddress extends org.apache.james.core.MailAddress {

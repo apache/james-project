@@ -29,8 +29,8 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;

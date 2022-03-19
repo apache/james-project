@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
+            <artifactId>jakarta.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcmail-jdk18on</artifactId>
+            <artifactId>bcjmail-jdk18on</artifactId>
         </dependency>
     </dependencies>
 

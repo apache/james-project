@@ -24,10 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.MessagingException;
 import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.mailetcontainer.api.MailProcessor;

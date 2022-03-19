@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 
-import javax.mail.internet.InternetHeaders;
+import jakarta.mail.internet.InternetHeaders;
 
 /**
  * Provide an {@link InputStream} over an {@link InternetHeaders} instance. When

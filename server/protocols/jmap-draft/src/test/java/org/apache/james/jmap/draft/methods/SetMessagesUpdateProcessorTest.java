@@ -31,7 +31,7 @@ import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.UserEntityValidator;

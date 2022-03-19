@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
-import javax.mail.internet.ParseException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.ContentType;
+import jakarta.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;

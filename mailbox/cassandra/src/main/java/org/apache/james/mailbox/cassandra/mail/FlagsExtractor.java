@@ -23,7 +23,7 @@ import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
 
 import java.util.Set;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
 

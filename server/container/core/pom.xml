@@ -77,11 +77,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${javax.activation.groupId}</groupId>
-            <artifactId>${javax.activation.artifactId}</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -91,8 +86,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>jakarta.activation</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
+            <artifactId>jakarta.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>

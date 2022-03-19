@@ -43,8 +43,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;

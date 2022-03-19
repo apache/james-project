@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 public class FlagsFilter {
 

@@ -24,8 +24,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Enumeration;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetHeaders;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetHeaders;
 
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.mailet.base.RFC2822Headers;

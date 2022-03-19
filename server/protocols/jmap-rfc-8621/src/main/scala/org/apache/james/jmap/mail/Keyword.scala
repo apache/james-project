@@ -22,7 +22,7 @@ package org.apache.james.jmap.mail
 import java.util.Locale
 
 import com.google.common.base.CharMatcher
-import javax.mail.Flags
+import jakarta.mail.Flags
 import org.apache.commons.lang3.StringUtils
 
 import scala.util.{Failure, Success, Try}

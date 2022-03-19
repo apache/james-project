@@ -19,8 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.transport.matchers.HasHabeasWarrantMark;
 import org.apache.mailet.Experimental;
@@ -95,7 +95,7 @@ public class AddHabeasWarrantMark extends GenericMailet {
      * in the pipeline.
      *
      * @param mail - the Mail object that contains the message and routing information
-     * @throws javax.mail.MessagingException - if an message or address parsing exception occurs or
+     * @throws MessagingException - if an message or address parsing exception occurs or
      *      an exception that interferes with the mailet's normal operation
      */
     @Override

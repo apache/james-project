@@ -21,8 +21,8 @@ package org.apache.james.jmap.draft.methods.integration.cucumber;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.jmap.draft.model.Keyword;
 import org.junit.Test;

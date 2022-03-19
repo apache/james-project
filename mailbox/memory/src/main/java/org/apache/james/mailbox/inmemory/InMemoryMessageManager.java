@@ -20,7 +20,7 @@ package org.apache.james.mailbox.inmemory;
 
 import java.time.Clock;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxPathLocker;

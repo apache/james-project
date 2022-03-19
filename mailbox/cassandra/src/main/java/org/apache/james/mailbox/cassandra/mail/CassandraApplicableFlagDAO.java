@@ -30,7 +30,8 @@ import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;

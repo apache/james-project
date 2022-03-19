@@ -34,8 +34,8 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
+import jakarta.mail.Flags;
+import jakarta.mail.internet.SharedInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;

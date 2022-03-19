@@ -457,8 +457,8 @@ Within the lib directory
             WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             
         from The Legion of the Bouncy Castle  http://www.bouncycastle.org/ 
-            bcmail-jdk15-1.45.jar
-            bcprov-jdk15-1.45.jar
+            bcjmail-jdk15on-1.70.jar
+            bcprov-jdk15on-1.70.jar
 
     licensed under the COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 http://www.opensource.org/licenses/CDDL-1.0  (as follows)
  

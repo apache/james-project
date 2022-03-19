@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.MailAddress;

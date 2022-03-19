@@ -20,8 +20,8 @@ package org.apache.james.transport.mailets;
 
 import java.util.Locale;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;

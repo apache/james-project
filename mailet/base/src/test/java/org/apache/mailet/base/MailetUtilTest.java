@@ -22,7 +22,7 @@ package org.apache.mailet.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.api.SoftAssertions;

@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import java.util.Collection;
 
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
 

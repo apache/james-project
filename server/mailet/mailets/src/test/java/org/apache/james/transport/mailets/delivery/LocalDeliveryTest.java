@@ -25,8 +25,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

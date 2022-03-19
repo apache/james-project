@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;

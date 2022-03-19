@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
