@@ -328,7 +328,7 @@ The Legion Of The Bouncy Castle
    <supplement>
     <project>
         <groupId>org.bouncycastle</groupId>
-        <artifactId>bcmail-jdk15</artifactId>
+        <artifactId>bcjmail-jdk15on</artifactId>
         <organization>
             <name>The Legion of the Bouncy Castle</name>
             <url>http://www.bouncycastle.org/</url>
@@ -338,7 +338,7 @@ The Legion Of The Bouncy Castle
    <supplement>
     <project>
         <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15</artifactId>
+        <artifactId>bcprov-jdk15on</artifactId>
         <organization>
             <name>The Legion of the Bouncy Castle</name>
             <url>http://www.bouncycastle.org/</url>

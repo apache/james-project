@@ -22,7 +22,7 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.UidRange;

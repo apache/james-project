@@ -23,7 +23,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;

@@ -26,7 +26,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;

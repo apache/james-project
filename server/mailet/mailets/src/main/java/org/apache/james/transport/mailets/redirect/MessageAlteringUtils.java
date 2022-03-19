@@ -21,13 +21,13 @@ package org.apache.james.transport.mailets.redirect;
 import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
 
-import javax.mail.BodyPart;
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.james.server.core.MimeMessageUtil;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
@@ -132,7 +132,7 @@ public class MessageAlteringUtils {
     private BodyPart getBodyPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
         MimeBodyPart part = new MimeBodyPart();
         part.setText(getText(originalMail, originalMessage, head));
-        part.setDisposition(javax.mail.Part.INLINE);
+        part.setDisposition(jakarta.mail.Part.INLINE);
         return part;
     }
 
@@ -161,7 +161,7 @@ public class MessageAlteringUtils {
                 break;
         }
         attachmentPart.setFileName(getFileName(originalMessage.getSubject()));
-        attachmentPart.setDisposition(javax.mail.Part.ATTACHMENT);
+        attachmentPart.setDisposition(jakarta.mail.Part.ATTACHMENT);
         return attachmentPart;
     }
 
@@ -177,7 +177,7 @@ public class MessageAlteringUtils {
         errorPart.setContent(originalMail.getErrorMessage(), "text/plain");
         errorPart.setHeader(RFC2822Headers.CONTENT_TYPE, "text/plain");
         errorPart.setFileName("Reasons");
-        errorPart.setDisposition(javax.mail.Part.ATTACHMENT);
+        errorPart.setDisposition(jakarta.mail.Part.ATTACHMENT);
         return errorPart;
     }
 

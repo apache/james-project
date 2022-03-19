@@ -22,14 +22,15 @@ package org.apache.james.transport.util;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.activation.DataHandler;
 import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
+
+import jakarta.activation.DataHandler;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.util.html.HtmlTextExtractor;

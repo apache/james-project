@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.jsieve.mail.Action;
 import org.apache.mailet.Mail;

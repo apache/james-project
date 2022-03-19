@@ -22,7 +22,8 @@ package org.apache.james.mailbox.elasticsearch.v7.json;
 import java.time.ZoneId;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;

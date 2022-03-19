@@ -29,8 +29,8 @@ import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.Message;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.Message;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.io.FilenameUtils;

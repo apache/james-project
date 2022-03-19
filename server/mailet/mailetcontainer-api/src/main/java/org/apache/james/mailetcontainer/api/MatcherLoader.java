@@ -19,7 +19,7 @@
 
 package org.apache.james.mailetcontainer.api;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;

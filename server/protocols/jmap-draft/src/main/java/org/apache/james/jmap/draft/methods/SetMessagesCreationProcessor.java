@@ -28,7 +28,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;

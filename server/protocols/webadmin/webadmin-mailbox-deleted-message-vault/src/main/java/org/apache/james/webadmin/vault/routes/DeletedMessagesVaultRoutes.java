@@ -24,7 +24,8 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;

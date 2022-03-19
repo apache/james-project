@@ -4,7 +4,7 @@ The U.S. Government Department of Commerce, Bureau of Industry and Security (BIS
 
 The following provides more details on the included cryptographic software: 
   Apache James Server uses third party cryptography software including   
-      bcmail and bcprov libraries by "The Legion of the Bouncy Castle" http://www.bouncycastle.org, 
+      bcjmail and bcprov libraries by "The Legion of the Bouncy Castle" http://www.bouncycastle.org, 
       jasypt library by "Jasypt.org" http://www.jasypt.org/ 
       and the Java Runtime Environment.
       

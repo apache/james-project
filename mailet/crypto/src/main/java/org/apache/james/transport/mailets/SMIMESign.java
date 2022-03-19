@@ -24,10 +24,10 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;

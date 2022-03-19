@@ -20,7 +20,7 @@ package org.apache.james.mailbox.cassandra.table;
 
 import java.util.Locale;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import com.google.common.collect.ImmutableMap;
 

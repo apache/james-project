@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.search;
 import java.util.Collection;
 import java.util.List;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;

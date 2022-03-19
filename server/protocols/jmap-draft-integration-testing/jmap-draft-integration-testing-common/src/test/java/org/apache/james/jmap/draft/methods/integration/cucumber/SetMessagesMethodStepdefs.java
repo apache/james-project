@@ -27,7 +27,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.Keywords;

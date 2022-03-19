@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;

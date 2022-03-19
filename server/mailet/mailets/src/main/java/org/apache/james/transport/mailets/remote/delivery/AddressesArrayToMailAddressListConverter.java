@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import javax.mail.Address;
-import javax.mail.internet.AddressException;
+import jakarta.mail.Address;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;

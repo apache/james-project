@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javax.activation.MimeType;
-import javax.activation.MimeTypeParseException;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.activation.MimeType;
+import jakarta.activation.MimeTypeParseException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;

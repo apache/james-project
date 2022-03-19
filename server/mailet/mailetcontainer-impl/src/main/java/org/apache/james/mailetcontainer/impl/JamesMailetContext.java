@@ -34,12 +34,13 @@ import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.mail.Address;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.Address;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -266,7 +267,7 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
     /**
      * Performs DNS lookups as needed to find servers which should or might
      * support SMTP. Returns an Iterator over HostAddress, a specialized
-     * subclass of javax.mail.URLName, which provides location information for
+     * subclass of jakarta.mail.URLName, which provides location information for
      * servers that are specified as mail handlers for the given hostname. This
      * is done using MX records, and the HostAddress instances are returned
      * sorted by MX priority. If no host is found for domainName, the Iterator

@@ -27,7 +27,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;

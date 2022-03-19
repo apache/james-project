@@ -23,7 +23,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.IOException;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;

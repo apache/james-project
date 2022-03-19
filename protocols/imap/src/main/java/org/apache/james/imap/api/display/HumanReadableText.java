@@ -21,7 +21,7 @@ package org.apache.james.imap.api.display;
 
 import java.util.Arrays;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.mailbox.MessageSequenceNumber;

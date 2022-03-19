@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mailet.Mail;
@@ -285,10 +285,10 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      *
      * @param mail - the Mail object that contains the MimeMessage and
      *          routing information
-     * @throws javax.mail.MessagingException - if an exception occurs that interferes with the mailet's normal operation
+     * @throws MessagingException - if an exception occurs that interferes with the mailet's normal operation
      */
     @Override
-    public abstract void service(Mail mail) throws javax.mail.MessagingException;
+    public abstract void service(Mail mail) throws MessagingException;
     
     
     

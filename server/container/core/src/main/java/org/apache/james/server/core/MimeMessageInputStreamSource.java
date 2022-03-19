@@ -27,9 +27,9 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
-import javax.mail.util.SharedByteArrayInputStream;
-import javax.mail.util.SharedFileInputStream;
+import jakarta.mail.MessagingException;
+import jakarta.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;

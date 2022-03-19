@@ -21,9 +21,9 @@ package org.apache.james.javax;
 
 import java.util.List;
 
-import javax.mail.BodyPart;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
 
 import com.google.common.collect.ImmutableList;
 

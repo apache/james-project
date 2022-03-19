@@ -19,7 +19,7 @@
 
 package org.apache.james.server.core;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 public class MimeMessageFromMimeMessageTest extends MimeMessageFromStreamTest {
 

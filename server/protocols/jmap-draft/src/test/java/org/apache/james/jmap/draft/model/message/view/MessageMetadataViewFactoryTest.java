@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model.message.view;
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;

@@ -24,7 +24,7 @@ import static org.apache.mailet.DsnParameters.Notify.FAILURE;
 import java.util.Collection;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.util.FunctionalUtils;

@@ -1080,6 +1080,11 @@ without prior written authorization of the copyright holder.
             url='http://www.oracle.com'
             />
         <organisation
+            id='eclipse.org'
+            name='Eclipse'
+            url='https://www.eclipse.org/'
+            />
+        <organisation
             id='fusesource.org'
             name='FuseSource' 
             url='http://www.fusesource.org'/>
@@ -1251,9 +1256,9 @@ The Apache Software Foundation (http://www.apache.org/).
                 <resource name='wrapper.jar'/>
             </by-organisation>
         </with-license>
-        <with-license id='CDDL'>
-            <by-organisation id='oracle.com'>
-                <resource name='mail-1.4.4.jar' source='http://kenai.com/projects/javamail/downloads'/>
+        <with-license id='ApacheLicenseVersion2'>
+            <by-organisation id='eclipse.org'>
+                <resource name='jakarta.mail-2.0.1.jar' source='https://eclipse-ee4j.github.io/mail/JakartaMail-License'/>
             </by-organisation>
         </with-license>
         <with-license id='MIT'>
@@ -1392,8 +1397,8 @@ All rights reserved.
             Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)
             </copyright-notice>
             <by-organisation id='TheLegionoftheBouncyCastle'>
-                <resource name='bcmail-jdk15-1.45.jar'/>
-                <resource name='bcprov-jdk15-1.45.jar'/>
+                <resource name='bcjmail-jdk15on-1.70.jar'/>
+                <resource name='bcprov-jdk15on-1.70.jar'/>
             </by-organisation>
         </with-license>
         <with-license id='BSD2Clause'>

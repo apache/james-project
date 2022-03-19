@@ -22,8 +22,8 @@ package org.apache.james.server.core;
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
 
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 
 public class MimeMessageFromStreamTest extends MimeMessageTest {
 

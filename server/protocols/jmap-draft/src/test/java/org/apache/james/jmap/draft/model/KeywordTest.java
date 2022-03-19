@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;

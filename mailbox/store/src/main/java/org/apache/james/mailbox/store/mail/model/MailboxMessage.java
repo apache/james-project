@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;

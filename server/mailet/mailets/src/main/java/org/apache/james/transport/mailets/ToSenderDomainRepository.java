@@ -22,7 +22,8 @@ package org.apache.james.transport.mailets;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

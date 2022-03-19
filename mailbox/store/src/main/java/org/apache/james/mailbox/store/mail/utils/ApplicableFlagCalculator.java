@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.utils;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;

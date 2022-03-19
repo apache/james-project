@@ -21,7 +21,7 @@ package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;

@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.model;
 
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 

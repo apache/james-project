@@ -21,7 +21,8 @@ package org.apache.james.smtpserver;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

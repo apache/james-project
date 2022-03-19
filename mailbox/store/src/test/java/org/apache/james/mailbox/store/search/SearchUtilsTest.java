@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
