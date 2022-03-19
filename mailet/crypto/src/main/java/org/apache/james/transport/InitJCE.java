@@ -25,8 +25,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.Provider;
 import java.security.Security;
 
-import javax.activation.CommandMap;
-import javax.activation.MailcapCommandMap;
+import jakarta.activation.CommandMap;
+import jakarta.activation.MailcapCommandMap;
 
 /**
  * Security Providers initialization class. The first call of the init method

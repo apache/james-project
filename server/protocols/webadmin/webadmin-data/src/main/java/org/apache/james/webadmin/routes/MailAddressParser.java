@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.webadmin.utils.ErrorResponder;

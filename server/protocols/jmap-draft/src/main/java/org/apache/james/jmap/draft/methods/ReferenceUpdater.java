@@ -24,7 +24,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;

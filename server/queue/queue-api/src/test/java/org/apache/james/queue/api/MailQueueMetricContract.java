@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.stream.IntStream;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.metrics.api.Gauge;
 import org.apache.mailet.base.test.FakeMail;

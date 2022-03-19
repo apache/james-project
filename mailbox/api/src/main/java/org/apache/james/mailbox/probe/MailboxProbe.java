@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;

@@ -22,8 +22,9 @@ package org.apache.james.transport.mailets;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.Mail;

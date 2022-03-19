@@ -22,7 +22,7 @@ package org.apache.james.mailbox.quota.mailing.subscribers;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

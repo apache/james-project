@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 
-import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.Flags;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;

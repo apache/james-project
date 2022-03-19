@@ -22,7 +22,7 @@ package org.apache.mailet.base;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
@@ -182,7 +182,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *          routing information
      * @return java.util.Collection - the recipients that the mailet container should have the
      *          mailet affect.
-     * @throws javax.mail.MessagingException - if an exception occurs that interferes with the mailet's normal operation
+     * @throws MessagingException - if an exception occurs that interferes with the mailet's normal operation
      *          occurred
      */
     @Override

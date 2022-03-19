@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.mail
 
-import javax.mail.Flags
+import jakarta.mail.Flags
 import org.apache.james.mailbox.FlagsBuilder
 
 import scala.util.{Failure, Success, Try}

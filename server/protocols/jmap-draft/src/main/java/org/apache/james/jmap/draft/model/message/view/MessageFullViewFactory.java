@@ -30,7 +30,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.mail.internet.SharedInputStream;
+
+import jakarta.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;

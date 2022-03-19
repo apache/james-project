@@ -21,7 +21,7 @@
 
 package org.apache.james.transport.mailets.debug;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;

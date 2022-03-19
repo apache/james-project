@@ -19,9 +19,9 @@
 
 package org.apache.james.fetchmail;
 
-import javax.mail.Folder;
-import javax.mail.MessagingException;
-import javax.mail.Store;
+import jakarta.mail.Folder;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Store;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

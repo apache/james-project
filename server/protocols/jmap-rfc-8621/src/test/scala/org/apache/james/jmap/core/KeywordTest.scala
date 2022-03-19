@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.core
 
-import javax.mail.Flags
+import jakarta.mail.Flags
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.mail.Keyword

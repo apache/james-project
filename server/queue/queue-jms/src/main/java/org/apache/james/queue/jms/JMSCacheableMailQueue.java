@@ -47,9 +47,10 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.commons.lang3.tuple.Pair;

@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.json;
 import java.time.Instant;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.draft.model.BlobId;

@@ -22,7 +22,7 @@ package org.apache.james.transport.matchers;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericRecipientMatcher;
@@ -49,7 +49,7 @@ public class RecipientIsRegex extends GenericRecipientMatcher {
     Pattern pattern   = null;
 
     @Override
-    public void init() throws javax.mail.MessagingException {
+    public void init() throws MessagingException {
         String patternString = getCondition();
         if (Strings.isNullOrEmpty(patternString)) {
             throw new MessagingException("Pattern is missing");

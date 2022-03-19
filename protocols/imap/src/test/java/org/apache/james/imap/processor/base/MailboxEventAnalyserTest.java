@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;

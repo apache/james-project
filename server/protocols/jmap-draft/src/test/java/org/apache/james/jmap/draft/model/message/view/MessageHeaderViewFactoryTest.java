@@ -29,7 +29,7 @@ import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.
 import java.time.Clock;
 import java.util.Optional;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;

@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;

@@ -25,7 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -67,7 +67,7 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
     private String selectByPK;
 
     @Override
-    public void init() throws javax.mail.MessagingException {
+    public void init() throws MessagingException {
         super.init();
         selectByPK = sqlQueries.getSqlString("selectByPK", true);
     }

@@ -24,9 +24,9 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.Enumeration;
 
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
@@ -50,7 +50,7 @@ public class RelayLimit extends GenericMatcher {
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage mm = mail.getMessage();
         int count = 0;
         for (Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {

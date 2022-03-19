@@ -21,8 +21,8 @@ package org.apache.mailet.base.test;
 
 import java.io.IOException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.core.MailAddress;

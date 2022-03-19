@@ -21,7 +21,7 @@ package org.apache.james.mailbox.backup;
 import java.io.InputStream;
 import java.util.Date;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 public class MessageArchiveEntry implements MailArchiveEntry {
 

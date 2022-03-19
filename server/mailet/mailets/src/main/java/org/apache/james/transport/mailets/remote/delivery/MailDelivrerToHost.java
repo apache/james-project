@@ -32,10 +32,10 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Properties;
 
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -220,7 +220,7 @@ public class MailDelivrerToHost {
             case HDRS:
                 return RETURN_HDRS;
             default:
-                throw new NotImplementedException(ret + " cannot be converted to javax.mail parameters");
+                throw new NotImplementedException(ret + " cannot be converted to jakarta.mail parameters");
         }
     }
 
@@ -241,7 +241,7 @@ public class MailDelivrerToHost {
             case DELAY:
                 return NOTIFY_DELAY;
             default:
-                throw new NotImplementedException(notify + " cannot be converted to javax.mail parameters");
+                throw new NotImplementedException(notify + " cannot be converted to jakarta.mail parameters");
         }
     }
 

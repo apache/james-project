@@ -321,7 +321,7 @@
             </roles>
             <timezone />
         </developer>
-     </developers>
+    </developers>
 
     <contributors>
         <contributor>
@@ -604,14 +604,12 @@
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.20.0</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
-        <javax.activation.groupId>javax.activation</javax.activation.groupId>
-        <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jsieve.version>0.8</jsieve.version>
         <spring.version>4.3.25.RELEASE</spring.version>
         <activmq-artemis.version>2.29.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.3</apache-jspf-resolver.version>
-        <javamail.version>1.5.4</javamail.version>
-        <javax-activation.version>1.1.1</javax-activation.version>
+        <jakarta-mail.version>2.0.1</jakarta-mail.version>
+        <jakarta-activation.version>2.0.1</jakarta-activation.version>
         <slf4j.version>2.0.7</slf4j.version>
 
         <dnsjava.version>3.5.2</dnsjava.version>
@@ -644,8 +642,6 @@
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
         <qdox.version>2.0.3</qdox.version>
-        <javax.activation.groupId>javax.activation</javax.activation.groupId>
-        <javax.activation.artifactId>activation</javax.activation.artifactId>
         <javax.persistence.version>1.0.2</javax.persistence.version>
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
@@ -1007,8 +1003,8 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <groupId>javax.mail</groupId>
-                        <artifactId>mail</artifactId>
+                        <groupId>com.sun.mail</groupId>
+                        <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1018,8 +1014,8 @@
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>javax.mail</groupId>
-                        <artifactId>mail</artifactId>
+                        <groupId>com.sun.mail</groupId>
+                        <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1030,8 +1026,8 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <groupId>javax.mail</groupId>
-                        <artifactId>mail</artifactId>
+                        <groupId>com.sun.mail</groupId>
+                        <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2237,17 +2233,17 @@
             </dependency>
             <dependency>
                 <groupId>com.sun.activation</groupId>
-                <artifactId>javax.activation</artifactId>
-                <version>1.2.0</version>
+                <artifactId>jakarta.activation</artifactId> <!-- Replaces 'com.sun.activation:javax.activation' -->
+                <version>${jakarta-activation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.mail</groupId>
-                <artifactId>javax.mail</artifactId>
-                <version>1.6.2</version>
+                <artifactId>jakarta.mail</artifactId> <!-- Replaces 'com.sun.mail:javax.mail' -->
+                <version>${jakarta-mail.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
+                        <groupId>com.sun.activation</groupId>
+                        <artifactId>jakarta.activation</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2482,16 +2478,6 @@
                 <groupId>io.vavr</groupId>
                 <artifactId>vavr</artifactId>
                 <version>0.10.4</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>${javax-activation.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>javax.activation-api</artifactId>
-                <version>1.2.0</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -2736,7 +2722,7 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk18on</artifactId>
+                <artifactId>bcjmail-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
@@ -3988,7 +3974,7 @@
                             </configuration>
                         </plugin>
                         <plugin>
-                        <groupId>pl.project13.maven</groupId>
+                            <groupId>pl.project13.maven</groupId>
                             <artifactId>git-commit-id-plugin</artifactId>
                             <executions>
                                 <execution>

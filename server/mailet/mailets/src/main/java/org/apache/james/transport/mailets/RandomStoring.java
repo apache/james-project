@@ -30,7 +30,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

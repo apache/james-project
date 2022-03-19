@@ -21,7 +21,7 @@ package org.apache.james.core.builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.util.MimeMessageUtil;
 import org.junit.jupiter.api.Test;

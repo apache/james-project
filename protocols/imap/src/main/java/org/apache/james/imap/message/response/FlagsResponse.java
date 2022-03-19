@@ -21,7 +21,7 @@ package org.apache.james.imap.message.response;
 
 import java.util.Objects;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 

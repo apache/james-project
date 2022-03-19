@@ -26,8 +26,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Predicate;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;

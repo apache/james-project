@@ -22,7 +22,7 @@ package org.apache.james.javax;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import javax.mail.Address;
+import jakarta.mail.Address;
 
 import org.apache.james.mime4j.util.MimeUtil;
 

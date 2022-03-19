@@ -11,7 +11,8 @@
 
 
   Download the source for:
-    mail-1.4.4.jar from http://kenai.com/projects/javamail/downloads
+    jakarta.mail-${version}.jar from https://github.com/eclipse-ee4j/mail/releases
+	jakarta.activation-${version}.jar from https://github.com/eclipse-ee4j/jaf/releases
 
   This distribution contains third party resources requiring the following notices:
 

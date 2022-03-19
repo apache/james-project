@@ -21,7 +21,7 @@ package org.apache.mailet.base;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.MailetConfig;
 

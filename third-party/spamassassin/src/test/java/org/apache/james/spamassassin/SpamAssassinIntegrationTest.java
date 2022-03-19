@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailets.TemporaryJamesServer;

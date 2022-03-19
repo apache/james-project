@@ -23,7 +23,7 @@ package org.apache.james.transport.matchers;
 
 import java.util.regex.PatternSyntaxException;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Experimental;
 import org.apache.mailet.base.RFC2822Headers;

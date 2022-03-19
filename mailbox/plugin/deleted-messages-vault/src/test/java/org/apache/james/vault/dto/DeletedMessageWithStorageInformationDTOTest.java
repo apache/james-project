@@ -29,7 +29,7 @@ import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;

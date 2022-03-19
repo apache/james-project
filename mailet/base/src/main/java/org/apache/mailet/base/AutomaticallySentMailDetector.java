@@ -19,7 +19,7 @@
 
 package org.apache.mailet.base;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 

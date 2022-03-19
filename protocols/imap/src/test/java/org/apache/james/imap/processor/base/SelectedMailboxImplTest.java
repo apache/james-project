@@ -19,10 +19,10 @@
 
 package org.apache.james.imap.processor.base;
 
-import static javax.mail.Flags.Flag.ANSWERED;
-import static javax.mail.Flags.Flag.FLAGGED;
-import static javax.mail.Flags.Flag.RECENT;
-import static javax.mail.Flags.Flag.SEEN;
+import static jakarta.mail.Flags.Flag.ANSWERED;
+import static jakarta.mail.Flags.Flag.FLAGGED;
+import static jakarta.mail.Flags.Flag.RECENT;
+import static jakarta.mail.Flags.Flag.SEEN;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +41,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;

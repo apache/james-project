@@ -51,7 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;

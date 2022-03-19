@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;

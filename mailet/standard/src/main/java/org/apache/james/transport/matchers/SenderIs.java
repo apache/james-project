@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
@@ -55,7 +55,7 @@ public class SenderIs extends GenericMatcher {
     }
 
     @Override
-    public void init() throws javax.mail.MessagingException {
+    public void init() throws MessagingException {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
         }

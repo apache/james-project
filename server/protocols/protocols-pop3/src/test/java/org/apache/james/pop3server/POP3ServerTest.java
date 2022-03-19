@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.net.pop3.POP3Client;

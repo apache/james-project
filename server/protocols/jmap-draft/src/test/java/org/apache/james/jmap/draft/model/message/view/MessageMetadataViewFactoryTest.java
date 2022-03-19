@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;

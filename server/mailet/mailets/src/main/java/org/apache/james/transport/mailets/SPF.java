@@ -21,9 +21,9 @@ package org.apache.james.transport.mailets;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.inject.Inject;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
@@ -106,7 +106,7 @@ public class SPF extends GenericMailet {
             createSPF(new DNSServiceXBillImpl());
         } else {
             createSPF(spfDnsService);
-        }
+    }
 
         Collection<String> ignoredNetworks = Splitter.on(',')
             .trimResults()
@@ -154,4 +154,4 @@ public class SPF extends GenericMailet {
             }
         }
     }
-}
+        }

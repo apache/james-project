@@ -23,8 +23,8 @@ package org.apache.james.transport.mailets;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.mail.Header;
-import javax.mail.MessagingException;
+import jakarta.mail.Header;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;

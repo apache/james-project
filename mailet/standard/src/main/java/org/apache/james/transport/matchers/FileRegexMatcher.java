@@ -24,7 +24,7 @@ package org.apache.james.transport.matchers;
 import java.io.IOException;
 import java.util.regex.PatternSyntaxException;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Experimental;
 

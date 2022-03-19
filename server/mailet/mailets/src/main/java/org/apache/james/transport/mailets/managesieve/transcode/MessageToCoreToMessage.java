@@ -25,11 +25,11 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Scanner;
 
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;

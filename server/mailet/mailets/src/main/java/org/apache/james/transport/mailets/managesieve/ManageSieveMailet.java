@@ -28,7 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;

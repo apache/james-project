@@ -23,7 +23,8 @@ import java.io.InputStream;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
-import javax.mail.util.SharedByteArrayInputStream;
+
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
