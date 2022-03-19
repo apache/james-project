@@ -493,6 +493,15 @@ class IMAPServerTest {
         }
 
         @Test
+        void extraLFLinesBatchedWithStartTLSShouldBeSanitized() throws Exception {
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\nA1 NOOP\r\n"))
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
+        }
+
+        @Test
         void tagsShouldBeWellSanitized() throws Exception {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
