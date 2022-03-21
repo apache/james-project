@@ -36,7 +36,6 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
-import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
@@ -51,7 +50,6 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
@@ -206,22 +204,20 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         return "IMAP Service";
     }
 
+
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory() {
         
-        return new AbstractChannelPipelineFactory(group, getFrameHandlerFactory(), getExecutorGroup()) {
+        return new AbstractChannelPipelineFactory(getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return createCoreHandler();
             }
 
-            private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
-
             @Override
             public void initChannel(Channel channel) throws Exception {
                 ChannelPipeline pipeline = channel.pipeline();
-                pipeline.addLast(GROUP_HANDLER, groupHandler);
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 

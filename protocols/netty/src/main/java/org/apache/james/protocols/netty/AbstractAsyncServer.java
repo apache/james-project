@@ -97,7 +97,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
         bootstrap.group(bossGroup, workerGroup);
 
-        ChannelInitializer<SocketChannel> factory = createPipelineFactory(channels);
+        ChannelInitializer<SocketChannel> factory = createPipelineFactory();
 
         // Configure the pipeline factory.
         bootstrap.childHandler(factory);
@@ -153,7 +153,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
      */
-    protected abstract ChannelInitializer<SocketChannel> createPipelineFactory(ChannelGroup group);
+    protected abstract ChannelInitializer<SocketChannel> createPipelineFactory();
 
     /**
      * Set the read/write timeout for the server. This will throw a {@link IllegalStateException} if the

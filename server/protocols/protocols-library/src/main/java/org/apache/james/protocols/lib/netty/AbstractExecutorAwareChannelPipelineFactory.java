@@ -23,7 +23,6 @@ import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
@@ -35,9 +34,9 @@ import io.netty.util.concurrent.EventExecutorGroup;
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
-                                                       ChannelGroup group, Encryption encryption,
+                                                       Encryption encryption,
                                                        ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, encryption, frameHandlerFactory, eventExecutorGroup);
+        super(timeout, maxConnections, maxConnectsPerIp, encryption, frameHandlerFactory, eventExecutorGroup);
     }
     
     /**

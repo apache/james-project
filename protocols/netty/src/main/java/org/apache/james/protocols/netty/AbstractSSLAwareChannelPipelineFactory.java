@@ -24,7 +24,6 @@ import org.apache.james.protocols.api.Encryption;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -39,16 +38,16 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
     private Encryption secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-                                                  int maxConnections, int maxConnectsPerIp, ChannelGroup group,
+                                                  int maxConnections, int maxConnectsPerIp,
                                                   ChannelHandlerFactory frameHandlerFactory,
                                                   EventExecutorGroup eventExecutorGroup) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory, eventExecutorGroup);
+        super(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, ChannelGroup group, Encryption secure,
+            int maxConnections, int maxConnectsPerIp, Encryption secure,
             ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(timeout, maxConnections, maxConnectsPerIp, group, frameHandlerFactory, eventExecutorGroup);
+        this(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
 
         this.secure = secure;
     }

@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import nl.altindag.ssl.SSLFactory;
@@ -555,8 +554,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     protected abstract ChannelInboundHandlerAdapter createCoreHandler();
     
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group,
+    protected AbstractChannelPipelineFactory createPipelineFactory() {
+        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
             getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
