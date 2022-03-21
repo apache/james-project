@@ -290,7 +290,6 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private UidRange[] filter(UidRange[] uidSet, MessageUid lowerBound) {
         return Arrays.stream(uidSet)
             .flatMap(range -> filter(range, lowerBound))
-            .collect(ImmutableList.toImmutableList())
             .toArray(UidRange[]::new);
     }
 
