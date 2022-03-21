@@ -129,11 +129,11 @@ public class ReadOnlyLDAPUser implements User {
         try {
             BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
             return bindResult.getResultCode() == ResultCode.SUCCESS;
+        } catch (LDAPBindException e) {
+            LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
+            return false;
         } catch (Exception e) {
-            if (e instanceof LDAPBindException) {
-                LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
-            }
-            LOGGER.error("Unexpected error upon authentication", e);
+            LOGGER.error("Unexpected error upon authenticationfor {}", userName.asString(), e);
             return false;
         }
     }
