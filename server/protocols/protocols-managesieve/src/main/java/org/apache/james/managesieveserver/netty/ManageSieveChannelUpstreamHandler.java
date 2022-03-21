@@ -48,8 +48,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
 
-    public ManageSieveChannelUpstreamHandler(
-            ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
+    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, Encryption secure, Logger logger) {
         this.logger = logger;
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
@@ -76,6 +75,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
                 turnSSLon(ctx.channel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+                attachment.stopDetectingCommandInjection();
             }
         } catch (NotEnoughDataException ex) {
             // Do nothing will keep the cumulation
