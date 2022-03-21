@@ -136,18 +136,19 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             workerGroup.shutdownGracefully();
         }
 
+        if (channels != null) {
+            channels.close();
+        }
+
         started = false;
     }
 
     @Override
     public synchronized List<InetSocketAddress> getListenAddresses() {
-        ImmutableList.Builder<InetSocketAddress> builder = ImmutableList.builder();
-        for (Channel channel : ImmutableList.copyOf(channels.iterator())) {
-            builder.add((InetSocketAddress) channel.localAddress());
-        }
-        return builder.build();
+        return channels.stream()
+            .map(channel -> (InetSocketAddress) channel.localAddress())
+            .collect(ImmutableList.toImmutableList());
     }
-    
     
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
