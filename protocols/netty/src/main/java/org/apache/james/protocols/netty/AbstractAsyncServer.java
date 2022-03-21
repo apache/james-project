@@ -37,8 +37,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.GlobalEventExecutor;
-
+import io.netty.util.concurrent.ImmediateEventExecutor;
 
 
 /**
@@ -56,7 +55,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     private volatile boolean started;
     
-    private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private final ChannelGroup channels = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
     
