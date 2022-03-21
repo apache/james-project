@@ -33,7 +33,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
-import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
+import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +142,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig);
-        return new SMTPChannelUpstreamHandler(protocol, lmtpMetrics, getExecutorGroup());
+        return new SMTPChannelInboundHandler(protocol, lmtpMetrics, getExecutorGroup());
     }
 
     @Override
