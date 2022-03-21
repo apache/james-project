@@ -1593,7 +1593,7 @@ class IMAPServerTest {
         }
 
         @Test
-        void knownUidSetShouldTorelateDeletedMessages() throws Exception {
+        void knownUidSetShouldTolerateDeletedMessages() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
@@ -1830,7 +1830,7 @@ class IMAPServerTest {
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
                 .getMetaData(false, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
-            clientConnection.write(ByteBuffer.wrap(String.format("I00104 NOOP\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap("I00104 NOOP\r\n".getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK NOOP completed.")))
                 .filteredOn(s -> s.contains("* VANISHED 14"))
