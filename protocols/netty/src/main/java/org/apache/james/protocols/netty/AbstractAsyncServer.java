@@ -120,7 +120,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         // Bind and start to accept incoming connections.
         bootstrap.option(ChannelOption.SO_BACKLOG, backlog);
         bootstrap.option(ChannelOption.SO_REUSEADDR, true);
-        bootstrap.option(ChannelOption.TCP_NODELAY, true);
+        bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
     }
     
     @Override
