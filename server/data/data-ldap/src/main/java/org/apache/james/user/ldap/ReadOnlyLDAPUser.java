@@ -133,7 +133,7 @@ public class ReadOnlyLDAPUser implements User {
             LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
             return false;
         } catch (Exception e) {
-            LOGGER.error("Unexpected error upon authenticationfor {}", userName.asString(), e);
+            LOGGER.error("Unexpected error upon authentication for {}", userName.asString(), e);
             return false;
         }
     }
