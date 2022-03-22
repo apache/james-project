@@ -37,7 +37,7 @@ public interface HandlerConstants {
 
     String FRAMER = "framer";
 
-    String TIMEOUT_HANDLER = "timeoutHandler";
+    String READ_TIMEOUT_HANDLER = "readTimeoutHandler";
 
     String CORE_HANDLER = "coreHandler";
 

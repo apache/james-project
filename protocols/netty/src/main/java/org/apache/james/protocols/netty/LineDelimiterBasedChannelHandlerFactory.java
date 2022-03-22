@@ -23,7 +23,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 
 public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFactory {
-    private static final Boolean FAIL_FAST = true;
+    private static final boolean FAIL_FAST = false;
     private final int maxLineLength;
 
     public LineDelimiterBasedChannelHandlerFactory(int maxLineLength) {
@@ -32,7 +32,7 @@ public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFa
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new LineBasedFrameDecoder(maxLineLength, false, !FAIL_FAST);
+        return new LineBasedFrameDecoder(maxLineLength, false, FAIL_FAST);
     }
 
 }

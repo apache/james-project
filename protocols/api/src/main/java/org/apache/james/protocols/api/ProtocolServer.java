@@ -20,6 +20,12 @@ package org.apache.james.protocols.api;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.AbstractEventExecutor;
+import io.netty.util.concurrent.EventExecutorGroup;
+import io.netty.util.concurrent.Future;
 
 /**
  * A {@link ProtocolServer} accept inbound traffic and handle it. Basically the protocols API can be used to handle every "line based" protocol in an easy fashion
@@ -27,15 +33,68 @@ import java.util.List;
 public interface ProtocolServer {
 
     /**
-     * Start the server
+     * Same value as {@link AbstractEventExecutor#DEFAULT_SHUTDOWN_QUIET_PERIOD}.
      */
-    void bind() throws Exception;
-    
+    final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2; // 2 seconds.
+
     /**
-     * Stop the server
+     * Same value as {@link AbstractEventExecutor#DEFAULT_SHUTDOWN_TIMEOUT}.
      */
-    void unbind();
-    
+    final long DEFAULT_SHUTDOWN_TIMEOUT = 15; // 15 seconds.
+
+    /**
+     * Start the server - blocks until server has started.
+     */
+    default void bind() {
+        bindAsync().syncUninterruptibly();
+    }
+
+    /**
+     * Start the server - non-blocking/asynchronous.
+     */
+    Future<?> bindAsync();
+
+    /**
+     * Stop the server - blocks until server is stopped.
+     */
+    default void unbind() {
+        unbindAsync().syncUninterruptibly();
+    }
+
+    /**
+     * Stops the server immediately - only appropriate for using in tests.
+     */
+    default void unbindNow() {
+        unbindAsync(0, 0, TimeUnit.SECONDS).syncUninterruptibly();
+    }
+
+    /**
+     * Stop the server - blocks until server is stopped.
+     * 
+     * See {@link #unbindAsync(long, long, TimeUnit)} for documentation on these parameters.
+     */
+    default void unbind(long quietPeriod, long timeout, TimeUnit unit) {
+        unbindAsync(quietPeriod, timeout, unit).syncUninterruptibly();
+    }
+
+    /**
+     * Stop the server - non-blocking/asynchronous - with sensible default values.
+     */
+    default Future<?> unbindAsync() {
+        return unbindAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Stop the server - non-blocking/asynchronous.
+     * 
+     * Returns a future which completes after {@linkplain EventExecutorGroup#shutdownGracefully(long, long, TimeUnit)} is called on each managed {@link EventLoopGroup}.
+     * 
+     * @param quietPeriod Allows new tasks to be submitted during the <i>'the quiet period'</i> - if a task is submitted during the quiet period, the quiet period will start over.
+     * @param timeout     The maximum amount of time to wait until the executor is {@linkplain EventExecutorGroup#shutdown()} regardless if a task was submitted during the quiet period.
+     * @param unit        The unit of {@code quietPeriod} and {@code timeout}.
+     */
+    Future<?> unbindAsync(long quietPeriod, long timeout, TimeUnit unit);
+
     /**
      * return true if the server is bound
      */
@@ -45,15 +104,15 @@ public interface ProtocolServer {
      * Return the read/write timeout in seconds for the socket.
      * @return the timeout
      */
-    int  getTimeout();
-    
+    int getTimeout();
+
     /**
      * Return the backlog for the socket
      * 
      * @return backlog
      */
     int getBacklog();
-    
+
     /**
      * Return the ips on which the server listen for connections
      * 

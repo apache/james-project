@@ -26,13 +26,12 @@ import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
 
 public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChannelHandler {
     public static final String PATTERN = ImapConstants.STARTTLS_COMMAND.getName().toLowerCase();
 
-    public SwitchableLineBasedFrameDecoder(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter) {
-        super(pipeline, maxFrameLength, stripDelimiter, PATTERN);
+    public SwitchableLineBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter) {
+        super(maxFrameLength, stripDelimiter, PATTERN);
     }
 
     @Override

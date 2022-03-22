@@ -38,12 +38,11 @@ public class NettySMTPSServerTest extends AbstractSMTPSServerTest {
 
     @Override
     protected ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(enc)
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
 
 }

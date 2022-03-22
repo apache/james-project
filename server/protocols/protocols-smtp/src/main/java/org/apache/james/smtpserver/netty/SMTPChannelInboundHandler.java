@@ -28,7 +28,6 @@ import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.smtpserver.SMTPConstants;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * {@link BasicChannelInboundHandler} which is used by the SMTPServer
@@ -37,12 +36,12 @@ public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
 
     private final SmtpMetrics smtpMetrics;
 
-    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics) {
         super(new SMTPMDCContextFactory(), protocol, encryption);
         this.smtpMetrics = smtpMetrics;
     }
 
-    public SMTPChannelInboundHandler(Protocol protocol, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+    public SMTPChannelInboundHandler(Protocol protocol, SmtpMetrics smtpMetrics) {
         super(new SMTPMDCContextFactory(), protocol);
         this.smtpMetrics = smtpMetrics;
     }

@@ -24,8 +24,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Integration tests which use netty implementation
@@ -39,10 +37,9 @@ public class NettySMTPServerTest extends AbstractSMTPServerTest {
 
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
 }

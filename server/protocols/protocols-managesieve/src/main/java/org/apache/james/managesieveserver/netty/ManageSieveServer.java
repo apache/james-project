@@ -28,12 +28,11 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
-import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.protocols.netty.ConnectionLimitInboundHandler;
+import org.apache.james.protocols.netty.ConnectionPerIpLimitInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.string.StringDecoder;
@@ -80,42 +79,52 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory() {
+    protected Server createServer() {
+        beforeBuild();
+        return new Server(this);
+    }
 
-        return new AbstractChannelPipelineFactory(createFrameHandlerFactory(), getExecutorGroup()) {
+    private final class Server extends AbstractConfigurableAsyncServer.Server {
+        private Server(ManageSieveServer factory) {
+            super(factory);
+        }
 
-            @Override
-            protected ChannelInboundHandlerAdapter createHandler() {
-                return createCoreHandler();
-            }
+        @Override
+        protected AbstractChannelPipelineFactory createChannelInitializer() {
+            return new AbstractChannelPipelineFactory(getFrameHandlerFactory(), getGroupsManager()) {
 
-            @Override
-            public void initChannel(Channel channel) throws Exception {
-                ChannelPipeline pipeline = channel.pipeline();
-                Encryption secure = getEncryption();
-                if (secure != null && !secure.isStartTLS()) {
-                    // We need to set clientMode to false.
-                    // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
-
+                @Override
+                protected ChannelInboundHandlerAdapter createHandler() {
+                    return createCoreHandler();
                 }
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(ManageSieveServer.this.connectionLimit));
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(ManageSieveServer.this.connPerIP));
-                // Add the text line decoder which limit the max line length,
-                // don't strip the delimiter and use CRLF as delimiter
-                // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(getExecutorGroup(), FRAMER, getFrameHandlerFactory().create(pipeline));
-                pipeline.addLast(getExecutorGroup(), CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
-                pipeline.addLast(getExecutorGroup(), CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                pipeline.addLast(getExecutorGroup(), "stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
-                pipeline.addLast(getExecutorGroup(), CORE_HANDLER, createHandler());
-                pipeline.addLast(getExecutorGroup(), "stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
-            }
+                @Override
+                protected void initPipeline(ChannelPipeline pipeline) throws Exception {
+                    Encryption secure = getEncryption();
+                    if (secure != null && !secure.isStartTLS()) {
+                        // We need to set clientMode to false.
+                        // See https://issues.apache.org/jira/browse/JAMES-1025
+                        SSLEngine engine = secure.createSSLEngine();
+                        engine.setUseClientMode(false);
+                        pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
-        };
+                    }
+                    pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitInboundHandler(ManageSieveServer.this.connectionLimit));
+                    pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitInboundHandler(ManageSieveServer.this.connPerIP));
+                    // Add the text line decoder which limit the max line length,
+                    // don't strip the delimiter and use CRLF as delimiter
+                    // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
+                    pipeline.addLast(executorGroup, FRAMER, getFrameHandlerFactory().create(pipeline));
+                    pipeline.addLast(executorGroup, CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
+                    pipeline.addLast(executorGroup, CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
+
+                    pipeline.addLast(executorGroup, "stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
+                    pipeline.addLast(executorGroup, CORE_HANDLER, createHandler());
+                    pipeline.addLast(executorGroup, "stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
+                }
+
+            };
+        }
     }
 
     @Override

@@ -33,7 +33,6 @@ import org.apache.james.protocols.api.handler.LineHandler;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.ssl.SslHandler;
@@ -96,7 +95,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
             prepareStartTLS();
         }
 
-        ChannelFuture future = channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
+        channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
     }
 
     @Override
@@ -146,7 +145,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
         LineHandlerAware channelHandler = (LineHandlerAware) channel.pipeline()
             .get(HandlerConstants.CORE_HANDLER);
-        channelHandler.pushLineHandler(new LineHandlerUpstreamHandler(session, overrideCommandHandler));
+        channelHandler.pushLineHandler(new LineHandlerInboundHandler(session, overrideCommandHandler));
     }
     
    

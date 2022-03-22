@@ -32,6 +32,6 @@ public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFa
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false, pattern);
+        return new AllButStartTlsLineBasedChannelHandler(maxFrameLength, false, pattern);
     }
 }

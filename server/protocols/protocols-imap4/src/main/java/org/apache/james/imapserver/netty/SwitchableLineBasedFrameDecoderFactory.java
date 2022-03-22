@@ -33,6 +33,6 @@ public class SwitchableLineBasedFrameDecoderFactory implements ChannelHandlerFac
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new SwitchableLineBasedFrameDecoder(pipeline, maxLineLength, false);
+        return new SwitchableLineBasedFrameDecoder(maxLineLength, false);
     }
 }

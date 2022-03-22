@@ -114,10 +114,6 @@ public class AbstractConfigurableAsyncServerTest {
             return connPerIP;
         }
 
-        public String getJmxName() {
-            return jmxName;
-        }
-
         @Override
         public Encryption getEncryption() {
             return encryption;

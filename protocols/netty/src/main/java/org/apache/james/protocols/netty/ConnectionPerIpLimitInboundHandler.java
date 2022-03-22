@@ -29,7 +29,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 
 /**
- * {@link ChannelInboundHandlerAdapter} which limit connections per IP
+ * {@link ChannelUpstreamHandler} which limit connections per IP
  * 
  * This handler must be used as singleton when adding it to the {@link ChannelPipeline} to work correctly
  *
@@ -37,12 +37,12 @@ import io.netty.channel.ChannelPipeline;
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
 @ChannelHandler.Sharable
-public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAdapter {
+public class ConnectionPerIpLimitInboundHandler extends ChannelInboundHandlerAdapter {
 
     private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<>();
     private final int maxConnectionsPerIp;
-    
-    public ConnectionPerIpLimitUpstreamHandler(int maxConnectionsPerIp) {
+
+    public ConnectionPerIpLimitInboundHandler(int maxConnectionsPerIp) {
         this.maxConnectionsPerIp = maxConnectionsPerIp;
     }
 
@@ -51,7 +51,7 @@ public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAd
         if (maxConnectionsPerIp > 0) {
             InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
             String remoteIp = remoteAddress.getAddress().getHostAddress();
-            
+
             AtomicInteger atomicCount = connections.get(remoteIp);
 
             if (atomicCount == null) {
@@ -62,27 +62,27 @@ public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAd
                     atomicCount = oldAtomicCount;
                 }
             } else {
-                Integer count = atomicCount.incrementAndGet();
+                int count = atomicCount.incrementAndGet();
                 if (count > maxConnectionsPerIp) {
                     ctx.channel().close();
                 }
             }
         }
-        
+
         super.channelActive(ctx);
     }
-    
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (maxConnectionsPerIp > 0) {
             InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
             String remoteIp = remoteAddress.getAddress().getHostAddress();
-            
+
             AtomicInteger atomicCount = connections.get(remoteIp);
             if (atomicCount != null) {
                 atomicCount.decrementAndGet();
-            }              
-            
+            }
+
         }
         super.channelInactive(ctx);
     }

@@ -76,13 +76,12 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     private ProtocolServer createServer(Protocol protocol, Encryption enc) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(enc)
                 .frameHandlerFactory(new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
 
     private SMTPSClient createClient() {

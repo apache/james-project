@@ -24,40 +24,33 @@ import org.apache.james.protocols.api.Encryption;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.util.concurrent.EventExecutorGroup;
-
 
 /**
  * Abstract base class for {@link ChannelPipeline} implementations which use TLS
  */
 @ChannelHandler.Sharable
-public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketChannel> extends AbstractChannelPipelineFactory<C> {
+public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
 
     private Encryption secure;
 
-    public AbstractSSLAwareChannelPipelineFactory(int timeout,
+    public AbstractSSLAwareChannelPipelineFactory(int readTimeout,
                                                   int maxConnections, int maxConnectsPerIp,
                                                   ChannelHandlerFactory frameHandlerFactory,
-                                                  EventExecutorGroup eventExecutorGroup) {
-        super(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
+                                                  EventLoopGroupManager groupManager) {
+        super(readTimeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, groupManager);
     }
 
-    public AbstractSSLAwareChannelPipelineFactory(int timeout,
+    public AbstractSSLAwareChannelPipelineFactory(int readTimeout,
             int maxConnections, int maxConnectsPerIp, Encryption secure,
-            ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
+            ChannelHandlerFactory frameHandlerFactory,EventLoopGroupManager groupManager) {
+        super(readTimeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, groupManager);
 
         this.secure = secure;
     }
 
     @Override
-    public void initChannel(C channel) throws Exception {
-        super.initChannel(channel);
-
-        ChannelPipeline pipeline = channel.pipeline();
-
+    protected void initPipeline(ChannelPipeline pipeline) throws Exception {
         if (isSSLSocket()) {
             // We need to set clientMode to false.
             // See https://issues.apache.org/jira/browse/JAMES-1025
@@ -65,6 +58,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
             engine.setUseClientMode(false);
             pipeline.addFirst(HandlerConstants.SSL_HANDLER, new SslHandler(engine));
         }
+        super.initPipeline(pipeline);
     }
 
     /**

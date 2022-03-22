@@ -165,7 +165,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
             if (lineHandlers.size() > 0) {
 
                 ByteBuf buf = (ByteBuf) msg;
-                LineHandler lHandler = (LineHandler) lineHandlers.getLast();
+                LineHandler lHandler = lineHandlers.getLast();
                 long start = System.currentTimeMillis();
                 Response response = lHandler.onLine(pSession, buf.nioBuffer());
                 long executionTime = System.currentTimeMillis() - start;
@@ -190,7 +190,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
      * Cleanup the channel
      */
     protected void cleanup(ChannelHandlerContext ctx) {
-        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).getAndRemove();
+        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).getAndSet(null);
         if (session != null) {
             session.resetState();
         }

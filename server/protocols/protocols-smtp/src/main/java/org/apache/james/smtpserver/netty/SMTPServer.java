@@ -299,6 +299,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return SMTPServer.this.addressBracketsEnforcement;
         }
 
+        @Override
         public boolean isPlainAuthEnabled() {
             return authenticationConfiguration.isPlainAuthEnabled();
         }
@@ -385,7 +386,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new SMTPChannelInboundHandler(transport, getEncryption(), smtpMetrics, getExecutorGroup());
+        return new SMTPChannelInboundHandler(transport, getEncryption(), smtpMetrics);
     }
 
     @Override

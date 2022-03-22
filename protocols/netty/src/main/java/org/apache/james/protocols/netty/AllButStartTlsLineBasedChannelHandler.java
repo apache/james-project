@@ -29,22 +29,20 @@ import com.google.common.base.Splitter;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.util.AttributeKey;
 
 
 public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder {
-    private static final Boolean FAIL_FAST = true;
-    private final ChannelPipeline pipeline;
+    private static final boolean FAIL_FAST = false;
+
     private final String pattern;
 
     private static final AttributeKey<CommandDetectionSession> sessionAttributeKey =
             AttributeKey.valueOf("session");
 
-    public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
-        super(maxFrameLength, stripDelimiter, !FAIL_FAST);
-        this.pipeline = pipeline;
+    public AllButStartTlsLineBasedChannelHandler(int maxFrameLength, boolean stripDelimiter, String pattern) {
+        super(maxFrameLength, stripDelimiter, FAIL_FAST);
         this.pattern = pattern;
     }
 
@@ -62,7 +60,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     }
 
     protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx) {
-        return pipeline.context(HandlerConstants.CORE_HANDLER).channel().attr(sessionAttributeKey).get();
+        return ctx.channel().attr(sessionAttributeKey).get();
     }
 
     private String readAll(ByteBuf buffer) {

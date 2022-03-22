@@ -21,9 +21,9 @@ package org.apache.james.protocols.lib.netty;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.netty.EventLoopGroupManager;
 
 import io.netty.channel.ChannelHandler;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * Abstract base class which should get used if you MAY need an {@link ExecutionHandler}
@@ -33,10 +33,10 @@ import io.netty.util.concurrent.EventExecutorGroup;
 @ChannelHandler.Sharable
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
-    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
+    public AbstractExecutorAwareChannelPipelineFactory(int readTimeout, int maxConnections, int maxConnectsPerIp,
                                                        Encryption encryption,
-                                                       ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        super(timeout, maxConnections, maxConnectsPerIp, encryption, frameHandlerFactory, eventExecutorGroup);
+                                                       ChannelHandlerFactory frameHandlerFactory, EventLoopGroupManager groupManager) {
+        super(readTimeout, maxConnections, maxConnectsPerIp, encryption, frameHandlerFactory, groupManager);
     }
     
     /**

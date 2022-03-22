@@ -79,7 +79,6 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         ChannelInboundHandlerAdapter override = Iterables.getFirst(behaviourOverrides, null);
         if (override != null) {
@@ -225,7 +224,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             ctx.channel().config().setAutoRead(false);
             ctx.channel().eventLoop().execute(() ->
                 ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
-                        new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false)));
+                        new SwitchableLineBasedFrameDecoder(maxFrameLength, false)));
             ctx.channel().config().setAutoRead(true);
         }
     }

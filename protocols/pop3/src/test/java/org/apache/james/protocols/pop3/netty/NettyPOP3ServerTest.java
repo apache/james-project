@@ -31,10 +31,9 @@ public class NettyPOP3ServerTest extends AbstractPOP3ServerTest {
 
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
-        NettyServer server =  new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
 }

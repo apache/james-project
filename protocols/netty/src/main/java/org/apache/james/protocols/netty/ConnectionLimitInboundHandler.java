@@ -34,12 +34,12 @@ import io.netty.channel.ChannelPipeline;
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
 @ChannelHandler.Sharable
-public class ConnectionLimitUpstreamHandler extends ChannelInboundHandlerAdapter {
+public class ConnectionLimitInboundHandler extends ChannelInboundHandlerAdapter {
 
     private final AtomicInteger connections = new AtomicInteger(0);
     private volatile int maxConnections = -1;
     
-    public ConnectionLimitUpstreamHandler(int maxConnections) {
+    public ConnectionLimitInboundHandler(int maxConnections) {
         this.maxConnections = maxConnections;
     }
 

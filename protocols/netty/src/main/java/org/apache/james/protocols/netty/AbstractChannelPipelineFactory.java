@@ -24,56 +24,66 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * Abstract base class for {@link ChannelInitializer} implementations
  */
 @ChannelHandler.Sharable
-public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> extends ChannelInitializer<C> {
+public abstract class AbstractChannelPipelineFactory extends ChannelInitializer<SocketChannel> {
     public static final int MAX_LINE_LENGTH = 8192;
 
-    protected final ConnectionLimitUpstreamHandler connectionLimitHandler;
-    protected final ConnectionPerIpLimitUpstreamHandler connectionPerIpLimitHandler;
-    private final int timeout;
+    protected final ConnectionLimitInboundHandler connectionLimitHandler;
+    protected final ConnectionPerIpLimitInboundHandler connectionPerIpLimitHandler;
+    private final int readTimeout;
     private final ChannelHandlerFactory frameHandlerFactory;
-    private final EventExecutorGroup eventExecutorGroup;
+    protected final EventExecutorGroup executorGroup;
 
-    public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(0, 0, 0, frameHandlerFactory, eventExecutorGroup);
+    public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory, EventLoopGroupManager groupManager) {
+        this(0, 0, 0, frameHandlerFactory, groupManager);
     }
 
-    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
-                                          ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
-        this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
-        this.timeout = timeout;
+    public AbstractChannelPipelineFactory(int readTimeout, int maxConnections, int maxConnectsPerIp,
+                                          ChannelHandlerFactory frameHandlerFactory, EventLoopGroupManager groupManager) {
+        this.connectionLimitHandler = maxConnections > 0 ? new ConnectionLimitInboundHandler(maxConnections) : null;
+        this.connectionPerIpLimitHandler = maxConnectsPerIp > 0 ? new ConnectionPerIpLimitInboundHandler(maxConnectsPerIp) : null;
+        this.readTimeout = readTimeout;
         this.frameHandlerFactory = frameHandlerFactory;
-        this.eventExecutorGroup = eventExecutorGroup;
+        this.executorGroup = groupManager.getExecutorGroup();
     }
-    
-    
+
     @Override
-    protected void initChannel(C channel) throws Exception {
+    protected final void initChannel(SocketChannel channel) throws Exception {
+        initPipeline(channel.pipeline());
+    }
+
+    protected void initPipeline(ChannelPipeline pipeline) throws Exception {
         // Create a default pipeline implementation.
-        ChannelPipeline pipeline = channel.pipeline();
+        addLastIfNotNull(pipeline, HandlerConstants.CONNECTION_LIMIT_HANDLER, connectionLimitHandler);
 
-        pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, connectionLimitHandler);
+        addLastIfNotNull(pipeline, HandlerConstants.CONNECTION_PER_IP_LIMIT_HANDLER, connectionPerIpLimitHandler);
 
-        pipeline.addLast(HandlerConstants.CONNECTION_PER_IP_LIMIT_HANDLER, connectionPerIpLimitHandler);
-
-        
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
-        pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
-       
+        pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
+
         // Add the ChunkedWriteHandler to be able to write ChunkInput
         pipeline.addLast(HandlerConstants.CHUNK_HANDLER, new ChunkedWriteHandler());
-        pipeline.addLast(HandlerConstants.TIMEOUT_HANDLER, new TimeoutHandler(timeout));
 
-        pipeline.addLast(eventExecutorGroup, HandlerConstants.CORE_HANDLER, createHandler());
+        int readTimeout = this.readTimeout;
+        if (readTimeout > 0) {
+            pipeline.addLast(HandlerConstants.READ_TIMEOUT_HANDLER, new ReadTimeoutHandler(readTimeout));
+        }
+
+        pipeline.addLast(executorGroup, HandlerConstants.CORE_HANDLER, createHandler());
     }
 
-    
+    private static void addLastIfNotNull(ChannelPipeline pipeline, String name, ChannelHandler handler) {
+        if (handler != null) {
+            pipeline.addLast(name, handler);
+        }
+    }
+
     /**
      * Create the core {@link ChannelInboundHandlerAdapter} to use
      *

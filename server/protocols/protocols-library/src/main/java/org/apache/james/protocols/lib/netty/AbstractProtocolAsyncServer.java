@@ -48,7 +48,7 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
     @Override
     protected void preInit() throws Exception {
         super.preInit();
-        handlerChain = new ProtocolHandlerChainImpl(loader, config.configurationAt("handlerchain"), jmxName, getCoreHandlersPackage(), getJMXHandlersPackage());
+        handlerChain = new ProtocolHandlerChainImpl(loader, config.configurationAt("handlerchain"), getJmxName(), getCoreHandlersPackage(), getJMXHandlersPackage());
         handlerChain.init();
     }
 

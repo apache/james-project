@@ -25,8 +25,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractPOP3SServerTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -34,11 +32,10 @@ public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
 
     @Override
     protected ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(enc)
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
 }

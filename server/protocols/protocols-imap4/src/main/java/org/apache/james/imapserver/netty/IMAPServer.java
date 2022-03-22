@@ -37,8 +37,8 @@ import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
-import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.protocols.netty.ConnectionLimitInboundHandler;
+import org.apache.james.protocols.netty.ConnectionPerIpLimitInboundHandler;
 import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslHandler;
@@ -204,50 +203,59 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         return "IMAP Service";
     }
 
-
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory() {
-        
-        return new AbstractChannelPipelineFactory(getFrameHandlerFactory(), getExecutorGroup()) {
+    protected Server createServer() {
+        beforeBuild();
+        return new Server(this);
+    }
 
-            @Override
-            protected ChannelInboundHandlerAdapter createHandler() {
-                return createCoreHandler();
-            }
+    private final class Server extends AbstractConfigurableAsyncServer.Server {
+        private Server(IMAPServer factory) {
+            super(factory);
+        }
 
-            @Override
-            public void initChannel(Channel channel) throws Exception {
-                ChannelPipeline pipeline = channel.pipeline();
-                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
+        @Override
+        protected AbstractChannelPipelineFactory createChannelInitializer() {
+            return new AbstractChannelPipelineFactory(getFrameHandlerFactory(), getGroupsManager()) {
 
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(IMAPServer.this.connPerIP));
-
-                // Add the text line decoder which limit the max line length,
-                // don't strip the delimiter and use CRLF as delimiter
-                // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(FRAMER, getFrameHandlerFactory().create(pipeline));
-               
-                Encryption secure = getEncryption();
-                if (secure != null && !secure.isStartTLS()) {
-                    // We need to set clientMode to false.
-                    // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
-
+                @Override
+                protected ChannelInboundHandlerAdapter createHandler() {
+                    return createCoreHandler();
                 }
-                pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
 
-                pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
+                @Override
+                protected void initPipeline(ChannelPipeline pipeline) throws Exception {
+                    pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
+                    pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitInboundHandler(IMAPServer.this.connectionLimit));
 
-                pipeline.addLast(getExecutorGroup(), REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
-                    literalSizeLimit, maxLineLength));
+                    pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitInboundHandler(IMAPServer.this.connPerIP));
 
-                pipeline.addLast(getExecutorGroup(), CORE_HANDLER, createCoreHandler());
-            }
+                    // Add the text line decoder which limit the max line length,
+                    // don't strip the delimiter and use CRLF as delimiter
+                    // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
+                    pipeline.addLast(FRAMER, getFrameHandlerFactory().create(pipeline));
+                   
+                    Encryption secure = getEncryption();
+                    if (secure != null && !secure.isStartTLS()) {
+                        // We need to set clientMode to false.
+                        // See https://issues.apache.org/jira/browse/JAMES-1025
+                        SSLEngine engine = secure.createSSLEngine();
+                        engine.setUseClientMode(false);
+                        pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
-        };
+                    }
+                    pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
+
+                    pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
+
+                    pipeline.addLast(executorGroup, REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
+                        literalSizeLimit, maxLineLength));
+
+                    pipeline.addLast(executorGroup, CORE_HANDLER, createCoreHandler());
+                }
+
+            };
+        }
     }
 
     @Override

@@ -18,114 +18,120 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 
-import com.google.common.base.Preconditions;
-
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.DefaultEventLoopGroup;
-
 
 /**
  * Generic NettyServer 
  */
-public class NettyServer extends AbstractAsyncServer {
-    public static class Factory {
-        private Protocol protocol;
-        private Optional<Encryption> secure;
-        private Optional<ChannelHandlerFactory> frameHandlerFactory;
+public final class NettyServer extends AbstractAsyncServer {
+
+    private final Protocol protocol;
+    private final Encryption secure;
+    private final ChannelHandlerFactory frameHandlerFactory;
+    private final int readTimeout;
+    private final int maxConcurrentConnections;
+    private final int maxConcurrentConnectionsPerIP;
+
+    protected NettyServer(Factory factory) {
+        super(factory);
+        protocol = factory.protocol;
+        secure = factory.secure;
+        frameHandlerFactory = factory.frameHandlerFactory;
+        readTimeout = factory.readTimeout;
+        maxConcurrentConnections = factory.maxConcurrentConnections;
+        maxConcurrentConnectionsPerIP = factory.maxConcurrentConnectionsPerIP;
+    }
+
+    @Override
+    protected AbstractChannelPipelineFactory createChannelInitializer() {
+        return new AbstractSSLAwareChannelPipelineFactory(
+                readTimeout,
+                maxConcurrentConnections,
+                maxConcurrentConnectionsPerIP,
+                secure,
+                frameHandlerFactory,
+                groupsManager) {
+
+            @Override
+            protected ChannelInboundHandlerAdapter createHandler() {
+                return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
+            }
+        };
+    }
+
+    public static final class Factory extends AbstractAsyncServer.Factory<Factory> {
+        protected Protocol protocol;
+        protected Encryption secure;
+        protected ChannelHandlerFactory frameHandlerFactory;
+        protected int readTimeout;
+        protected int maxConcurrentConnections;
+        protected int maxConcurrentConnectionsPerIP;
 
         @Inject
         public Factory() {
-            secure = Optional.empty();
-            frameHandlerFactory = Optional.empty();
+            // Do nothing
+        }
+
+        @Override
+        protected void beforeBuild() {
+            super.beforeBuild();
+            if (protocol == null) {
+                throw new IllegalStateException("Must provide protocol");
+            }
+            if (frameHandlerFactory == null) {
+                frameHandlerFactory = new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+            }
         }
 
         public Factory protocol(Protocol protocol) {
-            Preconditions.checkNotNull(protocol, "'protocol' is mandatory");
             this.protocol = protocol;
             return this;
         }
 
         public Factory secure(Encryption secure) {
-            this.secure = Optional.ofNullable(secure);
+            this.secure = secure;
             return this;
         }
 
         public Factory frameHandlerFactory(ChannelHandlerFactory frameHandlerFactory) {
-            this.frameHandlerFactory = Optional.ofNullable(frameHandlerFactory);
+            this.frameHandlerFactory = frameHandlerFactory;
+            return this;
+        }
+
+        public Factory readTimeout(int readTimeout) {
+            this.readTimeout = readTimeout;
+            return this;
+        }
+
+        public Factory maxConcurrentConnections(int maxConcurrentConnections) {
+            this.maxConcurrentConnections = maxConcurrentConnections;
+            return this;
+        }
+
+        public Factory maxConcurrentConnectionsPerIP(int maxConcurrentConnectionsPerIP) {
+            this.maxConcurrentConnectionsPerIP = maxConcurrentConnectionsPerIP;
             return this;
         }
 
         public NettyServer build() {
-            Preconditions.checkState(protocol != null, "'protocol' is mandatory");
-            return new NettyServer(protocol, 
-                    secure.orElse(null),
-                    frameHandlerFactory.orElse(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
+            beforeBuild();
+            return new NettyServer(this);
         }
-    }
 
-    protected final Encryption secure;
-    protected final Protocol protocol;
-    private final ChannelHandlerFactory frameHandlerFactory;
-    private int maxCurConnections;
-    private int maxCurConnectionsPerIP;
-   
-    private NettyServer(Protocol protocol, Encryption secure, ChannelHandlerFactory frameHandlerFactory) {
-        this.protocol = protocol;
-        this.secure = secure;
-        this.frameHandlerFactory = frameHandlerFactory;
-    }
-    
-    public void setMaxConcurrentConnections(int maxCurConnections) {
-        if (isBound()) {
-            throw new IllegalStateException("Server running already");
+        @Override
+        protected final Factory this_() {
+            return this;
         }
-        this.maxCurConnections = maxCurConnections;
-    }
-
-    public void setMaxConcurrentConnectionsPerIP(int maxCurConnectionsPerIP) {
-        if (isBound()) {
-            throw new IllegalStateException("Server running already");
-        }
-        this.maxCurConnectionsPerIP = maxCurConnectionsPerIP;
-    }
-
-    protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
-    }
-    
-    @Override
-    public synchronized void bind() throws Exception {
-        super.bind();
-    }
-
-    private ChannelHandlerFactory getFrameHandlerFactory() {
-        return frameHandlerFactory;
     }
 
     @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory() {
-
-        return new AbstractSSLAwareChannelPipelineFactory(
-            getTimeout(),
-            maxCurConnections,
-            maxCurConnectionsPerIP,
-            secure,
-            getFrameHandlerFactory(),
-            new DefaultEventLoopGroup(16)) {
-
-            @Override
-            protected ChannelInboundHandlerAdapter createHandler() {
-                return createCoreHandler();
-            }
-        };
-
+    public int getTimeout() {
+        return readTimeout;
     }
 
 }

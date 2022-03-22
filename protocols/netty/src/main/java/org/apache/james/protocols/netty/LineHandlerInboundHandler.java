@@ -34,12 +34,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * @param <S>
  */
 @ChannelHandler.Sharable
-public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends ChannelInboundHandlerAdapter {
+public class LineHandlerInboundHandler<S extends ProtocolSession> extends ChannelInboundHandlerAdapter {
 
     private final LineHandler<S> handler;
     private final S session;
     
-    public LineHandlerUpstreamHandler(S session, LineHandler<S> handler) {
+    public LineHandlerInboundHandler(S session, LineHandler<S> handler) {
         this.handler = handler;
         this.session = session;
     }

@@ -30,13 +30,11 @@ public class NettyStartTlsPOP3ServerTest extends AbstractStartTlsPOP3ServerTest 
 
     @Override
     protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(enc)
+                .listenAddresses(address)
                 .build();
-        server.setListenAddresses(address);
-        
-        return server;
     }
 
 }

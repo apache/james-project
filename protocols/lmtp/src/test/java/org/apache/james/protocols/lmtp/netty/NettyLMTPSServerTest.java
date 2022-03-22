@@ -16,12 +16,11 @@ public class NettyLMTPSServerTest extends AbstractLMTPSServerTest {
 
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
-        NettyServer server = new NettyServer.Factory()
+        return new NettyServer.Factory()
                 .protocol(protocol)
                 .secure(Encryption.createTls(BogusSslContextFactory.getServerContext()))
+                .listenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT))
                 .build();
-        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-        return server;
     }
     
 }

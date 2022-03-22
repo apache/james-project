@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
-import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -48,15 +47,12 @@ import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.james.protocols.netty.EventLoopGroupManager;
+import org.apache.james.protocols.netty.EventLoopGroupManagerDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOption;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.util.PemUtils;
 
@@ -64,8 +60,11 @@ import nl.altindag.ssl.util.PemUtils;
 /**
  * Abstract base class for Servers for all James Servers
  */
-public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServer implements Configurable, ServerMBean {
+public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServer.Factory<AbstractConfigurableAsyncServer> implements Configurable, ServerMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConfigurableAsyncServer.class);
+
+    /** The default value for the connection keepalive. */
+    public static final boolean DEFAULT_KEEPALIVE = true;
 
     /** The default value for the connection backlog. */
     public static final int DEFAULT_BACKLOG = 200;
@@ -75,6 +74,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     /** The name of the parameter defining the connection timeout. */
     private static final String TIMEOUT_NAME = "connectiontimeout";
+
+    /** The name of the parameter defining the connection keepalive. */
+    private static final String KEEPALIVE_NAME = "connectionKeepalive";
 
     /** The name of the parameter defining the connection backlog. */
     private static final String BACKLOG_NAME = "connectionBacklog";
@@ -87,15 +89,17 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private FileSystem fileSystem;
 
     private boolean enabled;
+    
+    private Server server;
 
+    protected int readTimeout;
+    protected int connectionLimit;
     protected int connPerIP;
 
     private boolean useStartTLS;
     private boolean useSSL;
 
     private ClientAuth clientAuth;
-
-    protected int connectionLimit;
 
     private String helloName;
 
@@ -112,18 +116,41 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     protected Encryption encryption;
 
-
     private String[] enabledCipherSuites;
 
     private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ChannelHandlerFactory frameHandlerFactory;
 
-    private EventExecutorGroup executorGroup;
-
     private MBeanServer mbeanServer;
 
     private int port;
+
+    protected AbstractConfigurableAsyncServer() {
+        super.groupsManager(new EventLoopGroupManagerDefault());
+    }
+
+    public final String getJmxName() {
+        return getGroupsManager().getThreadNamePrefix();
+    }
+
+    public final void setJmxName(String jmxName) {
+        getGroupsManager().setThreadNamePrefix(jmxName);
+    }
+
+    @Override
+    public EventLoopGroupManagerDefault getGroupsManager() {
+        return (EventLoopGroupManagerDefault) super.getGroupsManager();
+    }
+
+    @Override
+    public AbstractConfigurableAsyncServer groupsManager(EventLoopGroupManager groupsManager) {
+        if (groupsManager instanceof EventLoopGroupManagerDefault) {
+            return super.groupsManager(groupsManager);
+        } else {
+            throw new IllegalArgumentException("This class only support instances of " + EventLoopGroupManager.class.getName());
+        }
+    }
 
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
@@ -150,7 +177,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
     
     private String getMBeanName() {
-        return  "org.apache.james:type=server,name=" + jmxName;
+        return  "org.apache.james:type=server,name=" + getJmxName();
     }
     
     @Override
@@ -184,23 +211,22 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             bindAddresses.add(address);
         }
-        setListenAddresses(bindAddresses.toArray(InetSocketAddress[]::new));
+        listenAddresses(bindAddresses.toArray(InetSocketAddress[]::new));
 
-        jmxName = config.getString("jmxName", getDefaultJMXName());
-        int ioWorker = config.getInt("ioWorkerCount", DEFAULT_IO_WORKER_COUNT);
-        setIoWorkerCount(ioWorker);
+        setJmxName(config.getString("jmxName", getDefaultJMXName()));
+        getGroupsManager().setBossThreads(config.getInt("bossThreads", EventLoopGroupManagerDefault.DEFAULT_BOSS_THREADS));
+        getGroupsManager().setWorkerThreads(config.getInt("ioWorkerCount", EventLoopGroupManagerDefault.DEFAULT_WORKER_THREADS));
+        getGroupsManager().setExecutorGroupThreads(config.getInt("maxExecutorCount", EventLoopGroupManagerDefault.DEFAULT_EXECUTOR_GROUP_THREADS));
 
-        executorGroup = new DefaultEventExecutorGroup(config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT),
-            NamedThreadFactory.withName(jmxName));
-        
         configureHelloName(config);
 
-        setTimeout(config.getInt(TIMEOUT_NAME, DEFAULT_TIMEOUT));
+        readTimeout = config.getInt(TIMEOUT_NAME, DEFAULT_TIMEOUT);
+        LOGGER.info("{} handler connection read timeout is: {}", getServiceType(), getTimeout());
 
-        LOGGER.info("{} handler connection timeout is: {}", getServiceType(), getTimeout());
+        keepalive(config.getBoolean(KEEPALIVE_NAME, DEFAULT_KEEPALIVE));
+        LOGGER.info("{} connection keepalive is: {}", getServiceType(), isKeepAlive());
 
-        setBacklog(config.getInt(BACKLOG_NAME, DEFAULT_BACKLOG));
-
+        backlog(config.getInt(BACKLOG_NAME, DEFAULT_BACKLOG));
         LOGGER.info("{} connection backlog is: {}", getServiceType(), getBacklog());
 
         String connectionLimitString = config.getString("connectionLimit", null);
@@ -267,10 +293,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     }
 
-    protected EventExecutorGroup getExecutorGroup() {
-        return executorGroup;
-    }
-
     @PostConstruct
     public final void init() throws Exception {
 
@@ -279,7 +301,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             buildSSLContext();
             preInit();
             frameHandlerFactory = createFrameHandlerFactory();
-            bind();
+            server = createServer();
+            server.bind();
             port = retrieveFirstBindedPort();
 
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
@@ -311,9 +334,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         LOGGER.info("Dispose {}", getServiceType());
         
         if (isEnabled()) {
-            unbind();
+            server.unbind();
+            server = null;
             postDestroy();
-            executorGroup.shutdownGracefully();
 
             unregisterMBean();
         }
@@ -392,6 +415,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return encryption;
     }
 
+    @Override
+    public int getTimeout() {
+        return readTimeout;
+    }
+
     /**
      * Build the SSLEngine
      * 
@@ -399,50 +427,43 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      */
     protected void buildSSLContext() throws Exception {
         if (useStartTLS || useSSL) {
-            FileInputStream fis = null;
             SSLFactory.Builder sslFactoryBuilder = SSLFactory.builder()
                 .withSslContextAlgorithm("TLS");
-            try {
-                if (keystore != null) {
-                    char[] passwordAsCharArray = Optional.ofNullable(secret)
-                        .orElse("")
-                        .toCharArray();
-                    sslFactoryBuilder.withIdentityMaterial(
-                        fileSystem.getFile(keystore).toPath(),
-                        passwordAsCharArray,
-                        passwordAsCharArray,
-                        keystoreType);
-                } else {
-                    X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
-                        fileSystem.getResource(certificates),
-                        fileSystem.getResource(privateKey),
-                        Optional.ofNullable(secret)
-                            .map(String::toCharArray)
-                            .orElse(null));
+            if (keystore != null) {
+                char[] passwordAsCharArray = Optional.ofNullable(secret)
+                    .orElse("")
+                    .toCharArray();
+                sslFactoryBuilder.withIdentityMaterial(
+                    fileSystem.getFile(keystore).toPath(),
+                    passwordAsCharArray,
+                    passwordAsCharArray,
+                    keystoreType);
+            } else {
+                X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
+                    fileSystem.getResource(certificates),
+                    fileSystem.getResource(privateKey),
+                    Optional.ofNullable(secret)
+                        .map(String::toCharArray)
+                        .orElse(null));
 
-                    sslFactoryBuilder.withIdentityMaterial(keyManager);
-                }
+                sslFactoryBuilder.withIdentityMaterial(keyManager);
+            }
 
-                if (clientAuth != null) {
-                    if (truststore != null) {
-                        sslFactoryBuilder.withTrustMaterial(
-                            fileSystem.getFile(truststore).toPath(),
-                            truststoreSecret,
-                            truststoreType);
-                    }
+            if (clientAuth != null) {
+                if (truststore != null) {
+                    sslFactoryBuilder.withTrustMaterial(
+                        fileSystem.getFile(truststore).toPath(),
+                        truststoreSecret,
+                        truststoreType);
                 }
+            }
 
-                SSLContext context = sslFactoryBuilder.build().getSslContext();
+            SSLContext context = sslFactoryBuilder.build().getSslContext();
 
-                if (useStartTLS) {
-                    encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
-                } else {
-                    encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
-                }
-            } finally {
-                if (fis != null) {
-                    fis.close();
-                }
+            if (useStartTLS) {
+                encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
+            } else {
+                encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
             }
         }
     }
@@ -490,13 +511,13 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     @Override
     public boolean isStarted() {
-        return isBound();
+        return server != null && server.isBound();
     }
 
     @Override
     public boolean start() {
         try {
-            bind();
+            server.bind();
         } catch (Exception e) {
             LOGGER.error("Unable to start server", e);
             return false;
@@ -506,7 +527,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     @Override
     public boolean stop() {
-        unbind();
+        server.unbind();
         return true;
     }
 
@@ -537,14 +558,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return addrs;
     }
 
-    @Override
-    protected void configureBootstrap(ServerBootstrap bootstrap) {
-        super.configureBootstrap(bootstrap);
-        
-        // enable tcp keep-alives
-        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
-    }
-    
     protected abstract ChannelHandlerFactory createFrameHandlerFactory();
 
     protected ChannelHandlerFactory getFrameHandlerFactory() {
@@ -552,24 +565,42 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
 
     protected abstract ChannelInboundHandlerAdapter createCoreHandler();
-    
-    @Override
-    protected AbstractChannelPipelineFactory createPipelineFactory() {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
-            getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
-            @Override
-            protected ChannelInboundHandlerAdapter createHandler() {
-                return AbstractConfigurableAsyncServer.this.createCoreHandler();
-
-            }
-
-            @Override
-            protected ConnectionCountHandler getConnectionCountHandler() {
-                return AbstractConfigurableAsyncServer.this.getConnectionCountHandler();
-            }
-
-        };
+    protected Server createServer() {
+        beforeBuild();
+        return new Server(this);
     }
-    
+
+    protected class Server extends AbstractAsyncServer {
+        protected Server(AbstractConfigurableAsyncServer factory) {
+            super(factory);
+        }
+        
+        @Override
+        public final int getTimeout() {
+            return readTimeout;
+        }
+
+        @Override
+        protected AbstractChannelPipelineFactory createChannelInitializer() {
+            return new AbstractExecutorAwareChannelPipelineFactory(readTimeout, connectionLimit, connPerIP,
+                getEncryption(), getFrameHandlerFactory(), groupsManager) {
+
+                @Override
+                protected ChannelInboundHandlerAdapter createHandler() {
+                    return AbstractConfigurableAsyncServer.this.createCoreHandler();
+                }
+
+                @Override
+                protected ConnectionCountHandler getConnectionCountHandler() {
+                    return AbstractConfigurableAsyncServer.this.getConnectionCountHandler();
+                }
+            };
+        }
+    }
+
+    @Override
+    protected AbstractConfigurableAsyncServer this_() {
+        return this;
+    }
 }
