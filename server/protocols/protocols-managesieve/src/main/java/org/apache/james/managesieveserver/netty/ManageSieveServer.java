@@ -38,7 +38,6 @@ import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
-import org.apache.james.protocols.netty.HandlerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
