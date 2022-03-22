@@ -122,11 +122,15 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * readable in the underlying {@link ByteBuf}
      */
     public static final class NotEnoughDataException extends RuntimeException {
-
         public static final int UNKNOWN_SIZE = -1;
+        private static final String NO_MESSAGE = null;
+        private static final Throwable NO_CAUSE = null;
+        private static final boolean DISABLE_SUPPRESSION = false;
+
         private final int size;
 
         public NotEnoughDataException(int size) {
+            super(NO_MESSAGE, NO_CAUSE, DISABLE_SUPPRESSION, false);
             this.size = size;
         }
 
