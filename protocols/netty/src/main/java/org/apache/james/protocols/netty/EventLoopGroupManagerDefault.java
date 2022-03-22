@@ -84,18 +84,22 @@ public final class EventLoopGroupManagerDefault implements EventLoopGroupManager
 
     @Override
     public void bind(ServerBootstrap bootstrap) {
-        if (bossThreads <= 0) {
-            throw new IllegalStateException("Boss threads must be 1 or greater");
+        // Create groups if haven't already been created (i.e. allow 'bind()' to be called multiple times safely before 'unbind()')
+        if (bossGroup == null) {
+            if (bossThreads <= 0) {
+                throw new IllegalStateException("Boss threads must be 1 or greater");
+            }
+            bossGroup = new NioEventLoopGroup(bossThreads, getThreadFactory("-bossThreads"));
+            workerGroup = workerThreads > 0 ? new NioEventLoopGroup(workerThreads, getThreadFactory("-worker")) : null;
+            executorGroup = executorGroupThreads > 0 ? new DefaultEventLoopGroup(executorGroupThreads, getThreadFactory("-executor")) : null;
         }
-        bossGroup = new NioEventLoopGroup(bossThreads, getThreadFactory("-bossThreads"));
-        workerGroup = workerThreads > 0 ? new NioEventLoopGroup(workerThreads, getThreadFactory("-worker")) : null;
+
+        // Assign to bootstrap
         if (workerGroup == null) {
             bootstrap.group(bossGroup);
         } else {
             bootstrap.group(bossGroup, workerGroup);
         }
-
-        executorGroup = executorGroupThreads > 0 ? new DefaultEventLoopGroup(executorGroupThreads, getThreadFactory("-executor")) : null;
     }
 
     private ThreadFactory getThreadFactory(String postfix) {
