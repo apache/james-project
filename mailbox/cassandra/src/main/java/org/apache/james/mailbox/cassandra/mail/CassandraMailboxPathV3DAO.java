@@ -161,10 +161,12 @@ public class CassandraMailboxPathV3DAO {
     }
 
     public void logGhostMailboxFailure(MailboxPath mailboxPath) {
-        GhostMailbox.logger()
+        if (GhostMailbox.isDebugEnabled()) {
+            GhostMailbox.logger()
                 .field(GhostMailbox.MAILBOX_NAME, mailboxPath.asString())
                 .field(TYPE, "readMiss")
                 .log(logger -> logger.debug("Read mailbox missed"));
+        }
     }
 
     /**
@@ -174,11 +176,13 @@ public class CassandraMailboxPathV3DAO {
      * or log history might have been dropped)
      */
     private void logReadSuccess(Mailbox mailbox) {
-        GhostMailbox.logger()
-            .field(GhostMailbox.MAILBOX_NAME, mailbox.generateAssociatedPath().asString())
-            .field(TYPE, "readSuccess")
-            .field(GhostMailbox.MAILBOX_ID, mailbox.getMailboxId().serialize())
-            .log(logger -> logger.debug("Read mailbox succeeded"));
+        if (GhostMailbox.isDebugEnabled()) {
+            GhostMailbox.logger()
+                .field(GhostMailbox.MAILBOX_NAME, mailbox.generateAssociatedPath().asString())
+                .field(TYPE, "readSuccess")
+                .field(GhostMailbox.MAILBOX_ID, mailbox.getMailboxId().serialize())
+                .log(logger -> logger.debug("Read mailbox succeeded"));
+        }
     }
 
     private Mailbox fromRowToCassandraIdAndPath(Row row) {
