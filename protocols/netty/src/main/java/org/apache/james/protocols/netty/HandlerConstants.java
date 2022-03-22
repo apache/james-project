@@ -29,12 +29,6 @@ public interface HandlerConstants {
 
     String SSL_HANDLER = "sslHandler";
 
-    String GROUP_HANDLER = "groupHandler";
-
-    String CONNECTION_LIMIT_HANDLER = " connectionLimit";
-
-    String CONNECTION_PER_IP_LIMIT_HANDLER = "connectionPerIpLimit";
-
     String FRAMER = "framer";
 
     String TIMEOUT_HANDLER = "timeoutHandler";
