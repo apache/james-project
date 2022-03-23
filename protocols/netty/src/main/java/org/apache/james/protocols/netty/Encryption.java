@@ -30,9 +30,9 @@ import io.netty.handler.ssl.SslHandler;
 /**
  * This class should be used to setup encrypted protocol handling
  */
-public final class Encryption {
+public interface Encryption {
 
-    public static Encryption createTls(SSLContext context) {
+    static Encryption createTls(SSLContext context) {
         return createTls(context, null, ClientAuth.NONE);
     }
 
@@ -45,11 +45,11 @@ public final class Encryption {
      * @param clientAuth
      *            specifies certificate based client authentication mode
      */
-    public static Encryption createTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        return new Encryption(context, false, enabledCipherSuites, clientAuth);
+    static Encryption createTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        return new Encryption.LegacyJavaEncryption(context, false, enabledCipherSuites, clientAuth);
     }
 
-    public static Encryption createStartTls(SSLContext context) {
+    static Encryption createStartTls(SSLContext context) {
         return createStartTls(context, null, ClientAuth.NONE);
     }
 
@@ -62,91 +62,122 @@ public final class Encryption {
      * @param clientAuth
      *            specifies certificate based client authentication mode
      */
-    public static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        return new Encryption(context, true, enabledCipherSuites, clientAuth);
-    }
-
-    private final SSLContext context;
-    private final boolean starttls;
-    private final String[] enabledCipherSuites;
-    private final ClientAuth clientAuth;
-
-    private Encryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        this.context = context;
-        this.starttls = starttls;
-        this.enabledCipherSuites = enabledCipherSuites;
-        this.clientAuth = clientAuth;
-    }
-
-    /**
-     * Return the {@link SSLContext} to use
-     * 
-     * @return context
-     */
-    public SSLContext getContext() {
-        return context;
+    static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        return new Encryption.LegacyJavaEncryption(context, true, enabledCipherSuites, clientAuth);
     }
 
     /**
      * Return <code>true</code> if this {@link Encryption} should be used for
      * STARTTLS
-     * 
+     *
      * @return starttls
      */
-    public boolean isStartTLS() {
-        return starttls;
-    }
+    boolean isStartTLS();
 
-    public boolean supportsEncryption() {
-        return context != null;
-    }
+    boolean supportsEncryption();
 
     /**
      * Return the Ciphersuites that are allowed for the {@link Encryption} or
      * <code>null</code> if all should be allowed
-     * 
+     *
      * @return ciphersuites
      */
-    public String[] getEnabledCipherSuites() {
-        return enabledCipherSuites;
-    }
+    String[] getEnabledCipherSuites();
 
     /**
      * Return the client authentication mode for the {@link Encryption}
+     *
      * @return authentication mode
      */
-    public ClientAuth getClientAuth() {
-        return clientAuth;
-    }
+    ClientAuth getClientAuth();
 
-    /**
-     * Create a new {@link SSLEngine} configured according to this class.
-     * @return sslengine
-     */
-    private SSLEngine createSSLEngine() {
-        SSLEngine engine = context.createSSLEngine();
+    SslHandler sslHandler();
 
-        // We need to copy the String array because of possible security issues.
-        // See https://issues.apache.org/jira/browse/PROTOCOLS-18
-        String[] cipherSuites = ArrayUtils.clone(enabledCipherSuites);
+    class LegacyJavaEncryption implements Encryption {
+        private final SSLContext context;
+        private final boolean starttls;
+        private final String[] enabledCipherSuites;
+        private final ClientAuth clientAuth;
 
-        if (cipherSuites != null && cipherSuites.length > 0) {
-            engine.setEnabledCipherSuites(cipherSuites);
+        private LegacyJavaEncryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
+            this.context = context;
+            this.starttls = starttls;
+            this.enabledCipherSuites = enabledCipherSuites;
+            this.clientAuth = clientAuth;
         }
-        if (ClientAuth.NEED.equals(clientAuth)) {
-            engine.setNeedClientAuth(true);
-        }
-        if (ClientAuth.WANT.equals(clientAuth)) {
-            engine.setWantClientAuth(true);
-        }
-        return engine;
-    }
 
-    public SslHandler sslHandler() {
-        SSLEngine engine = createSSLEngine();
-        // We need to set clientMode to false.
-        // See https://issues.apache.org/jira/browse/JAMES-1025
-        engine.setUseClientMode(false);
-        return new SslHandler(engine);
+        /**
+         * Return the {@link SSLContext} to use
+         *
+         * @return context
+         */
+        public SSLContext getContext() {
+            return context;
+        }
+
+        /**
+         * Return <code>true</code> if this {@link Encryption} should be used for
+         * STARTTLS
+         *
+         * @return starttls
+         */
+        public boolean isStartTLS() {
+            return starttls;
+        }
+
+        public boolean supportsEncryption() {
+            return context != null;
+        }
+
+        /**
+         * Return the Ciphersuites that are allowed for the {@link Encryption} or
+         * <code>null</code> if all should be allowed
+         *
+         * @return ciphersuites
+         */
+        public String[] getEnabledCipherSuites() {
+            return enabledCipherSuites;
+        }
+
+        /**
+         * Return the client authentication mode for the {@link Encryption}
+         *
+         * @return authentication mode
+         */
+        public ClientAuth getClientAuth() {
+            return clientAuth;
+        }
+
+        /**
+         * Create a new {@link SSLEngine} configured according to this class.
+         *
+         * @return sslengine
+         */
+        private SSLEngine createSSLEngine() {
+            SSLEngine engine = context.createSSLEngine();
+
+            // We need to copy the String array because of possible security issues.
+            // See https://issues.apache.org/jira/browse/PROTOCOLS-18
+            String[] cipherSuites = ArrayUtils.clone(enabledCipherSuites);
+
+            if (cipherSuites != null && cipherSuites.length > 0) {
+                engine.setEnabledCipherSuites(cipherSuites);
+            }
+            if (ClientAuth.NEED.equals(clientAuth)) {
+                engine.setNeedClientAuth(true);
+            }
+            if (ClientAuth.WANT.equals(clientAuth)) {
+                engine.setWantClientAuth(true);
+            }
+            return engine;
+        }
+
+        public SslHandler sslHandler() {
+            SSLEngine engine = createSSLEngine();
+            // We need to set clientMode to false.
+            // See https://issues.apache.org/jira/browse/JAMES-1025
+            engine.setUseClientMode(false);
+            return new SslHandler(engine);
+        }
     }
 }
