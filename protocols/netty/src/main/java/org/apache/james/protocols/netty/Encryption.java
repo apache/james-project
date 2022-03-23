@@ -25,6 +25,8 @@ import javax.net.ssl.SSLEngine;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.protocols.api.ClientAuth;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import io.netty.handler.ssl.SslHandler;
 
 /**
@@ -32,6 +34,7 @@ import io.netty.handler.ssl.SslHandler;
  */
 public interface Encryption {
 
+    @VisibleForTesting
     static Encryption createTls(SSLContext context) {
         return createTls(context, null, ClientAuth.NONE);
     }
@@ -49,6 +52,7 @@ public interface Encryption {
         return new Encryption.LegacyJavaEncryption(context, false, enabledCipherSuites, clientAuth);
     }
 
+    @VisibleForTesting
     static Encryption createStartTls(SSLContext context) {
         return createStartTls(context, null, ClientAuth.NONE);
     }
