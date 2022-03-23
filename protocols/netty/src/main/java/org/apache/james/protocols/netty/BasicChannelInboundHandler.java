@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import javax.net.ssl.SSLEngine;
-
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -198,13 +196,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
 
     
     
-    protected ProtocolSession createSession(ChannelHandlerContext ctx) throws Exception {
-        SSLEngine engine = null;
-        if (secure != null) {
-            engine = secure.createSSLEngine();
-        }
-
-        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), engine));
+    protected ProtocolSession createSession(ChannelHandlerContext ctx) {
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), secure));
     }
 
     @Override

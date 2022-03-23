@@ -18,12 +18,9 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import javax.net.ssl.SSLEngine;
-
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 
@@ -55,12 +52,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
         super.initChannel(channel);
 
         if (isSSLSocket()) {
-            ChannelPipeline pipeline = channel.pipeline();
-            // We need to set clientMode to false.
-            // See https://issues.apache.org/jira/browse/JAMES-1025
-            SSLEngine engine = secure.createSSLEngine();
-            engine.setUseClientMode(false);
-            pipeline.addFirst(HandlerConstants.SSL_HANDLER, new SslHandler(engine));
+            channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.sslHandler());
         }
     }
 

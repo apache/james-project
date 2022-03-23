@@ -25,6 +25,8 @@ import javax.net.ssl.SSLEngine;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.protocols.api.ClientAuth;
 
+import io.netty.handler.ssl.SslHandler;
+
 /**
  * This class should be used to setup encrypted protocol handling
  */
@@ -117,7 +119,7 @@ public final class Encryption {
      * Create a new {@link SSLEngine} configured according to this class.
      * @return sslengine
      */
-    public SSLEngine createSSLEngine() {
+    private SSLEngine createSSLEngine() {
         SSLEngine engine = context.createSSLEngine();
 
         // We need to copy the String array because of possible security issues.
@@ -134,5 +136,13 @@ public final class Encryption {
             engine.setWantClientAuth(true);
         }
         return engine;
+    }
+
+    public SslHandler sslHandler() {
+        SSLEngine engine = createSSLEngine();
+        // We need to set clientMode to false.
+        // See https://issues.apache.org/jira/browse/JAMES-1025
+        engine.setUseClientMode(false);
+        return new SslHandler(engine);
     }
 }

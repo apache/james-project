@@ -25,8 +25,6 @@ import static org.apache.james.protocols.netty.HandlerConstants.CONNECTION_LIMIT
 
 import java.util.Optional;
 
-import javax.net.ssl.SSLEngine;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -46,7 +44,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.CharsetUtil;
 
@@ -103,16 +100,11 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
             }
 
             @Override
-            public void initChannel(Channel channel) throws Exception {
+            public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
-                    // We need to set clientMode to false.
-                    // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
-
+                    pipeline.addFirst(SSL_HANDLER, secure.sslHandler());
                 }
 
                 connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(CONNECTION_LIMIT_HANDLER, handler));

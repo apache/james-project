@@ -47,7 +47,6 @@ import io.netty.handler.codec.compression.JZlibEncoder;
 import io.netty.handler.codec.compression.ZlibDecoder;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
-import io.netty.handler.ssl.SslHandler;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
     private static final int BUFFER_SIZE = 2048;
@@ -161,10 +160,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         channel.config().setAutoRead(false);
         write(statusResponse);
 
-        SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
-
-        filter.engine().setUseClientMode(false);
-        channel.pipeline().addFirst(SSL_HANDLER, filter);
+        channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
         stopDetectingCommandInjection();
         channel.config().setAutoRead(true);
 
