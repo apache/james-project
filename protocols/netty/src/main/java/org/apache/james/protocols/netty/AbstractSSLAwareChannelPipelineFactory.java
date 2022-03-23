@@ -20,8 +20,6 @@ package org.apache.james.protocols.netty;
 
 import javax.net.ssl.SSLEngine;
 
-import org.apache.james.protocols.api.Encryption;
-
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;

@@ -34,10 +34,10 @@ import java.util.Map;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.api.ClientAuth;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.netty.Encryption;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

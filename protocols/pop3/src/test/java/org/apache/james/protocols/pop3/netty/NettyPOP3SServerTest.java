@@ -20,13 +20,11 @@ package org.apache.james.protocols.pop3.netty;
 
 import java.net.InetSocketAddress;
 
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractPOP3SServerTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
     private static final String LOCALHOST_IP = "127.0.0.1";

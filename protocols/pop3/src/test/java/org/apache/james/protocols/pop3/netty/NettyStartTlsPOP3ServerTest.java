@@ -20,9 +20,9 @@ package org.apache.james.protocols.pop3.netty;
 
 import java.net.InetSocketAddress;
 
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractStartTlsPOP3ServerTest;
 
