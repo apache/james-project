@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +67,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
 
     @Override
-    public synchronized Future<?> bindAsync() {
+    public synchronized Future<Void> bindAsync() {
         if (channels != null) {
             throw new IllegalStateException("Server running already");
         }
@@ -79,6 +80,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         bootstrap.childHandler(createChannelInitializer());
 
         // Bind to addresses
+        Promise<Void> promise = newPromise();
         PromiseCombiner combiner = createCombiner();
         channels = new DefaultChannelGroup(EXECUTOR);
         for (InetSocketAddress address : addresses) {
@@ -86,10 +88,12 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             combiner.add(bind.addListener((Future<Void> future) -> {
                 if (future.isSuccess()) {
                     channels.add(bind.channel());
+                } else { // On failure, set better failure message to promise that includes the address that caused the failure.
+                    promise.tryFailure(new IOException("Failed to bind to address: " + address, future.cause()));
                 }
             }));
         }
-        return finish(combiner);
+        return finish(combiner, promise);
     }
 
     /**
@@ -104,7 +108,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
 
     @Override
-    public synchronized Future<?> unbindAsync(long quietPeriod, long timeout, TimeUnit unit) {
+    public synchronized Future<Void> unbindAsync(long quietPeriod, long timeout, TimeUnit unit) {
         PromiseCombiner combiner = createCombiner();
 
         // Close channels
@@ -200,12 +204,19 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         protected abstract T this_();
     }
 
+    private static Promise<Void> newPromise() {
+        return EXECUTOR.newPromise();
+    }
+
     private static PromiseCombiner createCombiner() {
         return new PromiseCombiner(EXECUTOR);
     }
 
     private static Future<Void> finish(PromiseCombiner combiner) {
-        Promise<Void> promise = EXECUTOR.newPromise();
+        return finish(combiner, newPromise());
+    }
+
+    private static Future<Void> finish(PromiseCombiner combiner, Promise<Void> promise) {
         combiner.finish(promise);
         return promise;
     }

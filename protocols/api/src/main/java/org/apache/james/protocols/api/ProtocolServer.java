@@ -46,26 +46,26 @@ public interface ProtocolServer {
      * Start the server - blocks until server has started.
      */
     default void bind() {
-        bindAsync().syncUninterruptibly();
+        sync_bind(bindAsync());
     }
 
     /**
      * Start the server - non-blocking/asynchronous.
      */
-    Future<?> bindAsync();
+    Future<Void> bindAsync();
 
     /**
      * Stop the server - blocks until server is stopped.
      */
     default void unbind() {
-        unbindAsync().syncUninterruptibly();
+        sync_unbind(unbindAsync());
     }
 
     /**
      * Stops the server immediately - only appropriate for using in tests.
      */
     default void unbindNow() {
-        unbindAsync(0, 0, TimeUnit.SECONDS).syncUninterruptibly();
+        sync_unbind(unbindAsync(0, 0, TimeUnit.SECONDS));
     }
 
     /**
@@ -74,13 +74,13 @@ public interface ProtocolServer {
      * See {@link #unbindAsync(long, long, TimeUnit)} for documentation on these parameters.
      */
     default void unbind(long quietPeriod, long timeout, TimeUnit unit) {
-        unbindAsync(quietPeriod, timeout, unit).syncUninterruptibly();
+        sync_unbind(unbindAsync(quietPeriod, timeout, unit));
     }
 
     /**
      * Stop the server - non-blocking/asynchronous - with sensible default values.
      */
-    default Future<?> unbindAsync() {
+    default Future<Void> unbindAsync() {
         return unbindAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
     }
 
@@ -93,7 +93,7 @@ public interface ProtocolServer {
      * @param timeout     The maximum amount of time to wait until the executor is {@linkplain EventExecutorGroup#shutdown()} regardless if a task was submitted during the quiet period.
      * @param unit        The unit of {@code quietPeriod} and {@code timeout}.
      */
-    Future<?> unbindAsync(long quietPeriod, long timeout, TimeUnit unit);
+    Future<Void> unbindAsync(long quietPeriod, long timeout, TimeUnit unit);
 
     /**
      * return true if the server is bound
@@ -119,4 +119,25 @@ public interface ProtocolServer {
      * @return ips
      */
     List<InetSocketAddress> getListenAddresses();
+
+    private static void sync_bind(Future<Void> future) {
+        try {
+            future.sync();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("Unexpected interrupt while waiting for bind to complete", e);
+        } catch (Throwable e) {
+            throw new IllegalStateException("Failed to bind", e); // Wrap exception from different call stack - important to do always do this on sync() so current call stack is included. 
+        }
+    }
+
+    private static void sync_unbind(Future<Void> future) {
+        try {
+            future.sync();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("Unexpected interrupt while waiting for unbind to complete", e);
+        } catch (Throwable e) {
+            throw new IllegalStateException("Failed to unbind", e); // Wrap exception from different call stack - important to do always do this on sync() so current call stack is included.
+        }
+    }
+
 }
