@@ -31,8 +31,6 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509ExtendedKeyManager;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -41,7 +39,8 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.protocols.api.ClientAuth;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
+import org.apache.james.protocols.lib.SslConfig;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -57,8 +56,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
-import nl.altindag.ssl.SSLFactory;
-import nl.altindag.ssl.util.PemUtils;
 
 
 /**
@@ -90,30 +87,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     protected int connPerIP;
 
-    private boolean useStartTLS;
-    private boolean useSSL;
-
-    private ClientAuth clientAuth;
-
     protected int connectionLimit;
 
     private String helloName;
 
-    private String keystore;
-    private String keystoreType;
-    private String privateKey;
-    private String certificates;
-
-    private String secret;
-
-    private String truststore;
-    private String truststoreType;
-    private char[] truststoreSecret;
-
+    private SslConfig sslConfig;
     protected Encryption encryption;
-
-
-    private String[] enabledCipherSuites;
 
     private ChannelHandlerFactory frameHandlerFactory;
 
@@ -231,35 +210,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
         }
 
-        useStartTLS = config.getBoolean("tls.[@startTLS]", false);
-        useSSL = config.getBoolean("tls.[@socketTLS]", false);
-
-        if (config.getProperty("tls.clientAuth") != null || config.getKeys("tls.clientAuth").hasNext()) {
-            clientAuth = ClientAuth.NEED;
-        } else {
-            clientAuth = ClientAuth.NONE;
-        }
-
-        if (useSSL && useStartTLS) {
-            throw new ConfigurationException("startTLS is only supported when using plain sockets");
-        }
-
-        if (useStartTLS || useSSL) {
-            enabledCipherSuites = config.getStringArray("tls.supportedCipherSuites.cipherSuite");
-            keystore = config.getString("tls.keystore", null);
-            privateKey = config.getString("tls.privateKey", null);
-            certificates = config.getString("tls.certificates", null);
-            keystoreType = config.getString("tls.keystoreType", "JKS");
-            if (keystore == null && (privateKey == null || certificates == null)) {
-                throw new ConfigurationException("keystore or (privateKey and certificates) needs to get configured");
-            }
-            secret = config.getString("tls.secret", null);
-
-            truststore = config.getString("tls.clientAuth.truststore", null);
-            truststoreType = config.getString("tls.clientAuth.truststoreType", "JKS");
-            truststoreSecret = config.getString("tls.clientAuth.truststoreSecret", "").toCharArray();
-            LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
-        }
+        sslConfig = SslConfig.parse(config);
 
         Optional.ofNullable(config.getBoolean("gracefulShutdown", null)).ifPresent(this::setGracefulShutdown);
 
@@ -299,10 +250,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     public int getPort() {
         return port;
-    }
-
-    public boolean useSSL() {
-        return useSSL;
     }
 
     @PreDestroy
@@ -398,43 +345,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @throws Exception
      */
     protected void buildSSLContext() throws Exception {
-        if (useStartTLS || useSSL) {
-            SSLFactory.Builder sslFactoryBuilder = SSLFactory.builder()
-                .withSslContextAlgorithm("TLS");
-            if (keystore != null) {
-                char[] passwordAsCharArray = Optional.ofNullable(secret)
-                    .orElse("")
-                    .toCharArray();
-                sslFactoryBuilder.withIdentityMaterial(
-                    fileSystem.getFile(keystore).toPath(),
-                    passwordAsCharArray,
-                    passwordAsCharArray,
-                    keystoreType);
-            } else {
-                X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
-                    fileSystem.getResource(certificates),
-                    fileSystem.getResource(privateKey),
-                    Optional.ofNullable(secret)
-                        .map(String::toCharArray)
-                        .orElse(null));
-
-                sslFactoryBuilder.withIdentityMaterial(keyManager);
-            }
-
-            if (clientAuth != null && truststore != null) {
-                sslFactoryBuilder.withTrustMaterial(
-                    fileSystem.getFile(truststore).toPath(),
-                    truststoreSecret,
-                    truststoreType);
-            }
-
-            SSLContext context = sslFactoryBuilder.build().getSslContext();
-
-            if (useStartTLS) {
-                encryption = Encryption.createStartTls(context, enabledCipherSuites, clientAuth);
-            } else {
-                encryption = Encryption.createTls(context, enabledCipherSuites, clientAuth);
-            }
+        if (sslConfig.useSSL() || sslConfig.useStartTLS()) {
+            encryption = new LegacyJavaEncryptionFactory(fileSystem, sslConfig)
+                .create();
         }
     }
 
