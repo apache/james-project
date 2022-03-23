@@ -203,7 +203,7 @@ class AbstractConfigurableAsyncServerTest {
         assertThat(testServer.getEncryption().isStartTLS()).isFalse();
         assertThat(testServer.getEncryption().getEnabledCipherSuites()).isEmpty(); // no default constraints
         assertThat(testServer.getEncryption().getClientAuth()).isEqualTo(ClientAuth.NONE);
-        assertThat(testServer.getEncryption().getContext()).isNotNull();
+        assertThat(testServer.getEncryption().supportsEncryption()).isTrue();
     }
 
     @Test
@@ -217,7 +217,7 @@ class AbstractConfigurableAsyncServerTest {
         assertThat(testServer.getEncryption().isStartTLS()).isTrue();
         assertThat(testServer.getEncryption().getEnabledCipherSuites()).isEmpty(); // no default constraints
         assertThat(testServer.getEncryption().getClientAuth()).isEqualTo(ClientAuth.NONE);
-        assertThat(testServer.getEncryption().getContext()).isNotNull();
+        assertThat(testServer.getEncryption().supportsEncryption()).isTrue();
     }
 
     @Test

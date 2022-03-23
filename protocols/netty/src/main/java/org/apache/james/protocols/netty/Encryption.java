@@ -97,6 +97,10 @@ public final class Encryption {
         return starttls;
     }
 
+    public boolean supportsEncryption() {
+        return context != null;
+    }
+
     /**
      * Return the Ciphersuites that are allowed for the {@link Encryption} or
      * <code>null</code> if all should be allowed
