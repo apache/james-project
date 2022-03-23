@@ -20,11 +20,11 @@ package org.apache.james.protocols.smtp;
 
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
+import org.apache.james.protocols.netty.Encryption;
 
 
 public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {

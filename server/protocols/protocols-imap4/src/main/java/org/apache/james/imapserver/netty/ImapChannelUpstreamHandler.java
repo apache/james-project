@@ -37,7 +37,7 @@ import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
-import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

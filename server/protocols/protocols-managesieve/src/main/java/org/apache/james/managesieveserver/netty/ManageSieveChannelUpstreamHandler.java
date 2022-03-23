@@ -27,7 +27,7 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
-import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -34,8 +34,8 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.encode.main.DefaultLocalizer;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
 import io.netty.buffer.Unpooled;

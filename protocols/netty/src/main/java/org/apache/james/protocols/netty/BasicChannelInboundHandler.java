@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;

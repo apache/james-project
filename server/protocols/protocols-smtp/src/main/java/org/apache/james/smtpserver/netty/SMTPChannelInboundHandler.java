@@ -19,10 +19,10 @@
 package org.apache.james.smtpserver.netty;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.netty.BasicChannelInboundHandler;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.smtpserver.SMTPConstants;

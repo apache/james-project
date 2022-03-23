@@ -31,13 +31,13 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

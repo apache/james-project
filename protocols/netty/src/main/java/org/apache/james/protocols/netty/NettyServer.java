@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 
 import com.google.common.base.Preconditions;

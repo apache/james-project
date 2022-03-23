@@ -20,11 +20,11 @@ package org.apache.james.protocols.pop3;
 
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3SClient;
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
+import org.apache.james.protocols.netty.Encryption;
 
 public abstract class AbstractPOP3SServerTest extends AbstractPOP3ServerTest {
 

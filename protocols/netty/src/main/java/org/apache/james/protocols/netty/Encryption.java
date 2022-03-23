@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api;
+package org.apache.james.protocols.netty;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.james.protocols.api.ClientAuth;
 
 /**
  * This class should be used to setup encrypted protocol handling
