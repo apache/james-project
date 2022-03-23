@@ -32,18 +32,6 @@ import io.netty.handler.ssl.SslHandler;
  */
 public final class Encryption {
 
-    private final SSLContext context;
-    private final boolean starttls;
-    private final String[] enabledCipherSuites;
-    private final ClientAuth clientAuth;
-
-    private Encryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        this.context = context;
-        this.starttls = starttls;
-        this.enabledCipherSuites = enabledCipherSuites;
-        this.clientAuth = clientAuth;
-    }
-
     public static Encryption createTls(SSLContext context) {
         return createTls(context, null, ClientAuth.NONE);
     }
@@ -76,6 +64,18 @@ public final class Encryption {
      */
     public static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
         return new Encryption(context, true, enabledCipherSuites, clientAuth);
+    }
+
+    private final SSLContext context;
+    private final boolean starttls;
+    private final String[] enabledCipherSuites;
+    private final ClientAuth clientAuth;
+
+    private Encryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        this.context = context;
+        this.starttls = starttls;
+        this.enabledCipherSuites = enabledCipherSuites;
+        this.clientAuth = clientAuth;
     }
 
     /**
