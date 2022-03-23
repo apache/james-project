@@ -190,6 +190,12 @@
                         - advanced: Enables output an advanced error log implying the place of allocation of the underlying object and would free resources. <br/>
                         - testing: Enables output an advanced error log implying the place of allocation of the underlying object and rethrow an error, that action is being taken by the development team. <br/>
                 </dd>
+
+                <dt><strong>james.protocols.mdc.hostname</strong></dt>
+                <dd>Optional. Boolean. Defaults to true. <br/>
+                    Should we add the host in the MDC logging context for incoming IMAP, SMTP, POP3? Doing so, a DNS resolution
+                    is attempted for each incoming connection, which can be costly. Remote IP is always added to the logging context.</dd>
+
             </dl>
 
             </subsection>

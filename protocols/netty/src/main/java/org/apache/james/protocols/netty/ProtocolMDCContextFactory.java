@@ -32,6 +32,8 @@ import io.netty.channel.ChannelHandlerContext;
 
 
 public interface ProtocolMDCContextFactory {
+    boolean ADD_HOST_TO_MDC = Boolean.parseBoolean(System.getProperty("james.protocols.mdc.hostname", "true"));
+
     class Standard implements ProtocolMDCContextFactory {
         @Override
         public MDCBuilder onBound(Protocol protocol, ChannelHandlerContext ctx) {
@@ -49,10 +51,14 @@ public interface ProtocolMDCContextFactory {
     MDCBuilder withContext(ProtocolSession protocolSession);
 
     static MDCBuilder mdcContext(Protocol protocol, ChannelHandlerContext ctx) {
-        return MDCBuilder.create()
+        MDCBuilder mdc = MDCBuilder.create()
             .addToContext(MDCBuilder.PROTOCOL, protocol.getName())
-            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addToContext(MDCBuilder.HOST, retrieveHost(ctx));
+            .addToContext(MDCBuilder.IP, retrieveIp(ctx));
+
+        if (ADD_HOST_TO_MDC) {
+            return mdc.addToContext(MDCBuilder.HOST, retrieveHost(ctx));
+        }
+        return mdc;
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {
