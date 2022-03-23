@@ -34,6 +34,10 @@ import io.netty.handler.ssl.SslHandler;
  */
 public interface Encryption {
 
+    interface Factory {
+        Encryption create() throws Exception;
+    }
+
     @VisibleForTesting
     static Encryption createTls(SSLContext context) {
         return createTls(context, null, ClientAuth.NONE);
