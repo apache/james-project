@@ -25,8 +25,6 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.FileChannel;
 
-import javax.net.ssl.SSLEngine;
-
 import org.apache.james.protocols.api.AbstractProtocolTransport;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -45,11 +43,11 @@ import io.netty.handler.stream.ChunkedStream;
 public class NettyProtocolTransport extends AbstractProtocolTransport {
     
     private final Channel channel;
-    private final SSLEngine engine;
+    private final Encryption encryption;
     
-    public NettyProtocolTransport(Channel channel, SSLEngine engine) {
+    public NettyProtocolTransport(Channel channel, Encryption encryption) {
         this.channel = channel;
-        this.engine = engine;
+        this.encryption = encryption;
     }
 
     @Override
@@ -69,7 +67,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
 
     @Override
     public boolean isStartTLSSupported() {
-        return engine != null;
+        return encryption != null && encryption.isStartTLS();
     }
 
 
@@ -84,9 +82,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
      * Add the {@link SslHandler} to the pipeline and start encrypting after the next written message
      */
     private void prepareStartTLS() {
-        SslHandler filter = new SslHandler(engine, true);
-        filter.engine().setUseClientMode(false);
-        channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, filter);
+        channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, encryption.sslHandler());
     }
 
     @Override

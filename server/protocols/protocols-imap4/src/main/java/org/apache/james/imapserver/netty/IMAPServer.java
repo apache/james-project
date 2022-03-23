@@ -22,8 +22,6 @@ import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLEngine;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -51,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
 
@@ -235,12 +232,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
-                    // We need to set clientMode to false.
-                    // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
-
+                    pipeline.addFirst(SSL_HANDLER, secure.sslHandler());
                 }
 
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
