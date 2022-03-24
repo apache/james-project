@@ -336,6 +336,63 @@ class MailDispatcherTest {
         assertThat(mail.getMessage().getHeader(TEST_HEADER_NAME)).containsOnly(headerValue);
     }
 
+    @Test
+    void errorsShouldBeIgnoredWhenConfigIsProvided() throws Exception {
+        MailDispatcher testee = MailDispatcher.builder()
+            .mailetContext(fakeMailContext)
+            .mailStore(mailStore)
+            .ignoreError(true)
+            .build();
+
+        doReturn(Mono.error(new MessagingException()))
+            .when(mailStore)
+            .storeMail(any(MailAddress.class), any(Mail.class));
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("toto")))
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .state("state")
+            .build();
+
+        testee.dispatch(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void errorShouldFlowToTheErrorProcessor() throws Exception {
+        MailDispatcher testee = MailDispatcher.builder()
+            .mailetContext(fakeMailContext)
+            .mailStore(mailStore)
+            .errorProcessor("errorProcessor1")
+            .build();
+
+        doReturn(Mono.error(new MessagingException()))
+            .when(mailStore)
+            .storeMail(any(MailAddress.class), any(Mail.class));
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("toto")))
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .state("state")
+            .build();
+
+        testee.dispatch(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1)
+            .allSatisfy(sentMail -> assertThat(sentMail.getState()).isEqualTo("errorProcessor1"));
+    }
+
     public static class AccumulatorHeaderMailStore implements MailStore {
         private final ArrayListMultimap<MailAddress, String[]> headerValues;
         private final String headerName;

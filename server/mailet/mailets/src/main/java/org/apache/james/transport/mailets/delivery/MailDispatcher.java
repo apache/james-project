@@ -59,13 +59,17 @@ public class MailDispatcher {
     }
 
     public static class Builder {
-        static final boolean CONSUME = true;
+        static final boolean DEFAULT_CONSUME = true;
+        static final boolean DEFAULT_IGNORE_ERROR = false;
+        static final String DEFAULT_PROCESSOR = Mail.ERROR;
         private MailStore mailStore;
-        private Optional<Boolean> consume = Optional.empty();
+        private Boolean consume;
         private MailetContext mailetContext;
+        private String errorProcessor;
+        private Boolean ignoreError;
 
         public Builder consume(boolean consume) {
-            this.consume = Optional.of(consume);
+            this.consume = consume;
             return this;
         }
 
@@ -79,27 +83,43 @@ public class MailDispatcher {
             return this;
         }
 
+        public Builder errorProcessor(String errorProcessor) {
+            this.errorProcessor = errorProcessor;
+            return this;
+        }
+
+        public Builder ignoreError(boolean ignoreError) {
+            this.ignoreError = ignoreError;
+            return this;
+        }
+
         public MailDispatcher build() {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume.orElse(CONSUME), mailetContext);
+            return new MailDispatcher(mailStore, mailetContext,
+                Optional.ofNullable(consume).orElse(DEFAULT_CONSUME),
+                Optional.ofNullable(ignoreError).orElse(DEFAULT_IGNORE_ERROR),
+                Optional.ofNullable(errorProcessor).orElse(DEFAULT_PROCESSOR));
         }
-
     }
 
     private final MailStore mailStore;
-    private final boolean consume;
     private final MailetContext mailetContext;
+    private final boolean consume;
+    private final boolean ignoreError;
+    private final String errorProcessor;
 
-    private MailDispatcher(MailStore mailStore, boolean consume, MailetContext mailetContext) {
+    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, boolean ignoreError, String errorProcessor) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
+        this.errorProcessor = errorProcessor;
+        this.ignoreError = ignoreError;
     }
 
     public void dispatch(Mail mail) throws MessagingException {
-        List<MailAddress> errors =  customizeHeadersAndDeliver(mail);
-        if (!errors.isEmpty()) {
+        List<MailAddress> errors = customizeHeadersAndDeliver(mail);
+        if (!errors.isEmpty() && !ignoreError) {
             // If there were errors, we redirect the email to the ERROR
             // processor.
             // In order for this server to meet the requirements of the SMTP
@@ -112,10 +132,13 @@ public class MailDispatcher {
                 .sender(mail.getMaybeSender())
                 .addRecipients(errors)
                 .mimeMessage(mail.getMessage())
-                .state(Mail.ERROR)
+                .state(errorProcessor)
                 .build();
-            mailetContext.sendMail(newMail);
-            LifecycleUtil.dispose(newMail);
+            try {
+                mailetContext.sendMail(newMail);
+            } finally {
+                LifecycleUtil.dispose(newMail);
+            }
         }
         if (consume) {
             // Consume this message
