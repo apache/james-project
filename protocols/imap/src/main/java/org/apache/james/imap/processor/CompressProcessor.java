@@ -35,6 +35,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class CompressProcessor extends AbstractProcessor<CompressRequest> implements CapabilityImplementingProcessor {
     private static final String ALGO = "DEFLATE";
     private static final List<Capability> CAPA = ImmutableList.of(Capability.of(ImapConstants.COMPRESS_COMMAND.getName() + "=" + ALGO));
@@ -47,25 +49,27 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
     }
 
     @Override
-    protected void doProcess(CompressRequest request, Responder responder, ImapSession session) {
-        if (session.isCompressionSupported()) {
-            Object obj = session.getAttribute(COMPRESSED);
-            if (obj != null) {
-                responder.respond(factory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.COMPRESS_ALREADY_ACTIVE));
-            } else {
-                if (request.getAlgorithm().equalsIgnoreCase(ALGO) == false) {
-                    responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.ILLEGAL_ARGUMENTS));
+    protected Mono<Void> doProcess(CompressRequest request, Responder responder, ImapSession session) {
+        return Mono.fromRunnable(() -> {
+            if (session.isCompressionSupported()) {
+                Object obj = session.getAttribute(COMPRESSED);
+                if (obj != null) {
+                    responder.respond(factory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.COMPRESS_ALREADY_ACTIVE));
                 } else {
-                    StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE);
+                    if (request.getAlgorithm().equalsIgnoreCase(ALGO) == false) {
+                        responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.ILLEGAL_ARGUMENTS));
+                    } else {
+                        StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE);
 
-                    if (session.startCompression((ImmutableStatusResponse) response)) {
-                        session.setAttribute(COMPRESSED, true);
+                        if (session.startCompression((ImmutableStatusResponse) response)) {
+                            session.setAttribute(COMPRESSED, true);
+                        }
                     }
                 }
+            } else {
+                responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
             }
-        } else {
-            responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
-        }
+        });
     }
 
     @Override

@@ -62,13 +62,13 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
@@ -87,26 +87,27 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
 
     @Override
-    protected final void doProcess(R acceptableMessage, Responder responder, ImapSession session) {
-        TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + acceptableMessage.getCommand().getName());
-        try {
-            if (acceptableMessage.getCommand().validForState(session.getState())) {
-                getMailboxManager().startProcessingRequest(session.getMailboxSession());
+    protected final Mono<Void> doProcess(R acceptableMessage, Responder responder, ImapSession session) {
+        if (acceptableMessage.getCommand().validForState(session.getState())) {
+            getMailboxManager().startProcessingRequest(session.getMailboxSession());
 
-                processRequest(acceptableMessage, session, responder);
-
-                getMailboxManager().endProcessingRequest(session.getMailboxSession());
-            } else {
-                ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
-                responder.respond(response);
-            }
-        } catch (DeniedAccessOnSharedMailboxException e) {
-            no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
-        } catch (Exception unexpectedException) {
-            LOGGER.error("Unexpected error during IMAP processing", unexpectedException);
-            no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric(IMAP_PREFIX + acceptableMessage.getCommand().getName(),
+                processRequestReactive(acceptableMessage, session, responder)))
+                .doFinally(type -> getMailboxManager().endProcessingRequest(session.getMailboxSession()))
+                .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
+                    no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+                    return Mono.empty();
+                })
+                .onErrorResume(e -> {
+                    LOGGER.error("Unexpected error during IMAP processing", e);
+                    no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                    return Mono.empty();
+                });
+        } else {
+            ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
+            responder.respond(response);
+            return Mono.empty();
         }
-        timeMetric.stopAndPublish();
     }
 
     protected void flags(Responder responder, SelectedMailbox selected) {
@@ -357,7 +358,13 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected abstract void processRequest(R request, ImapSession session, Responder responder);
+    protected void processRequest(R request, ImapSession session, Responder responder) {
+        processRequestReactive(request, session, responder).block();
+    }
+
+    protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
+        return Mono.fromRunnable(() -> processRequest(request, session, responder));
+    }
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string
@@ -403,6 +410,14 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             .map(Throwing.<SelectedMailbox, MessageManager>function(selectedMailbox ->
                 getMailboxManager().getMailbox(selectedMailbox.getMailboxId(), session.getMailboxSession()))
                 .sneakyThrow());
+    }
+
+    protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session) {
+        return Optional.ofNullable(session.getSelected())
+            .map(selectedMailbox -> getMailboxManager()
+                .getMailboxReactive(selectedMailbox.getMailboxId(), session.getMailboxSession()))
+            .map(Mono::from)
+            .orElse(Mono.<MessageManager>empty());
     }
 
     /**

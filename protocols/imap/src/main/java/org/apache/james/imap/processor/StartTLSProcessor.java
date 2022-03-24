@@ -34,6 +34,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Processing STARTLS commands
  */
@@ -47,12 +49,14 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     }
 
     @Override
-    protected void doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
-        if (session.supportStartTLS()) {
-            session.startTLS((ImmutableStatusResponse) factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
-        } else {
-            responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
-        }
+    protected Mono<Void> doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
+        return Mono.fromRunnable(() -> {
+            if (session.supportStartTLS()) {
+                session.startTLS((ImmutableStatusResponse) factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
+            } else {
+                responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
+            }
+        });
     }
 
     @Override

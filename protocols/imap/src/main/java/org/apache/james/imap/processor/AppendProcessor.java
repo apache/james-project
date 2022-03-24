@@ -47,6 +47,10 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);
 
@@ -56,34 +60,32 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     }
 
     @Override
-    protected void processRequest(AppendRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(AppendRequest request, ImapSession session, Responder responder) {
         final String mailboxName = request.getMailboxName();
         final Content messageIn = request.getMessage().asMailboxContent();
         final Date datetime = request.getDatetime();
         final Flags flags = request.getFlags();
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session.getMailboxSession()))
+            .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.debug("Append failed for mailbox {}", mailboxPath, e);
 
-        try {
-            final MailboxManager mailboxManager = getMailboxManager();
-            final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, session.getMailboxSession());
-            appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath);
-        } catch (MailboxNotFoundException e) {
-            LOGGER.debug("Append failed for mailbox {}", mailboxPath, e);
-            
-            // Indicates that the mailbox does not exist
-            // So TRY CREATE
-            tryCreate(request, responder, e);
+                // Indicates that the mailbox does not exist
+                // So TRY CREATE
+                tryCreate(request, responder, e);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Append failed for mailbox {}", mailboxPath, e);
 
-        } catch (MailboxException e) {
-            LOGGER.error("Append failed for mailbox {}", mailboxPath, e);
-            
-            // Some other issue
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-
-        }
-
+                // Some other issue
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            });
     }
 
     /**
@@ -102,41 +104,46 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
 
-    private void appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
-        try {
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            final SelectedMailbox selectedMailbox = session.getSelected();
-            final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
+    private Mono<Void> appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
+        final MailboxSession mailboxSession = session.getMailboxSession();
+        final SelectedMailbox selectedMailbox = session.getSelected();
+        final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
 
-            final ComposedMessageId messageId = mailbox.appendMessage(
-                MessageManager.AppendCommand.builder()
-                    .withInternalDate(datetime)
-                    .withFlags(flagsToBeSet)
-                    .isRecent(!isSelectedMailbox)
-                    .build(message), mailboxSession)
-                .getId();
-            if (isSelectedMailbox) {
-                selectedMailbox.addRecent(messageId.getUid());
-            }
+        return Mono.from(mailbox.appendMessageReactive(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(datetime)
+                .withFlags(flagsToBeSet)
+                .isRecent(!isSelectedMailbox)
+                .build(message), mailboxSession))
+            .map(MessageManager.AppendResult::getId)
+            .doOnNext(Throwing.<ComposedMessageId>consumer(messageId -> {
+                if (isSelectedMailbox) {
+                    selectedMailbox.addRecent(messageId.getUid());
+                }
 
-            // get folder UIDVALIDITY
-            UidValidity uidValidity = mailbox
-                .getMailboxEntity()
-                .getUidValidity();
+                // get folder UIDVALIDITY
+                UidValidity uidValidity = mailbox
+                    .getMailboxEntity()
+                    .getUidValidity();
 
-            unsolicitedResponses(session, responder, false);
+                unsolicitedResponses(session, responder, false);
 
-            // in case of MULTIAPPEND support we will push more then one UID here
-            okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
-        } catch (MailboxNotFoundException e) {
-            // Indicates that the mailbox does not exist
-            // So TRY CREATE
-            tryCreate(request, responder, e);
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to append message to mailbox {}", mailboxPath, e);
-            // Some other issue
-            no(request, responder, HumanReadableText.SAVE_FAILED);
-        }
+                // in case of MULTIAPPEND support we will push more then one UID here
+                okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
+            }).sneakyThrow())
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                // Indicates that the mailbox does not exist
+                // So TRY CREATE
+                tryCreate(request, responder, e);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Unable to append message to mailbox {}", mailboxPath, e);
+                // Some other issue
+                no(request, responder, HumanReadableText.SAVE_FAILED);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @Override

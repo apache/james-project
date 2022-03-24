@@ -25,6 +25,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.util.MDCBuilder;
 
+import reactor.core.publisher.Mono;
+
 public class ImapResponseMessageProcessor extends AbstractProcessor<ImmutableStatusResponse> {
 
     public ImapResponseMessageProcessor() {
@@ -32,8 +34,8 @@ public class ImapResponseMessageProcessor extends AbstractProcessor<ImmutableSta
     }
 
     @Override
-    protected void doProcess(ImmutableStatusResponse acceptableMessage, Responder responder, ImapSession session) {
-        responder.respond(acceptableMessage);
+    protected Mono<Void> doProcess(ImmutableStatusResponse acceptableMessage, Responder responder, ImapSession session) {
+        return Mono.fromRunnable(() -> responder.respond(acceptableMessage));
     }
 
     @Override

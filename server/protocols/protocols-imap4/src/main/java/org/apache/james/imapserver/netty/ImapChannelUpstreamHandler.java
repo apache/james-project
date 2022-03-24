@@ -42,6 +42,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -247,40 +249,43 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             ChannelPipeline cp = ctx.pipeline();
 
             try {
-                try {
-                    cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
-                } catch (IllegalArgumentException e) {
-                    LOGGER.info("heartbeat handler is already part of this pipeline", e);
-                }
-                final ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
-                processor.process(message, responseEncoder, session);
-
-                if (session.getState() == ImapSessionState.LOGOUT) {
-                    // Make sure we close the channel after all the buffers were flushed out
-                    Channel channel = ctx.channel();
-                    if (channel.isActive()) {
-                        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                    }
-                }
-                final IOException failure = responseEncoder.getFailure();
-
-                if (failure != null) {
-                    LOGGER.info(failure.getMessage());
-                    LOGGER.debug("Failed to write {}", message, failure);
-                    throw failure;
-                }
-            } finally {
-                try {
-                    ctx.pipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
-                } catch (NoSuchElementException e) {
-                    LOGGER.info("Heartbeat handler was concurrently removed");
-                }
-                if (message instanceof Closeable) {
-                    ((Closeable) message).close();
-                }
+                cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+            } catch (IllegalArgumentException e) {
+                LOGGER.info("heartbeat handler is already part of this pipeline", e);
             }
+            ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
+            processor.processReactive(message, responseEncoder, session)
+                .doOnSuccess(type -> {
+                    if (session.getState() == ImapSessionState.LOGOUT) {
+                        // Make sure we close the channel after all the buffers were flushed out
+                        Channel channel = ctx.channel();
+                        if (channel.isActive()) {
+                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+                        }
+                    }
+                })
+                .doOnSuccess(type -> {
+                    IOException failure = responseEncoder.getFailure();
+                    if (failure != null) {
+                        LOGGER.info(failure.getMessage());
+                        LOGGER.debug("Failed to write {}", message, failure);
 
-            super.channelReadComplete(ctx);
+                        ctx.fireExceptionCaught(failure);
+                    }
+                })
+                .doFinally(Throwing.consumer(type -> {
+                    try {
+                        ctx.pipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
+                    } catch (NoSuchElementException e) {
+                        LOGGER.info("Heartbeat handler was concurrently removed");
+                    }
+                    if (message instanceof Closeable) {
+                        ((Closeable) message).close();
+                    }
+                }))
+                .doOnError(ctx::fireExceptionCaught)
+                .doFinally(type -> ctx.fireChannelReadComplete())
+                .subscribe();
         }
     }
 

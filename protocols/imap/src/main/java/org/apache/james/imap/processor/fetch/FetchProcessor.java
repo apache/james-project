@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
@@ -66,68 +67,71 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     }
 
     @Override
-    protected void processRequest(FetchRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(FetchRequest request, ImapSession session, Responder responder) {
         boolean useUids = request.isUseUids();
         IdRange[] idSet = request.getIdSet();
         FetchData fetch = computeFetchData(request, session);
+        long changedSince = fetch.getChangedSince();
 
-        try {
-            final long changedSince = fetch.getChangedSince();
-
-            MessageManager mailbox = getSelectedMailbox(session)
-                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-
-            boolean vanished = fetch.getVanished();
-            if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
-                taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
-                return;
-            }
-           
-            if (vanished && changedSince == -1) {
-                taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
-                return;
-            }
-            final MailboxSession mailboxSession = session.getMailboxSession();
-
-            MemoizedSupplier<MailboxMetaData> metaData = MemoizedSupplier.of(Throwing.supplier(
-                    () -> mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
-                .sneakyThrow());
-            if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
-                // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  metaData.get(), true);
-            }
-            
-            List<MessageRange> ranges = new ArrayList<>();
-
-            for (IdRange range : idSet) {
-                MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
-                if (messageSet != null) {
-                    MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
-                    MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
-                    ranges.add(batchedMessageSet);
+        return getSelectedMailboxReactive(session)
+            .switchIfEmpty(Mono.error(() ->  new MailboxException("Session not in SELECTED state")))
+            .doOnNext(Throwing.<MessageManager>consumer(mailbox -> {
+                boolean vanished = fetch.getVanished();
+                if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
+                    taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
+                    return;
                 }
-            }
 
-            if (vanished) {
-                // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses. 
-                //       If we do so we could prolly save one mailbox access which should give use some more speed up
-                respondVanished(session.getSelected(), ranges, responder);
-            }
-            processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
+                if (vanished && changedSince == -1) {
+                    taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
+                    return;
+                }
+                final MailboxSession mailboxSession = session.getMailboxSession();
 
-            
-            // Don't send expunge responses if FETCH is used to trigger this
-            // processor. See IMAP-284
-            final boolean omitExpunged = (!useUids);
-            unsolicitedResponses(session, responder, omitExpunged, useUids);
-            okComplete(request, responder);
-        } catch (MessageRangeException e) {
-            LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-        } catch (MailboxException e) {
-            LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            no(request, responder, HumanReadableText.SEARCH_FAILED);
-        }
+                MemoizedSupplier<MailboxMetaData> metaData = MemoizedSupplier.of(Throwing.supplier(
+                    () -> mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
+                    .sneakyThrow());
+                if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
+                    // Enable CONDSTORE as this is a CONDSTORE enabling command
+                    condstoreEnablingCommand(session, responder,  metaData.get(), true);
+                }
+
+                List<MessageRange> ranges = new ArrayList<>();
+
+                for (IdRange range : idSet) {
+                    MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
+                    if (messageSet != null) {
+                        MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
+                        MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
+                        ranges.add(batchedMessageSet);
+                    }
+                }
+
+                if (vanished) {
+                    // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses.
+                    //       If we do so we could prolly save one mailbox access which should give use some more speed up
+                    respondVanished(session.getSelected(), ranges, responder);
+                }
+                processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
+
+
+                // Don't send expunge responses if FETCH is used to trigger this
+                // processor. See IMAP-284
+                final boolean omitExpunged = (!useUids);
+                unsolicitedResponses(session, responder, omitExpunged, useUids);
+                okComplete(request, responder);
+            }).sneakyThrow())
+            .onErrorResume(MessageRangeException.class, e -> {
+                LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
+                taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
+                return Mono.empty();
+            })
+            .onErrorResume(MessageRangeException.class, e -> {
+                LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
+                no(request, responder, HumanReadableText.SEARCH_FAILED);
+                return Mono.empty();
+            })
+            .then();
     }
 
     private FetchData computeFetchData(FetchRequest request, ImapSession session) {

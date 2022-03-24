@@ -29,6 +29,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public abstract class AbstractProcessor<M extends ImapMessage> implements ImapProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProcessor.class);
 
@@ -40,16 +42,13 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
 
     @Override
     @SuppressWarnings("unchecked")
-    public void process(ImapMessage message, Responder responder, ImapSession session) {
+    public Mono<Void> processReactive(ImapMessage message, Responder responder, ImapSession session) {
         M acceptableMessage = (M) message;
         try (Closeable closeable = addContextToMDC(acceptableMessage)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Processing {}", message.toString());
             }
-            doProcess(acceptableMessage, responder, session);
-        } catch (RuntimeException e) {
-            LOGGER.error("Error while processing IMAP request", e);
-            throw e;
+            return doProcess(acceptableMessage, responder, session);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +73,7 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
      * @param session
      *            <code>ImapSession</code>, not null
      */
-    protected abstract void doProcess(M acceptableMessage, Responder responder, ImapSession session);
+    protected abstract Mono<Void> doProcess(M acceptableMessage, Responder responder, ImapSession session);
 
     /**
      * Add request specific information to the MDC, for contextual logging
