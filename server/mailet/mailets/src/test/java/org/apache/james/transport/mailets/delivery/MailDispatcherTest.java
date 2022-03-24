@@ -341,7 +341,7 @@ class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
-            .ignoreError(true)
+            .errorProcessor("ignore")
             .build();
 
         doReturn(Mono.error(new MessagingException()))

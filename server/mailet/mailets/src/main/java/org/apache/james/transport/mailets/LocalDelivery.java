@@ -77,8 +77,7 @@ public class LocalDelivery extends GenericMailet {
                 .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))
                 .build())
             .consume(getInitParameter("consume", true))
-            .ignoreError(getInitParameter("ignoreError", false))
-            .errorProcessor(getInitParameter("errorProcessor", Mail.ERROR))
+            .errorProcessor(getInitParameter("onMailetException", Mail.ERROR))
             .mailetContext(getMailetContext())
             .build();
     }

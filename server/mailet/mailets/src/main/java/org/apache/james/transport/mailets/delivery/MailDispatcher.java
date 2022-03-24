@@ -60,13 +60,11 @@ public class MailDispatcher {
 
     public static class Builder {
         static final boolean DEFAULT_CONSUME = true;
-        static final boolean DEFAULT_IGNORE_ERROR = false;
-        static final String DEFAULT_PROCESSOR = Mail.ERROR;
+        static final String DEFAULT_ERROR_PROCESSOR = Mail.ERROR;
         private MailStore mailStore;
         private Boolean consume;
         private MailetContext mailetContext;
         private String errorProcessor;
-        private Boolean ignoreError;
 
         public Builder consume(boolean consume) {
             this.consume = consume;
@@ -88,18 +86,12 @@ public class MailDispatcher {
             return this;
         }
 
-        public Builder ignoreError(boolean ignoreError) {
-            this.ignoreError = ignoreError;
-            return this;
-        }
-
         public MailDispatcher build() {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
             return new MailDispatcher(mailStore, mailetContext,
                 Optional.ofNullable(consume).orElse(DEFAULT_CONSUME),
-                Optional.ofNullable(ignoreError).orElse(DEFAULT_IGNORE_ERROR),
-                Optional.ofNullable(errorProcessor).orElse(DEFAULT_PROCESSOR));
+                Optional.ofNullable(errorProcessor).orElse(DEFAULT_ERROR_PROCESSOR));
         }
     }
 
@@ -109,12 +101,12 @@ public class MailDispatcher {
     private final boolean ignoreError;
     private final String errorProcessor;
 
-    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, boolean ignoreError, String errorProcessor) {
+    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, String errorProcessor) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
         this.errorProcessor = errorProcessor;
-        this.ignoreError = ignoreError;
+        this.ignoreError = errorProcessor.equalsIgnoreCase("ignore");
     }
 
     public void dispatch(Mail mail) throws MessagingException {
