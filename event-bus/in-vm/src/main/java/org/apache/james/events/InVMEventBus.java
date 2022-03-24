@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,6 +84,11 @@ public class InVMEventBus implements EventBus {
             return groupDelivery(event, retrieveListenerFromGroup(group), group);
         }
         return Mono.empty();
+    }
+
+    @Override
+    public Collection<Group> listRegisteredGroups() {
+        return groups.keySet();
     }
 
     private EventListener.ReactiveEventListener retrieveListenerFromGroup(Group group) {

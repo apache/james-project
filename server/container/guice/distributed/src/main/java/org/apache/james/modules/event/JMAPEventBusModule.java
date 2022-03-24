@@ -101,4 +101,9 @@ public class JMAPEventBusModule extends AbstractModule {
     EventBus provideJmapEventBus(@Named(InjectionKeys.JMAP) RabbitMQEventBus rabbitMQEventBus) {
         return rabbitMQEventBus;
     }
+
+    @ProvidesIntoSet
+    EventBus registerEventBus(@Named(InjectionKeys.JMAP) EventBus eventBus) {
+        return eventBus;
+    }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import java.util.Collection;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -171,5 +172,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
             return groupRegistrationHandler.retrieveGroupRegistration(group).reDeliver(event);
         }
         return Mono.empty();
+    }
+
+    @Override
+    public Collection<Group> listRegisteredGroups() {
+        return groupRegistrationHandler.registeredGroups();
     }
 }

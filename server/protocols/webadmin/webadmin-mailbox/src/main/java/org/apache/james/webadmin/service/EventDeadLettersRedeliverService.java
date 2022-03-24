@@ -21,6 +21,8 @@ package org.apache.james.webadmin.service;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.apache.james.events.Event;
@@ -40,13 +42,13 @@ public class EventDeadLettersRedeliverService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDeadLettersRedeliverService.class);
 
-    private final EventBus eventBus;
+    private final Set<EventBus> eventBuses;
     private final EventDeadLetters deadLetters;
 
     @Inject
     @VisibleForTesting
-    public EventDeadLettersRedeliverService(EventBus eventBus, EventDeadLetters deadLetters) {
-        this.eventBus = eventBus;
+    public EventDeadLettersRedeliverService(Set<EventBus> eventBuses, EventDeadLetters deadLetters) {
+        this.eventBuses = eventBuses;
         this.deadLetters = deadLetters;
     }
 
@@ -56,12 +58,20 @@ public class EventDeadLettersRedeliverService {
     }
 
     private Mono<Task.Result> redeliverGroupEvents(Group group, Event event, EventDeadLetters.InsertionId insertionId) {
-        return eventBus.reDeliver(group, event)
-            .then(deadLetters.remove(group, insertionId))
-            .thenReturn(Task.Result.COMPLETED)
-            .onErrorResume(e -> {
-                LOGGER.error("Error while performing redelivery of event: {} for group: {}",
-                    event.getEventId().toString(), group.asString(), e);
+        return eventBuses.stream()
+            .filter(eventBus -> eventBus.listRegisteredGroups().contains(group))
+            .findFirst()
+            .map(eventBus -> eventBus. reDeliver(group, event)
+                .then(deadLetters.remove(group, insertionId))
+                .thenReturn(Task.Result.COMPLETED)
+                .onErrorResume(e -> {
+                    LOGGER.error("Error while performing redelivery of event: {} for group: {}",
+                        event.getEventId().toString(), group.asString(), e);
+                    return Mono.just(Task.Result.PARTIAL);
+                }))
+            .orElseGet(() -> {
+                LOGGER.error("No eventBus associated. event: {} for group: {}",
+                    event.getEventId().toString(), group.asString());
                 return Mono.just(Task.Result.PARTIAL);
             });
     }

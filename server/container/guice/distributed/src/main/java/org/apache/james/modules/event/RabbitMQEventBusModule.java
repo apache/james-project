@@ -50,6 +50,10 @@ public class RabbitMQEventBusModule extends AbstractModule {
         bind(RabbitMQEventBus.class).in(Scopes.SINGLETON);
         bind(EventBus.class).to(RabbitMQEventBus.class);
 
+        Multibinder.newSetBinder(binder(), EventBus.class)
+            .addBinding()
+            .to(EventBus.class);
+
         Multibinder.newSetBinder(binder(), RegistrationKey.Factory.class)
             .addBinding().to(MailboxIdRegistrationKey.Factory.class);
 
