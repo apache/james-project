@@ -23,7 +23,6 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.CreateRequest;
@@ -40,9 +39,9 @@ import org.slf4j.LoggerFactory;
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateProcessor.class);
 
-    public CreateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public CreateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(CreateRequest.class, next, mailboxManager, factory, metricFactory);
+        super(CreateRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -23,12 +23,10 @@ import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Min
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.main.PathConverter;
@@ -47,12 +45,15 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
+public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
 
-    public ListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(ListRequest.class, next, mailboxManager, factory, metricFactory);
+    public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory);
+    }
+
+    public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(clazz, mailboxManager, factory, metricFactory);
     }
 
     /**
@@ -67,8 +68,9 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * reference. The value returned as the root MAY be the empty string if the
      * reference is non-rooted or is an empty string.
      */
+
     @Override
-    protected void processRequest(ListRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(T request, ImapSession session, Responder responder) {
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = session.getMailboxSession();
@@ -182,12 +184,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     }
 
     @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return ListRequest.class.equals(message.getClass());
-    }
-
-    @Override
-    protected Closeable addContextToMDC(ListRequest request) {
+    protected Closeable addContextToMDC(T request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LIST")
             .addToContext("base", request.getBaseReferenceName())

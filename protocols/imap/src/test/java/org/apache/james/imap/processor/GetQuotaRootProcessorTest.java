@@ -87,7 +87,7 @@ class GetQuotaRootProcessorTest {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
-        testee = new GetQuotaRootProcessor(mock(ImapProcessor.class), mockedMailboxManager,
+        testee = new GetQuotaRootProcessor(mockedMailboxManager,
             statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new RecordingMetricFactory());
     }
 

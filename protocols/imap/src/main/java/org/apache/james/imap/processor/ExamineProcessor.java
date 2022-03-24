@@ -27,7 +27,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.message.request.ExamineRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
@@ -35,9 +34,9 @@ import org.apache.james.util.MDCBuilder;
 
 public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest> {
 
-    public ExamineProcessor(ImapProcessor next, MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory statusResponseFactory,
+    public ExamineProcessor(MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory statusResponseFactory,
                             MetricFactory metricFactory) {
-        super(ExamineRequest.class, next, mailboxManager, statusResponseFactory, true, metricFactory, eventBus);
+        super(ExamineRequest.class, mailboxManager, statusResponseFactory, true, metricFactory, eventBus);
     }
 
     @Override

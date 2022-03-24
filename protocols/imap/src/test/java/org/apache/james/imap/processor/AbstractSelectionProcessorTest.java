@@ -29,7 +29,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageUid;
@@ -42,12 +41,11 @@ public class AbstractSelectionProcessorTest {
 
     @Before
     public void setUp() {
-        ImapProcessor nextProcessor = null;
         MailboxManager mailboxManager = null;
         EventBus eventBus = null;
         StatusResponseFactory statusResponseFactory = null;
         MetricFactory metricFactory = null;
-        testee = new SelectProcessor(nextProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
+        testee = new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory);
     }
 
     @Test

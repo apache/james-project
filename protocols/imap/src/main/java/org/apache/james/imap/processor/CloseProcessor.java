@@ -23,7 +23,6 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CloseRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -40,9 +39,9 @@ import org.slf4j.LoggerFactory;
 public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloseProcessor.class);
 
-    public CloseProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public CloseProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(CloseRequest.class, next, mailboxManager, factory, metricFactory);
+        super(CloseRequest.class,mailboxManager, factory, metricFactory);
     }
 
     @Override

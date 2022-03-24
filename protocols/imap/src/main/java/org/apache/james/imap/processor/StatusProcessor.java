@@ -24,7 +24,6 @@ import java.io.Closeable;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.StatusRequest;
@@ -45,9 +44,9 @@ import org.slf4j.LoggerFactory;
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
 
-    public StatusProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(StatusRequest.class, next, mailboxManager, factory, metricFactory);
+        super(StatusRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

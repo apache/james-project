@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: a0 CAPABILITY
-S: \* CAPABILITY .* ANNOTATION .*
+S: \* CAPABILITY .*ANNOTATION.*
 S: a0 OK CAPABILITY completed.
 
 C: a1 SETMETADATA INBOX (/private/comment {1025}

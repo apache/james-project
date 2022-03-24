@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.NamespaceRequest;
 import org.apache.james.imap.message.response.NamespaceResponse;
@@ -44,9 +43,8 @@ import com.google.common.collect.ImmutableList;
 public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_NAMESPACES);
     
-    public NamespaceProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(NamespaceRequest.class, next, mailboxManager, factory, metricFactory);
+    public NamespaceProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(NamespaceRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -24,7 +24,6 @@ import java.io.Closeable;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.RenameRequest;
@@ -45,9 +44,9 @@ import reactor.core.publisher.Mono;
 public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameProcessor.class);
 
-    public RenameProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public RenameProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(RenameRequest.class, next, mailboxManager, factory, metricFactory);
+        super(RenameRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

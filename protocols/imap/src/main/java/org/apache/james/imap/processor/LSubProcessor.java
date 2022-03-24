@@ -26,7 +26,6 @@ import java.util.Collection;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LsubRequest;
 import org.apache.james.imap.message.response.LSubResponse;
@@ -45,9 +44,9 @@ import org.slf4j.LoggerFactory;
 public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(LSubProcessor.class);
 
-    public LSubProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
+    public LSubProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(LsubRequest.class, next, mailboxManager, subscriptionManager, factory, metricFactory);
+        super(LsubRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 
     @Override

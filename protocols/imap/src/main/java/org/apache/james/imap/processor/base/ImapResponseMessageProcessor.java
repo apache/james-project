@@ -21,24 +21,23 @@ package org.apache.james.imap.processor.base;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.util.MDCBuilder;
 
-public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapResponseMessage> {
+public class ImapResponseMessageProcessor extends AbstractProcessor<ImmutableStatusResponse> {
 
-    public ImapResponseMessageProcessor(ImapProcessor next) {
-        super(ImapResponseMessage.class, next);
+    public ImapResponseMessageProcessor() {
+        super(ImmutableStatusResponse.class);
     }
 
     @Override
-    protected void doProcess(ImapResponseMessage acceptableMessage, Responder responder, ImapSession session) {
+    protected void doProcess(ImmutableStatusResponse acceptableMessage, Responder responder, ImapSession session) {
         responder.respond(acceptableMessage);
     }
 
     @Override
-    protected Closeable addContextToMDC(ImapResponseMessage message) {
+    protected Closeable addContextToMDC(ImmutableStatusResponse message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "RESPOND")
             .build();

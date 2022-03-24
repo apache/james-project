@@ -39,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class SetQuotaProcessorTest {
+class SetQuotaProcessorTest {
     private SetQuotaProcessor testee;
     private FakeImapSession imapSession;
     private ImapProcessor.Responder mockedResponder;
@@ -50,8 +50,7 @@ public class SetQuotaProcessorTest {
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         imapSession = new FakeImapSession();
         mockedResponder = mock(ImapProcessor.Responder.class);
-        testee = new SetQuotaProcessor(mock(ImapProcessor.class), mock(MailboxManager.class),
-            statusResponseFactory, new RecordingMetricFactory());
+        testee = new SetQuotaProcessor(mock(MailboxManager.class), statusResponseFactory, new RecordingMetricFactory());
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
     }

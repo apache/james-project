@@ -26,7 +26,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SetQuotaRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -41,9 +40,9 @@ import com.google.common.collect.ImmutableList;
 public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
 
-    public SetQuotaProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public SetQuotaProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(SetQuotaRequest.class, next, mailboxManager, factory, metricFactory);
+        super(SetQuotaRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

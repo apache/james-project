@@ -21,10 +21,9 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SystemMessage;
-import org.apache.james.imap.processor.base.AbstractChainedProcessor;
+import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
@@ -34,13 +33,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Processes system messages unrelated to IMAP.
  */
-public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessage> {
+public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemMessageProcessor.class);
 
     private final MailboxManager mailboxManager;
 
-    public SystemMessageProcessor(ImapProcessor next, MailboxManager mailboxManager) {
-        super(SystemMessage.class, next);
+    public SystemMessageProcessor(MailboxManager mailboxManager) {
+        super(SystemMessage.class);
         this.mailboxManager = mailboxManager;
     }
 

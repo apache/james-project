@@ -27,7 +27,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
@@ -47,9 +46,9 @@ import com.google.common.collect.ImmutableList;
 public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotationRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetAnnotationProcessor.class);
 
-    public SetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public SetAnnotationProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(SetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
+        super(SetAnnotationRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -38,7 +38,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.IdleRequest;
@@ -67,9 +66,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     private boolean enableIdle;
     private ScheduledExecutorService heartbeatExecutor;
 
-    public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public IdleProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory) {
-        super(IdleRequest.class, next, mailboxManager, factory, metricFactory);
+        super(IdleRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

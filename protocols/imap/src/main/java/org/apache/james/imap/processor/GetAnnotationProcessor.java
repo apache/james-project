@@ -33,7 +33,6 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.GetAnnotationRequest;
@@ -56,9 +55,9 @@ import com.google.common.collect.ImmutableSortedSet;
 public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotationRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetAnnotationProcessor.class);
 
-    public GetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public GetAnnotationProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(GetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
+        super(GetAnnotationRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

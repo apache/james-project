@@ -40,7 +40,6 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.CopyRequest;
-import org.apache.james.imap.message.request.MoveRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -65,7 +64,6 @@ class CopyProcessorTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(58L);
 
     private CopyProcessor testee;
-    private ImapProcessor mockNextProcessor;
     private MailboxManager mockMailboxManager;
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
@@ -74,14 +72,13 @@ class CopyProcessorTest {
 
     @BeforeEach
     void setUp() {
-        mockNextProcessor = mock(ImapProcessor.class);
         mockMailboxManager = mock(MailboxManager.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USERNAME);
 
-        testee = new CopyProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        testee = new CopyProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
@@ -116,7 +113,7 @@ class CopyProcessorTest {
         verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, INBOX, mailboxSession);
         verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
-        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
+        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder);
     }
 
 
@@ -149,7 +146,7 @@ class CopyProcessorTest {
         verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, INBOX, mailboxSession);
         verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
-        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
+        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder);
     }
 
     @Test
@@ -173,7 +170,7 @@ class CopyProcessorTest {
         verify(mockMailboxManager).endProcessingRequest(mailboxSession);
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockResponder).respond(noResponse);
-        verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
+        verifyNoMoreInteractions(mockMailboxManager, mockResponder);
     }
 
     @Test
@@ -197,16 +194,6 @@ class CopyProcessorTest {
         verify(mockMailboxManager).endProcessingRequest(mailboxSession);
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockResponder).respond(noResponse);
-        verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
-    }
-
-    @Test
-    void processShouldNotHandleMoveRequests() {
-        MoveRequest moveRequest = new MoveRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
-
-        testee.process(moveRequest, mockResponder, imapSession);
-
-        verify(mockNextProcessor).process(moveRequest, mockResponder, imapSession);
-        verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
+        verifyNoMoreInteractions(mockMailboxManager, mockResponder);
     }
 }

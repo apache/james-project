@@ -47,7 +47,7 @@ import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FlagsResponse;
 import org.apache.james.imap.message.response.RecentResponse;
 import org.apache.james.imap.message.response.VanishedResponse;
-import org.apache.james.imap.processor.base.AbstractChainedProcessor;
+import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -70,7 +70,7 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 
-public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractChainedProcessor<R> {
+public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";
@@ -78,9 +78,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     private final StatusResponseFactory factory;
     private final MetricFactory metricFactory;
 
-    public AbstractMailboxProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public AbstractMailboxProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
                                     MetricFactory metricFactory) {
-        super(acceptableClass, next);
+        super(acceptableClass);
         this.mailboxManager = mailboxManager;
         this.factory = factory;
         this.metricFactory = metricFactory;

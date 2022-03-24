@@ -106,7 +106,6 @@ public class SearchProcessorTest {
     private static final MailboxId mailboxId = TestId.of(18);
 
     SearchProcessor processor;
-    ImapProcessor next;
     ImapProcessor.Responder responder;
     FakeImapSession session;
     StatusResponseFactory serverResponseFactory;
@@ -120,7 +119,6 @@ public class SearchProcessorTest {
     void setUp() {
         serverResponseFactory = mock(StatusResponseFactory.class);
         session = new FakeImapSession();
-        next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
         statusResponse = mock(StatusResponse.class);
         mailbox = mock(MessageManager.class);
@@ -129,7 +127,7 @@ public class SearchProcessorTest {
         selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getMailboxId()).thenReturn(mailboxId);
         
-        processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new RecordingMetricFactory());
+        processor = new SearchProcessor(mailboxManager, serverResponseFactory, new RecordingMetricFactory());
         expectOk();
     }
 

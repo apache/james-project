@@ -26,7 +26,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.DeleteACLRequest;
@@ -53,9 +52,8 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
-    public DeleteACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(DeleteACLRequest.class, next, mailboxManager, factory, metricFactory);
+    public DeleteACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(DeleteACLRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

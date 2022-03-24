@@ -34,7 +34,6 @@ import java.util.Set;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CapabilityRequest;
 import org.apache.james.imap.message.response.CapabilityResponse;
@@ -56,11 +55,9 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<Capability> disabledCaps = new HashSet<>();
 
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(CapabilityRequest.class, next, mailboxManager, factory, metricFactory);
+    public CapabilityProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(CapabilityRequest.class, mailboxManager, factory, metricFactory);
         capabilities.add(this);
-        
     }
 
     @Override

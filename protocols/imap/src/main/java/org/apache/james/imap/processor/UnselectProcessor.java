@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.UnselectRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -43,9 +42,9 @@ import com.google.common.collect.ImmutableList;
 public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> UNSELECT = ImmutableList.of(SUPPORTS_UNSELECT);
 
-    public UnselectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public UnselectProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(UnselectRequest.class, next, mailboxManager, factory, metricFactory);
+        super(UnselectRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -29,7 +29,6 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.PathConverter;
@@ -51,9 +50,9 @@ import org.slf4j.LoggerFactory;
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);
 
-    public AppendProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
+    public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
             MetricFactory metricFactory) {
-        super(AppendRequest.class, next, mailboxManager, statusResponseFactory, metricFactory);
+        super(AppendRequest.class, mailboxManager, statusResponseFactory, metricFactory);
     }
 
     @Override

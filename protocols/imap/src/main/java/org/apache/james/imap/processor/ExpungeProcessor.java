@@ -31,7 +31,6 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.ExpungeRequest;
@@ -56,9 +55,9 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
 
     private static final List<Capability> UIDPLUS = ImmutableList.of(SUPPORTS_UIDPLUS);
 
-    public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public ExpungeProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(ExpungeRequest.class, next, mailboxManager, factory, metricFactory);
+        super(ExpungeRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -23,7 +23,6 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.PathConverter;
@@ -39,12 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteProcessor.class);
 
-    public DeleteProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(DeleteRequest.class, next, mailboxManager, factory, metricFactory);
+    public DeleteProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(DeleteRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

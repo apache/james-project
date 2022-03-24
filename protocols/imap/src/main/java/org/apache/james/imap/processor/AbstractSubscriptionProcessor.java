@@ -20,7 +20,6 @@ package org.apache.james.imap.processor;
 
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -35,9 +34,9 @@ public abstract class AbstractSubscriptionProcessor<R extends ImapRequest> exten
 
     private final SubscriptionManager subscriptionManager;
 
-    public AbstractSubscriptionProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
+    public AbstractSubscriptionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
                                          MetricFactory metricFactory) {
-        super(acceptableClass, next, mailboxManager, factory, metricFactory);
+        super(acceptableClass, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
     }
 

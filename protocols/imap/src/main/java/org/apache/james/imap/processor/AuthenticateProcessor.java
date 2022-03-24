@@ -35,7 +35,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
@@ -60,9 +59,9 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private static final String AUTH_TYPE_XOAUTH2 = "XOAUTH2";
     private static final List<Capability> OAUTH_CAPABILITIES = ImmutableList.of(Capability.of("AUTH=" + AUTH_TYPE_OAUTHBEARER), Capability.of("AUTH=" + AUTH_TYPE_XOAUTH2));
 
-    public AuthenticateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory) {
-        super(AuthenticateRequest.class, next, mailboxManager, factory, metricFactory);
+        super(AuthenticateRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -58,29 +58,23 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.ImmutableList;
 
-public class SetAnnotationProcessorTest {
+class SetAnnotationProcessorTest {
     private static final int FIRST_ELEMENT_INDEX = 0;
 
     private SetAnnotationProcessor processor;
-
-    private ImapProcessor mockNextProcessor;
     private MailboxManager mockMailboxManager;
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
     private FakeImapSession imapSession;
     private MailboxSession mockMailboxSession;
-
     private List<MailboxAnnotation> mailboxAnnotations;
     private StatusResponse okResponse;
-
-    private MailboxPath inbox; 
-
+    private MailboxPath inbox;
     private SetAnnotationRequest request;
     private ArgumentCaptor<HumanReadableText> humanTextCaptor;
     
     private void initAndMockData() {
         okResponse = mock(StatusResponse.class);
-        mockNextProcessor = mock(ImapProcessor.class);
         mockMailboxManager = mock(MailboxManager.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
@@ -101,7 +95,7 @@ public class SetAnnotationProcessorTest {
     void setUp() {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
-        processor = new SetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        processor = new SetAnnotationProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
     }
 
     @Test

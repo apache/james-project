@@ -29,66 +29,43 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
+public abstract class AbstractProcessor<M extends ImapMessage> implements ImapProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProcessor.class);
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(AbstractChainedProcessor.class);
-    private final ImapProcessor next;
     private final Class<M> acceptableClass;
 
-    /**
-     * Constructs a chainable <code>ImapProcessor</code>.
-     * 
-     * @param next
-     *            next <code>ImapProcessor</code> in the chain, not null
-     */
-    public AbstractChainedProcessor(Class<M> acceptableClass, ImapProcessor next) {
-        this.next = next;
+    public AbstractProcessor(Class<M> acceptableClass) {
         this.acceptableClass = acceptableClass;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void process(ImapMessage message, Responder responder, ImapSession session) {
-        final boolean isAcceptable = isAcceptable(message);
-        if (isAcceptable) {
-            M acceptableMessage = (M) message;
-            try (Closeable closeable = addContextToMDC(acceptableMessage)) {
-                try {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Processing {}", message.toString());
-                    }
-                    doProcess(acceptableMessage, responder, session);
-                } catch (RuntimeException e) {
-                    LOGGER.error("Error while processing IMAP request", e);
-                    throw e;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        M acceptableMessage = (M) message;
+        try (Closeable closeable = addContextToMDC(acceptableMessage)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Processing {}", message.toString());
             }
-        } else {
-            next.process(message, responder, session);
+            doProcess(acceptableMessage, responder, session);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while processing IMAP request", e);
+            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void configure(ImapConfiguration imapConfiguration) {
-        next.configure(imapConfiguration);
+
+    }
+
+    public Class<M> acceptableClass() {
+        return acceptableClass;
     }
 
     /**
-     * Is the given message acceptable?
-     * 
-     * @param message
-     *            <code>ImapMessage</code>, not null
-     * @return true if the given message is processable by this processable
-     */
-    protected boolean isAcceptable(ImapMessage message) {
-        return acceptableClass.isInstance(message);
-    }
-
-    /**
-     * Processes an acceptable message. Only messages passing
-     * {@link #isAcceptable(ImapMessage)} should be passed to this method.
+     * Processes an acceptable message. Errors are managed.
      * 
      * @param acceptableMessage
      *            <code>M</code>, not null
