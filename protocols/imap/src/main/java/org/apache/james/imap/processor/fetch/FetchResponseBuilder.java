@@ -52,6 +52,9 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public final class FetchResponseBuilder {
     private final EnvelopeBuilder envelopeBuilder;
 
@@ -99,20 +102,12 @@ public final class FetchResponseBuilder {
         return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
     }
 
-    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
+    public Mono<FetchResponse> build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getUid();
         return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
-
             reset(msn);
-            // setMsn(resultMsn);
-
-            // FLAGS response
-            // Check if this fetch will cause the "SEEN" flag to be set on this
-            // message. If so, update the flags, and ensure that a flags response is
-            // included in the response.
-            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
 
             // INTERNALDATE response
             if (fetch.contains(Item.INTERNAL_DATE)) {
@@ -127,7 +122,6 @@ public final class FetchResponseBuilder {
             if (fetch.contains(Item.ENVELOPE)) {
                 this.envelope = buildEnvelope(result);
             }
-
 
             // BODY part responses.
             Collection<BodyFetchElement> elements = fetch.getBodyElements();
@@ -161,7 +155,12 @@ public final class FetchResponseBuilder {
 
             addModSeq(fetch, result.getModSeq());
 
-            return build();
+            // FLAGS response
+            // Check if this fetch will cause the "SEEN" flag to be set on this
+            // message. If so, update the flags, and ensure that a flags response is
+            // included in the response.
+            return addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
+                .then(Mono.fromCallable(this::build));
         });
     }
 
@@ -186,43 +185,50 @@ public final class FetchResponseBuilder {
         }
     }
 
-    private void addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) throws MailboxException {
-        boolean ensureFlagsResponse = false;
-        final Flags resultFlags = flags;
-        if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {
-            mailbox.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession);
-            resultFlags.add(Flags.Flag.SEEN);
-            ensureFlagsResponse = true;
-        }
-
-        if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
-            if (selected.isRecent(resultUid)) {
-                resultFlags.add(Flags.Flag.RECENT);
-            }
-            setFlags(resultFlags);
-        }
+    private Mono<Void> addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) throws MailboxException {
+        return ensureFlagResponse(fetch, mailbox, selected, resultUid, mailboxSession, flags)
+            .doOnNext(ensureFlagsResponse -> {
+                if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
+                    if (selected.isRecent(resultUid)) {
+                        flags.add(Flags.Flag.RECENT);
+                    }
+                    setFlags(flags);
+                }
+            })
+            .then();
     }
 
-    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
+    private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
+        if (fetch.isSetSeen() && !flags.contains(Flags.Flag.SEEN)) {
+            return Mono.from(mailbox.setFlagsReactive(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession))
+                .subscribeOn(Schedulers.elastic())
+                .then(Mono.fromCallable(() -> {
+                    flags.add(Flags.Flag.SEEN);
+                    return true;
+                }));
+        }
+        return Mono.just(false);
+    }
+
+    public Mono<FetchResponse> build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getComposedMessageId().getUid();
         return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
 
             reset(msn);
-            // setMsn(resultMsn);
+
+            // UID response
+            addUid(fetch, resultUid);
+
+            addModSeq(fetch, result.getModSeq());
 
             // FLAGS response
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
-            // UID response
-            addUid(fetch, resultUid);
-
-
-            addModSeq(fetch, result.getModSeq());
-            return build();
+            return addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
+                .then(Mono.fromCallable(this::build));
         });
     }
 

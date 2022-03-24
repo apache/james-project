@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -61,6 +65,9 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Interface which represent a Mailbox
@@ -150,6 +157,10 @@ public interface MessageManager {
      * @return new flags indexed by UID
      */
     Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
+
+    default Publisher<Map<MessageUid, Flags>> setFlagsReactive(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> setFlags(flags, flagsUpdateMode, set, mailboxSession));
+    }
 
     class AppendResult {
         private final ComposedMessageId id;
@@ -386,6 +397,18 @@ public interface MessageManager {
      * @return MessageResult with the fields defined by FetchGroup
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
+
+    default Publisher<MessageResult> getMessagesReactive(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        try {
+            MessageResultIterator messages = getMessages(set, fetchGroup, mailboxSession);
+            Stream<MessageResult> stream = StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(messages, Spliterator.ORDERED),
+                false);
+            return Flux.fromStream(stream);
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
 
     Publisher<ComposedMessageIdWithMetaData> listMessagesMetadata(MessageRange set, MailboxSession session);
 
