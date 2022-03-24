@@ -87,11 +87,11 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
 
     @Override
     protected void writeToClient(byte[] bytes, ProtocolSession session, boolean startTLS) {
+        channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
+
         if (startTLS) {
             prepareStartTLS();
         }
-
-        channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
     }
 
     @Override
