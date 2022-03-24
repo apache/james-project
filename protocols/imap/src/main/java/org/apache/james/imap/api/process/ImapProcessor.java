@@ -23,6 +23,8 @@ import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
+import reactor.core.publisher.Mono;
+
 /**
  * <p>
  * Processable IMAP command.
@@ -43,7 +45,13 @@ public interface ImapProcessor {
      * @param responder <code>not null</code>, the responder use write response for message
      * @param session the imap session
      */
-    void process(ImapMessage message, Responder responder, ImapSession session);
+    default void process(ImapMessage message, Responder responder, ImapSession session) {
+        processReactive(message, responder, session).block();
+    }
+
+    default Mono<Void> processReactive(ImapMessage message, Responder responder, ImapSession session) {
+        return Mono.fromRunnable(() -> process(message, responder, session));
+    }
 
     void configure(ImapConfiguration imapConfiguration);
 

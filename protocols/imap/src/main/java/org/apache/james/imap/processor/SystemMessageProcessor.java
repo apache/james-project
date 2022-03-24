@@ -30,6 +30,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Processes system messages unrelated to IMAP.
  */
@@ -44,7 +46,7 @@ public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
     }
 
     @Override
-    protected void doProcess(SystemMessage message, Responder responder, ImapSession session) {
+    protected Mono<Void> doProcess(SystemMessage message, Responder responder, ImapSession session) {
         switch (message) {
             case FORCE_LOGOUT:
                 forceLogout(session);
@@ -53,6 +55,7 @@ public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
                 LOGGER.info("Unknown system message {}", message);
                 break;
         }
+        return Mono.empty();
     }
 
     /**

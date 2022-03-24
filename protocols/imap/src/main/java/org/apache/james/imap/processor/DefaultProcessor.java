@@ -42,6 +42,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 public class DefaultProcessor implements ImapProcessor {
 
     public static ImapProcessor createDefaultProcessor(ImapProcessor chainEndProcessor,
@@ -138,6 +140,12 @@ public class DefaultProcessor implements ImapProcessor {
     public void process(ImapMessage message, Responder responder, ImapSession session) {
         processorMap.getOrDefault(message.getClass(), chainEndProcessor)
             .process(message, responder, session);
+    }
+
+    @Override
+    public Mono<Void> processReactive(ImapMessage message, Responder responder, ImapSession session) {
+        return processorMap.getOrDefault(message.getClass(), chainEndProcessor)
+            .processReactive(message, responder, session);
     }
 
     @Override
