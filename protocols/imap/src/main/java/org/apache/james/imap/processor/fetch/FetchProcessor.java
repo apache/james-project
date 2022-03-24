@@ -21,7 +21,6 @@ package org.apache.james.imap.processor.fetch;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -42,11 +41,9 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MemoizedSupplier;
@@ -62,7 +59,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
 
     public FetchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                          MetricFactory metricFactory) {
         super(FetchRequest.class, mailboxManager, factory, metricFactory);
     }
 
@@ -74,17 +71,17 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         long changedSince = fetch.getChangedSince();
 
         return getSelectedMailboxReactive(session)
-            .switchIfEmpty(Mono.error(() ->  new MailboxException("Session not in SELECTED state")))
-            .doOnNext(Throwing.<MessageManager>consumer(mailbox -> {
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
+            .flatMap(Throwing.<MessageManager, Mono<Void>>function(mailbox -> {
                 boolean vanished = fetch.getVanished();
                 if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
                     taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
-                    return;
+                    return Mono.empty();
                 }
 
                 if (vanished && changedSince == -1) {
                     taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
-                    return;
+                    return Mono.empty();
                 }
                 final MailboxSession mailboxSession = session.getMailboxSession();
 
@@ -93,7 +90,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     .sneakyThrow());
                 if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
                     // Enable CONDSTORE as this is a CONDSTORE enabling command
-                    condstoreEnablingCommand(session, responder,  metaData.get(), true);
+                    condstoreEnablingCommand(session, responder, metaData.get(), true);
                 }
 
                 List<MessageRange> ranges = new ArrayList<>();
@@ -112,14 +109,15 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     //       If we do so we could prolly save one mailbox access which should give use some more speed up
                     respondVanished(session.getSelected(), ranges, responder);
                 }
-                processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
-
-
-                // Don't send expunge responses if FETCH is used to trigger this
-                // processor. See IMAP-284
-                final boolean omitExpunged = (!useUids);
-                unsolicitedResponses(session, responder, omitExpunged, useUids);
-                okComplete(request, responder);
+                return processMessageRanges(session, mailbox, ranges, fetch, mailboxSession, responder)
+                    .then(Mono.fromRunnable(() -> {
+                        // Don't send expunge responses if FETCH is used to trigger this
+                        // processor. See IMAP-284
+                        final boolean omitExpunged = (!useUids);
+                        unsolicitedResponses(session, responder, omitExpunged, useUids);
+                        okComplete(request, responder);
+                    }))
+                    .then();
             }).sneakyThrow())
             .onErrorResume(MessageRangeException.class, e -> {
                 LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
@@ -148,78 +146,73 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      * Process the given message ranges by fetch them and pass them to the
      * {@link org.apache.james.imap.api.process.ImapProcessor.Responder}
      */
-    private void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
+    private Mono<Void> processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, MailboxSession mailboxSession, Responder responder) throws MailboxException {
         final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
         FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
-        for (MessageRange range : ranges) {
-            if (fetch.isOnlyFlags()) {
-                processMessageRangeForFlags(session, mailbox, fetch, mailboxSession, responder, builder, range);
-            } else {
-                processMessageRange(session, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
-            }
-        }
-
+        return Flux.fromIterable(ranges)
+            .concatMap(range -> {
+                if (fetch.isOnlyFlags()) {
+                    return processMessageRangeForFlags(session, mailbox, fetch, mailboxSession, responder, builder, range);
+                } else {
+                    return processMessageRange(session, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
+                }
+            })
+            .then();
     }
 
-    private void processMessageRangeForFlags(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, MessageRange range) {
+    private Mono<Void> processMessageRangeForFlags(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, MessageRange range) {
         SelectedMailbox selected = session.getSelected();
-        Iterator<ComposedMessageIdWithMetaData> results = Flux.from(mailbox.listMessagesMetadata(range, mailboxSession))
+        return Flux.from(mailbox.listMessagesMetadata(range, mailboxSession))
             .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-            .toStream()
-            .iterator();
+            .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
+            .doOnNext(responder::respond)
+            .then();
+    }
 
-        while (results.hasNext()) {
-            ComposedMessageIdWithMetaData result = results.next();
-
-            try {
-                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
-                responder.respond(response);
-            } catch (MessageRangeException e) {
-                // we can't for whatever reason find the message so
-                // just skip it and log it to debug
-                LOGGER.debug("Unable to find message with uid {}", result.getComposedMessageId().getUid(), e);
-            } catch (MailboxException e) {
-                // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
-                // So we just skip it
-                //
-                // See IMAP-347
-                LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getComposedMessageId().getUid(), e);
-            }
+    private Mono<FetchResponse> toResponse(MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, FetchResponseBuilder builder, SelectedMailbox selected, org.apache.james.mailbox.model.ComposedMessageIdWithMetaData result) {
+        try {
+            return builder.build(fetch, result, mailbox, selected, mailboxSession);
+        } catch (MessageRangeException e) {
+            // we can't for whatever reason find the message so
+            // just skip it and log it to debug
+            LOGGER.debug("Unable to find message with uid {}", result.getComposedMessageId().getUid(), e);
+            return Mono.empty();
+        } catch (MailboxException e) {
+            // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
+            // So we just skip it
+            //
+            // See IMAP-347
+            LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getComposedMessageId().getUid(), e);
+            return Mono.empty();
         }
     }
 
-    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
-        MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
+    private Mono<FetchResponse> toResponse(MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, FetchResponseBuilder builder, SelectedMailbox selected, MessageResult result) {
+        try {
+            return builder.build(fetch, result, mailbox, selected, mailboxSession);
+        } catch (MessageRangeException e) {
+            // we can't for whatever reason find the message so
+            // just skip it and log it to debug
+            LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
+            return Mono.empty();
+        } catch (MailboxException e) {
+            // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
+            // So we just skip it
+            //
+            // See IMAP-347
+            LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
+            return Mono.empty();
+        }
+    }
+
+    private Mono<Void> processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) {
         SelectedMailbox selected = session.getSelected();
-        while (messages.hasNext()) {
-            final MessageResult result = messages.next();
-
-            //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
-            if (fetch.contains(Item.MODSEQ) && result.getModSeq().asLong() <= fetch.getChangedSince()) {
-                continue;
-            }
-
-            try {
-                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
-                responder.respond(response);
-            } catch (MessageRangeException e) {
-                // we can't for whatever reason find the message so
-                // just skip it and log it to debug
-                LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
-            } catch (MailboxException e) {
-                // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
-                // So we just skip it
-                //
-                // See IMAP-347
-                LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
-            }
-        }
-
-        // Throw the exception if we received one
-        if (messages.getException() != null) {
-            throw messages.getException();
-        }
+        return Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
+            .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+            .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
+            .doOnNext(responder::respond)
+            .then();
     }
 
 

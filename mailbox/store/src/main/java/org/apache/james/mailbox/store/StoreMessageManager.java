@@ -75,6 +75,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -83,6 +84,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.mail.FetchGroupConverter;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -718,9 +720,16 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+    public MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
         return new StoreMessageResultIterator(messageMapper, mailbox, set, batchSizes, fetchGroup);
+    }
+
+    @Override
+    public Publisher<MessageResult> getMessagesReactive(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        return Flux.from(mapperFactory.getMessageMapper(mailboxSession)
+            .findInMailboxReactive(mailbox, set, FetchGroupConverter.getFetchType(fetchGroup), -1))
+            .map(Throwing.<MailboxMessage, MessageResult>function(message -> ResultUtils.loadMessageResult(message, fetchGroup)).sneakyThrow());
     }
 
     @Override
