@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.flush.FlushConsolidationHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
@@ -223,6 +224,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             @Override
             public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
+                pipeline.addLast(new FlushConsolidationHandler());
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
 
                 connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
