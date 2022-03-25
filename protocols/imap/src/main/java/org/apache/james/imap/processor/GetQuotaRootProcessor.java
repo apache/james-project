@@ -41,13 +41,15 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * GETQUOTAROOT Processor
@@ -71,40 +73,50 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     }
 
     @Override
-    protected void processRequest(GetQuotaRootRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(GetQuotaRootRequest request, ImapSession session, Responder responder) {
         final MailboxSession mailboxSession = session.getMailboxSession();
         final MailboxManager mailboxManager = getMailboxManager();
 
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
 
         // First check mailbox exists
-        try {
-            if (mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-                QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
-                Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotas.getMessageQuota();
-                Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotas.getStorageQuota();
-                responder.respond(new QuotaRootResponse(request.getMailboxName(), quotaRoot.getValue()));
-                if (messageQuota.getLimit().isLimited()) {
-                    responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
-                }
-                if (storageQuota.getLimit().isLimited()) {
-                    responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
-                }
-                okComplete(request, responder);
-            } else {
-                Object[] params = new Object[]{
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(Throwing.function(messageManager -> {
+                if (mailboxManager.hasRight(messageManager.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
+                    return respondQuotas(request, responder, mailboxPath);
+                } else {
+                    Object[] params = new Object[]{
                         MailboxACL.Right.Read.toString(),
                         request.getCommand().getName(),
                         request.getMailboxName()
-                };
-                HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(request, responder, humanReadableText);
-            }
-        } catch (MailboxException me) {
-            taggedBad(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
-        }
+                    };
+                    HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
+                    no(request, responder, humanReadableText);
+                    return Mono.empty();
+                }
+            }));
+    }
 
+    private Mono<Void> respondQuotas(GetQuotaRootRequest request, Responder responder, MailboxPath mailboxPath) {
+        return Mono.from(quotaRootResolver.getQuotaRootReactive(mailboxPath))
+            .flatMap(quotaRoot -> Mono.from(quotaManager.getQuotasReactive(quotaRoot))
+                .doOnNext(quotas -> {
+                    Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotas.getMessageQuota();
+                    Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotas.getStorageQuota();
+                    responder.respond(new QuotaRootResponse(request.getMailboxName(), quotaRoot.getValue()));
+                    if (messageQuota.getLimit().isLimited()) {
+                        responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
+                    }
+                    if (storageQuota.getLimit().isLimited()) {
+                        responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
+                    }
+                    okComplete(request, responder);
+                }))
+            .onErrorResume(MailboxException.class, e -> {
+                taggedBad(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @Override

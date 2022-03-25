@@ -45,6 +45,8 @@ public interface RightManager {
      */
     boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException;
 
+    boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws MailboxException;
+
     /**
      * Tells whether the given {@link MailboxSession}'s user has the given
      * {@link MailboxACL.Right} for this {@link MessageManager}'s mailbox.
