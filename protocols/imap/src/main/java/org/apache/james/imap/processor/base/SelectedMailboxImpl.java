@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.StampedLock;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -68,7 +69,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * Default implementation of {@link SelectedMailbox}
@@ -120,9 +120,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         }
     }
 
-    private final Registration registration;
+    private final AtomicReference<Registration> registration = new AtomicReference<>();
     private final MailboxManager mailboxManager;
+    private final MessageManager messageManager;
     private final MailboxId mailboxId;
+    private final EventBus eventBus;
     private final ImapSession session;
     private final MailboxSession.SessionId sessionId;
     private final MailboxSession mailboxSession;
@@ -130,7 +132,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private final Set<MessageUid> recentUids = new TreeSet<>();
     private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Set<MessageUid> expungedUids = new TreeSet<>();
-    private final Object applicableFlagsLock = new Object();
+    private final StampedLock applicableFlagsLock = new StampedLock();
     private final AtomicReference<EventListener> idleEventListener = new AtomicReference<>();
     private boolean recentUidRemoved = false;
     private boolean isDeletedByOtherSession = false;
@@ -138,31 +140,32 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private boolean silentFlagChanges = false;
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
-    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) throws MailboxException {
+    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) {
+        this.eventBus = eventBus;
         this.session = session;
         this.sessionId = session.getMailboxSession().getSessionId();
         this.mailboxManager = mailboxManager;
-        
+        this.messageManager = messageManager;
+        this.mailboxSession = session.getMailboxSession();
+        this.uidMsnConverter = new UidMsnConverter();
+        this.mailboxId = messageManager.getId();
+    }
+
+    public Mono<Void> finishInit() throws MailboxException {
         // Ignore events from our session
         setSilentFlagChanges(true);
 
-        mailboxSession = session.getMailboxSession();
-
-        uidMsnConverter = new UidMsnConverter();
-
-        mailboxId = messageManager.getId();
-
-        registration = Mono.from(eventBus.register(this, new MailboxIdRegistrationKey(mailboxId)))
-            .subscribeOn(Schedulers.elastic())
-            .block();
-
-        synchronized (applicableFlagsLock) {
-            applicableFlags = applicableFlags.updateWithNewFlags(messageManager.getApplicableFlags(mailboxSession));
-        }
-        ImmutableList<MessageUid> uids = Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession))
-            .collect(ImmutableList.toImmutableList())
-            .block();
-        uidMsnConverter.addAll(uids);
+        return Mono.from(eventBus.register(this, new MailboxIdRegistrationKey(mailboxId)))
+                .doOnNext(this.registration::set)
+            .then(Mono.using(applicableFlagsLock::writeLock,
+                stamp -> messageManager.getApplicableFlagsReactive(mailboxSession)
+                    .flatMap(flags -> Mono.fromRunnable(() -> applicableFlags = applicableFlags.updateWithNewFlags(flags))),
+                applicableFlagsLock::unlockWrite)
+                .then())
+            .then(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession))
+                .collect(ImmutableList.toImmutableList())
+                .doOnNext(uidMsnConverter::addAll))
+            .then();
     }
 
     @Override
@@ -187,7 +190,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     @Override
     public synchronized void deselect() {
-        registration.unregister();
+        registration.get().unregister();
         
         uidMsnConverter.clear();
         flagUpdateUids.clear();
@@ -258,9 +261,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         sizeChanged = false;
         flagUpdateUids.clear();
         isDeletedByOtherSession = false;
-        synchronized (applicableFlagsLock) {
-            applicableFlags = applicableFlags.ackUpdates();
-        }
+        long stamp = applicableFlagsLock.writeLock();
+        applicableFlags = applicableFlags.ackUpdates();
+        applicableFlagsLock.unlockWrite(stamp);
     }
 
     @Override
@@ -371,9 +374,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     
     @Override
     public synchronized void resetNewApplicableFlags() {
-        synchronized (applicableFlagsLock) {
-            applicableFlags = applicableFlags.ackUpdates();
-        }
+        long stamp = applicableFlagsLock.writeLock();
+        applicableFlags = applicableFlags.ackUpdates();
+        applicableFlagsLock.unlockWrite(stamp);
     }
 
     
@@ -447,9 +450,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
                 }
             }
         }
-        synchronized (applicableFlagsLock) {
-            applicableFlags = updateApplicableFlags(applicableFlags, updated);
-        }
+        long stamp = applicableFlagsLock.writeLock();
+        applicableFlags = updateApplicableFlags(applicableFlags, updated);
+        applicableFlagsLock.unlock(stamp);
         return VOID;
     }
 

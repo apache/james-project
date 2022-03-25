@@ -68,6 +68,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import io.vavr.Tuple;
+import reactor.core.publisher.Mono;
 
 abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<R> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
@@ -87,24 +88,24 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
     @Override
-    protected void processRequest(R request, ImapSession session, Responder responder) {
-        final String mailboxName = request.getMailboxName();
-        try {
-            final MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+    protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
+        String mailboxName = request.getMailboxName();
+        MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-            respond(session, fullMailboxPath, request, responder);
-           
-            
-        } catch (MailboxNotFoundException e) {
-            LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e);
-            responder.respond(statusResponseFactory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
-        } catch (MailboxException e) {
-            LOGGER.error("Select failed for mailbox {}", mailboxName, e);
-            no(request, responder, HumanReadableText.SELECT);
-        } 
+        return respond(session, fullMailboxPath, request, responder)
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e);
+                responder.respond(statusResponseFactory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Select failed for mailbox {}", mailboxName, e);
+                no(request, responder, HumanReadableText.SELECT);
+                return Mono.empty();
+            });
     }
 
-    private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException {
+    private Mono<Void> respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) {
         ClientSpecifiedUidValidity lastKnownUidValidity = request.getLastKnownUidValidity();
         IdRange[] knownSequences = request.getKnownSequenceSet();
         UidRange[] knownUids = request.getKnownUidSet();
@@ -120,73 +121,77 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //    connection.
         if (!lastKnownUidValidity.isUnknown() && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
             taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
-            return;
+            return Mono.empty();
         }
 
-        final MailboxMetaData metaData = selectMailbox(fullMailboxPath, session, responder);
-        final SelectedMailbox selected = session.getSelected();
-        MessageUid firstUnseen = metaData.getFirstUnseen();
-        
-        flags(responder, selected);
-        exists(responder, metaData);
-        recent(responder, selected);
-        uidValidity(responder, metaData);
-        
-        
-        // try to write the UNSEEN message to the client and retry if we fail because of concurrent sessions.
-        // 
-        // See IMAP-345
-        int retryCount = 0;
-        while (unseen(responder, firstUnseen, selected) == false) {
-            // if we not was able to get find the unseen within 5 retries we should just not send it
-            if (retryCount == 5) {
-                LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
-                break;
-            }
-            firstUnseen = selectMailbox(fullMailboxPath, session, responder).getFirstUnseen();
-            retryCount++;
-            
-        }
-        
-        permanentFlags(responder, metaData, selected);
-        highestModSeq(responder, metaData);
-        uidNext(responder, metaData);
-        
-        if (request.getCondstore()) {
-           condstoreEnablingCommand(session, responder, metaData, false);
-        }
-        
-        // Now do the QRESYNC processing if necessary
-        // 
-        // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC paramters
-        // The same is true if none are given ;)
-        if (metaData.isModSeqPermanent() && !lastKnownUidValidity.isUnknown()) {
-            if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
+        return selectMailbox(fullMailboxPath, session, responder)
+            .doOnNext(Throwing.<MailboxMetaData>consumer(metaData -> {
 
-                //  If the provided UIDVALIDITY matches that of the selected mailbox, the
-                //  server then checks the last known modification sequence.
+                final SelectedMailbox selected = session.getSelected();
+                MessageUid firstUnseen = metaData.getFirstUnseen();
+
+                flags(responder, selected);
+                exists(responder, metaData);
+                recent(responder, selected);
+                uidValidity(responder, metaData);
+
+
+                // try to write the UNSEEN message to the client and retry if we fail because of concurrent sessions.
                 //
-                //  The server sends the client any pending flag changes (using FETCH
-                //  responses that MUST contain UIDs) and expunges those that have
-                //  occurred in this mailbox since the provided modification sequence.
+                // See IMAP-345
+                int retryCount = 0;
+                while (unseen(responder, firstUnseen, selected) == false) {
+                    // if we not was able to get find the unseen within 5 retries we should just not send it
+                    if (retryCount == 5) {
+                        LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
+                        break;
+                    }
+                    firstUnseen = selectMailbox(fullMailboxPath, session, responder).block().getFirstUnseen();
+                    retryCount++;
 
-                uidSet(request, metaData)
-                    .ifPresent(Throwing.<UidRange[]>consumer(
-                        uidSet -> respondVanished(session, responder, knownSequences, knownUids, selected, uidSet))
-                        .sneakyThrow());
+                }
 
-                taggedOk(responder, request, metaData, HumanReadableText.SELECT);
-            } else {
+                permanentFlags(responder, metaData, selected);
+                highestModSeq(responder, metaData);
+                uidNext(responder, metaData);
 
-                taggedOk(responder, request, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
-            }
-        } else {
-            taggedOk(responder, request, metaData, HumanReadableText.SELECT);
-        }
+                if (request.getCondstore()) {
+                    condstoreEnablingCommand(session, responder, metaData, false);
+                }
 
-        // Reset the saved sequence-set after successful SELECT / EXAMINE
-        // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
-        SearchResUtil.resetSavedSequenceSet(session);
+                // Now do the QRESYNC processing if necessary
+                //
+                // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC paramters
+                // The same is true if none are given ;)
+                if (metaData.isModSeqPermanent() && !lastKnownUidValidity.isUnknown()) {
+                    if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
+
+                        //  If the provided UIDVALIDITY matches that of the selected mailbox, the
+                        //  server then checks the last known modification sequence.
+                        //
+                        //  The server sends the client any pending flag changes (using FETCH
+                        //  responses that MUST contain UIDs) and expunges those that have
+                        //  occurred in this mailbox since the provided modification sequence.
+
+                        uidSet(request, metaData)
+                            .ifPresent(Throwing.<UidRange[]>consumer(
+                                uidSet -> respondVanished(session, responder, knownSequences, knownUids, selected, uidSet))
+                                .sneakyThrow());
+
+                        taggedOk(responder, request, metaData, HumanReadableText.SELECT);
+                    } else {
+
+                        taggedOk(responder, request, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
+                    }
+                } else {
+                    taggedOk(responder, request, metaData, HumanReadableText.SELECT);
+                }
+
+                // Reset the saved sequence-set after successful SELECT / EXAMINE
+                // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
+                SearchResUtil.resetSavedSequenceSet(session);
+            }).sneakyThrow())
+            .then();
     }
 
     private Optional<UidRange[]> uidSet(AbstractMailboxSelectionRequest request, MailboxMetaData metaData) {
@@ -367,15 +372,20 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(existsResponse);
     }
 
-    private MailboxMetaData selectMailbox(MailboxPath mailboxPath, ImapSession session, Responder responder) throws MailboxException {
+    private Mono<MailboxMetaData> selectMailbox(MailboxPath mailboxPath, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
-        final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-
-        final SelectedMailbox sessionMailbox;
         final SelectedMailbox currentMailbox = session.getSelected();
+
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
+                .flatMap(Throwing.function(sessionMailbox ->
+                    mailbox.getMetaDataReactive(!openReadOnly, mailboxSession, FetchGroup.FIRST_UNSEEN)
+                        .doOnNext(next -> addRecent(next, sessionMailbox))))));
+    }
+
+    private Mono<SelectedMailbox> selectMailbox(ImapSession session, Responder responder, MessageManager mailbox, SelectedMailbox currentMailbox) throws MailboxException {
         if (currentMailbox == null || !currentMailbox.getMailboxId().equals(mailbox.getId())) {
-            
             // QRESYNC EXTENSION
             //
             // Response with the CLOSE return-code when the currently selected mailbox is closed implicitly using the SELECT/EXAMINE command on another mailbox
@@ -385,16 +395,15 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 responder.respond(getStatusResponseFactory()
                     .untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed()));
             }
-            session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox));
-
-            sessionMailbox = session.getSelected();
-            
+            SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox);
+            return selectedMailbox.finishInit()
+                .then(Mono.fromCallable(() -> {
+                    session.selected(selectedMailbox);
+                    return selectedMailbox;
+                }));
         } else {
-            sessionMailbox = currentMailbox;
+            return Mono.just(currentMailbox);
         }
-        final MailboxMetaData metaData = mailbox.getMetaData(!openReadOnly, mailboxSession, MailboxMetaData.FetchGroup.FIRST_UNSEEN);
-        addRecent(metaData, sessionMailbox);
-        return metaData;
     }
 
     private void addRecent(MailboxMetaData metaData, SelectedMailbox sessionMailbox) {

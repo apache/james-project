@@ -431,6 +431,10 @@ public interface MessageManager {
 
     Flags getApplicableFlags(MailboxSession session) throws MailboxException;
 
+    default Mono<Flags> getApplicableFlagsReactive(MailboxSession session) {
+        return Mono.fromCallable(() -> getApplicableFlags(session));
+    }
+
     /**
      * Gets current meta data for the mailbox.<br>
      * Consolidates common calls together to allow improved performance.<br>
@@ -446,6 +450,10 @@ public interface MessageManager {
      * @return metadata view filtered for the session's user, not null
      */
     MailboxMetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException;
+
+    default Mono<MailboxMetaData> getMetaDataReactive(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
+        return Mono.fromCallable(() -> getMetaData(resetRecent, mailboxSession, fetchGroup));
+    }
 
     /**
      * Meta data about the current state of the mailbox.

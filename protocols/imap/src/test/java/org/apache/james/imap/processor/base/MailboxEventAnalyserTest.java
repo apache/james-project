@@ -164,6 +164,7 @@ class MailboxEventAnalyserTest {
             .thenReturn(new SingleMessageResultIterator(messageResult));
 
         testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
+        testee.finishInit().block();
     }
 
     @Test

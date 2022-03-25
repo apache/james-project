@@ -153,6 +153,13 @@ public class CassandraUidProvider implements UidProvider {
                 .blockOptional();
     }
 
+    @Override
+    public Mono<Optional<MessageUid>> lastUidReactive(Mailbox mailbox) {
+        return findHighestUid((CassandraId) mailbox.getMailboxId())
+            .map(Optional::of)
+            .switchIfEmpty(Mono.just(Optional.empty()));
+    }
+
     private Mono<MessageUid> findHighestUid(CassandraId mailboxId) {
         return executor.executeSingleRow(
             selectStatement.bind()

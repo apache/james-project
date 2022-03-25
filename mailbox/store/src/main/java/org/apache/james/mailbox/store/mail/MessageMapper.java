@@ -124,11 +124,19 @@ public interface MessageMapper extends Mapper {
      */
     MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
 
+    default Mono<Optional<MessageUid>> findFirstUnseenMessageUidReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> Optional.ofNullable(findFirstUnseenMessageUid(mailbox)));
+    }
+
     /**
      * Return a List of {@link MailboxMessage} which are recent.
      * The list must be ordered by the {@link MailboxMessage} uid.
      */
     List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException;
+
+    default Mono<List<MessageUid>> findRecentMessageUidsInMailboxReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> findRecentMessageUidsInMailbox(mailbox));
+    }
 
 
     /**
@@ -205,13 +213,24 @@ public interface MessageMapper extends Mapper {
      */
     Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException;
 
+    default Mono<Optional<MessageUid>> getLastUidReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> getLastUid(mailbox));
+    }
 
     /**
      * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
      */
     ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException;
 
+    default Mono<ModSeq> getHighestModSeqReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> getHighestModSeq(mailbox));
+    }
+
     Flags getApplicableFlag(Mailbox mailbox) throws MailboxException;
+
+    default Mono<Flags> getApplicableFlagReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> getApplicableFlag(mailbox));
+    }
 
     /**
      * Return a list containing all MessageUid of Messages that belongs to given {@link Mailbox}

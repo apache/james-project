@@ -563,57 +563,85 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public MailboxMetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
+    public Mono<MailboxMetaData> getMetaDataReactive(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
         MailboxACL resolvedAcl = getResolvedAcl(mailboxSession);
         boolean hasReadRight = storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession);
         if (!hasReadRight) {
-            return MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession));
+            return Mono.just(MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession)));
         }
-        List<MessageUid> recent;
         Flags permanentFlags = getPermanentFlags(mailboxSession);
         UidValidity uidValidity = getMailboxEntity().getUidValidity();
-        MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
-                .map(MessageUid::next)
-                .orElse(MessageUid.MIN_VALUE);
-        ModSeq highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
-        long messageCount;
-        long unseenCount;
-        MessageUid firstUnseen;
-        switch (fetchGroup) {
-        case UNSEEN_COUNT:
-            MailboxCounters mailboxCounters = getMailboxCounters(mailboxSession);
-            unseenCount = mailboxCounters.getUnseen();
-            messageCount = mailboxCounters.getCount();
-            firstUnseen = null;
-            recent = recent(resetRecent, mailboxSession);
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-            break;
-        case FIRST_UNSEEN:
-            firstUnseen = findFirstUnseenMessageUid(mailboxSession);
-            messageCount = getMessageCount(mailboxSession);
-            unseenCount = 0;
-            recent = recent(resetRecent, mailboxSession);
+        return Mono.zip(messageMapper.getLastUidReactive(mailbox)
+                .map(optional -> optional
+                    .map(MessageUid::next)
+                    .orElse(MessageUid.MIN_VALUE)),
+            messageMapper.getHighestModSeqReactive(mailbox))
+            .flatMap(t2 -> toMetadata(messageMapper, resetRecent, mailboxSession, fetchGroup, resolvedAcl, permanentFlags, uidValidity, t2.getT1(), t2.getT2()));
+    }
 
-            break;
-        case NO_UNSEEN:
-            firstUnseen = null;
-            unseenCount = 0;
-            messageCount = getMessageCount(mailboxSession);
-            recent = recent(resetRecent, mailboxSession);
+    @Override
+    public MailboxMetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
+        return MailboxReactorUtils.block(getMetaDataReactive(resetRecent, mailboxSession, fetchGroup));
+    }
 
-            break;
-        default:
-            firstUnseen = null;
-            unseenCount = 0;
-            messageCount = -1;
-            // just reset the recent but not include them in the metadata
-            if (resetRecent) {
-                recent(resetRecent, mailboxSession);
+    private Mono<MailboxMetaData> toMetadata(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) {
+        try {
+            switch (fetchGroup) {
+                case UNSEEN_COUNT:
+                    return metadataUnseenCount(messageMapper, resetRecent, mailboxSession, resolvedAcl, permanentFlags, uidValidity, uidNext, highestModSeq);
+                case FIRST_UNSEEN:
+                    return metadataFirstUnseen(messageMapper, resetRecent, mailboxSession, resolvedAcl, permanentFlags, uidValidity, uidNext, highestModSeq);
+                case NO_UNSEEN:
+                    return metadataNoUnseen(messageMapper, resetRecent, mailboxSession, resolvedAcl, permanentFlags, uidValidity, uidNext, highestModSeq);
+                default:
+                    return metadataDefault(resetRecent, mailboxSession, resolvedAcl, permanentFlags, uidValidity, uidNext, highestModSeq);
             }
-            recent = new ArrayList<>();
-            break;
+        } catch (MailboxException e) {
+            return Mono.error(e);
         }
-        return new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
+    }
+
+    private Mono<MailboxMetaData> metadataDefault(boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
+        MessageUid firstUnseen = null;
+        long unseenCount = 0;
+        long messageCount = -1;
+        List<MessageUid> recent = new ArrayList<>();
+        final MailboxMetaData metaData = new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
+
+        // just reset the recent but not include them in the metadata
+        if (resetRecent) {
+            return recent(resetRecent, mailboxSession)
+                .thenReturn(metaData);
+        }
+        return Mono.just(metaData);
+    }
+
+    private Mono<MailboxMetaData> metadataNoUnseen(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
+        MessageUid firstUnseen = null;
+        long unseenCount = 0;
+        return Mono.zip(
+            messageMapper.getMailboxCountersReactive(mailbox).map(MailboxCounters::getUnseen),
+            recent(resetRecent, mailboxSession))
+            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1(), unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
+    }
+
+    private Mono<MailboxMetaData> metadataFirstUnseen(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
+        long unseenCount = 0;
+        return Mono.zip(
+            messageMapper.getMailboxCountersReactive(mailbox).map(MailboxCounters::getCount),
+            recent(resetRecent, mailboxSession),
+            messageMapper.findFirstUnseenMessageUidReactive(getMailboxEntity()))
+            .map(Throwing.function(t3 -> new MailboxMetaData(t3.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t3.getT1(), unseenCount, t3.getT3().orElse(null), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
+    }
+
+    private Mono<MailboxMetaData> metadataUnseenCount(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
+        MessageUid firstUnseen = null;
+        return Mono.zip(
+            messageMapper.getMailboxCountersReactive(mailbox),
+            recent(resetRecent, mailboxSession))
+            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1().getCount(), t2.getT1().getUnseen(), firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
     }
 
     @Override
@@ -742,16 +770,13 @@ public class StoreMessageManager implements MessageManager {
      * Return a List which holds all uids of recent messages and optional reset
      * the recent flag on the messages for the uids
      */
-    protected List<MessageUid> recent(final boolean reset, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<List<MessageUid>> recent(final boolean reset, MailboxSession mailboxSession) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        return messageMapper.execute(() -> {
-            if (reset) {
-                return resetRecents(messageMapper, mailboxSession);
-            }
-            return messageMapper.findRecentMessageUidsInMailbox(getMailboxEntity());
-        });
-
+        if (reset) {
+            return Mono.fromCallable(() -> resetRecents(messageMapper, mailboxSession)).subscribeOn(Schedulers.elastic());
+        }
+        return messageMapper.findRecentMessageUidsInMailboxReactive(getMailboxEntity());
     }
 
     private List<MessageUid> resetRecents(MessageMapper messageMapper, MailboxSession mailboxSession) throws MailboxException {
@@ -930,14 +955,6 @@ public class StoreMessageManager implements MessageManager {
         return copiedMessages;
     }
 
-    /**
-     * Return the uid of the first unseen message or null of none is found
-     */
-    protected MessageUid findFirstUnseenMessageUid(MailboxSession session) throws MailboxException {
-        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        return messageMapper.findFirstUnseenMessageUid(getMailboxEntity());
-    }
-
     @Override
     public MailboxId getId() {
         return mailbox.getMailboxId();
@@ -952,6 +969,12 @@ public class StoreMessageManager implements MessageManager {
     public Flags getApplicableFlags(MailboxSession session) throws MailboxException {
         return mapperFactory.getMessageMapper(session)
             .getApplicableFlag(mailbox);
+    }
+
+    @Override
+    public Mono<Flags> getApplicableFlagsReactive(MailboxSession session) {
+        return mapperFactory.getMessageMapper(session)
+            .getApplicableFlagReactive(mailbox);
     }
 
     private Flux<MessageUid> listAllMessageUids(MailboxSession session) throws MailboxException {

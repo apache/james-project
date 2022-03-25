@@ -193,4 +193,10 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .single()
             .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
+
+    @Override
+    public Mono<ModSeq> highestModSeqReactive(Mailbox mailbox) {
+        return findHighestModSeq((CassandraId) mailbox.getMailboxId())
+            .map(optional -> optional.orElse(ModSeq.first()));
+    }
 }
