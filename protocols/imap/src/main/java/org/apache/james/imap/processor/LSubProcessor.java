@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
@@ -41,32 +42,44 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(LSubProcessor.class);
+
+    private final SubscriptionManager subscriptionManager;
 
     public LSubProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(LsubRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
+        super(LsubRequest.class, mailboxManager, factory, metricFactory);
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
-    protected void doProcessRequest(LsubRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(LsubRequest request, ImapSession session, Responder responder) {
         String referenceName = request.getBaseReferenceName();
         String mailboxPattern = request.getMailboxPattern();
 
         try {
-            listSubscriptions(session, responder, referenceName, mailboxPattern);
-
-            okComplete(request, responder);
-        } catch (MailboxException e) {
+            return listSubscriptions(session, responder, referenceName, mailboxPattern)
+                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+                .onErrorResume(MailboxException.class, e -> {
+                    LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e);
+                    no(request, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
+                    return Mono.empty();
+                }).then();
+        } catch (SubscriptionException e) {
             LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e);
             no(request, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
+            return Mono.empty();
         }
     }
 
-    private void listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) throws SubscriptionException, MailboxException {
+    private Mono<Void> listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) throws SubscriptionException {
         MailboxSession mailboxSession = session.getMailboxSession();
-        Collection<String> mailboxes = getSubscriptionManager().subscriptions(mailboxSession);
+        Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
+            .collectList();
 
         String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
 
@@ -76,9 +89,11 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
             mailboxSession.getPathDelimiter());
         Collection<String> mailboxResponses = new ArrayList<>();
 
-        for (String mailbox : mailboxes) {
-            respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
-        }
+        return mailboxesMono.doOnNext(mailboxes -> {
+            for (String mailbox : mailboxes) {
+                respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
+            }
+        }).then();
     }
 
     private void respond(Responder responder, MailboxNameExpression expression, String mailboxName, boolean originalSubscription, Collection<String> mailboxes, Collection<String> mailboxResponses, char delimiter) {
