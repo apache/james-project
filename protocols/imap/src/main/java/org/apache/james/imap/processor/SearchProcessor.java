@@ -22,8 +22,8 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -70,6 +70,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
@@ -83,72 +84,78 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected void processRequest(SearchRequest request, ImapSession session, Responder responder) {
-        final SearchOperation operation = request.getSearchOperation();
-        final SearchKey searchKey = operation.getSearchKey();
-        final boolean useUids = request.isUseUids();
+    protected Mono<Void> processRequestReactive(SearchRequest request, ImapSession session, Responder responder) {
+        SearchOperation operation = request.getSearchOperation();
+        SearchKey searchKey = operation.getSearchKey();
+        boolean useUids = request.isUseUids();
         List<SearchResultOption> resultOptions = operation.getResultOptions();
 
         try {
-            MessageManager mailbox = getSelectedMailbox(session)
-                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-
             MailboxSession msession = session.getMailboxSession();
             SearchQuery query = toQuery(searchKey, session);
-
-            Collection<MessageUid> uids = performUidSearch(mailbox, query, msession);
-            Collection<Long> results = asResults(session, useUids, uids);
-
-            ModSeq highestModSeq = computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids);
-            ImapResponseMessage response = toResponse(request, session, useUids, resultOptions, uids, results, highestModSeq);
-
-            responder.respond(response);
-
             boolean omitExpunged = (!useUids);
-            unsolicitedResponses(session, responder, omitExpunged, useUids);
-            okComplete(request, responder);
+            return getSelectedMailboxReactive(session)
+                .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
+                .flatMap(Throwing.function(mailbox -> performUidSearch(mailbox, query, msession)
+                    .flatMap(uids -> {
+                        Collection<Long> results = asResults(session, useUids, uids);
+                        return computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids)
+                            .doOnNext(highestModSeq -> {
+                                ImapResponseMessage response = toResponse(request, session, useUids, resultOptions, uids, results, highestModSeq);
+                                responder.respond(response);
+                            });
+                    })
+                    .then(unsolicitedResponses(session, responder, omitExpunged, useUids))))
+                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+                .then()
+                .doFinally(type -> session.setAttribute(SEARCH_MODSEQ, null))
+                .onErrorResume(MessageRangeException.class, e -> {
+                    LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
+                    no(request, responder, HumanReadableText.SEARCH_FAILED);
+
+                    if (resultOptions.contains(SearchResultOption.SAVE)) {
+                        // Reset the saved sequence-set on a BAD response if the SAVE option was used.
+                        //
+                        // See RFC5182 2.1.Normative Description of the SEARCHRES Extension
+                        SearchResUtil.resetSavedSequenceSet(session);
+                    }
+                    return Mono.empty();
+                });
         } catch (MessageRangeException e) {
             LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e);
             taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-        } catch (MailboxException e) {
-            LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
-            no(request, responder, HumanReadableText.SEARCH_FAILED);
-            
-            if (resultOptions.contains(SearchResultOption.SAVE)) {
-                // Reset the saved sequence-set on a BAD response if the SAVE option was used.
-                //
-                // See RFC5182 2.1.Normative Description of the SEARCHRES Extension
-                SearchResUtil.resetSavedSequenceSet(session);
-            }
-        } finally {
-            session.setAttribute(SEARCH_MODSEQ, null);
+            return Mono.empty();
         }
     }
 
-    private ModSeq computeHighestModSeqIfNeeded(ImapSession session, Responder responder, MessageManager mailbox, MailboxSession msession, Collection<MessageUid> uids) throws MailboxException {
+    private Mono<Optional<ModSeq>> computeHighestModSeqIfNeeded(ImapSession session, Responder responder, MessageManager mailbox, MailboxSession msession, Collection<MessageUid> uids) {
         // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
         //
         // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
-        final ModSeq highestModSeq;
         if (session.getAttribute(SEARCH_MODSEQ) != null) {
-            MailboxMetaData metaData = mailbox.getMetaData(false, msession, MailboxMetaData.FetchGroup.NO_COUNT);
-            highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
-
-            // Enable CONDSTORE as this is a CONDSTORE enabling command
-            condstoreEnablingCommand(session, responder,  metaData, true);
-            return highestModSeq;
+            try {
+                return mailbox.getMetaDataReactive(false, msession, MailboxMetaData.FetchGroup.NO_COUNT)
+                    .flatMap(metaData -> {
+                        // Enable CONDSTORE as this is a CONDSTORE enabling command
+                        condstoreEnablingCommand(session, responder,  metaData, true);
+                        return findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
+                    })
+                    .switchIfEmpty(Mono.empty());
+            } catch (MailboxException e) {
+                throw new RuntimeException(e);
+            }
         } else {
-            return null;
+            return Mono.just(Optional.empty());
         }
     }
 
-    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, Collection<Long> results, ModSeq highestModSeq) {
+    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, Collection<Long> results, Optional<ModSeq> highestModSeq) {
         final long[] ids = toArray(results);
 
         if (resultOptions == null || resultOptions.isEmpty()) {
-            return new SearchResponse(ids, highestModSeq);
+            return new SearchResponse(ids, highestModSeq.orElse(null));
         } else {
-            return handleResultOptions(request, session, useUids, resultOptions, uids, highestModSeq, ids);
+            return handleResultOptions(request, session, useUids, resultOptions, uids, highestModSeq.orElse(null), ids);
         }
     }
 
@@ -231,10 +238,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
 
-    private Collection<MessageUid> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
+    private Mono<Collection<MessageUid>> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
         return Flux.from(mailbox.search(query, msession))
-            .collect(ImmutableList.toImmutableList())
-            .block();
+            .collect(ImmutableList.toImmutableList());
     }
 
     private long[] toArray(Collection<Long> results) {
@@ -243,36 +249,22 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
     /**
      * Find the highest mod-sequence number in the given {@link MessageRange}'s.
-     * 
-     * @param session
-     * @param mailbox
-     * @param ranges
-     * @param currentHighest
-     * @return highestModSeq
-     * @throws MailboxException
      */
-    private ModSeq findHighestModSeq(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, ModSeq currentHighest) throws MailboxException {
-        ModSeq highestModSeq = null;
-        
+    private Mono<Optional<ModSeq>> findHighestModSeq(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, ModSeq currentHighest) {
         // Reverse loop over the ranges as its more likely that we find a match at the end
-        int size = ranges.size();
-        for (int i = size - 1; i > 0; i--) {
-            Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
-                mailbox.listMessagesMetadata(ranges.get(i), session))
-                .toStream()
-                .iterator();
-            while (results.hasNext()) {
-                ModSeq modSeq = results.next().getModSeq();
-                if (highestModSeq == null || modSeq.asLong() > highestModSeq.asLong()) {
-                    highestModSeq = modSeq;
+        ArrayList<MessageRange> rangesCopy = new ArrayList<>(ranges);
+        Collections.reverse(rangesCopy);
+        return Flux.fromIterable(rangesCopy)
+            .concatMap(range -> Flux.from(mailbox.listMessagesMetadata(range, session)))
+            .map(ComposedMessageIdWithMetaData::getModSeq)
+            .takeUntil(modseq -> modseq.equals(currentHighest))
+            .reduce((a, b) -> {
+                if (a.compareTo(b) > 0) {
+                    return a;
                 }
-                if (highestModSeq == currentHighest) {
-                    return highestModSeq;
-                }
-            }
-            
-        }
-        return highestModSeq;
+                return b;
+            }).map(Optional::of)
+            .switchIfEmpty(Mono.fromCallable(() -> Optional.empty()));
     }
 
     private SearchQuery toQuery(SearchKey key, ImapSession session) throws MessageRangeException {
