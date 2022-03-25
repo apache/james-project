@@ -42,6 +42,7 @@ import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -67,12 +68,10 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
             MailboxSession mailboxSession = session.getMailboxSession();
 
-            int expunged = 0;
-            MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
-
-            if (!mdata.isWriteable()) {
+            if (!getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                 no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
             } else {
+                int expunged = 0;
                 IdRange[] ranges = request.getUidSet();
                 if (ranges == null) {
                    expunged = expunge(mailbox, MessageRange.all(), session, mailboxSession);
@@ -95,6 +94,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 //
                 // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
                 if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
+                    MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                     okComplete(request, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
                 } else {
                     okComplete(request, responder);
