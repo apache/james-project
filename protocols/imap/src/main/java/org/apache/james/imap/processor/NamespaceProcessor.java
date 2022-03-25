@@ -37,6 +37,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Processes a NAMESPACE command into a suitable set of responses.
  */
@@ -48,15 +50,15 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     }
 
     @Override
-    protected void processRequest(NamespaceRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(NamespaceRequest request, ImapSession session, Responder responder) {
         final MailboxSession mailboxSession = session.getMailboxSession();
         final List<NamespaceResponse.Namespace> personalNamespaces = buildPersonalNamespaces(mailboxSession, session);
         final List<NamespaceResponse.Namespace> otherUsersNamespaces = buildOtherUsersSpaces(mailboxSession, session);
         final List<NamespaceResponse.Namespace> sharedNamespaces = buildSharedNamespaces(mailboxSession, session);
         final NamespaceResponse response = new NamespaceResponse(personalNamespaces, otherUsersNamespaces, sharedNamespaces);
         responder.respond(response);
-        unsolicitedResponses(session, responder, false);
-        okComplete(request, responder);
+        return unsolicitedResponses(session, responder, false)
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     /**

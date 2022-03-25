@@ -28,6 +28,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import reactor.core.publisher.Mono;
+
 public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
 
     public CheckProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -36,9 +38,9 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     }
 
     @Override
-    protected void processRequest(CheckRequest request, ImapSession session, Responder responder) {
-        unsolicitedResponses(session, responder, false);
-        okComplete(request, responder);
+    protected Mono<Void> processRequestReactive(CheckRequest request, ImapSession session, Responder responder) {
+        return unsolicitedResponses(session, responder, false)
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     @Override

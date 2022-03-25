@@ -28,16 +28,18 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import reactor.core.publisher.Mono;
+
 public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
     public NoopProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(NoopRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override
-    protected void processRequest(NoopRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(NoopRequest request, ImapSession session, Responder responder) {
         // So, unsolicated responses are returned to check for new mail
-        unsolicitedResponses(session, responder, false);
-        okComplete(request, responder);
+        return unsolicitedResponses(session, responder, false)
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     @Override

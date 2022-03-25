@@ -43,6 +43,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
     private static final List<Capability> CAPS = ImmutableList.of(
@@ -76,11 +78,11 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     }
 
     @Override
-    protected void processRequest(CapabilityRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(CapabilityRequest request, ImapSession session, Responder responder) {
         final CapabilityResponse result = new CapabilityResponse(getSupportedCapabilities(session));        
         responder.respond(result);
-        unsolicitedResponses(session, responder, false);
-        okComplete(request, responder);
+        return unsolicitedResponses(session, responder, false)
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     /**

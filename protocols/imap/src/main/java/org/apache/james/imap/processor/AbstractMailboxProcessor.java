@@ -57,7 +57,6 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -123,53 +122,53 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(untaggedOk);
     }
     
-    protected void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean useUids) {
-        unsolicitedResponses(session, responder, false, useUids);
+    protected Mono<Void> unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean useUids) {
+        return unsolicitedResponses(session, responder, false, useUids);
     }
 
     /**
      * Sends any unsolicited responses to the client, such as EXISTS and FLAGS
      * responses when the selected mailbox is modified by another user.
      */
-    protected void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean omitExpunged, boolean useUid) {
+    protected Mono<Void> unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean omitExpunged, boolean useUid) {
         final SelectedMailbox selected = session.getSelected();
         if (selected == null) {
             LOGGER.debug("No mailbox selected");
+            return Mono.empty();
         } else {
-            unsolicitedResponses(session, responder, selected, omitExpunged, useUid);
+            return unsolicitedResponses(session, responder, selected, omitExpunged, useUid);
         }
     }
 
-    private void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, SelectedMailbox selected, boolean omitExpunged, boolean useUid) {
-        final boolean sizeChanged = selected.isSizeChanged();
-        // New message response
-        if (sizeChanged) {
-            addExistsResponses(session, selected, responder);
-        }
-        // Expunged messages
-        if (!omitExpunged) {
-            final Collection<MessageUid> expungedUids = selected.expungedUids();
-            if (!expungedUids.isEmpty()) {
-                // Check if QRESYNC was enabled. If so we MUST use VANISHED responses
-                if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
-                    addVanishedResponse(selected, expungedUids, responder);
-                } else {
-                    addExpungedResponses(selected, expungedUids, responder);
-                }
-                // Only reset the events if we send the EXPUNGE or VANISHED responses. See IMAP-286
-                selected.resetExpungedUids();
+    private Mono<Void> unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, SelectedMailbox selected, boolean omitExpunged, boolean useUid) {
+        return Mono.fromRunnable(() -> {
+            final boolean sizeChanged = selected.isSizeChanged();
+            // New message response
+            if (sizeChanged) {
+                addExistsResponses(selected, responder);
             }
+            // Expunged messages
+            if (!omitExpunged) {
+                final Collection<MessageUid> expungedUids = selected.expungedUids();
+                if (!expungedUids.isEmpty()) {
+                    // Check if QRESYNC was enabled. If so we MUST use VANISHED responses
+                    if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
+                        addVanishedResponse(selected, expungedUids, responder);
+                    } else {
+                        addExpungedResponses(selected, expungedUids, responder);
+                    }
+                    // Only reset the events if we send the EXPUNGE or VANISHED responses. See IMAP-286
+                    selected.resetExpungedUids();
+                }
 
-        }
-        if (sizeChanged || (selected.isRecentUidRemoved() && !omitExpunged)) {
-            addRecentResponses(selected, responder);
-            selected.resetRecentUidRemoved();
-        }
-
-        // Message updates
-        addFlagsResponses(session, selected, responder, useUid);
-        
-        selected.resetEvents();
+            }
+            if (sizeChanged || (selected.isRecentUidRemoved() && !omitExpunged)) {
+                addRecentResponses(selected, responder);
+                selected.resetRecentUidRemoved();
+            }
+        })
+            .then(Mono.defer(() -> addFlagsResponses(session, selected, responder, useUid)))
+            .doFinally(type -> selected.resetEvents());
     }
 
     private void addExpungedResponses(SelectedMailbox selected, Collection<MessageUid> expungedUids, ImapProcessor.Responder responder) {
@@ -192,92 +191,101 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(new VanishedResponse(uidRange, false));
     }
     
-    private void addFlagsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
+    private Mono<Void> addFlagsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
+        MessageManager messageManager = selected.getMessageManager();
+        MailboxSession mailboxSession = session.getMailboxSession();
+
+        final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
+        if (!flagUpdateUids.isEmpty()) {
+            return addApplicableFlagResponse(session, selected, responder, useUid)
+                .then(Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
+                    .concatMap(range ->
+                        addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
+                    .then())
+                .onErrorResume(MailboxException.class, e -> {
+                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+                    return Mono.empty();
+                });
+        } else {
+            return addApplicableFlagResponse(session, selected, responder, useUid)
+                .onErrorResume(MailboxException.class, e -> {
+                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+                    return Mono.empty();
+                });
+        }
+    }
+
+    private Mono<Void> addApplicableFlagResponse(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
         try {
             // To be lazily initialized only if needed, which is in minority of cases.
-            MessageManager messageManager = null;
-            MailboxMetaData metaData = null;
-            final MailboxSession mailboxSession = session.getMailboxSession();
+            MessageManager messageManager = selected.getMessageManager();
+            MailboxSession mailboxSession = session.getMailboxSession();
 
             // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
             // This is the case if some new flag/keyword was used
             // See IMAP-303
             if (selected.hasNewApplicableFlags()) {
-                messageManager = getMailbox(session, selected);
                 flags(responder, selected);
-                metaData = messageManager.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
-
-                permanentFlags(responder, metaData, selected);
-                selected.resetNewApplicableFlags();
+                return messageManager.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                    .doOnNext(metaData -> permanentFlags(responder, metaData, selected))
+                    .doOnNext(any -> selected.resetNewApplicableFlags())
+                .onErrorResume(MailboxException.class, e -> {
+                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+                    return Mono.empty();
+                }).then();
             }
-            
-            final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
-            if (!flagUpdateUids.isEmpty()) {
-                Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
-                if (messageManager == null) {
-                    messageManager = getMailbox(session, selected);
-                }
-                boolean isModSeqPermanent = true;
-                while (ranges.hasNext()) {
-                    addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, isModSeqPermanent, mailboxSession);
-                }
-            }
-
+            return Mono.empty();
         } catch (MailboxException e) {
             handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+            return Mono.empty();
         }
-
     }
     
-    private void addFlagsResponses(ImapSession session,
+    private Mono<Void> addFlagsResponses(ImapSession session,
                                    SelectedMailbox selected,
                                    ImapProcessor.Responder responder,
                                    boolean useUid,
                                    MessageRange messageSet, MessageManager mailbox,
-                                   boolean isModSeqPermanent,
-                                   MailboxSession mailboxSession) throws MailboxException {
-        Iterator<ComposedMessageIdWithMetaData> it = Flux.from(
-            mailbox.listMessagesMetadata(messageSet, mailboxSession))
-            .toStream()
-            .iterator();
+                                   MailboxSession mailboxSession) {
         final boolean qresyncEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC);
         final boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
-        while (it.hasNext()) {
-            ComposedMessageIdWithMetaData mr = it.next();
-            final MessageUid uid = mr.getComposedMessageId().getUid();
-            selected.msn(uid).fold(() -> {
-                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getMailboxId().serialize());
-                // skip this as it was not found in the mapping
-                // 
-                // See IMAP-346
-                return null;
-            }, msn -> {
+        return Flux.from(
+            mailbox.listMessagesMetadata(messageSet, mailboxSession))
+            .doOnNext(Throwing.consumer(mr -> {
+                MessageUid uid = mr.getComposedMessageId().getUid();
+                selected.msn(uid).fold(() -> {
+                    LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getMailboxId().serialize());
+                    // skip this as it was not found in the mapping
+                    //
+                    // See IMAP-346
+                    return null;
+                }, msn -> {
 
-                final Flags flags = mr.getFlags();
-                final MessageUid uidOut;
-                if (useUid || qresyncEnabled) {
-                    uidOut = uid;
-                } else {
-                    uidOut = null;
-                }
-                if (selected.isRecent(uid)) {
-                    flags.add(Flags.Flag.RECENT);
-                } else {
-                    flags.remove(Flags.Flag.RECENT);
-                }
-                final FetchResponse response;
+                    final Flags flags = mr.getFlags();
+                    final MessageUid uidOut;
+                    if (useUid || qresyncEnabled) {
+                        uidOut = uid;
+                    } else {
+                        uidOut = null;
+                    }
+                    if (selected.isRecent(uid)) {
+                        flags.add(Flags.Flag.RECENT);
+                    } else {
+                        flags.remove(Flags.Flag.RECENT);
+                    }
+                    final FetchResponse response;
 
-                // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
-                // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
-                if ((condstoreEnabled || qresyncEnabled) && isModSeqPermanent) {
-                    response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
-                } else {
-                    response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
-                }
-                responder.respond(response);
-                return null;
-            });
-        }
+                    // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
+                    // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
+                    if (condstoreEnabled || qresyncEnabled) {
+                        response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
+                    } else {
+                        response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
+                    }
+                    responder.respond(response);
+                    return null;
+                });
+            })).then();
     }
 
     protected void condstoreEnablingCommand(ImapSession session, Responder responder, MailboxMetaData metaData, boolean sendHighestModSeq) {
@@ -304,7 +312,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    private void addExistsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder) {
+    private void addExistsResponses(SelectedMailbox selected, ImapProcessor.Responder responder) {
         final long existsCount = selected.existsCount();
         final ExistsResponse response = new ExistsResponse(existsCount);
         responder.respond(response);

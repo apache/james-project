@@ -1479,6 +1479,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            System.out.println("toto");
             readStringUntil(clientConnection, s -> s.contains("+ Idling"));
 
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
@@ -1748,6 +1749,7 @@ class IMAPServerTest {
         ImmutableList.Builder<String> result = ImmutableList.builder();
         while (true) {
             String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
+            System.out.println(line);
             result.add(line);
             if (condition.test(line)) {
                 return result.build();

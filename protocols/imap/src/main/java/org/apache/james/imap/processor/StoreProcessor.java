@@ -166,7 +166,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
             }
             final boolean omitExpunged = (!useUids);
-            unsolicitedResponses(session, responder, omitExpunged, useUids);
+            unsolicitedResponses(session, responder, omitExpunged, useUids).block();
             
             // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
             if (failed.isEmpty() && failedMsns.isEmpty()) {

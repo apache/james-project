@@ -109,15 +109,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     //       If we do so we could prolly save one mailbox access which should give use some more speed up
                     respondVanished(session.getSelected(), ranges, responder);
                 }
+                boolean omitExpunged = (!useUids);
                 return processMessageRanges(session, mailbox, ranges, fetch, mailboxSession, responder)
-                    .then(Mono.fromRunnable(() -> {
-                        // Don't send expunge responses if FETCH is used to trigger this
-                        // processor. See IMAP-284
-                        final boolean omitExpunged = (!useUids);
-                        unsolicitedResponses(session, responder, omitExpunged, useUids);
-                        okComplete(request, responder);
-                    }))
-                    .then();
+                    // Don't send expunge responses if FETCH is used to trigger this
+                    // processor. See IMAP-284
+                    .then(Mono.defer(() -> unsolicitedResponses(session, responder, omitExpunged, useUids)))
+                    .then(Mono.fromRunnable(() -> okComplete(request, responder)));
             }).sneakyThrow())
             .onErrorResume(MessageRangeException.class, e -> {
                 LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
@@ -147,7 +144,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      * {@link org.apache.james.imap.api.process.ImapProcessor.Responder}
      */
     private Mono<Void> processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, MailboxSession mailboxSession, Responder responder) throws MailboxException {
-        final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
+        FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
         FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
         return Flux.fromIterable(ranges)

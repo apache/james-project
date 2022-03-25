@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnableProcessor.class);
 
@@ -67,18 +69,19 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
 
     @Override
-    protected void processRequest(EnableRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(EnableRequest request, ImapSession session, Responder responder) {
         try {
 
             List<Capability> caps = request.getCapabilities();
             Set<Capability> enabledCaps = enable(request, responder, session, caps.iterator());
             responder.respond(new EnableResponse(enabledCaps));
 
-            unsolicitedResponses(session, responder, false);
-            okComplete(request, responder);
+            return unsolicitedResponses(session, responder, false)
+                .then(Mono.fromRunnable(() -> okComplete(request, responder)));
         } catch (EnableException e) {
             LOGGER.info("Unable to enable extension", e);
             taggedBad(request, responder, HumanReadableText.FAILED);
+            return Mono.empty();
         }
     }
    

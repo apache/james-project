@@ -66,7 +66,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
                 condstoreEnablingCommand(session, responder, metaData, false); 
             }
             responder.respond(response);
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
 
             okComplete(request, responder);
         } catch (MailboxException e) {
