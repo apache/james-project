@@ -90,98 +90,17 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         List<SearchResultOption> resultOptions = operation.getResultOptions();
 
         try {
-
             MessageManager mailbox = getSelectedMailbox(session)
                 .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
 
-            final SearchQuery query = toQuery(searchKey, session);
             MailboxSession msession = session.getMailboxSession();
+            SearchQuery query = toQuery(searchKey, session);
 
-            final Collection<MessageUid> uids = performUidSearch(mailbox, query, msession);
-            final Collection<Long> results = asResults(session, useUids, uids);
+            Collection<MessageUid> uids = performUidSearch(mailbox, query, msession);
+            Collection<Long> results = asResults(session, useUids, uids);
 
-            // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
-            //
-            // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
-            final ModSeq highestModSeq;
-            if (session.getAttribute(SEARCH_MODSEQ) != null) {
-                MailboxMetaData metaData = mailbox.getMetaData(false, msession, MailboxMetaData.FetchGroup.NO_COUNT);
-                highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
-                
-                // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  metaData, true);                
-                
-            } else {
-                highestModSeq = null;
-            }
-            final long[] ids = toArray(results);
-
-            final ImapResponseMessage response;
-            if (resultOptions == null || resultOptions.isEmpty()) {
-                response = new SearchResponse(ids, highestModSeq);
-            } else {
-                List<Long> idList = new ArrayList<>(ids.length);
-                for (long id : ids) {
-                    idList.add(id);
-                }
-
-                List<IdRange> idsAsRanges = new ArrayList<>();
-                for (Long id: idList) {
-                    idsAsRanges.add(new IdRange(id));
-                }
-                IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(IdRange[]::new);
-                
-                List<UidRange> uidsAsRanges = new ArrayList<>();
-                for (MessageUid uid: uids) {
-                    uidsAsRanges.add(new UidRange(uid));
-                }
-                UidRange[] uidRanges = UidRange.mergeRanges(uidsAsRanges).toArray(UidRange[]::new);
-                
-                boolean esearch = false;
-                for (SearchResultOption resultOption : resultOptions) {
-                    if (SearchResultOption.SAVE != resultOption) {
-                        esearch = true;
-                        break;
-                    }
-                }
-                
-                if (esearch) {
-                    long min = -1;
-                    long max = -1;
-                    long count = ids.length;
-
-                    if (ids.length > 0) {
-                        min = ids[0];
-                        max = ids[ids.length - 1];
-                    } 
-                   
-                    
-                    // Save the sequence-set for later usage. This is part of SEARCHRES 
-                    if (resultOptions.contains(SearchResultOption.SAVE)) {
-                        if (resultOptions.contains(SearchResultOption.ALL) || resultOptions.contains(SearchResultOption.COUNT)) {
-                            // if the options contain ALL or COUNT we need to save the complete sequence-set
-                            SearchResUtil.saveSequenceSet(session, idRanges);
-                        } else {
-                            List<IdRange> savedRanges = new ArrayList<>();
-                            if (resultOptions.contains(SearchResultOption.MIN)) {
-                                // Store the MIN
-                                savedRanges.add(new IdRange(min));  
-                            } 
-                            if (resultOptions.contains(SearchResultOption.MAX)) {
-                                // Store the MAX
-                                savedRanges.add(new IdRange(max));
-                            }
-                            SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
-                        }
-                    }
-                    response = new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), useUids, resultOptions);
-                } else {
-                    // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
-                    SearchResUtil.saveSequenceSet(session, idRanges);
-                    response = new SearchResponse(ids, highestModSeq);
-
-                }
-            }
+            ModSeq highestModSeq = computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids);
+            ImapResponseMessage response = toResponse(request, session, useUids, resultOptions, uids, results, highestModSeq);
 
             responder.respond(response);
 
@@ -203,6 +122,96 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
         } finally {
             session.setAttribute(SEARCH_MODSEQ, null);
+        }
+    }
+
+    private ModSeq computeHighestModSeqIfNeeded(ImapSession session, Responder responder, MessageManager mailbox, MailboxSession msession, Collection<MessageUid> uids) throws MailboxException {
+        // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
+        //
+        // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
+        final ModSeq highestModSeq;
+        if (session.getAttribute(SEARCH_MODSEQ) != null) {
+            MailboxMetaData metaData = mailbox.getMetaData(false, msession, MailboxMetaData.FetchGroup.NO_COUNT);
+            highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
+
+            // Enable CONDSTORE as this is a CONDSTORE enabling command
+            condstoreEnablingCommand(session, responder,  metaData, true);
+            return highestModSeq;
+        } else {
+            return null;
+        }
+    }
+
+    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, Collection<Long> results, ModSeq highestModSeq) {
+        final long[] ids = toArray(results);
+
+        if (resultOptions == null || resultOptions.isEmpty()) {
+            return new SearchResponse(ids, highestModSeq);
+        } else {
+            return handleResultOptions(request, session, useUids, resultOptions, uids, highestModSeq, ids);
+        }
+    }
+
+    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, ModSeq highestModSeq, long[] ids) {
+        List<Long> idList = new ArrayList<>(ids.length);
+        for (long id : ids) {
+            idList.add(id);
+        }
+
+        List<IdRange> idsAsRanges = new ArrayList<>();
+        for (Long id: idList) {
+            idsAsRanges.add(new IdRange(id));
+        }
+        IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(IdRange[]::new);
+
+        List<UidRange> uidsAsRanges = new ArrayList<>();
+        for (MessageUid uid: uids) {
+            uidsAsRanges.add(new UidRange(uid));
+        }
+        UidRange[] uidRanges = UidRange.mergeRanges(uidsAsRanges).toArray(UidRange[]::new);
+
+        boolean esearch = false;
+        for (SearchResultOption resultOption : resultOptions) {
+            if (SearchResultOption.SAVE != resultOption) {
+                esearch = true;
+                break;
+            }
+        }
+
+        if (esearch) {
+            long min = -1;
+            long max = -1;
+            long count = ids.length;
+
+            if (ids.length > 0) {
+                min = ids[0];
+                max = ids[ids.length - 1];
+            }
+
+
+            // Save the sequence-set for later usage. This is part of SEARCHRES
+            if (resultOptions.contains(SearchResultOption.SAVE)) {
+                if (resultOptions.contains(SearchResultOption.ALL) || resultOptions.contains(SearchResultOption.COUNT)) {
+                    // if the options contain ALL or COUNT we need to save the complete sequence-set
+                    SearchResUtil.saveSequenceSet(session, idRanges);
+                } else {
+                    List<IdRange> savedRanges = new ArrayList<>();
+                    if (resultOptions.contains(SearchResultOption.MIN)) {
+                        // Store the MIN
+                        savedRanges.add(new IdRange(min));
+                    }
+                    if (resultOptions.contains(SearchResultOption.MAX)) {
+                        // Store the MAX
+                        savedRanges.add(new IdRange(max));
+                    }
+                    SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
+                }
+            }
+            return new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), useUids, resultOptions);
+        } else {
+            // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
+            SearchResUtil.saveSequenceSet(session, idRanges);
+            return new SearchResponse(ids, highestModSeq);
         }
     }
 
