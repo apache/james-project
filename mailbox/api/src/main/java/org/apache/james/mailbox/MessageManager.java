@@ -103,16 +103,6 @@ public interface MessageManager {
     boolean isWriteable(MailboxSession session) throws MailboxException;
 
     /**
-     * Return true if {@link MessageResult#getModSeq()} is stored in a permanent
-     * way.
-     *
-     * @deprecated use
-     *             {@link #getMetaData(boolean, MailboxSession, MailboxMetaData.FetchGroup)}
-     */
-    @Deprecated
-    boolean isModSeqPermanent(MailboxSession session);
-
-    /**
      * Searches for messages matching the given query. The result must be
      * ordered
      * 
@@ -495,7 +485,7 @@ public interface MessageManager {
          *
          * @return MailboxMetaData with default values for all fields
          */
-        public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable, boolean modSeqPermanent) {
+        public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable) {
             ImmutableList<MessageUid> recents = ImmutableList.of();
             MessageUid uidNext = MessageUid.MIN_VALUE;
             ModSeq highestModSeq = ModSeq.first();
@@ -512,7 +502,6 @@ public interface MessageManager {
                 unseenCount,
                 firstUnseen,
                 writeable,
-                modSeqPermanent,
                 resolvedAcl);
         }
 
@@ -526,10 +515,9 @@ public interface MessageManager {
         private final MessageUid firstUnseen;
         private final boolean writeable;
         private final ModSeq highestModSeq;
-        private final boolean modSeqPermanent;
         private final MailboxACL acl;
 
-        public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
+        public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, MailboxACL acl) {
             this.recent = Optional.ofNullable(recent).map(ImmutableList::copyOf).orElseGet(ImmutableList::of);
             this.highestModSeq = highestModSeq;
             this.recentCount = this.recent.size();
@@ -541,7 +529,6 @@ public interface MessageManager {
             this.unseenCount = unseenCount;
             this.firstUnseen = firstUnseen;
             this.writeable = writeable;
-            this.modSeqPermanent = modSeqPermanent;
             this.acl = acl;
         }
 
@@ -648,16 +635,6 @@ public interface MessageManager {
          */
         public ModSeq getHighestModSeq() {
             return highestModSeq;
-        }
-
-        /**
-         * Return true if the mailbox does store the mod-sequences in a
-         * permanent way
-         *
-         * @return permanent
-         */
-        public boolean isModSeqPermanent() {
-            return modSeqPermanent;
         }
 
 

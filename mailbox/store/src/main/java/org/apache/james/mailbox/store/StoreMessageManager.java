@@ -250,17 +250,6 @@ public class StoreMessageManager implements MessageManager {
         return getPermanentFlags(session);
     }
 
-    /**
-     * Return true. If an subclass don't want to store mod-sequences in a
-     * permanent way just override this and return false
-     * 
-     * @return true
-     */
-    @Override
-    public boolean isModSeqPermanent(MailboxSession session) {
-        return true;
-    }
-
     @Override
     public Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException {
         if (!isWriteable(mailboxSession)) {
@@ -567,7 +556,7 @@ public class StoreMessageManager implements MessageManager {
         MailboxACL resolvedAcl = getResolvedAcl(mailboxSession);
         boolean hasReadRight = storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession);
         if (!hasReadRight) {
-            return Mono.just(MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession)));
+            return Mono.just(MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession)));
         }
         Flags permanentFlags = getPermanentFlags(mailboxSession);
         UidValidity uidValidity = getMailboxEntity().getUidValidity();
@@ -608,7 +597,7 @@ public class StoreMessageManager implements MessageManager {
         long unseenCount = 0;
         long messageCount = -1;
         List<MessageUid> recent = new ArrayList<>();
-        final MailboxMetaData metaData = new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
+        final MailboxMetaData metaData = new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), resolvedAcl);
 
         // just reset the recent but not include them in the metadata
         if (resetRecent) {
@@ -624,7 +613,7 @@ public class StoreMessageManager implements MessageManager {
         return Mono.zip(
             messageMapper.getMailboxCountersReactive(mailbox).map(MailboxCounters::getUnseen),
             recent(resetRecent, mailboxSession))
-            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1(), unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
+            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1(), unseenCount, firstUnseen, isWriteable(mailboxSession), resolvedAcl)));
     }
 
     private Mono<MailboxMetaData> metadataFirstUnseen(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
@@ -633,7 +622,7 @@ public class StoreMessageManager implements MessageManager {
             messageMapper.getMailboxCountersReactive(mailbox).map(MailboxCounters::getCount),
             recent(resetRecent, mailboxSession),
             messageMapper.findFirstUnseenMessageUidReactive(getMailboxEntity()))
-            .map(Throwing.function(t3 -> new MailboxMetaData(t3.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t3.getT1(), unseenCount, t3.getT3().orElse(null), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
+            .map(Throwing.function(t3 -> new MailboxMetaData(t3.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t3.getT1(), unseenCount, t3.getT3().orElse(null), isWriteable(mailboxSession), resolvedAcl)));
     }
 
     private Mono<MailboxMetaData> metadataUnseenCount(MessageMapper messageMapper, boolean resetRecent, MailboxSession mailboxSession, MailboxACL resolvedAcl, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq) throws MailboxException {
@@ -641,7 +630,7 @@ public class StoreMessageManager implements MessageManager {
         return Mono.zip(
             messageMapper.getMailboxCountersReactive(mailbox),
             recent(resetRecent, mailboxSession))
-            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1().getCount(), t2.getT1().getUnseen(), firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl)));
+            .map(Throwing.function(t2 -> new MailboxMetaData(t2.getT2(), permanentFlags, uidValidity, uidNext, highestModSeq, t2.getT1().getCount(), t2.getT1().getUnseen(), firstUnseen, isWriteable(mailboxSession), resolvedAcl)));
     }
 
     @Override
