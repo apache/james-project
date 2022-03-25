@@ -28,8 +28,8 @@ import org.apache.james.imap.message.request.CloseRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -50,7 +50,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             MessageManager mailbox = getSelectedMailbox(session)
                 .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
             final MailboxSession mailboxSession = session.getMailboxSession();
-            if (mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).isWriteable()) {
+            if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                 mailbox.expunge(MessageRange.all(), mailboxSession);
                 session.deselect();
 
@@ -58,7 +58,6 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 //
                 // See http://www.rfc-editor.org/errata_search.php?rfc=5162
                 okComplete(request, responder);
-               
             }
 
         } catch (MailboxException e) {
