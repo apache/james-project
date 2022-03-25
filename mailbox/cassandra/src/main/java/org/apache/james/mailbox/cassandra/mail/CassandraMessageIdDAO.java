@@ -385,7 +385,7 @@ public class CassandraMessageIdDAO {
         case RANGE:
             return selectRange(mailboxId, set.getUidFrom(), set.getUidTo(), limit);
         case ONE:
-            return Flux.concat(selectOneRow(mailboxId, set.getUidFrom()));
+            return Flux.from(selectOneRow(mailboxId, set.getUidFrom()));
         }
         throw new UnsupportedOperationException();
     }
