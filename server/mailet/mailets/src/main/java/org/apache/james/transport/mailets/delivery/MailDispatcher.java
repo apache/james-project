@@ -64,7 +64,7 @@ public class MailDispatcher {
         private MailStore mailStore;
         private Boolean consume;
         private MailetContext mailetContext;
-        private String errorProcessor;
+        private String onMailetException;
 
         public Builder consume(boolean consume) {
             this.consume = consume;
@@ -81,8 +81,8 @@ public class MailDispatcher {
             return this;
         }
 
-        public Builder errorProcessor(String errorProcessor) {
-            this.errorProcessor = errorProcessor;
+        public Builder onMailetException(String onMailetException) {
+            this.onMailetException = onMailetException;
             return this;
         }
 
@@ -91,7 +91,7 @@ public class MailDispatcher {
             Preconditions.checkNotNull(mailetContext);
             return new MailDispatcher(mailStore, mailetContext,
                 Optional.ofNullable(consume).orElse(DEFAULT_CONSUME),
-                Optional.ofNullable(errorProcessor).orElse(DEFAULT_ERROR_PROCESSOR));
+                Optional.ofNullable(onMailetException).orElse(DEFAULT_ERROR_PROCESSOR));
         }
     }
 
@@ -99,14 +99,16 @@ public class MailDispatcher {
     private final MailetContext mailetContext;
     private final boolean consume;
     private final boolean ignoreError;
+    private final boolean propagate;
     private final String errorProcessor;
 
-    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, String errorProcessor) {
+    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, String onMailetException) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
-        this.errorProcessor = errorProcessor;
-        this.ignoreError = errorProcessor.equalsIgnoreCase("ignore");
+        this.errorProcessor = onMailetException;
+        this.ignoreError = onMailetException.equalsIgnoreCase("ignore");
+        this.propagate = onMailetException.equalsIgnoreCase("propagate");
     }
 
     public void dispatch(Mail mail) throws MessagingException {
@@ -160,6 +162,9 @@ public class MailDispatcher {
                     Throwing.consumer(savedHeaders -> restoreHeaders(mail.getMessage(), savedHeaders)))
                     .onErrorResume(ex -> {
                         LOGGER.error("Error while storing mail. This is a final exception.", ex);
+                        if (propagate) {
+                            return Mono.error(ex);
+                        }
                         return Mono.just(recipient);
                     }))
             .collectList()

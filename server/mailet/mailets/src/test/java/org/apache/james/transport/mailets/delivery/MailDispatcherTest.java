@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -341,7 +342,7 @@ class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
-            .errorProcessor("ignore")
+            .onMailetException("ignore")
             .build();
 
         doReturn(Mono.error(new MessagingException()))
@@ -369,7 +370,7 @@ class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
-            .errorProcessor("errorProcessor1")
+            .onMailetException("errorProcessor1")
             .build();
 
         doReturn(Mono.error(new MessagingException()))
@@ -391,6 +392,33 @@ class MailDispatcherTest {
 
         assertThat(fakeMailContext.getSentMails()).hasSize(1)
             .allSatisfy(sentMail -> assertThat(sentMail.getState()).isEqualTo("errorProcessor1"));
+    }
+
+    @Test
+    void dispatchShouldThrowWhenOnMailetExceptionIsPropagate() throws Exception {
+        MailDispatcher testee = MailDispatcher.builder()
+            .mailetContext(fakeMailContext)
+            .mailStore(mailStore)
+            .onMailetException("propagate")
+            .build();
+
+        doReturn(Mono.error(new MessagingException()))
+            .when(mailStore)
+            .storeMail(any(MailAddress.class), any(Mail.class));
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("toto")))
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .state("state")
+            .build();
+
+        assertThatThrownBy(()-> testee.dispatch(mail))
+            .isInstanceOf(Exception.class);
     }
 
     public static class AccumulatorHeaderMailStore implements MailStore {
