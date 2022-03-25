@@ -32,7 +32,6 @@ import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -40,10 +39,10 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * GETQUOTA processor
@@ -97,16 +96,10 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     private boolean hasRight(QuotaRoot quotaRoot, ImapSession session) throws MailboxException {
         // If any of the mailboxes owned by quotaRoot user can be read by the current user, then we should respond to him.
         final MailboxSession mailboxSession = session.getMailboxSession();
-        List<Mailbox> mailboxList = Flux.from(quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, mailboxSession))
-            .collect(ImmutableList.toImmutableList())
-            .subscribeOn(Schedulers.elastic())
+        return Flux.from(quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, mailboxSession))
+            .filter(Throwing.predicate(mailbox -> getMailboxManager().hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)))
+            .hasElements()
             .block();
-        for (Mailbox mailbox : mailboxList) {
-            if (getMailboxManager().hasRight(mailbox.generateAssociatedPath(), MailboxACL.Right.Read, mailboxSession)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
