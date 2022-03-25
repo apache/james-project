@@ -49,12 +49,12 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
         try {
             getSubscriptionManager().unsubscribe(mailboxSession, mailboxName);
 
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
             okComplete(request, responder);
 
         } catch (SubscriptionException e) {
             LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e);
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
 
             no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
         }

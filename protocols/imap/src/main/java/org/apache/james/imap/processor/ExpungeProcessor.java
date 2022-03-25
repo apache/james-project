@@ -88,7 +88,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                     }
 
                 }
-                unsolicitedResponses(session, responder, false);
+                unsolicitedResponses(session, responder, false).block();
                 
                 
                 // Check if QRESYNC was enabled and at least one message was expunged. If so we need to respond with an OK response that contain the HIGHESTMODSEQ

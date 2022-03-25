@@ -63,7 +63,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
                 mailboxManager.createMailbox(existingPath, mailboxsession);
             }
             okComplete(request, responder);
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
         } catch (MailboxExistsException e) {
             LOGGER.debug("Rename from {} to {} failed because the target mailbox exists", existingPath, newPath, e);
             no(request, responder, HumanReadableText.FAILURE_MAILBOX_EXISTS);

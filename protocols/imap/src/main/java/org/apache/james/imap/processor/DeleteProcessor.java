@@ -54,7 +54,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             }
             final MailboxManager mailboxManager = getMailboxManager();
             mailboxManager.deleteMailbox(mailboxPath, session.getMailboxSession());
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
             okComplete(request, responder);
         } catch (MailboxNotFoundException e) {
             LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e);

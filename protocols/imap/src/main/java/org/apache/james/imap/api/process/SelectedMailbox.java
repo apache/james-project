@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.events.EventListener;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -98,6 +99,8 @@ public interface SelectedMailbox {
      * This is beneficial as the MailboxId is immutable.
      */
     MailboxId getMailboxId();
+
+    MessageManager getMessageManager();
 
     /**
      * Is the given uid recent ?

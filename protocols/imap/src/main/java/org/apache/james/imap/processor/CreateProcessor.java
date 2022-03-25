@@ -50,7 +50,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
         try {
             final MailboxManager mailboxManager = getMailboxManager();
             mailboxManager.createMailbox(mailboxPath, session.getMailboxSession());
-            unsolicitedResponses(session, responder, false);
+            unsolicitedResponses(session, responder, false).block();
             okComplete(request, responder);
         } catch (MailboxExistsException e) {
             LOGGER.debug("Create failed for mailbox {} as it already exists", mailboxPath, e);

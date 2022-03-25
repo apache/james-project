@@ -116,21 +116,20 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
                 .isRecent(!isSelectedMailbox)
                 .build(message), mailboxSession))
             .map(MessageManager.AppendResult::getId)
-            .doOnNext(Throwing.<ComposedMessageId>consumer(messageId -> {
-                if (isSelectedMailbox) {
-                    selectedMailbox.addRecent(messageId.getUid());
-                }
-
+            .map(Throwing.<ComposedMessageId, ComposedMessageId>function(messageId -> {
+                    if (isSelectedMailbox) {
+                        selectedMailbox.addRecent(messageId.getUid());
+                    }
+                    return messageId;
+                }).sneakyThrow())
+            .flatMap(messageId -> unsolicitedResponses(session, responder, false).thenReturn(messageId))
+            .doOnNext(Throwing.consumer(messageId -> {
                 // get folder UIDVALIDITY
                 UidValidity uidValidity = mailbox
                     .getMailboxEntity()
                     .getUidValidity();
-
-                unsolicitedResponses(session, responder, false);
-
-                // in case of MULTIAPPEND support we will push more then one UID here
                 okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
-            }).sneakyThrow())
+            }))
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 // Indicates that the mailbox does not exist
                 // So TRY CREATE

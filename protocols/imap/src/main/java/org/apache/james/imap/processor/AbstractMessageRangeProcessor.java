@@ -75,7 +75,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
             } else {
                 StatusResponse.ResponseCode code = handleRanges(request, session, targetMailbox, mailboxSession);
-                unsolicitedResponses(session, responder, request.isUseUids());
+                unsolicitedResponses(session, responder, request.isUseUids()).block();
                 okComplete(request, code, responder);
             }
         } catch (MessageRangeException e) {

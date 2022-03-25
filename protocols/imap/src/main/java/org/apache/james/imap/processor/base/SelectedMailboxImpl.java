@@ -200,6 +200,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
+    public MessageManager getMessageManager() {
+        return messageManager;
+    }
+
+    @Override
     public synchronized  boolean removeRecent(MessageUid uid) {
         final boolean result = recentUids.remove(uid);
         if (result) {
