@@ -83,6 +83,7 @@ public class StoreRightManager implements RightManager {
         return block(Mono.from(myRights(mailboxId, session))).contains(right);
     }
 
+    @Override
     public boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) {
         return myRights(mailbox, session).contains(right);
     }

@@ -194,7 +194,7 @@ public class StoreMessageManager implements MessageManager {
      * Return the underlying {@link Mailbox}
      */
 
-    public Mailbox getMailboxEntity() throws MailboxException {
+    public Mailbox getMailboxEntity() {
         return mailbox;
     }
 
