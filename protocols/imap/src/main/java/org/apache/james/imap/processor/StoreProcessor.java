@@ -87,29 +87,20 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             MailboxSession mailboxSession = session.getMailboxSession();
             Flags flags = request.getFlags();
 
-            if (unchangedSince != -1) {
-                MailboxMetaData metaData = mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
-                if (!metaData.isModSeqPermanent()) {
-                    // Check if the mailbox did not support modsequences. If so return a tagged bad response.
-                    // See RFC4551 3.1.2. NOMODSEQ Response Code 
-                    taggedBad(request, responder, HumanReadableText.NO_MOD_SEQ);
+            if (unchangedSince == 0) {
+                Flags.Flag[] systemFlags = flags.getSystemFlags();
+                if (systemFlags != null && systemFlags.length != 0) {
+                    // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
+                    //
+                    // See RFC4551 3.2. STORE and UID STORE Command;
+                    //
+                    //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
+                    //       fails if the metadata item exists.  A system flag MUST always be
+                    //       considered existent, whether it was set or not.
+                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idSet));
+                    responder.respond(response);
                     return;
-                } else if (unchangedSince == 0) {
-                    Flags.Flag[] systemFlags = flags.getSystemFlags();
-                    if (systemFlags != null && systemFlags.length != 0) {
-                        // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
-                        //
-                        // See RFC4551 3.2. STORE and UID STORE Command;
-                        //
-                        //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
-                        //       fails if the metadata item exists.  A system flag MUST always be
-                        //       considered existent, whether it was set or not.
-                        final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idSet));
-                        responder.respond(response);
-                        return;
-                    }
                 }
-              
             } 
             final List<MessageUid> failed = new ArrayList<>();
             List<NullableMessageSequenceNumber> failedMsns = new ArrayList<>();

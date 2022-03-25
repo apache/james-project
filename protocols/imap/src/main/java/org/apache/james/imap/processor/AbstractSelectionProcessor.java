@@ -163,7 +163,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 //
                 // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC paramters
                 // The same is true if none are given ;)
-                if (metaData.isModSeqPermanent() && !lastKnownUidValidity.isUnknown()) {
+                if (!lastKnownUidValidity.isUnknown()) {
                     if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
 
                         //  If the provided UIDVALIDITY matches that of the selected mailbox, the
@@ -310,13 +310,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
     private void highestModSeq(Responder responder, MailboxMetaData metaData) {
-        final StatusResponse untaggedOk;
-        if (metaData.isModSeqPermanent()) {
-            final ModSeq highestModSeq = metaData.getHighestModSeq();
-            untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
-        } else {
-            untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.NO_MOD_SEQ, ResponseCode.noModSeq());
-        }
+        ModSeq highestModSeq = metaData.getHighestModSeq();
+        StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
         responder.respond(untaggedOk);        
     }
 

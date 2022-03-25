@@ -217,10 +217,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 if (messageManager == null) {
                     messageManager = getMailbox(session, selected);
                 }
-                if (metaData == null) {
-                    metaData = messageManager.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
-                }
-                boolean isModSeqPermanent = metaData.isModSeqPermanent();
+                boolean isModSeqPermanent = true;
                 while (ranges.hasNext()) {
                     addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, isModSeqPermanent, mailboxSession);
                 }
@@ -287,12 +284,10 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
         if (!enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
             if (sendHighestModSeq) {
-                if (metaData.isModSeqPermanent()) {
-                    ModSeq highestModSeq = metaData.getHighestModSeq();
+                ModSeq highestModSeq = metaData.getHighestModSeq();
 
-                    StatusResponse untaggedOk = getStatusResponseFactory().untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
-                    responder.respond(untaggedOk);        
-                }
+                StatusResponse untaggedOk = getStatusResponseFactory().untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
+                responder.respond(untaggedOk);
             }
             enabled.add(ImapConstants.SUPPORTS_CONDSTORE);
         }
