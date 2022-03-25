@@ -40,3 +40,16 @@ Allowed mode values are: none, simple, advanced, testing
 
 The purpose of each mode is introduced in `config-system.xml`
 
+== Disabling host information in protocol MDC logging context
+
+Should we add the host in the MDC logging context for incoming IMAP, SMTP, POP3? Doing so, a DNS resolution
+is attempted for each incoming connection, which can be costly. Remote IP is always added to the logging context.
+
+
+In `jvm.properties`
+----
+james.protocols.mdc.hostname=false
+----
+
+Optional. Boolean. Defaults to true.
+

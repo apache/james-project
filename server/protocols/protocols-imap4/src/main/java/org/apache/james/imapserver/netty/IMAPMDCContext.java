@@ -25,17 +25,21 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.util.MDCBuilder;
 
 import io.netty.channel.ChannelHandlerContext;
 
 public class IMAPMDCContext {
-
     public static MDCBuilder boundMDC(ChannelHandlerContext ctx) {
-        return MDCBuilder.create()
+        MDCBuilder mdc = MDCBuilder.create()
             .addToContext(MDCBuilder.PROTOCOL, "IMAP")
-            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addToContext(MDCBuilder.HOST, retrieveHost(ctx));
+            .addToContext(MDCBuilder.IP, retrieveIp(ctx));
+
+        if (ProtocolMDCContextFactory.ADD_HOST_TO_MDC) {
+            return mdc.addToContext(MDCBuilder.HOST, retrieveHost(ctx));
+        }
+        return mdc;
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {
