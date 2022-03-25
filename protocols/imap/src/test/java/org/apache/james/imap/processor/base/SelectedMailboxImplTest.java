@@ -115,8 +115,8 @@ class SelectedMailboxImplTest {
 
         when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class)))
             .thenReturn(messageManager);
-        when(messageManager.getApplicableFlags(any(MailboxSession.class)))
-            .thenReturn(new Flags());
+        when(messageManager.getApplicableFlagsReactive(any(MailboxSession.class)))
+            .thenReturn(Mono.just(new Flags()));
         when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
             .thenReturn(Flux.just(MessageUid.of(1), MessageUid.of(3))
                 .delayElements(Duration.ofSeconds(1)));
@@ -144,6 +144,7 @@ class SelectedMailboxImplTest {
             eventBus,
             imapSession,
             messageManager);
+        selectedMailbox.finishInit().block();
 
         assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
@@ -155,7 +156,7 @@ class SelectedMailboxImplTest {
             .when(eventBus)
             .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
 
-        new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
+        new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager).finishInit().block();
 
         assertThat(successCount.get()).isEqualTo(1);
     }
@@ -168,6 +169,7 @@ class SelectedMailboxImplTest {
             .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
 
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
+        selectedMailbox.finishInit().block();
 
         assertThat(selectedMailbox.getApplicableFlags().getUserFlags()).containsOnly(CUSTOM_FLAG);
     }
@@ -183,7 +185,7 @@ class SelectedMailboxImplTest {
             mailboxManager,
             eventBus,
             imapSession,
-            messageManager);
+            messageManager).finishInit().block();
 
         assertThat(successCount.get())
             .as("Get the incremented value in case of successful event processing.")

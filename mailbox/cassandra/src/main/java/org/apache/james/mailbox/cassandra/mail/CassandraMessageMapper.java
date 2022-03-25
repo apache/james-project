@@ -272,10 +272,15 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) {
+        return findRecentMessageUidsInMailboxReactive(mailbox)
+            .block();
+    }
+
+    @Override
+    public Mono<List<MessageUid>> findRecentMessageUidsInMailboxReactive(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
-            .collectList()
-            .block();
+            .collectList();
     }
 
     @Override
@@ -284,6 +289,14 @@ public class CassandraMessageMapper implements MessageMapper {
         return firstUnseenDAO.retrieveFirstUnread(mailboxId)
                 .blockOptional()
                 .orElse(null);
+    }
+
+    @Override
+    public Mono<Optional<MessageUid>> findFirstUnseenMessageUidReactive(Mailbox mailbox) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        return firstUnseenDAO.retrieveFirstUnread(mailboxId)
+            .map(Optional::of)
+            .switchIfEmpty(Mono.just(Optional.empty()));
     }
 
     @Override
@@ -342,6 +355,16 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.highestModSeq(mailbox);
+    }
+
+    @Override
+    public Mono<Optional<MessageUid>> getLastUidReactive(Mailbox mailbox) {
+        return uidProvider.lastUidReactive(mailbox);
+    }
+
+    @Override
+    public Mono<ModSeq> getHighestModSeqReactive(Mailbox mailbox) {
+        return modSeqProvider.highestModSeqReactive(mailbox);
     }
 
     @Override
@@ -501,6 +524,13 @@ public class CassandraMessageMapper implements MessageMapper {
                 .defaultIfEmpty(new Flags())
                 .block())
             .build();
+    }
+
+    @Override
+    public Mono<Flags> getApplicableFlagReactive(Mailbox mailbox) {
+        return applicableFlagDAO.retrieveApplicableFlag((CassandraId) mailbox.getMailboxId())
+            .defaultIfEmpty(new Flags())
+            .map(flags -> ApplicableFlagBuilder.builder().add(flags).build());
     }
 
     private MessageMetaData setInMailbox(Mailbox mailbox, MailboxMessage message) throws MailboxException {

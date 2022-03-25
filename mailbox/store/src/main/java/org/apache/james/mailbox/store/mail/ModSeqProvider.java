@@ -54,6 +54,10 @@ public interface ModSeqProvider {
      */
     ModSeq highestModSeq(Mailbox mailbox) throws MailboxException;
 
+    default Mono<ModSeq> highestModSeqReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> highestModSeq(mailbox));
+    }
+
     /**
      * Return the highest mod-sequence which were used for the {@link Mailbox}
      */

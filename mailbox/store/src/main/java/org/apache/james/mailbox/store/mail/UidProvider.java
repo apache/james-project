@@ -49,6 +49,10 @@ public interface UidProvider {
      */
     Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException;
 
+    default Mono<Optional<MessageUid>> lastUidReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> lastUid(mailbox));
+    }
+
     MessageUid nextUid(MailboxId mailboxId) throws MailboxException;
 
     default Mono<MessageUid> nextUidReactive(MailboxId mailboxId) {
