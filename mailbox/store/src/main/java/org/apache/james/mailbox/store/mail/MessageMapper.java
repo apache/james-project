@@ -158,6 +158,10 @@ public interface MessageMapper extends Mapper {
     Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException;
 
+    default Mono<List<UpdatedFlags>> updateFlagsReactive(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) {
+        return Mono.fromCallable(() -> ImmutableList.copyOf(updateFlags(mailbox, flagsUpdateCalculator, set)));
+    }
+
     default Optional<UpdatedFlags> updateFlags(Mailbox mailbox, MessageUid uid, FlagsUpdateCalculator flagsUpdateCalculator) throws MailboxException {
         return Iterators.toStream(updateFlags(mailbox, flagsUpdateCalculator, MessageRange.one(uid)))
             .findFirst();
@@ -174,6 +178,10 @@ public interface MessageMapper extends Mapper {
             result.addAll(updateFlags(mailbox, calculator, range));
         }
         return result.build();
+    }
+
+    default Mono<List<UpdatedFlags>> resetRecentReactive(Mailbox mailbox) {
+        return Mono.fromCallable(() -> resetRecent(mailbox));
     }
 
     
