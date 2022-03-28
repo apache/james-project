@@ -25,8 +25,6 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.TEN_SECONDS;
 import static org.apache.james.lifecycle.api.Disposable.LeakAware;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.awaitility.Awaitility;
@@ -82,12 +80,7 @@ class LeakAwareTest {
 
     // using reflect to change LeakAware.LEVEL value
     private static void forceChangeLevel(LeakAware.Level level) throws NoSuchFieldException, IllegalAccessException {
-        final Field field = LeakAware.class.getDeclaredField("LEVEL");
-        field.setAccessible(true);
-        final Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        field.set(null, level);
+        LeakAwareFixture.forceChangeLevel(level);
     }
 
     @Test

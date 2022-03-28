@@ -17,32 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.memory;
+package org.apache.james.lifecycle.api;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
-import org.apache.james.lifecycle.api.Disposable;
-import org.apache.james.lifecycle.api.LeakAwareFixture;
-import org.apache.james.mailrepository.MailRepositoryContract;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+public class LeakAwareFixture {
 
-class MemoryMailRepositoryTest implements MailRepositoryContract {
-
-    private MemoryMailRepository memoryMailRepository;
-
-    @BeforeAll
-    static void beforeAll() throws NoSuchFieldException, IllegalAccessException {
-        LeakAwareFixture.forceChangeLevel(Disposable.LeakAware.Level.NONE);
-    }
-
-    @BeforeEach
-    void setup() {
-        memoryMailRepository = new MemoryMailRepository();
-    }
-
-    @Override
-    public MailRepository retrieveRepository() {
-        return memoryMailRepository;
+    // using reflect to change LeakAware.LEVEL value
+    public static void forceChangeLevel(Disposable.LeakAware.Level level) throws NoSuchFieldException, IllegalAccessException {
+        final Field field = Disposable.LeakAware.class.getDeclaredField("LEVEL");
+        field.setAccessible(true);
+        final Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+        field.set(null, level);
     }
 }
