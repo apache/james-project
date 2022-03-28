@@ -385,13 +385,17 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     
     @Override
-    public synchronized void event(Event event) {
+    public void event(Event event) {
+        synchronizedEvent(event);
+        Optional.ofNullable(idleEventListener.get())
+            .ifPresent(Throwing.<EventListener>consumer(listener -> listener.event(event)).sneakyThrow());
+    }
+
+    private synchronized void synchronizedEvent(Event event) {
         if (event instanceof MailboxEvent) {
             MailboxEvent mailboxEvent = (MailboxEvent) event;
             mailboxEvent(mailboxEvent);
         }
-        Optional.ofNullable(idleEventListener.get())
-            .ifPresent(Throwing.<EventListener>consumer(listener -> listener.event(event)).sneakyThrow());
     }
 
     private void mailboxEvent(MailboxEvent mailboxEvent) {
