@@ -26,16 +26,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;
 
 public class MemoryMailRepository implements MailRepository {
 
-    private final ConcurrentHashMap<MailKey, Mail> mails;
+    private static final ConcurrentHashMap<MailKey, Mail> mails = new ConcurrentHashMap<>();
 
     public MemoryMailRepository() {
-        mails = new ConcurrentHashMap<>();
+        mails.forEach((key, value) -> LifecycleUtil.dispose(value));
+        mails.clear();
     }
 
     @Override
