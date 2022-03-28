@@ -50,6 +50,10 @@ public class UidMsnConverter {
     }
 
     public synchronized NullableMessageSequenceNumber getMsn(MessageUid uid) {
+        return getMsnUnsynchronized(uid);
+    }
+
+    private NullableMessageSequenceNumber getMsnUnsynchronized(MessageUid uid) {
         int position = Collections.binarySearch(uids, uid);
         if (position < 0) {
             return NullableMessageSequenceNumber.noMessage();
@@ -81,6 +85,12 @@ public class UidMsnConverter {
 
     public synchronized void remove(MessageUid uid) {
         uids.remove(uid);
+    }
+
+    public synchronized NullableMessageSequenceNumber getAndRemove(MessageUid uid) {
+        NullableMessageSequenceNumber result = getMsnUnsynchronized(uid);
+        uids.remove(uid);
+        return result;
     }
 
     public synchronized boolean isEmpty() {
