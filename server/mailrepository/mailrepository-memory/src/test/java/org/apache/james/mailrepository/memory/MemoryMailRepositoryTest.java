@@ -19,22 +19,13 @@
 
 package org.apache.james.mailrepository.memory;
 
-
-import org.apache.james.lifecycle.api.Disposable;
-import org.apache.james.lifecycle.api.LeakAwareFixture;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 class MemoryMailRepositoryTest implements MailRepositoryContract {
 
     private MemoryMailRepository memoryMailRepository;
-
-    @BeforeAll
-    static void beforeAll() throws NoSuchFieldException, IllegalAccessException {
-        LeakAwareFixture.forceChangeLevel(Disposable.LeakAware.Level.NONE);
-    }
 
     @BeforeEach
     void setup() {
