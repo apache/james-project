@@ -179,12 +179,12 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public synchronized Optional<MessageUid> getFirstUid() {
+    public Optional<MessageUid> getFirstUid() {
         return uidMsnConverter.getFirstUid();
     }
 
     @Override
-    public synchronized Optional<MessageUid> getLastUid() {
+    public Optional<MessageUid> getLastUid() {
         return uidMsnConverter.getLastUid();
     }
 
@@ -272,10 +272,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public synchronized NullableMessageSequenceNumber remove(MessageUid uid) {
-        NullableMessageSequenceNumber result = msn(uid);
-        uidMsnConverter.remove(uid);
-        return result;
+    public NullableMessageSequenceNumber remove(MessageUid uid) {
+        return uidMsnConverter.getAndRemove(uid);
     }
 
     private boolean interestingFlags(UpdatedFlags updated) {
@@ -487,12 +485,12 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public synchronized NullableMessageSequenceNumber msn(MessageUid uid) {
+    public NullableMessageSequenceNumber msn(MessageUid uid) {
         return uidMsnConverter.getMsn(uid);
     }
 
     @Override
-    public synchronized Optional<MessageUid> uid(int msn) {
+    public Optional<MessageUid> uid(int msn) {
         if (msn == NO_SUCH_MESSAGE) {
             return Optional.empty();
         }
@@ -502,7 +500,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     
     @Override
-    public synchronized long existsCount() {
+    public long existsCount() {
         return uidMsnConverter.getNumMessage();
     }
 }
