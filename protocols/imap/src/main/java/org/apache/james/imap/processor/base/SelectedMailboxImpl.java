@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.StampedLock;
 
@@ -134,10 +135,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final StampedLock applicableFlagsLock = new StampedLock();
     private final AtomicReference<EventListener> idleEventListener = new AtomicReference<>();
-    private boolean recentUidRemoved = false;
-    private boolean isDeletedByOtherSession = false;
-    private boolean sizeChanged = false;
-    private boolean silentFlagChanges = false;
+    private final AtomicBoolean recentUidRemoved = new AtomicBoolean(false);
+    private final AtomicBoolean isDeletedByOtherSession = new AtomicBoolean(false);
+    private final AtomicBoolean sizeChanged = new AtomicBoolean(false);
+    private final AtomicBoolean silentFlagChanges = new AtomicBoolean(false);
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) {
@@ -208,7 +209,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     public synchronized  boolean removeRecent(MessageUid uid) {
         final boolean result = recentUids.remove(uid);
         if (result) {
-            recentUidRemoved = true;
+            recentUidRemoved.set(true);
         }
         return result;
     }
@@ -252,20 +253,20 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public synchronized boolean isRecentUidRemoved() {
-        return recentUidRemoved;
+    public boolean isRecentUidRemoved() {
+        return recentUidRemoved.get();
     }
 
     @Override
-    public synchronized void resetRecentUidRemoved() {
-        recentUidRemoved = false;
+    public void resetRecentUidRemoved() {
+        recentUidRemoved.set(false);
     }
 
     @Override
     public synchronized void resetEvents() {
-        sizeChanged = false;
+        sizeChanged.set(false);
         flagUpdateUids.clear();
-        isDeletedByOtherSession = false;
+        isDeletedByOtherSession.set(false);
         long stamp = applicableFlagsLock.writeLock();
         applicableFlags = applicableFlags.ackUpdates();
         applicableFlagsLock.unlockWrite(stamp);
@@ -306,8 +307,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
      * @return true if any flag changes from current session will be ignored,
      *         false otherwise
      */
-    public final synchronized boolean isSilentFlagChanges() {
-        return silentFlagChanges;
+    public final boolean isSilentFlagChanges() {
+        return silentFlagChanges.get();
     }
 
     /**
@@ -317,8 +318,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
      *            true if any flag changes from current session should be
      *            ignored, false otherwise
      */
-    public final synchronized void setSilentFlagChanges(boolean silentFlagChanges) {
-        this.silentFlagChanges = silentFlagChanges;
+    public final void setSilentFlagChanges(boolean silentFlagChanges) {
+        this.silentFlagChanges.set(silentFlagChanges);
     }
 
     /**
@@ -328,8 +329,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
      */
 
     @Override
-    public final synchronized boolean isSizeChanged() {
-        return sizeChanged;
+    public final boolean isSizeChanged() {
+        return sizeChanged.get();
     }
 
     /**
@@ -340,8 +341,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
      */
 
     @Override
-    public final synchronized boolean isDeletedByOtherSession() {
-        return isDeletedByOtherSession;
+    public final boolean isDeletedByOtherSession() {
+        return isDeletedByOtherSession.get();
     }
 
     /**
@@ -412,7 +413,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     private Void handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
         if (mailboxDeletion.getSessionId() != sessionId) {
-            isDeletedByOtherSession = true;
+            isDeletedByOtherSession.set(true);
         }
         return VOID;
     }
@@ -424,7 +425,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     private Void handleFlagsUpdates(FlagsUpdated updated) {
         List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
-        if (sessionId != updated.getSessionId() || !silentFlagChanges) {
+        if (sessionId != updated.getSessionId() || !silentFlagChanges.get()) {
 
             for (UpdatedFlags u : uFlags) {
                 if (interestingFlags(u)) {
@@ -460,7 +461,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     private Void handleAddition(Added added) {
-        sizeChanged = true;
+        sizeChanged.set(true);
         SelectedMailbox sm = session.getSelected();
         for (MessageUid uid : added.getUids()) {
             uidMsnConverter.addUid(uid);
