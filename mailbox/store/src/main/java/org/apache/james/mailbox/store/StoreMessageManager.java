@@ -699,6 +699,33 @@ public class StoreMessageManager implements MessageManager {
             UpdatedFlags::getNewFlags));
     }
 
+    @Override
+    public Publisher<Map<MessageUid, Flags>> setFlagsReactive(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) {
+        try {
+            if (!isWriteable(mailboxSession)) {
+                return Mono.error(new ReadOnlyException(getMailboxPath()));
+            }
+        } catch (MailboxException e) {
+            return Mono.error(e);
+        }
+
+        trimFlags(flags, mailboxSession);
+
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
+
+        return messageMapper.executeReactive(messageMapper.updateFlagsReactive(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set))
+            .flatMap(updatedFlags -> eventBus.dispatch(EventFactory.flagsUpdated()
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(getMailboxEntity())
+                    .updatedFlags(updatedFlags)
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .thenReturn(updatedFlags.stream().collect(ImmutableMap.toImmutableMap(
+                    UpdatedFlags::getUid,
+                    UpdatedFlags::getNewFlags))));
+    }
+
     /**
      * Copy the {@link MessageRange} to the {@link StoreMessageManager}
      */
@@ -763,32 +790,34 @@ public class StoreMessageManager implements MessageManager {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
         if (reset) {
-            return Mono.fromCallable(() -> resetRecents(messageMapper, mailboxSession)).subscribeOn(Schedulers.elastic());
+            return resetRecents(messageMapper, mailboxSession);
         }
         return messageMapper.findRecentMessageUidsInMailboxReactive(getMailboxEntity());
     }
 
-    private List<MessageUid> resetRecents(MessageMapper messageMapper, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<List<MessageUid>> resetRecents(MessageMapper messageMapper, MailboxSession mailboxSession) throws MailboxException {
         if (!isWriteable(mailboxSession)) {
             throw new ReadOnlyException(getMailboxPath());
         }
 
-        List<UpdatedFlags> updatedFlags = messageMapper.resetRecent(getMailboxEntity());
+        return messageMapper.resetRecentReactive(getMailboxEntity())
+            .flatMap(updatedFlags -> publishResentFlagsUpdateIfNeeded(mailboxSession, updatedFlags)
+                .thenReturn(updatedFlags.stream()
+                    .map(UpdatedFlags::getUid)
+                    .collect(ImmutableList.toImmutableList())));
+    }
 
+    private Mono<Void> publishResentFlagsUpdateIfNeeded(MailboxSession mailboxSession, List<UpdatedFlags> updatedFlags) {
         if (!updatedFlags.isEmpty()) {
-            eventBus.dispatch(EventFactory.flagsUpdated()
+            return eventBus.dispatch(EventFactory.flagsUpdated()
                     .randomEventId()
                     .mailboxSession(mailboxSession)
                     .mailbox(getMailboxEntity())
                     .updatedFlags(updatedFlags)
                     .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                .block();
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()));
         }
-
-        return updatedFlags.stream()
-            .map(UpdatedFlags::getUid)
-            .collect(ImmutableList.toImmutableList());
+        return Mono.empty();
     }
 
     private void runPredeletionHooks(List<MessageUid> uids, MailboxSession session) {

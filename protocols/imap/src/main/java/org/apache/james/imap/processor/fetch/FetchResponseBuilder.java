@@ -53,7 +53,6 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public final class FetchResponseBuilder {
     private final EnvelopeBuilder envelopeBuilder;
@@ -185,8 +184,8 @@ public final class FetchResponseBuilder {
         }
     }
 
-    private Mono<Void> addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) throws MailboxException {
-        return ensureFlagResponse(fetch, mailbox, selected, resultUid, mailboxSession, flags)
+    private Mono<Void> addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
+        return ensureFlagResponse(fetch, mailbox, resultUid, mailboxSession, flags)
             .doOnNext(ensureFlagsResponse -> {
                 if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
                     if (selected.isRecent(resultUid)) {
@@ -198,10 +197,9 @@ public final class FetchResponseBuilder {
             .then();
     }
 
-    private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
+    private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
         if (fetch.isSetSeen() && !flags.contains(Flags.Flag.SEEN)) {
             return Mono.from(mailbox.setFlagsReactive(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession))
-                .subscribeOn(Schedulers.elastic())
                 .then(Mono.fromCallable(() -> {
                     flags.add(Flags.Flag.SEEN);
                     return true;
@@ -210,7 +208,7 @@ public final class FetchResponseBuilder {
         return Mono.just(false);
     }
 
-    public Mono<FetchResponse> build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
+    public Mono<FetchResponse> build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MailboxException {
         final MessageUid resultUid = result.getComposedMessageId().getUid();
         return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);

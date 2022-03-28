@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -412,25 +413,37 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-
-        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited())
-            .map(CassandraMessageMetadata::getComposedMessageId);
-
-        return updateFlags(flagUpdateCalculator, mailboxId, toBeUpdated).iterator();
+        return updateFlagsReactive(mailbox, flagUpdateCalculator, range).block().iterator();
     }
 
-    private List<UpdatedFlags> updateFlags(FlagsUpdateCalculator flagUpdateCalculator, CassandraId mailboxId, Flux<ComposedMessageIdWithMetaData> toBeUpdated) {
-        FlagsUpdateStageResult firstResult = runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator).block();
-        FlagsUpdateStageResult finalResult = handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult);
-        if (finalResult.containsFailedResults()) {
-            LOGGER.error("Can not update following UIDs {} for mailbox {}", finalResult.getFailed(), mailboxId.asUuid());
-        }
-        return finalResult.getSucceeded();
+    @Override
+    public Mono<List<UpdatedFlags>> updateFlagsReactive(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, set, Limit.unlimited())
+            .map(CassandraMessageMetadata::getComposedMessageId);
+
+        return updateFlags(flagsUpdateCalculator, mailboxId, toBeUpdated);
+    }
+
+    private Mono<List<UpdatedFlags>> updateFlags(FlagsUpdateCalculator flagUpdateCalculator, CassandraId mailboxId, Flux<ComposedMessageIdWithMetaData> toBeUpdated) {
+        return runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator)
+            .flatMap(firstResult ->
+                handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult)
+                    .doOnNext(finalResult -> {
+                        if (finalResult.containsFailedResults()) {
+                            LOGGER.error("Can not update following UIDs {} for mailbox {}", finalResult.getFailed(), mailboxId.asUuid());
+                        }
+                    }).map(FlagsUpdateStageResult::getSucceeded));
     }
 
     @Override
     public List<UpdatedFlags> resetRecent(Mailbox mailbox) {
+        return resetRecentReactive(mailbox).block();
+    }
+
+    @Override
+    public Mono<List<UpdatedFlags>> resetRecentReactive(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         Flux<ComposedMessageIdWithMetaData> toBeUpdated = mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
@@ -444,15 +457,14 @@ public class CassandraMessageMapper implements MessageMapper {
         return updateFlags(calculator, mailboxId, toBeUpdated);
     }
 
-    private FlagsUpdateStageResult handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
-        FlagsUpdateStageResult globalResult = firstResult;
-        int retryCount = 0;
-        while (retryCount < cassandraConfiguration.getFlagsUpdateMessageMaxRetry() && globalResult.containsFailedResults()) {
-            retryCount++;
-            FlagsUpdateStageResult stageResult = retryUpdatesStage(mailboxId, flagUpdateCalculator, globalResult.getFailed()).block();
-            globalResult = globalResult.keepSucceded().merge(stageResult);
-        }
-        return globalResult;
+    private Mono<FlagsUpdateStageResult> handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
+        AtomicReference<FlagsUpdateStageResult> globalResult = new AtomicReference<>(firstResult);
+
+        return Flux.range(0, cassandraConfiguration.getFlagsUpdateMessageMaxRetry())
+            .takeUntil(i -> globalResult.get().containsFailedResults())
+            .concatMap(i -> retryUpdatesStage(mailboxId, flagUpdateCalculator, globalResult.get().getFailed())
+                .doOnNext(next -> globalResult.set(globalResult.get().keepSucceded().merge(next))))
+            .then(Mono.fromCallable(globalResult::get));
     }
 
     private Mono<FlagsUpdateStageResult> retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<ComposedMessageId> failed) {
