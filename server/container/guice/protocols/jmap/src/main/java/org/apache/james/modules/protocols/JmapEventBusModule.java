@@ -26,8 +26,6 @@ import org.apache.james.jmap.pushsubscription.PushListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.multibindings.ProvidesIntoSet;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 public class JmapEventBusModule extends AbstractModule {
