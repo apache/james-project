@@ -24,10 +24,12 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryProbeImpl implements GuiceProbe {
@@ -68,5 +70,11 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
 
     public MailRepositoryStore getMailRepositoryStore() {
         return repositoryStore;
+    }
+
+    public void removeAllMails() {
+        repositoryStore.getUrls()
+            .map(Throwing.function(repositoryStore::select))
+            .forEach(Throwing.consumer(MailRepository::removeAll));
     }
 }

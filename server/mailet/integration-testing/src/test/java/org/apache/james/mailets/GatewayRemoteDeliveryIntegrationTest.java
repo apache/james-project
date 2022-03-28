@@ -43,6 +43,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
@@ -78,6 +79,7 @@ class GatewayRemoteDeliveryIntegrationTest {
     void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
+            jamesServer.getProbe(MailRepositoryProbeImpl.class).removeAllMails();
             jamesServer.shutdown();
         }
     }

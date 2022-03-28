@@ -33,11 +33,10 @@ import org.apache.mailet.Mail;
 
 public class MemoryMailRepository implements MailRepository {
 
-    private static final ConcurrentHashMap<MailKey, Mail> mails = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<MailKey, Mail> mails;
 
     public MemoryMailRepository() {
-        mails.forEach((key, value) -> LifecycleUtil.dispose(value));
-        mails.clear();
+        mails = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -71,6 +70,8 @@ public class MemoryMailRepository implements MailRepository {
 
     @Override
     public void remove(MailKey key) {
+        Optional.ofNullable(mails.get(key))
+            .ifPresent(LifecycleUtil::dispose);
         mails.remove(key);
     }
 
@@ -81,6 +82,7 @@ public class MemoryMailRepository implements MailRepository {
 
     @Override
     public void removeAll() {
+        mails.forEach((key, value) -> LifecycleUtil.dispose(value));
         mails.clear();
     }
 
