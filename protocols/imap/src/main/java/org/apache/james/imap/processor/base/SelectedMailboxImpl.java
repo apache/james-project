@@ -377,7 +377,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     
     @Override
-    public synchronized void resetNewApplicableFlags() {
+    public void resetNewApplicableFlags() {
         long stamp = applicableFlagsLock.writeLock();
         applicableFlags = applicableFlags.ackUpdates();
         applicableFlagsLock.unlockWrite(stamp);
