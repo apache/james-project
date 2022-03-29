@@ -78,7 +78,7 @@ class MailboxChangeListenerTest {
     val eventBus = new EventBus {
       override def register(listener: EventListener.ReactiveEventListener, key: RegistrationKey): Publisher[Registration] = Mono.empty()
 
-      override def register(listener: EventListener.ReactiveEventListener, group: Group): Registration = () => {}
+      override def register(listener: EventListener.ReactiveEventListener, group: Group): Registration = () => Mono.empty()
 
       override def dispatch(event: Event, key: util.Set[RegistrationKey]): Mono[Void] = Mono.empty()
 

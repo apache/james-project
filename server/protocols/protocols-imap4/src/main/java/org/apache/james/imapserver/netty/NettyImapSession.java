@@ -48,6 +48,7 @@ import io.netty.handler.codec.compression.JZlibEncoder;
 import io.netty.handler.codec.compression.ZlibDecoder;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
+import reactor.core.publisher.Mono;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
     private static final int BUFFER_SIZE = 2048;
@@ -100,9 +101,9 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public void logout() {
-        closeMailbox();
-        state = ImapSessionState.LOGOUT;
+    public Mono<Void> logout() {
+        return closeMailbox()
+            .then(Mono.fromRunnable(() ->state = ImapSessionState.LOGOUT));
     }
 
     @Override
@@ -111,16 +112,16 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public void deselect() {
+    public Mono<Void> deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
-        closeMailbox();
+        return closeMailbox();
     }
 
     @Override
-    public void selected(SelectedMailbox mailbox) {
+    public Mono<Void> selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
-        closeMailbox();
-        this.selectedMailbox = mailbox;
+        return closeMailbox()
+            .then(Mono.fromRunnable(() -> selectedMailbox = mailbox));
     }
 
     @Override
@@ -143,11 +144,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return this.state;
     }
 
-    private void closeMailbox() {
+    private Mono<Void> closeMailbox() {
         if (selectedMailbox != null) {
-            selectedMailbox.deselect();
-            selectedMailbox = null;
+            return selectedMailbox.deselect()
+                .then(Mono.fromRunnable(() -> selectedMailbox = null));
         }
+        return Mono.empty();
     }
 
     @Override

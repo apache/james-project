@@ -24,11 +24,14 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link IdleStateHandler} which will call {@link ImapSession#logout()} if the
@@ -59,14 +62,14 @@ public class ImapIdleStateHandler extends IdleStateHandler implements NettyConst
                 address.getAddress().getHostAddress());
 
             // logout the client
-            session.logout();
-
-            // close the channel
-            ctx.channel().close();
-
+            session.logout()
+                // close the channel
+                .then(Mono.fromRunnable(() -> ctx.channel().close()))
+                .then(Mono.fromRunnable(Throwing.runnable(() -> super.channelIdle(ctx, e))))
+                .subscribe();
+        } else {
+            super.channelIdle(ctx, e);
         }
-        
-        super.channelIdle(ctx, e);
     
     }
 

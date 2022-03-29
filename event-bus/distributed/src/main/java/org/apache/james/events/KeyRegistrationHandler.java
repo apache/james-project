@@ -143,12 +143,11 @@ class KeyRegistrationHandler {
         return registerIfNeeded(key, registration)
             .thenReturn(new KeyRegistration(() -> {
                 if (registration.unregister().lastListenerRemoved()) {
-                    registrationBinder.unbind(key)
+                    return registrationBinder.unbind(key)
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
-                        .subscribeOn(Schedulers.elastic())
-                        .block();
+                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()));
                 }
+                return Mono.empty();
             }));
     }
 

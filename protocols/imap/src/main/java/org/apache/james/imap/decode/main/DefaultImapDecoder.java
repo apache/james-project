@@ -88,7 +88,7 @@ public class DefaultImapDecoder implements ImapDecoder {
 
         if (count > maxInvalidCommands || session.getState() == ImapSessionState.NON_AUTHENTICATED) {
             ImapMessage message = responseFactory.bye(HumanReadableText.BYE_UNKNOWN_COMMAND);
-            session.logout();
+            session.logout().block();
             return message;
         }
         session.setAttribute(INVALID_COMMAND_COUNT, count);

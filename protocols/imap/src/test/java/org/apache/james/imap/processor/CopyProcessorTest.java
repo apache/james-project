@@ -93,7 +93,7 @@ class CopyProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
-        imapSession.selected(selectedMailbox);
+        imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
@@ -126,7 +126,7 @@ class CopyProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
-        imapSession.selected(selectedMailbox);
+        imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
@@ -158,7 +158,7 @@ class CopyProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
-        imapSession.selected(selectedMailbox);
+        imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(false));
 
         StatusResponse noResponse = mock(StatusResponse.class);
@@ -182,7 +182,7 @@ class CopyProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
-        imapSession.selected(selectedMailbox);
+        imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.error(new MailboxException()));
 
         StatusResponse noResponse = mock(StatusResponse.class);

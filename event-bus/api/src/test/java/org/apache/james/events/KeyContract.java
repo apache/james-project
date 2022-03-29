@@ -236,7 +236,7 @@ public interface KeyContract extends EventBusContract {
         default void unregisterShouldRemoveDoubleRegisteredListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
-            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
+            Mono.from(Mono.from(eventBus().register(listener, KEY_1)).block().unregister()).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -260,8 +260,8 @@ public interface KeyContract extends EventBusContract {
         default void callingAllUnregisterMethodShouldUnregisterTheListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
-            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
-            registration.unregister();
+            Mono.from(Mono.from(eventBus().register(listener, KEY_1)).block().unregister()).block();
+            Mono.from(registration.unregister()).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -273,7 +273,7 @@ public interface KeyContract extends EventBusContract {
         default void unregisterShouldHaveNotNotifyWhenCalledOnDifferentKeys() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
-            Mono.from(eventBus().register(listener, KEY_2)).block().unregister();
+            Mono.from(Mono.from(eventBus().register(listener, KEY_2)).block().unregister()).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -285,9 +285,9 @@ public interface KeyContract extends EventBusContract {
             EventListener listener = EventBusTestFixture.newListener();
 
             Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
-            registration.unregister();
+            Mono.from(registration.unregister()).block();
 
-            assertThatCode(registration::unregister)
+            assertThatCode(() -> Mono.from(registration.unregister()).block())
                 .doesNotThrowAnyException();
         }
 
@@ -315,7 +315,7 @@ public interface KeyContract extends EventBusContract {
         @Test
         default void dispatchShouldNotNotifyUnregisteredListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
+            Mono.from(Mono.from(eventBus().register(listener, KEY_1)).block().unregister()).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -398,7 +398,7 @@ public interface KeyContract extends EventBusContract {
         default void unregisteredDistantListenersShouldNotBeNotified() throws Exception {
             EventListener eventListener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(eventListener, KEY_1)).block().unregister();
+            Mono.from(Mono.from(eventBus().register(eventListener, KEY_1)).block().unregister()).block();
 
             eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 

@@ -31,6 +31,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when
  * a client first establishes a connection to the Imap server, and continues
@@ -92,7 +94,7 @@ public interface ImapSession extends CommandDetectionSession {
     /**
      * Logs out the session. Marks the connection for closure;
      */
-    void logout();
+    Mono<Void> logout();
 
     /**
      * Gets the current client state.
@@ -113,14 +115,14 @@ public interface ImapSession extends CommandDetectionSession {
      * @param mailbox
      *            The selected mailbox.
      */
-    void selected(SelectedMailbox mailbox);
+    Mono<Void> selected(SelectedMailbox mailbox);
 
     /**
      * Moves the session out of {@link ImapSessionState#SELECTED} state and back
      * into {@link ImapSessionState#AUTHENTICATED} state. The selected mailbox
      * is cleared.
      */
-    void deselect();
+    Mono<Void> deselect();
 
     /**
      * Provides the selected mailbox for this session, or <code>null</code> if

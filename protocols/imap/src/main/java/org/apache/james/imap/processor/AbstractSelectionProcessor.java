@@ -392,10 +392,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             }
             SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox);
             return selectedMailbox.finishInit()
-                .then(Mono.fromCallable(() -> {
-                    session.selected(selectedMailbox);
-                    return selectedMailbox;
-                }));
+                .then(session.selected(selectedMailbox))
+                .thenReturn(selectedMailbox);
         } else {
             return Mono.just(currentMailbox);
         }

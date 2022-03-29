@@ -113,7 +113,7 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
     private void abandon(OutputStream out, ImapSession session) {
         if (session != null) {
             try {
-                session.logout();
+                session.logout().block();
             } catch (Throwable t) {
                 LOGGER.warn("Session logout failed. Resources may not be correctly recycled.");
             }

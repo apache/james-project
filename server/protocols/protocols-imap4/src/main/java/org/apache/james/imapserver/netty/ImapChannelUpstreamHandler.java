@@ -52,6 +52,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.TooLongFrameException;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link ChannelInboundHandlerAdapter} which handles IMAP
@@ -188,12 +189,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             // remove the stored attribute for the channel to free up resources
             // See JAMES-1195
             ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
-            if (imapSession != null) {
-                imapSession.logout();
-            }
-            imapConnectionsMetric.decrement();
 
-            super.channelInactive(ctx);
+            Optional.ofNullable(imapSession)
+                .map(ImapSession::logout)
+                .orElse(Mono.empty())
+                .doFinally(signal -> imapConnectionsMetric.decrement())
+                .doFinally(Throwing.consumer(signal -> super.channelInactive(ctx)))
+                .subscribe();
         }
     }
 
@@ -225,16 +227,19 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
                 // logout on error not sure if that is the best way to handle it
                 final ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                if (imapSession != null) {
-                    imapSession.logout();
-                }
 
-                // Make sure we close the channel after all the buffers were flushed out
-                Channel channel = ctx.channel();
-                if (channel.isActive()) {
-                    channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                }
-
+                Optional.ofNullable(imapSession)
+                    .map(ImapSession::logout)
+                    .orElse(Mono.empty())
+                    .doFinally(signal -> {
+                        // Make sure we close the channel after all the buffers were flushed out
+                        Channel channel = ctx.channel();
+                        if (channel.isActive()) {
+                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+                        }
+                    })
+                    .doFinally(Throwing.consumer(signal -> super.channelInactive(ctx)))
+                    .subscribe();
             }
         }
     }

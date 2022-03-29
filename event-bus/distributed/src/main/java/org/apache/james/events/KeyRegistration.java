@@ -19,15 +19,19 @@
 
 package org.apache.james.events;
 
-class KeyRegistration implements Registration {
-    private final Runnable unregister;
+import java.util.function.Supplier;
 
-    KeyRegistration(Runnable unregister) {
+import reactor.core.publisher.Mono;
+
+class KeyRegistration implements Registration {
+    private final Supplier<Mono<Void>> unregister;
+
+    KeyRegistration(Supplier<Mono<Void>> unregister) {
         this.unregister = unregister;
     }
 
     @Override
-    public void unregister() {
-        unregister.run();
+    public Mono<Void> unregister() {
+        return unregister.get();
     }
 }

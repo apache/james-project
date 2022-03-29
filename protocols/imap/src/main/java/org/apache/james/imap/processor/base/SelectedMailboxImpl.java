@@ -70,6 +70,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Default implementation of {@link SelectedMailbox}
@@ -190,9 +191,14 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public synchronized void deselect() {
-        registration.get().unregister();
-        
+    public Mono<Void> deselect() {
+        return Mono.from(registration.get().unregister())
+            .then(Mono.fromRunnable(this::clearInternalStructures)
+                .subscribeOn(Schedulers.elastic()))
+            .then();
+    }
+
+    private synchronized void clearInternalStructures() {
         uidMsnConverter.clear();
         flagUpdateUids.clear();
 

@@ -153,7 +153,7 @@ class GroupRegistrationHandler {
     }
 
     void stop() {
-        groupRegistrations.values().forEach(GroupRegistration::unregister);
+        groupRegistrations.values().forEach(groupRegistration -> Mono.from(groupRegistration.unregister()).block());
         consumer.ifPresent(Disposable::dispose);
     }
 
