@@ -80,7 +80,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <james.lifecycle.leak.detection.mode>none</james.lifecycle.leak.detection.mode>
+                        <james.lifecycle.leak.detection.mode>simple</james.lifecycle.leak.detection.mode>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
