@@ -103,7 +103,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public Mono<Void> logout() {
         return closeMailbox()
-            .then(Mono.fromRunnable(() ->state = ImapSessionState.LOGOUT));
+            .then(Mono.fromRunnable(() -> state = ImapSessionState.LOGOUT));
     }
 
     @Override

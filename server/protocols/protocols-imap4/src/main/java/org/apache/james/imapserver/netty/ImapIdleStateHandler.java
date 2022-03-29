@@ -66,7 +66,9 @@ public class ImapIdleStateHandler extends IdleStateHandler implements NettyConst
                 // close the channel
                 .then(Mono.fromRunnable(() -> ctx.channel().close()))
                 .then(Mono.fromRunnable(Throwing.runnable(() -> super.channelIdle(ctx, e))))
-                .subscribe();
+                .subscribe(any -> {
+
+                }, ctx::fireExceptionCaught);
         } else {
             super.channelIdle(ctx, e);
         }
