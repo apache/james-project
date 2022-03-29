@@ -57,6 +57,10 @@ public class DefaultEventModule extends AbstractModule {
         bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);
 
+        Multibinder.newSetBinder(binder(), EventBus.class)
+            .addBinding()
+            .to(EventBus.class);
+
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class);

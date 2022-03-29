@@ -72,6 +72,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -109,10 +111,12 @@ class EventDeadLettersRoutesTest {
         "  }" +
         "}";
     private static final String SERIALIZED_GROUP_A = new EventBusTestFixture.GroupA().asString();
+    private static final String SERIALIZED_GROUP_B = new EventBusTestFixture.GroupB().asString();
 
     private WebAdminServer webAdminServer;
     private EventDeadLetters deadLetters;
-    private EventBus eventBus;
+    private EventBus eventBus1;
+    private EventBus eventBus2;
     private MemoryTaskManager taskManager;
 
     @BeforeEach
@@ -120,8 +124,9 @@ class EventDeadLettersRoutesTest {
         deadLetters = new MemoryEventDeadLetters();
         JsonTransformer jsonTransformer = new JsonTransformer();
         MailboxEventSerializer eventSerializer = new MailboxEventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
-        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
-        EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(eventBus, deadLetters);
+        eventBus1 = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
+        eventBus2 = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
+        EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(ImmutableSet.of(eventBus1, eventBus2), deadLetters);
         EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
@@ -391,8 +396,8 @@ class EventDeadLettersRoutesTest {
             eventCollectorB = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
             groupB = new EventBusTestFixture.GroupB();
-            eventBus.register(eventCollectorA, groupA);
-            eventBus.register(eventCollectorB, groupB);
+            eventBus1.register(eventCollectorA, groupA);
+            eventBus1.register(eventCollectorB, groupB);
         }
 
         @Test
@@ -571,6 +576,71 @@ class EventDeadLettersRoutesTest {
     }
 
     @Nested
+    class SeveralEventBus {
+        private Group groupA;
+        private Group groupB;
+        private EventCollector eventCollectorA;
+        private EventCollector eventCollectorB;
+
+        @BeforeEach
+        void nestedBeforeEach() {
+            eventCollectorA = new EventCollector();
+            eventCollectorB = new EventCollector();
+            groupA = new EventBusTestFixture.GroupA();
+            groupB = new EventBusTestFixture.GroupB();
+            eventBus1.register(eventCollectorA, groupA);
+            eventBus2.register(eventCollectorB, groupB);
+        }
+
+        @Test
+        void postRedeliverAllEventsShouldRedeliverEventFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+                .when()
+                .get(taskId + "/await")
+                .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(1))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollectorA.getEvents()).hasSize(1);
+        }
+
+        @Test
+        void postRedeliverAllEventsShouldRemoveAllEventsFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupB, EVENT_2).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(2))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollectorA.getEvents()).hasSize(1);
+            assertThat(eventCollectorB.getEvents()).hasSize(1);
+        }
+
+    }
+
+    @Nested
     class RedeliverGroupEvents {
         private Group groupA;
         private EventCollector eventCollector;
@@ -579,7 +649,7 @@ class EventDeadLettersRoutesTest {
         void nestedBeforeEach() {
             eventCollector = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
-            eventBus.register(eventCollector, groupA);
+            eventBus1.register(eventCollector, groupA);
         }
 
         @Test
@@ -799,7 +869,7 @@ class EventDeadLettersRoutesTest {
         void nestedBeforeEach() {
             eventCollector = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
-            eventBus.register(eventCollector, groupA);
+            eventBus1.register(eventCollector, groupA);
         }
 
         @Test

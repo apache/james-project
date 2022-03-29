@@ -19,10 +19,12 @@
 
 package org.apache.james.events;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.reactivestreams.Publisher;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
@@ -72,5 +74,9 @@ public interface EventBus {
 
     default Registration register(EventListener.ReactiveGroupEventListener groupListener) {
         return register(groupListener, groupListener.getDefaultGroup());
+    }
+
+    default Collection<Group> listRegisteredGroups() {
+        return ImmutableList.of();
     }
 }
