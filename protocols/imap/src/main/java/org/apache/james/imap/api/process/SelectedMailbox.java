@@ -32,6 +32,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Interface which represent a selected Mailbox during the selected state
  */
@@ -42,7 +44,7 @@ public interface SelectedMailbox {
     /**
      * Deselect the Mailbox
      */
-    void deselect();
+    Mono<Void> deselect();
 
     void registerIdle(EventListener idle);
 

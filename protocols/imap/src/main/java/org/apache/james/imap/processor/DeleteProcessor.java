@@ -50,7 +50,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
         try {
             final SelectedMailbox selected = session.getSelected();
             if (selected != null && selected.getPath().equals(mailboxPath)) {
-                session.deselect();
+                session.deselect().block();
             }
             final MailboxManager mailboxManager = getMailboxManager();
             mailboxManager.deleteMailbox(mailboxPath, session.getMailboxSession());

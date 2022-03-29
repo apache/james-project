@@ -39,6 +39,7 @@ import org.apache.james.core.healthcheck.Result;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.Registration;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -217,7 +218,7 @@ public class MailReceptionCheck implements HealthCheck {
                 Mono.from(eventBus.register(listener, new MailboxIdRegistrationKey(mailbox.getId()))),
                 registration -> sendMail(username)
                     .flatMap(content -> checkReceived(session, listener, mailbox, content)),
-                registration -> Mono.fromRunnable(registration::unregister)))
+                Registration::unregister))
             .subscribeOn(Schedulers.elastic())
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
             .onErrorResume(e -> {

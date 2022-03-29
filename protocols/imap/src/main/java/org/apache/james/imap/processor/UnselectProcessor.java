@@ -34,6 +34,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Processor which implements the UNSELECT extension.
  * 
@@ -48,14 +50,14 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected void processRequest(UnselectRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(UnselectRequest request, ImapSession session, Responder responder) {
         if (session.getSelected() != null) {
-            session.deselect();
-            okComplete(request, responder);
+            return session.deselect()
+                .then(Mono.fromRunnable(() -> okComplete(request, responder)));
         } else {
             taggedBad(request, responder, HumanReadableText.UNSELECT);
+            return Mono.empty();
         }
-
     }
 
     @Override

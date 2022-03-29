@@ -192,7 +192,7 @@ public class SearchProcessorTest {
 
     private void expectsGetSelectedMailbox() throws Exception {
         when(mailboxManager.getMailbox(mailboxId, mailboxSession)).thenReturn(mailbox, mailbox);
-        session.selected(selectedMailbox);
+        session.selected(selectedMailbox).block();
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);
         when(selectedMailbox.getPath()).thenReturn(mailboxPath);

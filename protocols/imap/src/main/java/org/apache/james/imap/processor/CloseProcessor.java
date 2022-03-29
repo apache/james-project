@@ -52,7 +52,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             final MailboxSession mailboxSession = session.getMailboxSession();
             if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                 mailbox.expunge(MessageRange.all(), mailboxSession);
-                session.deselect();
+                session.deselect().block();
 
                 // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
                 //

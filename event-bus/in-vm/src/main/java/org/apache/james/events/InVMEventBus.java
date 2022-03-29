@@ -56,14 +56,14 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         registrations.put(key, listener);
-        return Mono.just(() -> registrations.remove(key, listener));
+        return Mono.just(() -> Mono.fromRunnable(() -> registrations.remove(key, listener)));
     }
 
     @Override
     public Registration register(EventListener.ReactiveEventListener listener, Group group) {
         EventListener previous = groups.putIfAbsent(group, listener);
         if (previous == null) {
-            return () -> groups.remove(group, listener);
+            return () -> Mono.fromRunnable(() -> groups.remove(group, listener));
         }
         throw new GroupAlreadyRegistered(group);
     }

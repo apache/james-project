@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public interface GroupContract {
@@ -247,7 +248,7 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             Registration registration = eventBus().register(listener, GROUP_A);
 
-            registration.unregister();
+            Mono.from(registration.unregister()).block();
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
@@ -270,7 +271,7 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, GROUP_A).unregister();
+            Mono.from(eventBus().register(listener, GROUP_A).unregister()).block();
 
             assertThatCode(() -> eventBus().register(listener2, GROUP_A))
                 .doesNotThrowAnyException();
@@ -281,9 +282,9 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
 
             Registration registration = eventBus().register(listener, GROUP_A);
-            registration.unregister();
+            Mono.from(registration.unregister()).block();
 
-            assertThatCode(registration::unregister)
+            assertThatCode(() -> Mono.from(registration.unregister()).block())
                 .doesNotThrowAnyException();
         }
 
@@ -291,7 +292,7 @@ public interface GroupContract {
         default void registerShouldAcceptAlreadyUnregisteredGroups() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, GROUP_A).unregister();
+            Mono.from(eventBus().register(listener, GROUP_A).unregister()).block();
             eventBus().register(listener, GROUP_A);
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
@@ -384,7 +385,7 @@ public interface GroupContract {
         default void redeliverShouldThrowAfterGroupIsUnregistered() {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, GROUP_A).unregister();
+            Mono.from(eventBus().register(listener, GROUP_A).unregister()).block();
 
             assertThatThrownBy(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
                 .isInstanceOf(GroupRegistrationNotFound.class);
@@ -467,7 +468,7 @@ public interface GroupContract {
         default void unregisterShouldStopNotificationForDistantGroups() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, GROUP_A).unregister();
+            Mono.from(eventBus().register(listener, GROUP_A).unregister()).block();
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 

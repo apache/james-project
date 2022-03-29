@@ -234,7 +234,7 @@ class MailboxEventAnalyserTest {
 
         analyser.event(update);
         analyser.event(update);
-        analyser.deselect();
+        analyser.deselect().block();
 
         assertThat(analyser.flagUpdateUids()).isEmpty();
     }

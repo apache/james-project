@@ -63,7 +63,7 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
   }
 
   def withRegistration(registration: Option[Registration]): Unit = Option(pushRegistration.getAndSet(registration.orNull))
-    .foreach(oldRegistration => SMono.fromCallable(() => oldRegistration.unregister())
+    .foreach(oldRegistration => SMono(oldRegistration.unregister())
       .subscribeOn(Schedulers.elastic())
       .subscribe())
 }

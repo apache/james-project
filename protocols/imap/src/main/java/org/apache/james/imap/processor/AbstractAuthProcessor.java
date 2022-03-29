@@ -153,7 +153,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } else {
             LOGGER.info("Too many authentication failures. Closing connection.");
             bye(responder, HumanReadableText.TOO_MANY_FAILURES);
-            session.logout();
+            session.logout().block();
         }
     }
 

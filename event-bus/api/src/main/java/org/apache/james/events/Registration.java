@@ -19,6 +19,8 @@
 
 package org.apache.james.events;
 
+import org.reactivestreams.Publisher;
+
 public interface Registration {
-    void unregister();
+    Publisher<Void> unregister();
 }

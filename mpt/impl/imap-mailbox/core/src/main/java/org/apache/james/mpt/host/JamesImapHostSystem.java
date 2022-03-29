@@ -163,7 +163,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
 
         @Override
         public void stop() throws Exception {
-            session.deselect();
+            session.deselect().block();
         }
 
         @Override

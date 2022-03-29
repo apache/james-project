@@ -192,9 +192,11 @@ class GroupRegistration implements Registration {
     }
 
     @Override
-    public void unregister() {
-        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
-            .ifPresent(Disposable::dispose);
-        unregisterGroup.run();
+    public Mono<Void> unregister() {
+        return Mono.fromRunnable(() -> {
+            receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
+                .ifPresent(Disposable::dispose);
+            unregisterGroup.run();
+        });
     }
 }

@@ -29,6 +29,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import reactor.core.publisher.Mono;
+
 public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     public LogoutProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -36,12 +38,14 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     }
 
     @Override
-    protected void processRequest(LogoutRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(LogoutRequest request, ImapSession session, Responder responder) {
         MailboxSession mailboxSession = session.getMailboxSession();
         getMailboxManager().logout(mailboxSession);
-        session.logout();
-        bye(responder);
-        okComplete(request, responder);
+        return session.logout()
+            .then(Mono.fromRunnable(() -> {
+                bye(responder);
+                okComplete(request, responder);
+            }));
     }
 
     @Override
