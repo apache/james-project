@@ -147,6 +147,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         SslHandler filter = new SslHandler(secure.createSSLEngine(), false);
         filter.getEngine().setUseClientMode(false);
         channel.getPipeline().addFirst(SSL_HANDLER, filter);
+        stopDetectingCommandInjection();
 
         channel.setReadable(true);
 

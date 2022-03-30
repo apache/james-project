@@ -20,6 +20,7 @@
 package org.apache.james.imapserver.netty;
 
 import static javax.mail.Folder.READ_WRITE;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,8 +28,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -51,6 +54,7 @@ import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
 import org.apache.james.mailbox.MailboxSession;
@@ -80,13 +84,33 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.LoggerFactory;
 
 import com.sun.mail.imap.IMAPFolder;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelOption;
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 import nl.altindag.ssl.exception.PrivateKeyParseException;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.Connection;
+import reactor.netty.tcp.TcpClient;
 
 class IMAPServerTest {
+    public static ListAppender<ILoggingEvent> getListAppenderForClass(Class clazz) {
+        Logger logger = (Logger) LoggerFactory.getLogger(clazz);
+
+        ListAppender<ILoggingEvent> loggingEventListAppender = new ListAppender<>();
+        loggingEventListAppender.start();
+
+        logger.addAppender(loggingEventListAppender);
+        return loggingEventListAppender;
+    }
+
     private static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
     private static final Username USER = Username.of("user@domain.org");
@@ -344,11 +368,24 @@ class IMAPServerTest {
     class StartTLS {
         IMAPServer imapServer;
         private int port;
+        private Connection connection;
+        private ConcurrentLinkedDeque<String> responses;
 
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServerStartTLS.xml");
             port = imapServer.getListenAddresses().get(0).getPort();
+            connection = TcpClient.create()
+                .noSSL()
+                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
+                .option(ChannelOption.TCP_NODELAY, true)
+                .connectNow();
+            responses = new ConcurrentLinkedDeque<>();
+            connection.inbound().receive().asString()
+                .doOnNext(s -> System.out.println("A: " + s))
+                .doOnNext(responses::addLast)
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
         }
 
         @AfterEach
@@ -361,6 +398,24 @@ class IMAPServerTest {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
             assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\r\nA1 NOOP\r\n"))
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
+        }
+
+        @Test
+        void extraLFLinesBatchedWithStartTLSShouldBeSanitized() throws Exception {
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\nA1 NOOP\r\n"))
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
+        }
+
+        @Test
+        void tagsShouldBeWellSanitized() throws Exception {
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            assertThatThrownBy(() -> imapClient.sendCommand("NOOP\r\n A1 STARTTLS\r\nA2 NOOP"))
                 .isInstanceOf(EOFException.class)
                 .hasMessage("Connection closed without indication.");
         }
@@ -385,6 +440,28 @@ class IMAPServerTest {
             int imapCode = imapClient.sendCommand("STARTTLS\r\n");
 
             assertThat(imapCode).isEqualTo(IMAPReply.NO);
+        }
+
+        private void send(String format) {
+            connection.outbound()
+                .send(Mono.just(Unpooled.wrappedBuffer(format
+                    .getBytes(StandardCharsets.UTF_8))))
+                .then()
+                .subscribe();
+        }
+
+        @RepeatedTest(10)
+        void concurrencyShouldNotLeadToCommandInjection() throws Exception {
+            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractChainedProcessor.class);
+
+            send("a0 STARTTLS\r\n");
+            send("a1 NOOP\r\n");
+
+            Thread.sleep(50);
+
+            assertThat(listAppender.list)
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
+                .isEmpty();
         }
     }
 
