@@ -301,11 +301,6 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             enabled.add(ImapConstants.SUPPORTS_CONDSTORE);
         }
     }
-    
-    private MessageManager getMailbox(ImapSession session, SelectedMailbox selected) throws MailboxException {
-        final MailboxManager mailboxManager = getMailboxManager();
-        return mailboxManager.getMailbox(selected.getMailboxId(), session.getMailboxSession());
-    }
 
     private void addRecentResponses(SelectedMailbox selected, ImapProcessor.Responder responder) {
         final int recentCount = selected.recentCount();
@@ -574,9 +569,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             responder.respond(new VanishedResponse(vanishedIdRanges, true));
         }
     }
-    
-    
-    // TODO: Do we need to handle wildcards here ?
+
     protected UidRange[] uidRanges(Collection<MessageRange> mRanges) {
         UidRange[] idRanges = new UidRange[mRanges.size()];
         Iterator<MessageRange> mIt = mRanges.iterator();
