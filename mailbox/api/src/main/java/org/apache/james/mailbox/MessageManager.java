@@ -63,6 +63,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -130,6 +131,12 @@ public interface MessageManager {
      *             if anything went wrong
      */
     Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException;
+
+    default Flux<MessageUid> expungeReactive(MessageRange set, MailboxSession mailboxSession) {
+        return Flux.fromStream(Throwing.supplier(() -> StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(expunge(set, mailboxSession), Spliterator.ORDERED),
+            false)));
+    }
 
     /**
      * Deletes a list of messages given their uids in the mailbox.

@@ -27,7 +27,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CloseRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
@@ -35,6 +34,10 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
 
 public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloseProcessor.class);
@@ -45,25 +48,25 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     }
 
     @Override
-    protected void processRequest(CloseRequest request, ImapSession session, Responder responder) {
-        try {
-            MessageManager mailbox = getSelectedMailbox(session)
-                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
-                mailbox.expunge(MessageRange.all(), mailboxSession);
-                session.deselect().block();
-
-                // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
-                //
-                // See http://www.rfc-editor.org/errata_search.php?rfc=5162
-                okComplete(request, responder);
-            }
-
-        } catch (MailboxException e) {
-            LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
+    protected Mono<Void> processRequestReactive(CloseRequest request, ImapSession session, Responder responder) {
+        MailboxSession mailboxSession = session.getMailboxSession();
+        return getSelectedMailboxReactive(session)
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
+            .flatMap(Throwing.function(mailbox -> {
+                if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
+                    return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
+                        .then(session.deselect())
+                        // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
+                        // See http://www.rfc-editor.org/errata_search.php?rfc=5162
+                        .then(Mono.fromRunnable(() -> okComplete(request, responder)));
+                }
+                return Mono.empty();
+            }))
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            }).then();
     }
 
     @Override

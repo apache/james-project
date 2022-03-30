@@ -96,6 +96,14 @@ public interface MessageMapper extends Mapper {
      */
     List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException;
 
+    default Flux<MessageUid> retrieveMessagesMarkedForDeletionReactive(Mailbox mailbox, MessageRange messageRange) {
+        try {
+            return Flux.fromIterable(retrieveMessagesMarkedForDeletion(mailbox, messageRange));
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
+
     /**
      * Return the count of messages in the mailbox
      */
@@ -118,6 +126,10 @@ public interface MessageMapper extends Mapper {
      * and return a {@link Map} which holds the uids and metadata for all deleted messages
      */
     Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException;
+
+    default Mono<Map<MessageUid, MessageMetaData>> deleteMessagesReactive(Mailbox mailbox, List<MessageUid> uids) {
+        return Mono.fromCallable(() -> deleteMessages(mailbox, uids));
+    }
 
     /**
      * Return the uid of the first unseen message. If non can be found null will get returned
