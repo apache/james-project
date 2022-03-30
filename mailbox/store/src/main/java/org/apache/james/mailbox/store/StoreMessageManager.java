@@ -256,50 +256,59 @@ public class StoreMessageManager implements MessageManager {
             throw new ReadOnlyException(getMailboxPath());
         }
 
-        List<MessageUid> uids = retrieveMessagesMarkedForDeletion(set, mailboxSession);
-        Map<MessageUid, MessageMetaData> deletedMessages = deleteMessages(uids, mailboxSession);
+        List<MessageUid> uids = MailboxReactorUtils.block(retrieveMessagesMarkedForDeletion(set, mailboxSession));
+        Map<MessageUid, MessageMetaData> deletedMessages = MailboxReactorUtils.block(deleteMessages(uids, mailboxSession));
 
-        dispatchExpungeEvent(mailboxSession, deletedMessages);
+        dispatchExpungeEvent(mailboxSession, deletedMessages).block();
         return deletedMessages.keySet().iterator();
     }
 
-    private List<MessageUid> retrieveMessagesMarkedForDeletion(MessageRange messageRange, MailboxSession session) throws MailboxException {
+    @Override
+    public Flux<MessageUid> expungeReactive(MessageRange set, MailboxSession mailboxSession) {
+        if (!isWriteable(mailboxSession)) {
+            return Flux.error(new ReadOnlyException(getMailboxEntity().generateAssociatedPath()));
+        }
+
+        return retrieveMessagesMarkedForDeletion(set, mailboxSession)
+            .flatMap(uids -> deleteMessages(uids, mailboxSession))
+            .flatMap(deletedMessages -> dispatchExpungeEvent(mailboxSession, deletedMessages).thenReturn(deletedMessages))
+            .flatMapIterable(Map::keySet);
+    }
+
+    private Mono<List<MessageUid>> retrieveMessagesMarkedForDeletion(MessageRange messageRange, MailboxSession session) {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        return messageMapper.execute(
-            () -> messageMapper.retrieveMessagesMarkedForDeletion(getMailboxEntity(), messageRange));
+        return messageMapper.executeReactive(
+            messageMapper.retrieveMessagesMarkedForDeletionReactive(getMailboxEntity(), messageRange).collectList());
     }
 
     @Override
     public void delete(List<MessageUid> messageUids, MailboxSession mailboxSession) throws MailboxException {
-        Map<MessageUid, MessageMetaData> deletedMessages = deleteMessages(messageUids, mailboxSession);
+        Map<MessageUid, MessageMetaData> deletedMessages = MailboxReactorUtils.block(deleteMessages(messageUids, mailboxSession));
 
-        dispatchExpungeEvent(mailboxSession, deletedMessages);
+        dispatchExpungeEvent(mailboxSession, deletedMessages).block();
     }
 
-    private Map<MessageUid, MessageMetaData> deleteMessages(List<MessageUid> messageUids, MailboxSession session) throws MailboxException {
+    private Mono<Map<MessageUid, MessageMetaData>> deleteMessages(List<MessageUid> messageUids, MailboxSession session) {
         if (messageUids.isEmpty()) {
-            return ImmutableMap.of();
+            return Mono.just(ImmutableMap.of());
         }
 
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        runPredeletionHooks(messageUids, session);
+        return runPredeletionHooks(messageUids, session)
+            .then(messageMapper.executeReactive(messageMapper.deleteMessagesReactive(getMailboxEntity(), messageUids)));
 
-        return messageMapper.execute(
-            () -> messageMapper.deleteMessages(getMailboxEntity(), messageUids));
     }
 
-    private void dispatchExpungeEvent(MailboxSession mailboxSession, Map<MessageUid, MessageMetaData> deletedMessages) throws MailboxException {
-        eventBus.dispatch(EventFactory.expunged()
+    private Mono<Void> dispatchExpungeEvent(MailboxSession mailboxSession, Map<MessageUid, MessageMetaData> deletedMessages) {
+        return eventBus.dispatch(EventFactory.expunged()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(getMailboxEntity())
                 .metaData(ImmutableSortedMap.copyOf(deletedMessages))
                 .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-            .subscribeOn(Schedulers.elastic())
-            .block();
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
     }
 
     @Override
@@ -547,7 +556,7 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public boolean isWriteable(MailboxSession session) throws MailboxException {
+    public boolean isWriteable(MailboxSession session) {
         return storeRightManager.isReadWrite(session, mailbox, getSharedPermanentFlags(session));
     }
 
@@ -820,17 +829,16 @@ public class StoreMessageManager implements MessageManager {
         return Mono.empty();
     }
 
-    private void runPredeletionHooks(List<MessageUid> uids, MailboxSession session) {
+    private Mono<Void> runPredeletionHooks(List<MessageUid> uids, MailboxSession session) {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         Mono<DeleteOperation> deleteOperation = Flux.fromIterable(MessageRange.toRanges(uids))
-            .publishOn(Schedulers.elastic())
             .flatMap(range -> messageMapper.findInMailboxReactive(mailbox, range, FetchType.METADATA, UNLIMITED), DEFAULT_CONCURRENCY)
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(ImmutableList.toImmutableList())
             .map(DeleteOperation::from);
 
-        deleteOperation.flatMap(preDeletionHooks::runHooks).block();
+        return deleteOperation.flatMap(preDeletionHooks::runHooks).then();
     }
 
     @Override

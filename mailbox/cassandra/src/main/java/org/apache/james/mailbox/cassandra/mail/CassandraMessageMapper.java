@@ -311,6 +311,19 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) {
+        return deleteMessagesReactive(mailbox, uids)
+            .block();
+    }
+
+    @Override
+    public Flux<MessageUid> retrieveMessagesMarkedForDeletionReactive(Mailbox mailbox, MessageRange messageRange) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange);
+    }
+
+    @Override
+    public Mono<Map<MessageUid, MessageMetaData>> deleteMessagesReactive(Mailbox mailbox, List<MessageUid> uids) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return Flux.fromIterable(MessageRange.toRanges(uids))
@@ -319,9 +332,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .flatMap(this::expungeOne, cassandraConfiguration.getExpungeChunkSize())
             .collect(ImmutableMap.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
             .flatMap(messageMap -> indexTableHandler.updateIndexOnDelete(mailboxId, messageMap.values())
-                .thenReturn(messageMap))
-            .subscribeOn(Schedulers.elastic())
-            .block();
+                .thenReturn(messageMap));
     }
 
     private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData) {
