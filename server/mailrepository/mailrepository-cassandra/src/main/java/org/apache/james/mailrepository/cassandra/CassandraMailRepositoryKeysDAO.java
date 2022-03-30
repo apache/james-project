@@ -30,12 +30,15 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPO
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.Delete;
+import com.datastax.driver.core.querybuilder.Insert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,9 +49,11 @@ public class CassandraMailRepositoryKeysDAO {
     private final PreparedStatement insertKey;
     private final PreparedStatement deleteKey;
     private final PreparedStatement listKeys;
+    private final boolean strongConsistency;
 
     @Inject
-    public CassandraMailRepositoryKeysDAO(Session session) {
+    public CassandraMailRepositoryKeysDAO(Session session, CassandraConfiguration cassandraConfiguration) {
+        this.strongConsistency = cassandraConfiguration.isMailRepositoryStrongConsistency();
         this.executor = new CassandraAsyncExecutor(session);
 
         this.insertKey = prepareInsert(session);
@@ -63,18 +68,26 @@ public class CassandraMailRepositoryKeysDAO {
     }
 
     private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(delete()
+        Delete.Where deleteStatement = delete()
             .from(KEYS_TABLE_NAME)
-            .ifExists()
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME)))
-            .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
+            .and(eq(MAIL_KEY, bindMarker(MAIL_KEY)));
+
+        if (strongConsistency) {
+            return session.prepare(deleteStatement.ifExists());
+        }
+        return session.prepare(deleteStatement);
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(KEYS_TABLE_NAME)
-            .ifNotExists()
+        Insert insertStatement = insertInto(KEYS_TABLE_NAME)
             .value(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))
-            .value(MAIL_KEY, bindMarker(MAIL_KEY)));
+            .value(MAIL_KEY, bindMarker(MAIL_KEY));
+
+        if (strongConsistency) {
+            return session.prepare(insertStatement.ifNotExists());
+        }
+        return session.prepare(insertStatement);
     }
 
     public Mono<Boolean> store(MailRepositoryUrl url, MailKey key) {

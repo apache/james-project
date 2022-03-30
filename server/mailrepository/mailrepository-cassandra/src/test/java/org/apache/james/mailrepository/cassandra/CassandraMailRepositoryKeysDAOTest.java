@@ -21,13 +21,17 @@ package org.apache.james.mailrepository.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -47,7 +51,7 @@ class CassandraMailRepositoryKeysDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
+        testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
@@ -119,27 +123,56 @@ class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    void removeShouldReturnFalseWhenKeyNotDeleted() {
-        boolean isDeleted = testee.remove(URL2, KEY_2).block();
-
-        assertThat(isDeleted).isFalse();
-    }
-
-
-    @Test
     void storeShouldReturnTrueWhenNotPreviouslyStored() {
         boolean isStored = testee.store(URL, KEY_1).block();
 
         assertThat(isStored).isTrue();
     }
 
-    @Test
-    void storeShouldReturnFalseWhenPreviouslyStored() {
-        testee.store(URL, KEY_1).block();
+    @Nested
+    class WhenStrongConsistencyIsFalse {
+        CassandraMailRepositoryKeysDAO testee;
 
-        boolean isStored = testee.store(URL, KEY_1).block();
+        @BeforeEach
+        void setUp(CassandraCluster cassandra) {
+            testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.builder()
+                .mailRepositoryStrongConsistency(Optional.of(false))
+                .build());
+        }
 
-        assertThat(isStored).isFalse();
+        @Test
+        void storeShouldReturnTrueWhenPreviouslyStored() {
+            testee.store(URL, KEY_1).block();
+            assertThat(testee.store(URL, KEY_1).block()).isTrue();
+        }
+
+        @Test
+        void removeShouldReturnTrueWhenKeyNotDeleted() {
+            assertThat(testee.remove(URL2, KEY_2).block()).isTrue();
+        }
+    }
+
+    @Nested
+    class WhenStrongConsistencyIsTrue {
+        CassandraMailRepositoryKeysDAO testee;
+
+        @BeforeEach
+        void setUp(CassandraCluster cassandra) {
+            testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.builder()
+                .mailRepositoryStrongConsistency(Optional.of(true))
+                .build());
+        }
+
+        @Test
+        void storeShouldReturnFalseWhenPreviouslyStored() {
+            testee.store(URL, KEY_1).block();
+            assertThat(testee.store(URL, KEY_1).block()).isFalse();
+        }
+
+        @Test
+        void removeShouldReturnFalseWhenKeyNotDeleted() {
+            assertThat(testee.remove(URL2, KEY_2).block()).isFalse();
+        }
     }
 
 }
