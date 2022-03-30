@@ -71,34 +71,9 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             if (!getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                 no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
             } else {
-                int expunged = 0;
-                IdRange[] ranges = request.getUidSet();
-                if (ranges == null) {
-                   expunged = expunge(mailbox, MessageRange.all(), session, mailboxSession);
-                } else {
-                    // Handle UID EXPUNGE which is part of UIDPLUS
-                    // See http://tools.ietf.org/html/rfc4315
-                    for (IdRange range : ranges) {
-                        MessageRange mRange = messageRange(session.getSelected(), range, true);
-                        if (mRange != null) {
-                            expunged += expunge(mailbox, mRange, session, mailboxSession);
-                        }
-
-                    }
-
-                }
+                int expunged = expunge(request, session, mailbox, mailboxSession);
                 unsolicitedResponses(session, responder, false).block();
-                
-                
-                // Check if QRESYNC was enabled and at least one message was expunged. If so we need to respond with an OK response that contain the HIGHESTMODSEQ
-                //
-                // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
-                if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
-                    MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
-                    okComplete(request, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
-                } else {
-                    okComplete(request, responder);
-                }
+                respondOk(request, session, responder, mailbox, mailboxSession, expunged);
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("Expunge failed", e);
@@ -106,6 +81,36 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         } catch (MailboxException e) {
             LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+        }
+    }
+
+    private int expunge(ExpungeRequest request, ImapSession session, MessageManager mailbox, MailboxSession mailboxSession) throws MailboxException {
+        IdRange[] ranges = request.getUidSet();
+        if (ranges == null) {
+           return expunge(mailbox, MessageRange.all(), session, mailboxSession);
+        } else {
+            int expunged = 0;
+            // Handle UID EXPUNGE which is part of UIDPLUS
+            // See http://tools.ietf.org/html/rfc4315
+            for (IdRange range : ranges) {
+                MessageRange mRange = messageRange(session.getSelected(), range, true);
+                if (mRange != null) {
+                    expunged += expunge(mailbox, mRange, session, mailboxSession);
+                }
+            }
+            return expunged;
+        }
+    }
+
+    private void respondOk(ExpungeRequest request, ImapSession session, Responder responder, MessageManager mailbox, MailboxSession mailboxSession, int expunged) throws MailboxException {
+        // Check if QRESYNC was enabled and at least one message was expunged. If so we need to respond with an OK response that contain the HIGHESTMODSEQ
+        //
+        // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
+        if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
+            MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+            okComplete(request, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
+        } else {
+            okComplete(request, responder);
         }
     }
 
