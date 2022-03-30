@@ -1,7 +1,7 @@
 <imapserver enabled="true">
     <jmxName>imapserver</jmxName>
     <bind>0.0.0.0:0</bind>
-    <tls socketTLS="false" startTLS="false">
+    <tls socketTLS="false" startTLS="true">
         <keystore>classpath://keystore</keystore>
         <secret>james72laBalle</secret>
         <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>

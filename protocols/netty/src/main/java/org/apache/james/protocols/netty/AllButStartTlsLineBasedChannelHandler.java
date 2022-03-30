@@ -21,6 +21,7 @@ package org.apache.james.protocols.netty;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -34,6 +35,9 @@ import com.google.common.base.Splitter;
 
 public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder {
     private static final Boolean FAIL_FAST = true;
+    private static final CharMatcher CRLF_MATCHER = CharMatcher.anyOf("\r\n");
+    private static final Splitter CRLF_SPLITTER = Splitter.on(CRLF_MATCHER).omitEmptyStrings();
+
     private final ChannelPipeline pipeline;
     private final String pattern;
 
@@ -48,12 +52,30 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         CommandDetectionSession session = retrieveSession(ctx, channel);
 
         if (session == null || session.needsCommandInjectionDetection()) {
+            boolean startTlsInFlight = Optional.ofNullable(ctx.getChannel().getAttachment())
+                .filter(Boolean.class::isInstance)
+                .map(Boolean.class::cast)
+                .orElse(false);
             String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
-            if (hasCommandInjection(trimedLowerCasedInput)) {
+            if (hasCommandInjection(trimedLowerCasedInput) || startTlsInFlight) {
                 throw new CommandInjectionDetectedException();
+            }
+            // Prevents further reads on this channel to avoid race conditions
+            // Framer can accept IMAP requests sent concurrently while the channel is
+            // not yet encrypted allowing man-in-the-middle attacks relying on race conditions
+            // Disabling auto-read when framing STARTTLS prevents accepting other frames until STARTTLS
+            // is fully active.
+            if (hasStartTLS(trimedLowerCasedInput)) {
+                ctx.getChannel().setAttachment(true);
             }
         }
         return super.decode(ctx, channel, buffer);
+    }
+
+    protected boolean hasStartTLS(String trimedLowerCasedInput) {
+        List<String> parts = CRLF_SPLITTER.splitToList(trimedLowerCasedInput);
+
+        return parts.stream().anyMatch(s -> s.equalsIgnoreCase(pattern));
     }
 
     protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx, Channel channel) {
@@ -65,8 +87,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     }
 
     private boolean hasCommandInjection(String trimedLowerCasedInput) {
-        List<String> parts = Splitter.on(CharMatcher.anyOf("\r\n")).omitEmptyStrings()
-            .splitToList(trimedLowerCasedInput);
+        List<String> parts = CRLF_SPLITTER.splitToList(trimedLowerCasedInput);
 
         return hasInvalidStartTlsPart(parts) || multiPartsAndOneStartTls(parts);
     }

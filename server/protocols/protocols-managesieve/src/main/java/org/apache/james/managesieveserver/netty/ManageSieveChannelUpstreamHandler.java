@@ -79,6 +79,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
                 turnSSLon(ctx.getChannel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+                attachment.stopDetectingCommandInjection();
             }
         } catch (NotEnoughDataException ex) {
             // Do nothing will keep the cumulation

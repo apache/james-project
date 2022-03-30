@@ -30,6 +30,7 @@ import org.jboss.netty.handler.stream.ChunkedStream;
 public class ChannelManageSieveResponseWriter implements CommandDetectionSession {
     private final Channel channel;
     private String cumulation = null;
+    private boolean needsCommandInjectionDetection = true;
 
     public ChannelManageSieveResponseWriter(Channel channel) {
         this.channel = channel;
@@ -44,17 +45,17 @@ public class ChannelManageSieveResponseWriter implements CommandDetectionSession
 
     @Override
     public boolean needsCommandInjectionDetection() {
-        return false;
+        return needsCommandInjectionDetection;
     }
 
     @Override
     public void startDetectingCommandInjection() {
-
+        needsCommandInjectionDetection = true;
     }
 
     @Override
     public void stopDetectingCommandInjection() {
-
+        needsCommandInjectionDetection = false;
     }
 
     public void resetCumulation() {

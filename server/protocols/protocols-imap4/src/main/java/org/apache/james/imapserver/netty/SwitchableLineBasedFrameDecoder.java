@@ -82,9 +82,14 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
             .anyMatch(line -> line.startsWith(PATTERN) && !line.endsWith(PATTERN));
     }
 
+    @Override
+    protected boolean hasStartTLS(String trimedLowerCasedInput) {
+        return super.hasStartTLS(removeTag(trimedLowerCasedInput));
+    }
+
     protected String removeTag(String input) {
         String trimmedInput = input.trim();
-        int tagEnd = input.indexOf(' ');
+        int tagEnd = trimmedInput.indexOf(' ');
         if (tagEnd < 0) {
             return input;
         }
