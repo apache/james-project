@@ -30,7 +30,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
@@ -59,9 +58,9 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaManager quotaManager;
 
-    public GetQuotaRootProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager,
+    public GetQuotaRootProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager,
             MetricFactory metricFactory) {
-        super(GetQuotaRootRequest.class, next, mailboxManager, factory, metricFactory);
+        super(GetQuotaRootRequest.class, mailboxManager, factory, metricFactory);
         this.quotaRootResolver = quotaRootResolver;
         this.quotaManager = quotaManager;
     }

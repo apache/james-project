@@ -39,7 +39,6 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.StoreRequest;
@@ -71,9 +70,9 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
      */
     private static final ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
-    public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public StoreProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(StoreRequest.class, next, mailboxManager, factory, metricFactory);
+        super(StoreRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

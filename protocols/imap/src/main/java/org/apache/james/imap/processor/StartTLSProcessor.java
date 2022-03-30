@@ -26,11 +26,10 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.StartTLSRequest;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
-import org.apache.james.imap.processor.base.AbstractChainedProcessor;
+import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
@@ -38,12 +37,12 @@ import com.google.common.collect.ImmutableList;
 /**
  * Processing STARTLS commands
  */
-public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest> implements CapabilityImplementingProcessor {
+public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> STARTTLS_CAP = ImmutableList.of(ImapConstants.SUPPORTS_STARTTLS);
     private final StatusResponseFactory factory;
 
-    public StartTLSProcessor(ImapProcessor next, StatusResponseFactory factory) {
-        super(StartTLSRequest.class, next);
+    public StartTLSProcessor(StatusResponseFactory factory) {
+        super(StartTLSRequest.class);
         this.factory = factory;
     }
 

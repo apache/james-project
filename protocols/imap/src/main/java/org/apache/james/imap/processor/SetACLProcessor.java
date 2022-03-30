@@ -26,7 +26,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SetACLRequest;
@@ -55,9 +54,9 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
-    public SetACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public SetACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(SetACLRequest.class, next, mailboxManager, factory, metricFactory);
+        super(SetACLRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

@@ -26,8 +26,6 @@ import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,10 +37,9 @@ class CapabilityProcessorTest {
     @BeforeEach
     void setup() {
         StatusResponseFactory statusResponseFactory = null;
-        ImapProcessor imapProcessor = new UnknownRequestProcessor(statusResponseFactory);
         MailboxManager mailboxManager = null;
         MetricFactory metricFactory = null;
-        testee = new CapabilityProcessor(imapProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        testee = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
     }
 
     @Test

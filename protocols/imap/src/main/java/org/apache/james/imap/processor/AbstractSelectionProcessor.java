@@ -38,7 +38,6 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -78,9 +77,9 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private final boolean openReadOnly;
     private final EventBus eventBus;
     
-    public AbstractSelectionProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
+    public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
                                       MetricFactory metricFactory, EventBus eventBus) {
-        super(acceptableClass, next, mailboxManager, statusResponseFactory, metricFactory);
+        super(acceptableClass, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
         this.openReadOnly = openReadOnly;
 

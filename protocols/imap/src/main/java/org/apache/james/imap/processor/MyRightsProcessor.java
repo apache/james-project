@@ -27,7 +27,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.MyRightsRequest;
@@ -52,9 +51,8 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     private static final List<Capability> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
 
-    public MyRightsProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(MyRightsRequest.class, next, mailboxManager, factory, metricFactory);
+    public MyRightsProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+        super(MyRightsRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

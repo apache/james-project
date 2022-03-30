@@ -24,7 +24,6 @@ import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.mailbox.MailboxManager;
@@ -52,9 +51,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     // TODO: this should be configurable
     private static final int MAX_FAILURES = 3;
     
-    public AbstractAuthProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public AbstractAuthProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory) {
-        super(acceptableClass, next, mailboxManager, factory, metricFactory);
+        super(acceptableClass, mailboxManager, factory, metricFactory);
     }
 
     protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {

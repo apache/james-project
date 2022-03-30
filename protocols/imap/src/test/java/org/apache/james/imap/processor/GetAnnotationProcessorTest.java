@@ -77,17 +77,13 @@ class GetAnnotationProcessorTest {
     private static final MailboxAnnotation PRIVATE_GRANDCHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_GRANDCHILD_KEY, "The longest value size");
 
     private GetAnnotationProcessor processor;
-
-    private ImapProcessor mockNextProcessor;
     private MailboxManager mockMailboxManager;
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
     private FakeImapSession imapSession;
     private MailboxSession mailboxSession;
-
     private Set<MailboxAnnotationKey> keys;
     private StatusResponse statusResponse;
-
     private GetAnnotationRequest.Builder annotationRequestBuilder;
     private MailboxPath inbox;
     private ArgumentCaptor<HumanReadableText> humanTextCaptor;
@@ -96,7 +92,6 @@ class GetAnnotationProcessorTest {
 
     private void initAndMockData() {
         statusResponse = mock(StatusResponse.class);
-        mockNextProcessor = mock(ImapProcessor.class);
         mockMailboxManager = mock(MailboxManager.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
@@ -122,7 +117,7 @@ class GetAnnotationProcessorTest {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
 
-        processor = new GetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        processor = new GetAnnotationProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
     }
 
     @Test

@@ -27,14 +27,10 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
-import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.main.OutputStreamImapResponseWriter;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
@@ -69,17 +65,7 @@ class SelectProcessorTest {
         InMemoryIntegrationResources integrationResources = InMemoryIntegrationResources.defaultResources();
 
         mailboxManager = integrationResources.getMailboxManager();
-        testee = new SelectProcessor(new ImapProcessor() {
-            @Override
-            public void process(ImapMessage message, Responder responder, ImapSession session) {
-
-            }
-
-            @Override
-            public void configure(ImapConfiguration imapConfiguration) {
-
-            }
-        }, mailboxManager,
+        testee = new SelectProcessor(mailboxManager,
             integrationResources.getEventBus(),
             new UnpooledStatusResponseFactory(),
             new RecordingMetricFactory());

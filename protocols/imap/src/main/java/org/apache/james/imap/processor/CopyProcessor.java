@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.CopyRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -37,9 +36,9 @@ import org.apache.james.util.MDCBuilder;
 
 public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
 
-    public CopyProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public CopyProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(CopyRequest.class, next, mailboxManager, factory, metricFactory);
+        super(CopyRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

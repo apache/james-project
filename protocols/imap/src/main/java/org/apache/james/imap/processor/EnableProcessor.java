@@ -32,7 +32,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.EnableRequest;
 import org.apache.james.imap.message.response.EnableResponse;
@@ -53,16 +52,16 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
     private final CapabilityProcessor capabilityProcessor;
 
-    public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,
+    public EnableProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,
             MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
-        this(next, mailboxManager, factory, metricFactory, capabilityProcessor);
+        this(mailboxManager, factory, metricFactory, capabilityProcessor);
         EnableProcessor.capabilities.addAll(capabilities);
 
     }
 
-    public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public EnableProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
-        super(EnableRequest.class, next, mailboxManager, factory, metricFactory);
+        super(EnableRequest.class, mailboxManager, factory, metricFactory);
         this.capabilityProcessor = capabilityProcessor;
     }
 

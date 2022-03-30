@@ -26,7 +26,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.MoveRequest;
@@ -44,9 +43,9 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
 
     private final boolean moveCapabilitySupported;
 
-    public MoveProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public MoveProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(MoveRequest.class, next, mailboxManager, factory, metricFactory);
+        super(MoveRequest.class, mailboxManager, factory, metricFactory);
         moveCapabilitySupported = mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move);
     }
 

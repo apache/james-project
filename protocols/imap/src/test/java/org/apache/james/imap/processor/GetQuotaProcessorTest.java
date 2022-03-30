@@ -90,8 +90,8 @@ public class GetQuotaProcessorTest {
         when(mockedQuotaRootResolver.fromString(eq(QUOTA_ROOT.getValue()))).thenReturn(QUOTA_ROOT);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
-        testee = new GetQuotaProcessor(mock(ImapProcessor.class), mockedMailboxManager,
-            statusResponseFactory, mockedQuotaManager, mockedQuotaRootResolver, new RecordingMetricFactory());
+        testee = new GetQuotaProcessor(mockedMailboxManager, statusResponseFactory, mockedQuotaManager, mockedQuotaRootResolver,
+            new RecordingMetricFactory());
         mailbox = mock(Mailbox.class);
         when(mailbox.generateAssociatedPath()).thenReturn(MAILBOX_PATH);
         imapSession.authenticated();

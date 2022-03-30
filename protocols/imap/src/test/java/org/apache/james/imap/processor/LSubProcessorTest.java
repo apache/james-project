@@ -72,7 +72,6 @@ class LSubProcessorTest {
     public static final Username USER = Username.of("test");
 
     LSubProcessor processor;
-    ImapProcessor next;
     SubscriptionManager manager;
     ImapProcessor.Responder responder;
     MailboxMetaData result;
@@ -88,14 +87,13 @@ class LSubProcessorTest {
         subscriptions = new ArrayList<>();
         serverResponseFactory = mock(StatusResponseFactory.class);
         session = new FakeImapSession();
-        next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
         result = mock(MailboxMetaData.class);
         statusResponse = mock(StatusResponse.class);
         responderImpl = responder;
         manager =  mock(SubscriptionManager.class);
         mailboxSession = MailboxSessionUtil.create(USER);
-        processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new RecordingMetricFactory());
+        processor = new LSubProcessor(mock(MailboxManager.class), manager, serverResponseFactory, new RecordingMetricFactory());
         session.setMailboxSession(mailboxSession);
     }
 

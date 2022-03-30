@@ -41,7 +41,6 @@ import org.apache.james.imap.api.message.request.SearchOperation;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -78,9 +77,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     protected static final String SEARCH_MODSEQ = "SEARCH_MODSEQ";
     private static final List<Capability> CAPS = ImmutableList.of(Capability.of("WITHIN"), Capability.of("ESEARCH"), Capability.of("SEARCHRES"));
     
-    public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public SearchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(SearchRequest.class, next, mailboxManager, factory, metricFactory);
+        super(SearchRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

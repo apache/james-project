@@ -23,7 +23,6 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SubscribeRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -38,9 +37,9 @@ import org.slf4j.LoggerFactory;
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
-    public SubscribeProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
+    public SubscribeProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(SubscribeRequest.class, next, mailboxManager, subscriptionManager, factory, metricFactory);
+        super(SubscribeRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 
     @Override

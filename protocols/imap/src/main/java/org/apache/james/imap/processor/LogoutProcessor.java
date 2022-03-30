@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LogoutRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -31,9 +30,9 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
 public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
-    public LogoutProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public LogoutProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(LogoutRequest.class, next, mailboxManager, factory, metricFactory);
+        super(LogoutRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

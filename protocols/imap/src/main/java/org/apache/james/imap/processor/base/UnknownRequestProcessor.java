@@ -38,27 +38,24 @@ public class UnknownRequestProcessor implements ImapProcessor {
     private final StatusResponseFactory factory;
 
     public UnknownRequestProcessor(StatusResponseFactory factory) {
-        super();
         this.factory = factory;
     }
 
     public ImapResponseMessage process(ImapMessage message) {
         LOGGER.debug("Unknown message: {}", message);
-        final ImapResponseMessage result;
         if (message instanceof ImapRequest) {
             ImapRequest request = (ImapRequest) message;
             final Tag tag = request.getTag();
             final ImapCommand command = request.getCommand();
-            result = factory.taggedBad(tag, command, HumanReadableText.UNKNOWN_COMMAND);
+            return factory.taggedBad(tag, command, HumanReadableText.UNKNOWN_COMMAND);
         } else {
-            result = factory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
+            return factory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
         }
-        return result;
     }
 
     @Override
     public void process(ImapMessage message, Responder responder, ImapSession session) {
-        final ImapResponseMessage response = process(message);
+        ImapResponseMessage response = process(message);
         responder.respond(response);
     }
 

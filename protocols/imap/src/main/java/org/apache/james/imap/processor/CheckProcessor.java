@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CheckRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -31,9 +30,9 @@ import org.apache.james.util.MDCBuilder;
 
 public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
 
-    public CheckProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public CheckProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        super(CheckRequest.class, next, mailboxManager, factory, metricFactory);
+        super(CheckRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

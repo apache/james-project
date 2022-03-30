@@ -24,8 +24,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
-import org.apache.james.imap.processor.DefaultProcessorChain;
-import org.apache.james.imap.processor.base.ImapResponseMessageProcessor;
+import org.apache.james.imap.processor.DefaultProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
@@ -47,10 +46,8 @@ public class DefaultImapProcessorFactory {
         StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
 
-        ImapProcessor imap4rev1Chain = DefaultProcessorChain.createDefaultChain(unknownRequestImapProcessor, mailboxManager,
+        return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
             eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, metricFactory);
-
-        return new ImapResponseMessageProcessor(imap4rev1Chain);
     }
 
 }

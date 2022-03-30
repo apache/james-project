@@ -32,7 +32,6 @@ import static org.mockito.Mockito.when;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SetACLRequest;
@@ -81,7 +80,7 @@ class SetACLProcessorTest {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
-        subject = new SetACLProcessor(mock(ImapProcessor.class), mailboxManager, statusResponseFactory, new RecordingMetricFactory());
+        subject = new SetACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);

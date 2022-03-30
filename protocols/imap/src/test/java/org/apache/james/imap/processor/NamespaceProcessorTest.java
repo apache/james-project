@@ -38,7 +38,6 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.FakeImapSession;
@@ -56,7 +55,6 @@ class NamespaceProcessorTest {
     private static final String USERS_PREFIX = "UsersPrefix";
     private static final String PERSONAL_PREFIX = "PersonalPrefix";
     
-    
     NamespaceProcessor subject;
     StatusResponseFactory statusResponseStub;
     ImapSession imapSession;
@@ -70,7 +68,7 @@ class NamespaceProcessorTest {
         sharedSpaces = new ArrayList<>();
         statusResponseStub = mock(StatusResponseFactory.class);
         mailboxManagerStub = mock(MailboxManager.class);
-        subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new RecordingMetricFactory());
+        subject = new NamespaceProcessor(mailboxManagerStub, statusResponseStub, new RecordingMetricFactory());
         imapSession = spy(new FakeImapSession());
         mailboxSession = mock(MailboxSession.class);
      

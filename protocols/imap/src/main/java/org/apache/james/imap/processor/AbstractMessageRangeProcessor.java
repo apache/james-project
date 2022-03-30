@@ -28,7 +28,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.PathConverter;
@@ -53,9 +52,9 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
-    public AbstractMessageRangeProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+    public AbstractMessageRangeProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
                                          MetricFactory metricFactory) {
-        super(acceptableClass, next, mailboxManager, factory, metricFactory);
+        super(acceptableClass, mailboxManager, factory, metricFactory);
     }
 
     protected abstract List<MessageRange> process(MailboxPath targetMailbox,
