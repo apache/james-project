@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
 
 import java.io.Closeable;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -37,9 +36,7 @@ import org.apache.james.imap.message.request.ExpungeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -49,83 +46,82 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExpungeProcessor.class);
 
     private static final List<Capability> UIDPLUS = ImmutableList.of(SUPPORTS_UIDPLUS);
 
-    public ExpungeProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+    public ExpungeProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(ExpungeRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override
-    protected void processRequest(ExpungeRequest request, ImapSession session, Responder responder) {
-        try {
-            MessageManager mailbox = getSelectedMailbox(session)
-                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-            MailboxSession mailboxSession = session.getMailboxSession();
+    protected Mono<Void> processRequestReactive(ExpungeRequest request, ImapSession session, Responder responder) {
+        MailboxSession mailboxSession = session.getMailboxSession();
 
-            if (!getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
-                no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
-            } else {
-                int expunged = expunge(request, session, mailbox, mailboxSession);
-                unsolicitedResponses(session, responder, false).block();
-                respondOk(request, session, responder, mailbox, mailboxSession, expunged);
-            }
-        } catch (MessageRangeException e) {
-            LOGGER.debug("Expunge failed", e);
-            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-        } catch (MailboxException e) {
-            LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
+        return getSelectedMailboxReactive(session)
+            .flatMap(Throwing.function(mailbox -> {
+                if (!getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
+                    no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
+                    return Mono.empty();
+                } else {
+                    return expunge(request, session, mailbox, mailboxSession)
+                        .flatMap(expunged -> unsolicitedResponses(session, responder, false).thenReturn(expunged))
+                        .flatMap(Throwing.function(expunged -> respondOk(request, session, responder, mailbox, mailboxSession, expunged)));
+                }
+            }))
+            .onErrorResume(MessageRangeException.class, e -> {
+                LOGGER.debug("Expunge failed", e);
+                taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            });
     }
 
-    private int expunge(ExpungeRequest request, ImapSession session, MessageManager mailbox, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<Integer> expunge(ExpungeRequest request, ImapSession session, MessageManager mailbox, MailboxSession mailboxSession) {
         IdRange[] ranges = request.getUidSet();
         if (ranges == null) {
            return expunge(mailbox, MessageRange.all(), session, mailboxSession);
         } else {
-            int expunged = 0;
             // Handle UID EXPUNGE which is part of UIDPLUS
             // See http://tools.ietf.org/html/rfc4315
-            for (IdRange range : ranges) {
-                MessageRange mRange = messageRange(session.getSelected(), range, true);
-                if (mRange != null) {
-                    expunged += expunge(mailbox, mRange, session, mailboxSession);
-                }
-            }
-            return expunged;
+            return Flux.fromIterable(ImmutableList.copyOf(ranges))
+                .map(Throwing.<IdRange, MessageRange>function(range -> messageRange(session.getSelected(), range, true)).sneakyThrow())
+                .concatMap(range -> expunge(mailbox, range, session, mailboxSession))
+                .reduce(Integer::sum);
         }
     }
 
-    private void respondOk(ExpungeRequest request, ImapSession session, Responder responder, MessageManager mailbox, MailboxSession mailboxSession, int expunged) throws MailboxException {
+    private Mono<Void> respondOk(ExpungeRequest request, ImapSession session, Responder responder, MessageManager mailbox, MailboxSession mailboxSession, int expunged) throws MailboxException {
         // Check if QRESYNC was enabled and at least one message was expunged. If so we need to respond with an OK response that contain the HIGHESTMODSEQ
         //
         // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
         if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
-            MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
-            okComplete(request, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
+            return mailbox.getMetaDataReactive(false, mailboxSession, FetchGroup.NO_COUNT)
+                .doOnNext(metaData -> okComplete(request, ResponseCode.highestModSeq(metaData.getHighestModSeq()), responder))
+                .then();
         } else {
-            okComplete(request, responder);
+            return Mono.fromRunnable(() -> okComplete(request, responder));
         }
     }
 
-    private int expunge(MessageManager mailbox, MessageRange range, ImapSession session, MailboxSession mailboxSession) throws MailboxException {
-        final Iterator<MessageUid> it = mailbox.expunge(range, mailboxSession);
-        final SelectedMailbox selected = session.getSelected();
-        int expunged = 0;
-        if (mailboxSession != null) {
-            while (it.hasNext()) {
-                final MessageUid uid = it.next();
-                selected.removeRecent(uid);
-                expunged++;
-            }
-        }
-        return expunged;
+    private Mono<Integer> expunge(MessageManager mailbox, MessageRange range, ImapSession session, MailboxSession mailboxSession) {
+        SelectedMailbox selected = session.getSelected();
+
+        return mailbox.expungeReactive(range, mailboxSession)
+            .doOnNext(selected::removeRecent)
+            .count()
+            .map(Long::intValue);
     }
 
     @Override
