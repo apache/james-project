@@ -55,25 +55,71 @@ public class UidMsnConverter {
 
     private void addAllUnSynchronized(List<MessageUid> addedUids) {
         if (usesInts) {
-            IntAVLTreeSet tmp = new IntAVLTreeSet(uidsAsInts);
-            for (MessageUid uid : addedUids) {
-                if (uid.asLong() > INTERGER_MAX_VALUE) {
-                    switchToLongs();
-                    addAllUnSynchronized(addedUids);
-                    return;
-                }
-                tmp.add((int) uid.asLong());
+            if (uidsAsInts.isEmpty()) {
+                // Avoids intermediary tree structure
+                addAllToEmptyIntStructure(addedUids);
+            } else {
+                addAllToNonEmptyIntStructure(addedUids);
             }
-            uidsAsInts.clear();
-            uidsAsInts.addAll(tmp);
         } else {
-            LongAVLTreeSet tmp = new LongAVLTreeSet(uids);
-            for (MessageUid uid : addedUids) {
-                tmp.add(uid.asLong());
+            if (uids.isEmpty()) {
+                // Avoids intermediary tree structure
+                addAllToEmptyLongStructure(addedUids);
+            } else {
+                addAllToNonEmptyLongStructure(addedUids);
             }
-            uids.clear();
-            uids.addAll(tmp);
         }
+    }
+
+    private void addAllToNonEmptyLongStructure(List<MessageUid> addedUids) {
+        LongAVLTreeSet tmp = new LongAVLTreeSet(uids);
+        for (MessageUid uid : addedUids) {
+            tmp.add(uid.asLong());
+        }
+        uids.clear();
+        uids.addAll(tmp);
+    }
+
+    private void addAllToEmptyLongStructure(List<MessageUid> addedUids) {
+        uids.ensureCapacity(addedUids.size());
+        for (MessageUid uid : addedUids) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                uids.clear();
+                switchToLongs();
+                addAllUnSynchronized(addedUids);
+                return;
+            }
+            uids.add((int) uid.asLong());
+        }
+        uids.sort(LongComparators.NATURAL_COMPARATOR);
+    }
+
+    private void addAllToNonEmptyIntStructure(List<MessageUid> addedUids) {
+        IntAVLTreeSet tmp = new IntAVLTreeSet(uidsAsInts);
+        for (MessageUid uid : addedUids) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                switchToLongs();
+                addAllUnSynchronized(addedUids);
+                return;
+            }
+            tmp.add((int) uid.asLong());
+        }
+        uidsAsInts.clear();
+        uidsAsInts.addAll(tmp);
+    }
+
+    private void addAllToEmptyIntStructure(List<MessageUid> addedUids) {
+        uidsAsInts.ensureCapacity(addedUids.size());
+        for (MessageUid uid : addedUids) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                uidsAsInts.clear();
+                switchToLongs();
+                addAllUnSynchronized(addedUids);
+                return;
+            }
+            uidsAsInts.add((int) uid.asLong());
+        }
+        uidsAsInts.sort(IntComparators.NATURAL_COMPARATOR);
     }
 
     private void switchToLongs() {
