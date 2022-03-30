@@ -286,9 +286,9 @@ class UidMsnConverterTest {
 
     @Test
     void addAllShouldRemoveDuplicates() {
+        testee.addUid(messageUid2);
         testee.addAll(ImmutableList.of(
             messageUid1,
-            messageUid2,
             messageUid2,
             messageUid3,
             messageUid4));
