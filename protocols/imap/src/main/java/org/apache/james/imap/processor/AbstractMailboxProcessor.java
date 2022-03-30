@@ -512,7 +512,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      *            input range
      * @return normalized message range
      */
-    protected MessageRange normalizeMessageRange(SelectedMailbox selected, MessageRange range) throws MessageRangeException {
+    protected MessageRange normalizeMessageRange(SelectedMailbox selected, MessageRange range) {
         Type rangeType = range.getType();
         MessageUid start;
         MessageUid end;
@@ -543,7 +543,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         default:
-            throw new MessageRangeException("Unknown message range type: " + rangeType);
+            throw new RuntimeException("Unknown message range type: " + rangeType);
         }
     }
     
@@ -551,14 +551,14 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     /**
      * Send VANISHED responses if needed. 
      */
-    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) throws MailboxException {
+    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) {
         Set<MessageUid> vanishedUids = new HashSet<>();
         for (MessageRange range : ranges) {
             MessageUid from = range.getUidFrom();
             MessageUid to = range.getUidTo();
             while (from.compareTo(to) <= 0) {
                 MessageUid copy = from;
-                selectedMailbox.msn(from).fold(
+                selectedMailbox.msn(from).foldSilent(
                     () -> vanishedUids.add(copy),
                     msn -> {
                         // ignore still there

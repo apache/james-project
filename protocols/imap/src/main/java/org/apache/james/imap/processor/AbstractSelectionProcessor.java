@@ -125,7 +125,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         }
 
         return selectMailbox(fullMailboxPath, session, responder)
-            .doOnNext(Throwing.<MailboxMetaData>consumer(metaData -> {
+            .doOnNext(metaData -> {
 
                 final SelectedMailbox selected = session.getSelected();
                 MessageUid firstUnseen = metaData.getFirstUnseen();
@@ -190,7 +190,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 // Reset the saved sequence-set after successful SELECT / EXAMINE
                 // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
                 SearchResUtil.resetSavedSequenceSet(session);
-            }).sneakyThrow())
+            })
             .then();
     }
 
@@ -207,7 +207,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             });
     }
 
-    private void respondVanished(ImapSession session, Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) throws MailboxException {
+    private void respondVanished(ImapSession session, Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
         // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
         //
         // Message sequence match data:
@@ -333,11 +333,11 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(taggedOk);
     }
 
-    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected) throws MailboxException {
+    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected) {
         if (firstUnseen != null) {
             final MessageUid unseenUid = firstUnseen;
 
-            return selected.msn(unseenUid).fold(() -> {
+            return selected.msn(unseenUid).foldSilent(() -> {
                 LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getMailboxId().serialize());
                 return false;
             }, msn -> {
