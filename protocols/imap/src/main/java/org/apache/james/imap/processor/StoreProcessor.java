@@ -22,10 +22,9 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.Flags;
@@ -58,7 +57,12 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
@@ -69,70 +73,64 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     @Override
-    protected void processRequest(StoreRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(StoreRequest request, ImapSession session, Responder responder) {
         IdRange[] idSet = request.getIdSet();
         List<MessageUid> failed = new ArrayList<>();
         List<NullableMessageSequenceNumber> failedMsns = new ArrayList<>();
         Flags flags = request.getFlags();
         List<String> userFlags = Arrays.asList(flags.getUserFlags());
+        boolean omitExpunged = (!request.isUseUids());
 
         if (rejectUnchangedSinceZeroWithSystemFlagUpdate(request, responder, idSet, flags)) {
-            return;
+            return Mono.empty();
         }
 
-        try {
-            SelectedMailbox selected = session.getSelected();
-            MailboxSession mailboxSession = session.getMailboxSession();
+        SelectedMailbox selected = session.getSelected();
+        MailboxSession mailboxSession = session.getMailboxSession();
 
-            MessageManager mailbox = getSelectedMailbox(session)
-                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-            for (IdRange range : idSet) {
-                MessageRange messageSet = messageRange(selected, range, request.isUseUids());
-                handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet);
-            }
-            boolean omitExpunged = (!request.isUseUids());
-            unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()).block();
-            
-            // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
-            if (failed.isEmpty() && failedMsns.isEmpty()) {
-                okComplete(request, responder);
-            } else {
-                respondFailed(request, responder, failed, failedMsns);
-            }
-        } catch (MessageRangeException e) {
-            LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-        } catch (MailboxException e) {
-            LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            no(request, responder, HumanReadableText.SAVE_FAILED);
-        }
+        return getSelectedMailboxReactive(session)
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
+            .flatMap(mailbox -> Flux.fromIterable(ImmutableList.copyOf(idSet))
+                .map(Throwing.<IdRange, MessageRange>function(idRange -> messageRange(selected, idRange, request.isUseUids())).sneakyThrow())
+                .concatMap(messageSet -> handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet))
+                .then())
+            .then(unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()))
+            .doOnSuccess(any -> {
+                // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
+                if (failed.isEmpty() && failedMsns.isEmpty()) {
+                    okComplete(request, responder);
+                } else {
+                    respondFailed(request, responder, failed, failedMsns);
+                }
+            })
+            .onErrorResume(MessageRangeException.class, e -> {
+                LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
+                taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
+                no(request, responder, HumanReadableText.SAVE_FAILED);
+                return Mono.empty();
+            });
     }
 
-    private void handleRange(StoreRequest request, ImapSession session, Responder responder, SelectedMailbox selected, MessageManager mailbox, MailboxSession mailboxSession, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, MessageRange messageSet) throws MailboxException {
+    private Mono<Void> handleRange(StoreRequest request, ImapSession session, Responder responder, SelectedMailbox selected, MessageManager mailbox, MailboxSession mailboxSession, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, MessageRange messageSet) {
         if (messageSet != null) {
-
             if (request.getUnchangedSince() != -1) {
-                List<MessageUid> uids = new ArrayList<>();
-
-                Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
-                    mailbox.listMessagesMetadata(messageSet, mailboxSession))
-                    .toStream()
-                    .iterator();
-                while (results.hasNext()) {
-                    ComposedMessageIdWithMetaData r = results.next();
-                    checkIfFailed(request, selected, failed, failedMsns, userFlags, uids, r);
-                }
-                List<MessageRange> mRanges = MessageRange.toRanges(uids);
-                for (MessageRange mRange : mRanges) {
-                    setFlags(request, mailboxSession, mailbox, mRange, session, responder);
-                }
+                return Flux.from(mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                    .<MessageUid>handle((id, sink) -> filterIfFailed(request, selected, failed, failedMsns, userFlags, id).ifPresent(sink::next)).collectList()
+                    .flatMapIterable(MessageRange::toRanges)
+                    .concatMap(range -> setFlags(request, mailboxSession, mailbox, range, session, responder))
+                    .then();
             } else {
-                setFlags(request, mailboxSession, mailbox, messageSet, session, responder);
+                return setFlags(request, mailboxSession, mailbox, messageSet, session, responder);
             }
         }
+        return Mono.empty();
     }
 
-    private void checkIfFailed(StoreRequest request, SelectedMailbox selected, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, List<MessageUid> uids, ComposedMessageIdWithMetaData r) {
+    private Optional<MessageUid> filterIfFailed(StoreRequest request, SelectedMailbox selected, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, ComposedMessageIdWithMetaData r) {
         MessageUid uid = r.getComposedMessageId().getUid();
 
         boolean fail = false;
@@ -158,13 +156,14 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         //
         // See RFC4551 3.2. STORE and UID STORE Commands
         if (!fail && r.getModSeq().asLong() <= request.getUnchangedSince()) {
-            uids.add(uid);
+            return Optional.of(uid);
         } else {
             if (request.isUseUids()) {
                 failed.add(uid);
             } else {
                 failedMsns.add(selected.msn(uid));
             }
+            return Optional.empty();
         }
     }
 
@@ -213,47 +212,61 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     /**
      * Set the flags for given messages
      */
-    private void setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder) throws MailboxException {
+    private Mono<Void> setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder) {
         boolean silent = request.isSilent();
         long unchangedSince = request.getUnchangedSince();
         
         SelectedMailbox selected = session.getSelected();
-        Map<MessageUid, Flags> flagsByUid = mailbox.setFlags(request.getFlags(), request.getFlagsUpdateMode(), messageSet, mailboxSession);
-        handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected);
+        return Mono.from(mailbox.setFlagsReactive(request.getFlags(), request.getFlagsUpdateMode(), messageSet, mailboxSession))
+            .flatMap(flagsByUid -> handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected)
+                .then(handleCondstore(request, mailboxSession, mailbox, messageSet, session, responder, silent, unchangedSince, selected, flagsByUid)));
+    }
 
+    private Mono<Void> handleCondstore(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid) {
         Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
         boolean qresyncEnabled = enabled.contains(ImapConstants.SUPPORTS_QRESYNC);
         boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
-        
+
         if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            Map<MessageUid, ModSeq> modSeqs = computeModSeqs(mailboxSession, mailbox, messageSet, unchangedSince, qresyncEnabled, condstoreEnabled);
+            return computeModSeqs(mailboxSession, mailbox, messageSet, unchangedSince, qresyncEnabled, condstoreEnabled)
+                .flatMap(Throwing.function(modSeqs -> {
+                    sendFetchResponses(responder, request.isUseUids(), silent, unchangedSince, selected, flagsByUid, qresyncEnabled, condstoreEnabled, modSeqs);
 
-            sendFetchResponses(responder, request.isUseUids(), silent, unchangedSince, selected, flagsByUid, qresyncEnabled, condstoreEnabled, modSeqs);
-
-            if (unchangedSince != -1) {
-                // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), true);
-            }
+                    if (unchangedSince != -1) {
+                        // Enable CONDSTORE as this is a CONDSTORE enabling command
+                        return mailbox.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                            .doOnNext(metaData -> condstoreEnablingCommand(session, responder,  metaData, true));
+                    }
+                    return Mono.empty();
+                })).then();
         }
+        return Mono.empty();
     }
 
-    private void handlePermanentFlagChanges(MailboxSession mailboxSession, MessageManager mailbox, Responder responder, SelectedMailbox selected) throws MailboxException {
+    private Mono<Void> handlePermanentFlagChanges(MailboxSession mailboxSession, MessageManager mailbox, Responder responder, SelectedMailbox selected) {
         // As the STORE command is allowed to create a new "flag/keyword", we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
         // if some new flag/keyword was used
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), selected);
-            selected.resetNewApplicableFlags();
+            try {
+                return Mono.from(mailbox.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
+                    .doOnNext(metaData -> permanentFlags(responder, metaData, selected))
+                    .doOnNext(any -> selected.resetNewApplicableFlags())
+                    .then();
+            } catch (MailboxException e) {
+                throw new RuntimeException(e);
+            }
         }
+        return Mono.empty();
     }
 
-    private void sendFetchResponses(Responder responder, boolean useUids, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs) throws MailboxException {
+    private void sendFetchResponses(Responder responder, boolean useUids, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs) {
         for (Map.Entry<MessageUid, Flags> entry : flagsByUid.entrySet()) {
             final MessageUid uid = entry.getKey();
 
-            selected.msn(uid).fold(() -> {
-                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().asString());
+            selected.msn(uid).foldSilent(() -> {
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getMailboxId());
                 // skip this as it was not found in the mapping
                 //
                 // See IMAP-346
@@ -285,9 +298,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         }
     }
 
-    private Map<MessageUid, ModSeq> computeModSeqs(MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, long unchangedSince, boolean qresyncEnabled, boolean condstoreEnabled) {
-        final Map<MessageUid, ModSeq> modSeqs = new HashMap<>();
-
+    private Mono<Map<MessageUid, ModSeq>> computeModSeqs(MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, long unchangedSince, boolean qresyncEnabled, boolean condstoreEnabled) {
         // Check if we need to also send the the mod-sequences back to the client
         //
         // This is the case if one of these is true:
@@ -296,17 +307,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         //      - QRESYNC was enabled via ENABLE QRESYNC
         //
         if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
-                mailbox.listMessagesMetadata(messageSet, mailboxSession))
-                .toStream()
-                .iterator();
-            while (results.hasNext()) {
-                ComposedMessageIdWithMetaData r = results.next();
-                // Store the modseq for the uid for later usage in the response
-                modSeqs.put(r.getComposedMessageId().getUid(),r.getModSeq());
-            }
+            return Flux.from(mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                .collectMap(r -> r.getComposedMessageId().getUid(), ComposedMessageIdWithMetaData::getModSeq);
         }
-        return modSeqs;
+        return Mono.just(ImmutableMap.of());
     }
 
     private FetchResponse computeFetchResponse(boolean silent, long unchangedSince, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs, MessageUid uid, org.apache.james.mailbox.MessageSequenceNumber msn, Flags resultFlags, MessageUid resultUid) {

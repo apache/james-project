@@ -22,6 +22,8 @@ package org.apache.james.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
@@ -60,6 +62,14 @@ public final class NullableMessageSequenceNumber {
             return handleMessage.handle(msn.get());
         } else {
             return handleNoMessage.handle();
+        }
+    }
+
+    public <T> T foldSilent(Supplier<T> handleNoMessage, Function<MessageSequenceNumber, T> handleMessage) {
+        if (msn.isPresent()) {
+            return handleMessage.apply(msn.get());
+        } else {
+            return handleNoMessage.get();
         }
     }
 
