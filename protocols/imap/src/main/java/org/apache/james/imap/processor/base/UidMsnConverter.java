@@ -19,34 +19,69 @@
 
 package org.apache.james.imap.processor.base;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntComparators;
+import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongComparators;
 
 public class UidMsnConverter {
+    private static final int FIRST_MSN = 1;
+    private static final long INTERGER_MAX_VALUE = Integer.MAX_VALUE;
 
-    public static final int FIRST_MSN = 1;
-
-    @VisibleForTesting final ArrayList<MessageUid> uids;
+    @VisibleForTesting final LongArrayList uids;
+    @VisibleForTesting final IntArrayList uidsAsInts;
+    @VisibleForTesting boolean usesInts = true;
 
     public UidMsnConverter() {
-        this.uids = Lists.newArrayList();
+        this.uids = new LongArrayList();
+        this.uidsAsInts = new IntArrayList();
     }
 
     public synchronized void addAll(List<MessageUid> addedUids) {
-        TreeSet<MessageUid> tmp = new TreeSet<>();
-        tmp.addAll(uids);
-        tmp.addAll(addedUids);
-        uids.clear();
-        uids.addAll(tmp);
+        addAllUnSynchronized(addedUids);
+    }
+
+    private void addAllUnSynchronized(List<MessageUid> addedUids) {
+        if (usesInts) {
+            IntAVLTreeSet tmp = new IntAVLTreeSet(uidsAsInts);
+            for (MessageUid uid : addedUids) {
+                if (uid.asLong() > INTERGER_MAX_VALUE) {
+                    switchToLongs();
+                    addAllUnSynchronized(addedUids);
+                    return;
+                }
+                tmp.add((int) uid.asLong());
+            }
+            uidsAsInts.clear();
+            uidsAsInts.addAll(tmp);
+        } else {
+            LongAVLTreeSet tmp = new LongAVLTreeSet(uids);
+            for (MessageUid uid : addedUids) {
+                tmp.add(uid.asLong());
+            }
+            uids.clear();
+            uids.addAll(tmp);
+        }
+    }
+
+    private void switchToLongs() {
+        usesInts = false;
+        uids.ensureCapacity(uidsAsInts.size());
+        for (int i = 0; i < uidsAsInts.size(); i++) {
+            uids.add(uidsAsInts.getInt(i));
+        }
     }
 
     public synchronized NullableMessageSequenceNumber getMsn(MessageUid uid) {
@@ -54,22 +89,39 @@ public class UidMsnConverter {
     }
 
     private NullableMessageSequenceNumber getMsnUnsynchronized(MessageUid uid) {
-        int position = Collections.binarySearch(uids, uid);
-        if (position < 0) {
-            return NullableMessageSequenceNumber.noMessage();
+        if (usesInts) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                return NullableMessageSequenceNumber.noMessage();
+            }
+            int position = Arrays.binarySearch(uidsAsInts.elements(), 0, uidsAsInts.size(), (int) uid.asLong());
+            if (position < 0) {
+                return NullableMessageSequenceNumber.noMessage();
+            }
+            return NullableMessageSequenceNumber.of(position + 1);
+        } else {
+            int position =  Arrays.binarySearch(uids.elements(), 0, uids.size(), uid.asLong());
+            if (position < 0) {
+                return NullableMessageSequenceNumber.noMessage();
+            }
+            return NullableMessageSequenceNumber.of(position + 1);
         }
-        return NullableMessageSequenceNumber.of(position + 1);
     }
 
     public synchronized Optional<MessageUid> getUid(int msn) {
-        if (msn <= uids.size() && msn > 0) {
-            return Optional.of(uids.get(msn - 1));
+        if (usesInts) {
+            if (msn <= uidsAsInts.size() && msn > 0) {
+                return Optional.of(MessageUid.of(uidsAsInts.getInt(msn - 1)));
+            }
+        } else {
+            if (msn <= uids.size() && msn > 0) {
+                return Optional.of(MessageUid.of(uids.getLong(msn - 1)));
+            }
         }
         return Optional.empty();
     }
 
     public synchronized Optional<MessageUid> getLastUid() {
-        if (uids.isEmpty()) {
+        if (uidsAsInts.isEmpty() && uids.isEmpty()) {
             return Optional.empty();
         }
         return getUid(getLastMsn());
@@ -80,42 +132,86 @@ public class UidMsnConverter {
     }
 
     public synchronized int getNumMessage() {
-        return uids.size();
+        if (usesInts) {
+            return uidsAsInts.size();
+        } else {
+            return uids.size();
+        }
     }
 
     public synchronized void remove(MessageUid uid) {
-        uids.remove(uid);
+        removeUnsynchronized(uid);
+    }
+
+    private void removeUnsynchronized(MessageUid uid) {
+        if (usesInts) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                return;
+            }
+            int index = Arrays.binarySearch(uidsAsInts.elements(), 0, uidsAsInts.size(), (int) uid.asLong());
+            if (index >= 0) {
+                uidsAsInts.removeInt(index);
+            }
+        } else {
+            int index = Arrays.binarySearch(uids.elements(), 0, uids.size(), (int) uid.asLong());
+            if (index >= 0) {
+                uids.removeLong(index);
+            }
+        }
     }
 
     public synchronized NullableMessageSequenceNumber getAndRemove(MessageUid uid) {
         NullableMessageSequenceNumber result = getMsnUnsynchronized(uid);
-        uids.remove(uid);
+        removeUnsynchronized(uid);
         return result;
     }
 
     public synchronized boolean isEmpty() {
-        return uids.isEmpty();
+        return uids.isEmpty() && uidsAsInts.isEmpty();
     }
 
     public synchronized void clear() {
         uids.clear();
+        uidsAsInts.clear();
     }
 
     public synchronized void addUid(MessageUid uid) {
-        if (uids.contains(uid)) {
-            return;
-        }
-        if (isLastUid(uid)) {
-            uids.add(uid);
+        addUidUnSynchronized(uid);
+    }
+
+    private void addUidUnSynchronized(MessageUid uid) {
+        if (usesInts) {
+            if (uid.asLong() > INTERGER_MAX_VALUE) {
+                switchToLongs();
+                addUidUnSynchronized(uid);
+                return;
+            }
+            if (uidsAsInts.contains((int) uid.asLong())) {
+                return;
+            }
+            if (isLastUid(uid)) {
+                uidsAsInts.add((int) uid.asLong());
+            } else {
+                uidsAsInts.add((int) uid.asLong());
+                uidsAsInts.sort(IntComparators.NATURAL_COMPARATOR);
+                Collections.sort(uids);
+            }
         } else {
-            uids.add(uid);
-            Collections.sort(uids);
+            if (uids.contains(uid.asLong())) {
+                return;
+            }
+            if (isLastUid(uid)) {
+                uids.add(uid.asLong());
+            } else {
+                uids.add(uid.asLong());
+                uids.sort(LongComparators.NATURAL_COMPARATOR);
+            }
         }
     }
 
     private boolean isLastUid(MessageUid uid) {
         Optional<MessageUid> lastUid = getLastUid();
-        return !lastUid.isPresent() ||
+        return lastUid.isEmpty() ||
             lastUid.get().compareTo(uid) < 0;
     }
 

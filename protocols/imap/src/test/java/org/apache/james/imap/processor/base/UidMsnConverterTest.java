@@ -461,8 +461,14 @@ class UidMsnConverterTest {
 
     private Map<Integer, MessageUid> mapTesteeInternalDataToMsnByUid() {
         ImmutableMap.Builder<Integer, MessageUid> result = ImmutableMap.builder();
+        if (testee.usesInts) {
+            for (int i = 0; i < testee.uidsAsInts.size(); i++) {
+                result.put(i + 1, MessageUid.of(testee.uidsAsInts.get(i)));
+            }
+            return result.build();
+        }
         for (int i = 0; i < testee.uids.size(); i++) {
-            result.put(i + 1, testee.uids.get(i));
+            result.put(i + 1, MessageUid.of(testee.uids.get(i)));
         }
         return result.build();
     }
