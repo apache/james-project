@@ -30,7 +30,6 @@ import java.util.Set;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -54,7 +53,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -64,11 +62,6 @@ import reactor.core.publisher.Flux;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
-
-    /**
-     * The {@link ImapCommand} which should be used for the response if some CONDSTORE option is used
-     */
-    private static final ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
     public StoreProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -78,127 +71,33 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     @Override
     protected void processRequest(StoreRequest request, ImapSession session, Responder responder) {
         IdRange[] idSet = request.getIdSet();
-        boolean useUids = request.isUseUids();
-        long unchangedSince = request.getUnchangedSince();
+        List<MessageUid> failed = new ArrayList<>();
+        List<NullableMessageSequenceNumber> failedMsns = new ArrayList<>();
+        Flags flags = request.getFlags();
+        List<String> userFlags = Arrays.asList(flags.getUserFlags());
+
+        if (rejectUnchangedSinceZeroWithSystemFlagUpdate(request, responder, idSet, flags)) {
+            return;
+        }
 
         try {
+            SelectedMailbox selected = session.getSelected();
+            MailboxSession mailboxSession = session.getMailboxSession();
+
             MessageManager mailbox = getSelectedMailbox(session)
                 .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-            MailboxSession mailboxSession = session.getMailboxSession();
-            Flags flags = request.getFlags();
-
-            if (unchangedSince == 0) {
-                Flags.Flag[] systemFlags = flags.getSystemFlags();
-                if (systemFlags != null && systemFlags.length != 0) {
-                    // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
-                    //
-                    // See RFC4551 3.2. STORE and UID STORE Command;
-                    //
-                    //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
-                    //       fails if the metadata item exists.  A system flag MUST always be
-                    //       considered existent, whether it was set or not.
-                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idSet));
-                    responder.respond(response);
-                    return;
-                }
-            } 
-            final List<MessageUid> failed = new ArrayList<>();
-            List<NullableMessageSequenceNumber> failedMsns = new ArrayList<>();
-            final List<String> userFlags = Arrays.asList(flags.getUserFlags());
             for (IdRange range : idSet) {
-                final SelectedMailbox selected = session.getSelected();
-                MessageRange messageSet = messageRange(selected, range, useUids);
-                if (messageSet != null) {
-
-                    if (unchangedSince != -1) {
-                        List<MessageUid> uids = new ArrayList<>();
-
-                        Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
-                            mailbox.listMessagesMetadata(messageSet, mailboxSession))
-                            .toStream()
-                            .iterator();
-                        while (results.hasNext()) {
-                            ComposedMessageIdWithMetaData r = results.next();
-                            MessageUid uid = r.getComposedMessageId().getUid();
-
-                            boolean fail = false;
-
-                            // Check if UNCHANGEDSINCE 0 was used and the Message contains the request flag.
-                            // In such cases we need to fail for this message.
-                            //
-                            // From RFC4551:
-                            //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
-                            //       fails if the metadata item exists.  A system flag MUST always be
-                            //       considered existent, whether it was set or not.
-                            if (unchangedSince == 0) {
-                                String[] uFlags = r.getFlags().getUserFlags();
-                                for (String uFlag : uFlags) {
-                                    if (userFlags.contains(uFlag)) {
-                                        fail = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            // Check if the mod-sequence of the message is <= the unchangedsince.
-                            //
-                            // See RFC4551 3.2. STORE and UID STORE Commands
-                            if (!fail && r.getModSeq().asLong() <= unchangedSince) {
-                                uids.add(uid);
-                            } else {
-                                if (useUids) {
-                                    failed.add(uid);
-                                } else {
-                                    failedMsns.add(selected.msn(uid));
-                                }
-                            }
-                        }
-                        List<MessageRange> mRanges = MessageRange.toRanges(uids);
-                        for (MessageRange mRange : mRanges) {
-                            setFlags(request, mailboxSession, mailbox, mRange, session, responder);
-                        }
-                    } else {
-                        setFlags(request, mailboxSession, mailbox, messageSet, session, responder);
-                    }
-
-                }
-
-
+                MessageRange messageSet = messageRange(selected, range, request.isUseUids());
+                handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet);
             }
-            final boolean omitExpunged = (!useUids);
-            unsolicitedResponses(session, responder, omitExpunged, useUids).block();
+            boolean omitExpunged = (!request.isUseUids());
+            unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()).block();
             
             // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
             if (failed.isEmpty() && failedMsns.isEmpty()) {
                 okComplete(request, responder);
             } else {
-                if (useUids) {
-                    List<MessageRange> ranges = MessageRange.toRanges(failed);
-                    UidRange[] idRanges = new UidRange[ranges.size()];
-                    for (int i = 0; i < ranges.size(); i++) {
-                        MessageRange r = ranges.get(i);
-                        if (r.getType() == Type.ONE) {
-                            idRanges[i] = new UidRange(r.getUidFrom());
-                        } else {
-                            idRanges[i] = new UidRange(r.getUidFrom(), r.getUidTo());
-                        }
-                    }
-                    // we need to return the failed sequences
-                    //
-                    // See RFC4551 3.2. STORE and UID STORE Commands
-                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
-                    responder.respond(response);
-                } else {
-                    List<IdRange> ranges = new ArrayList<>();
-                    for (NullableMessageSequenceNumber msn: failedMsns) {
-                        msn.ifPresent(id -> ranges.add(new IdRange(id.asInt())));
-                    }
-                    IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(IdRange[]::new);
-                    // See RFC4551 3.2. STORE and UID STORE Commands
-                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
-                    responder.respond(response);
-                    
-                }
+                respondFailed(request, responder, failed, failedMsns);
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
@@ -208,20 +107,137 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             no(request, responder, HumanReadableText.SAVE_FAILED);
         }
     }
-    
+
+    private void handleRange(StoreRequest request, ImapSession session, Responder responder, SelectedMailbox selected, MessageManager mailbox, MailboxSession mailboxSession, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, MessageRange messageSet) throws MailboxException {
+        if (messageSet != null) {
+
+            if (request.getUnchangedSince() != -1) {
+                List<MessageUid> uids = new ArrayList<>();
+
+                Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
+                    mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                    .toStream()
+                    .iterator();
+                while (results.hasNext()) {
+                    ComposedMessageIdWithMetaData r = results.next();
+                    checkIfFailed(request, selected, failed, failedMsns, userFlags, uids, r);
+                }
+                List<MessageRange> mRanges = MessageRange.toRanges(uids);
+                for (MessageRange mRange : mRanges) {
+                    setFlags(request, mailboxSession, mailbox, mRange, session, responder);
+                }
+            } else {
+                setFlags(request, mailboxSession, mailbox, messageSet, session, responder);
+            }
+        }
+    }
+
+    private void checkIfFailed(StoreRequest request, SelectedMailbox selected, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns, List<String> userFlags, List<MessageUid> uids, ComposedMessageIdWithMetaData r) {
+        MessageUid uid = r.getComposedMessageId().getUid();
+
+        boolean fail = false;
+
+        // Check if UNCHANGEDSINCE 0 was used and the Message contains the request flag.
+        // In such cases we need to fail for this message.
+        //
+        // From RFC4551:
+        //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
+        //       fails if the metadata item exists.  A system flag MUST always be
+        //       considered existent, whether it was set or not.
+        if (request.getUnchangedSince() == 0) {
+            String[] uFlags = r.getFlags().getUserFlags();
+            for (String uFlag : uFlags) {
+                if (userFlags.contains(uFlag)) {
+                    fail = true;
+                    break;
+                }
+            }
+        }
+
+        // Check if the mod-sequence of the message is <= the unchangedsince.
+        //
+        // See RFC4551 3.2. STORE and UID STORE Commands
+        if (!fail && r.getModSeq().asLong() <= request.getUnchangedSince()) {
+            uids.add(uid);
+        } else {
+            if (request.isUseUids()) {
+                failed.add(uid);
+            } else {
+                failedMsns.add(selected.msn(uid));
+            }
+        }
+    }
+
+    private boolean rejectUnchangedSinceZeroWithSystemFlagUpdate(StoreRequest request, Responder responder, IdRange[] idSet, Flags flags) {
+        if (request.getUnchangedSince() == 0) {
+            Flags.Flag[] systemFlags = flags.getSystemFlags();
+            if (systemFlags != null && systemFlags.length != 0) {
+                // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
+                //
+                // See RFC4551 3.2. STORE and UID STORE Command
+                //
+                //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
+                //       fails if the metadata item exists.  A system flag MUST always be
+                //       considered existent, whether it was set or not.
+                StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idSet));
+                responder.respond(response);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void respondFailed(StoreRequest request, Responder responder, List<MessageUid> failed, List<NullableMessageSequenceNumber> failedMsns) {
+        if (request.isUseUids()) {
+            UidRange[] idRanges = MessageRange.toRanges(failed)
+                .stream()
+                .map(r -> new UidRange(r.getUidFrom(), r.getUidTo()))
+                .toArray(UidRange[]::new);
+            // we need to return the failed sequences
+            //
+            // See RFC4551 3.2. STORE and UID STORE Commands
+            StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
+            responder.respond(response);
+        } else {
+            List<IdRange> ranges = new ArrayList<>();
+            for (NullableMessageSequenceNumber msn: failedMsns) {
+                msn.ifPresent(id -> ranges.add(new IdRange(id.asInt())));
+            }
+            IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(IdRange[]::new);
+            // See RFC4551 3.2. STORE and UID STORE Commands
+            StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
+            responder.respond(response);
+        }
+    }
+
     /**
      * Set the flags for given messages
      */
     private void setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder) throws MailboxException {
-        
-        final Flags flags = request.getFlags();
-        final boolean useUids = request.isUseUids();
-        final boolean silent = request.isSilent();
-        final long unchangedSince = request.getUnchangedSince();
-        final MessageManager.FlagsUpdateMode mode = request.getFlagsUpdateMode();
+        boolean silent = request.isSilent();
+        long unchangedSince = request.getUnchangedSince();
         
         SelectedMailbox selected = session.getSelected();
-        final Map<MessageUid, Flags> flagsByUid = mailbox.setFlags(flags, mode, messageSet, mailboxSession);
+        Map<MessageUid, Flags> flagsByUid = mailbox.setFlags(request.getFlags(), request.getFlagsUpdateMode(), messageSet, mailboxSession);
+        handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected);
+
+        Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
+        boolean qresyncEnabled = enabled.contains(ImapConstants.SUPPORTS_QRESYNC);
+        boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
+        
+        if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
+            Map<MessageUid, ModSeq> modSeqs = computeModSeqs(mailboxSession, mailbox, messageSet, unchangedSince, qresyncEnabled, condstoreEnabled);
+
+            sendFetchResponses(responder, request.isUseUids(), silent, unchangedSince, selected, flagsByUid, qresyncEnabled, condstoreEnabled, modSeqs);
+
+            if (unchangedSince != -1) {
+                // Enable CONDSTORE as this is a CONDSTORE enabling command
+                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), true);
+            }
+        }
+    }
+
+    private void handlePermanentFlagChanges(MailboxSession mailboxSession, MessageManager mailbox, Responder responder, SelectedMailbox selected) throws MailboxException {
         // As the STORE command is allowed to create a new "flag/keyword", we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
         // if some new flag/keyword was used
         // See IMAP-303
@@ -230,89 +246,85 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), selected);
             selected.resetNewApplicableFlags();
         }
-        
-        Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
-        boolean qresyncEnabled = enabled.contains(ImapConstants.SUPPORTS_QRESYNC);
-        boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
-        
-        if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            final Map<MessageUid, ModSeq> modSeqs = new HashMap<>();
-           
-            // Check if we need to also send the the mod-sequences back to the client
-            //
-            // This is the case if one of these is true:
-            //      - UNCHANGEDSINCE was used
-            //      - CONDSTORE was enabled via ENABLE CONDSTORE
-            //      - QRESYNC was enabled via ENABLE QRESYNC
-            //
-            if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-                Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
-                    mailbox.listMessagesMetadata(messageSet, mailboxSession))
-                    .toStream()
-                    .iterator();
-                while (results.hasNext()) {
-                    ComposedMessageIdWithMetaData r = results.next();
-                    // Store the modseq for the uid for later usage in the response
-                    modSeqs.put(r.getComposedMessageId().getUid(),r.getModSeq());
+    }
+
+    private void sendFetchResponses(Responder responder, boolean useUids, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs) throws MailboxException {
+        for (Map.Entry<MessageUid, Flags> entry : flagsByUid.entrySet()) {
+            final MessageUid uid = entry.getKey();
+
+            selected.msn(uid).fold(() -> {
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().asString());
+                // skip this as it was not found in the mapping
+                //
+                // See IMAP-346
+                return null;
+            }, msn -> {
+
+                final Flags resultFlags = entry.getValue();
+                final MessageUid resultUid;
+
+                // Check if we need to include the uid. T
+                //
+                // This is the case if one of these is true:
+                //      - FETCH (UID...)  was used
+                //      - QRESYNC was enabled via ENABLE QRESYNC
+                if (useUids || qresyncEnabled) {
+                    resultUid = uid;
+                } else {
+                    resultUid = null;
                 }
-            }
-            
-            for (Map.Entry<MessageUid, Flags> entry : flagsByUid.entrySet()) {
-                final MessageUid uid = entry.getKey();
 
-                selected.msn(uid).fold(() -> {
-                    LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().asString());
-                    // skip this as it was not found in the mapping
-                    // 
-                    // See IMAP-346
-                    return null;
-                }, msn -> {
+                if (selected.isRecent(uid)) {
+                    resultFlags.add(Flags.Flag.RECENT);
+                }
 
-                    final Flags resultFlags = entry.getValue();
-                    final MessageUid resultUid;
+                FetchResponse response = computeFetchResponse(silent, unchangedSince, qresyncEnabled, condstoreEnabled, modSeqs, uid, msn, resultFlags, resultUid);
+                responder.respond(response);
+                return null;
+            });
+        }
+    }
 
-                    // Check if we need to include the uid. T
-                    //
-                    // This is the case if one of these is true:
-                    //      - FETCH (UID...)  was used
-                    //      - QRESYNC was enabled via ENABLE QRESYNC
-                    if (useUids || qresyncEnabled) {
-                        resultUid = uid;
-                    } else {
-                        resultUid = null;
-                    }
+    private Map<MessageUid, ModSeq> computeModSeqs(MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, long unchangedSince, boolean qresyncEnabled, boolean condstoreEnabled) {
+        final Map<MessageUid, ModSeq> modSeqs = new HashMap<>();
 
-                    if (selected.isRecent(uid)) {
-                        resultFlags.add(Flags.Flag.RECENT);
-                    }
-
-                    final FetchResponse response;
-                    // For more information related to the FETCH response see
-                    //
-                    // RFC4551 3.2. STORE and UID STORE Commands
-                    if (silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
-                        // We need to return an FETCH response which contains the mod-sequence of the message even if FLAGS.SILENT was used
-                        response = new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
-                    } else if (!silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
-                        //
-                        // Use a FETCH response which contains the mod-sequence and the flags
-                        response = new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
-                    } else {
-                        // Use a FETCH response which only contains the flags as no CONDSTORE was used
-                        response = new FetchResponse(msn, resultFlags, resultUid, null, null, null, null, null, null, null);
-                    }
-                    responder.respond(response);
-                    return null;
-                });
-            }
-
-            if (unchangedSince != -1) {
-                // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), true);
-                                  
+        // Check if we need to also send the the mod-sequences back to the client
+        //
+        // This is the case if one of these is true:
+        //      - UNCHANGEDSINCE was used
+        //      - CONDSTORE was enabled via ENABLE CONDSTORE
+        //      - QRESYNC was enabled via ENABLE QRESYNC
+        //
+        if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
+            Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
+                mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                .toStream()
+                .iterator();
+            while (results.hasNext()) {
+                ComposedMessageIdWithMetaData r = results.next();
+                // Store the modseq for the uid for later usage in the response
+                modSeqs.put(r.getComposedMessageId().getUid(),r.getModSeq());
             }
         }
-        
+        return modSeqs;
+    }
+
+    private FetchResponse computeFetchResponse(boolean silent, long unchangedSince, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs, MessageUid uid, org.apache.james.mailbox.MessageSequenceNumber msn, Flags resultFlags, MessageUid resultUid) {
+        // For more information related to the FETCH response see
+        //
+        // RFC4551 3.2. STORE and UID STORE Commands
+        if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
+            if (silent) {
+                // We need to return an FETCH response which contains the mod-sequence of the message even if FLAGS.SILENT was used
+                return new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
+            } else {
+                // Use a FETCH response which contains the mod-sequence and the flags
+                return new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
+            }
+        } else {
+            // Use a FETCH response which only contains the flags as no CONDSTORE was used
+            return new FetchResponse(msn, resultFlags, resultUid, null, null, null, null, null, null, null);
+        }
     }
 
     @Override
