@@ -70,7 +70,7 @@ import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
-import org.apache.james.imap.processor.base.AbstractChainedProcessor;
+import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
 import org.apache.james.mailbox.MailboxSession;
@@ -542,7 +542,7 @@ class IMAPServerTest {
 
         @RepeatedTest(10)
         void concurrencyShouldNotLeadToCommandInjection() throws Exception {
-            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractChainedProcessor.class);
+            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);
 
             send("a0 STARTTLS\r\n");
             send("a1 NOOP\r\n");
