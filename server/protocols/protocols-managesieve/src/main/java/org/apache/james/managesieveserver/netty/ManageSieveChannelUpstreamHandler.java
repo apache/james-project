@@ -73,6 +73,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
                 turnSSLon(ctx.getChannel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+                attachment.stopDetectingCommandInjection();
             }
         }
     }
