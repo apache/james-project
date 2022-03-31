@@ -36,8 +36,7 @@ public class QuotaSearchIndexCreationUtil {
                                        ElasticSearchConfiguration configuration) {
         return new IndexCreationFactory(configuration)
             .useIndex(indexName)
-            .addAlias(readAlias)
-            .addAlias(writeAlias)
+            .addAlias(readAlias, writeAlias)
             .createIndexAndAliases(client, QuotaRatioMappingFactory.getMappingContent());
     }
 

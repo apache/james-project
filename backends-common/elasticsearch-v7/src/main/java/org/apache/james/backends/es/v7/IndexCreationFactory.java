@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -75,53 +76,83 @@ public class IndexCreationFactory {
 
     static class IndexCreationPerformer {
         public static class Builder {
-            private final int nbShards;
-            private final int nbReplica;
-            private final int waitForActiveShards;
-            private final IndexName indexName;
-            private final ImmutableList.Builder<AliasName> aliases;
-            private Optional<IndexCreationCustomElement> customAnalyzers;
-            private Optional<IndexCreationCustomElement> customTokenizers;
 
-            public Builder(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
-                this.nbShards = nbShards;
-                this.nbReplica = nbReplica;
-                this.waitForActiveShards = waitForActiveShards;
-                this.indexName = indexName;
-                this.aliases = ImmutableList.builder();
-                this.customAnalyzers = Optional.empty();
-                this.customTokenizers = Optional.empty();
+            @FunctionalInterface
+            public interface RequireNbShards {
+                RequireNbReplica nbShards(int nbShards);
             }
 
-            public Builder addAlias(AliasName aliasName) {
-                Preconditions.checkNotNull(aliasName);
-                this.aliases.add(aliasName);
-                return this;
+            @FunctionalInterface
+            public interface RequireNbReplica {
+                RequireWaitForActiveShards nbReplica(int nbReplica);
             }
 
-            public Builder customAnalyzers(IndexCreationCustomElement customAnalyzers) {
-                Preconditions.checkNotNull(customAnalyzers);
-                this.customAnalyzers = Optional.of(customAnalyzers);
-                return this;
+            @FunctionalInterface
+            public interface RequireWaitForActiveShards {
+                RequireIndexName waitForActiveShards(int waitForActiveShards);
             }
 
-            public Builder customTokenizers(IndexCreationCustomElement customTokenizers) {
-                Preconditions.checkNotNull(customTokenizers);
-                this.customTokenizers = Optional.of(customTokenizers);
-                return this;
+            @FunctionalInterface
+            public interface RequireIndexName {
+                RequireAlias indexName(IndexName indexName);
             }
 
-            public IndexCreationPerformer build() {
-                return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build(), customAnalyzers, customTokenizers);
+            @FunctionalInterface
+            public interface RequireAlias {
+                FinalStage addAlias(Collection<AliasName> aliases);
+
+                default FinalStage addAlias(AliasName... aliases) {
+                    return addAlias(ImmutableList.copyOf(aliases));
+                }
             }
 
-            public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
-                return build().createIndexAndAliases(client, Optional.empty());
-            }
+            public static class FinalStage {
+                private final int nbShards;
+                private final int nbReplica;
+                private final int waitForActiveShards;
+                private final IndexName indexName;
+                private final ImmutableList<AliasName> aliases;
+                private Optional<IndexCreationCustomElement> customAnalyzers;
+                private Optional<IndexCreationCustomElement> customTokenizers;
 
-            public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
-                return build().createIndexAndAliases(client, Optional.of(mappingContent));
+                FinalStage(int nbShards, int nbReplica, int waitForActiveShards,
+                           IndexName indexName, Collection<AliasName> aliases) {
+                    this.nbShards = nbShards;
+                    this.nbReplica = nbReplica;
+                    this.waitForActiveShards = waitForActiveShards;
+                    this.indexName = indexName;
+                    this.aliases = ImmutableList.copyOf(aliases);
+                    this.customAnalyzers = Optional.empty();
+                    this.customTokenizers = Optional.empty();
+                }
+
+                public FinalStage customAnalyzers(IndexCreationCustomElement customAnalyzers) {
+                    this.customAnalyzers = Optional.of(customAnalyzers);
+                    return this;
+                }
+
+                public FinalStage customTokenizers(IndexCreationCustomElement customTokenizers) {
+                    this.customTokenizers = Optional.of(customTokenizers);
+                    return this;
+                }
+
+                public IndexCreationPerformer build() {
+                    return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases, customAnalyzers, customTokenizers);
+                }
+
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
+                    return build().createIndexAndAliases(client, Optional.empty());
+                }
+
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
+                    return build().createIndexAndAliases(client, Optional.of(mappingContent));
+                }
             }
+        }
+
+        public static Builder.RequireNbShards builder() {
+            return nbShards -> nbReplica -> waitForActiveShards -> indexName -> aliases
+                -> new Builder.FinalStage(nbShards, nbReplica, waitForActiveShards, indexName, aliases);
         }
 
         private final int nbShards;
@@ -132,11 +163,7 @@ public class IndexCreationFactory {
         private final Optional<IndexCreationCustomElement> customAnalyzers;
         private final Optional<IndexCreationCustomElement> customTokenizers;
 
-        public IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases) {
-            this(nbShards, nbReplica, waitForActiveShards, indexName, aliases, Optional.empty(), Optional.empty());
-        }
-
-        public IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases,
+        IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases,
                                       Optional<IndexCreationCustomElement> customAnalyzers, Optional<IndexCreationCustomElement> customTokenizers) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
@@ -303,8 +330,12 @@ public class IndexCreationFactory {
         this.waitForActiveShards = configuration.getWaitForActiveShards();
     }
 
-    public IndexCreationPerformer.Builder useIndex(IndexName indexName) {
+    public IndexCreationPerformer.Builder.RequireAlias useIndex(IndexName indexName) {
         Preconditions.checkNotNull(indexName);
-        return new IndexCreationPerformer.Builder(nbShards, nbReplica, waitForActiveShards, indexName);
+        return IndexCreationPerformer.builder()
+            .nbShards(nbShards)
+            .nbReplica(nbReplica)
+            .waitForActiveShards(waitForActiveShards)
+            .indexName(indexName);
     }
 }

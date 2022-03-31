@@ -35,8 +35,7 @@ public class MailboxIndexCreationUtil {
                                                            ElasticSearchConfiguration configuration) {
             return new IndexCreationFactory(configuration)
                 .useIndex(indexName)
-                .addAlias(readAlias)
-                .addAlias(writeAlias)
+                .addAlias(readAlias, writeAlias)
                 .createIndexAndAliases(client, MailboxMappingFactory.getMappingContent());
     }
 
