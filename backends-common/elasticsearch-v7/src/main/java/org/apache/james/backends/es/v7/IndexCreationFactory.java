@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -115,9 +116,13 @@ public class IndexCreationFactory {
                     this.customTokenizers = Optional.empty();
                 }
 
-                public FinalStage addAlias(AliasName aliasName) {
-                    Preconditions.checkNotNull(aliasName);
-                    this.aliases.add(aliasName);
+                public FinalStage addAlias(AliasName... aliases) {
+                    this.aliases.add(aliases);
+                    return this;
+                }
+
+                public FinalStage addAlias(Collection<AliasName> aliases) {
+                    this.aliases.addAll(ImmutableList.copyOf(aliases));
                     return this;
                 }
 
