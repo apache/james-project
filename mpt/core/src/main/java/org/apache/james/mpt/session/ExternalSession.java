@@ -159,15 +159,7 @@ public final class ExternalSession implements Session {
     @Override
     public void writeLine(String line) throws Exception {
         monitor.note("-> " + line);
-        monitor.debug("[Writing line]");
-        ByteBuffer writeBuffer = US_ASCII.encode(line);
-        while (writeBuffer.hasRemaining()) {
-            socket.write(writeBuffer);
-        }
-        lineEndBuffer.rewind();
-        while (lineEndBuffer.hasRemaining()) {
-            socket.write(lineEndBuffer);
-        }
+        socket.write(ByteBuffer.wrap((line + "\r\n").getBytes(US_ASCII)));
         monitor.debug("[Done]");
     }
 

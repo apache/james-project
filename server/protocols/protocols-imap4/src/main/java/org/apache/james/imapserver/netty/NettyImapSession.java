@@ -144,6 +144,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
             filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
         }
         channel.getPipeline().addFirst(SSL_HANDLER, filter);
+        stopDetectingCommandInjection();
 
         channel.setReadable(true);
 

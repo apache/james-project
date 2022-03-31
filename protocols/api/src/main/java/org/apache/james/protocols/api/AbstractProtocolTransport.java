@@ -53,6 +53,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             // reset state on starttls
             if (startTLS) {
                 session.resetState();
+                session.stopDetectingCommandInjection();
             }
 
             if (response.isEndSession()) {
