@@ -22,7 +22,11 @@ package org.apache.james.backends.es.v7;
 import static org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -33,65 +37,147 @@ import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class IndexCreationFactory {
 
-    public static class AliasSpecificationStep {
-        private final int nbShards;
-        private final int nbReplica;
-        private final int waitForActiveShards;
-        private final IndexName indexName;
-        private final ImmutableList.Builder<AliasName> aliases;
+    public static class IndexCreationCustomElement {
+        public static IndexCreationCustomElement EMPTY = from("{}");
 
-        AliasSpecificationStep(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
-            this.nbShards = nbShards;
-            this.nbReplica = nbReplica;
-            this.waitForActiveShards = waitForActiveShards;
-            this.indexName = indexName;
-            this.aliases = ImmutableList.builder();
+        public static IndexCreationCustomElement from(String value) {
+            try {
+                new ObjectMapper().readTree(value);
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException("value must be a valid json");
+            }
+            return new IndexCreationCustomElement(value);
         }
 
-        public AliasSpecificationStep addAlias(AliasName aliasName) {
-            Preconditions.checkNotNull(aliasName);
-            this.aliases.add(aliasName);
-            return this;
+        private final String payload;
+
+        IndexCreationCustomElement(String payload) {
+            this.payload = payload;
         }
 
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
-            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client, Optional.empty());
-        }
-
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
-            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client, Optional.of(mappingContent));
+        public String getPayload() {
+            return payload;
         }
     }
 
     static class IndexCreationPerformer {
+        public static class Builder {
+
+            @FunctionalInterface
+            public interface RequireNbShards {
+                RequireNbReplica nbShards(int nbShards);
+            }
+
+            @FunctionalInterface
+            public interface RequireNbReplica {
+                RequireWaitForActiveShards nbReplica(int nbReplica);
+            }
+
+            @FunctionalInterface
+            public interface RequireWaitForActiveShards {
+                RequireIndexName waitForActiveShards(int waitForActiveShards);
+            }
+
+            @FunctionalInterface
+            public interface RequireIndexName {
+                FinalStage indexName(IndexName indexName);
+            }
+
+            public static class FinalStage {
+                private final int nbShards;
+                private final int nbReplica;
+                private final int waitForActiveShards;
+                private final IndexName indexName;
+                private final ImmutableList.Builder<AliasName> aliases;
+                private Optional<IndexCreationCustomElement> customAnalyzers;
+                private Optional<IndexCreationCustomElement> customTokenizers;
+
+                FinalStage(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
+                    this.nbShards = nbShards;
+                    this.nbReplica = nbReplica;
+                    this.waitForActiveShards = waitForActiveShards;
+                    this.indexName = indexName;
+                    this.aliases = ImmutableList.builder();;
+                    this.customAnalyzers = Optional.empty();
+                    this.customTokenizers = Optional.empty();
+                }
+
+                public FinalStage addAlias(AliasName... aliases) {
+                    this.aliases.add(aliases);
+                    return this;
+                }
+
+                public FinalStage addAlias(Collection<AliasName> aliases) {
+                    this.aliases.addAll(ImmutableList.copyOf(aliases));
+                    return this;
+                }
+
+                public FinalStage customAnalyzers(IndexCreationCustomElement customAnalyzers) {
+                    this.customAnalyzers = Optional.of(customAnalyzers);
+                    return this;
+                }
+
+                public FinalStage customTokenizers(IndexCreationCustomElement customTokenizers) {
+                    this.customTokenizers = Optional.of(customTokenizers);
+                    return this;
+                }
+
+                public IndexCreationPerformer build() {
+                    return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build(), customAnalyzers, customTokenizers);
+                }
+
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
+                    return build().createIndexAndAliases(client, Optional.empty());
+                }
+
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
+                    return build().createIndexAndAliases(client, Optional.of(mappingContent));
+                }
+            }
+        }
+
+        public static Builder.RequireNbShards builder() {
+            return nbShards -> nbReplica -> waitForActiveShards -> indexName
+                -> new Builder.FinalStage(nbShards, nbReplica, waitForActiveShards, indexName);
+        }
+
         private final int nbShards;
         private final int nbReplica;
         private final int waitForActiveShards;
         private final IndexName indexName;
         private final ImmutableList<AliasName> aliases;
+        private final Optional<IndexCreationCustomElement> customAnalyzers;
+        private final Optional<IndexCreationCustomElement> customTokenizers;
 
-        public IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases) {
+        private IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases,
+                                      Optional<IndexCreationCustomElement> customAnalyzers, Optional<IndexCreationCustomElement> customTokenizers) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
             this.waitForActiveShards = waitForActiveShards;
             this.indexName = indexName;
             this.aliases = aliases;
+            this.customAnalyzers = customAnalyzers;
+            this.customTokenizers = customTokenizers;
         }
 
         public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> mappingContent) {
             Preconditions.checkNotNull(indexName);
             try {
-                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica, waitForActiveShards), mappingContent);
+                createIndexIfNeeded(client, indexName, generateSetting(), mappingContent);
                 aliases.forEach(Throwing.<AliasName>consumer(alias -> createAliasIfNeeded(client, indexName, alias))
                     .sneakyThrow());
             } catch (IOException e) {
@@ -139,7 +225,7 @@ public class IndexCreationFactory {
             return client.indices().exists(new GetIndexRequest(indexName.getValue()), RequestOptions.DEFAULT);
         }
 
-        private XContentBuilder generateSetting(int nbShards, int nbReplica, int waitForActiveShards) throws IOException {
+        private XContentBuilder generateSetting() throws IOException {
             return jsonBuilder()
                 .startObject()
                     .startObject("settings")
@@ -158,23 +244,8 @@ public class IndexCreationFactory {
                                     .endArray()
                                 .endObject()
                             .endObject()
-                            .startObject("analyzer")
-                                .startObject(KEEP_MAIL_AND_URL)
-                                    .field("tokenizer", "uax_url_email")
-                                    .startArray("filter")
-                                        .value("lowercase")
-                                        .value("stop")
-                                    .endArray()
-                                .endObject()
-                                .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
-                                    .field("tokenizer", "uax_url_email")
-                                    .startArray("filter")
-                                        .value("lowercase")
-                                        .value("stop")
-                                        .value(ENGLISH_SNOWBALL)
-                                    .endArray()
-                                .endObject()
-                            .endObject()
+                            .rawField(ANALYZER, generateAnalyzers(), XContentType.JSON)
+                            .rawField(TOKENIZER, generateTokenizer(), XContentType.JSON)
                             .startObject("filter")
                                 .startObject(ENGLISH_SNOWBALL)
                                     .field("type", "snowball")
@@ -184,6 +255,42 @@ public class IndexCreationFactory {
                         .endObject()
                     .endObject()
                 .endObject();
+        }
+
+        private String analyzerDefault() throws IOException {
+            XContentBuilder analyzerBuilder = jsonBuilder()
+                .startObject()
+                    .startObject(KEEP_MAIL_AND_URL)
+                        .field("tokenizer", "uax_url_email")
+                        .startArray("filter")
+                            .value("lowercase")
+                            .value("stop")
+                        .endArray()
+                    .endObject()
+
+                    .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
+                        .field("tokenizer", "uax_url_email")
+                        .startArray("filter")
+                            .value("lowercase")
+                            .value("stop")
+                            .value(ENGLISH_SNOWBALL)
+                        .endArray()
+                    .endObject()
+                .endObject();
+
+            return Strings.toString(analyzerBuilder);
+        }
+
+        private InputStream generateAnalyzers() {
+            return new ByteArrayInputStream(customAnalyzers.orElseGet(Throwing.supplier(() -> IndexCreationCustomElement.from(analyzerDefault())).sneakyThrow())
+                .getPayload()
+                .getBytes(StandardCharsets.UTF_8));
+        }
+
+        private InputStream generateTokenizer() {
+            return new ByteArrayInputStream(customTokenizers.orElse(IndexCreationCustomElement.EMPTY)
+                .getPayload()
+                .getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -212,6 +319,7 @@ public class IndexCreationFactory {
     public static final String FIELDS = "fields";
     public static final String RAW = "raw";
     public static final String ANALYZER = "analyzer";
+    public static final String TOKENIZER = "tokenizer";
     public static final String NORMALIZER = "normalizer";
     public static final String SEARCH_ANALYZER = "search_analyzer";
 
@@ -222,8 +330,12 @@ public class IndexCreationFactory {
         this.waitForActiveShards = configuration.getWaitForActiveShards();
     }
 
-    public AliasSpecificationStep useIndex(IndexName indexName) {
+    public IndexCreationPerformer.Builder.FinalStage useIndex(IndexName indexName) {
         Preconditions.checkNotNull(indexName);
-        return new AliasSpecificationStep(nbShards, nbReplica, waitForActiveShards, indexName);
+        return IndexCreationPerformer.builder()
+            .nbShards(nbShards)
+            .nbReplica(nbReplica)
+            .waitForActiveShards(waitForActiveShards)
+            .indexName(indexName);
     }
 }

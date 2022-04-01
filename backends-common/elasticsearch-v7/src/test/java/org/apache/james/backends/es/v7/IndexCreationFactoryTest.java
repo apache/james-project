@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 
+import org.apache.james.backends.es.v7.IndexCreationFactory.IndexCreationCustomElement;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,10 +41,6 @@ class IndexCreationFactoryTest {
     @BeforeEach
     void setUp() {
         client = elasticSearch.getDockerElasticSearch().clientProvider().get();
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
-            .useIndex(INDEX_NAME)
-            .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(client);
     }
 
     @AfterEach
@@ -52,6 +50,11 @@ class IndexCreationFactoryTest {
 
     @Test
     void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(client);
+
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
@@ -67,11 +70,92 @@ class IndexCreationFactoryTest {
     }
 
     @Test
-    void addAliasShouldThrowWhenNull() {
+    void customAnalyzerShouldNotThrowWhenValidAnalyzer() {
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .customAnalyzers(IndexCreationCustomElement.from("{" +
+                "    \"my_custom_analyzer\": {" +
+                "        \"type\": \"custom\"," +
+                "        \"tokenizer\": \"standard\"," +
+                "        \"char_filter\": [" +
+                "            \"html_strip\"" +
+                "        ]," +
+                "        \"filter\": [" +
+                "            \"lowercase\"," +
+                "            \"asciifolding\"" +
+                "        ]" +
+                "    }" +
+                "}"))
+            .createIndexAndAliases(client);
+    }
+
+    @Test
+    void customAnalyzerShouldThrowWhenInValidAnalyzer() {
         assertThatThrownBy(() ->
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
-                .addAlias(null))
-            .isInstanceOf(NullPointerException.class);
+                .addAlias(ALIAS_NAME)
+                .customAnalyzers(IndexCreationCustomElement.from("{" +
+                    "    \"my_custom_analyzer\": {" +
+                    "        \"type\": \"invalid\"," +
+                    "        \"tokenizer\": \"not_Found_tokenizer\"" +
+                    "    }" +
+                    "}"))
+                .createIndexAndAliases(client))
+            .isInstanceOf(ElasticsearchStatusException.class);
     }
+
+    @Test
+    void customTokenizersShouldNotThrowWhenValidTokenizers() {
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .customTokenizers(IndexCreationCustomElement.from("{" +
+                "        \"custom_tokenizer\": { " +
+                "          \"type\": \"pattern\"," +
+                "          \"pattern\": \"[ .,!?]\"" +
+                "        }" +
+                "      }"))
+            .createIndexAndAliases(client);
+    }
+
+    @Test
+    void customTokenizersShouldThrowWhenInValidTokenizers() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+                .useIndex(INDEX_NAME)
+                .addAlias(ALIAS_NAME)
+                .customTokenizers(IndexCreationCustomElement.from("{" +
+                    "        \"custom_tokenizer\": { " +
+                    "          \"type\": \"invalidType\"," +
+                    "          \"pattern\": \"[ .,!?]\"" +
+                    "        }" +
+                    "      }"))
+                .createIndexAndAliases(client))
+            .isInstanceOf(ElasticsearchStatusException.class);
+    }
+
+    @Test
+    void createIndexShouldNotThrowWhenProvidedValidCustomAnalyzerAndTokenizer() {
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .customAnalyzers(IndexCreationCustomElement.from("{" +
+                "        \"my_custom_analyzer\": { " +
+                "          \"tokenizer\": \"custom_tokenizer\"," +
+                "          \"filter\": [" +
+                "            \"lowercase\"" +
+                "          ]" +
+                "        }" +
+                "      }"))
+            .customTokenizers(IndexCreationCustomElement.from("{" +
+                "        \"custom_tokenizer\": { " +
+                "          \"type\": \"pattern\"," +
+                "          \"pattern\": \"[ .,!?]\"" +
+                "        }" +
+                "      }"))
+            .createIndexAndAliases(client);
+    }
+
 }
