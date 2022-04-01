@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api.process;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -246,4 +247,6 @@ public interface ImapSession extends CommandDetectionSession {
     default boolean isAuthenticatingNonEncryptedWhenRequiredSSL() {
         return isSSLRequired() && !isTLSActive();
     }
+
+    void schedule(Runnable runnable, Duration waitDelay);
 }

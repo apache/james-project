@@ -18,9 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
@@ -28,8 +33,12 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 
 public class FakeImapSession implements ImapSession {
+    private static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
+    private static final ThreadFactory THREAD_FACTORY = NamedThreadFactory.withClassName(FakeImapSession.class);
+    private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE, THREAD_FACTORY);
 
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
 
@@ -182,4 +191,8 @@ public class FakeImapSession implements ImapSession {
         return false;
     }
 
+    @Override
+    public void schedule(Runnable runnable, Duration waitDelay) {
+       EXECUTOR_SERVICE.schedule(runnable, waitDelay.toMillis(), TimeUnit.MILLISECONDS);
+    }
 }

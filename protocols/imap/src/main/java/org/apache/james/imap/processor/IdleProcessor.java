@@ -22,12 +22,9 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
 
 import java.io.Closeable;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.events.Event;
@@ -48,7 +45,6 @@ import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,13 +54,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
 
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_IDLE);
-    public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private static final String DONE = "DONE";
 
-    private TimeUnit heartbeatIntervalUnit;
-    private long heartbeatInterval;
+    private Duration heartbeatInterval;
     private boolean enableIdle;
-    private ScheduledExecutorService heartbeatExecutor;
 
     public IdleProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory) {
@@ -75,13 +68,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     public void configure(ImapConfiguration imapConfiguration) {
         super.configure(imapConfiguration);
 
-        this.heartbeatInterval = imapConfiguration.getIdleTimeInterval();
-        this.heartbeatIntervalUnit = imapConfiguration.getIdleTimeIntervalUnit();
+        this.heartbeatInterval = Duration.of(imapConfiguration.getIdleTimeInterval(), imapConfiguration.getIdleTimeIntervalUnit().toChronoUnit());
         this.enableIdle = imapConfiguration.isEnableIdle();
-        if (enableIdle) {
-            ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-            this.heartbeatExecutor = Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE, threadFactory);
-        }
     }
 
     @Override
@@ -121,7 +109,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         // Check if we should send heartbeats
         if (enableIdle) {
-            heartbeatExecutor.schedule(new Runnable() {
+            session.schedule(new Runnable() {
 
                 @Override
                 public void run() {
@@ -140,10 +128,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         responder.respond(response);
 
                         // schedule the heartbeat again for the next interval
-                        heartbeatExecutor.schedule(this, heartbeatInterval, heartbeatIntervalUnit);
+                        session.schedule(this, heartbeatInterval);
                     }
                 }
-            }, heartbeatInterval, heartbeatIntervalUnit);
+            }, heartbeatInterval);
         }
 
         // Write the response after the listener was add

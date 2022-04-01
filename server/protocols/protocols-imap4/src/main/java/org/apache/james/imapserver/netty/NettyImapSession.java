@@ -19,9 +19,11 @@
 package org.apache.james.imapserver.netty;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
@@ -284,4 +286,8 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return channel.pipeline().get(ZLIB_DECODER) != null;
     }
 
+    @Override
+    public void schedule(Runnable runnable, Duration waitDelay) {
+        channel.eventLoop().schedule(runnable, waitDelay.toMillis(), TimeUnit.MILLISECONDS);
+    }
 }
