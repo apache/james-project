@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
+import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -134,17 +135,31 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
 
-        getMailboxManager().search(
-                MailboxQuery.builder()
-                    .userAndNamespaceFrom(basePath)
-                    .expression(new PrefixedRegex(
-                        basePath.getName(),
-                        ModifiedUtf7.decodeModifiedUTF7(mailboxName),
-                        mailboxSession.getPathDelimiter()))
-                    .build(), Minimal, mailboxSession)
+        getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
             .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath())))
             .then()
             .block();
+    }
+
+    private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
+        if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
+            && basePath.getUser().equals(mailboxSession.getUser())
+            && basePath.getName().isEmpty()
+            && mailboxName.equals("*")) {
+
+            return MailboxQuery.builder()
+                .userAndNamespaceFrom(basePath)
+                .expression(Wildcard.INSTANCE)
+                .build();
+        }
+
+        return MailboxQuery.builder()
+            .userAndNamespaceFrom(basePath)
+            .expression(new PrefixedRegex(
+                basePath.getName(),
+                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                mailboxSession.getPathDelimiter()))
+            .build();
     }
 
     private MailboxPath computeBasePath(ImapSession session, String finalReferencename, boolean isRelative) {
