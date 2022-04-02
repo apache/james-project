@@ -254,19 +254,15 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         Encryption secure = getEncryption();
-        ImapChannelUpstreamHandler.ImapChannelUpstreamHandlerBuilder coreHandlerBuilder = ImapChannelUpstreamHandler.builder()
+        return ImapChannelUpstreamHandler.builder()
             .hello(hello)
             .processor(processor)
             .encoder(encoder)
             .compress(compress)
             .authenticationConfiguration(authenticationConfiguration)
             .secure(secure)
-            .imapMetrics(imapMetrics);
-
-        if (secure != null && secure.isStartTLS()) {
-            coreHandlerBuilder.secure(secure);
-        }
-        return coreHandlerBuilder.build();
+            .imapMetrics(imapMetrics)
+            .build();
     }
 
     @Override
