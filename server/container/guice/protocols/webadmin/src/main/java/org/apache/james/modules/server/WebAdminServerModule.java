@@ -135,6 +135,8 @@ public class WebAdminServerModule extends AbstractModule {
                 .additionalRoutes(additionalRoutes)
                 .jwtPublicKeyPEM(loadPublicKey(fileSystem,
                     Optional.ofNullable(configurationFile.getString("jwt.publickeypem.url", null))))
+                .maxThreadCount(Optional.ofNullable(configurationFile.getInteger("maxThreadCount", null)))
+                .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");

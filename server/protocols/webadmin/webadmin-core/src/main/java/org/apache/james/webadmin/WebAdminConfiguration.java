@@ -59,6 +59,8 @@ public class WebAdminConfiguration {
         private Optional<String> host = Optional.empty();
         private ImmutableList.Builder<String> additionalRoutes = ImmutableList.builder();
         private Optional<String> jwtPublicKey = Optional.empty();
+        private Optional<Integer> maxThreadCount = Optional.empty();
+        private Optional<Integer> minThreadCount = Optional.empty();
 
         public Builder jwtPublicKeyPEM(String jwtPublicKeyPEM) {
             this.jwtPublicKey = Optional.of(jwtPublicKeyPEM);
@@ -131,6 +133,16 @@ public class WebAdminConfiguration {
             return this;
         }
 
+        public Builder minThreadCount(Optional<Integer> minThreadCount) {
+            this.minThreadCount = minThreadCount;
+            return this;
+        }
+
+        public Builder maxThreadCount(Optional<Integer> maxThreadCount) {
+            this.maxThreadCount = maxThreadCount;
+            return this;
+        }
+
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
             Preconditions.checkState(!enabled.get() || port.isPresent(), "You need to specify a port for WebAdminConfiguration");
@@ -142,7 +154,9 @@ public class WebAdminConfiguration {
                 urlCORSOrigin.orElse(CORS_ALL_ORIGINS),
                 host.orElse(DEFAULT_HOST),
                 additionalRoutes.build(),
-                jwtPublicKey);
+                jwtPublicKey,
+                maxThreadCount,
+                minThreadCount);
         }
     }
 
@@ -154,10 +168,12 @@ public class WebAdminConfiguration {
     private final String host;
     private final List<String> additionalRoutes;
     private final Optional<String> jwtPublicKey;
+    private final Optional<Integer> maxThreadCount;
+    private final Optional<Integer> minThreadCount;
 
     @VisibleForTesting
     WebAdminConfiguration(boolean enabled, Optional<PortSupplier> port, Optional<TlsConfiguration> tlsConfiguration,
-                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes, Optional<String> jwtPublicKey) {
+                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes, Optional<String> jwtPublicKey, Optional<Integer> maxThreadCount, Optional<Integer> minThreadCount) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
@@ -166,6 +182,16 @@ public class WebAdminConfiguration {
         this.host = host;
         this.additionalRoutes = additionalRoutes;
         this.jwtPublicKey = jwtPublicKey;
+        this.maxThreadCount = maxThreadCount;
+        this.minThreadCount = minThreadCount;
+    }
+
+    public Optional<Integer> getMaxThreadCount() {
+        return maxThreadCount;
+    }
+
+    public Optional<Integer> getMinThreadCount() {
+        return minThreadCount;
     }
 
     public Optional<String> getJwtPublicKey() {
