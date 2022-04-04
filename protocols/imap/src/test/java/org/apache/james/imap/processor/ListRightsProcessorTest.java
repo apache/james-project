@@ -110,7 +110,7 @@ class ListRightsProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(listRightsRequest, responder, imapSession);
+        subject.doProcess(listRightsRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -128,7 +128,7 @@ class ListRightsProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(listRightsRequest, responder, imapSession);
+        subject.doProcess(listRightsRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -144,7 +144,7 @@ class ListRightsProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
-        subject.doProcess(listRightsRequest, responder, imapSession);
+        subject.doProcess(listRightsRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -169,7 +169,7 @@ class ListRightsProcessorTest {
             .thenReturn(listRights);
 
 
-        subject.doProcess(listRightsRequest, responder, imapSession);
+        subject.doProcess(listRightsRequest, responder, imapSession).block();
 
         ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, USER_1.asString(), listRights);
         verify(responder, times(2)).respond(argumentCaptor.capture());

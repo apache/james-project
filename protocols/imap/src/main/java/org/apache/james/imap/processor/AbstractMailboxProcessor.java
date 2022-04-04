@@ -88,11 +88,12 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     @Override
     protected final Mono<Void> doProcess(R acceptableMessage, Responder responder, ImapSession session) {
         if (acceptableMessage.getCommand().validForState(session.getState())) {
-            getMailboxManager().startProcessingRequest(session.getMailboxSession());
+            MailboxSession mailboxSession = session.getMailboxSession();
+            getMailboxManager().startProcessingRequest(mailboxSession);
 
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(IMAP_PREFIX + acceptableMessage.getCommand().getName(),
                 processRequestReactive(acceptableMessage, session, responder)))
-                .doFinally(type -> getMailboxManager().endProcessingRequest(session.getMailboxSession()))
+                .doFinally(type -> getMailboxManager().endProcessingRequest(mailboxSession))
                 .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
                     no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
                     return Mono.empty();

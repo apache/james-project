@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class GetQuotaProcessorTest {
 
@@ -106,13 +107,13 @@ public class GetQuotaProcessorTest {
             .thenReturn(Flux.just(mailbox));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
-        when(mockedQuotaManager.getQuotas(any(QuotaRoot.class)))
-            .thenReturn(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA));
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA)));
 
         QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
         QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
 
-        testee.doProcess(getQuotaRequest, mockedResponder, imapSession);
+        testee.doProcess(getQuotaRequest, mockedResponder, imapSession).block();
 
         ArgumentCaptor<ImapResponseMessage> argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
         verify(mockedResponder, times(3)).respond(argumentCaptor.capture());
@@ -133,10 +134,10 @@ public class GetQuotaProcessorTest {
             .thenReturn(Flux.just((mailbox)));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
-        when(mockedQuotaManager.getQuotas(any(QuotaRoot.class)))
-            .thenThrow(new MailboxException());
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.error(new MailboxException()));
 
-        testee.doProcess(getQuotaRequest, mockedResponder, imapSession);
+        testee.doProcess(getQuotaRequest, mockedResponder, imapSession).block();
 
         ArgumentCaptor<ImapResponseMessage> argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
         verify(mockedResponder).respond(argumentCaptor.capture());
@@ -156,7 +157,7 @@ public class GetQuotaProcessorTest {
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(false);
 
-        testee.doProcess(getQuotaRequest, mockedResponder, imapSession);
+        testee.doProcess(getQuotaRequest, mockedResponder, imapSession).block();
 
         ArgumentCaptor<ImapResponseMessage> argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
         verify(mockedResponder).respond(argumentCaptor.capture());

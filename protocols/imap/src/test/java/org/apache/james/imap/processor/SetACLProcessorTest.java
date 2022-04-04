@@ -109,7 +109,7 @@ class SetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(setACLRequest, responder, imapSession);
+        subject.doProcess(setACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -127,7 +127,7 @@ class SetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(replaceAclRequest, responder, imapSession);
+        subject.doProcess(replaceAclRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -143,7 +143,7 @@ class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
-        subject.doProcess(replaceAclRequest, responder, imapSession);
+        subject.doProcess(replaceAclRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -176,7 +176,7 @@ class SetACLProcessorTest {
             .thenReturn(true);
 
         SetACLRequest r = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), prefix + SET_RIGHTS);
-        subject.doProcess(r, responder, imapSession);
+        subject.doProcess(r, responder, imapSession).block();
 
         verify(mailboxManager).applyRightsCommand(path,
             MailboxACL.command().key(user1Key).rights(setRights).mode(editMode).build(),

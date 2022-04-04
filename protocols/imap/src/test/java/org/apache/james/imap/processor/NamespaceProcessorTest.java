@@ -92,7 +92,7 @@ class NamespaceProcessorTest {
         final NamespaceResponse response = buildResponse(null);
         final Responder responderMock = mock(Responder.class);
 
-        subject.doProcess(namespaceRequest, responderMock, imapSession);
+        subject.doProcess(namespaceRequest, responderMock, imapSession).block();
 
         verify(responderMock, times(1)).respond(response);
         verify(responderMock, times(1)).respond(any(StatusResponse.class));
@@ -118,7 +118,7 @@ class NamespaceProcessorTest {
         
         final Responder responderMock = mock(Responder.class);
 
-        subject.doProcess(namespaceRequest, responderMock, imapSession);
+        subject.doProcess(namespaceRequest, responderMock, imapSession).block();
 
         verify(responderMock, times(1)).respond(response);
         verify(responderMock, times(1)).respond(any(StatusResponse.class));

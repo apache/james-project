@@ -64,6 +64,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class MailboxEventAnalyserTest {
     private static final MessageUid UID = MessageUid.of(900);
@@ -156,12 +157,12 @@ class MailboxEventAnalyserTest {
         when(messageResult.getMailboxId()).thenReturn(MAILBOX_ID);
         when(messageResult.getUid()).thenReturn(MESSAGE_UID);
 
-        when(messageManager.getApplicableFlags(any())).thenReturn(new Flags());
+        when(messageManager.getApplicableFlagsReactive(any())).thenReturn(Mono.just(new Flags()));
         when(messageManager.getId()).thenReturn(MAILBOX_ID);
         when(messageManager.search(any(), any()))
             .thenReturn(Flux.just(MESSAGE_UID));
-        when(messageManager.getMessages(any(), any(), any()))
-            .thenReturn(new SingleMessageResultIterator(messageResult));
+        when(messageManager.getMessagesReactive(any(), any(), any()))
+            .thenReturn(Flux.just(messageResult));
 
         testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
         testee.finishInit().block();
