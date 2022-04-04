@@ -242,13 +242,15 @@ public class WebAdminConfiguration {
                 && Objects.equals(this.jwtPublicKey, that.jwtPublicKey)
                 && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin)
                 && Objects.equals(this.host, that.host)
-                && Objects.equals(this.additionalRoutes, that.additionalRoutes);
+                && Objects.equals(this.additionalRoutes, that.additionalRoutes)
+                && Objects.equals(this.minThreadCount, that.minThreadCount)
+                && Objects.equals(this.maxThreadCount, that.maxThreadCount);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, jwtPublicKey, urlCORSOrigin, host, additionalRoutes);
+        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, jwtPublicKey, urlCORSOrigin, host, additionalRoutes, minThreadCount, maxThreadCount);
     }
 }
