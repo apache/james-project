@@ -34,6 +34,8 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * SETQUOTA processor
  */
@@ -51,14 +53,16 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected void processRequest(SetQuotaRequest request, ImapSession session, Responder responder) {
-        Object[] params = new Object[]{
-            "Full admin rights",
-            request.getCommand().getName(),
-            "Can not perform SETQUOTA commands"
-        };
-        HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-        no(request, responder, humanReadableText);
+    protected Mono<Void> processRequestReactive(SetQuotaRequest request, ImapSession session, Responder responder) {
+        return Mono.fromRunnable(() -> {
+            Object[] params = new Object[]{
+                "Full admin rights",
+                request.getCommand().getName(),
+                "Can not perform SETQUOTA commands"
+            };
+            HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
+            no(request, responder, humanReadableText);
+        });
     }
 
     @Override
