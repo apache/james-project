@@ -38,7 +38,10 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * <p>
@@ -161,6 +164,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * Delete the mailbox with the name
      */
     void deleteMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    default Mono<Void> deleteMailboxReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return Mono.fromRunnable(Throwing.runnable(() -> deleteMailbox(mailboxPath, session)));
+    }
 
     /**
      * Delete the mailbox with the given id
