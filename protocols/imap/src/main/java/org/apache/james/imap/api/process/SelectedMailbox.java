@@ -95,6 +95,8 @@ public interface SelectedMailbox {
      */
     MailboxPath getPath() throws MailboxException;
 
+    Mono<MailboxPath> getPathReactive();
+
     /**
      * Return the mailboxId of the selected Mailbox.
      *

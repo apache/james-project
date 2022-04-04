@@ -37,6 +37,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteProcessor.class);
 
@@ -45,27 +47,44 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     }
 
     @Override
-    protected void processRequest(DeleteRequest request, ImapSession session, Responder responder) {
-        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
-        try {
-            final SelectedMailbox selected = session.getSelected();
-            if (selected != null && selected.getPath().equals(mailboxPath)) {
-                session.deselect().block();
-            }
-            final MailboxManager mailboxManager = getMailboxManager();
-            mailboxManager.deleteMailbox(mailboxPath, session.getMailboxSession());
-            unsolicitedResponses(session, responder, false).block();
-            okComplete(request, responder);
-        } catch (MailboxNotFoundException e) {
-            LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e);
-            no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
-        } catch (TooLongMailboxNameException e) {
-            LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e);
-            taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
-        } catch (MailboxException e) {
-            LOGGER.error("Delete failed for mailbox {}", mailboxPath, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+    protected Mono<Void> processRequestReactive(DeleteRequest request, ImapSession session, Responder responder) {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        SelectedMailbox selected = session.getSelected();
+
+        return deselect(session, selected, mailboxPath)
+            .then(mailboxManager.deleteMailboxReactive(mailboxPath, session.getMailboxSession()))
+            .then(unsolicitedResponses(session, responder, false))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .then()
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e);
+                no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+                return Mono.empty();
+            })
+            .onErrorResume(TooLongMailboxNameException.class, e -> {
+                LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e);
+                taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("Delete failed for mailbox {}", mailboxPath, e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            });
+    }
+
+    private Mono<Void> deselect(ImapSession session, SelectedMailbox selected, MailboxPath mailboxPath) {
+        if (selected == null) {
+            return Mono.empty();
         }
+        return selected.getPathReactive()
+            .flatMap(selectedPath -> {
+                if (selectedPath.equals(mailboxPath)) {
+                    return session.deselect();
+                }
+                return Mono.empty();
+            });
     }
 
     @Override
