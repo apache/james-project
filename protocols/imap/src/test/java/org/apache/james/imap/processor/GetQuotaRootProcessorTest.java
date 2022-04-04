@@ -63,6 +63,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class GetQuotaRootProcessorTest {
@@ -92,7 +93,7 @@ class GetQuotaRootProcessorTest {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
-        final MessageManager messageManager = mock(MessageManager.class);
+        MessageManager messageManager = mock(MessageManager.class);
         when(mockedMailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(Mono.just(messageManager));
         when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
@@ -106,16 +107,17 @@ class GetQuotaRootProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(MAILBOX_PATH)).thenReturn(Mono.just(QUOTA_ROOT));
+        when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession)).thenReturn(Flux.just(mock(Mailbox.class)));
         when(mockedMailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Read), eq(mailboxSession))).thenReturn(true);
-        when(mockedQuotaManager.getQuotas(any(QuotaRoot.class)))
-            .thenReturn(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA));
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA)));
 
         final QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
         final QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
         final QuotaRootResponse quotaRootResponse = new QuotaRootResponse("INBOX", "plop");
 
-        testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession);
+        testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
         verify(mockedMailboxManager, times(1)).startProcessingRequest(mailboxSession);
         verify(mockedMailboxManager, times(1)).endProcessingRequest(mailboxSession);
@@ -159,7 +161,7 @@ class GetQuotaRootProcessorTest {
         imapSession.setMailboxSession(mailboxSession);
         when(mockedMailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Read), eq(mailboxSession))).thenReturn(false);
 
-        testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession);
+        testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
         verify(mockedMailboxManager).startProcessingRequest(mailboxSession);
         verify(mockedMailboxManager).endProcessingRequest(mailboxSession);

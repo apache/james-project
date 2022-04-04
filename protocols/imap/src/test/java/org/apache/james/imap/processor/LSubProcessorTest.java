@@ -48,6 +48,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
+
 class LSubProcessorTest {
 
     private static final String ROOT = "ROOT";
@@ -181,6 +183,6 @@ class LSubProcessorTest {
     }
 
     private void expectSubscriptions() throws Exception {
-        when(manager.subscriptions(mailboxSession)).thenReturn(subscriptions);
+        when(manager.subscriptionsReactive(mailboxSession)).thenReturn(Flux.fromIterable(subscriptions));
     }
 }
