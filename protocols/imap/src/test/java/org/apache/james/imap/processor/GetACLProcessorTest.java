@@ -99,7 +99,7 @@ class GetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(getACLRequest, responder, imapSession);
+        subject.doProcess(getACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -117,7 +117,7 @@ class GetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(getACLRequest, responder, imapSession);
+        subject.doProcess(getACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -133,7 +133,7 @@ class GetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
-        subject.doProcess(getACLRequest, responder, imapSession);
+        subject.doProcess(getACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -154,7 +154,7 @@ class GetACLProcessorTest {
         when(metaData.getACL()).thenReturn(acl);
 
         ACLResponse response = new ACLResponse(MAILBOX_NAME, acl);
-        subject.doProcess(getACLRequest, responder, imapSession);
+        subject.doProcess(getACLRequest, responder, imapSession).block();
 
         verify(responder, times(2)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);

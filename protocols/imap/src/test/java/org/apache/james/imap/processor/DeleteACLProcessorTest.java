@@ -104,7 +104,7 @@ class DeleteACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(deleteACLRequest, responder, imapSession);
+        subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -122,7 +122,7 @@ class DeleteACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(false);
 
-        subject.doProcess(deleteACLRequest, responder, imapSession);
+        subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -138,7 +138,7 @@ class DeleteACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
-        subject.doProcess(deleteACLRequest, responder, imapSession);
+        subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
         verify(responder, times(1)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
@@ -159,7 +159,7 @@ class DeleteACLProcessorTest {
             .thenReturn(true);
         when(metaData.getACL()).thenReturn(acl);
 
-        subject.doProcess(deleteACLRequest, responder, imapSession);
+        subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
         verify(mailboxManager).applyRightsCommand(path,
             MailboxACL.command().key(user1Key).noRights().asReplacement(),

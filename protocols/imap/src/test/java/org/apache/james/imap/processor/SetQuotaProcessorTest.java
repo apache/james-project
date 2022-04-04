@@ -59,7 +59,7 @@ class SetQuotaProcessorTest {
     void processorShouldWorkOnNoRights() {
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, "quotaRoot");
 
-        testee.doProcess(setQuotaRequest, mockedResponder, imapSession);
+        testee.doProcess(setQuotaRequest, mockedResponder, imapSession).block();
 
         ArgumentCaptor<ImapResponseMessage> imapResponseMessageArgumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
         verify(mockedResponder).respond(imapResponseMessageArgumentCaptor.capture());

@@ -71,6 +71,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SearchProcessorTest {
     private static final int DAY = 6;
@@ -191,7 +192,7 @@ public class SearchProcessorTest {
     }
 
     private void expectsGetSelectedMailbox() throws Exception {
-        when(mailboxManager.getMailbox(mailboxId, mailboxSession)).thenReturn(mailbox, mailbox);
+        when(mailboxManager.getMailboxReactive(mailboxId, mailboxSession)).thenReturn(Mono.just(mailbox));
         session.selected(selectedMailbox).block();
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);
