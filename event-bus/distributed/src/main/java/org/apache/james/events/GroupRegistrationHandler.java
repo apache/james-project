@@ -33,11 +33,14 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -120,7 +123,6 @@ class GroupRegistrationHandler {
                 receiverProvider::createReceiver,
             receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
             Receiver::close)
-            .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
             .subscribeOn(Schedulers.elastic())
@@ -130,20 +132,24 @@ class GroupRegistrationHandler {
     private Mono<Void> deliver(AcknowledgableDelivery acknowledgableDelivery) {
         byte[] eventAsBytes = acknowledgableDelivery.getBody();
 
-        Event event = deserializeEvent(eventAsBytes);
-
-        return Flux.fromIterable(groupRegistrations.values())
-            .flatMap(groupRegistration -> groupRegistration.runListenerReliably(DEFAULT_RETRY_COUNT, event))
-                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack))
+        return deserializeEvent(eventAsBytes)
+            .flatMapIterable(aa -> groupRegistrations.values()
+                .stream()
+                .map(group -> Pair.of(group, aa))
+                .collect(ImmutableList.toImmutableList()))
+            .flatMap(event -> event.getLeft().runListenerReliably(DEFAULT_RETRY_COUNT, event.getRight()))
+            .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic()))
             .then()
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", GROUP, e);
-                return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE));
+                return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE))
+                    .subscribeOn(Schedulers.elastic())
+                    .then();
             });
     }
 
-    private Event deserializeEvent(byte[] eventAsBytes) {
-        return eventSerializer.fromBytes(eventAsBytes);
+    private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes));
     }
 
     void stop() {
