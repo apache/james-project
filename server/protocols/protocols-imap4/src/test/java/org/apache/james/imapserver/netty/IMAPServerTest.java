@@ -93,6 +93,7 @@ import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.TestIMAPClient;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
@@ -2255,6 +2256,48 @@ class IMAPServerTest {
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK CLOSE completed.")))
                 .isNotNull();
+        }
+    }
+
+    @Nested
+    class SslConcurrentConnections {
+        IMAPServer imapServer;
+        int port;
+
+        @BeforeEach
+        void setup() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapSSL.xml"));
+            imapServer = createImapServer(config);
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            if (imapServer != null) {
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void shouldSupportManyConcurrentSSLConnections() throws Exception {
+            //Failed for 3.7.0, this serves as a non regression test
+            ConcurrentTestRunner.builder()
+                .operation((a, b) -> {
+                    IMAPSClient imapsClient = imapsImplicitClient(port);
+                    boolean capability = imapsClient.capability();
+                    assertThat(capability).isTrue();
+                    imapsClient.close();
+                })
+                .threadCount(10)
+                .operationCount(200)
+                .runSuccessfullyWithin(Duration.ofMinutes(10));
+        }
+
+        private IMAPSClient imapsImplicitClient(int port) throws Exception {
+            IMAPSClient client = new IMAPSClient(true, BogusSslContextFactory.getClientContext());
+            client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+            client.connect("127.0.0.1", port);
+            return client;
         }
     }
 }
