@@ -33,6 +33,8 @@ Except specific documented cases, these files are required, at least to establis
 ** xref:configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra.properties[example]
 ** xref:configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driver link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties[example]
 ** xref:configure/rabbitmq.adoc[*rabbitmq.properties*] allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[example]
+** xref:configure/redis.adoc[*redis.properties*] allows configuration for the Redis driver link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/redis.properties[example], that is used by optional
+distributed rate limiting component.
 ** xref:configure/tika.adoc[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/tika.properties[example]
 
 == For core components

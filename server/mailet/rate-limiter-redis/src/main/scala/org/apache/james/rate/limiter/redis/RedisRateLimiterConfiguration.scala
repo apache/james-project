@@ -32,13 +32,17 @@ object RedisRateLimiterConfiguration {
 
   def from(config: Configuration): RedisRateLimiterConfiguration =
     from(config.getString("redisURL"),
-      config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT))
+      config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT),
+      Option(config.getInteger("redis.ioThreads", null)).map(Integer2int),
+      Option(config.getInteger("redis.workerThreads", null)).map(Integer2int))
 
-  def from(redisUri: String, isCluster: Boolean): RedisRateLimiterConfiguration = {
+  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int]): RedisRateLimiterConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
     Preconditions.checkNotNull(isCluster)
-    RedisRateLimiterConfiguration(RedisUris.from(redisUri), isCluster)
+    RedisRateLimiterConfiguration(RedisUris.from(redisUri), isCluster, ioThreads, workerThreads)
   }
+
+  def from(redisUri: String, isCluster: Boolean): RedisRateLimiterConfiguration = from(redisUri, isCluster, None, None)
 }
 
 object RedisUris {
@@ -60,4 +64,4 @@ object RedisUris {
   def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
 }
 
-case class RedisRateLimiterConfiguration(redisURI: RedisUris, isCluster: Boolean)
+case class RedisRateLimiterConfiguration(redisURI: RedisUris, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int])
