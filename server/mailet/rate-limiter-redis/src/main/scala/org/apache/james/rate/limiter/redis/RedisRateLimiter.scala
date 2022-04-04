@@ -52,7 +52,7 @@ class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisRateLimiterConf
     if (redisConfiguration.isCluster) {
       val resourceBuilder = ClientResources.builder()
         .threadFactoryProvider(poolName => NamedThreadFactory.withName(s"redis-driver-$poolName"))
-      redisConfiguration.ioThreads.foreach(value =>resourceBuilder.ioThreadPoolSize(value))
+      redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
       redisConfiguration.workerThreads.foreach(value =>resourceBuilder.computationThreadPoolSize(value))
       new RedisClusterRateLimiterFactory(RedisClusterClient.create(resourceBuilder.build(),
         redisConfiguration.redisURI.value.asJava))
