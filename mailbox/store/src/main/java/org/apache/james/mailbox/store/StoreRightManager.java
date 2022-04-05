@@ -135,6 +135,12 @@ public class StoreRightManager implements RightManager {
     }
 
     @Override
+    public List<Rfc4314Rights> listRights(Mailbox mailbox, EntryKey key, MailboxSession session) throws MailboxException {
+        return aclResolver.listRights(key,
+            mailbox.getUser().asString());
+    }
+
+    @Override
     public MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = blockOptional(mapper.findMailboxByPath(mailboxPath))

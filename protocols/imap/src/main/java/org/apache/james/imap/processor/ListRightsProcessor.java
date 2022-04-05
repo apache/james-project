@@ -43,7 +43,10 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * LISTRIGHTS Processor.
@@ -59,67 +62,66 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     }
 
     @Override
-    protected void processRequest(ListRightsRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(ListRightsRequest request, ImapSession session, Responder responder) {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxSession = session.getMailboxSession();
+        String mailboxName = request.getMailboxName();
+        String identifier = request.getIdentifier();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-        final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        final String mailboxName = request.getMailboxName();
-        final String identifier = request.getIdentifier();
-        try {
-
-            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
-            // Check that mailbox exists
-            mailboxManager.getMailbox(mailboxPath, mailboxSession);
-
-            /*
-             * RFC 4314 section 6.
-             * An implementation MUST make sure the ACL commands themselves do
-             * not give information about mailboxes with appropriately
-             * restricted ACLs. For example, when a user agent executes a GETACL
-             * command on a mailbox that the user has no permission to LIST, the
-             * server would respond to that request with the same error that
-             * would be used if the mailbox did not exist, thus revealing no
-             * existence information, much less the mailbox’s ACL.
-             */
-            if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
-                /* RFC 4314 section 4. */
-                Object[] params = new Object[] {
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .doOnNext(Throwing.consumer(mailbox -> {
+                /*
+                 * RFC 4314 section 6.
+                 * An implementation MUST make sure the ACL commands themselves do
+                 * not give information about mailboxes with appropriately
+                 * restricted ACLs. For example, when a user agent executes a GETACL
+                 * command on a mailbox that the user has no permission to LIST, the
+                 * server would respond to that request with the same error that
+                 * would be used if the mailbox did not exist, thus revealing no
+                 * existence information, much less the mailbox’s ACL.
+                 */
+                if (!mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Lookup, mailboxSession)) {
+                    no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                } else if (!mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Administer, mailboxSession)) {
+                    /* RFC 4314 section 4. */
+                    Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
                         request.getCommand().getName(),
                         mailboxName
-                };
-                HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(request, responder, text);
-            } else {
-                
-                EntryKey key = EntryKey.deserialize(identifier);
-                
-                // FIXME check if identifier is a valid user or group
-                // FIXME Servers, when processing a command that has an identifier as a
-                // parameter (i.e., any of SETACL, DELETEACL, and LISTRIGHTS commands),
-                // SHOULD first prepare the received identifier using "SASLprep" profile
-                // [SASLprep] of the "stringprep" algorithm [Stringprep].  If the
-                // preparation of the identifier fails or results in an empty string,
-                // the server MUST refuse to perform the command with a BAD response.
-                // Note that Section 6 recommends additional identifier’s verification
-                // steps.
-                
-                List<Rfc4314Rights> rights = mailboxManager.listRights(mailboxPath, key, mailboxSession);
-                ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
-                responder.respond(aclResponse);
-                okComplete(request, responder);
-                // FIXME should we send unsolicited responses here?
-                // unsolicitedResponses(session, responder, false);
-            }
-        } catch (MailboxNotFoundException e) {
-            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-        } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
+                    };
+                    HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
+                    no(request, responder, text);
+                } else {
 
+                    EntryKey key = EntryKey.deserialize(identifier);
+
+                    // FIXME check if identifier is a valid user or group
+                    // FIXME Servers, when processing a command that has an identifier as a
+                    // parameter (i.e., any of SETACL, DELETEACL, and LISTRIGHTS commands),
+                    // SHOULD first prepare the received identifier using "SASLprep" profile
+                    // [SASLprep] of the "stringprep" algorithm [Stringprep].  If the
+                    // preparation of the identifier fails or results in an empty string,
+                    // the server MUST refuse to perform the command with a BAD response.
+                    // Note that Section 6 recommends additional identifier’s verification
+                    // steps.
+
+                    List<Rfc4314Rights> rights = mailboxManager.listRights(mailbox.getMailboxEntity(), key, mailboxSession);
+                    ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
+                    responder.respond(aclResponse);
+                    okComplete(request, responder);
+                }
+            }))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @Override
