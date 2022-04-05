@@ -80,8 +80,8 @@ public class SetVacationResponseMethod implements Method {
 
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             process(methodCallId, mailboxSession, setVacationRequest)
-                .subscriberContext(jmapAction("SET_VACATION"))
-                .subscriberContext(context("set-vacation", MDCBuilder.ofValue("update", setVacationRequest.getUpdate().toString())))));
+                .contextWrite(jmapAction("SET_VACATION"))
+                .contextWrite(context("set-vacation", MDCBuilder.ofValue("update", setVacationRequest.getUpdate().toString())))));
     }
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {

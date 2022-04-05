@@ -70,7 +70,7 @@ public class SetMessagesMethod implements Method {
                 .responseName(RESPONSE_NAME)
                 .build())
             .flux()
-            .subscriberContext(context(ACTION, mdc(setMessagesRequest)));
+            .contextWrite(context(ACTION, mdc(setMessagesRequest)));
     }
 
     private MDCBuilder mdc(SetMessagesRequest setMessagesRequest) {

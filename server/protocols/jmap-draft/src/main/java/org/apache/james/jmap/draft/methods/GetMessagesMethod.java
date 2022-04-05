@@ -96,7 +96,7 @@ public class GetMessagesMethod implements Method {
                     .properties(outputProperties.getOptionalMessageProperties())
                     .filterProvider(integerSimpleFilterProviderPair)
                     .build()))
-            .subscriberContext(context("GET_MESSAGES", mdc(getMessagesRequest)))));
+            .contextWrite(context("GET_MESSAGES", mdc(getMessagesRequest)))));
     }
 
     private MDCBuilder mdc(GetMessagesRequest getMessagesRequest) {

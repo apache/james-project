@@ -78,7 +78,7 @@ public class SetMailboxesMethod implements Method {
                     .response(response)
                     .responseName(RESPONSE_NAME)
                     .build())))
-            .subscriberContext(context(ACTION, mdc(setMailboxesRequest)));
+            .contextWrite(context(ACTION, mdc(setMailboxesRequest)));
     }
 
     private MDCBuilder mdc(SetMailboxesRequest setMailboxesRequest) {

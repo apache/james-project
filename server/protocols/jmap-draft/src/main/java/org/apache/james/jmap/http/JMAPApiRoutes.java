@@ -99,12 +99,12 @@ public class JMAPApiRoutes implements JMAPRoutes {
             .flatMap(session -> userProvisioner.provisionUser(session)
                 .then(Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-request",
                     post(request, response, session))))
-                .subscriberContext(jmapAuthContext(session)))
+                .contextWrite(jmapAuthContext(session)))
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> response.status(INTERNAL_SERVER_ERROR).send())
-            .subscriberContext(jmapContext(request));
+            .contextWrite(jmapContext(request));
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, MailboxSession session) {

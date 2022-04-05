@@ -142,12 +142,12 @@ public class DownloadRoutes implements JMAPRoutes {
         return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-download-post",
                     respondAttachmentAccessToken(session, downloadPath, response)))
-                .subscriberContext(jmapAuthContext(session)))
+                .contextWrite(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
-            .subscriberContext(jmapContext(request))
-            .subscriberContext(jmapAction("download-post"))
+            .contextWrite(jmapContext(request))
+            .contextWrite(jmapAction("download-post"))
             .subscribeOn(Schedulers.elastic());
     }
 
@@ -172,13 +172,13 @@ public class DownloadRoutes implements JMAPRoutes {
         return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-download-get",
                     download(session, downloadPath, response)))
-                .subscriberContext(jmapAuthContext(session)))
+                .contextWrite(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(IllegalArgumentException.class, e -> handleBadRequest(response, LOGGER, e))
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
-            .subscriberContext(jmapContext(request))
-            .subscriberContext(jmapAction("download-get"))
+            .contextWrite(jmapContext(request))
+            .contextWrite(jmapAction("download-get"))
             .subscribeOn(Schedulers.elastic());
     }
 

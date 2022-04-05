@@ -121,7 +121,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
              subscriptions: Subscriptions,
              allMailboxesMetadata: Seq[MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
-    val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
+    val sanitizedCounters: MailboxCounters.Sanitized = mailboxMetaData.getCounters.sanitize()
 
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
       case Left(error) => SMono.error(error)
@@ -169,7 +169,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
       mailbox
     }
 
-  private def instanciateMailbox(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, messageManager: MessageManager, sanitizedCounters: MailboxCounters, subscriptions: Subscriptions): SMono[Mailbox] = {
+  private def instanciateMailbox(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, messageManager: MessageManager, sanitizedCounters: MailboxCounters.Sanitized, subscriptions: Subscriptions): SMono[Mailbox] = {
     try {
       MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
         case Left(error) => SMono.error(error)
