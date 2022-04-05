@@ -141,11 +141,15 @@ public class IndexCreationFactory {
                 }
 
                 public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
-                    return build().createIndexAndAliases(client, Optional.empty());
+                    return build().createIndexAndAliases(client, Optional.empty(), Optional.empty());
                 }
 
                 public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
-                    return build().createIndexAndAliases(client, Optional.of(mappingContent));
+                    return build().createIndexAndAliases(client, Optional.empty(), Optional.of(mappingContent));
+                }
+
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings, Optional<XContentBuilder> mappingContent) {
+                    return build().createIndexAndAliases(client, indexSettings, mappingContent);
                 }
             }
         }
@@ -174,10 +178,11 @@ public class IndexCreationFactory {
             this.customTokenizers = customTokenizers;
         }
 
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> mappingContent) {
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings,
+                                                                Optional<XContentBuilder> mappingContent) {
             Preconditions.checkNotNull(indexName);
             try {
-                createIndexIfNeeded(client, indexName, generateSetting(), mappingContent);
+                createIndexIfNeeded(client, indexName, indexSettings.orElse(generateSetting()), mappingContent);
                 aliases.forEach(Throwing.<AliasName>consumer(alias -> createAliasIfNeeded(client, indexName, alias))
                     .sneakyThrow());
             } catch (IOException e) {
