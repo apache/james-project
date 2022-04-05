@@ -19,22 +19,24 @@
 
 package org.apache.james.task;
 
+import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
+
 import java.io.IOException;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.UnicastProcessor;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryWorkQueue implements WorkQueue {
     private final TaskManagerWorker worker;
     private final Disposable subscription;
-    private final UnicastProcessor<TaskWithId> tasks;
+    private final Sinks.Many<TaskWithId> tasks;
 
     public MemoryWorkQueue(TaskManagerWorker worker) {
         this.worker = worker;
-        this.tasks = UnicastProcessor.create();
-        this.subscription = tasks
+        this.tasks = Sinks.many().unicast().onBackpressureBuffer();
+        this.subscription = tasks.asFlux()
             .subscribeOn(Schedulers.elastic())
             .limitRate(1)
             .concatMap(this::dispatchTaskToWorker)
@@ -46,7 +48,7 @@ public class MemoryWorkQueue implements WorkQueue {
     }
 
     public void submit(TaskWithId taskWithId) {
-        tasks.onNext(taskWithId);
+        tasks.emitNext(taskWithId, FAIL_FAST);
     }
 
     public void cancel(TaskId taskId) {

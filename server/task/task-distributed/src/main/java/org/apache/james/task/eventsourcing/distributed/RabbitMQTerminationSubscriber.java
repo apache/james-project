@@ -23,6 +23,7 @@ package org.apache.james.task.eventsourcing.distributed;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
+import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +48,7 @@ import com.rabbitmq.client.Delivery;
 import reactor.core.Disposable;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.UnicastProcessor;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -66,7 +67,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private final JsonEventSerializer serializer;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
-    private UnicastProcessor<OutboundMessage> sendQueue;
+    private Sinks.Many<OutboundMessage> sendQueue;
     private DirectProcessor<Event> listener;
     private Disposable sendQueueHandle;
     private Disposable listenQueueHandle;
@@ -83,9 +84,9 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         sender.declare(QueueSpecification.queue(queueName.asString()).durable(!DURABLE).autoDelete(AUTO_DELETE)).block();
         sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, queueName.asString())).block();
-        sendQueue = UnicastProcessor.create();
+        sendQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendQueueHandle = sender
-            .send(sendQueue)
+            .send(sendQueue.asFlux())
             .subscribeOn(Schedulers.elastic())
             .subscribe();
 
@@ -116,7 +117,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             byte[] payload = serializer.serialize(event).getBytes(StandardCharsets.UTF_8);
             AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder().build();
             OutboundMessage message = new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, basicProperties, payload);
-            sendQueue.onNext(message);
+            sendQueue.emitNext(message, FAIL_FAST);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

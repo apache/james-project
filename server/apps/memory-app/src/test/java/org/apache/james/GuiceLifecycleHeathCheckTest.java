@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
@@ -42,7 +43,7 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 class GuiceLifecycleHeathCheckTest {
@@ -117,14 +118,13 @@ class GuiceLifecycleHeathCheckTest {
 
         @Test
         void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) {
-            Mono<Void> stopMono = Mono.fromRunnable(() -> { });
+            Sinks.Empty<Object> sink = Sinks.empty();
             try {
                 configureRequestSpecification(server);
 
-                stopMono = Mono.fromRunnable(server::stop);
-                stopMono
+                Mono.fromRunnable(server::stop)
                     .publishOn(Schedulers.elastic())
-                    .subscribeWith(MonoProcessor.create());
+                    .subscribe(r -> {}, e -> {}, () -> sink.emitEmpty(FAIL_FAST));
 
                 when()
                     .get("/healthcheck")
@@ -132,7 +132,7 @@ class GuiceLifecycleHeathCheckTest {
                     .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503);
             } finally {
                 latch.countDown();
-                stopMono.block();
+                sink.asMono().block();
             }
         }
     }

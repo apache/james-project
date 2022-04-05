@@ -24,6 +24,7 @@ import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
+import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -49,7 +50,7 @@ import com.rabbitmq.client.Delivery;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.UnicastProcessor;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.BindingSpecification;
@@ -81,7 +82,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private final CancelRequestQueueName cancelRequestQueueName;
-    private UnicastProcessor<TaskId> sendCancelRequestsQueue;
+    private Sinks.Many<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
     private Disposable receiverHandle;
     private Disposable cancelRequestListenerHandle;
@@ -191,9 +192,9 @@ public class RabbitMQWorkQueue implements WorkQueue {
         sender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, cancelRequestQueueName.asString())).block();
         registerCancelRequestsListener(cancelRequestQueueName.asString());
 
-        sendCancelRequestsQueue = UnicastProcessor.create();
+        sendCancelRequestsQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendCancelRequestsQueueHandle = sender
-            .send(sendCancelRequestsQueue.map(this::makeCancelRequestMessage))
+            .send(sendCancelRequestsQueue.asFlux().map(this::makeCancelRequestMessage))
             .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
@@ -240,7 +241,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     @Override
     public void cancel(TaskId taskId) {
-        sendCancelRequestsQueue.onNext(taskId);
+        sendCancelRequestsQueue.emitNext(taskId, FAIL_FAST);
     }
 
     @Override
