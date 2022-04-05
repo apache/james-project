@@ -85,6 +85,8 @@ public interface RightManager {
      */
     List<MailboxACL.Rfc4314Rights> listRights(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
 
+    List<MailboxACL.Rfc4314Rights> listRights(Mailbox mailbox, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
+
     MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException;
