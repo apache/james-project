@@ -43,6 +43,8 @@ public interface SubscriptionManager extends RequestAware {
      */
     void subscribe(MailboxSession session, String mailbox) throws SubscriptionException;
 
+    Publisher<Void> subscribeReactive(String mailbox, MailboxSession session);
+
     /**
      * Finds all subscriptions for the user in the session.
      * 
@@ -68,4 +70,5 @@ public interface SubscriptionManager extends RequestAware {
      */
     void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException;
 
+    Publisher<Void> unsubscribeReactive(String mailbox, MailboxSession session);
 }

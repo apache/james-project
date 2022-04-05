@@ -42,6 +42,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     private final Session session;
@@ -95,6 +96,20 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     @Override
     public synchronized void save(Subscription subscription) {
         session.execute(insertStatement.bind()
+            .setString(USER, subscription.getUser().asString())
+            .setString(MAILBOX, subscription.getMailbox()));
+    }
+
+    @Override
+    public Mono<Void> saveReactive(Subscription subscription) {
+        return executor.executeVoid(deleteStatement.bind()
+            .setString(USER, subscription.getUser().asString())
+            .setString(MAILBOX, subscription.getMailbox()));
+    }
+
+    @Override
+    public Mono<Void> deleteReactive(Subscription subscription) {
+        return executor.executeVoid(insertStatement.bind()
             .setString(USER, subscription.getUser().asString())
             .setString(MAILBOX, subscription.getMailbox()));
     }

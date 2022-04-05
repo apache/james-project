@@ -34,6 +34,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
@@ -43,20 +45,18 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
     }
 
     @Override
-    protected void doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
-        final String mailboxName = request.getMailboxName();
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        try {
-            getSubscriptionManager().subscribe(mailboxSession, mailboxName);
+    protected Mono<Void> doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
+        String mailboxName = request.getMailboxName();
+        MailboxSession mailboxSession = session.getMailboxSession();
 
-            unsolicitedResponses(session, responder, false).block();
-            okComplete(request, responder);
-
-        } catch (SubscriptionException e) {
-            LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e);
-            unsolicitedResponses(session, responder, false).block();
-            no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
-        }
+        return Mono.from(getSubscriptionManager().subscribeReactive(mailboxName, mailboxSession))
+            .then(unsolicitedResponses(session, responder, false))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .onErrorResume(SubscriptionException.class, e -> {
+                LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e);
+                return unsolicitedResponses(session, responder, false)
+                    .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)));
+            }).then();
     }
 
     @Override

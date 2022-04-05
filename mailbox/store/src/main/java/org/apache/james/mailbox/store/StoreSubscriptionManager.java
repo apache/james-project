@@ -35,6 +35,8 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Manages subscriptions for Users and Mailboxes.
  */
@@ -58,6 +60,28 @@ public class StoreSubscriptionManager implements SubscriptionManager {
             }));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
+        }
+    }
+
+    @Override
+    public Publisher<Void> subscribeReactive(String mailbox, MailboxSession session) {
+        try {
+            SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
+            Subscription newSubscription = new Subscription(session.getUser(), mailbox);
+            return mapper.executeReactive(mapper.saveReactive(newSubscription));
+        } catch (SubscriptionException e) {
+            return Mono.error(e);
+        }
+    }
+
+    @Override
+    public Publisher<Void> unsubscribeReactive(String mailbox, MailboxSession session) {
+        try {
+            SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
+            Subscription oldSubscription = new Subscription(session.getUser(), mailbox);
+            return mapper.executeReactive(mapper.deleteReactive(oldSubscription));
+        } catch (SubscriptionException e) {
+            return Mono.error(e);
         }
     }
 
