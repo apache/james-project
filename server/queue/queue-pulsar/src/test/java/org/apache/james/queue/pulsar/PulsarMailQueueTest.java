@@ -135,7 +135,6 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 system);
     }
 
-    @Disabled("JAMES-3700 We need to define a deadletter policy for the Pulsar MailQueue")
     @Test
     void badMessagesShouldNotAlterDelivery(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
         new JavaClient(pulsar.getConfiguration().brokerUri(),
@@ -150,7 +149,6 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         assertThat(mail.getMail().getName()).isEqualTo("name");
     }
 
-    @Disabled("JAMES-3700 We need to define a deadletter policy for the Pulsar MailQueue")
     @Test
     void badMessagesShouldBeMovedToADeadLetterTopic(DockerPulsarExtension.DockerPulsar pulsar) throws Exception {
         new JavaClient(pulsar.getConfiguration().brokerUri(),

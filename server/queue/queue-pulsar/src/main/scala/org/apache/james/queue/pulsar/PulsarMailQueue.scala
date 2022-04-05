@@ -121,6 +121,8 @@ class PulsarMailQueue(
   private val scheduledTopic = Topic(s"persistent://${config.namespace.asString}/${name.asString()}-scheduled")
   private val filterTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-${name.asString()}")
   private val filterScheduledTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-scheduled-${name.asString()}")
+  private val deadletterTopic = Topic(s"persistent://${config.namespace.asString}/James-${name.asString()}/dead-letter")  
+  
   private val subscription = Subscription("subscription-" + name.asString())
   private val scheduledSubscription = Subscription("scheduled-subscription-" + name.asString())
 
@@ -201,7 +203,11 @@ class PulsarMailQueue(
         topics = Seq(topic),
         subscriptionType = Some(SubscriptionType.Shared),
         subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
-        negativeAckRedeliveryDelay = Some(1.second)
+        negativeAckRedeliveryDelay = Some(1.second),
+        deadLetterPolicy = Some(DeadLetterPolicy.builder()
+                                     .maxRedeliverCount(10)
+                                     .deadLetterTopic("persistent://${config.namespace.asString}/James-${name.asString()}/dead-letter")
+                                     .build()),
       )
     )
 
@@ -332,6 +338,10 @@ class PulsarMailQueue(
           topics = Seq(topic),
           subscriptionType = Some(SubscriptionType.Shared),
           subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
+          deadLetterPolicy = Some(DeadLetterPolicy.builder()
+                                       .maxRedeliverCount(10)
+                                       .deadLetterTopic("persistent://${config.namespace.asString}/James-${name.asString()}/dead-letter")
+                                       .build()),
         )
       )
     ).map(message => Json.fromJson[Filter](Json.parse(message.value)))

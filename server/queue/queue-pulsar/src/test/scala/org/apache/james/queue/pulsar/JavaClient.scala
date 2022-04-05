@@ -37,7 +37,13 @@ case class JavaClient(brokerUri: String, topic: String) {
       subscriptionName = Subscription("subscription"),
       topics = Seq(Topic(topic)),
       subscriptionType = Some(SubscriptionType.Shared),
-      subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest)))(Schema.STRING)
+      subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
+      deadLetterPolicy = Some(DeadLetterPolicy.builder()
+                                   .maxRedeliverCount(10)
+                                   .deadLetterTopic("persistent://${config.namespace.asString}/James-${name.asString()}/dead-letter")
+                                   .build())
+    )
+  )(Schema.STRING)
 
   def consumeOne: Option[ConsumerMessage[String]] = consumer.receive(FiniteDuration(1, SECONDS)).toOption.flatten
 }
