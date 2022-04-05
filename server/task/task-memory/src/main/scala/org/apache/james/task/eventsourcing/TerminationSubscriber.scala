@@ -21,7 +21,8 @@ package org.apache.james.task.eventsourcing
 
 import org.apache.james.eventsourcing.{Event, Subscriber}
 import org.reactivestreams.Publisher
-import reactor.core.publisher.DirectProcessor
+import reactor.core.publisher.Sinks
+import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 
 trait TerminationSubscriber extends Subscriber {
   override def handle(event: Event): Unit = event match {
@@ -35,11 +36,11 @@ trait TerminationSubscriber extends Subscriber {
 }
 
 class MemoryTerminationSubscriber extends TerminationSubscriber {
-  private val events: DirectProcessor[Event] = DirectProcessor.create[Event]()
+  private val events: Sinks.Many[Event] = Sinks.many().multicast().directBestEffort()
 
   override def addEvent(event: Event): Unit =
-    events.onNext(event)
+    events.emitNext(event, FAIL_FAST)
 
   override def listenEvents: Publisher[Event] =
-    events.share()
+    events.asFlux()
 }

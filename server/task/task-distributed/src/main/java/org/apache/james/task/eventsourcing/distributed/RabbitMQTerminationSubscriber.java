@@ -46,7 +46,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
 import reactor.core.Disposable;
-import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
@@ -68,7 +67,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private Sinks.Many<OutboundMessage> sendQueue;
-    private DirectProcessor<Event> listener;
+    private Sinks.Many<Event> listener;
     private Disposable sendQueueHandle;
     private Disposable listenQueueHandle;
 
@@ -90,7 +89,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             .subscribeOn(Schedulers.elastic())
             .subscribe();
 
-        listener = DirectProcessor.create();
+        listener = Sinks.many().multicast().directBestEffort();
         listenQueueHandle = consumeTerminationQueue();
     }
 
@@ -108,7 +107,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             .subscribeOn(Schedulers.elastic())
             .map(this::toEvent)
             .handle(publishIfPresent())
-            .subscribe(listener::onNext);
+            .subscribe(e -> listener.emitNext(e, FAIL_FAST));
     }
 
     @Override
@@ -125,7 +124,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
 
     @Override
     public Publisher<Event> listenEvents() {
-        return listener.share();
+        return listener.asFlux();
     }
 
     private Optional<Event> toEvent(Delivery delivery) {
