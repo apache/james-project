@@ -23,6 +23,7 @@ import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -54,6 +56,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import reactor.core.publisher.Mono;
 
 /**
  * ListRightsProcessor Test.
@@ -91,10 +95,11 @@ class ListRightsProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
-            .thenReturn(metaData);
-        when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
-            .thenReturn(messageManager);
+        when(messageManager.getMetaDataReactive(anyBoolean(), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
+            .thenReturn(Mono.just(metaData));
+        when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
+            .thenReturn(Mono.just(messageManager));
+        when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
 
         listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, USER_1.asString());
 
@@ -159,13 +164,13 @@ class ListRightsProcessorTest {
     @Test
     void testListRights() throws MailboxException {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Lookup), eq(mailboxSession)))
             .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Administer), eq(mailboxSession)))
             .thenReturn(true);
         when(metaData.getACL()).thenReturn(acl);
         
-        when(mailboxManager.listRights(path, user1Key, mailboxSession))
+        when(mailboxManager.listRights(any(Mailbox.class), eq(user1Key), eq(mailboxSession)))
             .thenReturn(listRights);
 
 
