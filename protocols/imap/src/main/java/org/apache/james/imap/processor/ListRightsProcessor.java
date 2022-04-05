@@ -32,6 +32,7 @@ import org.apache.james.imap.message.request.ListRightsRequest;
 import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -70,7 +71,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
-            .doOnNext(Throwing.consumer(mailbox -> {
+            .doOnNext(Throwing.<MessageManager>consumer(mailbox -> {
                 /*
                  * RFC 4314 section 6.
                  * An implementation MUST make sure the ACL commands themselves do
@@ -111,7 +112,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                     responder.respond(aclResponse);
                     okComplete(request, responder);
                 }
-            }))
+            }).sneakyThrow())
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
                 return Mono.empty();

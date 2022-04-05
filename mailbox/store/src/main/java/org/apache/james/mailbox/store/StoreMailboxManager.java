@@ -881,6 +881,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public List<Rfc4314Rights> listRights(Mailbox mailbox, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException {
+        return storeRightManager.listRights(mailbox, identifier, session);
+    }
+
+    @Override
     public MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return storeRightManager.listRights(mailboxPath, session);
     }

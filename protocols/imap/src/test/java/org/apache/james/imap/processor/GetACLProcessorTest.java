@@ -23,6 +23,7 @@ import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,14 +43,16 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import reactor.core.publisher.Mono;
 
 /**
  * GetACLProcessor Test.
@@ -66,13 +69,11 @@ class GetACLProcessorTest {
     private MailboxMetaData metaData;
     private GetACLRequest getACLRequest;
     private GetACLProcessor subject;
-    private MailboxPath path;
     private ArgumentCaptor<ImapResponseMessage> argumentCaptor;
     private Responder responder;
 
     @BeforeEach
     public void setUp() throws Exception {
-        path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
         subject = new GetACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
@@ -86,17 +87,18 @@ class GetACLProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(FetchGroup.class)))
-            .thenReturn(metaData);
-        when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
-            .thenReturn(messageManager);
+        when(messageManager.getMetaDataReactive(anyBoolean(), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
+            .thenReturn(Mono.just(metaData));
+        when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
+            .thenReturn(Mono.just(messageManager));
+        when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
 
         argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
     }
 
     @Test
     void testNoListRight() throws Exception {
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Lookup), eq(mailboxSession)))
             .thenReturn(false);
 
         subject.doProcess(getACLRequest, responder, imapSession).block();
@@ -112,9 +114,9 @@ class GetACLProcessorTest {
     
     @Test
     void testNoAdminRight() throws Exception {
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Lookup), eq(mailboxSession)))
             .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Administer), eq(mailboxSession)))
             .thenReturn(false);
 
         subject.doProcess(getACLRequest, responder, imapSession).block();
@@ -129,9 +131,9 @@ class GetACLProcessorTest {
     }
     
     @Test
-    void testInexistentMailboxName() throws Exception {
-        when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
-            .thenThrow(new MailboxNotFoundException(""));
+    void testInexistentMailboxName() {
+        when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
+            .thenReturn(Mono.error(new MailboxNotFoundException("")));
 
         subject.doProcess(getACLRequest, responder, imapSession).block();
 
@@ -147,13 +149,12 @@ class GetACLProcessorTest {
     @Test
     void testSufficientRights() throws Exception {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Lookup), eq(mailboxSession)))
             .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Administer), eq(mailboxSession)))
             .thenReturn(true);
         when(metaData.getACL()).thenReturn(acl);
 
-        ACLResponse response = new ACLResponse(MAILBOX_NAME, acl);
         subject.doProcess(getACLRequest, responder, imapSession).block();
 
         verify(responder, times(2)).respond(argumentCaptor.capture());
@@ -161,6 +162,7 @@ class GetACLProcessorTest {
 
         assertThat(argumentCaptor.getAllValues())
             .hasSize(2);
+        ACLResponse response = new ACLResponse(MAILBOX_NAME, acl);
         assertThat(argumentCaptor.getAllValues().get(0))
             .isEqualTo(response);
         assertThat(argumentCaptor.getAllValues().get(1))
