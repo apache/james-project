@@ -43,6 +43,10 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+
 /**
  * MYRIGHTS Processor.
  */
@@ -56,52 +60,51 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     }
 
     @Override
-    protected void processRequest(MyRightsRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(MyRightsRequest request, ImapSession session, Responder responder) {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxSession = session.getMailboxSession();
+        String mailboxName = request.getMailboxName();
 
-        final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        final String mailboxName = request.getMailboxName();
-        try {
-
-            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
-            // Check that mailbox exists
-            mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            Rfc4314Rights myRights = mailboxManager.myRights(mailboxPath, mailboxSession);
-
-            /*
-             * RFC 4314 section 6. An implementation MUST make sure the ACL
-             * commands themselves do not give information about mailboxes with
-             * appropriately restricted ACLs. For example, when a user agent
-             * executes a GETACL command on a mailbox that the user has no
-             * permission to LIST, the server would respond to that request with
-             * the same error that would be used if the mailbox did not exist,
-             * thus revealing no existence information, much less the mailbox’s
-             * ACL.
-             * 
-             * RFC 4314 section 4. * MYRIGHTS - any of the following rights is
-             * required to perform the operation: "l", "r", "i", "k", "x", "a".
-             */
-            if (!myRights.contains(MailboxACL.Right.Lookup)
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .doOnNext(Throwing.consumer(mailbox -> {
+                Rfc4314Rights myRights = mailboxManager.myRights(mailbox.getMailboxEntity(), mailboxSession);
+                /*
+                 * RFC 4314 section 6. An implementation MUST make sure the ACL
+                 * commands themselves do not give information about mailboxes with
+                 * appropriately restricted ACLs. For example, when a user agent
+                 * executes a GETACL command on a mailbox that the user has no
+                 * permission to LIST, the server would respond to that request with
+                 * the same error that would be used if the mailbox did not exist,
+                 * thus revealing no existence information, much less the mailbox’s
+                 * ACL.
+                 *
+                 * RFC 4314 section 4. * MYRIGHTS - any of the following rights is
+                 * required to perform the operation: "l", "r", "i", "k", "x", "a".
+                 */
+                if (!myRights.contains(MailboxACL.Right.Lookup)
                     && !myRights.contains(MailboxACL.Right.Read)
                     && !myRights.contains(MailboxACL.Right.Insert)
                     && !myRights.contains(MailboxACL.Right.CreateMailbox)
                     && !myRights.contains(MailboxACL.Right.DeleteMailbox)
                     && !myRights.contains(MailboxACL.Right.Administer)) {
+                    no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                } else {
+                    MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);
+                    responder.respond(myRightsResponse);
+                    okComplete(request, responder);
+                }
+            }))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
                 no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            } else {
-                MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);
-                responder.respond(myRightsResponse);
-                okComplete(request, responder);
-                // FIXME should we send unsolicited responses here?
-                // unsolicitedResponses(session, responder, false);
-            }
-        } catch (MailboxNotFoundException e) {
-            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-        } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
-
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @Override
