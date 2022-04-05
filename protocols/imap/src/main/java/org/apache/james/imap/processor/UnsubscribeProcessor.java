@@ -34,6 +34,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<UnsubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnsubscribeProcessor.class);
 
@@ -43,21 +45,18 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
     }
 
     @Override
-    protected void doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder) {
-        final String mailboxName = request.getMailboxName();
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        try {
-            getSubscriptionManager().unsubscribe(mailboxSession, mailboxName);
+    protected Mono<Void> doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder) {
+        String mailboxName = request.getMailboxName();
+        MailboxSession mailboxSession = session.getMailboxSession();
 
-            unsolicitedResponses(session, responder, false).block();
-            okComplete(request, responder);
-
-        } catch (SubscriptionException e) {
-            LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e);
-            unsolicitedResponses(session, responder, false).block();
-
-            no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
-        }
+        return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxName, mailboxSession))
+            .then(unsolicitedResponses(session, responder, false))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .onErrorResume(SubscriptionException.class, e -> {
+                LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e);
+                return unsolicitedResponses(session, responder, false)
+                    .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)));
+            }).then();
     }
 
     @Override

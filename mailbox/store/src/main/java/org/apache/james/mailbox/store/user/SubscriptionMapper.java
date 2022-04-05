@@ -25,6 +25,7 @@ import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Functions;
 
 import reactor.core.publisher.Flux;
@@ -40,6 +41,10 @@ public interface SubscriptionMapper extends Mapper {
      * @param subscription not null
      */
     void save(Subscription subscription) throws SubscriptionException;
+
+    default Mono<Void> saveReactive(Subscription subscription) {
+        return Mono.fromRunnable(Throwing.runnable(() -> save(subscription)));
+    }
 
     /**
      * Finds subscriptions for the given user.
@@ -58,4 +63,8 @@ public interface SubscriptionMapper extends Mapper {
      * @param subscription not null
      */
     void delete(Subscription subscription) throws SubscriptionException;
+
+    default Mono<Void> deleteReactive(Subscription subscription) {
+        return Mono.fromRunnable(Throwing.runnable(() -> delete(subscription)));
+    }
 }

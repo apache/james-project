@@ -26,6 +26,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.metrics.api.MetricFactory;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Abstract base class which should be used by implementations which need to
  * access the {@link SubscriptionManager}
@@ -50,22 +52,19 @@ public abstract class AbstractSubscriptionProcessor<R extends ImapRequest> exten
     }
 
     @Override
-    protected final void processRequest(R request, ImapSession session, Responder responder) {
+    protected final Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
 
         // take care of calling the start/end processing
         MailboxSession mSession = session.getMailboxSession();
-        getSubscriptionManager().startProcessingRequest(mSession);
-        doProcessRequest(request, session, responder);
-        getSubscriptionManager().endProcessingRequest(mSession);
+
+        return Mono.fromRunnable(() -> getSubscriptionManager().startProcessingRequest(mSession))
+            .then(doProcessRequest(request, session, responder))
+            .then(Mono.fromRunnable(() -> getSubscriptionManager().endProcessingRequest(mSession)));
     }
 
     /**
      * Process the request
-     * 
-     * @param request
-     * @param session
-     * @param responder
      */
-    protected abstract void doProcessRequest(R request, ImapSession session, Responder responder);
+    protected abstract Mono<Void> doProcessRequest(R request, ImapSession session, Responder responder);
 
 }
