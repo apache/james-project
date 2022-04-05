@@ -32,8 +32,6 @@ import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -44,7 +42,10 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * GETACL Processor.
@@ -60,52 +61,58 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     }
 
     @Override
-    protected void processRequest(GetACLRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(GetACLRequest request, ImapSession session, Responder responder) {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxSession = session.getMailboxSession();
+        String mailboxName = request.getMailboxName();
 
-        final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        final String mailboxName = request.getMailboxName();
-        try {
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
-            // Check that mailbox exists
-            MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            /*
-             * RFC 4314 section 6.
-             * An implementation MUST make sure the ACL commands themselves do
-             * not give information about mailboxes with appropriately
-             * restricted ACLs. For example, when a user agent executes a GETACL
-             * command on a mailbox that the user has no permission to LIST, the
-             * server would respond to that request with the same error that
-             * would be used if the mailbox did not exist, thus revealing no
-             * existence information, much less the mailbox’s ACL.
-             */
-            if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
-                /* RFC 4314 section 4. */
-                Object[] params = new Object[] {
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(Throwing.function(mailbox -> {
+
+                /*
+                 * RFC 4314 section 6.
+                 * An implementation MUST make sure the ACL commands themselves do
+                 * not give information about mailboxes with appropriately
+                 * restricted ACLs. For example, when a user agent executes a GETACL
+                 * command on a mailbox that the user has no permission to LIST, the
+                 * server would respond to that request with the same error that
+                 * would be used if the mailbox did not exist, thus revealing no
+                 * existence information, much less the mailbox’s ACL.
+                 */
+                if (!mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Lookup, mailboxSession)) {
+                    no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                    return Mono.empty();
+                } else if (!mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Administer, mailboxSession)) {
+                    /* RFC 4314 section 4. */
+                    Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
                         request.getCommand().getName(),
                         mailboxName
-                };
-                HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(request, responder, text);
-            } else {
-                MailboxMetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
-                ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
-                responder.respond(aclResponse);
-                okComplete(request, responder);
-                // FIXME should we send unsolicited responses here?
-                // unsolicitedResponses(session, responder, false);
-            }
-        } catch (MailboxNotFoundException e) {
-            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-        } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
-
+                    };
+                    HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
+                    no(request, responder, text);
+                    return Mono.empty();
+                } else {
+                    return mailbox.getMetaDataReactive(false, mailboxSession, FetchGroup.NO_COUNT)
+                        .doOnNext(metaData -> {
+                            ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
+                            responder.respond(aclResponse);
+                            okComplete(request, responder);
+                        });
+                }
+            }))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                return Mono.empty();
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @Override
