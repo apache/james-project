@@ -197,7 +197,7 @@ public class ReactorUtils {
     }
 
     private static MDCBuilder retrieveMDCBuilder(Signal<?> signal) {
-        return signal.getContext().stream()
+        return signal.getContextView().stream()
             .filter(entry -> entry.getKey() instanceof String)
             .filter(entry -> entry.getValue() instanceof MDCBuilder)
             .filter(entry -> ((String) entry.getKey()).startsWith(MDC_KEY_PREFIX))

@@ -104,14 +104,14 @@ public class UploadRoutes implements JMAPRoutes {
         } else {
             return authenticator.authenticate(request)
                 .flatMap(session -> post(request, response, ContentType.of(contentType), session)
-                    .subscriberContext(jmapAuthContext(session)))
+                    .contextWrite(jmapAuthContext(session)))
                 .onErrorResume(CancelledUploadException.class, e -> handleCanceledUpload(response, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(e -> handleInternalError(response, LOGGER, e))
-                .subscriberContext(jmapContext(request))
-                .subscriberContext(jmapAction("upload-get"))
+                .contextWrite(jmapContext(request))
+                .contextWrite(jmapAction("upload-get"))
                 .subscribeOn(Schedulers.elastic());
         }
     }

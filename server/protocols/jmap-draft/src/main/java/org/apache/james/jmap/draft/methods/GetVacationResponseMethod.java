@@ -81,7 +81,7 @@ public class GetVacationResponseMethod implements Method {
                     .response(response)
                     .build())
                 .flux()))
-            .subscriberContext(jmapAction("VACATION"));
+            .contextWrite(jmapAction("VACATION"));
     }
 
     private Mono<GetVacationResponse> process(MailboxSession mailboxSession) {

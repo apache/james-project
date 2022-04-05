@@ -81,7 +81,7 @@ public class InVmEventDelivery implements EventDelivery {
         if (listener.isHandling(event)) {
             return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                     listener.reactiveEvent(event))))
-                .subscriberContext(context("deliver", buildMDC(listener, event)));
+                .contextWrite(context("deliver", buildMDC(listener, event)));
         }
         return Mono.empty();
     }

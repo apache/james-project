@@ -38,7 +38,7 @@ class ListenerExecutor {
         if (listener.isHandling(event)) {
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 Mono.from(listener.reactiveEvent(event))
-                    .subscriberContext(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, event)))));
+                    .contextWrite(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, event)))));
         }
         return Mono.empty();
     }

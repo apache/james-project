@@ -99,7 +99,7 @@ public class GetMailboxesMethod implements Method {
 
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             process(methodCallId, mailboxSession, mailboxesRequest)
-                .subscriberContext(context(ACTION, mdc(mailboxesRequest)))));
+                .contextWrite(context(ACTION, mdc(mailboxesRequest)))));
     }
 
     private MDCBuilder mdc(GetMailboxesRequest mailboxesRequest) {

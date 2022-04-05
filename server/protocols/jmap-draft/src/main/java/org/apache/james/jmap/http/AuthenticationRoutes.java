@@ -141,22 +141,22 @@ public class AuthenticationRoutes implements JMAPRoutes {
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
-            .subscriberContext(jmapContext(request))
-            .subscriberContext(jmapAction("auth-post"))
+            .contextWrite(jmapContext(request))
+            .contextWrite(jmapAction("auth-post"))
             .subscribeOn(Schedulers.elastic());
     }
 
     private Mono<Void> returnEndPointsResponse(HttpServerRequest req, HttpServerResponse resp) {
             return authenticator.authenticate(req)
                 .flatMap(session -> returnEndPointsResponse(resp)
-                    .subscriberContext(jmapAuthContext(session)))
+                    .contextWrite(jmapAuthContext(session)))
                 .onErrorResume(IllegalArgumentException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, LOGGER, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
-                .subscriberContext(jmapContext(req))
-                .subscriberContext(jmapAction("returnEndPoints"))
+                .contextWrite(jmapContext(req))
+                .contextWrite(jmapAction("returnEndPoints"))
                 .subscribeOn(Schedulers.elastic());
     }
 
@@ -186,10 +186,10 @@ public class AuthenticationRoutes implements JMAPRoutes {
         return authenticator.authenticate(req)
             .flatMap(session -> Mono.from(accessTokenManager.revoke(AccessToken.fromString(authorizationHeader)))
                     .then(resp.status(NO_CONTENT).send().then())
-                .subscriberContext(jmapAuthContext(session)))
+                .contextWrite(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
-            .subscriberContext(jmapContext(req))
-            .subscriberContext(jmapAction("auth-delete"))
+            .contextWrite(jmapContext(req))
+            .contextWrite(jmapAction("auth-delete"))
             .subscribeOn(Schedulers.elastic());
     }
 
