@@ -18,18 +18,34 @@
  ****************************************************************/
 package org.apache.james.core.quota;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class QuotaSizeUsage implements QuotaUsageValue<QuotaSizeUsage, QuotaSizeLimit> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QuotaSizeUsage.class);
+
+    public static class Sanitized extends QuotaSizeUsage {
+        private static Sanitized of(long value) {
+            Preconditions.checkArgument(value >= 0, "Sanitized quota shall be positive");
+            return new Sanitized(value);
+        }
+
+        private Sanitized(Long value) {
+            super(value);
+        }
+    }
 
     public static QuotaSizeUsage size(long value) {
         return new QuotaSizeUsage(value);
     }
 
-    private final Long value;
+    private final long value;
 
-    private QuotaSizeUsage(Long value) {
+    private QuotaSizeUsage(long value) {
         this.value = value;
     }
 
@@ -57,10 +73,22 @@ public class QuotaSizeUsage implements QuotaUsageValue<QuotaSizeUsage, QuotaSize
         }
     }
 
+    public boolean isValid() {
+        return value >= 0;
+    }
+
+    public Sanitized sanitize() {
+        if (!isValid()) {
+            LOGGER.warn("Invalid quota count usage : {}", value);
+        }
+
+        return Sanitized.of(Math.max(value, 0));
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("value", value.toString())
+            .add("value", value)
             .toString();
     }
 

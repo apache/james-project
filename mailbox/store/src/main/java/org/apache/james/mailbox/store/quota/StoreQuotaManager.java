@@ -57,7 +57,7 @@ public class StoreQuotaManager implements QuotaManager {
     public Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) {
         Map<Scope, QuotaCountLimit> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
         return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
-            .used(Mono.from(currentQuotaManager.getCurrentMessageCount(quotaRoot)).block())
+            .used(Mono.from(currentQuotaManager.getCurrentMessageCount(quotaRoot)).block().sanitize())
             .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCountLimit.unlimited()))
             .limitsByScope(maxMessageDetails)
             .build();
@@ -68,7 +68,7 @@ public class StoreQuotaManager implements QuotaManager {
     public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) {
         Map<Scope, QuotaSizeLimit> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
         return Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
-            .used(Mono.from(currentQuotaManager.getCurrentStorage(quotaRoot)).block())
+            .used(Mono.from(currentQuotaManager.getCurrentStorage(quotaRoot)).block().sanitize())
             .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSizeLimit.unlimited()))
             .limitsByScope(maxStorageDetails)
             .build();
@@ -77,7 +77,7 @@ public class StoreQuotaManager implements QuotaManager {
     @Override
     public Quotas getQuotas(QuotaRoot quotaRoot) {
         MaxQuotaManager.QuotaDetails quotaDetails = maxQuotaManager.quotaDetails(quotaRoot);
-        CurrentQuotas currentQuotas = Mono.from(currentQuotaManager.getCurrentQuotas(quotaRoot)).block();
+        CurrentQuotas currentQuotas = Mono.from(currentQuotaManager.getCurrentQuotas(quotaRoot)).block().sanitize();
         return new Quotas(
             Quota.<QuotaCountLimit, QuotaCountUsage>builder()
                 .used(currentQuotas.count())
@@ -95,7 +95,7 @@ public class StoreQuotaManager implements QuotaManager {
     public Publisher<Quotas> getQuotasReactive(QuotaRoot quotaRoot) {
         return Mono.zip(
                 Mono.from(maxQuotaManager.quotaDetailsReactive(quotaRoot)),
-                Mono.from(currentQuotaManager.getCurrentQuotas(quotaRoot)))
+                Mono.from(currentQuotaManager.getCurrentQuotas(quotaRoot)).map(CurrentQuotas::sanitize))
             .map(tuple -> new Quotas(
                 Quota.<QuotaCountLimit, QuotaCountUsage>builder()
                     .used(tuple.getT2().count())

@@ -68,6 +68,17 @@ class StoreQuotaManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    void getMessageQuotaShouldSanitizeNegativeValues() throws Exception {
+        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.count(360L)));
+        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaCountUsage.count(-36L)));
+
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(0)).computedLimit(QuotaCountLimit.count(360)).build());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.size(360L)));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenAnswer(any ->
@@ -75,6 +86,18 @@ class StoreQuotaManagerTest {
 
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(36)).computedLimit(QuotaSizeLimit.size(360)).build());
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void getStorageQuotaShouldSanitizeNegativeValues() throws Exception {
+        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.size(360L)));
+        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaSizeUsage.size(-36L)));
+
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(0)).computedLimit(QuotaSizeLimit.size(360)).build());
     }
 
     @SuppressWarnings("unchecked")
