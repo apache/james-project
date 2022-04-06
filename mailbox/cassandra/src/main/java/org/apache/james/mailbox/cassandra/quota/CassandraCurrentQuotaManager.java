@@ -120,7 +120,9 @@ public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
     public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
         return getCurrentQuotas(quotaOperation.quotaRoot())
             .filter(Predicate.not(Predicate.isEqual(CurrentQuotas.from(quotaOperation))))
-            .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
+            .flatMap(storedQuotas -> cassandraAsyncExecutor.executeVoid(decreaseStatement.bind(storedQuotas.count().asLong(),
+                storedQuotas.size().asLong(),
+                quotaOperation.quotaRoot().asString()))
                 .then(increase(quotaOperation)));
     }
 }

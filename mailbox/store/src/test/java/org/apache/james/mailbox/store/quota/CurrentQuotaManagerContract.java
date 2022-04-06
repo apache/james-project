@@ -132,4 +132,14 @@ public interface CurrentQuotaManagerContract {
         assertThat(Mono.from(testee().getCurrentQuotas(QUOTA_ROOT)).block())
             .isEqualTo(CURRENT_QUOTAS);
     }
+
+    @Test
+    default void setCurrentQuotasShouldTolerateNegativeValues() {
+        Mono.from(testee().decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
+
+        Mono.from(testee().setCurrentQuotas(RESET_QUOTA_OPERATION)).block();
+
+        assertThat(Mono.from(testee().getCurrentQuotas(QUOTA_ROOT)).block())
+            .isEqualTo(CURRENT_QUOTAS);
+    }
 }
