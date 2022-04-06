@@ -89,20 +89,24 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     protected final Mono<Void> doProcess(R acceptableMessage, Responder responder, ImapSession session) {
         if (acceptableMessage.getCommand().validForState(session.getState())) {
             MailboxSession mailboxSession = session.getMailboxSession();
-            getMailboxManager().startProcessingRequest(mailboxSession);
 
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(IMAP_PREFIX + acceptableMessage.getCommand().getName(),
-                processRequestReactive(acceptableMessage, session, responder)))
-                .doFinally(type -> getMailboxManager().endProcessingRequest(mailboxSession))
-                .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
-                    no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
-                    return Mono.empty();
-                })
-                .onErrorResume(e -> {
-                    LOGGER.error("Unexpected error during IMAP processing", e);
-                    no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                    return Mono.empty();
-                });
+                Mono.<Void, Runnable>using(
+                    () -> {
+                        getMailboxManager().startProcessingRequest(mailboxSession);
+                        return () -> getMailboxManager().endProcessingRequest(mailboxSession);
+                    },
+                    c -> processRequestReactive(acceptableMessage, session, responder)
+                    .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
+                        no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+                        return Mono.empty();
+                    })
+                    .onErrorResume(e -> {
+                        LOGGER.error("Unexpected error during IMAP processing", e);
+                        no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                        return Mono.empty();
+                    }),
+                    Runnable::run)));
         } else {
             ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
             responder.respond(response);

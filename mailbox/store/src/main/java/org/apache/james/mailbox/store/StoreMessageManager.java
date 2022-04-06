@@ -571,12 +571,12 @@ public class StoreMessageManager implements MessageManager {
         UidValidity uidValidity = getMailboxEntity().getUidValidity();
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        return Mono.zip(messageMapper.getLastUidReactive(mailbox)
+        return messageMapper.executeReactive(Mono.zip(messageMapper.getLastUidReactive(mailbox)
                 .map(optional -> optional
                     .map(MessageUid::next)
                     .orElse(MessageUid.MIN_VALUE)),
             messageMapper.getHighestModSeqReactive(mailbox))
-            .flatMap(t2 -> toMetadata(messageMapper, resetRecent, mailboxSession, fetchGroup, resolvedAcl, permanentFlags, uidValidity, t2.getT1(), t2.getT2()));
+            .flatMap(t2 -> toMetadata(messageMapper, resetRecent, mailboxSession, fetchGroup, resolvedAcl, permanentFlags, uidValidity, t2.getT1(), t2.getT2())));
     }
 
     @Override
