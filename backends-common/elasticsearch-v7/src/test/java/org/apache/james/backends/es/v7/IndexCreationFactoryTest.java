@@ -19,12 +19,18 @@
 
 package org.apache.james.backends.es.v7;
 
+import static org.apache.james.backends.es.v7.IndexCreationFactory.ANALYZER;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.TOKENIZER;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.TYPE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.james.backends.es.v7.IndexCreationFactory.IndexCreationCustomElement;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +39,59 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class IndexCreationFactoryTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
+
+    public static XContentBuilder getValidIndexSetting() throws IOException {
+        return jsonBuilder()
+            .startObject()
+                .startObject("settings")
+                    .startObject("index")
+                        .field("max_ngram_diff", 10)
+                    .endObject()
+                    .startObject("analysis")
+                        .startObject(ANALYZER)
+                            .startObject("email_ngram_filter_analyzer")
+                                .field(TOKENIZER, "uax_url_email")
+                                .startArray("filter")
+                                    .value("ngram_filter")
+                                .endArray()
+                            .endObject()
+                        .endObject()
+                        .startObject("filter")
+                            .startObject("ngram_filter")
+                                .field(TYPE, "ngram")
+                                .field("min_gram", 3)
+                                .field("max_gram", 13)
+                            .endObject()
+                        .endObject()
+                    .endObject()
+                .endObject()
+            .endObject();
+    }
+
+    public static XContentBuilder getInvalidIndexSetting() throws IOException {
+        return jsonBuilder()
+            .startObject()
+                .startObject("settings")
+                    .startObject("analysis")
+                        .startObject(ANALYZER)
+                            .startObject("email_ngram_filter_analyzer")
+                                .field(TOKENIZER, "uax_url_email")
+                                .startArray("filter")
+                                    .value("ngram_filter")
+                                .endArray()
+                            .endObject()
+                        .endObject()
+                        .startObject("filter")
+                            .startObject("ngram_filter")
+                                .field(TYPE, "ngram")
+                                .field("min_gram", 3)
+                                .field("max_gram", 13)
+                            .endObject()
+                        .endObject()
+                    .endObject()
+                .endObject()
+            .endObject();
+    }
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
@@ -156,6 +215,24 @@ class IndexCreationFactoryTest {
                 "        }" +
                 "      }"))
             .createIndexAndAliases(client);
+    }
+
+    @Test
+    void customIndexSettingShouldNotThrowWhenValidSetting() throws IOException {
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(client, Optional.of(getValidIndexSetting()), Optional.empty());
+    }
+
+    @Test
+    void customIndexSettingShouldThrowWhenInvalidSetting() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+                .useIndex(INDEX_NAME)
+                .addAlias(ALIAS_NAME)
+                .createIndexAndAliases(client, Optional.of(getInvalidIndexSetting()), Optional.empty()))
+            .isInstanceOf(ElasticsearchStatusException.class);
     }
 
 }
