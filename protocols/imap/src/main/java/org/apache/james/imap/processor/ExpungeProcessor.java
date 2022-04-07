@@ -91,7 +91,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     private Mono<Integer> expunge(ExpungeRequest request, ImapSession session, MessageManager mailbox, MailboxSession mailboxSession) {
         IdRange[] ranges = request.getUidSet();
         if (ranges == null) {
-           return expunge(mailbox, MessageRange.all(), session, mailboxSession);
+            return expunge(mailbox, MessageRange.all(), session, mailboxSession);
         } else {
             // Handle UID EXPUNGE which is part of UIDPLUS
             // See http://tools.ietf.org/html/rfc4315
