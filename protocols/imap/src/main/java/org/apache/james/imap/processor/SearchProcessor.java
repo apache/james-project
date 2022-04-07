@@ -87,24 +87,20 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     protected Mono<Void> processRequestReactive(SearchRequest request, ImapSession session, Responder responder) {
         SearchOperation operation = request.getSearchOperation();
         SearchKey searchKey = operation.getSearchKey();
-        boolean useUids = request.isUseUids();
-        List<SearchResultOption> resultOptions = operation.getResultOptions();
 
         try {
             MailboxSession msession = session.getMailboxSession();
             SearchQuery query = toQuery(searchKey, session);
+            boolean useUids = request.isUseUids();
             boolean omitExpunged = (!useUids);
             return getSelectedMailboxReactive(session)
                 .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
                 .flatMap(Throwing.function(mailbox -> performUidSearch(mailbox, query, msession)
-                    .flatMap(uids -> {
-                        Collection<Long> results = asResults(session, useUids, uids);
-                        return computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids)
-                            .doOnNext(highestModSeq -> {
-                                ImapResponseMessage response = toResponse(request, session, useUids, resultOptions, uids, results, highestModSeq);
-                                responder.respond(response);
-                            });
-                    })
+                    .flatMap(uids -> computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids)
+                        .doOnNext(highestModSeq -> {
+                            ImapResponseMessage response = toResponse(request, session, uids, highestModSeq);
+                            responder.respond(response);
+                        }))
                     .then(unsolicitedResponses(session, responder, omitExpunged, useUids))))
                 .then(Mono.fromRunnable(() -> okComplete(request, responder)))
                 .then()
@@ -113,7 +109,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
                     no(request, responder, HumanReadableText.SEARCH_FAILED);
 
-                    if (resultOptions.contains(SearchResultOption.SAVE)) {
+                    if (request.getSearchOperation().getResultOptions().contains(SearchResultOption.SAVE)) {
                         // Reset the saved sequence-set on a BAD response if the SAVE option was used.
                         //
                         // See RFC5182 2.1.Normative Description of the SEARCHRES Extension
@@ -149,17 +145,20 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
 
-    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, Collection<Long> results, Optional<ModSeq> highestModSeq) {
-        final long[] ids = toArray(results);
+    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, Collection<MessageUid> uids, Optional<ModSeq> highestModSeq) {
+        Collection<Long> results = asResults(session, request.isUseUids(), uids);
+        long[] ids = toArray(results);
 
+        List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
         if (resultOptions == null || resultOptions.isEmpty()) {
             return new SearchResponse(ids, highestModSeq.orElse(null));
         } else {
-            return handleResultOptions(request, session, useUids, resultOptions, uids, highestModSeq.orElse(null), ids);
+            return handleResultOptions(request, session, uids, highestModSeq.orElse(null), ids);
         }
     }
 
-    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, boolean useUids, List<SearchResultOption> resultOptions, Collection<MessageUid> uids, ModSeq highestModSeq, long[] ids) {
+    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, Collection<MessageUid> uids, ModSeq highestModSeq, long[] ids) {
+        List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
         List<Long> idList = new ArrayList<>(ids.length);
         for (long id : ids) {
             idList.add(id);
@@ -214,7 +213,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
                 }
             }
-            return new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), useUids, resultOptions);
+            return new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), request.isUseUids(), resultOptions);
         } else {
             // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
             SearchResUtil.saveSequenceSet(session, idRanges);
@@ -264,7 +263,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 }
                 return b;
             }).map(Optional::of)
-            .switchIfEmpty(Mono.fromCallable(() -> Optional.empty()));
+            .switchIfEmpty(Mono.fromCallable(Optional::empty));
     }
 
     private SearchQuery toQuery(SearchKey key, ImapSession session) throws MessageRangeException {
