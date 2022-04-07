@@ -213,20 +213,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     public void disableFraming(ChannelHandlerContext ctx) {
-        ctx.channel().config().setAutoRead(false);
-        ctx.channel().eventLoop().execute(() -> ctx.channel().pipeline().remove(FRAMER));
-        ctx.channel().config().setAutoRead(true);
+        ctx.channel().pipeline().remove(FRAMER);
         framingEnabled.set(false);
     }
 
     public void enableFraming(ChannelHandlerContext ctx) {
         if (!framingEnabled.get()) {
             framingEnabled.set(true);
-            ctx.channel().config().setAutoRead(false);
-            ctx.channel().eventLoop().execute(() ->
-                ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
-                        new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false)));
-            ctx.channel().config().setAutoRead(true);
+            ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
+                new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false));
         }
     }
 
