@@ -419,8 +419,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
     @Override
-    public void enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) throws EnableException {
-
+    public Mono<Void> enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) {
         if (EnableProcessor.getEnabledCapabilities(session).contains(capability) == false) {
             SelectedMailbox sm = session.getSelected();
             // Send a HIGHESTMODSEQ response if the there was a select mailbox before and the client just enabled
@@ -428,22 +427,20 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             //
             // See http://www.dovecot.org/list/dovecot/2008-March/029561.html
             if (capability.equals(ImapConstants.SUPPORTS_CONDSTORE) || capability.equals(ImapConstants.SUPPORTS_QRESYNC)) {
-                try {
-                    MailboxMetaData metaData  = null;
-                    boolean send = false;
-                    if (sm != null) {
-                        MessageManager mailbox = getSelectedMailbox(session)
-                            .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
-                        metaData = mailbox.getMetaData(false, session.getMailboxSession(), FetchGroup.NO_COUNT);
-                        send = true;
-                    }
-                    condstoreEnablingCommand(session, responder, metaData, send);
-                } catch (MailboxException e) {
-                    throw new EnableException("Unable to enable " + capability.asString(), e);
+                if (sm != null) {
+                    boolean send = true;
+                    return getSelectedMailboxReactive(session)
+                        .switchIfEmpty(Mono.error(() -> new EnableException("Unable to enable " + capability.asString(), new MailboxException("Session not in SELECTED state"))))
+                        .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(false, session.getMailboxSession(), FetchGroup.NO_COUNT)))
+                        .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, send))
+                        .then();
                 }
+                boolean send = false;
+                MailboxMetaData metaData  = null;
+                return Mono.fromRunnable(() -> condstoreEnablingCommand(session, responder, metaData, send));
             }
-            
         }
+        return Mono.empty();
     }
     
     

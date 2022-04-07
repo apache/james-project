@@ -23,7 +23,6 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_ENABLE;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -38,11 +37,14 @@ import org.apache.james.imap.processor.PermitEnableCapabilityProcessor.EnableExc
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
@@ -69,37 +71,40 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
     @Override
     protected Mono<Void> processRequestReactive(EnableRequest request, ImapSession session, Responder responder) {
-        try {
-
-            List<Capability> caps = request.getCapabilities();
-            Set<Capability> enabledCaps = enable(request, responder, session, caps.iterator());
-            responder.respond(new EnableResponse(enabledCaps));
-
-            return unsolicitedResponses(session, responder, false)
-                .then(Mono.fromRunnable(() -> okComplete(request, responder)));
-        } catch (EnableException e) {
-            LOGGER.info("Unable to enable extension", e);
-            taggedBad(request, responder, HumanReadableText.FAILED);
-            return Mono.empty();
-        }
+        List<Capability> caps = request.getCapabilities();
+        return enable(request, responder, session, caps)
+            .doOnNext(enabledCaps -> responder.respond(new EnableResponse(enabledCaps)))
+            .then(unsolicitedResponses(session, responder, false))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .doOnEach(ReactorUtils.logOnError(EnableException.class, e -> LOGGER.info("Unable to enable extension", e)))
+            .onErrorResume(EnableException.class, e -> {
+                taggedBad(request, responder, HumanReadableText.FAILED);
+                return Mono.empty();
+            }).then();
     }
    
-    public Set<Capability> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<Capability> caps) throws EnableException {
-        Set<Capability> enabledCaps = new HashSet<>();
-        while (caps.hasNext()) {
-            Capability cap = caps.next();
-            // Check if the CAPABILITY is supported at all
-            if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
-                for (PermitEnableCapabilityProcessor enableProcessor : capabilities) {
-                    if (enableProcessor.getPermitEnableCapabilities(session).contains(cap)) {
-                        enableProcessor.enable(request, responder, session, cap);
-                        enabledCaps.add(cap);
-                    }
+    public Mono<Set<Capability>> enable(ImapRequest request, Responder responder, ImapSession session, List<Capability> caps) {
+        return Flux.fromIterable(caps)
+            .flatMap(cap -> {
+                // Check if the CAPABILITY is supported at all
+                if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
+                    return Flux.fromIterable(capabilities)
+                        .flatMap(enableProcessor -> {
+                            if (enableProcessor.getPermitEnableCapabilities(session).contains(cap)) {
+                                return enableProcessor.enable(request, responder, session, cap)
+                                    .then(Mono.just(cap));
+                            }
+                            return Mono.empty();
+                        })
+                        .distinct()
+                        .next();
                 }
-            }
-        }
-        getEnabledCapabilities(session).addAll(enabledCaps);
-        return enabledCaps;
+                return Mono.empty();
+            }).collect(ImmutableSet.toImmutableSet())
+            .map(enabledCaps -> {
+                getEnabledCapabilities(session).addAll(enabledCaps);
+                return enabledCaps;
+            });
     }
 
     /**
