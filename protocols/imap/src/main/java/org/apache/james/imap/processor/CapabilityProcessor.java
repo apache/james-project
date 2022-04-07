@@ -25,7 +25,6 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -116,10 +115,9 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     }
 
     @Override
-    protected Closeable addContextToMDC(CapabilityRequest request) {
+    protected MDCBuilder mdc(CapabilityRequest request) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "CAPABILITY")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "CAPABILITY");
     }
     
 

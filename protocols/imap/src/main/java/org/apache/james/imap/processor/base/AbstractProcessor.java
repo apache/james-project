@@ -19,13 +19,12 @@
 
 package org.apache.james.imap.processor.base;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,14 +43,16 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
     @SuppressWarnings("unchecked")
     public Mono<Void> processReactive(ImapMessage message, Responder responder, ImapSession session) {
         M acceptableMessage = (M) message;
-        try (Closeable closeable = addContextToMDC(acceptableMessage)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Processing {}", message.toString());
-            }
-            return doProcess(acceptableMessage, responder, session);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        return initialLog(message)
+            .then(doProcess(acceptableMessage, responder, session))
+            .contextWrite(ReactorUtils.context("imap-processor", mdc(acceptableMessage)));
+    }
+
+    private Mono<Void> initialLog(ImapMessage message) {
+        if (LOGGER.isDebugEnabled()) {
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Processing {}", message.toString()));
         }
+        return Mono.empty();
     }
 
     @Override
@@ -78,5 +79,5 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
     /**
      * Add request specific information to the MDC, for contextual logging
      */
-    protected abstract Closeable addContextToMDC(M message);
+    protected abstract MDCBuilder mdc(M message);
 }

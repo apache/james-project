@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.NoopRequest;
@@ -43,9 +41,8 @@ public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(NoopRequest message) {
+    protected MDCBuilder mdc(NoopRequest message) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "NOOP")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "NOOP");
     }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,10 +65,9 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     }
 
     @Override
-    protected Closeable addContextToMDC(LoginRequest request) {
+    protected MDCBuilder mdc(LoginRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LOGIN")
-            .addToContext(MDCBuilder.USER, request.getUserid().asString())
-            .build();
+            .addToContext("login-user", request.getUserid().asString());
     }
 }

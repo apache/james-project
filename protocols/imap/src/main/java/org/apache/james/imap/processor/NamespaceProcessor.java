@@ -20,7 +20,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_NAMESPACES;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -108,9 +107,8 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     }
 
     @Override
-    protected Closeable addContextToMDC(NamespaceRequest request) {
+    protected MDCBuilder mdc(NamespaceRequest request) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "NAMESPACE")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "NAMESPACE");
     }
 }

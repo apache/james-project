@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,38 +58,43 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         StatusDataItems statusDataItems = request.getStatusDataItems();
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        try {
-            LOGGER.debug("Status called on mailbox named {}", mailboxPath);
+        return logInitialRequest(mailboxPath).
+            then(retrieveMetadata(mailboxPath, statusDataItems, mailboxSession))
+            .doOnNext(metaData -> {
+                MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
 
-            return retrieveMetadata(mailboxPath, statusDataItems, mailboxSession)
-                .doOnNext(metaData -> {
-                    MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
+                // Enable CONDSTORE as this is a CONDSTORE enabling command
+                if (response.getHighestModSeq() != null) {
+                    condstoreEnablingCommand(session, responder, metaData, false);
+                }
+                responder.respond(response);
+            })
+            .then(unsolicitedResponses(session, responder, false))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e)))
+            .onErrorResume(MailboxException.class, e -> {
+                no(request, responder, HumanReadableText.STATUS_FAILED);
+                return Mono.empty();
+            })
+            .then();
+    }
 
-                    // Enable CONDSTORE as this is a CONDSTORE enabling command
-                    if (response.getHighestModSeq() != null) {
-                        condstoreEnablingCommand(session, responder, metaData, false);
-                    }
-                    responder.respond(response);
-                })
-                .then(unsolicitedResponses(session, responder, false))
-                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-                .onErrorResume(MailboxException.class, e -> {
-                    LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
-                    no(request, responder, HumanReadableText.SEARCH_FAILED);
-                    return Mono.empty();
-                })
-                .then();
-        } catch (MailboxException e) {
-            LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
-            no(request, responder, HumanReadableText.SEARCH_FAILED);
+    private Mono<Void> logInitialRequest(MailboxPath mailboxPath) {
+        if (LOGGER.isDebugEnabled()) {
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Status called on mailbox named {}", mailboxPath));
+        } else {
             return Mono.empty();
         }
     }
 
-    private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) throws MailboxException {
-        MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, mailboxSession);
-        MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
-        return mailbox.getMetaDataReactive(false, mailboxSession, fetchGroup);
+    private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
+        try {
+            MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, mailboxSession);
+            MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
+            return mailbox.getMetaDataReactive(false, mailboxSession, fetchGroup);
+        } catch (MailboxException e) {
+            return Mono.error(e);
+        }
     }
 
     private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
@@ -158,11 +164,10 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(StatusRequest request) {
+    protected MDCBuilder mdc(StatusRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "STATUS")
             .addToContext("mailbox", request.getMailboxName())
-            .addToContext("parameters", request.getStatusDataItems().toString())
-            .build();
+            .addToContext("parameters", request.getStatusDataItems().toString());
     }
 }

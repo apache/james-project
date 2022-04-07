@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SystemMessage;
 import org.apache.james.imap.processor.base.AbstractProcessor;
@@ -75,10 +73,9 @@ public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
     }
 
     @Override
-    protected Closeable addContextToMDC(SystemMessage message) {
+    protected MDCBuilder mdc(SystemMessage message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SYSTEM_MESSAGE")
-            .addToContext("message", message.toString())
-            .build();
+            .addToContext("message", message.toString());
     }
 }

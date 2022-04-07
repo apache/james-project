@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,6 +64,7 @@ import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,8 +107,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 .then(Mono.fromRunnable(() -> okComplete(request, responder)))
                 .then()
                 .doFinally(type -> session.setAttribute(SEARCH_MODSEQ, null))
+                .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e)))
                 .onErrorResume(MessageRangeException.class, e -> {
-                    LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
                     no(request, responder, HumanReadableText.SEARCH_FAILED);
 
                     if (request.getSearchOperation().getResultOptions().contains(SearchResultOption.SAVE)) {
@@ -118,9 +120,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     return Mono.empty();
                 });
         } catch (MessageRangeException e) {
-            LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e);
-            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-            return Mono.empty();
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e))
+                .then(Mono.fromRunnable(() -> taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET)));
         }
     }
 
@@ -510,11 +511,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(SearchRequest request) {
+    protected MDCBuilder mdc(SearchRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SEARCH")
             .addToContext("useUid", Boolean.toString(request.isUseUids()))
-            .addToContext("searchOperation", request.getSearchOperation().toString())
-            .build();
+            .addToContext("searchOperation", request.getSearchOperation().toString());
     }
 }

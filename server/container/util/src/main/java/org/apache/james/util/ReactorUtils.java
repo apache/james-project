@@ -42,6 +42,7 @@ import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.concurrent.Queues;
 import reactor.util.context.Context;
+import reactor.util.context.ContextView;
 
 public class ReactorUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorUtils.class);
@@ -168,22 +169,30 @@ public class ReactorUtils {
             if (!signal.isOnError()) {
                 return;
             }
-            try {
-                try (Closeable mdc = retrieveMDCBuilder(signal).build()) {
-                    errorLogStatement.accept(signal.getThrowable());
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            logWithContext(() -> errorLogStatement.accept(signal.getThrowable()), signal.getContextView());
         };
     }
 
     public static Consumer<Signal<?>> log(Runnable logStatement) {
+        return signal -> logWithContext(logStatement, signal.getContextView());
+    }
+
+    private static void logWithContext(Runnable logStatement, ContextView contextView) {
+        try (Closeable mdc = retrieveMDCBuilder(contextView).build()) {
+            logStatement.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Mono<Void> logAsMono(Runnable logStatement) {
+        return Mono.deferContextual(contextView -> Mono.fromRunnable(() -> logWithContext(logStatement, contextView)));
+    }
+
+    public static Consumer<Signal<?>> logOnError(Class<? extends Throwable> clazz, Consumer<Throwable> errorLogStatement) {
         return signal -> {
-            try (Closeable mdc = retrieveMDCBuilder(signal).build()) {
-                logStatement.run();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if (signal.hasError() && clazz.isInstance(signal.getThrowable())) {
+                logWithContext(() -> errorLogStatement.accept(signal.getThrowable()), signal.getContextView());
             }
         };
     }
@@ -196,13 +205,16 @@ public class ReactorUtils {
         return MDC_KEY_PREFIX + value;
     }
 
-    private static MDCBuilder retrieveMDCBuilder(Signal<?> signal) {
-        return signal.getContextView().stream()
+    public static MDCBuilder retrieveMDCBuilder(Signal<?> signal) {
+        return retrieveMDCBuilder(signal.getContextView());
+    }
+
+    public static MDCBuilder retrieveMDCBuilder(ContextView context) {
+        return context.stream()
             .filter(entry -> entry.getKey() instanceof String)
             .filter(entry -> entry.getValue() instanceof MDCBuilder)
             .filter(entry -> ((String) entry.getKey()).startsWith(MDC_KEY_PREFIX))
             .map(entry -> (MDCBuilder) entry.getValue())
             .reduce(MDCBuilder.create(), MDCBuilder::addToContext);
     }
-
 }

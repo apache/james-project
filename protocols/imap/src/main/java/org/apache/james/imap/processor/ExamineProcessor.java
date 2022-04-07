@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,7 +39,7 @@ public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(ExamineRequest request) {
+    protected MDCBuilder mdc(ExamineRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "EXAMINE")
             .addToContext("mailbox", request.getMailboxName())
@@ -49,7 +48,6 @@ public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest>
             .addToContext("knownUids", UidRange.toString(request.getKnownUidSet()))
             .addToContext("knownIdRange", IdRange.toString(request.getKnownSequenceSet()))
             .addToContext("lastKnownUidValidity", request.getLastKnownUidValidity().toString())
-            .addToContext("uidSet", UidRange.toString(request.getUidSet()))
-            .build();
+            .addToContext("uidSet", UidRange.toString(request.getUidSet()));
     }
 }

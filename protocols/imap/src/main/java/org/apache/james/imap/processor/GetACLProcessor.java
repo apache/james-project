@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -107,8 +108,8 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                 no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             })
@@ -121,10 +122,9 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(GetACLRequest request) {
+    protected MDCBuilder mdc(GetACLRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "GET_ACL")
-            .addToContext("mailbox", request.getMailboxName())
-            .build();
+            .addToContext("mailbox", request.getMailboxName());
     }
 }

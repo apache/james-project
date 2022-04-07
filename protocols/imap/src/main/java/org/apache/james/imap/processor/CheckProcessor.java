@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CheckRequest;
@@ -44,9 +42,8 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(CheckRequest request) {
+    protected MDCBuilder mdc(CheckRequest request) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "CHECK")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "CHECK");
     }
 }

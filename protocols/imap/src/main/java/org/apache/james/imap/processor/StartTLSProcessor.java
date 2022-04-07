@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,9 +68,8 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     }
 
     @Override
-    protected Closeable addContextToMDC(StartTLSRequest message) {
+    protected MDCBuilder mdc(StartTLSRequest message) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "START_TLS")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "START_TLS");
     }
 }
