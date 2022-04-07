@@ -63,7 +63,6 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -473,7 +472,6 @@ class IMAPServerTest {
                 .connectNow();
             responses = new ConcurrentLinkedDeque<>();
             connection.inbound().receive().asString()
-                .doOnNext(s -> System.out.println("A: " + s))
                 .doOnNext(responses::addLast)
                 .subscribeOn(Schedulers.elastic())
                 .subscribe();
@@ -1479,7 +1477,6 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
-            System.out.println("toto");
             readStringUntil(clientConnection, s -> s.contains("+ Idling"));
 
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
@@ -1741,7 +1738,6 @@ class IMAPServerTest {
         line.rewind();
         byte[] bline = new byte[line.remaining()];
         line.get(bline);
-        System.out.println("O: " + IOUtils.toString(bline));
         return bline;
     }
 
@@ -1749,7 +1745,6 @@ class IMAPServerTest {
         ImmutableList.Builder<String> result = ImmutableList.builder();
         while (true) {
             String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
-            System.out.println(line);
             result.add(line);
             if (condition.test(line)) {
                 return result.build();
