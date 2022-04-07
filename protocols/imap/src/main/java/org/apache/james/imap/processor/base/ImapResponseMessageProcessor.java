@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor.base;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.util.MDCBuilder;
@@ -39,9 +37,8 @@ public class ImapResponseMessageProcessor extends AbstractProcessor<ImmutableSta
     }
 
     @Override
-    protected Closeable addContextToMDC(ImmutableStatusResponse message) {
+    protected MDCBuilder mdc(ImmutableStatusResponse message) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "RESPOND")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "RESPOND");
     }
 }

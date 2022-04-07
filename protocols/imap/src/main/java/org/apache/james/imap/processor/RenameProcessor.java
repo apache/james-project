@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -80,11 +78,10 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(RenameRequest request) {
+    protected MDCBuilder mdc(RenameRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "RENAME")
             .addToContext("existingName", request.getExistingName())
-            .addToContext("newName", request.getNewName())
-            .build();
+            .addToContext("newName", request.getNewName());
     }
 }

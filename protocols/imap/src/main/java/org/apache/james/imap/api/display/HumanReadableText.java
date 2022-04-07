@@ -94,6 +94,8 @@ public class HumanReadableText {
 
     public static final HumanReadableText SEARCH_FAILED = new HumanReadableText("org.apache.james.imap.SEARCH_FAILED", "failed. Search failed.");
 
+    public static final HumanReadableText STATUS_FAILED = new HumanReadableText("org.apache.james.imap.STATUS_FAILED", "failed. Status failed.");
+
     public static final HumanReadableText COUNT_FAILED = new HumanReadableText("org.apache.james.imap.COUNT_FAILED", "failed. Count failed.");
 
     public static final HumanReadableText SAVE_FAILED = new HumanReadableText("org.apache.james.imap.SAVE_FAILED", "failed. Save failed.");

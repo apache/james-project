@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -80,11 +79,10 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected Closeable addContextToMDC(SetAnnotationRequest request) {
+    protected MDCBuilder mdc(SetAnnotationRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SET_ANNOTATION")
             .addToContext("mailbox", request.getMailboxName())
-            .addToContext("annotations", request.getMailboxAnnotations().toString())
-            .build();
+            .addToContext("annotations", request.getMailboxAnnotations().toString());
     }
 }

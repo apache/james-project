@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor.fetch;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,13 +117,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     .then(Mono.defer(() -> unsolicitedResponses(session, responder, omitExpunged, useUids)))
                     .then(Mono.fromRunnable(() -> okComplete(request, responder)));
             }).sneakyThrow())
+            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
             .onErrorResume(MessageRangeException.class, e -> {
-                LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return Mono.empty();
             })
-            .onErrorResume(MessageRangeException.class, e -> {
-                LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
+            .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
                 return Mono.empty();
             })
@@ -212,14 +213,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             .then();
     }
 
-
     @Override
-    protected Closeable addContextToMDC(FetchRequest request) {
+    protected MDCBuilder mdc(FetchRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "FETCH")
             .addToContext("useUid", Boolean.toString(request.isUseUids()))
             .addToContext("idSet", IdRange.toString(request.getIdSet()))
-            .addToContext("fetchedData", request.getFetch().toString())
-            .build();
+            .addToContext("fetchedData", request.getFetch().toString());
     }
 }

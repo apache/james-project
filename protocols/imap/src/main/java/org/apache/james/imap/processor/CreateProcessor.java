@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -65,10 +63,9 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(CreateRequest request) {
+    protected MDCBuilder mdc(CreateRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "CREATE")
-            .addToContext("mailbox", request.getMailboxName())
-            .build();
+            .addToContext("mailbox", request.getMailboxName());
     }
 }

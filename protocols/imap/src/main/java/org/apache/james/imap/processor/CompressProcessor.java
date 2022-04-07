@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -81,10 +80,9 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
     }
 
     @Override
-    protected Closeable addContextToMDC(CompressRequest message) {
+    protected MDCBuilder mdc(CompressRequest message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "COMPRESS")
-            .addToContext("algorithm", message.getAlgorithm())
-            .build();
+            .addToContext("algorithm", message.getAlgorithm());
     }
 }

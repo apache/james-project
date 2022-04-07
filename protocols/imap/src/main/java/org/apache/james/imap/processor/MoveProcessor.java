@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -70,13 +69,12 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
     }
 
     @Override
-    protected Closeable addContextToMDC(MoveRequest request) {
+    protected MDCBuilder mdc(MoveRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "MOVE")
             .addToContext("targetMailbox", request.getMailboxName())
             .addToContext("uidEnabled", Boolean.toString(request.isUseUids()))
-            .addToContext("idSet", IdRange.toString(request.getIdSet()))
-            .build();
+            .addToContext("idSet", IdRange.toString(request.getIdSet()));
     }
 
 }

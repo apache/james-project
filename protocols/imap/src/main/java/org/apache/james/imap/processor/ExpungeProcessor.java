@@ -20,8 +20,8 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -76,13 +76,13 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                         .flatMap(Throwing.function(expunged -> respondOk(request, session, responder, mailbox, mailboxSession, expunged)));
                 }
             }))
+            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Expunge failed", e)))
             .onErrorResume(MessageRangeException.class, e -> {
-                LOGGER.debug("Expunge failed", e);
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             });
@@ -130,10 +130,9 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     }
 
     @Override
-    protected Closeable addContextToMDC(ExpungeRequest request) {
+    protected MDCBuilder mdc(ExpungeRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "EXPUNGE")
-            .addToContext("uidSet", IdRange.toString(request.getUidSet()))
-            .build();
+            .addToContext("uidSet", IdRange.toString(request.getUidSet()));
     }
 }

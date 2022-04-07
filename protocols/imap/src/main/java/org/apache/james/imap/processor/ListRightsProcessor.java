@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -117,8 +118,8 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                 no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             })
@@ -131,11 +132,10 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     }
 
     @Override
-    protected Closeable addContextToMDC(ListRightsRequest request) {
+    protected MDCBuilder mdc(ListRightsRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LIST_RIGHTS")
             .addToContext("mailbox", request.getMailboxName())
-            .addToContext("identifier", request.getIdentifier())
-            .build();
+            .addToContext("identifier", request.getIdentifier());
     }
 }

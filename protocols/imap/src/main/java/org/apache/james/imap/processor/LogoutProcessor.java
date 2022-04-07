@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
-
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LogoutRequest;
@@ -49,9 +47,8 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(LogoutRequest request) {
+    protected MDCBuilder mdc(LogoutRequest request) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "LOGOUT")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "LOGOUT");
     }
 }

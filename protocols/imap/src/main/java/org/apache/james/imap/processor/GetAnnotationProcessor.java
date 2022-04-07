@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -154,14 +153,13 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected Closeable addContextToMDC(GetAnnotationRequest request) {
+    protected MDCBuilder mdc(GetAnnotationRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "GET_ANNOTATION")
             .addToContext("mailbox", request.getMailboxName())
             .addToContext("depth", request.getDepth().getCode())
             .addToContextIfPresent("maxSize", request.getMaxsize()
                 .map(i -> Integer.toString(i)))
-            .addToContext("keys", request.getKeys().toString())
-            .build();
+            .addToContext("keys", request.getKeys().toString());
     }
 }

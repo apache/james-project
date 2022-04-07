@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -52,18 +52,16 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
         return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxName, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .onErrorResume(SubscriptionException.class, e -> {
-                LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e);
-                return unsolicitedResponses(session, responder, false)
-                    .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)));
-            }).then();
+            .doOnEach(logOnError(SubscriptionException.class, e -> LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e)))
+            .onErrorResume(SubscriptionException.class, e ->
+                unsolicitedResponses(session, responder, false)
+                .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)))).then();
     }
 
     @Override
-    protected Closeable addContextToMDC(UnsubscribeRequest message) {
+    protected MDCBuilder mdc(UnsubscribeRequest message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "UNSUBSCRIBE")
-            .addToContext("mailbox", message.getMailboxName())
-            .build();
+            .addToContext("mailbox", message.getMailboxName());
     }
 }

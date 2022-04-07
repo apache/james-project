@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -103,13 +104,13 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     respondFailed(request, responder, failed, failedMsns);
                 }
             })
+            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
             .onErrorResume(MessageRangeException.class, e -> {
-                LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
                 no(request, responder, HumanReadableText.SAVE_FAILED);
                 return Mono.empty();
             });
@@ -332,13 +333,12 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(StoreRequest message) {
+    protected MDCBuilder mdc(StoreRequest message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "STORE")
             .addToContext("ranges", IdRange.toString(message.getIdSet()))
             .addToContext("useUids", Boolean.toString(message.isUseUids()))
             .addToContext("unchangedSince", Long.toString(message.getUnchangedSince()))
-            .addToContext("isSilent", Boolean.toString(message.isSilent()))
-            .build();
+            .addToContext("isSilent", Boolean.toString(message.isSilent()));
     }
 }

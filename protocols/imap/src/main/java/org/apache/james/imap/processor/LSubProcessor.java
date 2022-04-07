@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,39 +62,38 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
         String referenceName = request.getBaseReferenceName();
         String mailboxPattern = request.getMailboxPattern();
 
-        try {
-            return listSubscriptions(session, responder, referenceName, mailboxPattern)
-                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-                .onErrorResume(MailboxException.class, e -> {
-                    LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e);
-                    no(request, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
-                    return Mono.empty();
-                }).then();
-        } catch (SubscriptionException e) {
-            LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e);
-            no(request, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
-            return Mono.empty();
-        }
+        return listSubscriptions(session, responder, referenceName, mailboxPattern)
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e)))
+            .onErrorResume(MailboxException.class, e -> {
+                no(request, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
+                return Mono.empty();
+            }).then();
     }
 
-    private Mono<Void> listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) throws SubscriptionException {
+    private Mono<Void> listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) {
         MailboxSession mailboxSession = session.getMailboxSession();
-        Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
-            .collectList();
+        Mono<List<String>> mailboxesMono;
+        try {
+            mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
+                .collectList();
 
-        String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
+            String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
 
-        MailboxNameExpression expression = new PrefixedRegex(
-            decodedMailName,
-            ModifiedUtf7.decodeModifiedUTF7(mailboxName),
-            mailboxSession.getPathDelimiter());
-        Collection<String> mailboxResponses = new ArrayList<>();
+            MailboxNameExpression expression = new PrefixedRegex(
+                decodedMailName,
+                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                mailboxSession.getPathDelimiter());
+            Collection<String> mailboxResponses = new ArrayList<>();
 
-        return mailboxesMono.doOnNext(mailboxes -> {
-            for (String mailbox : mailboxes) {
-                respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
-            }
-        }).then();
+            return mailboxesMono.doOnNext(mailboxes -> {
+                for (String mailbox : mailboxes) {
+                    respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
+                }
+            }).then();
+        } catch (SubscriptionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void respond(Responder responder, MailboxNameExpression expression, String mailboxName, boolean originalSubscription, Collection<String> mailboxes, Collection<String> mailboxResponses, char delimiter) {
@@ -114,11 +114,10 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(LsubRequest request) {
+    protected MDCBuilder mdc(LsubRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LSUB")
             .addToContext("base", request.getBaseReferenceName())
-            .addToContext("pattern", request.getMailboxPattern())
-            .build();
+            .addToContext("pattern", request.getMailboxPattern());
     }
 }

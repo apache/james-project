@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -66,11 +65,10 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(SetQuotaRequest request) {
+    protected MDCBuilder mdc(SetQuotaRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SET_QUOTA")
             .addToContext("quotaRoot", request.getQuotaRoot())
-            .addToContext("limits", request.getResourceLimits().toString())
-            .build();
+            .addToContext("limits", request.getResourceLimits().toString());
     }
 }

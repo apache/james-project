@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -62,17 +62,16 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 }
                 return Mono.empty();
             }))
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             }).then();
     }
 
     @Override
-    protected Closeable addContextToMDC(CloseRequest request) {
+    protected MDCBuilder mdc(CloseRequest request) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "CLOSE")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "CLOSE");
     }
 }

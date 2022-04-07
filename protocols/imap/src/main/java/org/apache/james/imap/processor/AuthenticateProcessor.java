@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -168,11 +167,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    protected Closeable addContextToMDC(AuthenticateRequest request) {
+    protected MDCBuilder mdc(AuthenticateRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "AUTHENTICATE")
-            .addToContext("authType", request.getAuthType())
-            .build();
+            .addToContext("authType", request.getAuthType());
     }
 
     private void doOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {

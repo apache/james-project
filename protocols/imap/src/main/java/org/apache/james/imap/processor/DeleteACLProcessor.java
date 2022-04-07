@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -138,11 +137,10 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     }
 
     @Override
-    protected Closeable addContextToMDC(DeleteACLRequest request) {
+    protected MDCBuilder mdc(DeleteACLRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "DELETE_ACL")
             .addToContext("mailbox", request.getMailboxName())
-            .addToContext("identifier", request.getIdentifier())
-            .build();
+            .addToContext("identifier", request.getIdentifier());
     }
 }

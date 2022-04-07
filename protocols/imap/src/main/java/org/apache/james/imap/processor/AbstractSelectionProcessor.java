@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -93,13 +95,13 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
         return respond(session, fullMailboxPath, request, responder)
+            .doOnEach(logOnError(MailboxNotFoundException.class, e -> LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
-                LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e);
                 responder.respond(statusResponseFactory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Select failed for mailbox {}", mailboxName, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Select failed for mailbox {}", mailboxName, e);
                 no(request, responder, HumanReadableText.SELECT);
                 return Mono.empty();
             });

@@ -39,6 +39,7 @@ import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -256,52 +257,63 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        try (Closeable closeable = mdc(ctx).build()) {
-            imapCommandsMetric.increment();
-            ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-            ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
-            ImapMessage message = (ImapMessage) msg;
-            ChannelPipeline cp = ctx.pipeline();
+        imapCommandsMetric.increment();
+        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
+        ImapMessage message = (ImapMessage) msg;
+        ChannelPipeline cp = ctx.pipeline();
 
-            try {
-                cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
-            } catch (IllegalArgumentException e) {
+        try {
+            cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+        } catch (IllegalArgumentException e) {
+            try (Closeable closeable = mdc(ctx).build()) {
                 LOGGER.info("heartbeat handler is already part of this pipeline", e);
             }
-            ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
-            processor.processReactive(message, responseEncoder, session)
-                .doOnSuccess(type -> {
-                    if (session.getState() == ImapSessionState.LOGOUT) {
-                        // Make sure we close the channel after all the buffers were flushed out
-                        Channel channel = ctx.channel();
-                        if (channel.isActive()) {
-                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                        }
+        }
+        ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
+        processor.processReactive(message, responseEncoder, session)
+            .doOnSuccess(type -> {
+                if (session.getState() == ImapSessionState.LOGOUT) {
+                    // Make sure we close the channel after all the buffers were flushed out
+                    Channel channel = ctx.channel();
+                    if (channel.isActive()) {
+                        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
                     }
-                })
-                .doOnSuccess(type -> {
+                }
+            })
+            .doOnEach(signal -> {
+                if (signal.isOnComplete()) {
                     IOException failure = responseEncoder.getFailure();
                     if (failure != null) {
-                        LOGGER.info(failure.getMessage());
-                        LOGGER.debug("Failed to write {}", message, failure);
+                        try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(signal).build()) {
+                            LOGGER.info(failure.getMessage());
+                            LOGGER.debug("Failed to write {}", message, failure);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
 
                         ctx.fireExceptionCaught(failure);
                     }
-                })
-                .doFinally(Throwing.consumer(type -> {
+                }
+            })
+            .doOnEach(Throwing.consumer(signal -> {
+                if (signal.isOnComplete() || signal.isOnError()) {
                     try {
                         ctx.pipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
                     } catch (NoSuchElementException e) {
-                        LOGGER.info("Heartbeat handler was concurrently removed");
+                        try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(signal).build()) {
+                            LOGGER.info("Heartbeat handler was concurrently removed");
+                        }
                     }
                     if (message instanceof Closeable) {
                         ((Closeable) message).close();
                     }
-                }))
-                .doOnError(ctx::fireExceptionCaught)
-                .doFinally(type -> ctx.fireChannelReadComplete())
-                .subscribe();
-        }
+                }
+            }))
+            .doOnError(ctx::fireExceptionCaught)
+            .doFinally(type -> ctx.fireChannelReadComplete())
+            .contextWrite(ReactorUtils.context("imap", mdc(ctx)))
+            .subscribe();
     }
 
 }

@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.Date;
 
 import javax.mail.Flags;
@@ -71,37 +72,19 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         session.stopDetectingCommandInjection();
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session.getMailboxSession()))
             .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath))
+            .doOnEach(logOnError(MailboxNotFoundException.class, e -> LOGGER.debug("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
-                LOGGER.debug("Append failed for mailbox {}", mailboxPath, e);
-
                 // Indicates that the mailbox does not exist
                 // So TRY CREATE
-                tryCreate(request, responder, e);
+                no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Append failed for mailbox {}", mailboxPath, e);
-
                 // Some other issue
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             });
-    }
-
-    /**
-     * Issues a TRY CREATE response.
-     * 
-     * @param request
-     *            not null
-     * @param responder
-     *            not null
-     * @param e
-     *            not null
-     */
-    private void tryCreate(AppendRequest request, Responder responder, MailboxNotFoundException e) {
-        LOGGER.debug("Cannot open mailbox: ", e);
-
-        no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
 
     private Mono<Void> appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
@@ -130,26 +113,13 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
                     .getUidValidity();
                 okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
             }))
-            .onErrorResume(MailboxNotFoundException.class, e -> {
-                // Indicates that the mailbox does not exist
-                // So TRY CREATE
-                tryCreate(request, responder, e);
-                return Mono.empty();
-            })
-            .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Unable to append message to mailbox {}", mailboxPath, e);
-                // Some other issue
-                no(request, responder, HumanReadableText.SAVE_FAILED);
-                return Mono.empty();
-            })
             .then();
     }
 
     @Override
-    protected Closeable addContextToMDC(AppendRequest request) {
+    protected MDCBuilder mdc(AppendRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "APPEND")
-            .addToContext("mailbox", request.getMailboxName())
-            .build();
+            .addToContext("mailbox", request.getMailboxName());
     }
 }

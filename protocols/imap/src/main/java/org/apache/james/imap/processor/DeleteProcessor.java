@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -57,18 +57,18 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .then()
+            .doOnEach(logOnError(MailboxNotFoundException.class, e -> LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
-                LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e);
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(TooLongMailboxNameException.class, e -> LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e)))
             .onErrorResume(TooLongMailboxNameException.class, e -> {
-                LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e);
                 taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
                 return Mono.empty();
             })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Delete failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("Delete failed for mailbox {}", mailboxPath, e);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             });
@@ -88,10 +88,9 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(DeleteRequest request) {
+    protected MDCBuilder mdc(DeleteRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "DELETE")
-            .addToContext("mailbox", request.getMailboxName())
-            .build();
+            .addToContext("mailbox", request.getMailboxName());
     }
 }

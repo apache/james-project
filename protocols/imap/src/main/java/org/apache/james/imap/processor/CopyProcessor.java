@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.message.IdRange;
@@ -55,12 +54,11 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(CopyRequest request) {
+    protected MDCBuilder mdc(CopyRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "COPY")
             .addToContext("targetMailbox", request.getMailboxName())
             .addToContext("uidEnabled", Boolean.toString(request.isUseUids()))
-            .addToContext("idSet", IdRange.toString(request.getIdSet()))
-            .build();
+            .addToContext("idSet", IdRange.toString(request.getIdSet()));
     }
 }

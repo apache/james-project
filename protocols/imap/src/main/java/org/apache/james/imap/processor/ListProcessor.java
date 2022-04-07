@@ -20,8 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
-
-import java.io.Closeable;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
@@ -80,11 +79,11 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-                .onErrorResume(MailboxException.class, e -> {
-                    LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e);
-                    no(request, responder, HumanReadableText.SEARCH_FAILED);
-                    return Mono.empty();
-                })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e)))
+            .onErrorResume(MailboxException.class, e -> {
+                no(request, responder, HumanReadableText.SEARCH_FAILED);
+                return Mono.empty();
+            })
             .then();
     }
 
@@ -205,11 +204,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     @Override
-    protected Closeable addContextToMDC(T request) {
+    protected MDCBuilder mdc(T request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LIST")
             .addToContext("base", request.getBaseReferenceName())
-            .addToContext("pattern", request.getMailboxPattern())
-            .build();
+            .addToContext("pattern", request.getMailboxPattern());
     }
 }

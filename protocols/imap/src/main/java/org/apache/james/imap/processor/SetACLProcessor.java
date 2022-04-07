@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -157,12 +156,11 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(SetACLRequest request) {
+    protected MDCBuilder mdc(SetACLRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SET_ACL")
             .addToContext("mailbox", request.getMailboxName())
             .addToContext("identifier", request.getIdentifier())
-            .addToContext("rights", request.getRights())
-            .build();
+            .addToContext("rights", request.getRights());
     }
 }

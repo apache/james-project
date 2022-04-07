@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -120,10 +119,9 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     }
 
     @Override
-    protected Closeable addContextToMDC(GetQuotaRootRequest request) {
+    protected MDCBuilder mdc(GetQuotaRootRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "GET_QUOTA_ROOT")
-            .addToContext("mailbox", request.getMailboxName())
-            .build();
+            .addToContext("mailbox", request.getMailboxName());
     }
 }

@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
 
-import java.io.Closeable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -174,9 +173,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected Closeable addContextToMDC(IdleRequest message) {
+    protected MDCBuilder mdc(IdleRequest message) {
         return MDCBuilder.create()
-            .addToContext(MDCBuilder.ACTION, "IDLE")
-            .build();
+            .addToContext(MDCBuilder.ACTION, "IDLE");
     }
 }

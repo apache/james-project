@@ -20,7 +20,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UNSELECT;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -66,8 +65,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(UnselectRequest request) {
-        return MDCBuilder.ofValue(MDCBuilder.ACTION, "UNSELECT")
-            .build();
+    protected MDCBuilder mdc(UnselectRequest request) {
+        return MDCBuilder.ofValue(MDCBuilder.ACTION, "UNSELECT");
     }
 }

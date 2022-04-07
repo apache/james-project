@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.io.Closeable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,7 +39,7 @@ public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(SelectRequest message) {
+    protected MDCBuilder mdc(SelectRequest message) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SELECT")
             .addToContext("mailbox", message.getMailboxName())
@@ -49,8 +48,6 @@ public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
             .addToContext("knownUids", UidRange.toString(message.getKnownUidSet()))
             .addToContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
             .addToContext("lastKnownUidValidity", message.getLastKnownUidValidity().toString())
-            .addToContext("uidSet", UidRange.toString(message.getUidSet()))
-            .build();
+            .addToContext("uidSet", UidRange.toString(message.getUidSet()));
     }
-
 }

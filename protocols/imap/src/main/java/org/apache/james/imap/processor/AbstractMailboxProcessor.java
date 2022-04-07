@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,6 +63,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,8 +104,8 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                         no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
                         return Mono.empty();
                     })
+                    .doOnEach(ReactorUtils.logOnError(e -> LOGGER.error("Unexpected error during IMAP processing", e)))
                     .onErrorResume(e -> {
-                        LOGGER.error("Unexpected error during IMAP processing", e);
                         no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                         return Mono.empty();
                     }),
@@ -366,7 +369,13 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
 
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
-        return Mono.fromRunnable(() -> processRequest(request, session, responder));
+        return Mono.deferContextual(context -> Mono.fromRunnable(() -> {
+            try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(context).build()) {
+                processRequest(request, session, responder);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
     /**
