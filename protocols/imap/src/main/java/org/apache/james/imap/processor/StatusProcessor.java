@@ -42,6 +42,8 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Mono;
 
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
@@ -58,8 +60,8 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         StatusDataItems statusDataItems = request.getStatusDataItems();
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        return logInitialRequest(mailboxPath).
-            then(retrieveMetadata(mailboxPath, statusDataItems, mailboxSession))
+        return logInitialRequest(mailboxPath)
+            .then(retrieveMetadata(mailboxPath, statusDataItems, mailboxSession))
             .doOnNext(metaData -> {
                 MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
 
@@ -88,13 +90,10 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
-        try {
-            MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, mailboxSession);
-            MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
-            return mailbox.getMetaDataReactive(false, mailboxSession, fetchGroup);
-        } catch (MailboxException e) {
-            return Mono.error(e);
-        }
+        MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
+
+        return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(false, mailboxSession, fetchGroup)));
     }
 
     private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
