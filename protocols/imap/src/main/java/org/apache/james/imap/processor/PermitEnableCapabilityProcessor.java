@@ -24,6 +24,8 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.process.ImapSession;
 
+import reactor.core.publisher.Mono;
+
 /**
  * {@link CapabilityImplementingProcessor} which allows to ENABLE one ore more Capabilities
  */
@@ -39,7 +41,7 @@ public interface PermitEnableCapabilityProcessor extends CapabilityImplementingP
     /**
      * Callback which is used when a ENABLED command was used to enable on of the CAPABILITIES which is managed by this implementation
      */
-    void enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) throws EnableException;
+    Mono<Void> enable(ImapMessage message, Responder responder, ImapSession session, Capability capability);
 
     /**
      * Exception which should get thrown if for whatever reason its not possible to enable a capability
