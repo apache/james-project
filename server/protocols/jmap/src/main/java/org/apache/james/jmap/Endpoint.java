@@ -25,14 +25,24 @@ import io.netty.handler.codec.http.HttpMethod;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class Endpoint {
+    public static Endpoint ofFixedPath(HttpMethod method, String path) {
+        return new Endpoint(method, path, new UriMatcher.Fixed(path));
+    }
+
     private final HttpMethod method;
     private final String path;
-    private final UriPathTemplate uriPathTemplate;
+    private final UriMatcher uriMatcher;
 
     public Endpoint(HttpMethod method, String path) {
         this.method = method;
         this.path = path;
-        this.uriPathTemplate = new UriPathTemplate(path);
+        this.uriMatcher = UriMatcher.Impl.of(path);
+    }
+
+    private Endpoint(HttpMethod method, String path, UriMatcher uriMatcher) {
+        this.method = method;
+        this.path = path;
+        this.uriMatcher = uriMatcher;
     }
 
     public HttpMethod getMethod() {
@@ -45,11 +55,11 @@ public class Endpoint {
 
     public boolean matches(HttpServerRequest request) {
         return method.equals(request.method())
-            && uriPathTemplate.matches(request.uri());
+            && uriMatcher.matches(request.uri());
     }
 
-    UriPathTemplate getUriPathTemplate() {
-        return uriPathTemplate;
+    UriMatcher getUriMatcher() {
+        return uriMatcher;
     }
 
     @Override

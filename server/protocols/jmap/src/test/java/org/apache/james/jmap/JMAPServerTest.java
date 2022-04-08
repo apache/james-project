@@ -83,7 +83,7 @@ class JMAPServerTest {
     private static final ImmutableSet<JMAPRoutesHandler> CORS_ROUTES = ImmutableSet.of(
         new JMAPRoutesHandler(
             Version.DRAFT,
-            new FakeJMAPRoutes(ImmutableSet.of(new Endpoint(HttpMethod.OPTIONS, "/a")), Version.DRAFT)),
+            new FakeJMAPRoutes(ImmutableSet.of(Endpoint.ofFixedPath(HttpMethod.OPTIONS, "/a")), Version.DRAFT)),
         new JMAPRoutesHandler(
             Version.RFC8621,
             new FakeJMAPRoutes(ImmutableSet.of(new Endpoint(HttpMethod.OPTIONS, "/b")), Version.RFC8621)));

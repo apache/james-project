@@ -84,11 +84,11 @@ public class JMAPApiRoutes implements JMAPRoutes {
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.POST, JMAP))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.POST, JMAP))
                 .action(this::post)
                 .corsHeaders(),
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, JMAP))
                 .action(CORS_CONTROL)
                 .noCorsHeaders()
         );

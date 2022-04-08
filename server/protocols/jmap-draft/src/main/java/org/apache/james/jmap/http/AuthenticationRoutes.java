@@ -105,19 +105,19 @@ public class AuthenticationRoutes implements JMAPRoutes {
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.POST, AUTHENTICATION))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.POST, AUTHENTICATION))
                 .action(this::post)
                 .corsHeaders(),
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.GET, AUTHENTICATION))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.GET, AUTHENTICATION))
                 .action(this::returnEndPointsResponse)
                 .corsHeaders(),
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.DELETE, AUTHENTICATION))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.DELETE, AUTHENTICATION))
                 .action(this::delete)
                 .corsHeaders(),
             JMAPRoute.builder()
-                .endpoint(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION))
+                .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, AUTHENTICATION))
                 .action(CORS_CONTROL)
                 .noCorsHeaders()
         );

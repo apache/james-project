@@ -64,7 +64,7 @@ public class JMAPRoute {
             Action actionWithParameterResolving(Action action) {
                 return (req, res) ->
                     action.handleRequest(
-                        req.paramsResolver(s -> endpoint.getUriPathTemplate().match(s)),
+                        req.paramsResolver(s -> endpoint.getUriMatcher().match(s)),
                         res);
             }
         }

@@ -27,7 +27,7 @@ class EndpointTest {
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Endpoint.class)
-            .withIgnoredFields("uriPathTemplate")
+            .withIgnoredFields("uriMatcher")
             .verify();
     }
 }

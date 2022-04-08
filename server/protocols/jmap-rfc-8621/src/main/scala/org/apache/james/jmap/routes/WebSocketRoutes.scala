@@ -79,11 +79,11 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
-      .endpoint(new Endpoint(HttpMethod.GET, JMAP_WS))
+      .endpoint(Endpoint.ofFixedPath(HttpMethod.GET, JMAP_WS))
       .action(this.handleWebSockets)
       .corsHeaders,
     JMAPRoute.builder
-      .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP_WS))
+      .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, JMAP_WS))
       .action(JMAPRoutes.CORS_CONTROL)
       .corsHeaders())
 
