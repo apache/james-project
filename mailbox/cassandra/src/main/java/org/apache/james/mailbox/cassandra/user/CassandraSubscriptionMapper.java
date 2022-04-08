@@ -70,10 +70,8 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     }
 
     @Override
-    public synchronized void delete(Subscription subscription) {
-        session.execute(deleteStatement.bind()
-            .setString(USER, subscription.getUser().asString())
-            .setString(MAILBOX, subscription.getMailbox()));
+    public void delete(Subscription subscription) {
+        deleteReactive(subscription).block();
     }
 
     @Override
@@ -94,22 +92,20 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     }
 
     @Override
-    public synchronized void save(Subscription subscription) {
-        session.execute(insertStatement.bind()
-            .setString(USER, subscription.getUser().asString())
-            .setString(MAILBOX, subscription.getMailbox()));
+    public void save(Subscription subscription) {
+        saveReactive(subscription).block();
     }
 
     @Override
     public Mono<Void> saveReactive(Subscription subscription) {
-        return executor.executeVoid(deleteStatement.bind()
+        return executor.executeVoid(insertStatement.bind()
             .setString(USER, subscription.getUser().asString())
             .setString(MAILBOX, subscription.getMailbox()));
     }
 
     @Override
     public Mono<Void> deleteReactive(Subscription subscription) {
-        return executor.executeVoid(insertStatement.bind()
+        return executor.executeVoid(deleteStatement.bind()
             .setString(USER, subscription.getUser().asString())
             .setString(MAILBOX, subscription.getMailbox()));
     }
