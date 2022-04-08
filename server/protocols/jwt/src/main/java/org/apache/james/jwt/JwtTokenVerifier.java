@@ -25,9 +25,12 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 
@@ -44,10 +47,13 @@ public class JwtTokenVerifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
 
-    private final List<PublicKey> publicKeys;
+    private final List<JwtParser> jwtParsers;
 
     public JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
-        this.publicKeys = pubKeyProvider.get();
+        this.jwtParsers = pubKeyProvider.get()
+            .stream()
+            .map(this::toImmutableJwtParser)
+            .collect(ImmutableList.toImmutableList());
     }
 
     public Optional<String> verifyAndExtractLogin(String token) {
@@ -56,14 +62,14 @@ public class JwtTokenVerifier {
     }
 
     public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
-        return publicKeys.stream()
-            .flatMap(key -> verifyAndExtractClaim(token, claimName, returnType, key).stream())
+        return jwtParsers.stream()
+            .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
             .findFirst();
     }
 
-    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, PublicKey publicKey) {
+    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
         try {
-            Jws<Claims> jws = parseToken(token, publicKey);
+            Jws<Claims> jws = parser.parseClaimsJws(token);
             T claim = jws
                 .getBody()
                 .get(claimName, returnType);
@@ -88,10 +94,9 @@ public class JwtTokenVerifier {
         }
     }
 
-    private Jws<Claims> parseToken(String token, PublicKey publicKey) throws JwtException {
-        return Jwts
-                .parser()
-                .setSigningKey(publicKey)
-                .parseClaimsJws(token);
+    private JwtParser toImmutableJwtParser(PublicKey publicKey) {
+        return Jwts.parserBuilder()
+            .setSigningKey(publicKey)
+            .build();
     }
 }
