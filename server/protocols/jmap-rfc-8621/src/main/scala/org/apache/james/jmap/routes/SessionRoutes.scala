@@ -69,19 +69,19 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   override def routes: Stream[JMAPRoute] =
     Stream.of(
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.GET, JMAP_SESSION))
+        .endpoint(Endpoint.ofFixedPath(HttpMethod.GET, JMAP_SESSION))
         .action(generateSession)
         .corsHeaders,
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP_SESSION))
+        .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, JMAP_SESSION))
         .action(CORS_CONTROL)
         .noCorsHeaders,
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.GET, WELL_KNOWN_JMAP))
+        .endpoint(Endpoint.ofFixedPath(HttpMethod.GET, WELL_KNOWN_JMAP))
         .action(redirectToSession)
         .corsHeaders,
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.OPTIONS, WELL_KNOWN_JMAP))
+        .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, WELL_KNOWN_JMAP))
         .action(CORS_CONTROL)
         .noCorsHeaders)
 

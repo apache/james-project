@@ -54,11 +54,11 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
-      .endpoint(new Endpoint(HttpMethod.POST, JMAP))
+      .endpoint(Endpoint.ofFixedPath(HttpMethod.POST, JMAP))
       .action(this.post)
       .corsHeaders,
     JMAPRoute.builder
-      .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP))
+      .endpoint(Endpoint.ofFixedPath(HttpMethod.OPTIONS, JMAP))
       .action(JMAPRoutes.CORS_CONTROL)
       .corsHeaders())
 
