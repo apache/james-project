@@ -38,7 +38,7 @@ import it.unimi.dsi.fastutil.longs.LongComparators;
 
 public class UidMsnConverter {
     private static final int FIRST_MSN = 1;
-    private static final long INTERGER_MAX_VALUE = Integer.MAX_VALUE;
+    private static final long INTEGER_MAX_VALUE = Integer.MAX_VALUE;
 
     @VisibleForTesting final LongArrayList uids;
     @VisibleForTesting final IntArrayList uidsAsInts;
@@ -83,7 +83,7 @@ public class UidMsnConverter {
     private void addAllToEmptyLongStructure(List<MessageUid> addedUids) {
         uids.ensureCapacity(addedUids.size());
         for (MessageUid uid : addedUids) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 uids.clear();
                 switchToLongs();
                 addAllUnSynchronized(addedUids);
@@ -97,7 +97,7 @@ public class UidMsnConverter {
     private void addAllToNonEmptyIntStructure(List<MessageUid> addedUids) {
         IntAVLTreeSet tmp = new IntAVLTreeSet(uidsAsInts);
         for (MessageUid uid : addedUids) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 switchToLongs();
                 addAllUnSynchronized(addedUids);
                 return;
@@ -111,7 +111,7 @@ public class UidMsnConverter {
     private void addAllToEmptyIntStructure(List<MessageUid> addedUids) {
         uidsAsInts.ensureCapacity(addedUids.size());
         for (MessageUid uid : addedUids) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 uidsAsInts.clear();
                 switchToLongs();
                 addAllUnSynchronized(addedUids);
@@ -136,7 +136,7 @@ public class UidMsnConverter {
 
     private NullableMessageSequenceNumber getMsnUnsynchronized(MessageUid uid) {
         if (usesInts) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 return NullableMessageSequenceNumber.noMessage();
             }
             int position = Arrays.binarySearch(uidsAsInts.elements(), 0, uidsAsInts.size(), (int) uid.asLong());
@@ -191,7 +191,7 @@ public class UidMsnConverter {
 
     private void removeUnsynchronized(MessageUid uid) {
         if (usesInts) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 return;
             }
             int index = Arrays.binarySearch(uidsAsInts.elements(), 0, uidsAsInts.size(), (int) uid.asLong());
@@ -227,7 +227,7 @@ public class UidMsnConverter {
 
     private void addUidUnSynchronized(MessageUid uid) {
         if (usesInts) {
-            if (uid.asLong() > INTERGER_MAX_VALUE) {
+            if (uid.asLong() > INTEGER_MAX_VALUE) {
                 switchToLongs();
                 addUidUnSynchronized(uid);
                 return;
