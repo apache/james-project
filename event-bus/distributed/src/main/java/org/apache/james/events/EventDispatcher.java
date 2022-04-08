@@ -46,7 +46,6 @@ import com.rabbitmq.client.AMQP;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -114,8 +113,7 @@ public class EventDispatcher {
                 dispatchToLocalListeners(event, keys),
                 dispatchToRemoteListeners(event, keys))
             .doOnError(throwable -> LOGGER.error("error while dispatching event", throwable))
-            .then()
-            .subscribeWith(MonoProcessor.create());
+            .then();
     }
 
     private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {

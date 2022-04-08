@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Redis Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Redis Server Configuration">
+      <p>
+          Redis is used in distributed James for the optional rate limiting component.
+
+          This configuration helps you configure components using Redis in case you want to setup a distributed James.
+          And it is only applicable with Guice products.
+      </p>
+      <p>
+          Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/redis.properties">redis.properties</a>
+          in GIT to get some examples and hints.
+      </p>
+
+      <p>
+          RabbitMQ Configuration
+      </p>
+      <dl>
+          <dt><strong>redisURL</strong></dt>
+          <dd>
+              the Redis URI pointing to Redis server. Compulsory.
+          </dd>
+
+          <dt><strong>cluster.enabled</strong></dt>
+          <dd>
+              Whether we should attempt connections to Redis as a cluster.Defaults to false.
+          </dd>
+
+          <dt><strong>redis.ioThreads</strong></dt>
+          <dd>IO threads to be using for the underlying Netty networking resources. If unspecified driver defaults applies.</dd>
+
+          <dt><strong>redis.workerThreads</strong></dt>
+          <dd>Worker threads to be using for the underlying driver. If unspecified driver defaults applies.</dd>
+
+      </dl>
+  </section>
+
+</body>
+
+</document>

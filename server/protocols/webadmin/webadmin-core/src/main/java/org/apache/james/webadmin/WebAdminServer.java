@@ -58,6 +58,7 @@ public class WebAdminServer implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
 
     public static final int DEFAULT_PORT = 8080;
+    private static final int DEFAULTS = -1;
 
     private final WebAdminConfiguration configuration;
     private final List<Routes> privateRoutes;
@@ -100,6 +101,7 @@ public class WebAdminServer implements Startable {
             throw new RuntimeException(e);
         });
         if (configuration.isEnabled()) {
+            service.threadPool(configuration.getMaxThreadCount().orElse(DEFAULTS), configuration.getMinThreadCount().orElse(DEFAULT_PORT), DEFAULTS);
             service.ipAddress(listeningIP());
             service.port(configuration.getPort().get().getValue());
             configureExceptionHanding();

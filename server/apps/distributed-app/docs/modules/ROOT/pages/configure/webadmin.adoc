@@ -63,6 +63,12 @@ Defaults to the `jwt.publickeypem.url` value of `jmap.properties` file if unspec
 needs to be on the classpath or in the ./extensions-jars folder. Read mode about
 xref:extending/webadmin-routes.adoc[creating you own webadmin routes].
 
+| maxThreadCount
+| Maximum threads used by the underlying Jetty server. Optional.
+
+| minThreadCount
+| Minimum threads used by the underlying Jetty server. Optional.
+
 |===
 
 == Generating a JWT key pair

@@ -123,7 +123,6 @@ class GroupRegistrationHandler {
                 receiverProvider::createReceiver,
             receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
             Receiver::close)
-            .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
             .subscribeOn(Schedulers.elastic())
@@ -139,7 +138,7 @@ class GroupRegistrationHandler {
                 .map(group -> Pair.of(group, aa))
                 .collect(ImmutableList.toImmutableList()))
             .flatMap(event -> event.getLeft().runListenerReliably(DEFAULT_RETRY_COUNT, event.getRight()))
-                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic()))
+            .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic()))
             .then()
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", GROUP, e);
@@ -150,8 +149,7 @@ class GroupRegistrationHandler {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes))
-            .subscribeOn(Schedulers.parallel());
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes));
     }
 
     void stop() {

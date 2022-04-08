@@ -27,6 +27,7 @@
 **** xref:configure/cassandra.adoc[cassandra.properties]
 **** xref:configure/elasticsearch.adoc[elasticsearch.properties]
 **** xref:configure/rabbitmq.adoc[rabbitmq.properties]
+**** xref:configure/redis.adoc[redis.properties]
 **** xref:configure/tika.adoc[tika.properties]
 *** Core components
 **** xref:configure/batchsizes.adoc[batchsizes.properties]
