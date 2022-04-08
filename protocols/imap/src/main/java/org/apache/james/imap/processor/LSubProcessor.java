@@ -73,9 +73,8 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
 
     private Mono<Void> listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) {
         MailboxSession mailboxSession = session.getMailboxSession();
-        Mono<List<String>> mailboxesMono;
         try {
-            mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
+            Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
                 .collectList();
 
             String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
@@ -84,9 +83,9 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
                 decodedMailName,
                 ModifiedUtf7.decodeModifiedUTF7(mailboxName),
                 mailboxSession.getPathDelimiter());
-            Collection<String> mailboxResponses = new ArrayList<>();
 
             return mailboxesMono.doOnNext(mailboxes -> {
+                Collection<String> mailboxResponses = new ArrayList<>();
                 for (String mailbox : mailboxes) {
                     respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
                 }
