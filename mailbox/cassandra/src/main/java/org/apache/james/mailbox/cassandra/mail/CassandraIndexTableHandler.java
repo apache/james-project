@@ -35,7 +35,6 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.Iterators;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -168,7 +167,7 @@ public class CassandraIndexTableHandler {
     private Mono<Void> manageApplicableFlagsOnFlagsUpdate(CassandraId mailboxId, List<UpdatedFlags> updatedFlags) {
         return applicableFlagDAO.updateApplicableFlags(mailboxId,
             updatedFlags.stream()
-                .flatMap(flags -> Iterators.toStream(flags.userFlagIterator()))
+                .flatMap(UpdatedFlags::userFlagStream)
                 .collect(ImmutableSet.toImmutableSet()));
     }
 
