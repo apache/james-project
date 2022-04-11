@@ -21,9 +21,7 @@ package org.apache.james.imap.api.message;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -39,8 +37,8 @@ public class FetchData {
                 .seen(fetchData.setSeen);
         }
 
-        private EnumSet<Item> itemToFetch = EnumSet.noneOf(Item.class);
-        private Set<BodyFetchElement> bodyElements = new HashSet<>();
+        private final EnumSet<Item> itemToFetch = EnumSet.noneOf(Item.class);
+        private final ImmutableSet.Builder<BodyFetchElement> bodyElements = ImmutableSet.builder();
         private boolean setSeen = false;
         private long changedSince = -1;
         private boolean vanished;
@@ -86,7 +84,7 @@ public class FetchData {
         }
 
         public FetchData build() {
-            return new FetchData(itemToFetch, bodyElements, setSeen, changedSince, vanished);
+            return new FetchData(itemToFetch, bodyElements.build(), setSeen, changedSince, vanished);
         }
     }
 
@@ -111,9 +109,9 @@ public class FetchData {
     private final long changedSince;
     private final boolean vanished;
 
-    private FetchData(EnumSet<Item> itemToFetch, Set<BodyFetchElement> bodyElements, boolean setSeen, long changedSince, boolean vanished) {
-        this.itemToFetch = EnumSet.copyOf(itemToFetch);
-        this.bodyElements = ImmutableSet.copyOf(bodyElements);
+    private FetchData(EnumSet<Item> itemToFetch, ImmutableSet<BodyFetchElement> bodyElements, boolean setSeen, long changedSince, boolean vanished) {
+        this.itemToFetch = itemToFetch;
+        this.bodyElements = bodyElements;
         this.setSeen = setSeen;
         this.changedSince = changedSince;
         this.vanished = vanished;
