@@ -50,6 +50,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Flux;
@@ -146,13 +147,16 @@ public class CassandraMailboxDAO {
 
     private Mono<Mailbox> mailboxFromRow(Row row, CassandraId cassandraId) {
         return sanitizeUidValidity(cassandraId, row.getLong(UIDVALIDITY))
-            .map(uidValidity -> new Mailbox(
-                new MailboxPath(
-                    row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
-                    Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
-                    row.getString(NAME)),
-                uidValidity,
-                cassandraId));
+            .map(uidValidity -> {
+                UDTValue mailboxBase = row.getUDTValue(MAILBOX_BASE);
+                return new Mailbox(
+                    new MailboxPath(
+                        mailboxBase.getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
+                        Username.of(mailboxBase.getString(CassandraMailboxTable.MailboxBase.USER)),
+                        row.getString(NAME)),
+                    uidValidity,
+                    cassandraId);
+            });
     }
     
     private Mono<UidValidity> sanitizeUidValidity(CassandraId cassandraId, long uidValidityAsLong) {
