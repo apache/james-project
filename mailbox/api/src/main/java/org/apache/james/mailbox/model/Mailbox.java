@@ -30,25 +30,19 @@ import com.google.common.base.Objects;
  */
 public class Mailbox {
     private final MailboxId id;
-    private String namespace;
-    private Username user;
-    private String name;
+    private MailboxPath path;
     private final UidValidity uidValidity;
     private MailboxACL acl = MailboxACL.EMPTY;
 
     public Mailbox(MailboxPath path, UidValidity uidValidity, MailboxId mailboxId) {
         this.id = mailboxId;
-        this.namespace = path.getNamespace();
-        this.user = path.getUser();
-        this.name = path.getName();
+        this.path = path;
         this.uidValidity = uidValidity;
     }
 
     public Mailbox(Mailbox mailbox) {
         this.id = mailbox.getMailboxId();
-        this.namespace = mailbox.getNamespace();
-        this.user = mailbox.getUser();
-        this.name = mailbox.getName();
+        this.path = mailbox.generateAssociatedPath();
         this.uidValidity = mailbox.getUidValidity();
         this.acl = new MailboxACL(mailbox.getACL().getEntries());
     }
@@ -66,7 +60,7 @@ public class Mailbox {
      * @return not null
      */
     public String getNamespace() {
-        return namespace;
+        return path.getNamespace();
     }
 
     /**
@@ -74,7 +68,7 @@ public class Mailbox {
      * @param namespace not null
      */
     public void setNamespace(String namespace) {
-        this.namespace = namespace;
+        this.path = new MailboxPath(namespace, path.getUser(), path.getName());
     }
 
     /**
@@ -82,7 +76,7 @@ public class Mailbox {
      * @return not null
      */
     public Username getUser() {
-        return user;
+        return path.getUser();
     }
 
     /**
@@ -90,7 +84,7 @@ public class Mailbox {
      * @param user not null
      */
     public void setUser(Username user) {
-        this.user = user;
+        this.path = new MailboxPath(path.getNamespace(), user, path.getName());
     }
 
     /**
@@ -98,7 +92,7 @@ public class Mailbox {
      * @return not null
      */
     public String getName() {
-        return name;
+        return path.getName();
     }
 
     /**
@@ -106,7 +100,7 @@ public class Mailbox {
      * @param name not null
      */
     public void setName(String name) {
-        this.name = name;
+        this.path = new MailboxPath(path.getNamespace(), path.getUser(), name);
     }
 
     /**
@@ -118,7 +112,7 @@ public class Mailbox {
     }
 
     public MailboxPath generateAssociatedPath() {
-        return new MailboxPath(getNamespace(), getUser(), getName());
+        return path;
     }
 
     /**
@@ -150,16 +144,16 @@ public class Mailbox {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(namespace, user, name);
+        return Objects.hashCode(path);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("id", getMailboxId().serialize())
-            .add("namespace", namespace)
-            .add("user", user)
-            .add("name", name)
+            .add("namespace", path.getNamespace())
+            .add("user", path.getUser())
+            .add("name", path.getName())
             .toString();
     }
 }
