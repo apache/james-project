@@ -95,7 +95,7 @@ public class CassandraMailboxPathV3DAO {
     }
 
     private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(FIELDS)
+        return session.prepare(select(MAILBOX_ID, UIDVALIDITY)
             .from(TABLE_NAME)
             .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
             .and(eq(USER, bindMarker(USER)))
@@ -103,7 +103,7 @@ public class CassandraMailboxPathV3DAO {
     }
 
     private PreparedStatement prepareSelectUser(Session session) {
-        return session.prepare(select(FIELDS)
+        return session.prepare(select(MAILBOX_ID, UIDVALIDITY, MAILBOX_NAME)
             .from(TABLE_NAME)
             .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
             .and(eq(USER, bindMarker(USER))));
@@ -129,7 +129,7 @@ public class CassandraMailboxPathV3DAO {
                 .setString(USER, sanitizeUser(mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName())
                 .setConsistencyLevel(consistencyLevel))
-            .map(this::fromRowToCassandraIdAndPath)
+            .map(row -> fromRow(row, mailboxPath.getUser(), mailboxPath.getNamespace(), mailboxPath.getName()))
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
     }
@@ -140,7 +140,7 @@ public class CassandraMailboxPathV3DAO {
                 .setString(NAMESPACE, namespace)
                 .setString(USER, sanitizeUser(user))
                 .setConsistencyLevel(consistencyChoice.choose(consistenciesConfiguration)))
-            .map(this::fromRowToCassandraIdAndPath)
+            .map(row -> fromRow(row, user, namespace))
             .map(FunctionalUtils.toFunction(this::logReadSuccess));
     }
 
@@ -186,10 +186,18 @@ public class CassandraMailboxPathV3DAO {
     }
 
     private Mailbox fromRowToCassandraIdAndPath(Row row) {
+        return fromRow(row, Username.of(row.getString(USER)), row.getString(NAMESPACE));
+    }
+
+    private Mailbox fromRow(Row row, Username username, String namespace) {
+        return fromRow(row, username, namespace, row.getString(MAILBOX_NAME));
+    }
+
+    private Mailbox fromRow(Row row, Username username, String namespace, String name) {
         return new Mailbox(
-            new MailboxPath(row.getString(NAMESPACE),
-                Username.of(row.getString(USER)),
-                row.getString(MAILBOX_NAME)),
+            new MailboxPath(namespace,
+                username,
+                name),
             UidValidity.of(row.getLong(UIDVALIDITY)),
             CassandraId.of(row.getUUID(MAILBOX_ID)));
     }
