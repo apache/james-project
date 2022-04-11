@@ -31,7 +31,6 @@ import org.slf4j.MDC;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MDCBuilder {
@@ -92,7 +91,6 @@ public class MDCBuilder {
     }
 
     private final ImmutableMap.Builder<String, String> contextMap = ImmutableMap.builder();
-    private final ImmutableList.Builder<MDCBuilder> nestedBuilder = ImmutableList.builder();
 
     private MDCBuilder() {
 
@@ -107,7 +105,7 @@ public class MDCBuilder {
      */
     @Deprecated
     public MDCBuilder addContext(MDCBuilder nested) {
-        this.nestedBuilder.add(nested);
+        this.contextMap.putAll(nested.contextMap.build());
         return this;
     }
 
@@ -128,7 +126,7 @@ public class MDCBuilder {
     }
 
     public MDCBuilder addToContext(MDCBuilder nested) {
-        this.nestedBuilder.add(nested);
+        this.contextMap.putAll(nested.contextMap.build());
         return this;
     }
 
@@ -146,16 +144,7 @@ public class MDCBuilder {
 
     @VisibleForTesting
     Map<String, String> buildContextMap() {
-        ImmutableList<MDCBuilder> nested = nestedBuilder.build();
-        if (nested.isEmpty()) {
-            return contextMap.build();
-        }
-
-        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
-        nested.forEach(mdcBuilder -> result.putAll(mdcBuilder.buildContextMap()));
-        return result
-            .putAll(contextMap.build())
-            .build();
+        return contextMap.build();
     }
 
     public <T> T execute(Supplier<T> supplier) {
