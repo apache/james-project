@@ -108,11 +108,11 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     }
 
     public static String toString(IdRange[] ranges) {
-        return "(" + Optional.ofNullable(ranges)
+        return Optional.ofNullable(ranges)
             .map(array -> Arrays.stream(array)
-                .map(IdRange::toString)
+                .map(IdRange::asString)
                 .collect(Collectors.joining(",")))
-            .orElse("") + ")";
+            .orElse("");
     }
 
     public static IdRange from(MessageRange messageRange) {
@@ -159,6 +159,10 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
      */
     public String toString() {
         return "IdRange ( " + this.lowVal + "->" + this.highVal + " )";
+    }
+
+    public String asString() {
+        return this.lowVal + "->" + this.highVal;
     }
 
     public String getFormattedString() {
