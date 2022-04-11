@@ -56,6 +56,7 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
@@ -198,6 +199,31 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     @Override
     public AttachmentMapper getAttachmentMapper(MailboxSession session) {
         return cassandraAttachmentMapper;
+    }
+
+    @Override
+    public MessageMapper getMessageMapper(MailboxSession session) {
+        return cassandraMessageMapper;
+    }
+
+    @Override
+    public MessageIdMapper getMessageIdMapper(MailboxSession session) {
+        return cassandraMessageIdMapper;
+    }
+
+    @Override
+    public AnnotationMapper getAnnotationMapper(MailboxSession session) {
+        return cassandraAnnotationMapper;
+    }
+
+    @Override
+    public MailboxMapper getMailboxMapper(MailboxSession session) {
+        return cassandraMailboxMapper;
+    }
+
+    @Override
+    public SubscriptionMapper getSubscriptionMapper(MailboxSession session) {
+        return cassandraSubscriptionMapper;
     }
 
     public DeleteMessageListener deleteMessageListener() {
