@@ -707,10 +707,10 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Flux<Mailbox> baseMailboxes = mailboxMapper
             .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
-        Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
-        return Flux.concat(baseMailboxes, delegatedMailboxes)
-            .distinct()
+        Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session)
             .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)));
+        return Flux.concat(baseMailboxes, delegatedMailboxes)
+            .distinct();
     }
 
     private Flux<MailboxId> accessibleMailboxIds(MultimailboxesSearchQuery.Namespace namespace, Right right, MailboxSession session) {
