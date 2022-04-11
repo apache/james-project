@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -225,7 +226,11 @@ public class UpdatedFlags {
     public Iterator<String> userFlagIterator() {
         return Arrays.asList(modifiedFlags.getUserFlags()).iterator();
     }
-    
+
+    public Stream<String> userFlagStream() {
+        return Stream.of(modifiedFlags.getUserFlags());
+    }
+
     
     /**
      * Return the new mod-sequence for the message
