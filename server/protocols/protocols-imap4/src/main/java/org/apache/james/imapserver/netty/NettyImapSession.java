@@ -36,6 +36,7 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.encode.main.DefaultLocalizer;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.LineHandlerAware;
@@ -63,6 +64,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private boolean needsCommandInjectionDetection;
     private Optional<OidcSASLConfiguration> oidcSASLConfiguration;
     private boolean supportsOAuth;
+    private MailboxSession mailboxSession = null;
 
     public NettyImapSession(Channel channel, Encryption secure, boolean compress, boolean requiredSSL, boolean plainAuthEnabled, SessionId sessionId,
                             Optional<OidcSASLConfiguration> oidcSASLConfiguration) {
@@ -119,6 +121,16 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         this.state = ImapSessionState.SELECTED;
         closeMailbox();
         this.selectedMailbox = mailbox;
+    }
+
+    @Override
+    public MailboxSession getMailboxSession() {
+        return mailboxSession;
+    }
+
+    @Override
+    public void setMailboxSession(MailboxSession mailboxSession) {
+        this.mailboxSession = mailboxSession;
     }
 
     @Override
