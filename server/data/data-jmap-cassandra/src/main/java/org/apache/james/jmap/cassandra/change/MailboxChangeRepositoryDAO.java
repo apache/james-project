@@ -51,17 +51,25 @@ import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxId;
 
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TypeCodec;
+import com.datastax.driver.core.TypeTokens;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MailboxChangeRepositoryDAO {
+    private static final TypeToken<Set<UUID>> SET_OF_UUIDS = TypeTokens.setOf(UUID.class);
+    private static final TypeCodec<Set<UUID>> SET_OF_UUIDS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.frozenSet(DataType.uuid()), SET_OF_UUIDS);
+
     private final CassandraAsyncExecutor executor;
     private final UserType zonedDateTimeUserType;
     private final PreparedStatement insertStatement;
@@ -115,9 +123,9 @@ public class MailboxChangeRepositoryDAO {
             .setUUID(STATE, change.getState().getValue())
             .setBool(IS_COUNT_CHANGE, change.isCountChange())
             .setBool(IS_DELEGATED, change.isDelegated())
-            .setSet(CREATED, toUuidSet(change.getCreated()), UUID.class)
-            .setSet(UPDATED, toUuidSet(change.getUpdated()), UUID.class)
-            .setSet(DESTROYED, toUuidSet(change.getDestroyed()), UUID.class)
+            .set(CREATED, toUuidSet(change.getCreated()), SET_OF_UUIDS_CODEC)
+            .set(UPDATED, toUuidSet(change.getUpdated()), SET_OF_UUIDS_CODEC)
+            .set(DESTROYED, toUuidSet(change.getDestroyed()), SET_OF_UUIDS_CODEC)
             .setUDTValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate())));
     }
 
@@ -161,9 +169,9 @@ public class MailboxChangeRepositoryDAO {
             .date(CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(DATE)))
             .isCountChange(row.getBool(IS_COUNT_CHANGE))
             .delegated(row.getBool(IS_DELEGATED))
-            .created(toIdSet(row.getSet(CREATED, UUID.class)))
-            .updated(toIdSet(row.getSet(UPDATED, UUID.class)))
-            .destroyed(toIdSet(row.getSet(DESTROYED, UUID.class)))
+            .created(toIdSet(row.get(CREATED, SET_OF_UUIDS_CODEC)))
+            .updated(toIdSet(row.get(UPDATED, SET_OF_UUIDS_CODEC)))
+            .destroyed(toIdSet(row.get(DESTROYED, SET_OF_UUIDS_CODEC)))
             .build();
     }
 
