@@ -23,11 +23,33 @@ import java.util.Objects;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class CurrentQuotas {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CurrentQuotas.class);
+
+    public static class Sanitized extends CurrentQuotas {
+        private static Sanitized of(CurrentQuotas value) {
+            Preconditions.checkArgument(value.count().asLong() >= 0, "Sanitized quota shall be positive");
+            Preconditions.checkArgument(value.size().asLong() >= 0, "Sanitized quota shall be positive");
+            return new Sanitized(value.count(), value.size());
+        }
+
+        private static Sanitized of(QuotaCountUsage count, QuotaSizeUsage size) {
+            Preconditions.checkArgument(count.asLong() >= 0, "Sanitized quota shall be positive");
+            Preconditions.checkArgument(size.asLong() >= 0, "Sanitized quota shall be positive");
+            return new Sanitized(count, size);
+        }
+
+        public Sanitized(QuotaCountUsage count, QuotaSizeUsage size) {
+            super(count, size);
+        }
+    }
+
     private final QuotaCountUsage count;
     private final QuotaSizeUsage size;
 
@@ -65,6 +87,18 @@ public class CurrentQuotas {
         return new CurrentQuotas(
             QuotaCountUsage.count(this.count.asLong() - updateQuotas.count.asLong()),
             QuotaSizeUsage.size(this.size.asLong() - updateQuotas.size.asLong()));
+    }
+
+    public boolean isValid() {
+        return count.isValid() && size.isValid();
+    }
+
+    public Sanitized sanitize() {
+        if (!isValid()) {
+            LOGGER.warn("Invalid quota usage : {}, {}", count.asLong(), size.asLong());
+        }
+
+        return Sanitized.of(count.sanitize(), size.sanitize());
     }
 
     @Override

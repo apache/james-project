@@ -141,6 +141,27 @@ public interface RecomputeCurrentQuotasServiceContract {
     }
 
     @Test
+    default void recomputeCurrentQuotasShouldResetCurrentQuotasWhenNegativeQuotas() throws Exception {
+        usersRepository().addUser(USER_1, PASSWORD);
+
+        MailboxSession session = sessionProvider().createSystemSession(USER_1);
+        mailboxManager().createMailbox(MAILBOX_PATH, session);
+
+        MessageManager messageManager = mailboxManager().getMailbox(MAILBOX_PATH, session);
+        appendAMessageForUser(messageManager, session);
+
+        QuotaRoot quotaRoot = userQuotaRootResolver().forUser(USER_1);
+
+        QuotaOperation operation = new QuotaOperation(quotaRoot, QuotaCountUsage.count(300L), QuotaSizeUsage.size(390L));
+        Mono.from(currentQuotaManager().decrease(operation)).block();
+
+        testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block();
+
+        assertThat(Mono.from(currentQuotaManager().getCurrentQuotas(userQuotaRootResolver().forUser(USER_1))).block())
+            .isEqualTo(EXPECTED_QUOTAS);
+    }
+
+    @Test
     default void recomputeCurrentQuotasShouldNotUpdateContextWhenNoData() {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
