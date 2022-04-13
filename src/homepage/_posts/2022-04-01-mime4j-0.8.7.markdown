@@ -1,11 +1,11 @@
 ---
 layout: post
-title:  "Apache James Server 3.7.0"
+title:  "Apache James MIME4J 0.8.7"
 date:   2022-04-01  01:16:30 +0200
 categories: james update
 ---
 
-The Apache James developers are pleased to announcethe 0.8.7 release of the MIME4J library.
+The Apache James developers are pleased to announce the 0.8.7 release of the MIME4J library.
 
 Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
 
