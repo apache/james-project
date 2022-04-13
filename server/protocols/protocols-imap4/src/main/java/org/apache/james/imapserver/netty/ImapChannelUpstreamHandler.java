@@ -156,7 +156,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             imapConnectionsMetric.increment();
 
             ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
-            ctx.channel().attr(CONTEXT_ATTACHMENT_ATTRIBUTE_KEY).set(response);
 
             // write hello to client
             response.untagged().message("OK").message(hello).end();
@@ -217,8 +216,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 // command length."
                 //
                 // See also JAMES-1190
-                ImapResponseComposer composer = (ImapResponseComposer) ctx.channel().attr(CONTEXT_ATTACHMENT_ATTRIBUTE_KEY).get();
-                composer.untaggedResponse(ImapConstants.BAD + " failed. Maximum command line length exceeded");
+                ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
+                response.untaggedResponse(ImapConstants.BAD + " failed. Maximum command line length exceeded");
 
             } else {
 
@@ -243,7 +242,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         try (Closeable closeable = mdc(ctx).build()) {
             imapCommandsMetric.increment();
             ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-            ImapResponseComposer response = (ImapResponseComposer) ctx.channel().attr(CONTEXT_ATTACHMENT_ATTRIBUTE_KEY).get();
+            ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
             ImapMessage message = (ImapMessage) msg;
             ChannelPipeline cp = ctx.pipeline();
 

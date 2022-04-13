@@ -40,7 +40,6 @@ public interface NettyConstants {
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
-    AttributeKey<Object> CONTEXT_ATTACHMENT_ATTRIBUTE_KEY = AttributeKey.valueOf("ContextAttachment");
     AttributeKey<Map<String, Object>> FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY  = AttributeKey.valueOf("FrameDecoderMap");
 
 }
