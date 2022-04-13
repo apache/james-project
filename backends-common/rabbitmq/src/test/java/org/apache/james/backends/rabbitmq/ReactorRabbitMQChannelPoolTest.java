@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,8 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
             ReactorRabbitMQChannelPool.Configuration.builder()
                 .retries(2)
                 .minBorrowDelay(Duration.ofSeconds(2))
-                .maxChannel(poolSize));
+                .maxChannel(poolSize),
+            new RecordingMetricFactory());
         reactorRabbitMQChannelPool.start();
         return reactorRabbitMQChannelPool;
     }

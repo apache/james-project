@@ -33,6 +33,7 @@ import java.util.function.BiConsumer;
 import javax.annotation.PreDestroy;
 
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -660,11 +661,13 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private final Configuration configuration;
 
     private final InstrumentedPool<? extends Channel> newPool;
+    private final MetricFactory metricFatcory;
     private Sender sender;
 
-    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration) {
+    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration, MetricFactory metricFatcory) {
         this.connectionMono = connectionMono;
         this.configuration = configuration;
+        this.metricFatcory = metricFatcory;
 
         newPool = PoolBuilder.from(connectionMono
             .flatMap(this::openChannel))
@@ -706,7 +709,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     @Override
     public Mono<? extends Channel> getChannelMono() {
-        return borrow();
+        return Mono.from(metricFatcory.decoratePublisherWithTimerMetric("rabbit-acquire", borrow()));
     }
 
     private Mono<? extends Channel> borrow() {
@@ -720,15 +723,18 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     @Override
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
         return (signalType, channel) -> {
-            PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
+            metricFatcory.runPublishingTimerMetric("rabbit-release",
+                () -> {
+                    PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
 
-            if (!channel.isOpen() || !executeWithoutError(signalType)) {
-                pooledRef.invalidate()
-                    .block();
-                return;
-            }
-            pooledRef.release()
-                .block();
+                    if (!channel.isOpen() || !executeWithoutError(signalType)) {
+                        pooledRef.invalidate()
+                            .block();
+                        return;
+                    }
+                    pooledRef.release()
+                        .block();
+                });
         };
     }
 
