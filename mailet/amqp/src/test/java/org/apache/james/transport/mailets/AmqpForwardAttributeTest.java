@@ -32,6 +32,7 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration.ManagementCredentials;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -63,7 +64,7 @@ class AmqpForwardAttributeTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        mailet = new AmqpForwardAttribute();
+        mailet = new AmqpForwardAttribute(new RecordingMetricFactory());
         Logger logger = mock(Logger.class);
         mailetContext = FakeMailContext.builder()
                 .logger(logger)

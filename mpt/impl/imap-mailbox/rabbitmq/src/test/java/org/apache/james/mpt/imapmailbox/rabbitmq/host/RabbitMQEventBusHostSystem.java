@@ -80,7 +80,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));
         reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
-            ReactorRabbitMQChannelPool.Configuration.DEFAULT);
+            ReactorRabbitMQChannelPool.Configuration.DEFAULT,
+            new DefaultMetricFactory());
         reactorRabbitMQChannelPool.start();
         eventBus = createEventBus();
         eventBus.start();

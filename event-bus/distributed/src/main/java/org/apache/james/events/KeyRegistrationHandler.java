@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
@@ -70,12 +71,13 @@ class KeyRegistrationHandler {
     private final RabbitMQConfiguration configuration;
     private final ReceiverProvider receiverProvider;
     private Optional<Disposable> receiverSubscriber;
+    private final MetricFactory metricFactory;
     private Disposable newSubscription;
 
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
-                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, RabbitMQConfiguration configuration) {
+                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, RabbitMQConfiguration configuration, MetricFactory metricFactory) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -85,6 +87,7 @@ class KeyRegistrationHandler {
         this.listenerExecutor = listenerExecutor;
         this.retryBackoff = retryBackoff;
         this.configuration = configuration;
+        this.metricFactory = metricFactory;
         this.registrationQueue = namingStrategy.queueName(eventBusId);
         this.registrationBinder = new RegistrationBinder(namingStrategy, sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
@@ -143,9 +146,9 @@ class KeyRegistrationHandler {
         return registerIfNeeded(key, registration)
             .thenReturn(new KeyRegistration(() -> {
                 if (registration.unregister().lastListenerRemoved()) {
-                    return registrationBinder.unbind(key)
+                    return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()));
+                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))));
                 }
                 return Mono.empty();
             }));

@@ -29,11 +29,13 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -97,6 +99,8 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     public static final String ROUTING_KEY_DEFAULT_VALUE = "";
 
+    private final MetricFactory metricFactory;
+
     private String exchange;
     private AttributeName attribute;
     private ConnectionFactory connectionFactory;
@@ -104,6 +108,11 @@ public class AmqpForwardAttribute extends GenericMailet {
     private SimpleConnectionPool connectionPool;
     private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
     private Sender sender;
+
+    @Inject
+    public AmqpForwardAttribute(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
 
     @Override
     public void init() throws MailetException {
@@ -128,7 +137,8 @@ public class AmqpForwardAttribute extends GenericMailet {
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));
             reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
-                ReactorRabbitMQChannelPool.Configuration.DEFAULT);
+                ReactorRabbitMQChannelPool.Configuration.DEFAULT,
+                metricFactory);
             reactorRabbitMQChannelPool.start();
             sender = reactorRabbitMQChannelPool.getSender();
             sender.declareExchange(ExchangeSpecification.exchange(exchange));

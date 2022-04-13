@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -147,7 +148,8 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
             ReactorRabbitMQChannelPool.Configuration.builder()
                 .retries(2)
                 .minBorrowDelay(Duration.ofMillis(5))
-                .maxChannel(10));
+                .maxChannel(10),
+            new RecordingMetricFactory());
         channelPool.start();
     }
 
