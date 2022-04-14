@@ -70,7 +70,7 @@ class RoutingKeyConverterTest {
     }
 
     private static final RegistrationKey REGISTRATION_KEY_1 = new TestRegistrationKey("a");
-    private static final String ROUTING_KEY_1 = "org.apache.james.events.EventBusTestFixture$TestRegistrationKey:a";
+    private static final String ROUTING_KEY_1 = "TestRegistrationKey:a";
 
     private RoutingKeyConverter testee = RoutingKeyConverter.forFactories(
         new OtherTestRegistrationKey.Factory(),
@@ -91,24 +91,24 @@ class RoutingKeyConverterTest {
     @Test
     void toRoutingKeyShouldAcceptSeparator() {
         assertThat(RoutingKeyConverter.RoutingKey.of(new OtherTestRegistrationKey("a:b")).asString())
-            .isEqualTo("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:a:b");
+            .isEqualTo("OtherTestRegistrationKey:a:b");
     }
 
     @Test
     void toRegistrationKeyShouldAcceptSeparator() {
-        assertThat(testee.toRegistrationKey("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:a:b"))
+        assertThat(testee.toRegistrationKey("OtherTestRegistrationKey:a:b"))
             .isEqualTo(new OtherTestRegistrationKey("a:b"));
     }
 
     @Test
     void toRoutingKeyShouldAcceptEmptyValue() {
         assertThat(RoutingKeyConverter.RoutingKey.of(new OtherTestRegistrationKey("")).asString())
-            .isEqualTo("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:");
+            .isEqualTo("OtherTestRegistrationKey:");
     }
 
     @Test
     void toRegistrationKeyShouldAcceptEmptyValue() {
-        assertThat(testee.toRegistrationKey("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:"))
+        assertThat(testee.toRegistrationKey("OtherTestRegistrationKey:"))
             .isEqualTo(new OtherTestRegistrationKey(""));
     }
 
