@@ -51,7 +51,7 @@ public class RoutingKeyConverter {
         }
 
         String asString() {
-            return registrationKey.map(key -> key.getClass().getName() + SEPARATOR + key.asString())
+            return registrationKey.map(key -> key.getClass().getSimpleName() + SEPARATOR + key.asString())
                 .orElse(EMPTY_ROUTING_KEY);
         }
     }
@@ -66,7 +66,7 @@ public class RoutingKeyConverter {
     @Inject
     public RoutingKeyConverter(Set<RegistrationKey.Factory> factories) {
         this.factories = factories.stream()
-            .collect(ImmutableMap.toImmutableMap(factory -> factory.forClass().getName(), f -> f));
+            .collect(ImmutableMap.toImmutableMap(factory -> factory.forClass().getSimpleName(), f -> f));
     }
 
     RegistrationKey toRegistrationKey(String routingKey) {
