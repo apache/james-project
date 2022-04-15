@@ -34,6 +34,7 @@ import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.mailet.Mail;
@@ -56,16 +57,18 @@ class Enqueuer {
     private final MailReferenceSerializer mailReferenceSerializer;
     private final Metric enqueueMetric;
     private final MailQueueView mailQueueView;
+    private final RabbitMQMailQueueConfiguration configuration;
     private final Clock clock;
 
     Enqueuer(MailQueueName name, Sender sender, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
-             MailQueueView mailQueueView, Clock clock) {
+             MailQueueView mailQueueView, RabbitMQMailQueueConfiguration configuration, Clock clock) {
         this.name = name;
         this.sender = sender;
         this.mimeMessageStore = mimeMessageStore;
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
+        this.configuration = configuration;
         this.clock = clock;
         this.enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
@@ -112,19 +115,26 @@ class Enqueuer {
             EMPTY_ROUTING_KEY,
             basicProperties,
             getMailReferenceBytes(mailReference));
-        return sender.sendWithPublishConfirms(Mono.just(data))
-            .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
-            .next()
-            .handle((result, sink) -> {
-                if (!result.isAck()) {
-                    sink.error(new MailQueue.MailQueueException("Publish was not acked"));
-                } else {
-                    sink.complete();
-                }
-            })
-            // AutoRecoveringConnection blocks this forever
-            .timeout(Duration.ofSeconds(10), Mono.error(() -> new MailQueue.MailQueueException("Timeout enqueueing " + mailReference.getMail().getName())))
-            .then();
+
+        if (configuration.isMailQueuePublishConfirmEnabled()) {
+            return sender.sendWithPublishConfirms(Mono.just(data))
+                .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+                .next()
+                .handle((result, sink) -> {
+                    if (!result.isAck()) {
+                        sink.error(new MailQueue.MailQueueException("Publish was not acked"));
+                    } else {
+                        sink.complete();
+                    }
+                })
+                // AutoRecoveringConnection blocks this forever
+                .timeout(Duration.ofSeconds(10), Mono.error(() -> new MailQueue.MailQueueException("Timeout enqueueing " + mailReference.getMail().getName())))
+                .then();
+        } else {
+            return sender.send(Mono.just(data))
+                // AutoRecoveringConnection blocks this forever
+                .timeout(Duration.ofSeconds(10), Mono.error(() -> new MailQueue.MailQueueException("Timeout enqueueing " + mailReference.getMail().getName())));
+        }
     }
 
     private EnqueuedItem toEnqueuedItems(MailReference mailReference) {

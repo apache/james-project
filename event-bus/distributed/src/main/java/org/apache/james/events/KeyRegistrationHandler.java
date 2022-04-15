@@ -20,7 +20,6 @@
 package org.apache.james.events;
 
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
-import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
@@ -121,7 +120,7 @@ class KeyRegistrationHandler {
     private void declareQueue(Sender sender) {
         sender.declareQueue(
             QueueSpecification.queue(registrationQueue.asString())
-                .durable(DURABLE)
+                .durable(configuration.isEventBusNotificationDurabilityEnabled())
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(AUTO_DELETE)
                 .arguments(configuration.workQueueArgumentsBuilder().build()))

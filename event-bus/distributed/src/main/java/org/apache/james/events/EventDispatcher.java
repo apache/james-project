@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -67,11 +68,12 @@ public class EventDispatcher {
     private final AMQP.BasicProperties basicProperties;
     private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
+    private final RabbitMQConfiguration configuration;
 
     EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
                     ListenerExecutor listenerExecutor,
-                    EventDeadLetters deadLetters) {
+                    EventDeadLetters deadLetters, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -84,6 +86,7 @@ public class EventDispatcher {
             .build();
         this.listenerExecutor = listenerExecutor;
         this.deadLetters = deadLetters;
+        this.configuration = configuration;
     }
 
     void start() {
@@ -183,11 +186,15 @@ public class EventDispatcher {
         if (routingKeys.isEmpty()) {
             return Mono.empty();
         }
-        return sender.sendWithPublishConfirms(toMessages(serializedEvent, routingKeys))
-            .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
-            .filter(outboundMessageResult -> !outboundMessageResult.isAck())
-            .next()
-            .handle((result, sink) -> sink.error(new Exception("Publish was not acked")));
+        if (configuration.isEventBusPublishConfirmEnabled()) {
+            return sender.sendWithPublishConfirms(toMessages(serializedEvent, routingKeys))
+                .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+                .filter(outboundMessageResult -> !outboundMessageResult.isAck())
+                .next()
+                .handle((result, sink) -> sink.error(new Exception("Publish was not acked")));
+        } else {
+            return sender.send(toMessages(serializedEvent, routingKeys));
+        }
     }
 
     private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
