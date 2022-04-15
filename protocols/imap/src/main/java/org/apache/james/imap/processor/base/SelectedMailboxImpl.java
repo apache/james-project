@@ -159,11 +159,12 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
         return Mono.from(eventBus.register(this, new MailboxIdRegistrationKey(mailboxId)))
                 .doOnNext(this.registration::set)
-            .then(Mono.using(applicableFlagsLock::writeLock,
-                stamp -> messageManager.getApplicableFlagsReactive(mailboxSession)
-                    .flatMap(flags -> Mono.fromRunnable(() -> applicableFlags = applicableFlags.updateWithNewFlags(flags))),
-                applicableFlagsLock::unlockWrite)
-                .then())
+            .then(messageManager.getApplicableFlagsReactive(mailboxSession)
+                .doOnNext(flags -> {
+                    long stamp = applicableFlagsLock.writeLock();
+                    applicableFlags = applicableFlags.updateWithNewFlags(flags);
+                    applicableFlagsLock.unlockWrite(stamp);
+                }))
             .then(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession))
                 .collect(ImmutableList.toImmutableList())
                 .doOnNext(uidMsnConverter::addAll))
