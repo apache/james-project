@@ -175,7 +175,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 selected.resetRecentUidRemoved();
             }
         })
-            .then(Mono.defer(() -> addFlagsResponses(session, selected, responder, useUid)))
+            .then(addFlagsResponses(session, selected, responder, useUid))
             .doFinally(type -> selected.resetEvents());
     }
 
