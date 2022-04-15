@@ -599,12 +599,12 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     public static class Configuration {
         @FunctionalInterface
         public interface RequiresRetries {
-            RequiredMinBorrowDelay retries(int retries);
+            RequiredMaxBorrowDelay retries(int retries);
         }
 
         @FunctionalInterface
-        public interface RequiredMinBorrowDelay {
-            RequiredMaxChannel minBorrowDelay(Duration minBorrowDelay);
+        public interface RequiredMaxBorrowDelay {
+            RequiredMaxChannel maxBorrowDelay(Duration maxBorrowDelay);
         }
 
         @FunctionalInterface
@@ -614,11 +614,11 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         public static final Configuration DEFAULT = builder()
             .retries(MAX_BORROW_RETRIES)
-            .minBorrowDelay(MAX_BORROW_DELAY)
+            .maxBorrowDelay(MAX_BORROW_DELAY)
             .maxChannel(MAX_CHANNELS_NUMBER);
 
         public static RequiresRetries builder() {
-            return retries -> minBorrowDelay -> maxChannel -> new Configuration(minBorrowDelay, retries, maxChannel);
+            return retries -> maxBorrowDelay -> maxChannel -> new Configuration(maxBorrowDelay, retries, maxChannel);
         }
 
         public static Configuration from(org.apache.commons.configuration2.Configuration configuration) {
@@ -628,7 +628,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
             return builder()
                 .retries(configuration.getInt("channel.pool.retries", MAX_BORROW_RETRIES))
-                .minBorrowDelay(maxBorrowDelay)
+                .maxBorrowDelay(maxBorrowDelay)
                 .maxChannel(configuration.getInt("channel.pool.size", MAX_CHANNELS_NUMBER));
         }
 
@@ -672,7 +672,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         newPool = PoolBuilder.from(connectionMono
             .flatMap(this::openChannel))
             .sizeBetween(1, configuration.maxChannel)
-            .acquisitionScheduler(Schedulers.elastic())
+            .maxPendingAcquireUnbounded()
             .evictionPredicate((channel, metadata) -> {
                 if (!channel.isOpen()) {
                     return true;
@@ -722,20 +722,18 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     @Override
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
-        return (signalType, channel) -> {
-            metricFatcory.runPublishingTimerMetric("rabbit-release",
-                () -> {
-                    PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
+        return (signalType, channel) -> metricFatcory.runPublishingTimerMetric("rabbit-release",
+            () -> {
+                PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
 
-                    if (!channel.isOpen() || !executeWithoutError(signalType)) {
-                        pooledRef.invalidate()
-                            .block();
-                        return;
-                    }
-                    pooledRef.release()
+                if (!channel.isOpen() || !executeWithoutError(signalType)) {
+                    pooledRef.invalidate()
                         .block();
-                });
-        };
+                    return;
+                }
+                pooledRef.release()
+                    .block();
+            });
     }
 
     private boolean executeWithoutError(SignalType signalType) {
