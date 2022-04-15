@@ -643,6 +643,7 @@
         <guice.version>5.0.1</guice.version>
         <logback.version>1.2.10</logback.version>
         <tink.version>1.6.1</tink.version>
+        <lettuce.core.version>6.1.8.RELEASE</lettuce.core.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
 
@@ -2361,7 +2362,7 @@
             <dependency>
                 <groupId>io.lettuce</groupId>
                 <artifactId>lettuce-core</artifactId>
-                <version>6.1.6.RELEASE</version>
+                <version>${lettuce.core.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
