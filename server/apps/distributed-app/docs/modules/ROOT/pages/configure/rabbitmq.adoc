@@ -88,8 +88,17 @@ False (default value) results in the usage of classic queues.
 
 | hosts
 | Optional, default to the host specified as part of the URI.
-| Allow creating cluster aware connections.
-| A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
+Allow creating cluster aware connections.
+A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
+
+| mailqueue.publish.confirm.enabled
+| Whether or not to enable publish confirms for the mail queue. Optional boolean, defaults to true.
+
+| event.bus.publish.confirm.enabled
+| Whether or not to enable publish confirms for the event bus. Optional boolean, defaults to true.
+
+| event.bus.notification.durability.enabled
+| Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.
 |===
 
 == RabbitMQ MailQueue Configuration

@@ -28,7 +28,8 @@ public class RabbitMQMailQueueConfiguration {
     private static final boolean DEFAULT_SIZE_METRICS_DISABLED = false;
 
     public static class Builder {
-        private Optional<Boolean> sizeMetricsEnabled;
+        private Optional<Boolean> sizeMetricsEnabled = Optional.empty();
+        private Optional<Boolean> mailQueuePublishConfirmEnabled = Optional.empty();
 
         public Builder sizeMetricsEnabled(boolean sizeMetricsEnabled) {
             this.sizeMetricsEnabled = Optional.of(sizeMetricsEnabled);
@@ -40,12 +41,19 @@ public class RabbitMQMailQueueConfiguration {
             return this;
         }
 
+        public Builder mailQueuePublishConfirmEnabled(Boolean mailQueuePublishConfirmEnabled) {
+            this.mailQueuePublishConfirmEnabled = Optional.ofNullable(mailQueuePublishConfirmEnabled);
+            return this;
+        }
+
         public RabbitMQMailQueueConfiguration build() {
-            return new RabbitMQMailQueueConfiguration(sizeMetricsEnabled.orElse(DEFAULT_SIZE_METRICS_DISABLED));
+            return new RabbitMQMailQueueConfiguration(sizeMetricsEnabled.orElse(DEFAULT_SIZE_METRICS_DISABLED),
+                mailQueuePublishConfirmEnabled.orElse(true));
         }
     }
 
     public static final String SIZE_METRICS_ENABLED_PROPERTY = "mailqueue.size.metricsEnabled";
+    private static final String MAIL_QUEUE_PUBLISH_CONFIRM_ENABLED = "mailqueue.publish.confirm.enabled";
 
     public static Builder builder() {
         return new Builder();
@@ -54,6 +62,7 @@ public class RabbitMQMailQueueConfiguration {
     public static RabbitMQMailQueueConfiguration from(Configuration configuration) {
         return builder()
             .sizeMetricsEnabled(Optional.ofNullable(configuration.getBoolean(SIZE_METRICS_ENABLED_PROPERTY, null)))
+            .mailQueuePublishConfirmEnabled(configuration.getBoolean(MAIL_QUEUE_PUBLISH_CONFIRM_ENABLED, null))
             .build();
     }
 
@@ -70,9 +79,15 @@ public class RabbitMQMailQueueConfiguration {
     }
 
     private final boolean sizeMetricsEnabled;
+    private final boolean mailQueuePublishConfirmEnabled;
 
-    private RabbitMQMailQueueConfiguration(boolean sizeMetricsEnabled) {
+    private RabbitMQMailQueueConfiguration(boolean sizeMetricsEnabled, boolean mailQueuePublishConfirmEnabled) {
         this.sizeMetricsEnabled = sizeMetricsEnabled;
+        this.mailQueuePublishConfirmEnabled = mailQueuePublishConfirmEnabled;
+    }
+
+    public boolean isMailQueuePublishConfirmEnabled() {
+        return mailQueuePublishConfirmEnabled;
     }
 
     public boolean isSizeMetricsEnabled() {
@@ -84,13 +99,14 @@ public class RabbitMQMailQueueConfiguration {
         if (o instanceof RabbitMQMailQueueConfiguration) {
             RabbitMQMailQueueConfiguration that = (RabbitMQMailQueueConfiguration) o;
 
-            return Objects.equals(this.sizeMetricsEnabled, that.sizeMetricsEnabled);
+            return Objects.equals(this.sizeMetricsEnabled, that.sizeMetricsEnabled)
+                && Objects.equals(this.mailQueuePublishConfirmEnabled, that.mailQueuePublishConfirmEnabled);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(sizeMetricsEnabled);
+        return Objects.hash(sizeMetricsEnabled, mailQueuePublishConfirmEnabled);
     }
 }

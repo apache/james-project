@@ -304,6 +304,8 @@ public class RabbitMQConfiguration {
     private static final String SSL_KEY_STORE_PATH = "ssl.keystore";
     private static final String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
     private static final String QUEUE_TTL = "notification.queue.ttl";
+    private static final String EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED = "event.bus.notification.durability.enabled";
+    private static final String EVENT_BUS_PUBLISH_CONFIRM_ENABLED = "event.bus.publish.confirm.enabled";
 
     public static class ManagementCredentials {
 
@@ -398,6 +400,8 @@ public class RabbitMQConfiguration {
         private Optional<Integer> quorumQueueReplicationFactor;
         private Optional<SSLConfiguration> sslConfiguration;
         private Optional<Long> queueTTL;
+        private Optional<Boolean> eventBusPublishConfirmEnabled;
+        private Optional<Boolean> eventBusNotificationDurabilityEnabled;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
@@ -417,6 +421,8 @@ public class RabbitMQConfiguration {
             this.quorumQueueReplicationFactor = Optional.empty();
             this.hosts = ImmutableList.builder();
             this.queueTTL = Optional.empty();
+            this.eventBusPublishConfirmEnabled = Optional.empty();
+            this.eventBusNotificationDurabilityEnabled = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -471,6 +477,16 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder eventBusPublishConfirmEnabled(Boolean eventBusPublishConfirmEnabled) {
+            this.eventBusPublishConfirmEnabled = Optional.ofNullable(eventBusPublishConfirmEnabled);
+            return this;
+        }
+
+        public Builder eventBusNotificationDurabilityEnabled(Boolean eventBusNotificationDurabilityEnabled) {
+            this.eventBusNotificationDurabilityEnabled = Optional.ofNullable(eventBusNotificationDurabilityEnabled);
+            return this;
+        }
+
         public Builder useQuorumQueues(Boolean useQuorumQueues) {
             this.useQuorumQueues = Optional.ofNullable(useQuorumQueues);
             return this;
@@ -517,7 +533,9 @@ public class RabbitMQConfiguration {
                     useQuorumQueues.orElse(false),
                     quorumQueueReplicationFactor.orElse(DEFAULT_QUORUM_QUEUE_REPLICATION_FACTOR),
                     hostsDefaultingToUri(),
-                    queueTTL);
+                    queueTTL,
+                    eventBusPublishConfirmEnabled.orElse(true),
+                    eventBusNotificationDurabilityEnabled.orElse(true));
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -578,6 +596,8 @@ public class RabbitMQConfiguration {
             .quorumQueueReplicationFactor(quorumQueueReplicationFactor)
             .hosts(hosts)
             .queueTTL(queueTTL)
+            .eventBusNotificationDurabilityEnabled(configuration.getBoolean(EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED, null))
+            .eventBusPublishConfirmEnabled(configuration.getBoolean(EVENT_BUS_PUBLISH_CONFIRM_ENABLED, null))
             .build();
     }
 
@@ -646,11 +666,14 @@ public class RabbitMQConfiguration {
     private final List<Host> hosts;
     private final ManagementCredentials managementCredentials;
     private final Optional<Long> queueTTL;
+    private final boolean eventBusPublishConfirmEnabled;
+    private final boolean eventBusNotificationDurabilityEnabled;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
                                   int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
                                   int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
-                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL) {
+                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
+                                  boolean eventBusPublishConfirmEnabled, boolean eventBusNotificationDurabilityEnabled) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -668,6 +691,8 @@ public class RabbitMQConfiguration {
         this.quorumQueueReplicationFactor = quorumQueueReplicationFactor;
         this.hosts = hosts;
         this.queueTTL = queueTTL;
+        this.eventBusPublishConfirmEnabled = eventBusPublishConfirmEnabled;
+        this.eventBusNotificationDurabilityEnabled = eventBusNotificationDurabilityEnabled;
     }
 
     public URI getUri() {
@@ -739,6 +764,14 @@ public class RabbitMQConfiguration {
         return queueTTL;
     }
 
+    public boolean isEventBusPublishConfirmEnabled() {
+        return eventBusPublishConfirmEnabled;
+    }
+
+    public boolean isEventBusNotificationDurabilityEnabled() {
+        return eventBusNotificationDurabilityEnabled;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
@@ -760,7 +793,9 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
                 && Objects.equals(this.hosts, that.hosts)
-                && Objects.equals(this.queueTTL, that.queueTTL);
+                && Objects.equals(this.queueTTL, that.queueTTL)
+                && Objects.equals(this.eventBusPublishConfirmEnabled, that.eventBusPublishConfirmEnabled)
+                && Objects.equals(this.eventBusNotificationDurabilityEnabled, that.eventBusNotificationDurabilityEnabled);
         }
         return false;
     }
@@ -768,6 +803,7 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, useQuorumQueues, hosts,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement, sslConfiguration, queueTTL);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
+            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled);
     }
 }

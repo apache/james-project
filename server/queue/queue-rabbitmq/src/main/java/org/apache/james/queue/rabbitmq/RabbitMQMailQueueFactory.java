@@ -100,7 +100,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 metricFactory,
                 mailQueueName,
                 new Enqueuer(mailQueueName, sender, mimeMessageStore, mailReferenceSerializer,
-                    metricFactory, mailQueueView, clock),
+                    metricFactory, mailQueueView, configuration, clock),
                 new Dequeuer(mailQueueName, receiverProvider, mailLoader, mailReferenceSerializer,
                     metricFactory, mailQueueView, prefetchCount),
                 mailQueueView,

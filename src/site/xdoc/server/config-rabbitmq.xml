@@ -128,6 +128,16 @@
           <dd>Optional integer, defaults is 3600000.
               This is used only on queues used to share notification patterns, are exclusive to a node. If omitted, it will not add the TTL configure when declaring queues.
               Configure queue ttl (in ms). References: https://www.rabbitmq.com/ttl.html#queue-ttl.</dd>
+
+          <dt><strong>mailqueue.publish.confirm.enabled</strong></dt>
+          <dd>Whether or not to enable publish confirms for the mail queue. Optional boolean, defaults to true.</dd>
+
+          <dt><strong>event.bus.publish.confirm.enabled</strong></dt>
+          <dd>Whether or not to enable publish confirms for the event bus. Optional boolean, defaults to true.</dd>
+
+          <dt><strong>event.bus.notification.durability.enabled</strong></dt>
+          <dd>Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.</dd>
+
       </dl>
   </section>
 
