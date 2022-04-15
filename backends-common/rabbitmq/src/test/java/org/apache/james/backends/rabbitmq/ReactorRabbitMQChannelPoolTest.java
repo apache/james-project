@@ -72,7 +72,7 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
             rabbitMQExtension.getConnectionPool().getResilientConnection(),
             ReactorRabbitMQChannelPool.Configuration.builder()
                 .retries(2)
-                .minBorrowDelay(Duration.ofSeconds(2))
+                .maxBorrowDelay(Duration.ofSeconds(2))
                 .maxChannel(poolSize),
             new RecordingMetricFactory());
         reactorRabbitMQChannelPool.start();

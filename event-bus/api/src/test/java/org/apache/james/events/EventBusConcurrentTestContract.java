@@ -78,7 +78,7 @@ public interface EventBusConcurrentTestContract {
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -101,7 +101,7 @@ public interface EventBusConcurrentTestContract {
             int totalEventBus = 1;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -131,7 +131,7 @@ public interface EventBusConcurrentTestContract {
             int totalEventDeliveredByKeys = totalKeyListenerRegistrations * TOTAL_DISPATCH_OPERATIONS;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -163,7 +163,7 @@ public interface EventBusConcurrentTestContract {
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -191,7 +191,7 @@ public interface EventBusConcurrentTestContract {
             int totalEventBus = 2; // eventBus1 + eventBus2
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -227,7 +227,7 @@ public interface EventBusConcurrentTestContract {
             int totalEventDeliveredByKeys = totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
+                .reactorOperation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS))
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
