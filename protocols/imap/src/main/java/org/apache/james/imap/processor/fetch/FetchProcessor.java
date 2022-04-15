@@ -114,7 +114,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 return processMessageRanges(session, mailbox, ranges, fetch, mailboxSession, responder)
                     // Don't send expunge responses if FETCH is used to trigger this
                     // processor. See IMAP-284
-                    .then(Mono.defer(() -> unsolicitedResponses(session, responder, omitExpunged, useUids)))
+                    .then(unsolicitedResponses(session, responder, omitExpunged, useUids))
                     .then(Mono.fromRunnable(() -> okComplete(request, responder)));
             }).sneakyThrow())
             .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
