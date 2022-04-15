@@ -73,6 +73,14 @@ public class ElasticSearchIndexer {
     }
 
     public Mono<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) {
+        return update(updatedDocumentParts, routingKey, false);
+    }
+
+    public Mono<BulkResponse> upsert(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) {
+        return update(updatedDocumentParts, routingKey, true);
+    }
+
+    private Mono<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey, boolean upsert) {
         Preconditions.checkNotNull(updatedDocumentParts);
         Preconditions.checkNotNull(routingKey);
         BulkRequest request = new BulkRequest();
@@ -80,7 +88,8 @@ public class ElasticSearchIndexer {
             new UpdateRequest(aliasName.getValue(),
                 updatedDocumentPart.getId().asString())
                 .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)
-                .routing(routingKey.asString())));
+                .routing(routingKey.asString())
+                .docAsUpsert(upsert)));
 
         return client.bulk(request, RequestOptions.DEFAULT)
             .onErrorResume(ValidationException.class, exception -> {

@@ -136,6 +136,56 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
+    void upsertMessageShouldAddDocumentWhenNotExists() {
+        String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
+
+        testee.upsert(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
+
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+    }
+
+    @Test
+    void upsertMessageShouldUpdateWhenDocumentExist() {
+        String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
+
+        testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+
+        testee.upsert(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
+        awaitForElasticSearch(QueryBuilders.matchQuery("message", "mastering"), 1L);
+
+        awaitForElasticSearch(QueryBuilders.matchQuery("field", "unchanged"), 1L);
+    }
+
+    @Test
+    void upsertMessageShouldThrowWhenJsonIsNull() {
+        assertThatThrownBy(() -> testee.upsert(ImmutableList.of(
+            new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING).block())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void upsertMessageShouldThrowWhenIdIsNull() {
+        assertThatThrownBy(() -> testee.upsert(ImmutableList.of(
+            new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void upsertMessageShouldThrowWhenJsonIsEmpty() {
+        assertThatThrownBy(() -> testee.upsert(ImmutableList.of(
+            new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING).block())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void upsertMessageShouldThrowWhenRoutingKeyIsNull() {
+        assertThatThrownBy(() -> testee.upsert(ImmutableList.of(
+            new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void deleteByQueryShouldWorkOnSingleMessage() {
         DocumentId documentId =  DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
