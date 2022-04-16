@@ -9,12 +9,15 @@ In order to deliver its promises, the Distributed Server leverages the following
 
 image::storage.png[Storage responsibilities for the Distributed Server]
 
- * *Cassandra* is used for metadata storage
+ * *Cassandra* is used for metadata storage. Cassandra is efficient for a very high workload of small queries following
+a known pattern.
  * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
  email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or S3 compatible *Object Storage*
-(S3 or Swift)
- * *ElasticSearch* component empowers full text search on emails.
- * *RabbitMQ* enables James nodes of a same cluster to collaborate together.
+(S3 or Swift).
+ * *ElasticSearch* component empowers full text search on emails. It also enables querying data with unplanned access
+patterns. ElasticSearch throughtput do not however match the one of Cassandra thus its use is avoided upon regular workloads.
+ * *RabbitMQ* enables James nodes of a same cluster to collaborate together. It is used to implement connected protocols,
+notification patterns as well as distributed resilient work queues and mail queue.
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
  * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
 
@@ -28,15 +31,18 @@ The following protocols are supported and can be used to interact with the Distr
 * *IMAP*
 * xref:operate/webadmin.adoc[WebAdmin] REST Administration API
 * *LMTP*
+* *POP3*
 
 The following protocols should be considered experimental:
 
 * *JMAP* (RFC-8620 &RFC-8621 specifications and known limitations of the James implementation are defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-rfc-8621/doc[here])
-* *POP3*
+* *ManagedSieve*
 
 The following protocols should be considered deprecated:
 
 * *JMAP-draft* (draft specification as defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-draft/doc[here])
+
+Read more on xref:architecture/implemented-standards.adoc[implemented standards].
 
 == Topology
 
