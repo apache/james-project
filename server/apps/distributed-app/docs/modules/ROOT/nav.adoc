@@ -1,6 +1,7 @@
 * xref:index.adoc[]
 ** xref:objectives.adoc[]
 ** xref:architecture/index.adoc[]
+*** xref:architecture/implemented-standards.adoc[]
 *** xref:architecture/consistency-model.adoc[]
 *** xref:architecture/specialized-instances.adoc[]
 ** xref:run/index.adoc[Run]
