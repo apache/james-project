@@ -33,7 +33,7 @@ public class Username {
 
     public static Username of(String username) {
         Preconditions.checkArgument(username != null, "username should not be null or empty");
-        Preconditions.checkArgument(!username.trim().isEmpty(), "username should not be null or empty after being trimmed");
+        Preconditions.checkArgument(!username.isBlank(), "username should not be null or empty after being trimmed");
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH,
             "username length should not be longer than %s characters", MAXIMUM_MAIL_ADDRESS_LENGTH);
 
@@ -43,9 +43,6 @@ public class Username {
         }
         String userPart = username.substring(0, atPosition);
         String domainPart = username.substring(atPosition + 1);
-        if (domainPart.indexOf('@') >= 0) {
-            throw new IllegalArgumentException("The username should not contain multiple domain delimiter. Value: " + username);
-        }
         return fromLocalPartWithDomain(userPart, domainPart);
     }
 

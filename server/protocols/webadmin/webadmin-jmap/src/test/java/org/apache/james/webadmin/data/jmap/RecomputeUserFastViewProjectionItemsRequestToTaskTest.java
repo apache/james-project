@@ -66,7 +66,6 @@ import org.junit.jupiter.api.Test;
 import com.github.fge.lambdas.Throwing;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import spark.Service;
 
 class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
@@ -243,7 +242,7 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("The username should not contain multiple domain delimiter. Value: bad@bad@bad"));
+            .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
     }
 
     @Test
