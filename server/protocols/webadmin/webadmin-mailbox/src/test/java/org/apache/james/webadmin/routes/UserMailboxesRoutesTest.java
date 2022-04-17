@@ -1533,7 +1533,7 @@ class UserMailboxesRoutesTest {
                     .body("statusCode", Matchers.is(400))
                     .body("type", Matchers.is("InvalidArgument"))
                     .body("message", Matchers.is("Invalid arguments supplied in the user request"))
-                    .body("details", Matchers.is("The username should not contain multiple domain delimiter. Value: bad@bad@bad"));
+                    .body("details", Matchers.is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
             }
         }
 

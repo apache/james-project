@@ -5628,7 +5628,7 @@ trait MailboxSetMethodContract {
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidPatch",
-         |          "description": "The username should not contain multiple domain delimiter. Value: invalid@invalid@domain.tld"
+         |          "description": "Domain parts ASCII chars must be a-z A-Z 0-9 - or _"
          |        }
          |      }
          |    }, "c1"]
