@@ -112,17 +112,9 @@ C: c SEARCH RETURN (MIN) FLAGGED
 S: \* ESEARCH \(TAG "c"\) MIN 1
 S: c OK SEARCH completed.
 
-# https://datatracker.ietf.org/doc/html/rfc4731#section-3.2
-# When the server supports both the ESEARCH and the CONDSTORE
-# [CONDSTORE] extension, and the client requests one or more result
-# option described in section 3.1 together with the MODSEQ search
-# criterion in the same SEARCH/UID SEARCH command, then the server MUST
-# return the ESEARCH response containing the MODSEQ result option
-# (described in the following paragraph)
 C: d SEARCH RETURN (MIN) MODSEQ 8
 S: \* OK \[HIGHESTMODSEQ 8\] Highest
-S: \* ESEARCH \(TAG "d"\) MIN 4
-# S: \* ESEARCH (TAG "d") MIN 4 MODSEQ 8
+S: \* ESEARCH \(TAG "d"\) MIN 4 MODSEQ 8
 S: d OK SEARCH completed.
 
 C: e SEARCH RETURN (MAX) FLAGGED
