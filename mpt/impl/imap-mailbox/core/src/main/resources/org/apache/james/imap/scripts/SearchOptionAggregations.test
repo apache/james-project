@@ -1,0 +1,151 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# https://datatracker.ietf.org/doc/html/rfc4731
+
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed\.
+
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+
+# Append 6 messages
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 3 EXISTS
+S: \* 3 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 5 EXISTS
+S: \* 5 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 6 EXISTS
+S: \* 6 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+
+C: b STORE 1:2,4:5 +FLAGS.SILENT (\FLAGGED)
+S: b OK STORE completed.
+
+C: c SEARCH RETURN (MIN) FLAGGED
+S: \* ESEARCH \(TAG "c"\) MIN 1
+S: c OK SEARCH completed.
+
+# https://datatracker.ietf.org/doc/html/rfc4731#section-3.2
+# When the server supports both the ESEARCH and the CONDSTORE
+# [CONDSTORE] extension, and the client requests one or more result
+# option described in section 3.1 together with the MODSEQ search
+# criterion in the same SEARCH/UID SEARCH command, then the server MUST
+# return the ESEARCH response containing the MODSEQ result option
+# (described in the following paragraph)
+C: d SEARCH RETURN (MIN) MODSEQ 8
+S: \* OK \[HIGHESTMODSEQ 8\] Highest
+S: \* ESEARCH \(TAG "d"\) MIN 4
+# S: \* ESEARCH (TAG "d") MIN 4 MODSEQ 8
+S: d OK SEARCH completed.
+
+C: e SEARCH RETURN (MAX) FLAGGED
+S: \* ESEARCH \(TAG "e"\) MAX 5
+S: e OK SEARCH completed.
+
+C: f SEARCH RETURN (COUNT) FLAGGED
+S: \* ESEARCH \(TAG "f"\) COUNT 4
+S: f OK SEARCH completed.
+
+C: g SEARCH RETURN (MIN MAX COUNT) FLAGGED
+S: \* ESEARCH \(TAG "g"\) MIN 1 MAX 5 COUNT 4
+S: g OK SEARCH completed.
+
+C: h SEARCH RETURN (MIN MAX COUNT SAVE) FLAGGED
+S: \* ESEARCH \(TAG "h"\) MIN 1 MAX 5 COUNT 4
+S: h OK SEARCH completed.
+
+C: i FETCH $ FLAGS
+SUB {
+S: \* 1 FETCH .*
+S: \* 2 FETCH .*
+S: \* 4 FETCH .*
+S: \* 5 FETCH .*
+}
+S: i OK FETCH completed.

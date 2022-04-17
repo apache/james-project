@@ -64,6 +64,14 @@ public abstract class Search implements ImapTestConstants {
     }
 
     @Test
+    public void testSearchOptionAggregationsUS() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOD_SEQ_SEARCH));
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("SearchOptionAggregations");
+    }
+
+    @Test
     public void testSearchAtomsITALY() throws Exception {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOD_SEQ_SEARCH));
         simpleScriptedTestProtocol
