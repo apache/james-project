@@ -50,6 +50,11 @@ public class MailboxAnnotationListener implements EventListener.GroupEventListen
     }
 
     @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxDeletion;
+    }
+
+    @Override
     public Group getDefaultGroup() {
         return GROUP;
     }
