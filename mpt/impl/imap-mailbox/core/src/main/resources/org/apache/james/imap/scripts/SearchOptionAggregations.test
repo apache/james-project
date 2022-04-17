@@ -141,3 +141,7 @@ S: \* 4 FETCH .*
 S: \* 5 FETCH .*
 }
 S: i OK FETCH completed.
+
+C: h SEARCH RETURN (ALL) FLAGGED
+S: \* ESEARCH \(TAG "h"\) ALL 1:2,4:5
+S: h OK SEARCH completed.
