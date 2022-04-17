@@ -33,8 +33,6 @@ import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import reactor.core.scheduler.Schedulers;
-
 public class MailboxesExportTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("MailboxesExportTask");
 
@@ -110,7 +108,6 @@ public class MailboxesExportTask implements Task {
     @Override
     public Result run() {
         return service.export(progress, username)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

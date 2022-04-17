@@ -33,8 +33,6 @@ import org.apache.james.webadmin.validation.MailboxName;
 
 import com.google.common.base.MoreObjects;
 
-import reactor.core.scheduler.Schedulers;
-
 public class ClearMailboxContentTask implements Task {
     public static class Context {
         public static class Snapshot {
@@ -179,7 +177,6 @@ public class ClearMailboxContentTask implements Task {
     @Override
     public Result run() {
         return userMailboxesService.clearMailboxContent(username, mailboxName, context)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

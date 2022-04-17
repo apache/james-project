@@ -32,8 +32,6 @@ import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import reactor.core.scheduler.Schedulers;
-
 public class PopulateEmailQueryViewTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("PopulateEmailQueryViewTask");
 
@@ -144,7 +142,6 @@ public class PopulateEmailQueryViewTask implements Task {
     @Override
     public Result run() {
         return populator.populateView(progress, runningOptions)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

@@ -35,8 +35,6 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reactor.core.scheduler.Schedulers;
-
 public class AclV2Migration implements Migration {
     private static final int CONCURRENCY = 20;
 
@@ -99,7 +97,6 @@ public class AclV2Migration implements Migration {
                     .flatMap(acl -> storeV2.setACL(id, acl));
             }, CONCURRENCY)
             .doOnError(t -> LOGGER.error("Error while performing migration", t))
-            .subscribeOn(Schedulers.elastic())
             .blockLast();
     }
 

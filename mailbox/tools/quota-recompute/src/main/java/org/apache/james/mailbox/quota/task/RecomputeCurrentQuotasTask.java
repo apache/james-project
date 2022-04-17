@@ -33,8 +33,6 @@ import org.apache.james.task.TaskType;
 
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.scheduler.Schedulers;
-
 public class RecomputeCurrentQuotasTask implements Task {
     static final TaskType RECOMPUTE_CURRENT_QUOTAS = TaskType.of("recompute-current-quotas");
 
@@ -82,7 +80,6 @@ public class RecomputeCurrentQuotasTask implements Task {
     @Override
     public Task.Result run() {
         return service.recomputeCurrentQuotas(context, RunningOptions.DEFAULT)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

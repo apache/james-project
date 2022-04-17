@@ -33,8 +33,6 @@ import org.apache.james.task.TaskType;
 
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.scheduler.Schedulers;
-
 public class MetaDataFixInconsistenciesTask implements Task {
 
     public static final TaskType TASK_TYPE = TaskType.of("Pop3MetaDataFixInconsistenciesTask");
@@ -131,7 +129,6 @@ public class MetaDataFixInconsistenciesTask implements Task {
     @Override
     public Result run() throws InterruptedException {
         return metaDataFixInconsistenciesService.fixInconsistencies(context, runningOptions)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

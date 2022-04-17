@@ -39,7 +39,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlic
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> {
 
@@ -108,21 +107,18 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
 
     @Override
     public Flux<CassandraMailQueueBrowser.CassandraMailQueueItemView> browseReactive() {
-        return cassandraMailQueueBrowser.browse(mailQueueName)
-            .subscribeOn(Schedulers.elastic());
+        return cassandraMailQueueBrowser.browse(mailQueueName);
     }
 
     @Override
     public Flux<CassandraMailQueueBrowser.CassandraMailQueueItemView> browseOlderThanReactive(Instant olderThan) {
-        return cassandraMailQueueBrowser.browseOlderThan(mailQueueName, olderThan)
-            .subscribeOn(Schedulers.elastic());
+        return cassandraMailQueueBrowser.browseOlderThan(mailQueueName, olderThan);
     }
 
     @Override
     public long getSize() {
         return cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .count()
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -144,7 +140,6 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
                 .then(Mono.from(mimeMessageStore.delete(mailReference.getPartsId()))), DELETION_CONCURRENCY)
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

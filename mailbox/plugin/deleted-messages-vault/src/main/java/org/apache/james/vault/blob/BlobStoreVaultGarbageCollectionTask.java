@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 public class BlobStoreVaultGarbageCollectionTask implements Task {
 
@@ -98,7 +97,6 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     public Result run() {
         retentionOperation
             .doOnNext(deletedBuckets::add)
-            .subscribeOn(Schedulers.elastic())
             .then()
             .block();
 
