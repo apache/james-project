@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.scheduler.Schedulers;
-
 public class RecomputeMailboxCountersTask implements Task {
     public static final Logger LOGGER = LoggerFactory.getLogger(RecomputeMailboxCountersTask.class);
     static final TaskType RECOMPUTE_MAILBOX_COUNTERS = TaskType.of("recompute-mailbox-counters");
@@ -78,7 +76,6 @@ public class RecomputeMailboxCountersTask implements Task {
     @Override
     public Result run() {
         return service.recomputeMailboxCounters(context, options)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

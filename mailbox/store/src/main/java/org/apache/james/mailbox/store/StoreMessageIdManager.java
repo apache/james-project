@@ -200,8 +200,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
-        return  MailboxReactorUtils.block(deleteReactive(ImmutableList.of(messageId), mailboxIds, mailboxSession)
-            .subscribeOn(Schedulers.elastic()));
+        return MailboxReactorUtils.block(deleteReactive(ImmutableList.of(messageId), mailboxIds, mailboxSession));
     }
 
     @Override
@@ -296,8 +295,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public void setInMailboxes(MessageId messageId, Collection<MailboxId> targetMailboxIds, MailboxSession mailboxSession) throws MailboxException {
-        MailboxReactorUtils.block(setInMailboxesReactive(messageId, targetMailboxIds, mailboxSession)
-            .subscribeOn(Schedulers.elastic()));
+        MailboxReactorUtils.block(setInMailboxesReactive(messageId, targetMailboxIds, mailboxSession));
     }
 
     @Override
@@ -335,8 +333,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                     return applyMessageMoveNoMailboxChecks(mailboxSession, currentMailboxMessages, messageMove);
                 }
                 return Mono.empty();
-            })
-            .subscribeOn(Schedulers.elastic()));
+            }));
     }
 
     private Mono<List<MailboxMessage>> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) {

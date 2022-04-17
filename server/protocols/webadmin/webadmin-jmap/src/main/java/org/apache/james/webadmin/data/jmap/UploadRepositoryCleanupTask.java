@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class UploadRepositoryCleanupTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadRepositoryCleanupTask.class);
@@ -97,7 +96,6 @@ public class UploadRepositoryCleanupTask implements Task {
                     LOGGER.error("Error when cleaning upload repository", error);
                     return Mono.just(Result.PARTIAL);
                 })
-                .subscribeOn(Schedulers.elastic())
                 .block();
         } else {
             return Result.COMPLETED;

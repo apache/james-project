@@ -29,13 +29,16 @@ import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 /**
  * See https://issues.apache.org/jira/browse/MAILBOX-322 for reading about the Ghost mailbox bug.
  *
  * This class logs mailboxes writes in order to give context to analyse ghost mailbox bug.
  */
-public class MailboxOperationLoggingListener implements EventListener.GroupEventListener {
+public class MailboxOperationLoggingListener implements EventListener.ReactiveGroupEventListener {
     public static class MailboxOperationLoggingListenerGroup extends Group {
 
     }
@@ -52,6 +55,11 @@ public class MailboxOperationLoggingListener implements EventListener.GroupEvent
     @Override
     public boolean isHandling(Event event) {
         return event instanceof MailboxRenamed || event instanceof MailboxDeletion || event instanceof MailboxAdded;
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(Event event) {
+        return Mono.fromRunnable(() -> event(event));
     }
 
     @Override

@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class CreateMissingParentsTask implements Task {
     private static final Username USERNAME = Username.of("createMissingParentsTask");
@@ -151,7 +150,6 @@ public class CreateMissingParentsTask implements Task {
                 .flatMap(this::createMailbox, DEFAULT_CONCURRENCY)
                 .reduce(Task::combine)
                 .switchIfEmpty(Mono.just(Result.COMPLETED))
-                .subscribeOn(Schedulers.elastic())
                 .block();
         } catch (MailboxException e) {
             LOGGER.error("Error fetching mailbox paths", e);

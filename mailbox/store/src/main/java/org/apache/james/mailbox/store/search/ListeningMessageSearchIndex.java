@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link EventListener} and so get
@@ -102,6 +103,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     private Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
         return Flux.fromIterable(MessageRange.toRanges(added.getUids()))
             .concatMap(range -> retrieveMailboxMessages(session, mailbox, range))
+            .publishOn(Schedulers.parallel())
             .concatMap(mailboxMessage -> add(session, mailbox, mailboxMessage))
             .then();
     }

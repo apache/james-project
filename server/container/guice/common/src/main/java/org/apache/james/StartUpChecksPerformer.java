@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 public class StartUpChecksPerformer {
 
@@ -84,7 +83,6 @@ public class StartUpChecksPerformer {
 
         public List<StartUpCheck.CheckResult> check() {
             return Flux.fromIterable(startUpChecks)
-                .publishOn(Schedulers.elastic())
                 .map(this::checkQuietly)
                 .collect(ImmutableList.toImmutableList())
                 .block();

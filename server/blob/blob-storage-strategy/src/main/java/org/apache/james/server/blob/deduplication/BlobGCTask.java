@@ -32,8 +32,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import reactor.core.scheduler.Schedulers;
-
 public class BlobGCTask implements Task {
     public static final TaskType TASK_TYPE = TaskType.of("BlobGCTask");
 
@@ -199,7 +197,7 @@ public class BlobGCTask implements Task {
     }
 
     @Override
-    public Result run() throws InterruptedException {
+    public Result run() {
         BloomFilterGCAlgorithm gcAlgorithm = new BloomFilterGCAlgorithm(
             BlobReferenceAggregate.aggregate(blobReferenceSources),
             blobStoreDAO,
@@ -208,7 +206,6 @@ public class BlobGCTask implements Task {
             clock);
 
         return gcAlgorithm.gc(expectedBlobCount, associatedProbability, bucketName, context)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

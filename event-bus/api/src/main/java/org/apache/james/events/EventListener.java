@@ -38,7 +38,6 @@ public interface EventListener {
 
         default void event(Event event) throws Exception {
             Mono.from(reactiveEvent(event))
-                .subscribeOn(Schedulers.elastic())
                 .block();
         }
     }
@@ -51,7 +50,6 @@ public interface EventListener {
         @Override
         default void event(Event event) throws Exception {
             Mono.from(reactiveEvent(event))
-                .subscribeOn(Schedulers.elastic())
                 .block();
         }
     }

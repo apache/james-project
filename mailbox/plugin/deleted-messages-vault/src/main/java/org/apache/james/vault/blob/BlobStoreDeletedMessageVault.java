@@ -54,7 +54,6 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
@@ -160,8 +159,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
                 .thenReturn(storageInformation))
-            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId())))
-            .subscribeOn(Schedulers.elastic());
+            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId())));
     }
 
     @Override
@@ -176,7 +174,6 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
                 DELETE_EXPIRED_MESSAGES_METRIC_NAME,
                 retentionQualifiedBuckets(beginningOfRetentionPeriod)
                     .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)), DEFAULT_CONCURRENCY)));
-
     }
 
     ZonedDateTime getBeginningOfRetentionPeriod() {

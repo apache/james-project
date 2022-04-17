@@ -35,8 +35,6 @@ import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import reactor.core.scheduler.Schedulers;
-
 public class RecomputeUserFastViewProjectionItemsTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("RecomputeUserFastViewProjectionItemsTask");
 
@@ -151,7 +149,6 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
     @Override
     public Result run() {
         return corrector.correctUsersProjectionItems(progress, username, runningOptions)
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

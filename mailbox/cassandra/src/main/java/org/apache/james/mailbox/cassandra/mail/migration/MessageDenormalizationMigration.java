@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class MessageDenormalizationMigration implements Migration {
     static class MessageDenormalizationMigrationTask implements Task {
@@ -84,7 +83,6 @@ public class MessageDenormalizationMigration implements Migration {
             .filter(metadata -> !metadata.isComplete())
             .flatMap(this::retrieveFullMetadata, ReactorUtils.DEFAULT_CONCURRENCY)
             .flatMap(messageIdDAO::insert, 4)
-            .subscribeOn(Schedulers.elastic())
             .then()
             .block();
 
@@ -92,7 +90,6 @@ public class MessageDenormalizationMigration implements Migration {
             .filter(metadata -> !metadata.isComplete())
             .flatMap(this::retrieveFullMetadata, ReactorUtils.DEFAULT_CONCURRENCY)
             .concatMap(imapUidDAO::insertForce, 4)
-            .subscribeOn(Schedulers.elastic())
             .then()
             .block();
     }

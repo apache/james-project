@@ -83,7 +83,7 @@ public class PropagateLookupRightListener implements EventListener.GroupEventLis
         return event instanceof MailboxACLUpdated || event instanceof MailboxRenamed;
     }
 
-    private MailboxSession createMailboxSession(Event event) throws MailboxException {
+    private MailboxSession createMailboxSession(Event event) {
         return mailboxManager.createSystemSession(event.getUsername());
     }
 
