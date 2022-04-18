@@ -63,7 +63,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     private final ChannelGroup channels = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
-    private volatile Optional<Integer> bossWorker = Optional.of(DEFAULT_IO_WORKER_COUNT);
+    private volatile Optional<Integer> bossWorker = Optional.of(DEFAULT_BOSS_WORKER_COUNT);
 
     private List<InetSocketAddress> addresses = new ArrayList<>();
 
@@ -123,7 +123,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.channel(NioServerSocketChannel.class);
 
-        bossGroup = bossWorker.map(count -> new NioEventLoopGroup(2, NamedThreadFactory.withName(jmxName + "-boss")));
+        bossGroup = bossWorker.map(count -> new NioEventLoopGroup(count, NamedThreadFactory.withName(jmxName + "-boss")));
         workerGroup = new NioEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
 
         bossGroup.<Runnable>map(boss -> () -> bootstrap.group(boss, workerGroup))
