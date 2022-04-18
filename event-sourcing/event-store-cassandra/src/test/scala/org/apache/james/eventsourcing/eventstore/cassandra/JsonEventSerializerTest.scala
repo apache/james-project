@@ -65,14 +65,6 @@ class JsonEventSerializerTest {
   }
 
   @Test
-  def deserializeShouldThrowWhenEventWithDuplicatedTypes(): Unit =
-    assertThatThrownBy(() =>
-      JsonEventSerializer
-        .forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.OTHER_TEST_TYPE)
-        .withoutNestedType.deserialize(JsonEventSerializerTest.DUPLICATE_TYPE_EVENT_JSON))
-      .isInstanceOf(classOf[JsonEventSerializer.InvalidEventException])
-
-  @Test
   def deserializeShouldThrowWhenEventWithMissingType(): Unit =
     assertThatThrownBy(() =>
       JsonEventSerializer

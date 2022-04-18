@@ -38,12 +38,6 @@ class TaskDeserializerTest {
         "\"parameter\": 1" +
         "}";
 
-    private static final String TWO_TYPES_TASK_AS_STRING = "{" +
-        "\"type\": \"test-task\"," +
-        "\"type\": \"unknown\"," +
-        "\"parameter\": 1" +
-        "}";
-
     private static final String MISSING_TASK_AS_STRING = "{" +
         "\"parameter\": 1" +
         "}";
@@ -72,12 +66,6 @@ class TaskDeserializerTest {
     @Test
     void shouldThrowWhenMissingType() {
         assertThatThrownBy(() -> testee.deserialize(MISSING_TASK_AS_STRING))
-            .isInstanceOf(JsonTaskSerializer.InvalidTaskException.class);
-    }
-
-    @Test
-    void shouldThrowWhenDuplicateType() {
-        assertThatThrownBy(() -> testee.deserialize(TWO_TYPES_TASK_AS_STRING))
             .isInstanceOf(JsonTaskSerializer.InvalidTaskException.class);
     }
 

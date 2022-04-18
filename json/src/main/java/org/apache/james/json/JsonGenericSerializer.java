@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -109,8 +108,7 @@ public class JsonGenericSerializer<T, U extends DTO> {
             .registerModule(new JavaTimeModule())
             .registerModule(new GuavaModule())
             .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         NamedType[] namedTypes = modules.stream()
             .map(module -> new NamedType(module.getDTOClass(), module.getDomainObjectType()))
             .toArray(NamedType[]::new);
