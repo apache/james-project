@@ -661,13 +661,13 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private final Configuration configuration;
 
     private final InstrumentedPool<? extends Channel> newPool;
-    private final MetricFactory metricFatcory;
+    private final MetricFactory metricFactory;
     private Sender sender;
 
-    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration, MetricFactory metricFatcory) {
+    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration, MetricFactory metricFactory) {
         this.connectionMono = connectionMono;
         this.configuration = configuration;
-        this.metricFatcory = metricFatcory;
+        this.metricFactory = metricFactory;
 
         newPool = PoolBuilder.from(connectionMono
             .flatMap(this::openChannel))
@@ -709,7 +709,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     @Override
     public Mono<? extends Channel> getChannelMono() {
-        return Mono.from(metricFatcory.decoratePublisherWithTimerMetric("rabbit-acquire", borrow()));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-acquire", borrow()));
     }
 
     private Mono<? extends Channel> borrow() {
@@ -722,7 +722,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     @Override
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
-        return (signalType, channel) -> metricFatcory.runPublishingTimerMetric("rabbit-release",
+        return (signalType, channel) -> metricFactory.runPublishingTimerMetric("rabbit-release",
             () -> {
                 PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
 
