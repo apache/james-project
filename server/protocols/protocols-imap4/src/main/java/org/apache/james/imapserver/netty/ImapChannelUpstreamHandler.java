@@ -52,7 +52,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.TooLongFrameException;
 import reactor.core.publisher.Mono;
 
@@ -72,6 +71,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private ImapEncoder encoder;
         private IMAPServer.AuthenticationConfiguration authenticationConfiguration;
         private ImapMetrics imapMetrics;
+        private boolean ignoreIDLEUponProcessing;
         private Duration heartbeatInterval;
 
         public ImapChannelUpstreamHandlerBuilder hello(String hello) {
@@ -109,13 +109,18 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
+        public ImapChannelUpstreamHandlerBuilder ignoreIDLEUponProcessing(boolean ignoreIDLEUponProcessing) {
+            this.ignoreIDLEUponProcessing = ignoreIDLEUponProcessing;
+            return this;
+        }
+
         public ImapChannelUpstreamHandlerBuilder heartbeatInterval(Duration heartbeatInterval) {
             this.heartbeatInterval = heartbeatInterval;
             return this;
         }
 
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, (int) heartbeatInterval.toSeconds());
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds());
         }
     }
 
@@ -141,9 +146,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     private final Metric imapCommandsMetric;
 
+    private final boolean ignoreIDLEUponProcessing;
+
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
-                                      int heartbeatIntervalSeconds) {
+                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -152,6 +159,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.authenticationConfiguration = authenticationConfiguration;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
+        this.ignoreIDLEUponProcessing = ignoreIDLEUponProcessing;
         this.heartbeatHandler = new ImapHeartbeatHandler(heartbeatIntervalSeconds, heartbeatIntervalSeconds, heartbeatIntervalSeconds);
     }
 
@@ -252,7 +260,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     })
                     .doFinally(Throwing.consumer(signal -> super.channelInactive(ctx)))
                     .subscribe(any -> {
-                        
+
                     }, e -> {
                         LOGGER.error("Exception while handling errors for channel {}", ctx.channel(), e);
                         Channel channel = ctx.channel();
@@ -270,15 +278,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
         ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
         ImapMessage message = (ImapMessage) msg;
-        ChannelPipeline cp = ctx.pipeline();
 
-        try {
-            cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
-        } catch (IllegalArgumentException e) {
-            try (Closeable closeable = mdc(ctx).build()) {
-                LOGGER.info("heartbeat handler is already part of this pipeline", e);
-            }
-        }
+        beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
         processor.processReactive(message, responseEncoder, session)
             .doOnSuccess(type -> {
@@ -307,13 +308,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             })
             .doOnEach(Throwing.consumer(signal -> {
                 if (signal.isOnComplete() || signal.isOnError()) {
-                    try {
-                        ctx.pipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
-                    } catch (NoSuchElementException e) {
-                        try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(signal).build()) {
-                            LOGGER.info("Heartbeat handler was concurrently removed");
-                        }
-                    }
+                    afterIDLEUponProcessing(ctx);
                     if (message instanceof Closeable) {
                         ((Closeable) message).close();
                     }
@@ -325,4 +320,23 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .subscribe();
     }
 
+    private void beforeIDLEUponProcessing(ChannelHandlerContext ctx) {
+        if (!ignoreIDLEUponProcessing) {
+            try {
+                ctx.pipeline().addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
+            } catch (IllegalArgumentException e) {
+                LOGGER.info("heartbeat handler is already part of this pipeline", e);
+            }
+        }
+    }
+
+    private void afterIDLEUponProcessing(ChannelHandlerContext ctx) {
+        if (!ignoreIDLEUponProcessing) {
+            try {
+                ctx.pipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
+            } catch (NoSuchElementException e) {
+                LOGGER.info("Heartbeat handler was concurrently removed");
+            }
+        }
+    }
 }

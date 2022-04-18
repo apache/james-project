@@ -97,6 +97,8 @@
         <dd>Claim string uses to identify user. E.g: "email_address". Only configure this when you want to authenticate IMAP server using a OIDC provider.</dd>
         <dt><strong>auth.oidc.scope</strong></dt>
         <dd>An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.</dd>
+        <dt><strong>ignoreIDLEUponProcessing</strong></dt>
+        <dd>true or false - Allow disabling the heartbeat handler. Defaults to true.</dd>
       </dl>
 
     <subsection name="OIDC set up">

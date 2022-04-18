@@ -52,6 +52,9 @@
       <connectionLimitPerIP> 0 </connectionLimitPerIP>
     </handler>
 
+    <!-- Allow disabling the heartbeat handler -->
+    <ignoreIDLEUponProcessing>true</ignoreIDLEUponProcessing>
+
   </imapserver>
 
 </imapservers>
