@@ -43,6 +43,11 @@ public class FetchData {
         private long changedSince = -1;
         private boolean vanished;
 
+        public Builder fetch(Item item) {
+            itemToFetch.add(item);
+            return this;
+        }
+
         public Builder fetch(Item... item) {
             return fetch(Arrays.asList(item));
         }
