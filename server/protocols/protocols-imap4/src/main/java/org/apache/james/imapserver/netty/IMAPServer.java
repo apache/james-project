@@ -19,6 +19,7 @@
 package org.apache.james.imapserver.netty;
 
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -134,6 +135,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private AuthenticationConfiguration authenticationConfiguration;
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
+    private Duration heartbeatInterval;
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
     public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
@@ -172,8 +174,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
         connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
         connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
-
-        processor.configure(getImapConfiguration(configuration));
+        ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
+        heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
+        processor.configure(imapConfiguration);
     }
 
     @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -262,6 +265,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .authenticationConfiguration(authenticationConfiguration)
             .secure(secure)
             .imapMetrics(imapMetrics)
+            .heartbeatInterval(heartbeatInterval)
             .build();
     }
 

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -143,6 +144,10 @@ public class ImapConfiguration {
     
     public boolean isCondstoreEnable() {
         return isCondstoreEnable;
+    }
+
+    public Duration idleTimeIntervalAsDuration() {
+        return Duration.of(getIdleTimeInterval(), getIdleTimeIntervalUnit().toChronoUnit());
     }
 
     @Override
