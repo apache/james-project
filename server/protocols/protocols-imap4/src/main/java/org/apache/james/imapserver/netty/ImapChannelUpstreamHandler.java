@@ -23,6 +23,7 @@ import static org.apache.james.imapserver.netty.IMAPServer.AuthenticationConfigu
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -71,6 +72,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private ImapEncoder encoder;
         private IMAPServer.AuthenticationConfiguration authenticationConfiguration;
         private ImapMetrics imapMetrics;
+        private Duration heartbeatInterval;
 
         public ImapChannelUpstreamHandlerBuilder hello(String hello) {
             this.hello = hello;
@@ -107,8 +109,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
+        public ImapChannelUpstreamHandlerBuilder heartbeatInterval(Duration heartbeatInterval) {
+            this.heartbeatInterval = heartbeatInterval;
+            return this;
+        }
+
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration);
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, (int) heartbeatInterval.toSeconds());
         }
     }
 
@@ -126,7 +133,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     private final ImapEncoder encoder;
 
-    private final ImapHeartbeatHandler heartbeatHandler = new ImapHeartbeatHandler(0,0,0);
+    private final ImapHeartbeatHandler heartbeatHandler;
 
     private final AuthenticationConfiguration authenticationConfiguration;
 
@@ -135,7 +142,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final Metric imapCommandsMetric;
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration) {
+                                      Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
+                                      int heartbeatIntervalSeconds) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -144,6 +152,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.authenticationConfiguration = authenticationConfiguration;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
+        this.heartbeatHandler = new ImapHeartbeatHandler(heartbeatIntervalSeconds, heartbeatIntervalSeconds, heartbeatIntervalSeconds);
     }
 
     @Override

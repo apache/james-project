@@ -69,7 +69,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     public void configure(ImapConfiguration imapConfiguration) {
         super.configure(imapConfiguration);
 
-        this.heartbeatInterval = Duration.of(imapConfiguration.getIdleTimeInterval(), imapConfiguration.getIdleTimeIntervalUnit().toChronoUnit());
+        this.heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
         this.enableIdle = imapConfiguration.isEnableIdle();
     }
 
