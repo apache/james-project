@@ -76,6 +76,9 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             configureHostScheme(builder);
             configureTimeout(builder);
 
+            configuration.getMaxConnections().ifPresent(builder::setMaxConnTotal);
+            configuration.getMaxConnectionsPerHost().ifPresent(builder::setMaxConnPerRoute);
+
             builder.setThreadFactory(NamedThreadFactory.withName("ElasticSearch-driver"));
 
             return builder;
