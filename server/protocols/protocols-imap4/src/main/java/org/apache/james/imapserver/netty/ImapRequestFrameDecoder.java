@@ -104,7 +104,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
 
         Pair<ImapRequestLineReader, Integer> readerAndSize = obtainReader(ctx, in, attachment);
-        if (readerAndSize == null) return;
+        if (readerAndSize == null) {
+            return;
+        }
 
         parseImapMessage(ctx, in, attachment, readerAndSize, readerIndex)
             .ifPresent(out::add);
@@ -249,7 +251,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         }
                     }
                 })
-                .subscribe(o -> {},
+                .subscribe(o -> {
+
+                    },
                     ctx::fireExceptionCaught,
                     () -> {
 
