@@ -54,6 +54,7 @@ import com.datastax.driver.core.Session;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 public class CassandraModSeqProvider implements ModSeqProvider {
 
@@ -84,21 +85,23 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     }
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
-    private final long maxModSeqRetries;
     private final PreparedStatement select;
     private final PreparedStatement update;
     private final PreparedStatement insert;
     private final ConsistencyLevel consistencyLevel;
+    private final RetryBackoffSpec retrySpec;
 
     @Inject
     public CassandraModSeqProvider(Session session, CassandraConfiguration cassandraConfiguration,
                                    CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
-        this.maxModSeqRetries = cassandraConfiguration.getModSeqMaxRetry();
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
         this.select = prepareSelect(session);
+        Duration firstBackoff = Duration.ofMillis(10);
+        this.retrySpec = Retry.backoff(cassandraConfiguration.getModSeqMaxRetry(), firstBackoff)
+            .scheduler(Schedulers.elastic());
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -184,14 +187,12 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     @Override
     public Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        Duration firstBackoff = Duration.ofMillis(10);
-
         return findHighestModSeq(cassandraId)
             .flatMap(maybeHighestModSeq -> maybeHighestModSeq
                         .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
                         .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
             .single()
-            .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
+            .retryWhen(retrySpec);
     }
 
     @Override

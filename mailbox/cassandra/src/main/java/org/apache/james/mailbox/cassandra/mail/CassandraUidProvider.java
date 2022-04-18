@@ -55,26 +55,29 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 public class CassandraUidProvider implements UidProvider {
     private static final String CONDITION = "Condition";
 
     private final CassandraAsyncExecutor executor;
-    private final long maxUidRetries;
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement selectStatement;
     private final ConsistencyLevel consistencyLevel;
+    private final RetryBackoffSpec retrySpec;
 
     @Inject
     public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration,
                                 CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
-        this.maxUidRetries = cassandraConfiguration.getUidMaxRetry();
         this.selectStatement = prepareSelect(session);
         this.updateStatement = prepareUpdate(session);
         this.insertStatement = prepareInsert(session);
+        Duration firstBackoff = Duration.ofMillis(10);
+        this.retrySpec = Retry.backoff(cassandraConfiguration.getUidMaxRetry(), firstBackoff)
+            .scheduler(Schedulers.elastic());
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -116,12 +119,11 @@ public class CassandraUidProvider implements UidProvider {
         Mono<MessageUid> updateUid = findHighestUid(cassandraId)
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
 
-        Duration firstBackoff = Duration.ofMillis(10);
         return updateUid
             .switchIfEmpty(tryInsert(cassandraId))
             .switchIfEmpty(updateUid)
             .single()
-            .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
+            .retryWhen(retrySpec);
     }
 
     @Override
@@ -132,13 +134,12 @@ public class CassandraUidProvider implements UidProvider {
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid, count)
                 .map(highest -> range(messageUid, highest)));
 
-        Duration firstBackoff = Duration.ofMillis(10);
         return updateUid
             .switchIfEmpty(tryInsert(cassandraId, count)
                 .map(highest -> range(MessageUid.MIN_VALUE, highest)))
             .switchIfEmpty(updateUid)
             .single()
-            .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
+            .retryWhen(retrySpec);
     }
 
     private List<MessageUid> range(MessageUid lowerExclusive, MessageUid higherInclusive) {
