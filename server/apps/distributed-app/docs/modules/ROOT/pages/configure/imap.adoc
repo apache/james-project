@@ -107,6 +107,20 @@ will use the specified value.
 | connectionLimitPerIP
 | Set the maximum simultaneous incoming connections per IP for this service
 
+| bossWorkerCount
+| Set the maximum count of boss threads. Boss threads are responsible for accepting incoming IMAP connections
+and initializing associated resources. Optional integer, by default, boss threads are not used and this responsibility is being dealt with
+by IO threads.
+
+| ioWorkerCount
+| Set the maximum count of IO threads. IO threads are responsible for receiving incoming IMAP messages and framing them
+(split line by line). IO threads also take care of compression and SSL encryption. Their tasks are short-lived and non-blocking.
+Optional integer, defaults to 2 times the count of CPUs.
+
+| maxExecutorCount
+| Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like decoding IMAP requests
+(litterals can be buffered to temporary files) or executing IMAP commands. Optional integer, defaults to 16.
+
 | ignoreIDLEUponProcessing
 | true or false - Allow disabling the heartbeat handler. Defaults to true.
 |===
