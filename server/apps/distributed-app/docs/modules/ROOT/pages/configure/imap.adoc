@@ -107,6 +107,8 @@ will use the specified value.
 | connectionLimitPerIP
 | Set the maximum simultaneous incoming connections per IP for this service
 
+| ignoreIDLEUponProcessing
+| true or false - Allow disabling the heartbeat handler. Defaults to true.
 |===
 
 == OIDC setup

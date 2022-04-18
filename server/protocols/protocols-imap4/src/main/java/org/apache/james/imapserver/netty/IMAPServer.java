@@ -135,6 +135,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private AuthenticationConfiguration authenticationConfiguration;
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
+    private boolean ignoreIDLEUponProcessing;
     private Duration heartbeatInterval;
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
@@ -174,6 +175,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
         connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
         connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
+        ignoreIDLEUponProcessing = configuration.getBoolean("ignoreIDLEUponProcessing", true);
         ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
         heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
         processor.configure(imapConfiguration);
@@ -266,6 +268,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .secure(secure)
             .imapMetrics(imapMetrics)
             .heartbeatInterval(heartbeatInterval)
+            .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
             .build();
     }
 
