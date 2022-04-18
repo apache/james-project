@@ -21,14 +21,13 @@ package org.apache.james.imap.api.message;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 
 public class BodyFetchElement {
+    private static final String SIMPLE_NAME = BodyFetchElement.class.getSimpleName();
     private static final BodyFetchElement rfc822 = new BodyFetchElement(ImapConstants.FETCH_RFC822, SectionType.CONTENT, null, null, null, null);
 
     private static final BodyFetchElement rfc822Header = new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, SectionType.HEADER, null, null, null, null);
@@ -133,12 +132,13 @@ public class BodyFetchElement {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
+        return MoreObjects.toStringHelper(SIMPLE_NAME)
+            .omitNullValues()
             .add("firstOctet", firstOctet)
             .add("numberOfOctets", numberOfOctets)
             .add("name", name)
             .add("sectionType", sectionType)
-            .add("fieldNames", Optional.ofNullable(fieldNames).map(ImmutableList::copyOf))
+            .add("fieldNames", fieldNames)
             .toString();
     }
 }
