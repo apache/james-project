@@ -175,17 +175,11 @@ public class FetchData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("flags", contains(Item.FLAGS))
-            .add("uid", contains(Item.UID))
-            .add("internalDate", contains(Item.INTERNAL_DATE))
-            .add("size", contains(Item.SIZE))
-            .add("envelope", contains(Item.ENVELOPE))
-            .add("body", contains(Item.BODY))
-            .add("bodyStructure", contains(Item.BODY_STRUCTURE))
+        return MoreObjects.toStringHelper(FetchData.class.getSimpleName())
+            .omitNullValues()
+            .add("items", itemToFetch)
             .add("setSeen", setSeen)
             .add("bodyElements", bodyElements)
-            .add("modSeq", contains(Item.MODSEQ))
             .add("changedSince", changedSince)
             .add("vanished", vanished)
             .toString();

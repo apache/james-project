@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.model.MessageRange;
@@ -108,11 +107,16 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     }
 
     public static String toString(IdRange[] ranges) {
-        return Optional.ofNullable(ranges)
-            .map(array -> Arrays.stream(array)
+        if (ranges == null || ranges.length == 0) {
+            return "";
+        }
+        if (ranges.length == 1) {
+            return ranges[0].asString();
+        }
+
+        return Arrays.stream(ranges)
                 .map(IdRange::asString)
-                .collect(Collectors.joining(",")))
-            .orElse("");
+                .collect(Collectors.joining(","));
     }
 
     public static IdRange from(MessageRange messageRange) {
