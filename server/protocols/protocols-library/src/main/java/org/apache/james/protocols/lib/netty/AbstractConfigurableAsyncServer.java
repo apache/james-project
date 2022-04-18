@@ -166,6 +166,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         jmxName = config.getString("jmxName", getDefaultJMXName());
         int ioWorker = config.getInt("ioWorkerCount", DEFAULT_IO_WORKER_COUNT);
         setIoWorkerCount(ioWorker);
+        Integer bossWorker = config.getInteger("bossWorkerCount", null);
+        setBossWorkerCount(Optional.ofNullable(bossWorker));
 
         executorGroup = new DefaultEventExecutorGroup(config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT),
             NamedThreadFactory.withName(jmxName));
@@ -445,7 +447,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
-        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP,
+        return new AbstractSSLAwareChannelPipelineFactory<>(getTimeout(), connectionLimit, connPerIP,
             getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
