@@ -113,8 +113,8 @@ S: \* ESEARCH \(TAG "c"\) MIN 1
 S: c OK SEARCH completed.
 
 C: d SEARCH RETURN (MIN) MODSEQ 8
-S: \* OK \[HIGHESTMODSEQ 8\] Highest
-S: \* ESEARCH \(TAG "d"\) MIN 4 MODSEQ 8
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* ESEARCH \(TAG "d"\) MIN .* MODSEQ .*
 S: d OK SEARCH completed.
 
 C: e SEARCH RETURN (MAX) FLAGGED
