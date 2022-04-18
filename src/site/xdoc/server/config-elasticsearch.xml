@@ -87,6 +87,12 @@
           <dt><strong>elasticsearch.index.name</strong></dt>
           <dd><strong>Deprecated</strong> Use <strong>elasticsearch.index.mailbox.name</strong> instead. <br/>
               Name of the mailbox index backed by the alias. It will be created if missing.</dd>
+          <dt><strong>elasticsearch.max.connections</strong></dt>
+          <dd>Maximum count of HTTP connections allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+              applies (30 connections).</dd>
+          <dt><strong>elasticsearch.max.connections.per.hosts</strong></dt>
+          <dd>Maximum count of HTTP connections per host allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+              applies (10 connections).</dd>
           <dt><strong>elasticsearch.alias.read.mailbox.name</strong></dt>
           <dd>Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
               The target of the alias is the index name configured above.</dd>

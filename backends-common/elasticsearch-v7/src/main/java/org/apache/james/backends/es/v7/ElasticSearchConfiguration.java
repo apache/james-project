@@ -307,6 +307,8 @@ public class ElasticSearchConfiguration {
         private Optional<HostScheme> hostScheme;
         private Optional<Credential> credential;
         private Optional<SSLConfiguration> sslTrustConfiguration;
+        private Optional<Integer> maxConnectionsPerHost;
+        private Optional<Integer> maxConnections;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -319,6 +321,8 @@ public class ElasticSearchConfiguration {
             hostScheme = Optional.empty();
             credential = Optional.empty();
             sslTrustConfiguration = Optional.empty();
+            maxConnectionsPerHost = Optional.empty();
+            maxConnections = Optional.empty();
         }
 
         public Builder addHost(Host host) {
@@ -356,6 +360,16 @@ public class ElasticSearchConfiguration {
 
         public Builder maxRetries(Optional<Integer> maxRetries) {
             this.maxRetries = maxRetries;
+            return this;
+        }
+
+        public Builder maxConnectionsPerHost(Optional<Integer> maxConnectionsPerHost) {
+            this.maxConnectionsPerHost = maxConnectionsPerHost;
+            return this;
+        }
+
+        public Builder maxConnections(Optional<Integer> maxConnections) {
+            this.maxConnections = maxConnections;
             return this;
         }
 
@@ -397,7 +411,7 @@ public class ElasticSearchConfiguration {
                 requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT),
                 hostScheme.orElse(DEFAULT_SCHEME),
                 credential,
-                sslTrustConfiguration.orElse(DEFAULT_SSL_TRUST_CONFIGURATION));
+                sslTrustConfiguration.orElse(DEFAULT_SSL_TRUST_CONFIGURATION), maxConnections, maxConnectionsPerHost);
         }
     }
 
@@ -420,6 +434,8 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_NB_SHARDS = "elasticsearch.nb.shards";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY = "elasticsearch.retryConnection.minDelay";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES = "elasticsearch.retryConnection.maxRetries";
+    public static final String ELASTICSEARCH_MAX_CONNECTIONS = "elasticsearch.max.connections";
+    public static final String ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS = "elasticsearch.max.connections.per.hosts";
 
     public static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     public static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
@@ -448,6 +464,8 @@ public class ElasticSearchConfiguration {
             .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
             .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
+            .maxConnections(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS, null)))
+            .maxConnectionsPerHost(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS, null)))
             .build();
     }
 
@@ -540,9 +558,11 @@ public class ElasticSearchConfiguration {
     private final HostScheme hostScheme;
     private final Optional<Credential> credential;
     private final SSLConfiguration sslConfiguration;
+    private final Optional<Integer> maxConnections;
+    private final Optional<Integer> maxConnectionsPerHost;
 
     private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
-                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration) {
+                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration, Optional<Integer> maxConnections, Optional<Integer> maxConnectionsPerHost) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -553,6 +573,8 @@ public class ElasticSearchConfiguration {
         this.hostScheme = hostScheme;
         this.credential = credential;
         this.sslConfiguration = sslConfiguration;
+        this.maxConnections = maxConnections;
+        this.maxConnectionsPerHost = maxConnectionsPerHost;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -595,6 +617,14 @@ public class ElasticSearchConfiguration {
         return sslConfiguration;
     }
 
+    public Optional<Integer> getMaxConnections() {
+        return maxConnections;
+    }
+
+    public Optional<Integer> getMaxConnectionsPerHost() {
+        return maxConnectionsPerHost;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ElasticSearchConfiguration) {
@@ -609,7 +639,9 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.requestTimeout, that.requestTimeout)
                 && Objects.equals(this.hostScheme, that.hostScheme)
                 && Objects.equals(this.credential, that.credential)
-                && Objects.equals(this.sslConfiguration, that.sslConfiguration);
+                && Objects.equals(this.sslConfiguration, that.sslConfiguration)
+                && Objects.equals(this.maxConnections, that.maxConnections)
+                && Objects.equals(this.maxConnectionsPerHost, that.maxConnectionsPerHost);
         }
         return false;
     }
@@ -617,6 +649,6 @@ public class ElasticSearchConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout,
-            hostScheme, credential, sslConfiguration);
+            hostScheme, credential, sslConfiguration, maxConnections, maxConnectionsPerHost);
     }
 }

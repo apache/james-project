@@ -34,6 +34,15 @@ You may consult the https://www.elastic.co/guide/en/elasticsearch/reference/7.10
 
 | elasticsearch.retryConnection.minDelay
 | Minimum delay between connection attempts
+
+| elasticsearch.max.connections
+| Maximum count of HTTP connections allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+applies (30 connections).
+
+| elasticsearch.max.connections.per.hosts
+| Maximum count of HTTP connections per host allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+applies (10 connections).
+
 |===
 
 === Mailbox search
