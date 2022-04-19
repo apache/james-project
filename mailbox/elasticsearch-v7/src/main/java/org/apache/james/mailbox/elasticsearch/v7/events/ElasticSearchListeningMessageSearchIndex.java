@@ -216,7 +216,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     private DocumentId indexIdFor(MailboxId mailboxId, MessageUid uid) {
-        return DocumentId.fromString(String.join(ID_SEPARATOR, mailboxId.serialize(), String.valueOf(uid.asLong())));
+        return DocumentId.fromString(mailboxId.serialize() + ID_SEPARATOR + uid.asLong());
     }
 
     private void logIfNoMessageId(SearchResult searchResult) {
