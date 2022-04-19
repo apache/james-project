@@ -49,7 +49,7 @@ public class ListingEncodingUtils {
         if (hierarchyDelimiter == Character.UNASSIGNED) {
             composer.nil();
         } else {
-            composer.quote(Character.toString(hierarchyDelimiter));
+            composer.quote(hierarchyDelimiter);
         }
     }
 

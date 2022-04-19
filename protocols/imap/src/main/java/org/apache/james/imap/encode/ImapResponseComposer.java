@@ -141,6 +141,9 @@ public interface ImapResponseComposer {
      */
     ImapResponseComposer quote(String message) throws IOException;
 
+    ImapResponseComposer quote(char message) throws IOException;
+
+
     /**
      * Compose a {@link Literal} and write it to the socket. Everything which
      * was buffered before will get written too
