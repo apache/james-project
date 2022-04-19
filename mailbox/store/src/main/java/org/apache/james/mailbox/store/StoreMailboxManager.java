@@ -723,9 +723,9 @@ public class StoreMailboxManager implements MailboxManager {
         Flux<Mailbox> baseMailboxes = mailboxMapper
             .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
         Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session)
-            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)));
-        return Flux.concat(baseMailboxes, delegatedMailboxes)
-            .distinct();
+            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
+            .filter(mailbox -> !mailbox.getUser().equals(session.getUser()));
+        return Flux.concat(baseMailboxes, delegatedMailboxes);
     }
 
     private Flux<MailboxId> accessibleMailboxIds(MultimailboxesSearchQuery.Namespace namespace, Right right, MailboxSession session) {
@@ -733,8 +733,7 @@ public class StoreMailboxManager implements MailboxManager {
         Flux<MailboxId> baseMailboxes = mailboxMapper
             .userMailboxes(session.getUser());
         Flux<MailboxId> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, namespace, right, session);
-        return Flux.concat(baseMailboxes, delegatedMailboxes)
-            .distinct();
+        return Flux.concat(baseMailboxes, delegatedMailboxes);
     }
 
     static MailboxQuery.UserBound toSingleUserQuery(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
@@ -761,6 +760,7 @@ public class StoreMailboxManager implements MailboxManager {
             return Flux.empty();
         }
         return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right)
+            .filter(mailbox -> !mailbox.getUser().equals(session.getUser()))
             .map(Mailbox::getMailboxId);
     }
 
