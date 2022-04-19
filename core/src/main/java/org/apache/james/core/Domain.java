@@ -23,6 +23,8 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
@@ -93,7 +95,9 @@ public class Domain implements Serializable {
         }
     }
 
+    @Nonnull
     private final String domainName;
+    @Nonnull
     private final String normalizedDomainName;
 
     protected Domain(String domainName) {
@@ -120,7 +124,7 @@ public class Domain implements Serializable {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(normalizedDomainName);
+        return normalizedDomainName.hashCode();
     }
 
     @Override

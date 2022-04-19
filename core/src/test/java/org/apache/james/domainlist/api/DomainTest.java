@@ -32,8 +32,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class DomainTest {
-    private static String DOMAIN_WITH_64_CHAR_PART = "abc." + "d".repeat(64) + ".com";
-
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Domain.class)
