@@ -148,9 +148,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
         LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
             mailbox.getName(),
-            mailbox.getMailboxId(),
+            mailbox.getMailboxId().serialize(),
             session.getUser().asString(),
-            message.getUid());
+            message.getUid().asLong());
 
         RoutingKey from = routingKeyFactory.from(mailbox.getMailboxId());
         DocumentId id = indexIdFor(mailbox.getMailboxId(), message.getUid());
