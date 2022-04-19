@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -54,47 +53,47 @@ public class ListingEncodingUtils {
     }
 
     private static ImmutableList<String> getNameAttributes(AbstractListingResponse response) {
-        return ImmutableList
-            .<String>builder()
-            .addAll(selectabilityAsString(response.getSelectability()))
-            .addAll(childrenAsString(response.getChildren()))
-            .addAll(mailboxAttributeAsString(response.getType()))
-            .build();
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        selectabilityAsString(response.getSelectability(), builder);
+        childrenAsString(response.getChildren(), builder);
+        mailboxAttributeAsString(response.getType(), builder);
+
+        return builder.build();
     }
 
 
-    private static List<String> selectabilityAsString(MailboxMetaData.Selectability selectability) {
+    private static ImmutableList.Builder<String> selectabilityAsString(MailboxMetaData.Selectability selectability, ImmutableList.Builder<String> builder) {
         switch (selectability) {
             case MARKED:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_MARKED);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_MARKED);
             case NOSELECT:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_NOSELECT);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_NOSELECT);
             case UNMARKED:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_UNMARKED);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_UNMARKED);
             default:
-                return ImmutableList.of();
+                return builder;
         }
     }
 
-    private static ImmutableList<String> childrenAsString(MailboxMetaData.Children children) {
+    private static ImmutableList.Builder<String> childrenAsString(MailboxMetaData.Children children, ImmutableList.Builder<String> builder) {
         switch (children) {
             case HAS_CHILDREN:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_HAS_CHILDREN);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_HAS_CHILDREN);
             case HAS_NO_CHILDREN:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_HAS_NO_CHILDREN);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_HAS_NO_CHILDREN);
             case NO_INFERIORS:
-                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_NOINFERIORS);
+                return builder.add(ImapConstants.NAME_ATTRIBUTE_NOINFERIORS);
             default:
-                return ImmutableList.of();
+                return builder;
         }
     }
 
-    private static ImmutableList<String> mailboxAttributeAsString(MailboxType type) {
+    private static ImmutableList.Builder<String> mailboxAttributeAsString(MailboxType type, ImmutableList.Builder<String> builder) {
         String attributeName = type.getAttributeName();
         if (attributeName != null) {
-            return ImmutableList.of(attributeName);
+            return builder.add(attributeName);
         }
-        return ImmutableList.of();
+        return builder;
     }
-
 }
