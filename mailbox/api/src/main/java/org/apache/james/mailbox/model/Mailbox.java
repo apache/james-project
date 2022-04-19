@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
+import java.util.Objects;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxUtil;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 /**
  * Models long term mailbox data.
@@ -137,14 +138,14 @@ public class Mailbox {
     public boolean equals(Object obj) {
         if (obj instanceof Mailbox) {
             Mailbox o = (Mailbox)obj;
-            return Objects.equal(id, o.getMailboxId());
+            return Objects.equals(id, o.getMailboxId());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(path);
+        return path.hashCode();
     }
 
     @Override

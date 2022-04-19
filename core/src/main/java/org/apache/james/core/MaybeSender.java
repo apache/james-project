@@ -112,7 +112,7 @@ public class MaybeSender {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(mailAddress);
+        return Objects.hashCode(mailAddress);
     }
 
     @Override
