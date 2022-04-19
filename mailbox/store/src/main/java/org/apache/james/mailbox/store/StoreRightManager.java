@@ -189,6 +189,9 @@ public class StoreRightManager implements RightManager {
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) {
+        if (mailbox.getUser().equals(session.getUser())) {
+            return true;
+        }
         Rfc4314Rights rights = myRights(mailbox, session);
 
         /*
