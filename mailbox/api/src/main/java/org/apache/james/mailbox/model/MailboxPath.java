@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
@@ -137,14 +136,22 @@ public class MailboxPath {
         if (name == null) {
             return ImmutableList.of(this);
         }
+        List<MailboxPath> levels = getParents(delimiter);
+        levels.add(this);
+        return levels;
+    }
+
+    public List<MailboxPath> getParents(char delimiter) {
+        if (name == null) {
+            return ImmutableList.of();
+        }
         ArrayList<MailboxPath> levels = new ArrayList<>();
         int index = name.indexOf(delimiter);
         while (index >= 0) {
-            final String levelname = name.substring(0, index);
-            levels.add(new MailboxPath(namespace, user, levelname));
+            String levelName = name.substring(0, index);
+            levels.add(new MailboxPath(namespace, user, levelName));
             index = name.indexOf(delimiter, ++index);
         }
-        levels.add(this);
         return levels;
     }
 
@@ -245,9 +252,5 @@ public class MailboxPath {
 
     public boolean hasParent(char delimiter) {
         return name.indexOf(delimiter) >= 0;
-    }
-
-    public Stream<MailboxPath> getParents(char delimiter) {
-        return getHierarchyLevels(delimiter).stream().filter(p -> !p.equals(this));
     }
 }
