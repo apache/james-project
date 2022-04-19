@@ -238,6 +238,14 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         return this;
     }
 
+    @Override
+    public ImapResponseComposer quote(char message) throws IOException {
+        space();
+        buffer.write(BYTE_DQUOTE);
+        buffer.write(message);
+        buffer.write(BYTE_DQUOTE);
+        return this;
+    }
 
     private void closeBracket(byte bracket) throws IOException {
         buffer.write(bracket);
