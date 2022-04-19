@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.event;
 
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -117,9 +116,8 @@ public class PropagateLookupRightListener implements EventListener.GroupEventLis
     }
 
     private Stream<MailboxPath> listAncestors(MailboxSession mailboxSession, MailboxPath mailboxPath) {
-        return mailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter())
-            .stream()
-            .filter(Predicate.not(Predicate.isEqual(mailboxPath)));
+        return mailboxPath.getParents(mailboxSession.getPathDelimiter())
+            .stream();
     }
 
     private void applyLookupRight(MailboxSession session, MailboxPath mailboxPath, Entry entry) {

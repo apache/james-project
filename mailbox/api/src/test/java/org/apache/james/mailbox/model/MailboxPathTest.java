@@ -32,7 +32,6 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -379,14 +378,14 @@ class MailboxPathTest {
     @Test
     void getParentShouldReturnParents() {
         MailboxPath mailboxPath = MailboxPath.forUser(USER, "inbox.folder.subfolder");
-        assertThat(mailboxPath.getParents('.').collect(ImmutableList.toImmutableList()))
+        assertThat(mailboxPath.getParents('.'))
             .containsExactly(MailboxPath.forUser(USER, "inbox"), MailboxPath.forUser(USER, "inbox.folder"));
     }
 
     @Test
     void getParentShouldReturnEmptyWhenTopLevelMailbox() {
         MailboxPath mailboxPath = MailboxPath.forUser(USER, "inbox");
-        assertThat(mailboxPath.getParents('.').collect(ImmutableList.toImmutableList()))
+        assertThat(mailboxPath.getParents('.'))
             .isEmpty();
     }
 }

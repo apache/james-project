@@ -99,7 +99,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -693,11 +692,10 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private Map<MailboxPath, Boolean> parentMap(List<Mailbox> mailboxes, MailboxSession session) {
-        return mailboxes.stream().map(Mailbox::generateAssociatedPath)
-            .flatMap(path -> {
-                List<MailboxPath> hierarchyLevels = path.getHierarchyLevels(session.getPathDelimiter());
-                return Lists.reverse(hierarchyLevels).stream().skip(1);
-            })
+        return mailboxes.stream()
+            .flatMap(mailbox -> mailbox.generateAssociatedPath()
+                .getParents(session.getPathDelimiter())
+                .stream())
             .collect(ImmutableMap.toImmutableMap(
                 Function.identity(),
                 any -> true,

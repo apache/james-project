@@ -142,7 +142,7 @@ public class CreateMissingParentsTask implements Task {
             Set<MailboxPath> parentPaths = mailboxPaths
                 .stream()
                 .filter(path -> path.hasParent(delimiter))
-                .flatMap(path -> path.getParents(delimiter))
+                .flatMap(path -> path.getParents(delimiter).stream())
                 .collect(ImmutableSet.toImmutableSet());
 
             return Flux.fromIterable(parentPaths)
