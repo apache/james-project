@@ -90,6 +90,7 @@
         <module>mailet/remote-delivery-integration-testing</module>
 
         <module>mailrepository/mailrepository-api</module>
+        <module>mailrepository/mailrepository-blob</module>
         <module>mailrepository/mailrepository-cassandra</module>
         <module>mailrepository/mailrepository-memory</module>
 
