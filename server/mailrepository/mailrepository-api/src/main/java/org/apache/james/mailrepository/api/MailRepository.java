@@ -63,29 +63,21 @@ public interface MailRepository {
     Mail retrieve(MailKey key) throws MessagingException;
 
     /**
-     * Removes a specified message
-     * 
-     * @param mail
-     *            the message to be removed from the repository
-     */
-    void remove(Mail mail) throws MessagingException;
-
-    /**
-     * Remove an Collection of mails from the repository
-     * 
-     * @param mails
-     *            The Collection of <code>MailImpl</code>'s to delete
-     * @since 2.2.0
-     */
-    void remove(Collection<Mail> mails) throws MessagingException;
-
-    /**
      * Removes a message identified by key.
      * 
      * @param key
      *            the key of the message to be removed from the repository
      */
     void remove(MailKey key) throws MessagingException;
+
+    /**
+     * Removes some messages identified by keys.
+     */
+    default void remove(Collection<MailKey> keys) throws MessagingException {
+        for (MailKey key: keys) {
+            remove(key);
+        }
+    }
 
     /**
      * Removes all mails from this repository

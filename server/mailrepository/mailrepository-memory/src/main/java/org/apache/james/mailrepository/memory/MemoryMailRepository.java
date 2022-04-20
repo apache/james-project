@@ -19,7 +19,6 @@
 
 package org.apache.james.mailrepository.memory;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,16 +54,6 @@ public class MemoryMailRepository implements MailRepository {
         return Optional.ofNullable(mails.get(key))
             .map(this::cloneMail)
             .orElse(null);
-    }
-
-    @Override
-    public void remove(Mail mail) {
-        remove(MailKey.forMail(mail));
-    }
-
-    @Override
-    public void remove(Collection<Mail> toRemove) {
-        toRemove.stream().map(MailKey::forMail).forEach(this::remove);
     }
 
     @Override

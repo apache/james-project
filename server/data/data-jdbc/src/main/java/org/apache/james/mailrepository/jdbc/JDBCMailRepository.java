@@ -34,7 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -660,18 +659,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             .stream()
             .map(entry -> Attribute.convertToAttribute(entry.getKey(), entry.getValue()))
             .collect(ImmutableList.toImmutableList());
-    }
-
-    @Override
-    public void remove(Mail mail) throws MessagingException {
-        remove(MailKey.forMail(mail));
-    }
-
-    @Override
-    public void remove(Collection<Mail> mails) throws MessagingException {
-        for (Mail mail : mails) {
-            remove(mail);
-        }
     }
 
     @Override
