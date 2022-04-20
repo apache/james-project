@@ -49,6 +49,9 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
+
+import reactor.core.publisher.Mono;
 
 class NamespaceProcessorTest {
     private static final String SHARED_PREFIX = "SharedPrefix";
@@ -68,6 +71,10 @@ class NamespaceProcessorTest {
         sharedSpaces = new ArrayList<>();
         statusResponseStub = mock(StatusResponseFactory.class);
         mailboxManagerStub = mock(MailboxManager.class);
+        when(mailboxManagerStub.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         subject = new NamespaceProcessor(mailboxManagerStub, statusResponseStub, new RecordingMetricFactory());
         imapSession = spy(new FakeImapSession());
         mailboxSession = mock(MailboxSession.class);

@@ -21,9 +21,11 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -38,6 +40,9 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
+
+import reactor.core.publisher.Mono;
 
 class SetQuotaProcessorTest {
     private SetQuotaProcessor testee;
@@ -50,7 +55,12 @@ class SetQuotaProcessorTest {
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         imapSession = new FakeImapSession();
         mockedResponder = mock(ImapProcessor.Responder.class);
-        testee = new SetQuotaProcessor(mock(MailboxManager.class), statusResponseFactory, new RecordingMetricFactory());
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
+        testee = new SetQuotaProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
     }

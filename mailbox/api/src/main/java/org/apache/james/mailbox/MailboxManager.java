@@ -373,4 +373,14 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    default <T> Mono<T> manageProcessing(Mono<T> toBeWrapped, MailboxSession mailboxSession) {
+        return Mono.<T, Runnable>using(
+            () -> {
+                startProcessingRequest(mailboxSession);
+                return () -> endProcessingRequest(mailboxSession);
+            },
+            c -> toBeWrapped,
+            Runnable::run);
+    }
 }

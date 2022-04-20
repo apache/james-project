@@ -19,6 +19,9 @@
 package org.apache.james.imap.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
@@ -30,6 +33,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
+
+import reactor.core.publisher.Mono;
 
 class CapabilityProcessorTest {
     private CapabilityProcessor testee;
@@ -37,7 +43,11 @@ class CapabilityProcessorTest {
     @BeforeEach
     void setup() {
         StatusResponseFactory statusResponseFactory = null;
-        MailboxManager mailboxManager = null;
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         MetricFactory metricFactory = null;
         testee = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
     }
