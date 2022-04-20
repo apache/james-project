@@ -291,15 +291,6 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
         }
     }
 
-    @Override
-    public void remove(Mail mail) throws MessagingException {
-        remove(MailKey.forMail(mail));
-    }
-
-    @Override
-    public void remove(Collection<Mail> mails) throws MessagingException {
-        mails.forEach(Throwing.<Mail>consumer(this::remove).sneakyThrow());
-    }
 
     @Override
     public void remove(MailKey key) throws MessagingException {

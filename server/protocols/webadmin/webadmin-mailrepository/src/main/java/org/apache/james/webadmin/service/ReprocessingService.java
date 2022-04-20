@@ -86,12 +86,12 @@ public class ReprocessingService {
             this.configuration = configuration;
         }
 
-        private void reprocess(MailRepository repository, Mail mail) {
+        private void reprocess(MailRepository repository, Mail mail, MailKey key) {
             try {
                 configuration.getTargetProcessor().ifPresent(mail::setState);
                 mailQueue.enQueue(mail);
                 if (configuration.isConsume()) {
-                    repository.remove(mail);
+                    repository.remove(key);
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Error encountered while reprocessing mail " + mail.getName(), e);
@@ -127,9 +127,11 @@ public class ReprocessingService {
                 .forEach(Throwing.consumer((MailRepository repository) ->
                     Iterators.toStream(repository.list())
                         .peek(keyListener)
-                        .map(Throwing.function(key -> Optional.ofNullable(repository.retrieve(key))))
-                        .flatMap(Optional::stream)
-                        .forEach(mail -> reprocessor.reprocess(repository, mail))));
+                        .forEach(Throwing.consumer(key ->
+                                Optional.ofNullable(repository.retrieve(key))
+                                        .ifPresent(mail -> reprocessor.reprocess(repository, mail, key))
+                        ))
+                ));
         }
     }
 
@@ -143,7 +145,7 @@ public class ReprocessingService {
                 .findFirst()
                 .orElseThrow(() -> new MissingKeyException(key));
 
-            reprocessor.reprocess(mailPair.getKey(), mailPair.getValue());
+            reprocessor.reprocess(mailPair.getKey(), mailPair.getValue(), key);
         }
     }
 
