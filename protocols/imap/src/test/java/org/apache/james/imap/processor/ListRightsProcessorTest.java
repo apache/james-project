@@ -56,6 +56,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Mono;
 
@@ -84,6 +85,10 @@ class ListRightsProcessorTest {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         subject = new ListRightsProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);

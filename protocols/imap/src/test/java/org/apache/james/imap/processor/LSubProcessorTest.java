@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -47,8 +48,10 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class LSubProcessorTest {
 
@@ -95,7 +98,12 @@ class LSubProcessorTest {
         responderImpl = responder;
         manager =  mock(SubscriptionManager.class);
         mailboxSession = MailboxSessionUtil.create(USER);
-        processor = new LSubProcessor(mock(MailboxManager.class), manager, serverResponseFactory, new RecordingMetricFactory());
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
+        processor = new LSubProcessor(mailboxManager, manager, serverResponseFactory, new RecordingMetricFactory());
         session.setMailboxSession(mailboxSession);
     }
 

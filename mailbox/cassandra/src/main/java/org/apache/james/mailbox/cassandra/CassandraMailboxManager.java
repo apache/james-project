@@ -41,6 +41,8 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Cassandra implementation of {@link StoreMailboxManager}
  */
@@ -109,4 +111,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getThreadIdGuessingAlgorithm());
     }
 
+    @Override
+    public <T> Mono<T> manageProcessing(Mono<T> toBeWrapped, MailboxSession mailboxSession) {
+        return toBeWrapped;
+    }
 }

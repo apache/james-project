@@ -62,6 +62,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -93,6 +94,10 @@ class GetQuotaRootProcessorTest {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
+        when(mockedMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         MessageManager messageManager = mock(MessageManager.class);
         when(mockedMailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(Mono.just(messageManager));
@@ -119,8 +124,7 @@ class GetQuotaRootProcessorTest {
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
-        verify(mockedMailboxManager, times(1)).startProcessingRequest(mailboxSession);
-        verify(mockedMailboxManager, times(1)).endProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager).manageProcessing(any(), any());
 
         ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
         verify(mockedResponder, times(4)).respond(responseCaptor.capture());
@@ -142,8 +146,7 @@ class GetQuotaRootProcessorTest {
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
-        verify(mockedMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockedMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager).manageProcessing(any(), any());
 
         ArgumentCaptor<StatusResponse> responseCaptor = ArgumentCaptor.forClass(StatusResponse.class);
         verify(mockedResponder, only()).respond(responseCaptor.capture());
@@ -163,8 +166,7 @@ class GetQuotaRootProcessorTest {
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
-        verify(mockedMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockedMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager).manageProcessing(any(), any());
 
         ArgumentCaptor<StatusResponse> responseCaptor = ArgumentCaptor.forClass(StatusResponse.class);
         verify(mockedResponder, only()).respond(responseCaptor.capture());

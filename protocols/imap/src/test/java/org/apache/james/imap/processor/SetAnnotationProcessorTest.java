@@ -55,8 +55,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 class SetAnnotationProcessorTest {
     private static final int FIRST_ELEMENT_INDEX = 0;
@@ -76,6 +79,10 @@ class SetAnnotationProcessorTest {
     private void initAndMockData() {
         okResponse = mock(StatusResponse.class);
         mockMailboxManager = mock(MailboxManager.class);
+        when(mockMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         imapSession = new FakeImapSession();

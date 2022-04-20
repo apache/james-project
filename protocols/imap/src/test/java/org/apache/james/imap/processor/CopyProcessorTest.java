@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.Lists;
 
@@ -73,6 +74,10 @@ class CopyProcessorTest {
     @BeforeEach
     void setUp() {
         mockMailboxManager = mock(MailboxManager.class);
+        when(mockMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         imapSession = new FakeImapSession();
@@ -106,8 +111,7 @@ class CopyProcessorTest {
 
         testee.process(copyRequest, mockResponder, imapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).manageProcessing(any(), any());
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockMailboxManager).getMailbox(INBOX, mailboxSession);
         verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, INBOX, mailboxSession);
@@ -138,8 +142,7 @@ class CopyProcessorTest {
 
         testee.process(copyRequest, mockResponder, imapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).manageProcessing(any(), any());
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockMailboxManager).getMailbox(INBOX, mailboxSession);
         verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, INBOX, mailboxSession);
@@ -166,8 +169,7 @@ class CopyProcessorTest {
 
         testee.process(copyRequest, mockResponder, imapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).manageProcessing(any(), any());
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockResponder).respond(noResponse);
         verifyNoMoreInteractions(mockMailboxManager, mockResponder);
@@ -190,8 +192,7 @@ class CopyProcessorTest {
 
         testee.process(copyRequest, mockResponder, imapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).manageProcessing(any(), any());
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockResponder).respond(noResponse);
         verifyNoMoreInteractions(mockMailboxManager, mockResponder);

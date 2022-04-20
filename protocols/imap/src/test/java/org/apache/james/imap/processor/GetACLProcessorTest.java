@@ -51,6 +51,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Mono;
 
@@ -76,6 +77,10 @@ class GetACLProcessorTest {
     public void setUp() throws Exception {
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         subject = new GetACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);

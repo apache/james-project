@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -69,6 +70,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -124,6 +126,10 @@ public class SearchProcessorTest {
         statusResponse = mock(StatusResponse.class);
         mailbox = mock(MessageManager.class);
         mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         mailboxSession = MailboxSessionUtil.create(USER);
         selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getMailboxId()).thenReturn(mailboxId);

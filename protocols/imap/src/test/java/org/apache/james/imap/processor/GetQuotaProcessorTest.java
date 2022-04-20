@@ -59,6 +59,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -92,6 +93,10 @@ class GetQuotaProcessorTest {
         when(mockedQuotaRootResolver.fromString(eq(QUOTA_ROOT.getValue()))).thenReturn(QUOTA_ROOT);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
+        when(mockedMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return (Mono) args[0];
+        });
         MessageManager messageManager = mock(MessageManager.class);
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
