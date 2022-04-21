@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api;
 
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -62,14 +63,20 @@ public class ImapCommand {
 
     private final Validity validity;
     private final String name;
+    private final byte[] nameAsBytes;
 
     private ImapCommand(Validity validity, String name) {
         this.validity = validity;
         this.name = name;
+        this.nameAsBytes = name.getBytes(StandardCharsets.US_ASCII);
     }
 
     public String getName() {
         return name;
+    }
+
+    public byte[] getNameAsBytes() {
+        return nameAsBytes;
     }
 
     public boolean validForState(ImapSessionState state) {

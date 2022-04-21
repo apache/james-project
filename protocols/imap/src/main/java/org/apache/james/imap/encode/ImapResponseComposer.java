@@ -84,6 +84,8 @@ public interface ImapResponseComposer {
      */
     ImapResponseComposer message(String message) throws IOException;
 
+    ImapResponseComposer message(byte[] message) throws IOException;
+
     /**
      * Write the message of type <code>Long</code>
      * 

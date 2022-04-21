@@ -21,6 +21,7 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -51,7 +52,7 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         
         composer.untagged().message("ESEARCH").openParen().message("TAG").quote(tag.asString()).closeParen();
         if (useUid) {
-            composer.message("UID");
+            composer.message(ImapConstants.UID);
         }
         if (min > -1 && options.contains(SearchResultOption.MIN)) {
             composer.message(SearchResultOption.MIN.name()).message(min);
@@ -75,7 +76,7 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         //
         // see RFC4731 3.2.  Interaction with CONDSTORE extension
         if (highestModSeq != null) {
-            composer.message("MODSEQ");
+            composer.message(ImapConstants.FETCH_MODSEQ);
             composer.message(highestModSeq.asLong());
         }
         composer.end();

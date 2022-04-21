@@ -215,5 +215,12 @@ public class FastByteArrayOutputStream extends OutputStream {
         }
         buf[count++] = (byte) oneByte;
     }
+
+    public void write(byte oneByte) {
+        if (count == buf.length) {
+            expand(1);
+        }
+        buf[count++] = oneByte;
+    }
 }
 

@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -33,9 +34,9 @@ public class ListingEncodingUtils {
 
     public static void encodeListingResponse(ImapCommand command, ImapResponseComposer composer, AbstractListingResponse response) throws IOException {
         composer.untagged();
-        composer.message(command.getName());
+        composer.message(command.getNameAsBytes());
         composer.openParen();
-        for (String attribute : getNameAttributes(response)) {
+        for (byte[] attribute : getNameAttributes(response)) {
             composer.message(attribute);
         }
         composer.closeParen();
@@ -52,8 +53,8 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static ImmutableList<String> getNameAttributes(AbstractListingResponse response) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
+    private static ImmutableList<byte[]> getNameAttributes(AbstractListingResponse response) {
+        ImmutableList.Builder<byte[]> builder = ImmutableList.builder();
 
         selectabilityAsString(response.getSelectability(), builder);
         childrenAsString(response.getChildren(), builder);
@@ -63,7 +64,7 @@ public class ListingEncodingUtils {
     }
 
 
-    private static ImmutableList.Builder<String> selectabilityAsString(MailboxMetaData.Selectability selectability, ImmutableList.Builder<String> builder) {
+    private static ImmutableList.Builder<byte[]> selectabilityAsString(MailboxMetaData.Selectability selectability, ImmutableList.Builder<byte[]> builder) {
         switch (selectability) {
             case MARKED:
                 return builder.add(ImapConstants.NAME_ATTRIBUTE_MARKED);
@@ -76,7 +77,7 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static ImmutableList.Builder<String> childrenAsString(MailboxMetaData.Children children, ImmutableList.Builder<String> builder) {
+    private static ImmutableList.Builder<byte[]> childrenAsString(MailboxMetaData.Children children, ImmutableList.Builder<byte[]> builder) {
         switch (children) {
             case HAS_CHILDREN:
                 return builder.add(ImapConstants.NAME_ATTRIBUTE_HAS_CHILDREN);
@@ -89,10 +90,10 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static ImmutableList.Builder<String> mailboxAttributeAsString(MailboxType type, ImmutableList.Builder<String> builder) {
+    private static ImmutableList.Builder<byte[]> mailboxAttributeAsString(MailboxType type, ImmutableList.Builder<byte[]> builder) {
         String attributeName = type.getAttributeName();
         if (attributeName != null) {
-            return builder.add(attributeName);
+            return builder.add(attributeName.getBytes(StandardCharsets.US_ASCII));
         }
         return builder;
     }
