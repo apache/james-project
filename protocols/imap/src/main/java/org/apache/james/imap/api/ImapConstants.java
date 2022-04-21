@@ -19,27 +19,29 @@
 
 package org.apache.james.imap.api;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import org.apache.james.imap.api.message.Capability;
 
 public interface ImapConstants {
     // Basic response types
     String OK = "OK";
 
-    String NO = "NO";
+    byte[] NO = "NO".getBytes(US_ASCII);
 
     String BAD = "BAD";
 
     String BYE = "BYE";
 
-    String UNTAGGED = "*";
+    byte UNTAGGED = 0x2A; // *
 
-    String CONTINUATION = "+";
+    byte CONTINUATION = 0x2B; // +
 
-    String SP = " ";
+    byte SP = 0x20;
 
-    String NIL = "NIL";
+    byte[] NIL = "NIL".getBytes(US_ASCII);
 
-    String UID = "UID";
+    byte[] UID = "UID".getBytes(US_ASCII);
 
     byte BYTE_OPENING_PARENTHESIS = 0x28;
 
@@ -131,9 +133,9 @@ public interface ImapConstants {
 
     String RFC822_MESSAGE_ID = "Message-ID";
 
-    String NAME_ATTRIBUTE_HAS_CHILDREN = "\\HasChildren";
+    byte[] NAME_ATTRIBUTE_HAS_CHILDREN = "\\HasChildren".getBytes(US_ASCII);
 
-    String NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren";
+    byte[] NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren".getBytes(US_ASCII);
 
 
     char BACK_SLASH = '\\';
@@ -207,13 +209,13 @@ public interface ImapConstants {
 
     String ANNOTATION_RESPONSE_NAME = "METADATA";
 
-    String NAME_ATTRIBUTE_NOINFERIORS = "\\Noinferiors";
+    byte[] NAME_ATTRIBUTE_NOINFERIORS = "\\Noinferiors".getBytes(US_ASCII);
 
-    String NAME_ATTRIBUTE_NOSELECT = "\\Noselect";
+    byte[] NAME_ATTRIBUTE_NOSELECT = "\\Noselect".getBytes(US_ASCII);
 
-    String NAME_ATTRIBUTE_MARKED = "\\Marked";
+    byte[] NAME_ATTRIBUTE_MARKED = "\\Marked".getBytes(US_ASCII);
 
-    String NAME_ATTRIBUTE_UNMARKED = "\\Unmarked";
+    byte[] NAME_ATTRIBUTE_UNMARKED = "\\Unmarked".getBytes(US_ASCII);
 
     String FETCH_RFC822 = "RFC822";
 
@@ -221,13 +223,14 @@ public interface ImapConstants {
 
     String FETCH_RFC822_TEXT = "RFC822.TEXT";
 
-    String FETCH_BODY_STRUCTURE = "BODYSTRUCTURE";
+    byte[] FETCH_BODY_STRUCTURE = "BODYSTRUCTURE".getBytes(US_ASCII);
 
-    String FETCH_BODY = "BODY";
-    
-    String FETCH_MODSEQ = "MODSEQ";
+    byte[] FETCH_BODY = "BODY".getBytes(US_ASCII);
+
+    byte[] FETCH_MODSEQ = "MODSEQ".getBytes(US_ASCII);
 
     String LINE_END = "\r\n";
+    byte[] LINE_END_BYTES = LINE_END.getBytes();
     long MAX_NZ_NUMBER = 4294967295L;
     long MIN_NZ_NUMBER = 1L;
 

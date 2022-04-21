@@ -19,12 +19,14 @@
 
 package org.apache.james.imap.encode;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 
 import org.apache.james.imap.message.response.ExpungeResponse;
 
 public class ExpungeResponseEncoder implements ImapResponseEncoder<ExpungeResponse> {
-    public static final String EXPUNGE = "EXPUNGE";
+    public static final byte[] EXPUNGE = "EXPUNGE".getBytes(US_ASCII);
     private static final int NO_MESSAGE = -1;
 
     @Override

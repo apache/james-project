@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -41,7 +42,10 @@ import org.slf4j.LoggerFactory;
 
 public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchResponseEncoder.class);
-    public static final String ENVELOPE = "ENVELOPE";
+
+    private static final byte[] ENVELOPE = "ENVELOPE".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] RFC_822_SIZE = "RFC822.SIZE".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] INTERNALDATE = "INTERNALDATE".getBytes(StandardCharsets.US_ASCII);
 
     /** Disables all optional BODYSTRUCTURE extensions */
     private final boolean neverAddBodyStructureExtensions;
@@ -269,7 +273,7 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
         final Long size = fetchResponse.getSize();
         if (size != null) {
             // TODO: add method to composer
-            composer.message("RFC822.SIZE");
+            composer.message(RFC_822_SIZE);
             composer.message(size.intValue());
         }
     }
@@ -278,7 +282,7 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
         final Date internalDate = fetchResponse.getInternalDate();
         if (internalDate != null) {
             // TODO: add method to composer
-            composer.message("INTERNALDATE");
+            composer.message(INTERNALDATE);
             composer.quote(EncoderUtils.encodeDateTime(internalDate));
         }
     }

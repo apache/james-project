@@ -48,7 +48,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
     @Override
     public void encode(ImmutableStatusResponse response, ImapResponseComposer composer) throws IOException {
         final Type serverResponseType = response.getServerResponseType();
-        final String type = asString(serverResponseType);
+        final byte[] type = asString(serverResponseType);
         final ResponseCode responseCode = response.getResponseCode();
         final String code = asString(responseCode);
         final Tag tag = response.getTag();
@@ -116,11 +116,11 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
         }
     }
 
-    private String asString(StatusResponse.Type type) {
+    private byte[] asString(StatusResponse.Type type) {
         if (type == null) {
             return null;
         } else {
-            return type.getCode();
+            return type.getCodeAsBytes();
         }
     }
 }

@@ -19,12 +19,14 @@
 
 package org.apache.james.imap.encode;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 
 import org.apache.james.imap.message.response.ExistsResponse;
 
 public class ExistsResponseEncoder implements ImapResponseEncoder<ExistsResponse> {
-    public static final String EXISTS = "EXISTS";
+    public static final byte[] EXISTS = "EXISTS".getBytes(US_ASCII);
 
     @Override
     public Class<ExistsResponse> acceptableMessages() {

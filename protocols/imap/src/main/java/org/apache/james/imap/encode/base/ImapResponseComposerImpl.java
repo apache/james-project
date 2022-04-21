@@ -47,8 +47,13 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     public static final String FAILED = "failed.";
     private static final int LOWER_CASE_OFFSET = 'a' - 'A';
     public static final int DEFAULT_BUFFER_SIZE = 2048;
-    
-    
+    private static final byte[] SEEN = "\\Seen".getBytes(US_ASCII);
+    private static final byte[] RECENT = "\\Recent".getBytes(US_ASCII);
+    private static final byte[] FLAGGED = "\\Flagged".getBytes(US_ASCII);
+    private static final byte[] DRAFT = "\\Draft".getBytes(US_ASCII);
+    private static final byte[] DELETED = "\\Deleted".getBytes(US_ASCII);
+    private static final byte[] ANSWERED = "\\Answered".getBytes(US_ASCII);
+
     private final ImapResponseWriter writer;
 
     private final FastByteArrayOutputStream buffer;
@@ -77,7 +82,9 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     @Override
     public ImapResponseComposer continuationResponse(String message) throws IOException {
-        writeASCII(CONTINUATION + SP + message);
+        buffer.write(CONTINUATION);
+        buffer.write(SP);
+        writeASCII(message);
         end();
         return this;
     }
@@ -93,7 +100,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
    
     @Override
     public ImapResponseComposer untagged() throws IOException {
-        writeASCII(UNTAGGED);
+        buffer.write(UNTAGGED);
         return this;
     }
 
@@ -112,7 +119,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     private void responseCode(String responseCode) throws IOException {
         if (responseCode != null && !"".equals(responseCode)) {
-            writeASCII(" [");
+            buffer.write(BYTE_OPEN_SQUARE_BRACKET);
             writeASCII(responseCode);
             buffer.write(BYTE_CLOSE_SQUARE_BRACKET);
         }
@@ -120,7 +127,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     @Override
     public ImapResponseComposer end() throws IOException {
-        buffer.write(LINE_END.getBytes());
+        buffer.write(LINE_END_BYTES);
         writer.write(buffer.toByteArray());
         buffer.reset();
         return this;
@@ -151,22 +158,22 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         message(FLAGS);
         openParen();
         if (flags.contains(Flags.Flag.ANSWERED)) {
-            message("\\Answered");
+            message(ANSWERED);
         }
         if (flags.contains(Flags.Flag.DELETED)) {
-            message("\\Deleted");
+            message(DELETED);
         }
         if (flags.contains(Flags.Flag.DRAFT)) {
-            message("\\Draft");
+            message(DRAFT);
         }
         if (flags.contains(Flags.Flag.FLAGGED)) {
-            message("\\Flagged");
+            message(FLAGGED);
         }
         if (flags.contains(Flags.Flag.RECENT)) {
-            message("\\Recent");
+            message(RECENT);
         }
         if (flags.contains(Flags.Flag.SEEN)) {
-            message("\\Seen");
+            message(SEEN);
         }
         
         String[] userFlags = flags.getUserFlags();
@@ -184,6 +191,13 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
     @Override
+    public ImapResponseComposer message(byte[] message) throws IOException {
+        space();
+        buffer.write(message);
+        return this;
+    }
+
+    @Override
     public ImapResponseComposer quoteUpperCaseAscii(String message) throws IOException {
         if (message == null) {
             nil();
@@ -192,7 +206,6 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         }
         return this;
     }
-
 
     private void writeASCII(String string) throws IOException {
         buffer.write(string.getBytes(US_ASCII));
@@ -213,7 +226,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     @Override
     public ImapResponseComposer commandName(ImapCommand command) throws IOException {
-        return message(command.getName());
+        return message(command.getNameAsBytes());
     }
 
     @Override
@@ -272,7 +285,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         if (skipNextSpace) {
             skipNextSpace = false;
         } else {
-            buffer.write(SP.getBytes());
+            buffer.write(SP);
         }
     }
 

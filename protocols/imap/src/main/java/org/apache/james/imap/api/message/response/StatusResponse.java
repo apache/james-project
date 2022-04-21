@@ -20,6 +20,7 @@
 package org.apache.james.imap.api.message.response;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -113,9 +114,15 @@ public interface StatusResponse extends ImapResponseMessage {
         BYE("BYE");
 
         private final String code;
+        private final byte[] codeAsBytes;
 
         Type(String code) {
             this.code = code;
+            codeAsBytes = code.getBytes(StandardCharsets.US_ASCII);
+        }
+
+        public byte[] getCodeAsBytes() {
+            return codeAsBytes;
         }
 
         public final String getCode() {
