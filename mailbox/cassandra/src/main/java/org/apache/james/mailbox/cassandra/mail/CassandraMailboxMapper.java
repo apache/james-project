@@ -261,7 +261,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public Flux<Mailbox> list() {
         return performReadRepair(mailboxDAO.retrieveAllMailboxes())
-            .flatMap(this::toMailboxWithAcl, CONCURRENCY);
+            .flatMap(this::addAcl, CONCURRENCY);
     }
 
     @Override
@@ -274,15 +274,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return aclMapper.setACL(cassandraId, mailboxACL);
-    }
-
-    private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {
-        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return retrieveAcl(cassandraId)
-            .map(acl -> {
-                mailbox.setACL(acl);
-                return mailbox;
-            });
     }
 
     @Override
