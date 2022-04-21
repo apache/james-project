@@ -183,14 +183,15 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             // we can't for whatever reason find the message so
             // just skip it and log it to debug
             LOGGER.debug("Unable to find message with uid {}", result.getComposedMessageId().getUid(), e);
-            return Mono.empty();
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Unable to find message with uid {}", result.getComposedMessageId().getUid(), e))
+                .then(Mono.empty());
         } catch (MailboxException e) {
             // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
             // So we just skip it
             //
             // See IMAP-347
-            LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getComposedMessageId().getUid(), e);
-            return Mono.empty();
+            return ReactorUtils.logAsMono(() -> LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getComposedMessageId().getUid(), e))
+                .then(Mono.empty());
         }
     }
 
@@ -200,15 +201,15 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         } catch (MessageRangeException e) {
             // we can't for whatever reason find the message so
             // just skip it and log it to debug
-            LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
-            return Mono.empty();
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Unable to find message with uid {}", result.getUid(), e))
+                .then(Mono.empty());
         } catch (MailboxException e) {
             // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
             // So we just skip it
             //
             // See IMAP-347
-            LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
-            return Mono.empty();
+            return ReactorUtils.logAsMono(() -> LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e))
+                .then(Mono.empty());
         }
     }
 
