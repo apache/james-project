@@ -96,7 +96,6 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             boolean useUids = request.isUseUids();
             boolean omitExpunged = (!useUids);
             return getSelectedMailboxReactive(session)
-                .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
                 .flatMap(Throwing.function(mailbox -> performUidSearch(mailbox, query, msession)
                     .flatMap(uids -> computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids)
                         .doOnNext(highestModSeq -> {
