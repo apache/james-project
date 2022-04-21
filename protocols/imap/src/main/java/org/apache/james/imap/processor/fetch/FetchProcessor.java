@@ -23,9 +23,11 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.IdRange;
@@ -47,7 +49,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
-import org.apache.james.util.MemoizedSupplier;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +72,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         IdRange[] idSet = request.getIdSet();
         FetchData fetch = computeFetchData(request, session);
         long changedSince = fetch.getChangedSince();
+        final MailboxSession mailboxSession = session.getMailboxSession();
 
         return getSelectedMailboxReactive(session)
             .flatMap(Throwing.<MessageManager, Mono<Void>>function(mailbox -> {
@@ -83,38 +86,19 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
                     return Mono.empty();
                 }
-                final MailboxSession mailboxSession = session.getMailboxSession();
 
-                MemoizedSupplier<MailboxMetaData> metaData = MemoizedSupplier.of(Throwing.supplier(
-                    () -> mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
-                    .sneakyThrow());
-                if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
+                boolean constoreCommand = fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ);
+                Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
+                if (constoreCommand && !enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
                     // Enable CONDSTORE as this is a CONDSTORE enabling command
-                    condstoreEnablingCommand(session, responder, metaData.get(), true);
+                    return mailbox.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                        .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, true))
+                        .flatMap(Throwing.<MailboxMetaData, Mono<Void>>function(
+                            any -> doFetch(request, responder, useUids, idSet, fetch, mailboxSession, mailbox, vanished, session))
+                            .sneakyThrow());
                 }
 
-                List<MessageRange> ranges = new ArrayList<>();
-
-                for (IdRange range : idSet) {
-                    MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
-                    if (messageSet != null) {
-                        MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
-                        MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
-                        ranges.add(batchedMessageSet);
-                    }
-                }
-
-                if (vanished) {
-                    // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses.
-                    //       If we do so we could prolly save one mailbox access which should give use some more speed up
-                    respondVanished(session.getSelected(), ranges, responder);
-                }
-                boolean omitExpunged = (!useUids);
-                return processMessageRanges(session, mailbox, ranges, fetch, mailboxSession, responder)
-                    // Don't send expunge responses if FETCH is used to trigger this
-                    // processor. See IMAP-284
-                    .then(unsolicitedResponses(session, responder, omitExpunged, useUids))
-                    .then(Mono.fromRunnable(() -> okComplete(request, responder)));
+                return doFetch(request, responder, useUids, idSet, fetch, mailboxSession, mailbox, vanished, session);
             }).sneakyThrow())
             .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e)))
             .onErrorResume(MessageRangeException.class, e -> {
@@ -127,6 +111,31 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 return Mono.empty();
             })
             .then();
+    }
+
+    private Mono<Void> doFetch(FetchRequest request, Responder responder, boolean useUids, IdRange[] idSet, FetchData fetch, MailboxSession mailboxSession, MessageManager mailbox, boolean vanished, ImapSession session) throws MailboxException {
+        List<MessageRange> ranges = new ArrayList<>();
+
+        for (IdRange range : idSet) {
+            MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
+            if (messageSet != null) {
+                MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
+                MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
+                ranges.add(batchedMessageSet);
+            }
+        }
+
+        if (vanished) {
+            // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses.
+            //       If we do so we could prolly save one mailbox access which should give use some more speed up
+            respondVanished(session.getSelected(), ranges, responder);
+        }
+        boolean omitExpunged = (!useUids);
+        return processMessageRanges(session, mailbox, ranges, fetch, mailboxSession, responder)
+            // Don't send expunge responses if FETCH is used to trigger this
+            // processor. See IMAP-284
+            .then(unsolicitedResponses(session, responder, omitExpunged, useUids))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     private FetchData computeFetchData(FetchRequest request, ImapSession session) {
