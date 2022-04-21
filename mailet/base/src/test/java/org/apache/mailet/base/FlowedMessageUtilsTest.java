@@ -19,7 +19,6 @@
 
 package org.apache.mailet.base;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -107,7 +106,6 @@ public class FlowedMessageUtilsTest {
                 "Some other text");
     }
 
-    @Disabled("Currently fails due to a bug in FlowedMessageUtils")
     @Test
     void deflowWithQuotedTextEndingInSpaceFollowedByEmptyLine() {
         String input = "> Quoted \r\n" +
