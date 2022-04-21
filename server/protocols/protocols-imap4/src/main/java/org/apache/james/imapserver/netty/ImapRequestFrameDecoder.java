@@ -38,7 +38,6 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Iterables;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -81,7 +80,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     @Override
     @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        ChannelInboundHandlerAdapter override = Iterables.getFirst(behaviourOverrides, null);
+        ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
             override.channelRead(ctx, in);
             return;
