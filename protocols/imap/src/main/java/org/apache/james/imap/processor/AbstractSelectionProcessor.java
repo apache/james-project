@@ -429,8 +429,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             if (capability.equals(ImapConstants.SUPPORTS_CONDSTORE) || capability.equals(ImapConstants.SUPPORTS_QRESYNC)) {
                 if (sm != null) {
                     boolean send = true;
-                    return getSelectedMailboxReactive(session)
-                        .switchIfEmpty(Mono.error(() -> new EnableException("Unable to enable " + capability.asString(), new MailboxException("Session not in SELECTED state"))))
+                    return getSelectedMailboxReactive(session,
+                            Mono.error(() -> new EnableException("Unable to enable " + capability.asString(), new MailboxException("Session not in SELECTED state"))))
                         .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(false, session.getMailboxSession(), FetchGroup.NO_COUNT)))
                         .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, send))
                         .then();

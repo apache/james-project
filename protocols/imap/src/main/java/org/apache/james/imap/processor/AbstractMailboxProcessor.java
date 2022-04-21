@@ -419,12 +419,15 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 .sneakyThrow());
     }
 
-    protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session) {
+    protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session, Mono<MessageManager> ifEmpty) {
         return Optional.ofNullable(session.getSelected())
-            .map(selectedMailbox -> getMailboxManager()
-                .getMailboxReactive(selectedMailbox.getMailboxId(), session.getMailboxSession()))
-            .map(Mono::from)
-            .orElse(Mono.<MessageManager>empty());
+            .map(selectedMailbox -> Mono.from(getMailboxManager()
+                .getMailboxReactive(selectedMailbox.getMailboxId(), session.getMailboxSession())))
+            .orElse(ifEmpty);
+    }
+
+    protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session) {
+        return getSelectedMailboxReactive(session, Mono.error(() -> new MailboxException("Session not in SELECTED state")));
     }
 
     /**

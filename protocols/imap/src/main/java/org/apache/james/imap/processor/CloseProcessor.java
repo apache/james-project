@@ -51,7 +51,6 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     protected Mono<Void> processRequestReactive(CloseRequest request, ImapSession session, Responder responder) {
         MailboxSession mailboxSession = session.getMailboxSession();
         return getSelectedMailboxReactive(session)
-            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
             .flatMap(Throwing.function(mailbox -> {
                 if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                     return mailbox.expungeReactive(MessageRange.all(), mailboxSession)

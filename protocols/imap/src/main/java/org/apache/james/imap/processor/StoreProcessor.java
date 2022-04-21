@@ -90,7 +90,6 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return getSelectedMailboxReactive(session)
-            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
             .flatMap(mailbox -> Flux.fromIterable(ImmutableList.copyOf(idSet))
                 .map(Throwing.<IdRange, MessageRange>function(idRange -> messageRange(selected, idRange, request.isUseUids())).sneakyThrow())
                 .concatMap(messageSet -> handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet))

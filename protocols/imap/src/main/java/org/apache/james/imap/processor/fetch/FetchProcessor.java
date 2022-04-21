@@ -72,7 +72,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         long changedSince = fetch.getChangedSince();
 
         return getSelectedMailboxReactive(session)
-            .switchIfEmpty(Mono.error(() -> new MailboxException("Session not in SELECTED state")))
             .flatMap(Throwing.<MessageManager, Mono<Void>>function(mailbox -> {
                 boolean vanished = fetch.getVanished();
                 if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
