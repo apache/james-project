@@ -196,7 +196,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
         return performReadRepair(listMailboxes(fixedNamespace, fixedUser))
             .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
-            .distinct(Mailbox::generateAssociatedPath)
             .flatMap(this::addAcl, CONCURRENCY);
     }
 
