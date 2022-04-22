@@ -59,7 +59,10 @@ public final class FlowedMessageUtils {
     public static final String RFC2646_CRLF = "\r\n";
     public static final String RFC2646_FROM = "From ";
     public static final int RFC2646_WIDTH = 78;
-    
+
+    private static final char CR = '\r';
+    private static final char LF = '\n';
+
     private FlowedMessageUtils() {
         // this class cannot be instantiated
     }
@@ -199,80 +202,141 @@ public final class FlowedMessageUtils {
     }
 
     /**
-     * Decodes a text.
+     * Encodes a text.
      */
     public static String flow(String text, boolean delSp, int width) {
+        int lastIndex = text.length() - 1;
+
         StringBuilder result = new StringBuilder();
-        String[] lines = text.split("\r\n|\n", -1);
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            boolean notempty = line.length() > 0;
-            
+        int lineStartIndex = 0;
+
+        while (lineStartIndex <= lastIndex) {
             int quoteDepth = 0;
-            while (quoteDepth < line.length() && line.charAt(quoteDepth) == RFC2646_QUOTE) {
+            while (lineStartIndex <= lastIndex && text.charAt(lineStartIndex) == RFC2646_QUOTE) {
                 quoteDepth++;
+                lineStartIndex++;
             }
-            if (quoteDepth > 0) {
-                if (quoteDepth + 1 < line.length() && line.charAt(quoteDepth) == RFC2646_SPACE) {
-                    line = line.substring(quoteDepth + 1);
-                } else {
-                    line = line.substring(quoteDepth);
+
+            if (quoteDepth > 0 && lineStartIndex + 1 <= lastIndex && text.charAt(lineStartIndex) == RFC2646_SPACE) {
+                lineStartIndex++;
+            }
+
+            // We support both LF and CRLF line endings. To cover both cases we search for LF.
+            int lineFeedIndex = text.indexOf(LF, lineStartIndex);
+            boolean lineBreakFound = lineFeedIndex != -1;
+            int lineEndIndex = lineBreakFound ? lineFeedIndex : text.length();
+            int nextLineStartIndex = lineBreakFound ? lineFeedIndex + 1 : text.length();
+
+            if (lineBreakFound && lineEndIndex > 0 && text.charAt(lineEndIndex - 1) == CR) {
+                lineEndIndex--;
+            }
+
+            // Special case: signature separator
+            if (lineEndIndex - lineStartIndex == RFC2646_SIGNATURE.length() &&
+                text.regionMatches(lineStartIndex, RFC2646_SIGNATURE, 0, RFC2646_SIGNATURE.length())
+            ) {
+                if (quoteDepth > 0) {
+                    for (int i = 0; i < quoteDepth; i++) {
+                        result.append(RFC2646_QUOTE);
+                    }
+                    result.append(RFC2646_SPACE);
+                }
+                result.append(RFC2646_SIGNATURE);
+                result.append(RFC2646_CRLF);
+
+                lineStartIndex = nextLineStartIndex;
+                continue;
+            }
+
+            // Remove trailing spaces
+            while (lineEndIndex > lineStartIndex && text.charAt(lineEndIndex - 1) == RFC2646_SPACE) {
+                lineEndIndex--;
+            }
+
+            // Special case: a quoted line without any content
+            if (lineStartIndex == lineEndIndex && quoteDepth > 0) {
+                for (int i = 0; i < quoteDepth; i++) {
+                    result.append(RFC2646_QUOTE);
                 }
             }
-            
-            while (notempty) {
-                int extra = 0;
+
+            while (lineStartIndex < lineEndIndex) {
+                int prefixLength = 0;
                 if (quoteDepth == 0) {
-                    if (line.startsWith("" + RFC2646_SPACE) || line.startsWith("" + RFC2646_QUOTE) || line.startsWith(RFC2646_FROM)) {
-                        line = "" + RFC2646_SPACE + line;
-                        extra = 1;
+                    if (text.charAt(lineStartIndex) == RFC2646_SPACE || text.charAt(lineStartIndex) == RFC2646_QUOTE ||
+                        lineEndIndex - lineStartIndex >= RFC2646_FROM.length() &&
+                            text.regionMatches(lineStartIndex, RFC2646_FROM, 0, RFC2646_FROM.length())
+                    ) {
+                        // This line needs space stuffing
+                        result.append(RFC2646_SPACE);
+                        prefixLength = 1;
                     }
                 } else {
-                    line = RFC2646_SPACE + line;
-                    for (int j = 0; j < quoteDepth; j++) {
-                        line = "" + RFC2646_QUOTE + line;
+                    for (int i = 0; i < quoteDepth; i++) {
+                        result.append(RFC2646_QUOTE);
                     }
-                    extra = quoteDepth + 1;
+                    result.append(RFC2646_SPACE);
+                    prefixLength = quoteDepth + 1;
                 }
-                
-                int j = width - 1;
-                if (j >= line.length()) {
-                    j = line.length() - 1;
+
+                int remainingWidth = width - prefixLength - 1;
+                if (delSp) {
+                    remainingWidth--;
+                }
+                if (remainingWidth < 0) {
+                    remainingWidth = 0;
+                }
+
+                int breakIndex = lineStartIndex + remainingWidth;
+                if (breakIndex >= lineEndIndex) {
+                    breakIndex = lineEndIndex;
                 } else {
-                    while (j >= extra && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) {
-                        j--;
+                    while (breakIndex >= lineStartIndex &&
+                        (delSp && isAlphaChar(text, breakIndex) || !delSp && text.charAt(breakIndex) != RFC2646_SPACE)
+                    ) {
+                        breakIndex--;
                     }
-                    if (j < extra) {
+
+                    if (breakIndex < lineStartIndex) {
                         // Not able to cut a word: skip to word end even if greater than the max width
-                        j = width - 1;
-                        while (j < line.length() - 1 && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) {
-                            j++;
+                        breakIndex = lineStartIndex + remainingWidth;
+                        while (breakIndex < lineEndIndex &&
+                            ((delSp && isAlphaChar(text, breakIndex)) ||
+                                (!delSp && text.charAt(breakIndex) != RFC2646_SPACE))
+                        ) {
+                            breakIndex++;
                         }
                     }
+
+                    breakIndex++;
+
+                    if (breakIndex >= lineEndIndex) {
+                        breakIndex = lineEndIndex;
+                    } else if (Character.isHighSurrogate(text.charAt(breakIndex - 1))) {
+                        // Don't break surrogate pairs apart
+                        breakIndex++;
+                    }
                 }
-                
-                result.append(line, 0, j + 1);
-                if (j < line.length() - 1) { 
+
+                result.append(text, lineStartIndex, breakIndex);
+
+                if (breakIndex < lineEndIndex) {
                     if (delSp) {
                         result.append(RFC2646_SPACE);
                     }
                     result.append(RFC2646_CRLF);
                 }
-                
-                line = line.substring(j + 1);
-                notempty = line.length() > 0;
+
+                lineStartIndex = breakIndex;
             }
-            
-            if (i < lines.length - 1) {
-                // NOTE: Have to trim the spaces before, otherwise it won't recognize soft-break from hard break.
-                // Deflow of flowed message will not be identical to the original.
-                while (result.length() > 0 && result.charAt(result.length() - 1) == RFC2646_SPACE) {
-                    result.deleteCharAt(result.length() - 1);
-                }
+
+            if (lineBreakFound) {
                 result.append(RFC2646_CRLF);
             }
+
+            lineStartIndex = nextLineStartIndex;
         }
-        
+
         return result.toString();
     }
     
