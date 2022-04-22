@@ -31,7 +31,6 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 
@@ -131,7 +130,7 @@ public class FakeImapSession implements ImapSession {
     }
     
     @Override
-    public boolean startTLS(ImmutableStatusResponse response) {
+    public boolean startTLS() {
         return false;
     }
 
@@ -146,7 +145,7 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public boolean startCompression(ImmutableStatusResponse response) {
+    public boolean startCompression() {
         return false;
     }
 

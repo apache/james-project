@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,11 +30,7 @@ import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.ImapResponseWriter;
-import org.apache.james.imap.encode.StatusResponseEncoder;
-import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.encode.main.DefaultLocalizer;
 import org.apache.james.imap.message.Literal;
-import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.netty.Encryption;
@@ -167,27 +162,17 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startTLS(ImmutableStatusResponse statusResponse) {
+    public boolean startTLS() {
         if (!supportStartTLS()) {
             return false;
         }
         channel.config().setAutoRead(false);
-        write(statusResponse);
 
         channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
         stopDetectingCommandInjection();
         channel.config().setAutoRead(true);
 
         return true;
-    }
-
-    private void write(ImmutableStatusResponse statusResponse) {
-        try {
-            new StatusResponseEncoder(new DefaultLocalizer()).encode(statusResponse,
-                new ImapResponseComposerImpl(new EventLoopImapResponseWriter(channel), BUFFER_SIZE));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static class EventLoopImapResponseWriter implements ImapResponseWriter {
@@ -222,13 +207,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startCompression(ImmutableStatusResponse response) {
+    public boolean startCompression() {
         if (!isCompressionSupported()) {
             return false;
         }
 
         channel.config().setAutoRead(false);
-        write(response);
         ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
         ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 

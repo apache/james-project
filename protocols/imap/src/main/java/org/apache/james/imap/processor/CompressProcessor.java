@@ -28,7 +28,6 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CompressRequest;
-import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.util.MDCBuilder;
 
@@ -60,7 +59,8 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
                     } else {
                         StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE);
 
-                        if (session.startCompression((ImmutableStatusResponse) response)) {
+                        responder.respond(response);
+                        if (session.startCompression()) {
                             session.setAttribute(COMPRESSED, true);
                         }
                     }
