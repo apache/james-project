@@ -19,7 +19,6 @@
 
 package org.apache.mailet.base;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -273,7 +272,6 @@ public class FlowedMessageUtilsTest {
         assertThat(result).isEqualTo(">> >Quoted text\r\n");
     }
 
-    @Disabled("Signature separator line is not recognized")
     @Test
     void flowWithSignature() {
         String input = "Text\r\n" +
@@ -286,7 +284,6 @@ public class FlowedMessageUtilsTest {
         assertThat(result).isEqualTo(input);
     }
 
-    @Disabled("Signature separator line is not recognized")
     @Test
     void flowWithQuotedSignature() {
         String input = "> Text\r\n" +
@@ -299,7 +296,6 @@ public class FlowedMessageUtilsTest {
         assertThat(result).isEqualTo(input);
     }
 
-    @Disabled("Signature separator line is not recognized")
     @Test
     void flowWithComplexMultiLineText() {
         String input = "On [date], [user] wrote:\n" +
@@ -330,7 +326,6 @@ public class FlowedMessageUtilsTest {
         );
     }
 
-    @Disabled("Input leads to allocating memory in an endless loop, finally resulting in OutOfMemoryError")
     @Test
     void flowWithQuoteCharactersExceedingMaximumLineWidth() {
         String input = ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A few words";
@@ -353,7 +348,6 @@ public class FlowedMessageUtilsTest {
         assertThat(result).isEqualTo(input);
     }
 
-    @Disabled("First flowed line is one character longer than expected")
     @Test
     void flowWithDelSpAndLongLineWithNonAsciiCharacters() {
         String input = "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää";
@@ -366,7 +360,6 @@ public class FlowedMessageUtilsTest {
         );
     }
 
-    @Disabled("First flowed line is one character longer than expected")
     @Test
     void flowWithDelSpAndLongLineWithNonAsciiCharactersAndSurrogatePairAtSplitPoint() {
         String input = "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää\uD83C\uDF69ääääää";
@@ -379,7 +372,6 @@ public class FlowedMessageUtilsTest {
         );
     }
 
-    @Disabled("Test fails with StringIndexOutOfBoundsException")
     @Test
     void flowWithDelSpAndQuotedLineExactly77CharactersLong() {
         String input = ">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -391,7 +383,6 @@ public class FlowedMessageUtilsTest {
         );
     }
 
-    @Disabled("Test triggers endless loop")
     @Test
     void flowWithDelSpAndQuoteCharactersExceedingMaximumLineWidth() {
         String input = ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n";
