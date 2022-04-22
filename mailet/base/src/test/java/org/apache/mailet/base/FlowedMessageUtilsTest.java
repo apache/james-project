@@ -38,7 +38,7 @@ public class FlowedMessageUtilsTest {
     }
 
     @Test
-    void deflowWwithOnlySomeLinesEndingInSpace() {
+    void deflowWithOnlySomeLinesEndingInSpace() {
         String input = "Text that \r\n" +
             "should be \r\n" +
             "displayed on \r\n" +
