@@ -19,6 +19,7 @@
 
 package org.apache.mailet.base;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -201,5 +202,202 @@ public class FlowedMessageUtilsTest {
                 "> \r\n" +
                 "> -- \r\n" +
                 "> Signature text");
+    }
+
+    @Test
+    void flowWithShortLine() {
+        String input = "A single line not exceeding 78 characters.";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(input);
+    }
+
+    @Test
+    void flowWithLongLine() {
+        String input = "A single line with quite a bit of text so the maximum width of 78 characters is exceeded.";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(
+            "A single line with quite a bit of text so the maximum width of 78 characters \r\n" +
+                "is exceeded."
+        );
+    }
+
+    @Test
+    void flowWithShortQuotedLine() {
+        String input = "> A single line not exceeding 78 characters.";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(input);
+    }
+
+    @Test
+    void flowWithLongQuotedLine() {
+        String input = ">>> A single line with quite a bit of text so the maximum width of 78 characters is exceeded.";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(
+            ">>> A single line with quite a bit of text so the maximum width of 78 \r\n" +
+                ">>> characters is exceeded."
+        );
+    }
+
+    @Test
+    void flowWithLineStartingWithFrom() {
+        String input = "From me to you";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(" From me to you");
+    }
+
+    @Test
+    void flowWithLineStartingWithSpace() {
+        String input = " Leading space";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo("  Leading space");
+    }
+
+    @Test
+    void flowWithQuotedTextStartingWithQuoteCharacter() {
+        String input = ">> >Quoted text\n";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(">> >Quoted text\r\n");
+    }
+
+    @Disabled("Signature separator line is not recognized")
+    @Test
+    void flowWithSignature() {
+        String input = "Text\r\n" +
+            "\r\n" +
+            "-- \r\n" +
+            "Signature";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(input);
+    }
+
+    @Disabled("Signature separator line is not recognized")
+    @Test
+    void flowWithQuotedSignature() {
+        String input = "> Text\r\n" +
+            ">\r\n" +
+            "> -- \r\n" +
+            "> Signature";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(input);
+    }
+
+    @Disabled("Signature separator line is not recognized")
+    @Test
+    void flowWithComplexMultiLineText() {
+        String input = "On [date], [user] wrote:\n" +
+            ">A single line with quite a bit of text so the maximum width of 78 characters is exceeded.\n" +
+            "\n" +
+            "A rather short line.\n" +
+            "Followed by another short line.\n" +
+            "Followed by a line containing a lot more words. Enough words so it exceeds the maximum line length.\n" +
+            "\n" +
+            "-- \n" +
+            "Signature text that is sufficiently long so it exceeds the maximum width of 78 characters.";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(
+            "On [date], [user] wrote:\r\n" +
+                "> A single line with quite a bit of text so the maximum width of 78 \r\n" +
+                "> characters is exceeded.\r\n" +
+                "\r\n" +
+                "A rather short line.\r\n" +
+                "Followed by another short line.\r\n" +
+                "Followed by a line containing a lot more words. Enough words so it exceeds \r\n" +
+                "the maximum line length.\r\n" +
+                "\r\n" +
+                "-- \r\n" +
+                "Signature text that is sufficiently long so it exceeds the maximum width of \r\n" +
+                "78 characters."
+        );
+    }
+
+    @Disabled("Input leads to allocating memory in an endless loop, finally resulting in OutOfMemoryError")
+    @Test
+    void flowWithQuoteCharactersExceedingMaximumLineWidth() {
+        String input = ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A few words";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(
+            ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A \r\n" +
+                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> few \r\n" +
+                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> words"
+        );
+    }
+
+    @Test
+    void flowWithDelSpAndLongLineWithAsciiCharactersButWithoutAnySpaces() {
+        String input = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
+
+        assertThat(result).isEqualTo(input);
+    }
+
+    @Disabled("First flowed line is one character longer than expected")
+    @Test
+    void flowWithDelSpAndLongLineWithNonAsciiCharacters() {
+        String input = "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
+
+        assertThat(result).isEqualTo(
+            "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää \r\n" +
+                "ääääääääääää"
+        );
+    }
+
+    @Disabled("First flowed line is one character longer than expected")
+    @Test
+    void flowWithDelSpAndLongLineWithNonAsciiCharactersAndSurrogatePairAtSplitPoint() {
+        String input = "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää\uD83C\uDF69ääääää";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
+
+        assertThat(result).isEqualTo(
+            "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää\uD83C\uDF69 \r\n" +
+                "ääääää"
+        );
+    }
+
+    @Disabled("Test fails with StringIndexOutOfBoundsException")
+    @Test
+    void flowWithDelSpAndQuotedLineExactly77CharactersLong() {
+        String input = ">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
+
+        assertThat(result).isEqualTo(
+            "> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        );
+    }
+
+    @Disabled("Test triggers endless loop")
+    @Test
+    void flowWithDelSpAndQuoteCharactersExceedingMaximumLineWidth() {
+        String input = ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
+
+        assertThat(result).isEqualTo(input);
     }
 }
