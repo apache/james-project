@@ -56,6 +56,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants, LineHandlerAware {
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
+    private static final boolean RETRY = true;
     private static final String STORED_DATA = "STORED_DATA";
     private static final String WRITTEN_DATA = "WRITTEN_DATA";
     private static final String OUTPUT_STREAM = "OUTPUT_STREAM";
@@ -155,9 +156,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         // check if we failed before and if we already know how much data we
         // need to sucess next run
         int size = -1;
-        if (attachment.containsKey(NEEDED_DATA)) {
+        final Object rawSize = attachment.get(NEEDED_DATA);
+        if (rawSize != null) {
             retry = true;
-            size = (Integer) attachment.get(NEEDED_DATA);
+            size = (Integer) rawSize;
             // now see if the buffer hold enough data to process.
             if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE && size > in.readableBytes()) {
 
@@ -167,7 +169,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
                     // ok seems like it will not fit in the memory limit so we
                     // need to store it in a temporary file
-                    reader = uploadToAFile(ctx, in, retry, attachment, size);
+                    reader = uploadToAFile(ctx, in, attachment, size);
                     if (reader == null) return null;
 
                 } else {
@@ -185,7 +187,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         return Pair.of(reader, size);
     }
 
-    private ImapRequestLineReader uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, boolean retry, Map<String, Object> attachment, int size) throws IOException {
+    private ImapRequestLineReader uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int size) throws IOException {
         ImapRequestLineReader reader;
         final File f;
         int written;
@@ -228,7 +230,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 //ignore exception during close
             }
 
-            reader = new NettyStreamImapRequestLineReader(ctx.channel(), f, retry);
+            reader = new NettyStreamImapRequestLineReader(ctx.channel(), f, RETRY);
         } else {
             attachment.put(WRITTEN_DATA, written);
             return null;
