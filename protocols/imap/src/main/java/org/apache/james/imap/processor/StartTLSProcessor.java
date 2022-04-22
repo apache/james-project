@@ -27,7 +27,6 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.StartTLSRequest;
-import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.util.MDCBuilder;
 
@@ -51,7 +50,8 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     protected Mono<Void> doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
         return Mono.fromRunnable(() -> {
             if (session.supportStartTLS()) {
-                session.startTLS((ImmutableStatusResponse) factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
+                responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
+                session.startTLS();
             } else {
                 responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
             }
