@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.api.message;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.util.Locale;
 import java.util.Objects;
 
@@ -34,13 +36,19 @@ public class Capability {
     }
 
     private final String value;
+    private final byte[] bytes;
 
     private Capability(String value) {
         this.value = value;
+        this.bytes = value.getBytes(US_ASCII);
     }
 
     public String asString() {
         return value;
+    }
+
+    public byte[] asBytes() {
+        return bytes;
     }
 
     @Override

@@ -32,9 +32,6 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.StatusRequest;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
-
 /**
  * Parse STATUS commands
  */
@@ -54,24 +51,18 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     }
 
     private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
-        ImmutableList<String> words = splitWords(request);
-
-        EnumSet<StatusDataItems.StatusItem> items = EnumSet.copyOf(words.stream()
-            .map(Throwing.function(this::parseStatus).sneakyThrow())
-            .collect(ImmutableList.toImmutableList()));
-
-        return new StatusDataItems(items);
+        return new StatusDataItems(splitWords(request));
     }
 
-    private ImmutableList<String> splitWords(ImapRequestLineReader request) throws DecodingException {
-        ImmutableList.Builder<String> words = ImmutableList.builder();
+    private EnumSet<StatusDataItems.StatusItem> splitWords(ImapRequestLineReader request) throws DecodingException {
+        EnumSet<StatusDataItems.StatusItem> words = EnumSet.noneOf(StatusDataItems.StatusItem.class);
 
         request.nextWordChar();
         request.consumeChar('(');
         String nextWord = request.consumeWord(NOOP_CHAR_VALIDATOR);
 
         while (!nextWord.endsWith(")")) {
-            words.add(nextWord);
+            words.add(parseStatus(nextWord));
             nextWord = request.consumeWord(NOOP_CHAR_VALIDATOR);
             if (nextWord.isEmpty()) {
                 // Throw to avoid an infinite loop...
@@ -80,9 +71,9 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         }
         // Got the closing ")", may be attached to a word.
         if (nextWord.length() > 1) {
-            words.add(nextWord.substring(0, nextWord.length() - 1));
+            words.add(parseStatus(nextWord.substring(0, nextWord.length() - 1)));
         }
-        return words.build();
+        return words;
     }
 
     private StatusDataItems.StatusItem parseStatus(String nextWord) throws DecodingException {
