@@ -19,17 +19,18 @@
 
 package org.apache.james.imap.message.response;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.ModSeq;
 
+import it.unimi.dsi.fastutil.longs.LongList;
+
 /**
  * A <code>SEARCH</code> response.
  */
 public class SearchResponse implements ImapResponseMessage {
-    private final long[] ids;
+    private final LongList ids;
     private final ModSeq highestModSeq;
 
     /**
@@ -37,7 +38,7 @@ public class SearchResponse implements ImapResponseMessage {
      * 
      * @param ids ids, not null
      */
-    public SearchResponse(long[] ids, ModSeq highestModSeq) {
+    public SearchResponse(LongList ids, ModSeq highestModSeq) {
         this.ids = ids;
         this.highestModSeq = highestModSeq;
     }
@@ -47,7 +48,7 @@ public class SearchResponse implements ImapResponseMessage {
      * 
      * @return the ids, not null
      */
-    public final long[] getIds() {
+    public final LongList getIds() {
         return ids;
     }
     
@@ -66,7 +67,7 @@ public class SearchResponse implements ImapResponseMessage {
         if (o instanceof SearchResponse) {
             SearchResponse that = (SearchResponse) o;
 
-            return Arrays.equals(this.ids, that.ids)
+            return Objects.equals(this.ids, that.ids)
                 && Objects.equals(this.highestModSeq, that.highestModSeq);
         }
         return false;
@@ -74,7 +75,7 @@ public class SearchResponse implements ImapResponseMessage {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(Arrays.hashCode(ids), highestModSeq);
+        return Objects.hash(ids, highestModSeq);
     }
 
     /**
@@ -88,7 +89,7 @@ public class SearchResponse implements ImapResponseMessage {
 
         StringBuilder retValue = new StringBuilder();
 
-        retValue.append("SearchResponse ( ").append("ids = ").append(Arrays.toString(this.ids)).append(TAB).append(" )");
+        retValue.append("SearchResponse ( ").append("ids = ").append(this.ids).append(TAB).append(" )");
 
         return retValue.toString();
     }

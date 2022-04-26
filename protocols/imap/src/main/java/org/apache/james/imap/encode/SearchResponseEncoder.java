@@ -24,6 +24,9 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
+import it.unimi.dsi.fastutil.longs.LongConsumer;
+import it.unimi.dsi.fastutil.longs.LongList;
+
 /**
  * Encoders IMAP4rev1 <code>SEARCH</code> responses.
  */
@@ -35,14 +38,19 @@ public class SearchResponseEncoder implements ImapResponseEncoder<SearchResponse
 
     @Override
     public void encode(SearchResponse response, ImapResponseComposer composer) throws IOException {
-        final long[] ids = response.getIds();
+        LongList ids = response.getIds();
         ModSeq highestModSeq = response.getHighestModSeq();
         composer.untagged();
         composer.commandName(ImapConstants.SEARCH_COMMAND);
         if (ids != null) {
-            for (long id : ids) {
-                composer.message(id);
-            }
+            LongConsumer longConsumer = l -> {
+                try {
+                    composer.message(l);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+            ids.forEach(longConsumer);
         }
         
         // add MODSEQ
