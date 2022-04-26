@@ -40,7 +40,7 @@ public class EnableResponseEncoder implements ImapResponseEncoder<EnableResponse
         // Return ENABLED capabilities. See IMAP-323
         composer.message("ENABLED");
         for (Capability capability : capabilities) {
-            composer.message(capability.asString());
+            composer.message(capability.asBytes());
         }
         composer.end();
     }
