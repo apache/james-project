@@ -27,8 +27,18 @@ import org.apache.james.imap.message.response.SearchResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+
 class SearchResponseEncoderTest {
-    private static final long[] IDS = { 1, 4, 9, 16 };
+    private static final LongList IDS = new LongArrayList();
+
+    static {
+        IDS.add(1L);
+        IDS.add(4L);
+        IDS.add(9L);
+        IDS.add(16L);
+    }
 
     private SearchResponse response;
     private SearchResponseEncoder encoder;

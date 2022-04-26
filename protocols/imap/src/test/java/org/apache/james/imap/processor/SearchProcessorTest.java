@@ -20,12 +20,8 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,6 +68,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -89,7 +87,7 @@ public class SearchProcessorTest {
 
     private static final String KEYWORD = "BD3";
 
-    private static final long[] EMPTY = {};
+    private static final LongList EMPTY = new LongArrayList();
 
     private static final String ADDRESS = "John Smith <john@example.org>";
 

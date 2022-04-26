@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.mail.Flags.Flag;
 
@@ -71,6 +70,8 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -146,8 +147,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, Collection<MessageUid> uids, Optional<ModSeq> highestModSeq) {
-        Collection<Long> results = asResults(session, request.isUseUids(), uids);
-        long[] ids = toArray(results);
+        LongList ids = asResults(session, request.isUseUids(), uids);
 
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
         if (resultOptions == null || resultOptions.isEmpty()) {
@@ -157,9 +157,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
 
-    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, Collection<MessageUid> uids, ModSeq highestModSeq, long[] ids) {
+    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, Collection<MessageUid> uids, ModSeq highestModSeq, LongList ids) {
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
-        List<Long> idList = new ArrayList<>(ids.length);
+        List<Long> idList = new ArrayList<>(ids.size());
         for (long id : ids) {
             idList.add(id);
         }
@@ -187,11 +187,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         if (esearch) {
             long min = -1;
             long max = -1;
-            long count = ids.length;
+            long count = ids.size();
 
-            if (ids.length > 0) {
-                min = ids[0];
-                max = ids[ids.length - 1];
+            if (ids.size() > 0) {
+                min = ids.getLong(0);
+                max = ids.getLong(ids.size() - 1);
             }
 
 
@@ -221,29 +221,25 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
 
-    private Collection<Long> asResults(ImapSession session, boolean useUids, Collection<MessageUid> uids) {
+    private LongList asResults(ImapSession session, boolean useUids, Collection<MessageUid> uids) {
+        LongList result = new LongArrayList(uids.size());
+        // Avoid using streams here as the overhead for large search responses is massive.
         if (useUids) {
-            return uids.stream()
-                .map(MessageUid::asLong)
-                .collect(ImmutableList.toImmutableList());
+            for (MessageUid uid: uids) {
+                result.add(uid.asLong());
+            }
         } else {
-            return uids.stream()
-                .map(uid -> session.getSelected().msn(uid))
-                .flatMap(Throwing.function(nullableMsn ->
-                    nullableMsn.fold(
-                        Stream::empty,
-                        msn -> Stream.of(Integer.valueOf(msn.asInt()).longValue()))))
-                .collect(ImmutableList.toImmutableList());
+            for (MessageUid uid: uids) {
+                session.getSelected().msn(uid)
+                    .ifPresent(l -> result.add(l.asInt()));
+            }
         }
+        return result;
     }
 
     private Mono<Collection<MessageUid>> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
         return Flux.from(mailbox.search(query, msession))
             .collect(ImmutableList.toImmutableList());
-    }
-
-    private long[] toArray(Collection<Long> results) {
-        return results.stream().mapToLong(x -> x).toArray();
     }
 
     /**
