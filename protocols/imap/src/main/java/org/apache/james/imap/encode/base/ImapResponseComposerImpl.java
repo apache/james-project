@@ -42,9 +42,8 @@ import org.apache.james.imap.utils.FastByteArrayOutputStream;
  */
 public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComposer {
 
-    public static final String FLAGS = "FLAGS";
+    public static final byte[] FLAGS = "FLAGS".getBytes(US_ASCII);
 
-    public static final String FAILED = "failed.";
     private static final int LOWER_CASE_OFFSET = 'a' - 'A';
     public static final int DEFAULT_BUFFER_SIZE = 2048;
     private static final byte[] SEEN = "\\Seen".getBytes(US_ASCII);
