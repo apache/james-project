@@ -23,6 +23,9 @@ import java.util.EnumSet;
 import com.google.common.base.MoreObjects;
 
 public class StatusDataItems {
+
+    public static final String SIMPLE_NAME = StatusDataItems.class.getSimpleName();
+
     public enum StatusItem {
         MESSAGES,
         RECENT,
@@ -64,13 +67,8 @@ public class StatusDataItems {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("messages", isMessages())
-            .add("recent", isRecent())
-            .add("uidNext", isUidNext())
-            .add("uidValidity", isUidValidity())
-            .add("unseen", isUnseen())
-            .add("highestModSeq", isHighestModSeq())
+        return MoreObjects.toStringHelper(SIMPLE_NAME)
+            .add("statusItems", statusItems)
             .toString();
     }
 }
