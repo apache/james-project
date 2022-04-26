@@ -47,7 +47,7 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         String mailboxName = response.getMailbox();
 
         composer.untagged();
-        composer.message(STATUS_COMMAND.getName());
+        composer.message(STATUS_COMMAND.getNameAsBytes());
         composer.quote(mailboxName);
         composer.openParen();
 
