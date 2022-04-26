@@ -38,9 +38,9 @@ Optional integer, defaults to 100
 | Configure retries count to retrieve a channel. Exponential backoff is performed between each retries.
 Optional integer, defaults to 3
 
-| channel.pool.max.delay.ms
-| Configure timeout duration (in ms) to obtain a rabbitmq channel. Defaults to 30 seconds.
-Optional integer, defaults to 30 seconds.
+| channel.pool.min.delay.ms
+| Configure initial duration (in ms) between two channel retries. Exponential backoff is performed between each retries.
+Optional integer, defaults to 50
 
 | channel.pool.size
 | Configure the size of the channel pool.

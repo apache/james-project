@@ -52,7 +52,6 @@ import static org.mockito.Mockito.when;
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -470,8 +469,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
 
                     assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(NoSuchElementException.class)
-                        .hasMessageContaining("Timeout waiting for idle object");
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Retries exhausted");
 
                     rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
 
@@ -592,8 +591,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(NoSuchElementException.class)
-                        .hasMessageContaining("Timeout waiting for idle object");
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("Retries exhausted");
+
 
                 rabbitMQExtension.getRabbitMQ().unpause();
 
@@ -629,8 +629,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(NoSuchElementException.class)
-                        .hasMessageContaining("Timeout waiting for idle object");
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("Retries exhausted");
 
                 rabbitMQExtension.getRabbitMQ().unpause();
 
@@ -647,8 +647,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(NoSuchElementException.class)
-                        .hasMessageContaining("Timeout waiting for idle object");
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("Retries exhausted");
+
 
                 rabbitMQExtension.getRabbitMQ().unpause();
 

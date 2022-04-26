@@ -27,8 +27,6 @@ import static org.apache.james.events.EventBusTestFixture.newListener;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
-import java.util.NoSuchElementException;
-
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
@@ -74,8 +72,8 @@ class NetworkErrorTest {
         rabbitMQExtension.getRabbitMQ().pause();
 
         assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-            .isInstanceOf(NoSuchElementException.class)
-            .hasMessageContaining("Timeout waiting for idle object");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Retries exhausted");
 
         rabbitMQExtension.getRabbitMQ().unpause();
 
