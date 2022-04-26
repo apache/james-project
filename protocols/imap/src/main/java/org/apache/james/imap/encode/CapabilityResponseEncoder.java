@@ -40,9 +40,9 @@ public class CapabilityResponseEncoder implements ImapResponseEncoder<Capability
     public void encode(CapabilityResponse response, ImapResponseComposer composer) throws IOException {
         Iterator<Capability> capabilities = response.getCapabilities().iterator();
         composer.untagged();
-        composer.message(ImapConstants.CAPABILITY_COMMAND.getName());
+        composer.message(ImapConstants.CAPABILITY_COMMAND.getNameAsBytes());
         while (capabilities.hasNext()) {
-            composer.message(capabilities.next().asString());
+            composer.message(capabilities.next().asBytes());
         }
         composer.end();        
     }

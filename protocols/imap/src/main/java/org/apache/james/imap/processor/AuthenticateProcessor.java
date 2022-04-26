@@ -52,11 +52,14 @@ import com.google.common.collect.ImmutableList;
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
  */
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor {
+    public static final String AUTH_PLAIN = "AUTH=PLAIN";
+    public static final Capability AUTH_PLAIN_CAPABILITY = Capability.of(AUTH_PLAIN);
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
     private static final String AUTH_TYPE_PLAIN = "PLAIN";
     private static final String AUTH_TYPE_OAUTHBEARER = "OAUTHBEARER";
     private static final String AUTH_TYPE_XOAUTH2 = "XOAUTH2";
     private static final List<Capability> OAUTH_CAPABILITIES = ImmutableList.of(Capability.of("AUTH=" + AUTH_TYPE_OAUTHBEARER), Capability.of("AUTH=" + AUTH_TYPE_XOAUTH2));
+    public static final Capability SASL_CAPABILITY = Capability.of("SASL-IR");
 
     public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory) {
@@ -156,10 +159,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.
         // See IMAP-304
         if (!session.isPlainAuthDisallowed()) {
-            caps.add(Capability.of("AUTH=PLAIN"));
+            caps.add(AUTH_PLAIN_CAPABILITY);
         }
         // Support for SASL-IR. See RFC4959
-        caps.add(Capability.of("SASL-IR"));
+        caps.add(SASL_CAPABILITY);
         if (session.supportsOAuth()) {
             caps.addAll(OAUTH_CAPABILITIES);
         }

@@ -30,6 +30,7 @@ class CapabilityTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Capability.class)
+            .withIgnoredFields("bytes")
             .verify();
     }
 
