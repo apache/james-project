@@ -146,10 +146,9 @@ class MailboxesRoutesTest {
                 new ElasticSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    new InMemoryId.Factory(), messageIdFactory,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
                 new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
-                preInstanciationStage.getSessionProvider(), routingKeyFactory))
+                preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();

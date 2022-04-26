@@ -133,8 +133,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             client,
             queryConverter,
             DEFAULT_SEARCH_SIZE,
-            mailboxIdFactory,
-            messageIdFactory,
             configuration.getReadAliasMailboxName(), routingKeyFactory);
     }
 

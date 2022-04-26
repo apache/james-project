@@ -26,6 +26,8 @@ import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstant
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.IS_RECENT;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.IS_UNREAD;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.MAILBOX_ID;
+import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.MESSAGE_ID;
+import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.UID;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
@@ -62,7 +64,9 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,21 +89,26 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private static final String ID_SEPARATOR = ":";
     private static final Group GROUP = new ElasticSearchListeningMessageSearchIndexGroup();
 
+    private static final ImmutableList<String> MESSAGE_ID_FIELD = ImmutableList.of(MESSAGE_ID);
+    private static final ImmutableList<String> UID_FIELD = ImmutableList.of(UID);
+
     private final ElasticSearchIndexer elasticSearchIndexer;
     private final ElasticSearchSearcher searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
     private final RoutingKey.Factory<MailboxId> routingKeyFactory;
+    private final MessageId.Factory messageIdFactory;
 
     @Inject
     public ElasticSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
                                                     @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX) ElasticSearchIndexer indexer,
                                                     ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson,
-                                                    SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory) {
+                                                    SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory) {
         super(factory, sessionProvider);
         this.elasticSearchIndexer = indexer;
         this.messageToElasticSearchJson = messageToElasticSearchJson;
         this.searcher = searcher;
         this.routingKeyFactory = routingKeyFactory;
+        this.messageIdFactory = messageIdFactory;
     }
 
     @Override
@@ -124,8 +133,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         Optional<Integer> noLimit = Optional.empty();
 
         return searcher
-            .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
-            .map(SearchResult::getMessageUid);
+            .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit, UID_FIELD)
+            .map(this::extractUidFromHit)
+            .handle(publishIfPresent());
     }
     
     @Override
@@ -136,9 +146,8 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             return Flux.empty();
         }
 
-        return searcher.search(mailboxIds, searchQuery, Optional.empty())
-            .doOnNext(this::logIfNoMessageId)
-            .map(SearchResult::getMessageId)
+        return searcher.search(mailboxIds, searchQuery, Optional.empty(), MESSAGE_ID_FIELD)
+            .map(this::extractMessageIdFromHit)
             .handle(publishIfPresent())
             .distinct()
             .take(limit);
@@ -257,5 +266,33 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     private List<String> extractUserFlags(Map<String, Object> source) {
         return (List<String>) source.get("userFlags");
+    }
+
+    private Optional<MessageId> extractMessageIdFromHit(SearchHit hit) {
+        DocumentField messageId = hit.field(MESSAGE_ID);
+        if (messageId != null) {
+            return Optional.of(messageIdFactory.fromString(messageId.getValue()));
+        } else {
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<MessageUid> extractUidFromHit(SearchHit hit) {
+        DocumentField uid = hit.field(UID);
+        if (uid != null) {
+            Number uidAsNumber = uid.getValue();
+            return Optional.of(MessageUid.of(uidAsNumber.longValue()));
+        } else {
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<DocumentField> retrieveMessageIdField(SearchHit hit) {
+        if (hit.getFields().containsKey(MESSAGE_ID)) {
+            return Optional.ofNullable(hit.field(MESSAGE_ID));
+        }
+        return Optional.empty();
     }
 }

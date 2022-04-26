@@ -188,8 +188,6 @@ class ElasticSearchListeningMessageSearchIndexTest {
         elasticSearchSearcher = new ElasticSearchSearcher(client,
             new QueryConverter(new CriterionConverter()),
             ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
-            new InMemoryId.Factory(),
-            messageIdFactory,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             new MailboxIdRoutingKeyFactory());
 
@@ -201,7 +199,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         elasticSearchIndexer = new ElasticSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
-            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory());
+            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), messageIdFactory);
         session = sessionProvider.createSystemSession(USERNAME);
 
         mailbox = mapperFactory.getMailboxMapper(session).create(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), UidValidity.generate()).block();
@@ -265,7 +263,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             IndexAttachments.YES);
 
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
-            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory());
+            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), new InMemoryMessageId.Factory());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
