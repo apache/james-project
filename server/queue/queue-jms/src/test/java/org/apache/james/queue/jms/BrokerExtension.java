@@ -60,7 +60,6 @@ public class BrokerExtension  implements ParameterResolver, BeforeAllCallback, A
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        broker.addConnector("tcp://127.0.0.1:61616");
     }
 
     @Override
