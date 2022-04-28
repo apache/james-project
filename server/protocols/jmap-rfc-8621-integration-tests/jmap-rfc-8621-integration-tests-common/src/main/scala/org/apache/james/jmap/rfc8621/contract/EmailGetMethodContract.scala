@@ -4472,7 +4472,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Main test message...\\n",
+         |                                "value": "Main test message...\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
