@@ -39,6 +39,7 @@ import javax.mail.internet.SharedInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -98,7 +99,7 @@ public interface MessageManager {
     /**
      * Return if the Mailbox is writable
      * @deprecated use
-     *             {@link #getMetaData(boolean, MailboxSession, MailboxMetaData.FetchGroup)}
+     *             {@link #getMetaData(RecentMode, MailboxSession, MailboxMetaData.FetchGroup)}
      */
     @Deprecated
     boolean isWriteable(MailboxSession session) throws MailboxException;
@@ -438,24 +439,30 @@ public interface MessageManager {
      * The meta-data returned should be immutable and represent the current
      * state of the mailbox.
      * 
-     * @param resetRecent
-     *            true when recent flags should be reset, false otherwise
+     * @param recentMode
+     *            How to manage recent emails: ignore them, return their UIDs, reset then to non-recent.
      * @param mailboxSession
      *            context, not null
      * @param fetchGroup
      *            describes which optional data should be returned
      * @return metadata view filtered for the session's user, not null
      */
-    MailboxMetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException;
+    MailboxMetaData getMetaData(RecentMode recentMode, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException;
 
-    default Mono<MailboxMetaData> getMetaDataReactive(boolean resetRecent, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
-        return Mono.fromCallable(() -> getMetaData(resetRecent, mailboxSession, fetchGroup));
+    default Mono<MailboxMetaData> getMetaDataReactive(RecentMode recentMode, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
+        return Mono.fromCallable(() -> getMetaData(recentMode, mailboxSession, fetchGroup));
     }
 
     /**
      * Meta data about the current state of the mailbox.
      */
     class MailboxMetaData {
+
+        public enum RecentMode {
+            RESET,
+            RETRIEVE,
+            IGNORE
+        }
 
         /**
          * Describes the optional data types which will get set in the
@@ -655,6 +662,11 @@ public interface MessageManager {
         }
 
     }
+
+    /**
+     * Return {@link Flags} which are permanent stored by the mailbox.
+     */
+    Flags getPermanentFlags(MailboxSession session);
 
     /**
      * Get resolved ACL on this Mailbox for the given Session

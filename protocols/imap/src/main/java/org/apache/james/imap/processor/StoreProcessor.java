@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
@@ -218,8 +219,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         
         SelectedMailbox selected = session.getSelected();
         return Mono.from(mailbox.setFlagsReactive(request.getFlags(), request.getFlagsUpdateMode(), messageSet, mailboxSession))
-            .flatMap(flagsByUid -> handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected)
-                .then(handleCondstore(request, mailboxSession, mailbox, messageSet, session, responder, silent, unchangedSince, selected, flagsByUid)));
+            .doOnNext(flagsByUid -> handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected))
+            .flatMap(flagsByUid -> handleCondstore(request, mailboxSession, mailbox, messageSet, session, responder, silent, unchangedSince, selected, flagsByUid));
     }
 
     private Mono<Void> handleCondstore(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid) {
@@ -234,7 +235,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
                     if (unchangedSince != -1) {
                         // Enable CONDSTORE as this is a CONDSTORE enabling command
-                        return mailbox.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                        return mailbox.getMetaDataReactive(IGNORE, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
                             .doOnNext(metaData -> condstoreEnablingCommand(session, responder,  metaData, true));
                     }
                     return Mono.empty();
@@ -243,22 +244,15 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         return Mono.empty();
     }
 
-    private Mono<Void> handlePermanentFlagChanges(MailboxSession mailboxSession, MessageManager mailbox, Responder responder, SelectedMailbox selected) {
+    private void handlePermanentFlagChanges(MailboxSession mailboxSession, MessageManager mailbox, Responder responder, SelectedMailbox selected) {
         // As the STORE command is allowed to create a new "flag/keyword", we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
         // if some new flag/keyword was used
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            try {
-                return Mono.from(mailbox.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
-                    .doOnNext(metaData -> permanentFlags(responder, metaData, selected))
-                    .doOnNext(any -> selected.resetNewApplicableFlags())
-                    .then();
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            }
+            permanentFlags(responder, mailbox.getPermanentFlags(mailboxSession), selected);
+            selected.resetNewApplicableFlags();
         }
-        return Mono.empty();
     }
 
     private void sendFetchResponses(Responder responder, boolean useUids, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid, boolean qresyncEnabled, boolean condstoreEnabled, Map<MessageUid, ModSeq> modSeqs) {

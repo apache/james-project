@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.event;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
@@ -43,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class PropagateLookupRightListenerTest {
-    private static final boolean RESET_RECENT = false;
     private static final Username OWNER_USER = Username.of("user");
     private static final Username SHARED_USER = Username.of("sharee");
     private static final EntryKey SHARED_USER_KEY = EntryKey.createUserEntryKey(SHARED_USER);
@@ -112,7 +112,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -134,7 +134,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -152,7 +152,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -173,7 +173,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -194,11 +194,11 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualParentACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         MailboxACL actualChildACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualParentACL.getEntries())
@@ -222,7 +222,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -240,7 +240,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -258,7 +258,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -274,7 +274,7 @@ public class PropagateLookupRightListenerTest {
         storeMailboxManager.renameMailbox(CHILD_MAILBOX, MailboxPath.forUser(OWNER_USER, "shared1.sub1New"), mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId1, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -290,7 +290,7 @@ public class PropagateLookupRightListenerTest {
         storeMailboxManager.renameMailbox(CHILD_MAILBOX, MailboxPath.forUser(OWNER_USER, "shared1.sub1New"), mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId1, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())
@@ -306,10 +306,10 @@ public class PropagateLookupRightListenerTest {
         storeMailboxManager.renameMailbox(GRAND_CHILD_MAILBOX, MailboxPath.forUser(OWNER_USER, "shared1.sub1.sub2"), mailboxSession);
 
         MailboxACL parentActualACL = storeMailboxManager.getMailbox(parentMailboxId1, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
         MailboxACL childActualACL = storeMailboxManager.getMailbox(childMailboxId1, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(parentActualACL.getEntries())
@@ -330,7 +330,7 @@ public class PropagateLookupRightListenerTest {
             mailboxSession);
 
         MailboxACL actualACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
 
         assertThat(actualACL.getEntries())

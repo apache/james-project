@@ -20,6 +20,7 @@ package org.apache.james.mailbox;
 
 import static org.apache.james.mailbox.MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS;
 import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1592,9 +1593,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .recent()
                     .build(message), session1);
 
-            boolean resetRecent = false;
             MessageManager.MailboxMetaData metaData = mailboxManager.getMailbox(inbox1, session2)
-                .getMetaData(resetRecent, session2, MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT);
+                .getMetaData(IGNORE, session2, MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT);
 
             assertSoftly(
                 softly -> {

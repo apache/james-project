@@ -19,6 +19,9 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RESET;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
@@ -153,7 +156,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                 }
 
-                permanentFlags(responder, metaData, selected);
+                permanentFlags(responder, metaData.getPermanentFlags(), selected);
                 highestModSeq(responder, metaData);
                 uidNext(responder, metaData);
 
@@ -377,8 +380,15 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
-                    mailbox.getMetaDataReactive(!openReadOnly, mailboxSession, FetchGroup.FIRST_UNSEEN)
+                    mailbox.getMetaDataReactive(recentMode(!openReadOnly), mailboxSession, FetchGroup.FIRST_UNSEEN)
                         .doOnNext(next -> addRecent(next, sessionMailbox))))));
+    }
+
+    private MailboxMetaData.RecentMode recentMode(boolean reset) {
+        if (reset) {
+            return RESET;
+        }
+        return RETRIEVE;
     }
 
     private Mono<SelectedMailbox> selectMailbox(ImapSession session, Responder responder, MessageManager mailbox, SelectedMailbox currentMailbox) throws MailboxException {
@@ -431,7 +441,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     boolean send = true;
                     return getSelectedMailboxReactive(session,
                             Mono.error(() -> new EnableException("Unable to enable " + capability.asString(), new MailboxException("Session not in SELECTED state"))))
-                        .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(false, session.getMailboxSession(), FetchGroup.NO_COUNT)))
+                        .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(IGNORE, session.getMailboxSession(), FetchGroup.NO_COUNT)))
                         .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, send))
                         .then();
                 }

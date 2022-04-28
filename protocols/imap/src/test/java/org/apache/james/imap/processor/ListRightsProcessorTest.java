@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -100,7 +99,7 @@ class ListRightsProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaDataReactive(anyBoolean(), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
+        when(messageManager.getMetaDataReactive(any(MailboxMetaData.RecentMode.class), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
             .thenReturn(Mono.just(metaData));
         when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(Mono.just(messageManager));

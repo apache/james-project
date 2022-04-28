@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
         if (session.getAttribute(SEARCH_MODSEQ) != null) {
             try {
-                return mailbox.getMetaDataReactive(false, msession, MailboxMetaData.FetchGroup.NO_COUNT)
+                return mailbox.getMetaDataReactive(IGNORE, msession, MailboxMetaData.FetchGroup.NO_COUNT)
                     .flatMap(metaData -> {
                         // Enable CONDSTORE as this is a CONDSTORE enabling command
                         condstoreEnablingCommand(session, responder,  metaData, true);

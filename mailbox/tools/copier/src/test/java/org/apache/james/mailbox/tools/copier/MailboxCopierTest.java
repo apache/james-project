@@ -119,7 +119,7 @@ class MailboxCopierTest {
             MailboxSession userSession = mailboxManager.createSystemSession(mailboxPath.getUser());
             mailboxManager.startProcessingRequest(mailboxSession);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, userSession);
-            assertThat(messageManager.getMetaData(false, userSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(DataProvisioner.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
+            assertThat(messageManager.getMetaData(MessageManager.MailboxMetaData.RecentMode.IGNORE, userSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(DataProvisioner.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
         }
 
         mailboxManager.endProcessingRequest(mailboxSession);
