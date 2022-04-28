@@ -28,7 +28,6 @@ import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstant
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.MAILBOX_ID;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.MESSAGE_ID;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.UID;
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Collection;
@@ -77,6 +76,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final int FLAGS_UPDATE_PROCESSING_WINDOW_SIZE = 32;
@@ -134,8 +134,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
         return searcher
             .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit, UID_FIELD)
-            .map(this::extractUidFromHit)
-            .handle(publishIfPresent());
+            .handle(this::extractUidFromHit);
     }
     
     @Override
@@ -147,8 +146,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         }
 
         return searcher.search(mailboxIds, searchQuery, Optional.empty(), MESSAGE_ID_FIELD)
-            .map(this::extractMessageIdFromHit)
-            .handle(publishIfPresent())
+            .handle(this::extractMessageIdFromHit)
             .distinct()
             .take(limit);
     }
@@ -268,24 +266,22 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return (List<String>) source.get("userFlags");
     }
 
-    private Optional<MessageId> extractMessageIdFromHit(SearchHit hit) {
+    private void extractMessageIdFromHit(SearchHit hit, SynchronousSink<MessageId> sink) {
         DocumentField messageId = hit.field(MESSAGE_ID);
         if (messageId != null) {
-            return Optional.of(messageIdFactory.fromString(messageId.getValue()));
+            sink.next(messageIdFactory.fromString(messageId.getValue()));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
-            return Optional.empty();
         }
     }
 
-    private Optional<MessageUid> extractUidFromHit(SearchHit hit) {
+    private void extractUidFromHit(SearchHit hit, SynchronousSink<MessageUid> sink) {
         DocumentField uid = hit.field(UID);
         if (uid != null) {
             Number uidAsNumber = uid.getValue();
-            return Optional.of(MessageUid.of(uidAsNumber.longValue()));
+            sink.next(MessageUid.of(uidAsNumber.longValue()));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
-            return Optional.empty();
         }
     }
 
