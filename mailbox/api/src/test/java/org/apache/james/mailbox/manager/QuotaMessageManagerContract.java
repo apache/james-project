@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.manager;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RESET;
 import static org.apache.james.mailbox.manager.ManagerTestProvisionner.INBOX;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -168,7 +169,7 @@ public interface QuotaMessageManagerContract<T extends MailboxManager> {
         }
 
         List<MessageUid> uids = provisionner.getMessageManager()
-            .getMetaData(true, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
+            .getMetaData(RESET, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
             .getRecent();
         provisionner.getMessageManager().delete(uids, provisionner.getSession());
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
@@ -191,7 +192,7 @@ public interface QuotaMessageManagerContract<T extends MailboxManager> {
         }
 
         List<MessageUid> uids = provisionner.getMessageManager()
-            .getMetaData(true, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
+            .getMetaData(RESET, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
             .getRecent();
         provisionner.getMessageManager().delete(uids, provisionner.getSession());
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.

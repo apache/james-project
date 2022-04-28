@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.List;
@@ -96,7 +97,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                     no(request, responder, text);
                     return Mono.empty();
                 } else {
-                    return mailbox.getMetaDataReactive(false, mailboxSession, FetchGroup.NO_COUNT)
+                    return mailbox.getMetaDataReactive(IGNORE, mailboxSession, FetchGroup.NO_COUNT)
                         .doOnNext(metaData -> {
                             ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                             responder.respond(aclResponse);

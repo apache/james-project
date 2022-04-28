@@ -116,8 +116,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(new FlagsResponse(selected.getApplicableFlags()));
     }
 
-    protected void permanentFlags(Responder responder, MailboxMetaData metaData, SelectedMailbox selected) {
-        final Flags permanentFlags = metaData.getPermanentFlags();
+    protected void permanentFlags(Responder responder, Flags permanentFlags, SelectedMailbox selected) {
         if (permanentFlags.contains(Flags.Flag.USER)) {
             permanentFlags.add(selected.getApplicableFlags());
         }
@@ -145,7 +144,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     private Mono<Void> unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, SelectedMailbox selected, boolean omitExpunged, boolean useUid) {
         return Mono.fromRunnable(() -> {
-            final boolean sizeChanged = selected.isSizeChanged();
+            boolean sizeChanged = selected.isSizeChanged();
             // New message response
             if (sizeChanged) {
                 addExistsResponses(selected, responder);
@@ -198,49 +197,35 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         MessageManager messageManager = selected.getMessageManager();
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
+        Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
         if (!flagUpdateUids.isEmpty()) {
-            return addApplicableFlagResponse(session, selected, responder, useUid)
-                .then(Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
-                    .concatMap(range ->
-                        addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
-                    .then())
+            addApplicableFlagResponse(session, selected, responder, useUid);
+            return Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
+                .concatMap(range ->
+                    addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
+                .then()
                 .onErrorResume(MailboxException.class, e -> {
                     handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
                     return Mono.empty();
                 });
         } else {
-            return addApplicableFlagResponse(session, selected, responder, useUid)
-                .onErrorResume(MailboxException.class, e -> {
-                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
-                    return Mono.empty();
-                });
+            addApplicableFlagResponse(session, selected, responder, useUid);
+            return Mono.empty();
         }
     }
 
-    private Mono<Void> addApplicableFlagResponse(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
-        try {
-            // To be lazily initialized only if needed, which is in minority of cases.
-            MessageManager messageManager = selected.getMessageManager();
-            MailboxSession mailboxSession = session.getMailboxSession();
+    private void addApplicableFlagResponse(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
+        // To be lazily initialized only if needed, which is in minority of cases.
+        MessageManager messageManager = selected.getMessageManager();
+        MailboxSession mailboxSession = session.getMailboxSession();
 
-            // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
-            // This is the case if some new flag/keyword was used
-            // See IMAP-303
-            if (selected.hasNewApplicableFlags()) {
-                flags(responder, selected);
-                return messageManager.getMetaDataReactive(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
-                    .doOnNext(metaData -> permanentFlags(responder, metaData, selected))
-                    .doOnNext(any -> selected.resetNewApplicableFlags())
-                .onErrorResume(MailboxException.class, e -> {
-                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
-                    return Mono.empty();
-                }).then();
-            }
-            return Mono.empty();
-        } catch (MailboxException e) {
-            handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
-            return Mono.empty();
+        // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
+        // This is the case if some new flag/keyword was used
+        // See IMAP-303
+        if (selected.hasNewApplicableFlags()) {
+            flags(responder, selected);
+            permanentFlags(responder, messageManager.getPermanentFlags(mailboxSession), selected);
+            selected.resetNewApplicableFlags();
         }
     }
     

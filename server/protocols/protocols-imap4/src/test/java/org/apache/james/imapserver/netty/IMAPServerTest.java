@@ -24,6 +24,7 @@ import static javax.mail.Folder.READ_WRITE;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup.NO_COUNT;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1533,7 +1534,7 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(14)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(2)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
@@ -1577,7 +1578,7 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(14)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(2)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
@@ -1605,7 +1606,7 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(14)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(2)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
@@ -1630,7 +1631,7 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(2)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             clientConnection.write(ByteBuffer.wrap(("A042 STATUS INBOX (HIGHESTMODSEQ)\r\n").getBytes(StandardCharsets.UTF_8)));
 
@@ -1677,7 +1678,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
@@ -1698,7 +1699,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
@@ -1717,7 +1718,7 @@ class IMAPServerTest {
 
             readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
 
-            ModSeq highestModSeq = inbox.getMetaData(false, mailboxSession, NO_COUNT).getHighestModSeq();
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(7)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(9)), mailboxSession);
@@ -1808,7 +1809,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1834,7 +1835,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1860,7 +1861,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1887,7 +1888,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1918,7 +1919,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1949,7 +1950,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -1975,7 +1976,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -2001,7 +2002,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -2028,7 +2029,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
@@ -2076,7 +2077,7 @@ class IMAPServerTest {
                 .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
@@ -2097,7 +2098,7 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
@@ -2123,7 +2124,7 @@ class IMAPServerTest {
                 .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
@@ -2149,7 +2150,7 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .getMetaData(false, mailboxSession, NO_COUNT)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
                 .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap("I00104 NOOP\r\n".getBytes(StandardCharsets.UTF_8)));
 

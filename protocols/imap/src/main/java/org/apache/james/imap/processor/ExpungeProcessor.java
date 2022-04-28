@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.List;
@@ -107,7 +108,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         //
         // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
         if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
-            return mailbox.getMetaDataReactive(false, mailboxSession, FetchGroup.NO_COUNT)
+            return mailbox.getMetaDataReactive(IGNORE, mailboxSession, FetchGroup.NO_COUNT)
                 .doOnNext(metaData -> okComplete(request, ResponseCode.highestModSeq(metaData.getHighestModSeq()), responder))
                 .then();
         } else {

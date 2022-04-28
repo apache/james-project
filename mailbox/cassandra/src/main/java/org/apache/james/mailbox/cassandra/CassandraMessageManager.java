@@ -59,7 +59,7 @@ public class CassandraMessageManager extends StoreMessageManager {
      * Support user flags
      */
     @Override
-    protected Flags getPermanentFlags(MailboxSession session) {
+    public Flags getPermanentFlags(MailboxSession session) {
         Flags flags = super.getPermanentFlags(session);
         flags.add(Flags.Flag.USER);
         return flags;

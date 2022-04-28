@@ -42,7 +42,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
     }
 
     @Override
-    protected Flags getPermanentFlags(MailboxSession session) {
+    public Flags getPermanentFlags(MailboxSession session) {
         Flags permanentFlags = new Flags(super.getPermanentFlags(session));
         permanentFlags.add(Flags.Flag.USER);
         return permanentFlags;

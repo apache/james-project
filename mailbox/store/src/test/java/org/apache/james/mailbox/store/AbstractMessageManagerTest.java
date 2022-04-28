@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
 import static org.apache.james.mailbox.fixture.MailboxFixture.CEDRIC;
@@ -34,8 +35,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMessageManagerTest {
-
-    static final boolean NO_RESET_RECENT = false;
 
     MailboxManager mailboxManager;
     MailboxSession aliceSession;
@@ -58,7 +57,7 @@ public abstract class AbstractMessageManagerTest {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MailboxMetaData actual = messageManager.getMetaData(NO_RESET_RECENT, aliceSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
+        MessageManager.MailboxMetaData actual = messageManager.getMetaData(RETRIEVE, aliceSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
         assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUserEntryKey(BOB), MailboxACL.EntryKey.createUserEntryKey(CEDRIC));
     }
 
@@ -68,7 +67,7 @@ public abstract class AbstractMessageManagerTest {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MailboxMetaData actual = messageManager.getMetaData(NO_RESET_RECENT, bobSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
+        MessageManager.MailboxMetaData actual = messageManager.getMetaData(RETRIEVE, bobSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
         assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
 

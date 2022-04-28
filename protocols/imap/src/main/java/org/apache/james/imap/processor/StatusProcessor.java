@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
+import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -31,6 +33,7 @@ import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -91,9 +94,17 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
 
     private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
         MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
+        RecentMode recentMode = computeRecentMode(statusDataItems);
 
         return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
-            .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(false, mailboxSession, fetchGroup)));
+            .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(recentMode, mailboxSession, fetchGroup)));
+    }
+
+    private RecentMode computeRecentMode(StatusDataItems statusDataItems) {
+        if (statusDataItems.isRecent()) {
+            return RETRIEVE;
+        }
+        return IGNORE;
     }
 
     private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
