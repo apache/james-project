@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import java.io.OutputStream
-
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
@@ -40,6 +38,7 @@ import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWri
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
+import java.io.OutputStream
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -230,7 +229,7 @@ case class EmailBodyPart(partId: PartId,
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
       for {
-        value <- Try(IOUtils.toString(textBody.getInputStream, charset(Option(textBody.getMimeCharset)).name()))
+        value <- Try(IOUtils.toString(textBody.getInputStream, charset(Option(textBody.getMimeCharset))))
       } yield {
         Some(EmailBodyValue(value = value,
           isEncodingProblem = IsEncodingProblem(false),

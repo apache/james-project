@@ -24,10 +24,12 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
-import org.apache.james.mime4j.field.Fields;
+import org.apache.james.mime4j.field.ContentTypeFieldLenientImpl;
 import org.apache.james.mime4j.field.contenttype.parser.ContentTypeParser;
 import org.apache.james.mime4j.field.contenttype.parser.ParseException;
+import org.apache.james.mime4j.stream.RawField;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -176,47 +178,56 @@ public class ContentType {
 
     public static ContentType of(String value) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(value), "'content type' is mandatory");
-        return new ContentType(value);
+        return new ContentType(value, Optional.empty(), Optional.empty());
     }
 
     public static ContentType of(MimeType mimeType) {
-        return new ContentType(mimeType.asString());
+        return new ContentType(mimeType.asString(), Optional.of(mimeType), Optional.empty());
     }
 
     public static ContentType of(MimeType mimeType, Optional<Charset> charset) {
-        return ContentType.of(
-                charset.map(value -> mimeType.asString() + "; charset=" + value.name())
-            .orElse(mimeType.asString()));
+        return new ContentType(
+            charset.map(value -> mimeType.asString() + "; charset=" + value.name())
+                .orElse(mimeType.asString()),
+            Optional.of(mimeType),
+            charset);
     }
 
     private final String value;
+    private final Optional<MimeType> mimeType;
+    private final Optional<Charset> charset;
 
-    public ContentType(String value) {
+    private ContentType(String value, Optional<MimeType> mimeType, Optional<Charset> charset) {
         this.value = value;
+        this.mimeType = mimeType;
+        this.charset = charset;
     }
 
     public ContentTypeField asMime4J() {
-        return Fields.contentType(value);
+        return ContentTypeFieldLenientImpl.PARSER.parse(new RawField("Content-Type", value), DecodeMonitor.SILENT);
     }
 
     public MimeType mimeType() {
-        ContentTypeField contentTypeField = asMime4J();
-        return MimeType.of(
-            MediaType.of(contentTypeField.getMediaType()),
-            SubType.of(contentTypeField.getSubType()));
+        return mimeType.orElseGet(() -> {
+            ContentTypeField contentTypeField = asMime4J();
+            return MimeType.of(
+                    MediaType.of(contentTypeField.getMediaType()),
+                    SubType.of(contentTypeField.getSubType()));
+        });
     }
 
     public MediaType mediaType() {
-        return MediaType.of(asMime4J().getMediaType());
+        return mimeType().mediaType;
     }
 
     public SubType subType() {
-        return SubType.of(asMime4J().getSubType());
+        return mimeType().subType;
     }
 
     public Optional<Charset> charset() {
-        return Optional.ofNullable(asMime4J().getCharset())
-            .map(Charset::forName);
+        return charset.or(() -> Optional.ofNullable(asMime4J().getCharset())
+            .filter(s -> !s.isBlank())
+            .map(Charset::forName));
     }
 
     public String asString() {

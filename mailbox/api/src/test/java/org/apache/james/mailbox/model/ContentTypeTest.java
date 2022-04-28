@@ -33,6 +33,7 @@ class ContentTypeTest {
     @Test
     void contentTypeShouldRespectBeanContract() {
         EqualsVerifier.forClass(ContentType.class)
+                .withIgnoredFields("mimeType", "charset")
             .verify();
     }
 
