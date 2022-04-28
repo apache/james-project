@@ -38,7 +38,6 @@ import org.apache.james.mailbox.elasticsearch.v7.json.MessageToElasticSearchJson
 import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -103,6 +102,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     @Override
     protected void initializeMailboxManager() throws Exception {
+        messageIdFactory = new InMemoryMessageId.Factory();
         textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
             new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
@@ -138,7 +138,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         messageIdManager = resources.getMessageIdManager();
         messageSearchIndex = resources.getSearchIndex();
         eventBus = resources.getEventBus();
-        messageIdFactory = new InMemoryMessageId.Factory();
     }
 
     @Override
