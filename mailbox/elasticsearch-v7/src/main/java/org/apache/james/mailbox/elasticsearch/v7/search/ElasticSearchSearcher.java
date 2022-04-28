@@ -36,14 +36,11 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
 
 public class ElasticSearchSearcher {
     public static final int DEFAULT_SEARCH_SIZE = 100;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final int MAX_ROUTING_KEY = 5;
 

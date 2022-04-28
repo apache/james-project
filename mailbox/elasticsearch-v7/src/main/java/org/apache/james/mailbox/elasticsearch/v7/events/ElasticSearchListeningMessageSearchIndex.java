@@ -284,11 +284,4 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
         }
     }
-
-    private Optional<DocumentField> retrieveMessageIdField(SearchHit hit) {
-        if (hit.getFields().containsKey(MESSAGE_ID)) {
-            return Optional.ofNullable(hit.field(MESSAGE_ID));
-        }
-        return Optional.empty();
-    }
 }
