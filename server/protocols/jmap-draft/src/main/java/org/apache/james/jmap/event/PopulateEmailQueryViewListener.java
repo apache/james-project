@@ -25,6 +25,7 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -47,7 +48,10 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.dom.Header;
+import org.apache.james.mime4j.dom.field.DateTimeField;
+import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.reactivestreams.Publisher;
@@ -163,15 +167,21 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
         ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
 
         return Mono.fromCallable(() -> parseMessage(messageResult))
-            .map(message -> Optional.ofNullable(message.getDate()).orElse(messageResult.getInternalDate()))
+            .map(header -> date(header).orElse(messageResult.getInternalDate()))
             .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
             .flatMap(sentAt -> view.save(mailboxId, sentAt, receivedAt, messageResult.getMessageId()))
             .then();
     }
 
-    private Message parseMessage(MessageResult messageResult) throws IOException, MailboxException {
+    private Header parseMessage(MessageResult messageResult) throws IOException, MailboxException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
-        return defaultMessageBuilder.parseMessage(messageResult.getFullContent().getInputStream());
+        return defaultMessageBuilder.parseHeader(messageResult.getFullContent().getInputStream());
+    }
+
+    private Optional<Date> date(Header header) {
+        return Optional.ofNullable(header.getField("Date"))
+            .map(field -> DateTimeFieldLenientImpl.PARSER.parse(field, DecodeMonitor.SILENT))
+            .map(DateTimeField::getDate);
     }
 }
