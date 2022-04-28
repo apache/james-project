@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.Locales;
@@ -48,6 +47,6 @@ public class ContinuationResponseEncoder implements ImapResponseEncoder<Continua
 
     private String asString(HumanReadableText text) {
         // TODO: calculate locales
-        return localizer.localize(text, new Locales(new ArrayList<>(), null));
+        return localizer.localize(text, Locales.DEFAULT);
     }
 }

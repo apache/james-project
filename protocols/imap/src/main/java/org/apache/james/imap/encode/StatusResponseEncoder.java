@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -48,7 +47,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
     @Override
     public void encode(ImmutableStatusResponse response, ImapResponseComposer composer) throws IOException {
         final Type serverResponseType = response.getServerResponseType();
-        final byte[] type = asString(serverResponseType);
+        final byte[] type = asBytes(serverResponseType);
         final ResponseCode responseCode = response.getResponseCode();
         final String code = asString(responseCode);
         final Tag tag = response.getTag();
@@ -105,7 +104,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
 
     private String asString(HumanReadableText text) {
         // TODO: calculate locales
-        return localizer.localize(text, new Locales(new ArrayList<>(), null));
+        return localizer.localize(text, Locales.DEFAULT);
     }
 
     private String asString(StatusResponse.ResponseCode code) {
@@ -116,7 +115,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
         }
     }
 
-    private byte[] asString(StatusResponse.Type type) {
+    private byte[] asBytes(StatusResponse.Type type) {
         if (type == null) {
             return null;
         } else {
