@@ -22,6 +22,8 @@ package org.apache.james.imap.api.display;
 import java.util.List;
 import java.util.Locale;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * <p>
  * Immutable bean describing localisation preferences.
@@ -36,6 +38,7 @@ import java.util.Locale;
  * </ul>
  */
 public class Locales {
+    public static Locales DEFAULT = new Locales(ImmutableList.of(), null);
 
     private final List<Locale> userPreferences;
     private final Locale clientPreference;
