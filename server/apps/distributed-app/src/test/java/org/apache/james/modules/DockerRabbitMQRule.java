@@ -62,7 +62,7 @@ public class DockerRabbitMQRule implements GuiceModuleTestRule {
             binder -> binder.bind(ReactorRabbitMQChannelPool.Configuration.class)
                 .toInstance(ReactorRabbitMQChannelPool.Configuration.builder()
                     .retries(2)
-                        .minBorrowDelay(java.time.Duration.ofMillis(5))
+                    .maxBorrowDelay(java.time.Duration.ofSeconds(5))
                     .maxChannel(3)),
             binder -> binder.bind(SimpleConnectionPool.Configuration.class)
                 .toInstance(SimpleConnectionPool.Configuration.builder()

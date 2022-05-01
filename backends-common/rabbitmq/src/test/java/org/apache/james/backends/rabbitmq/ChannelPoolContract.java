@@ -31,6 +31,7 @@ import com.rabbitmq.client.Channel;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ChannelPool;
 
 interface ChannelPoolContract {
@@ -64,17 +65,16 @@ interface ChannelPoolContract {
     @Test
     default void channelPoolShouldWaitTillTheNextReleaseWhenAllChannelsAreTaken() {
         ChannelPool channelPool = getChannelPool(2);
-        channelPool.getChannelMono();
-        borrowChannel(channelPool);
+        Channel channel1 = borrowChannel(channelPool);
         Channel channel2 = borrowChannel(channelPool);
 
-        Mono.delay(Duration.ofSeconds(2))
-            .doOnSuccess(any -> returnToThePool(channelPool, channel2))
+        Mono.delay(Duration.ofSeconds(1))
+            .then(Mono.fromRunnable(() -> returnToThePool(channelPool, channel1)).subscribeOn(Schedulers.elastic()))
             .subscribe();
 
         Channel channelAfterReturned = borrowChannel(channelPool);
         assertThat(channelAfterReturned.getChannelNumber())
-            .isEqualTo(channel2.getChannelNumber());
+            .isEqualTo(channel1.getChannelNumber());
     }
 
     @Test

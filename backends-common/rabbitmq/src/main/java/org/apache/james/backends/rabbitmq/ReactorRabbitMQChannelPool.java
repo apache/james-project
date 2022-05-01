@@ -21,22 +21,17 @@ package org.apache.james.backends.rabbitmq;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Comparator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
@@ -44,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.CancelCallback;
@@ -66,6 +62,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
+import reactor.pool.InstrumentedPool;
+import reactor.pool.PoolBuilder;
+import reactor.pool.PooledRef;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ChannelPool;
 import reactor.rabbitmq.QueueSpecification;
@@ -597,63 +596,15 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         }
     }
 
-    private static class ChannelClosedException extends IOException {
-        ChannelClosedException(String message) {
-            super(message);
-        }
-    }
-
-    static class ChannelFactory extends BasePooledObjectFactory<Channel> {
-
-        private static final Logger LOGGER = LoggerFactory.getLogger(ChannelFactory.class);
-
-        private final Mono<Connection> connectionMono;
-        private final Configuration configuration;
-
-        ChannelFactory(Mono<Connection> connectionMono, Configuration configuration) {
-            this.connectionMono = connectionMono;
-            this.configuration = configuration;
-        }
-
-        @Override
-        public Channel create() {
-            return connectionMono
-                .flatMap(this::openChannel)
-                .block();
-        }
-
-        private Mono<? extends Channel> openChannel(Connection connection) {
-            return Mono.fromCallable(connection::openChannel)
-                .map(maybeChannel ->
-                    maybeChannel.orElseThrow(() -> new RuntimeException("RabbitMQ reached to maximum opened channels, cannot get more channels")))
-                .map(SelectOnceChannel::new)
-                .retryWhen(configuration.backoffSpec().scheduler(Schedulers.elastic()))
-                .doOnError(throwable -> LOGGER.error("error when creating new channel", throwable));
-        }
-
-        @Override
-        public PooledObject<Channel> wrap(Channel obj) {
-            return new DefaultPooledObject<>(obj);
-        }
-
-        @Override
-        public void destroyObject(PooledObject<Channel> pooledObject) throws Exception {
-            Channel channel = pooledObject.getObject();
-            if (channel.isOpen()) {
-                channel.close();
-            }
-        }
-    }
-
     public static class Configuration {
         @FunctionalInterface
         public interface RequiresRetries {
-            RequiredMinBorrowDelay retries(int retries);
+            RequiredMaxBorrowDelay retries(int retries);
         }
 
         @FunctionalInterface
-        public interface RequiredMinBorrowDelay {
-            RequiredMaxChannel minBorrowDelay(Duration minBorrowDelay);
+        public interface RequiredMaxBorrowDelay {
+            RequiredMaxChannel maxBorrowDelay(Duration maxBorrowDelay);
         }
 
         @FunctionalInterface
@@ -663,7 +614,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         public static final Configuration DEFAULT = builder()
             .retries(MAX_BORROW_RETRIES)
-            .minBorrowDelay(MIN_BORROW_DELAY)
+            .maxBorrowDelay(MAX_BORROW_DELAY)
             .maxChannel(MAX_CHANNELS_NUMBER);
 
         public static RequiresRetries builder() {
@@ -671,28 +622,28 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         }
 
         public static Configuration from(org.apache.commons.configuration2.Configuration configuration) {
-            Duration minBorrowDelay = Optional.ofNullable(configuration.getLong("channel.pool.min.delay.ms", null))
+            Duration maxBorrowDelay = Optional.ofNullable(configuration.getLong("channel.pool.max.delay.ms", null))
                     .map(Duration::ofMillis)
-                    .orElse(MIN_BORROW_DELAY);
+                    .orElse(MAX_BORROW_DELAY);
 
             return builder()
                 .retries(configuration.getInt("channel.pool.retries", MAX_BORROW_RETRIES))
-                .minBorrowDelay(minBorrowDelay)
+                .maxBorrowDelay(maxBorrowDelay)
                 .maxChannel(configuration.getInt("channel.pool.size", MAX_CHANNELS_NUMBER));
         }
 
-        private final Duration minBorrowDelay;
+        private final Duration maxBorrowDelay;
         private final int retries;
         private final int maxChannel;
 
-        public Configuration(Duration minBorrowDelay, int retries, int maxChannel) {
-            this.minBorrowDelay = minBorrowDelay;
+        public Configuration(Duration maxBorrowDelay, int retries, int maxChannel) {
+            this.maxBorrowDelay = maxBorrowDelay;
             this.retries = retries;
             this.maxChannel = maxChannel;
         }
 
         private RetryBackoffSpec backoffSpec() {
-            return Retry.backoff(retries, minBorrowDelay);
+            return Retry.backoff(retries, maxBorrowDelay);
         }
 
         public int getMaxChannel() {
@@ -701,15 +652,15 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRabbitMQChannelPool.class);
-    private static final long MAXIMUM_BORROW_TIMEOUT_IN_MS = Duration.ofSeconds(5).toMillis();
     private static final int MAX_CHANNELS_NUMBER = 3;
     private static final int MAX_BORROW_RETRIES = 3;
-    private static final Duration MIN_BORROW_DELAY = Duration.ofMillis(50);
+    private static final Duration MAX_BORROW_DELAY = Duration.ofSeconds(30);
 
+    private final ConcurrentHashMap<Integer, PooledRef<? extends Channel>> refs = new ConcurrentHashMap<>();
     private final Mono<Connection> connectionMono;
-    private final GenericObjectPool<Channel> pool;
-    private final ConcurrentSkipListSet<Channel> borrowedChannels;
     private final Configuration configuration;
+
+    private final InstrumentedPool<? extends Channel> newPool;
     private final MetricFactory metricFactory;
     private Sender sender;
 
@@ -717,12 +668,22 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         this.connectionMono = connectionMono;
         this.configuration = configuration;
         this.metricFactory = metricFactory;
-        ChannelFactory channelFactory = new ChannelFactory(connectionMono, configuration);
 
-        GenericObjectPoolConfig<Channel> config = new GenericObjectPoolConfig<>();
-        config.setMaxTotal(configuration.getMaxChannel());
-        this.pool = new GenericObjectPool<>(channelFactory, config);
-        this.borrowedChannels = new ConcurrentSkipListSet<>(Comparator.comparingInt(System::identityHashCode));
+        newPool = PoolBuilder.from(connectionMono
+            .flatMap(this::openChannel))
+            .sizeBetween(1, configuration.maxChannel)
+            .maxPendingAcquireUnbounded()
+            .evictionPredicate((channel, metadata) -> {
+                if (!channel.isOpen()) {
+                    return true;
+                }
+                if (metadata.idleTime() > Duration.ofSeconds(30).toMillis()) {
+                    return true;
+                }
+                return false;
+            })
+            .destroyHandler(channel -> Mono.fromRunnable(Throwing.runnable(channel::close)))
+            .buildPool();
     }
 
     private Mono<? extends Channel> openChannel(Connection connection) {
@@ -751,47 +712,28 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-acquire", borrow()));
     }
 
-    private Mono<Channel> borrow() {
-        return tryBorrowFromPool()
-            .doOnError(throwable -> LOGGER.warn("Cannot borrow channel", throwable))
-            .retryWhen(configuration.backoffSpec().scheduler(Schedulers.elastic()))
-            .onErrorMap(this::propagateException)
-            .subscribeOn(Schedulers.elastic())
-            .doOnNext(borrowedChannels::add);
-    }
-
-    private Mono<Channel> tryBorrowFromPool() {
-        return Mono.fromCallable(this::borrowFromPool);
-    }
-
-    private Throwable propagateException(Throwable throwable) {
-        if (throwable instanceof IllegalStateException
-            && throwable.getMessage().contains("Retries exhausted")) {
-            return throwable.getCause();
-        }
-
-        return throwable;
-    }
-
-    private Channel borrowFromPool() throws Exception {
-        Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
-        if (!channel.isOpen()) {
-            invalidateObject(channel);
-            throw new ChannelClosedException("borrowed channel is already closed");
-        }
-        return channel;
+    private Mono<? extends Channel> borrow() {
+        return newPool.acquire()
+            .timeout(configuration.maxBorrowDelay)
+            .doOnNext(ref -> refs.put(ref.poolable().getChannelNumber(), ref))
+            .map(PooledRef::poolable)
+            .onErrorMap(TimeoutException.class, e -> new NoSuchElementException("Timeout waiting for idle object"));
     }
 
     @Override
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
-        return (signalType, channel) -> {
-            borrowedChannels.remove(channel);
-            if (!channel.isOpen() || !executeWithoutError(signalType)) {
-                invalidateObject(channel);
-                return;
-            }
-            pool.returnObject(channel);
-        };
+        return (signalType, channel) -> metricFactory.runPublishingTimerMetric("rabbit-release",
+            () -> {
+                PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
+
+                if (!channel.isOpen() || !executeWithoutError(signalType)) {
+                    pooledRef.invalidate()
+                        .block();
+                    return;
+                }
+                pooledRef.release()
+                    .block();
+            });
     }
 
     private boolean executeWithoutError(SignalType signalType) {
@@ -848,24 +790,16 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             .then();
     }
 
-    private void invalidateObject(Channel channel) {
-        try {
-            pool.invalidateObject(channel);
-            if (channel.isOpen()) {
-                channel.close();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @PreDestroy
     @Override
     public void close() {
         sender.close();
-        borrowedChannels.forEach(channel -> getChannelCloseHandler().accept(SignalType.ON_NEXT, channel));
-        borrowedChannels.clear();
-        pool.close();
+        ImmutableList.copyOf(refs.values())
+            .stream()
+            .map(PooledRef::poolable)
+            .forEach(channel -> getChannelCloseHandler().accept(SignalType.ON_NEXT, channel));
+        refs.clear();
+        newPool.dispose();
     }
 
     public Mono<Boolean> tryChannel() {
@@ -873,8 +807,8 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             channel -> Mono.just(channel.isOpen()),
             channel -> {
                 if (channel != null) {
-                    borrowedChannels.remove(channel);
-                    pool.returnObject(channel);
+                    PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
+                    return pooledRef.release();
                 }
                 return Mono.empty();
             })
