@@ -98,7 +98,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -1066,7 +1065,6 @@ class IMAPServerTest {
             imapServer.destroy();
         }
 
-        @Disabled("JAMES-1489 IMAP Search do not support continuation")
         @Test
         void searchingShouldSupportMultipleUTF8Criteria() throws Exception {
             String host = "127.0.0.1";
