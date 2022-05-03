@@ -162,15 +162,18 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startTLS() {
+    public boolean startTLS(Runnable runnable) {
         if (!supportStartTLS()) {
             return false;
         }
-        channel.config().setAutoRead(false);
+        channel.eventLoop().execute(() -> {
+            channel.config().setAutoRead(false);
+            runnable.run();
 
-        channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
-        stopDetectingCommandInjection();
-        channel.config().setAutoRead(true);
+            channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
+            stopDetectingCommandInjection();
+            channel.config().setAutoRead(true);
+        });
 
         return true;
     }
