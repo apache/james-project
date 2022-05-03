@@ -159,7 +159,7 @@ public interface ImapSession extends CommandDetectionSession {
      * 
      * @return true if the encryption of the session was successfully
      */
-    boolean startTLS();
+    boolean startTLS(Runnable runnable);
 
     /**
      * Return true if the session is bound to a TLS encrypted socket.

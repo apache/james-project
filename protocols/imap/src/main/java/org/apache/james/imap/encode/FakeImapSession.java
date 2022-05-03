@@ -130,7 +130,7 @@ public class FakeImapSession implements ImapSession {
     }
     
     @Override
-    public boolean startTLS() {
+    public boolean startTLS(Runnable runnable) {
         return false;
     }
 
