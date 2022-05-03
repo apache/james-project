@@ -654,7 +654,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRabbitMQChannelPool.class);
     private static final int MAX_CHANNELS_NUMBER = 3;
     private static final int MAX_BORROW_RETRIES = 3;
-    private static final Duration MAX_BORROW_DELAY = Duration.ofSeconds(30);
+    private static final Duration MAX_BORROW_DELAY = Duration.ofSeconds(5);
 
     private final ConcurrentHashMap<Integer, PooledRef<? extends Channel>> refs = new ConcurrentHashMap<>();
     private final Mono<Connection> connectionMono;
