@@ -207,28 +207,31 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean startCompression() {
+    public boolean startCompression(Runnable runnable) {
         if (!isCompressionSupported()) {
             return false;
         }
 
-        channel.config().setAutoRead(false);
-        ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
-        ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
+        channel.eventLoop().execute(() -> {
+            channel.config().setAutoRead(false);
+            runnable.run();
+            ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
+            ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 
-        // Check if we have the SslHandler in the pipeline already
-        // if so we need to move the compress encoder and decoder
-        // behind it in the chain
-        // See JAMES-1186
-        if (channel.pipeline().get(SSL_HANDLER) == null) {
-            channel.pipeline().addFirst(ZLIB_DECODER, decoder);
-            channel.pipeline().addFirst(ZLIB_ENCODER, encoder);
-        } else {
-            channel.pipeline().addAfter(SSL_HANDLER, ZLIB_DECODER, decoder);
-            channel.pipeline().addAfter(SSL_HANDLER, ZLIB_ENCODER, encoder);
-        }
+            // Check if we have the SslHandler in the pipeline already
+            // if so we need to move the compress encoder and decoder
+            // behind it in the chain
+            // See JAMES-1186
+            if (channel.pipeline().get(SSL_HANDLER) == null) {
+                channel.pipeline().addFirst(ZLIB_DECODER, decoder);
+                channel.pipeline().addFirst(ZLIB_ENCODER, encoder);
+            } else {
+                channel.pipeline().addAfter(SSL_HANDLER, ZLIB_DECODER, decoder);
+                channel.pipeline().addAfter(SSL_HANDLER, ZLIB_ENCODER, encoder);
+            }
 
-        channel.config().setAutoRead(true);
+            channel.config().setAutoRead(true);
+        });
 
         return true;
     }

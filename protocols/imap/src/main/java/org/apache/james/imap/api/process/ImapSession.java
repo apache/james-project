@@ -195,7 +195,7 @@ public interface ImapSession extends CommandDetectionSession {
      * 
      * @return success
      */
-    boolean startCompression();
+    boolean startCompression(Runnable runnable);
 
     /**
      * Push in a new {@link ImapLineHandler} which is called for the next line received

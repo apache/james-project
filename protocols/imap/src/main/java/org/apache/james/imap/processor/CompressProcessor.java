@@ -59,8 +59,7 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
                     } else {
                         StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE);
 
-                        responder.respond(response);
-                        if (session.startCompression()) {
+                        if (session.startCompression(() -> responder.respond(response))) {
                             session.setAttribute(COMPRESSED, true);
                         }
                     }
