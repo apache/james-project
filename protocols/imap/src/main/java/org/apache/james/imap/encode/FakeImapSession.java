@@ -145,7 +145,7 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public boolean startCompression() {
+    public boolean startCompression(Runnable runnable) {
         return false;
     }
 
