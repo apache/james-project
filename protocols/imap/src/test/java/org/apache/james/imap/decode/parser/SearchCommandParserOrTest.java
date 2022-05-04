@@ -35,6 +35,7 @@ import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.decode.parser.SearchCommandParser.Context;
 import org.apache.james.mailbox.MessageUid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -178,7 +179,7 @@ class SearchCommandParserOrTest {
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
-        assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);
+        assertThat(parser.searchKey(null, reader, new Context(), false)).isEqualTo(key);
     }
 
     public class Input {

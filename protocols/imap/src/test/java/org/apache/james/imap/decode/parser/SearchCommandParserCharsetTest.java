@@ -41,6 +41,7 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.decode.parser.SearchCommandParser.Context;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -156,7 +157,7 @@ class SearchCommandParserCharsetTest {
                 new ByteArrayInputStream(NioUtils.add(NioUtils.add(CHARSET,
                         term), BYTES_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
-        final SearchKey searchKey = parser.searchKey(null, reader, null, true);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), true);
         assertThat(searchKey).isEqualTo(key);
     }
 
@@ -166,7 +167,7 @@ class SearchCommandParserCharsetTest {
                 new ByteArrayInputStream(input.getBytes(charset)),
                 new ByteArrayOutputStream());
 
-        final SearchKey searchKey = parser.searchKey(null, reader, null, isFirst);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), isFirst);
         assertThat(searchKey).isEqualTo(key);
     }
 

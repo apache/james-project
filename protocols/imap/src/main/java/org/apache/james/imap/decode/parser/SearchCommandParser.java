@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * Parse SEARCH commands
  */
 public class SearchCommandParser extends AbstractUidCommandParser {
-    private static class Context {
+    public static class Context {
         private Optional<Charset> previousCharset = Optional.empty();
 
         public void setCharset(Charset charset) {
