@@ -27,7 +27,7 @@ import java.util.Locale;
 
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.apache.james.utils.FakeSmtpExtension;
+import org.apache.james.utils.FakeSmtp;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
@@ -46,18 +46,17 @@ public interface ForwardSmtpTest {
             .await();
 
     @RegisterExtension
-    FakeSmtpExtension fakeSmtp = FakeSmtpExtension.withDefaultPort();
+    FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
 
     @Test
     default void forwardingAnEmailShouldWork(SmtpHostSystem hostSystem,
-                                             FakeSmtpExtension.FakeSmtp fakeSmtp,
                                              InMemoryDNSService dnsService) throws Exception {
         SimpleScriptedTestProtocol scriptedTest =
                 new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
                         .withLocale(Locale.US)
                         .withUser(USER_AT_DOMAIN, PASSWORD);
 
-        dnsService.registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
+        dnsService.registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
         scriptedTest.run("helo");
