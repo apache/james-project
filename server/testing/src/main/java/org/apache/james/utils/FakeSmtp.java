@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -109,11 +110,12 @@ public class FakeSmtp implements TestRule, BeforeAllCallback, AfterAllCallback, 
     }
 
     public void assertEmailReceived(Consumer<ValidatableResponse> expectations) {
-        expectations.accept(
-            given(requestSpecification(), RESPONSE_SPECIFICATION)
-                .get("/api/email")
-            .then()
-                .statusCode(200));
+        Awaitility.await().atMost(Duration.ofSeconds(15))
+            .untilAsserted(() -> expectations.accept(
+                given(requestSpecification(), RESPONSE_SPECIFICATION)
+                    .get("/api/email")
+                    .then()
+                    .statusCode(200)));
     }
 
     private RequestSpecification requestSpecification() {
