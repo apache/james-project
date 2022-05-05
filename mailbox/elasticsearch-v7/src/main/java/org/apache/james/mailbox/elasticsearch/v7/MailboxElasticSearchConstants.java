@@ -29,7 +29,7 @@ public interface MailboxElasticSearchConstants {
         String MAILBOX = "mailbox";
     }
 
-    WriteAliasName DEFAULT_MAILBOX_WRITE_ALIAS = new WriteAliasName("mailboxWriteAlias");
-    ReadAliasName DEFAULT_MAILBOX_READ_ALIAS = new ReadAliasName("mailboxReadAlias");
-    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox_v1");
+    WriteAliasName DEFAULT_MAILBOX_WRITE_ALIAS = new WriteAliasName("mailboxWriteAlias2");
+    ReadAliasName DEFAULT_MAILBOX_READ_ALIAS = new ReadAliasName("mailboxReadAlias2");
+    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox_v2");
 }
