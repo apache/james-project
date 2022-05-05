@@ -614,7 +614,8 @@
         <cucumber.version>2.4.0</cucumber.version>
 
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
-        <jackson.version>2.13.1</jackson.version>
+        <jackson.version>2.13.2</jackson.version>
+        <jackson.databind.version>2.13.2.2</jackson.databind.version>
         <feign.version>11.8</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.11.2</jjwt.version>
@@ -2073,7 +2074,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
