@@ -20,8 +20,12 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -73,7 +77,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class SearchProcessorTest {
+class SearchProcessorTest {
     private static final int DAY = 6;
 
     private static final int MONTH = 6;
@@ -392,8 +396,7 @@ public class SearchProcessorTest {
     @Test
     void testSUBJECT() throws Exception {
         expectsGetSelectedMailbox();
-        check(SearchKey.buildSubject(SUBJECT), SearchQuery.headerContains(
-                ImapConstants.RFC822_SUBJECT, SUBJECT));
+        check(SearchKey.buildSubject(SUBJECT), SearchQuery.subject(SUBJECT));
     }
 
     @Test

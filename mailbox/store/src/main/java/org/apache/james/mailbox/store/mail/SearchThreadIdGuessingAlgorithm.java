@@ -93,7 +93,7 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
         });
         SearchQuery.Criterion mimeMessageIdCriterion = SearchQuery.or(mimeMessageIdCriteriaBuilder.build());
 
-        SearchQuery.Criterion finalCriterion = subject.map(value -> SearchQuery.and(mimeMessageIdCriterion, SearchQuery.headerContains("Subject", SearchUtil.getBaseSubject(value.getValue()))))
+        SearchQuery.Criterion finalCriterion = subject.map(value -> SearchQuery.and(mimeMessageIdCriterion, SearchQuery.subject(SearchUtil.getBaseSubject(value.getValue()))))
             .orElse(mimeMessageIdCriterion);
 
         return MultimailboxesSearchQuery
