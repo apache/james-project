@@ -65,6 +65,7 @@ public class MimeMessageStore {
         public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore() {
             return mimeMessageStore(blobStore.getDefaultBucketName());
         }
+
         public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore(BucketName bucketName) {
             return new Store.Impl<>(
                 new MimeMessagePartsId.Factory(),
