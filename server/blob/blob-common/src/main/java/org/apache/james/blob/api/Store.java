@@ -86,6 +86,7 @@ public interface Store<T, I> {
             this.blobStore = blobStore;
             this.bucketName = bucketName;
         }
+
         @Override
         public Mono<I> save(T t) {
             return Flux.fromStream(encoder.encode(t))
@@ -93,6 +94,7 @@ public interface Store<T, I> {
                 .collectMap(Tuple2::getT1, Tuple2::getT2)
                 .map(idFactory::generate);
         }
+
         private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, ValueToSave> entry) {
             return Mono.just(entry.getLeft())
                 .zipWith(entry.getRight().saveIn(bucketName, blobStore));
