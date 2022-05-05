@@ -21,15 +21,16 @@ package org.apache.james.mailbox.elasticsearch.v7.query;
 
 import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -44,12 +45,15 @@ import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+
 public class CriterionConverter {
+    private static final Splitter HEADER_VALUE_SPLITTER = Splitter.on(CharMatcher.anyOf(" \t\r\n;:/<>\"',")).omitEmptyStrings();
 
     private final Map<Class<?>, Function<Criterion, QueryBuilder>> criterionConverterMap;
     private final Map<Class<?>, BiFunction<String, HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
@@ -97,9 +101,7 @@ public class CriterionConverter {
         registerHeaderOperatorConverter(
             SearchQuery.ExistsOperator.class,
             (headerName, operator) ->
-                nestedQuery(JsonMessageConstants.HEADERS,
-                    termQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME, headerName),
-                    ScoreMode.Avg));
+                    existsQuery(JsonMessageConstants.HEADERS + "." + headerName.toLowerCase(Locale.US)));
         
         registerHeaderOperatorConverter(
             SearchQuery.AddressOperator.class,
@@ -111,12 +113,19 @@ public class CriterionConverter {
         
         registerHeaderOperatorConverter(
             SearchQuery.ContainsOperator.class,
-            (headerName, operator) ->
-                nestedQuery(JsonMessageConstants.HEADERS,
-                    boolQuery()
-                        .must(termQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME, headerName))
-                        .must(matchQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE, operator.getValue())),
-                    ScoreMode.Avg));
+            (headerName, operator) -> {
+                List<String> parts = HEADER_VALUE_SPLITTER.splitToList(operator.getValue());
+                if (parts.size() <= 1) {
+                    return headerValueTerm(headerName, operator.getValue());
+                }
+                BoolQueryBuilder result = boolQuery();
+                parts.forEach(part -> result.should(headerValueTerm(headerName, part)));
+                return result;
+            });
+    }
+
+    private MatchQueryBuilder headerValueTerm(String headerName, String value) {
+        return matchQuery(JsonMessageConstants.HEADERS + "." + headerName.toLowerCase(Locale.US), value.toLowerCase(Locale.US));
     }
 
     @SuppressWarnings("unchecked")

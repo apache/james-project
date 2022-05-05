@@ -27,7 +27,6 @@ import static org.apache.james.backends.es.v7.IndexCreationFactory.FORMAT;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.KEEP_MAIL_AND_URL;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.KEYWORD;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.LONG;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.NESTED;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.NORMALIZER;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.PROPERTIES;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
@@ -71,7 +70,6 @@ import java.io.IOException;
 import org.apache.james.backends.es.v7.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.Attachment;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.EMailer;
-import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.HEADER;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class MailboxMappingFactory {
@@ -181,16 +179,7 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(HEADERS)
-                            .field(TYPE, NESTED)
-                            .startObject(PROPERTIES)
-                                .startObject(HEADER.NAME)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                                .startObject(HEADER.VALUE)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                            .endObject()
+                            .field(TYPE, "flattened")
                         .endObject()
 
                         .startObject(SUBJECT)

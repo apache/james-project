@@ -24,9 +24,14 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -36,12 +41,17 @@ import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimaps;
 
 public class IndexableMessage {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+    private static final Splitter HEADER_VALUE_SPLITTER = Splitter.on(CharMatcher.anyOf(" \t\r\n;:/<>\"',")).omitEmptyStrings();
 
     public static class Builder {
         private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {
@@ -305,8 +315,18 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.HEADERS)
-    public List<HeaderCollection.Header> getHeaders() {
-        return headers;
+    public Map<String, Collection<String>> getHeaders() {
+        return headers.stream()
+            .flatMap(this::tokenizeHeaderValue)
+            .collect(Multimaps.toMultimap(header -> header.getKey().toLowerCase(Locale.US),
+                header -> header.getValue().toLowerCase(Locale.US),
+                ArrayListMultimap::create))
+            .asMap();
+    }
+
+    private Stream<Pair<String, String>> tokenizeHeaderValue(HeaderCollection.Header header) {
+        return HEADER_VALUE_SPLITTER.splitToStream(header.getValue())
+            .map(value -> Pair.of(header.getHeaderName(), value));
     }
 
     @JsonProperty(JsonMessageConstants.MAILBOX_ID)

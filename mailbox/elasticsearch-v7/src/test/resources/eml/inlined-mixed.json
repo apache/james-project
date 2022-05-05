@@ -24,34 +24,17 @@
         "address": "bob@domain.tld"
     }],
     "hasAttachment": false,
-    "headers": [{
-        "name": "date",
-        "value": "Wed, 26 Jan 2022 12:21:37 +0100"
-    }, {
-        "name": "from",
-        "value": "Bob <bob@domain.tld>"
-    }, {
-        "name": "to",
-        "value": "Alice <alice@domain.tld>"
-    }, {
-        "name": "subject",
-        "value": "My subject"
-    }, {
-        "name": "message-id",
-        "value": "<20220126112137.wookj26xellphlam@W0248292>"
-    }, {
-        "name": "mime-version",
-        "value": "1.0"
-    }, {
-        "name": "content-type",
-        "value": "multipart/mixed; boundary=\"7f4cfz6rtfqdbqxn\""
-    }, {
-        "name": "content-disposition",
-        "value": "inline"
-    }, {
-        "name": "content-transfer-encoding",
-        "value": "8bit"
-    }],
+    "headers": {
+        "date":["wed","26","jan","2022","12","21","37","+0100"],
+        "mime-version":["1.0"],
+        "subject":["my","subject"],
+        "content-disposition":["inline"],
+        "content-transfer-encoding":["8bit"],
+        "message-id":["20220126112137.wookj26xellphlam@w0248292"],
+        "from":["bob","bob@domain.tld"],
+        "content-type":["multipart","mixed","boundary=","7f4cfz6rtfqdbqxn"],
+        "to":["alice","alice@domain.tld"]
+    },
     "mailboxId": "18",
     "mediaType": "plain",
     "messageId": "184",

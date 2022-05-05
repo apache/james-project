@@ -7,16 +7,16 @@
   "date":"2015-06-07T00:00:00+0200",
   "from":[{"name":"Antoine DUPRAT","address":"xyz@linagora.com"}],
   "hasAttachment":false,
-  "headers":[
-    {"name":"to","value":"Antoine DUPRAT <xyz@linagora.com>"},
-    {"name":"from","value":"Antoine DUPRAT <xyz@linagora.com>"},
-    {"name":"subject","value":"Inline attachment"},
-    {"name":"message-id","value":"<26d91590-b995-8d45-f66a-0433c65745bb@linagora.com>"},
-    {"name":"date","value":"Tue, 5 Jul 2016 11:47:46 +0200"},
-    {"name":"mime-version","value":"1.0"},
-    {"name":"content-type","value":"text/plain; charset=%invalid; format=flowed"},
-    {"name":"content-transfer-encoding","value":"7bit"}
-  ],
+  "headers":{
+    "date":["tue","5","jul","2016","11","47","46","+0200"],
+    "mime-version":["1.0"],
+    "subject":["inline","attachment"],
+    "content-transfer-encoding":["7bit"],
+    "message-id":["26d91590-b995-8d45-f66a-0433c65745bb@linagora.com"],
+    "from":["antoine","duprat","xyz@linagora.com"],
+    "content-type":["text","plain","charset=%invalid","format=flowed"],
+    "to":["antoine","duprat","xyz@linagora.com"]
+  },
   "mailboxId":"18",
   "mediaType":"plain",
   "messageId":"184",
