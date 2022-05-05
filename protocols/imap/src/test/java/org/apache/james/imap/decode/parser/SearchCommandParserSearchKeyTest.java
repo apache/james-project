@@ -36,6 +36,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.decode.parser.SearchCommandParser.Context;
 import org.apache.james.mailbox.MessageUid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -378,7 +379,7 @@ class SearchCommandParserSearchKeyTest {
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
-        assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);
+        assertThat(parser.searchKey(null, reader, new Context(), false)).isEqualTo(key);
     }
 
     @Test
@@ -732,7 +733,7 @@ class SearchCommandParserSearchKeyTest {
                 new ByteArrayOutputStream());
 
         try {
-            parser.searchKey(null, reader, null, false);
+            parser.searchKey(null, reader, new Context(), false);
             fail("Expected protocol exception to be throw since input is invalid");
         } catch (DecodingException e) {
             // expected

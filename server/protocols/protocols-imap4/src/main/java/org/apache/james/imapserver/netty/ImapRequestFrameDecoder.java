@@ -86,7 +86,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
 
-        in.markReaderIndex();
+        int readerIndex = in.readerIndex();
         boolean retry = false;
 
         ImapRequestLineReader reader;
@@ -200,7 +200,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     internalBuffer().clear();
                     ctx.fireChannelRead(spareBytes);
                 }
-                in.resetReaderIndex();
+                in.readerIndex(readerIndex);
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
@@ -212,8 +212,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     public void disableFraming(ChannelHandlerContext ctx) {
-        ctx.channel().pipeline().remove(FRAMER);
-        framingEnabled.set(false);
+        if (framingEnabled.get()) {
+            ctx.channel().pipeline().remove(FRAMER);
+            framingEnabled.set(false);
+        }
     }
 
     public void enableFraming(ChannelHandlerContext ctx) {

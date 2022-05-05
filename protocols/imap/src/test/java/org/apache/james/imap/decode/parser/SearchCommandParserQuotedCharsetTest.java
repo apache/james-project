@@ -44,6 +44,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.decode.parser.SearchCommandParser.Context;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,7 +149,7 @@ class SearchCommandParserQuotedCharsetTest {
                         .getBytes(StandardCharsets.US_ASCII)),
                         BYTES_QUOTED_UTF8_LENGTHY_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
-        final SearchKey searchKey = parser.searchKey(null, reader, null, true);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), true);
         assertThat(searchKey).isEqualTo(key);
     }
 
@@ -160,7 +161,7 @@ class SearchCommandParserQuotedCharsetTest {
                         .getBytes(StandardCharsets.US_ASCII)),
                         BYTES_QUOTED_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
-        final SearchKey searchKey = parser.searchKey(null, reader, null, true);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), true);
         assertThat(searchKey).isEqualTo(key);
     }
 
@@ -262,7 +263,7 @@ class SearchCommandParserQuotedCharsetTest {
                 new ByteArrayInputStream(add(add(CHARSET, term),
                         BYTES_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
-        final SearchKey searchKey = parser.searchKey(null, reader, null, true);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), true);
         assertThat(searchKey).isEqualTo(key);
     }
 
@@ -271,7 +272,7 @@ class SearchCommandParserQuotedCharsetTest {
                 new ByteArrayInputStream(input.getBytes(charset)),
                 new ByteArrayOutputStream());
 
-        final SearchKey searchKey = parser.searchKey(null, reader, null, isFirst);
+        final SearchKey searchKey = parser.searchKey(null, reader, new Context(), isFirst);
         assertThat(searchKey).isEqualTo(key);
     }
 
