@@ -67,6 +67,7 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.MessageIdCriterion.class, this::convertMessageId);
         registerCriterionConverter(SearchQuery.ConjunctionCriterion.class, this::convertConjunction);
         registerCriterionConverter(SearchQuery.HeaderCriterion.class, this::convertHeader);
+        registerCriterionConverter(SearchQuery.SubjectCriterion.class, this::convertSubject);
         registerCriterionConverter(SearchQuery.TextCriterion.class, this::convertTextCriterion);
         registerCriterionConverter(SearchQuery.CustomFlagCriterion.class, this::convertCustomFlagCriterion);
         
@@ -422,6 +423,14 @@ public class CriterionConverter {
             .apply(
                 headerCriterion.getHeaderName().toLowerCase(Locale.US),
                 headerCriterion.getOperator());
+    }
+
+    private Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
+        return new MatchQuery.Builder()
+            .field(JsonMessageConstants.SUBJECT)
+            .query(new FieldValue.Builder().stringValue(headerCriterion.getSubject()).build())
+            .build()
+            ._toQuery();
     }
 
     private Query manageAddressFields(String headerName, String value) {

@@ -750,6 +750,10 @@ public class SearchQuery {
         return new MimeMessageIDCriterion(messageId);
     }
 
+    public static Criterion subject(String subject) {
+        return new SubjectCriterion(subject);
+    }
+
     public static Criterion threadId(ThreadId threadId) {
         return new ThreadIdCriterion(threadId);
     }
@@ -1152,6 +1156,44 @@ public class SearchQuery {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("messageID", messageID)
+                .toString();
+        }
+    }
+
+    public static class SubjectCriterion extends Criterion {
+        private final String subject;
+
+        public SubjectCriterion(String subject) {
+            this.subject = subject;
+        }
+
+        public String getSubject() {
+            return subject;
+        }
+
+        public HeaderCriterion asHeaderCriterion() {
+            return new HeaderCriterion("Subject", new ContainsOperator(subject));
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SubjectCriterion) {
+                SubjectCriterion that = (SubjectCriterion) o;
+
+                return java.util.Objects.equals(this.subject, that.subject);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return java.util.Objects.hash(subject);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("subject", subject)
                 .toString();
         }
     }

@@ -1245,6 +1245,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
             SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
             return createHeaderQuery(mimeMessageIDCriterion.asHeaderCriterion());
+        } else if (criterion instanceof SearchQuery.SubjectCriterion) {
+            SearchQuery.SubjectCriterion subjectCriterion = (SearchQuery.SubjectCriterion) criterion;
+            return createHeaderQuery(subjectCriterion.asHeaderCriterion());
         } else if (criterion instanceof SearchQuery.ThreadIdCriterion) {
             SearchQuery.ThreadIdCriterion threadIdCriterion = (SearchQuery.ThreadIdCriterion) criterion;
             return createTermQuery(THREAD_ID_FIELD, threadIdCriterion.getThreadId().serialize());

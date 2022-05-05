@@ -347,7 +347,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         case TYPE_SMALLER:
             return SearchQuery.sizeLessThan(key.getSize());
         case TYPE_SUBJECT:
-            return SearchQuery.headerContains(ImapConstants.RFC822_SUBJECT, key.getValue());
+            return SearchQuery.subject(key.getValue());
         case TYPE_TEXT:
             return SearchQuery.mailContains(key.getValue());
         case TYPE_TO:
