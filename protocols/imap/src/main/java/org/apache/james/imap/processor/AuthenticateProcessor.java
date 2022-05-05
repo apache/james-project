@@ -79,11 +79,13 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
                     doPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
-                    responder.respond(new AuthenticateResponse());
-                    session.pushLineHandler((requestSession, data) -> {
-                        doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
-                        // remove the handler now
-                        requestSession.popLineHandler();
+                    session.executeSafely(() -> {
+                        responder.respond(new AuthenticateResponse());
+                        session.pushLineHandler((requestSession, data) -> {
+                            doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                            // remove the handler now
+                            requestSession.popLineHandler();
+                        });
                     });
                 }
             }

@@ -90,6 +90,10 @@ public interface ImapSession extends CommandDetectionSession {
      */
     SessionId sessionId();
 
+    default void executeSafely(Runnable runnable) {
+        runnable.run();
+    }
+
     /**
      * Logs out the session. Marks the connection for closure;
      */
