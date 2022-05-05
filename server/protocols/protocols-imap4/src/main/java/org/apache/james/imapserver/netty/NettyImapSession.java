@@ -96,6 +96,16 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
+    public void executeSafely(Runnable runnable) {
+        channel.eventLoop().execute(() -> {
+            channel.config().setAutoRead(false);
+            runnable.run();
+
+            channel.config().setAutoRead(true);
+        });
+    }
+
+    @Override
     public Mono<Void> logout() {
         return closeMailbox()
             .then(Mono.fromRunnable(() -> state = ImapSessionState.LOGOUT));
@@ -166,13 +176,10 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         if (!supportStartTLS()) {
             return false;
         }
-        channel.eventLoop().execute(() -> {
-            channel.config().setAutoRead(false);
+        executeSafely(() -> {
             runnable.run();
-
             channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
             stopDetectingCommandInjection();
-            channel.config().setAutoRead(true);
         });
 
         return true;
@@ -215,8 +222,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
             return false;
         }
 
-        channel.eventLoop().execute(() -> {
-            channel.config().setAutoRead(false);
+        executeSafely(() -> {
             runnable.run();
             ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
             ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
@@ -232,8 +238,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
                 channel.pipeline().addAfter(SSL_HANDLER, ZLIB_DECODER, decoder);
                 channel.pipeline().addAfter(SSL_HANDLER, ZLIB_ENCODER, encoder);
             }
-
-            channel.config().setAutoRead(true);
         });
 
         return true;
