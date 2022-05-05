@@ -103,7 +103,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
 
-        Pair<ImapRequestLineReader, Integer> readerAndSize = obtainReader(ctx, in, attachment);
+        Pair<ImapRequestLineReader, Integer> readerAndSize = obtainReader(ctx, in, attachment, readerIndex);
         if (readerAndSize == null) {
             return;
         }
@@ -161,7 +161,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         in.readerIndex(readerIndex);
     }
 
-    private Pair<ImapRequestLineReader, Integer> obtainReader(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment) throws IOException {
+    private Pair<ImapRequestLineReader, Integer> obtainReader(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int readerIndex) throws IOException {
         boolean retry = false;
         ImapRequestLineReader reader;
         // check if we failed before and if we already know how much data we
@@ -180,7 +180,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
                     // ok seems like it will not fit in the memory limit so we
                     // need to store it in a temporary file
-                    uploadToAFile(ctx, in, attachment, size);
+                    uploadToAFile(ctx, in, attachment, size, readerIndex);
                     return null;
 
                 } else {
@@ -198,7 +198,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         return Pair.of(reader, size);
     }
 
-    private void uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int size) throws IOException {
+    private void uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int size, int readerIndex) throws IOException {
         final File f;
         Sinks.Many<byte[]> sink;
 
@@ -244,7 +244,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         ImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), f, RETRY);
 
                         try {
-                            parseImapMessage(ctx, null, attachment, Pair.of(reader, written.get()))
+                            parseImapMessage(ctx, null, attachment, Pair.of(reader, written.get()), readerIndex)
                                 .ifPresent(ctx::fireChannelRead);
                         } catch (DecodingException e) {
                             ctx.fireExceptionCaught(e);
