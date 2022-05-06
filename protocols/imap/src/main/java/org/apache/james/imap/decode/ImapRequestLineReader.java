@@ -516,24 +516,16 @@ public abstract class ImapRequestLineReader {
         Flags flags = new Flags();
         nextWordChar();
         consumeChar('(');
-        CharacterValidator validator = new NoopCharValidator();
-        String nextWord = consumeWord(validator);
-        while (!nextWord.endsWith(")")) {
-            DecoderUtils.setFlag(nextWord, flags);
-            nextWord = consumeWord(validator);
+        while (nextChar() != ')') {
+            String nextWord = consumeWord(NoopCharValidator.INSTANCE, true);
             if (nextWord.isEmpty()) {
                 // Throw to avoid an infinite loop...
                 throw new DecodingException(HumanReadableText.FAILED, "Empty word encountered");
             }
+            DecoderUtils.setFlag(nextWord, flags);
+            nextWordChar();
         }
-        // Got the closing ")", may be attached to a word.
-        if (nextWord.length() > 1) {
-            int parenIndex = nextWord.indexOf(')');
-            if (parenIndex > 0) {
-                final String nextFlag = nextWord.substring(0, parenIndex);
-                DecoderUtils.setFlag(nextFlag, flags);
-            }
-        }
+        consumeChar(')');
 
         return flags;
     }
