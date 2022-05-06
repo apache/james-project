@@ -36,7 +36,6 @@ import org.apache.james.imap.message.request.StatusRequest;
  * Parse STATUS commands
  */
 public class StatusCommandParser extends AbstractImapCommandParser {
-    private static final ImapRequestLineReader.NoopCharValidator NOOP_CHAR_VALIDATOR = new ImapRequestLineReader.NoopCharValidator();
 
     public StatusCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STATUS_COMMAND, statusResponseFactory);
@@ -59,20 +58,18 @@ public class StatusCommandParser extends AbstractImapCommandParser {
 
         request.nextWordChar();
         request.consumeChar('(');
-        String nextWord = request.consumeWord(NOOP_CHAR_VALIDATOR);
+        request.nextWordChar();
 
-        while (!nextWord.endsWith(")")) {
-            words.add(parseStatus(nextWord));
-            nextWord = request.consumeWord(NOOP_CHAR_VALIDATOR);
+        while (request.nextChar() != ')') {
+            String nextWord = request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE, true);
             if (nextWord.isEmpty()) {
                 // Throw to avoid an infinite loop...
                 throw new DecodingException(HumanReadableText.FAILED, "Empty word encountered");
             }
+            words.add(parseStatus(nextWord));
+            request.nextWordChar();
         }
-        // Got the closing ")", may be attached to a word.
-        if (nextWord.length() > 1) {
-            words.add(parseStatus(nextWord.substring(0, nextWord.length() - 1)));
-        }
+        request.consumeChar(')');
         return words;
     }
 
