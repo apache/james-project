@@ -74,6 +74,7 @@ class NetworkErrorTest {
         rabbitMQExtension.getRabbitMQ().pause();
 
         assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+            .getCause()
             .isInstanceOf(NoSuchElementException.class)
             .hasMessageContaining("Timeout waiting for idle object");
 
