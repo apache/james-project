@@ -37,8 +37,7 @@ public class MailAddressCollectionReader {
 
     public static Set<Optional<MailAddress>> read(String condition) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
-        return Splitter.onPattern("(,| |\t)").splitToList(condition)
-            .stream()
+        return Splitter.onPattern("(,| |\t)").splitToStream(condition)
             .filter(Predicate.not(Strings::isNullOrEmpty))
             .map(MailAddressCollectionReader::getMailAddress)
             .collect(ImmutableSet.toImmutableSet());

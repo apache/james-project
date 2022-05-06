@@ -38,8 +38,7 @@ public class PackageName {
 
     private static boolean hasEmptyParts(String sanitizedValue) {
         return Splitter.on(PART_SEPARATOR)
-            .splitToList(sanitizedValue)
-            .stream()
+            .splitToStream(sanitizedValue)
             .anyMatch(String::isEmpty);
     }
 

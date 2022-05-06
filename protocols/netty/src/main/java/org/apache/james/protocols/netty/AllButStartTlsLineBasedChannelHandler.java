@@ -83,9 +83,8 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     }
 
     protected boolean hasStartTLS(String trimedLowerCasedInput) {
-        List<String> parts = CRLF_SPLITTER.splitToList(trimedLowerCasedInput);
-
-        return parts.stream().anyMatch(s -> s.equalsIgnoreCase(pattern));
+        return CRLF_SPLITTER.splitToStream(trimedLowerCasedInput)
+            .anyMatch(s -> s.equalsIgnoreCase(pattern));
     }
 
     private String readAll(ByteBuf buffer) {

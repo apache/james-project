@@ -245,7 +245,9 @@ public class MailAddress implements java.io.Serializable {
     }
 
     private boolean haveDoubleDot(String localPart) {
-        return Splitter.on('.').splitToList(localPart).stream().anyMatch(String::isEmpty);
+        return Splitter.on('.')
+            .splitToStream(localPart)
+            .anyMatch(String::isEmpty);
     }
 
     private Domain createDomain(String domain) throws AddressException {

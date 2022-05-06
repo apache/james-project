@@ -40,8 +40,7 @@ public class MappingArgument {
 
         return Splitter.on(',')
             .omitEmptyStrings()
-            .splitToList(mapping)
-            .stream()
+            .splitToStream(mapping)
             .map(MappingArgument::parseKeyValue)
             .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }

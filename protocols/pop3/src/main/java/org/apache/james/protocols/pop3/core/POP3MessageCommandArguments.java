@@ -42,8 +42,7 @@ public class POP3MessageCommandArguments {
             List<Integer> args = Splitter.on(' ')
                 .omitEmptyStrings()
                 .trimResults()
-                .splitToList(parameters)
-                .stream()
+                .splitToStream(parameters)
                 .map(Integer::parseInt)
                 .collect(ImmutableList.toImmutableList());
             

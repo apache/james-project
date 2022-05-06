@@ -430,8 +430,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
                 try {
                     MailAddress address = new MailAddress(property.substring(JAMES_MAIL_PER_RECIPIENT_HEADERS.length() + 1));
                     String headers = message.getStringProperty(property);
-                    return Splitter.on('\n').splitToList(headers)
-                        .stream()
+                    return Splitter.on('\n').splitToStream(headers)
                         .map(PerRecipientHeaders.Header::fromString)
                         .map(header -> Pair.of(address, header));
                 } catch (AddressException | JMSException e) {
@@ -463,8 +462,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         String attributeNames = message.getStringProperty(JAMES_MAIL_ATTRIBUTE_NAMES);
 
         builder.addAttributes(
-            splitter.splitToList(attributeNames)
-            .stream()
+            splitter.splitToStream(attributeNames)
             .flatMap(attributeName -> mailAttribute(message, attributeName))
             .collect(ImmutableList.toImmutableList()));
 

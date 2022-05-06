@@ -166,8 +166,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     private long countFetchedEntries() {
         return Splitter.on("\n")
             .trimResults()
-            .splitToList(imapClient.getReplyString())
-            .stream()
+            .splitToStream(imapClient.getReplyString())
             .filter(s -> s.startsWith("*"))
             .count();
     }
@@ -187,8 +186,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     boolean isCompletedWithFlags(String flags, String replyString) {
         return replyString.contains("OK FETCH completed")
             && Splitter.on(" ")
-                .splitToList(flags)
-                .stream()
+                .splitToStream(flags)
                 .allMatch(replyString::contains);
     }
 
