@@ -46,12 +46,16 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import org.apache.james.imap.message.request.FetchRequest;
 
+import com.google.common.base.CharMatcher;
+
 /**
  * Parse FETCH commands
  */
 public class FetchCommandParser extends AbstractUidCommandParser {
     private static final String CHANGEDSINCE = "CHANGEDSINCE";
     private static final String VANISHED = "VANISHED";
+    private static final CharMatcher CLOSING_BRACKET = CharMatcher.is(']');
+    private static final CharMatcher NEXT_ELEMENT_END = CharMatcher.anyOf(" [)\r\n");
 
     public FetchCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.FETCH_COMMAND, statusResponseFactory);
@@ -115,8 +119,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private void addNextElement(ImapRequestLineReader reader, FetchData.Builder fetch) throws DecodingException {
-        // String name = element.toString();
-        String name = readWord(reader, " [)\r\n");
+        String name = readWord(reader, NEXT_ELEMENT_END);
         char next = reader.nextChar();
         // Simple elements with no '[]' parameters.
         if (next != '[') {
@@ -124,7 +127,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         } else {
             reader.consumeChar('[');
 
-            String parameter = readWord(reader, "]");
+            String parameter = readWord(reader, CLOSING_BRACKET);
 
             reader.consumeChar(']');
 
@@ -209,10 +212,10 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         return new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
     }
 
-    private String readWord(ImapRequestLineReader request, String terminator) throws DecodingException {
+    private String readWord(ImapRequestLineReader request, CharMatcher terminator) throws DecodingException {
         StringBuilder builder = new StringBuilder();
         char next = request.nextChar();
-        while (terminator.indexOf(next) == -1) {
+        while (!terminator.matches(next)) {
             builder.append(next);
             request.consume();
             next = request.nextChar();
