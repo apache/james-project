@@ -470,6 +470,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
 
                     assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
+                        .getCause()
                         .isInstanceOf(NoSuchElementException.class)
                         .hasMessageContaining("Timeout waiting for idle object");
 
@@ -592,6 +593,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+                        .getCause()
                         .isInstanceOf(NoSuchElementException.class)
                         .hasMessageContaining("Timeout waiting for idle object");
 
@@ -629,6 +631,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+                        .getCause()
                         .isInstanceOf(NoSuchElementException.class)
                         .hasMessageContaining("Timeout waiting for idle object");
 
@@ -647,6 +650,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().pause();
 
                 assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+                        .getCause()
                         .isInstanceOf(NoSuchElementException.class)
                         .hasMessageContaining("Timeout waiting for idle object");
 

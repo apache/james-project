@@ -189,7 +189,7 @@ public class EventDispatcher {
                 .subscribeOn(Schedulers.elastic())) // channel.confirmSelect is synchronous
                 .filter(outboundMessageResult -> !outboundMessageResult.isAck())
                 .handle((result, sink) -> sink.error(new Exception("Publish was not acked")))
-                .retryWhen(Retry.backoff(5, Duration.ofMillis(100)))
+                .retryWhen(Retry.backoff(2, Duration.ofMillis(100)))
                 .then();
         } else {
             return sender.send(Mono.just(toMessage(serializedEvent, RoutingKey.empty())));
