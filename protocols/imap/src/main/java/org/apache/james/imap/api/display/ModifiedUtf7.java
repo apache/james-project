@@ -22,11 +22,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import com.beetstra.jutf7.CharsetProvider;
+import com.google.common.base.CharMatcher;
 
 /**
  * This class has some methods included which helps to encode/decode modified UTF7
  */
 public class ModifiedUtf7 {
+    private static final CharMatcher UNENCODED_CHAR_MATCHER = CharMatcher.isNot('&');
 
     private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName("X-MODIFIED-UTF-7");
 
@@ -37,6 +39,9 @@ public class ModifiedUtf7 {
      * @return decoded value
      */
     public static String decodeModifiedUTF7(String input) {
+        if (UNENCODED_CHAR_MATCHER.matchesAllOf(input)) {
+            return input;
+        }
         return X_MODIFIED_UTF_7_CHARSET.decode(ByteBuffer.wrap(input.getBytes())).toString();
     }
 
