@@ -77,12 +77,14 @@ public interface Store<T, I> {
         private final Encoder<T> encoder;
         private final Decoder<T> decoder;
         private final BlobStore blobStore;
+        private final BucketName bucketName;
 
-        public Impl(BlobPartsId.Factory<I> idFactory, Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore) {
+        public Impl(BlobPartsId.Factory<I> idFactory, Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore, BucketName bucketName) {
             this.idFactory = idFactory;
             this.encoder = encoder;
             this.decoder = decoder;
             this.blobStore = blobStore;
+            this.bucketName = bucketName;
         }
 
         @Override
@@ -95,14 +97,14 @@ public interface Store<T, I> {
 
         private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, ValueToSave> entry) {
             return Mono.just(entry.getLeft())
-                .zipWith(entry.getRight().saveIn(blobStore.getDefaultBucketName(), blobStore));
+                .zipWith(entry.getRight().saveIn(bucketName, blobStore));
         }
 
         @Override
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(Schedulers.elastic())
-                .collectMap(Map.Entry::getKey, entry -> readByteSource(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy()))
+                .collectMap(Map.Entry::getKey, entry -> readByteSource(bucketName, entry.getValue(), entry.getKey().getStoragePolicy()))
                 .map(decoder::decode);
         }
 
@@ -119,7 +121,7 @@ public interface Store<T, I> {
         @Override
         public Publisher<Void> delete(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().values())
-                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id), DEFAULT_CONCURRENCY)
+                .flatMap(id -> blobStore.delete(bucketName, id), DEFAULT_CONCURRENCY)
                 .then();
         }
     }
