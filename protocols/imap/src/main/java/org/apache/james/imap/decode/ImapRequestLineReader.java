@@ -57,19 +57,258 @@ import org.apache.james.mailbox.MessageUid;
  * lookahead=1 on the underlying character stream. TODO need to look at encoding
  */
 public abstract class ImapRequestLineReader {
+    /**
+     * Provides the ability to ensure characters are part of a permitted set.
+     */
+    public interface CharacterValidator {
+        /**
+         * Validates the supplied character.
+         *
+         * @param chr
+         *            The character to validate.
+         * @return <code>true</code> if chr is valid, <code>false</code> if not.
+         */
+        boolean isValid(char chr);
+    }
+
+    /**
+     * Verifies subsequent characters match a specified string
+     */
+    public static class StringMatcherCharacterValidator implements CharacterValidator {
+        public static StringMatcherCharacterValidator ignoreCase(String expectedString) {
+            return new StringMatcherCharacterValidator(expectedString);
+        }
+
+        static boolean asciiEqualsIgnoringCase(Character c1, Character c2) {
+            return Character.toUpperCase(c1) == Character.toUpperCase(c2);
+        }
+
+        private final String expectedString;
+        private int position = 0;
+
+        private StringMatcherCharacterValidator(String expectedString) {
+            this.expectedString = expectedString;
+        }
+
+        /**
+         * Verifies whether the next character is valid or not.
+         *
+         * This call will mutate StringValidator internal state, making it progress to following character validation.
+         */
+        @Override
+        public boolean isValid(char chr) {
+            if (position >= expectedString.length()) {
+                return false;
+            } else {
+                return asciiEqualsIgnoringCase(chr, expectedString.charAt(position++));
+            }
+        }
+    }
+
+    public static class NoopCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new NoopCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            return true;
+        }
+    }
+
+    public static class AtomCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new AtomCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
+        }
+
+        private boolean isAtomSpecial(char chr) {
+            return (chr == '(' || chr == ')' || chr == '{' || chr == ' ' || chr == Character.CONTROL);
+        }
+    }
+
+    public static class TagCharValidator extends AtomCharValidator {
+        public static CharacterValidator INSTANCE = new TagCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            if (chr == '+') {
+                return false;
+            }
+            return super.isValid(chr);
+        }
+    }
+
+    public static class MessageSetCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new MessageSetCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            return (isDigit(chr) || chr == ':' || chr == '*' || chr == ',');
+        }
+
+        private boolean isDigit(char chr) {
+            return '0' <= chr && chr <= '9';
+        }
+    }
+
+    /**
+     * Decodes contents of a quoted string. Charset aware. One shot, not thread
+     * safe.
+     */
+    private static class QuotedStringDecoder {
+        /** Decoder suitable for charset */
+        private final CharsetDecoder decoder;
+
+        /** byte buffer will be filled then flushed to character buffer */
+        private final ByteBuffer buffer;
+
+        /** character buffer may be dynamically resized */
+        CharBuffer charBuffer;
+
+        public QuotedStringDecoder(Charset charset) {
+            decoder = charset.newDecoder();
+            buffer = ByteBuffer.allocate(QUOTED_BUFFER_INITIAL_CAPACITY);
+            charBuffer = CharBuffer.allocate(QUOTED_BUFFER_INITIAL_CAPACITY);
+        }
+
+        public String decode(ImapRequestLineReader request) throws DecodingException {
+            try {
+                decoder.reset();
+                char next = request.nextChar();
+                while (next != '"') {
+                    // fill up byte buffer before decoding
+                    if (!buffer.hasRemaining()) {
+                        decodeByteBufferToCharacterBuffer(false);
+                    }
+                    if (next == '\\') {
+                        request.consume();
+                        next = request.nextChar();
+                        if (!isQuotedSpecial(next)) {
+                            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid escaped character in quote: '" + next + "'");
+                        }
+                    }
+                    // TODO: nextChar does not report accurate chars so safe to
+                    // cast to byte
+                    buffer.put((byte) next);
+                    request.consume();
+                    next = request.nextChar();
+                }
+                completeDecoding();
+                return charBuffer.toString();
+
+            } catch (IllegalStateException e) {
+                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
+            }
+        }
+
+        private void completeDecoding() throws DecodingException {
+            decodeByteBufferToCharacterBuffer(true);
+            flush();
+            charBuffer.flip();
+        }
+
+        private void flush() throws DecodingException {
+            final CoderResult coderResult = decoder.flush(charBuffer);
+            if (coderResult.isOverflow()) {
+                upsizeCharBuffer();
+                flush();
+            } else if (coderResult.isError()) {
+                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding");
+            }
+        }
+
+        /**
+         * Decodes contents of the byte buffer to the character buffer. The
+         * character buffer will be replaced by a larger one if required.
+         *
+         * @param endOfInput
+         *            is the input ended
+         */
+        private CoderResult decodeByteBufferToCharacterBuffer(boolean endOfInput) throws DecodingException {
+            buffer.flip();
+            return decodeMoreBytesToCharacterBuffer(endOfInput);
+        }
+
+        private CoderResult decodeMoreBytesToCharacterBuffer(boolean endOfInput) throws DecodingException {
+            final CoderResult coderResult = decoder.decode(buffer, charBuffer, endOfInput);
+            if (coderResult.isOverflow()) {
+                upsizeCharBuffer();
+                return decodeMoreBytesToCharacterBuffer(endOfInput);
+            } else if (coderResult.isError()) {
+                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding");
+            } else if (coderResult.isUnderflow()) {
+                buffer.clear();
+            }
+            return coderResult;
+        }
+
+        /**
+         * Increases the size of the character buffer.
+         */
+        private void upsizeCharBuffer() {
+            final int oldCapacity = charBuffer.capacity();
+            CharBuffer oldBuffer = charBuffer;
+            charBuffer = CharBuffer.allocate(oldCapacity + QUOTED_BUFFER_INITIAL_CAPACITY);
+            oldBuffer.flip();
+            charBuffer.put(oldBuffer);
+        }
+    }
 
     private static final int QUOTED_BUFFER_INITIAL_CAPACITY = 64;
-
-    protected boolean nextSeen = false;
-
-    protected char nextChar; // unknown
-
-
 
     public static int cap(char next) {
         return next > 'Z' ? next ^ 32 : next;
     }
-    
+
+    public static boolean isCHAR(char chr) {
+        return (chr >= 0x01 && chr <= 0x7f);
+    }
+
+    public static boolean isListWildcard(char chr) {
+        return (chr == '*' || chr == '%');
+    }
+
+    public static boolean isQuotedSpecial(char chr) {
+        return (chr == '"' || chr == '\\');
+    }
+
+    protected char nextChar; // unknown
+    protected boolean nextSeen = false;
+
+    /**
+     * Reads the next character in the current line. This method will continue
+     * to return the same character until the {@link #consume()} method is
+     * called.
+     *
+     * @return The next character TODO: character encoding is variable and
+     *         cannot be determine at the token level; this char is not accurate
+     *         reported; should be an octet
+     * @throws DecodingException
+     *             If the end-of-stream is reached.
+     */
+    public abstract char nextChar() throws DecodingException;
+
+    /**
+     * Reads and consumes a number of characters from the underlying reader,
+     * filling the char array provided. TODO: remove unnecessary copying of
+     * bits; line reader should maintain an internal ByteBuffer;
+     *
+     * @param size
+     *            count of characters to read and consume
+     * @param extraCRLF
+     *            <code>true</code> if extra CRLF is wanted, <code>false</code> else
+     * @throws DecodingException
+     *             If a char can't be read into each array element.
+     */
+    public abstract Literal read(int size, boolean extraCRLF) throws IOException;
+
+    /**
+     * Sends a server command continuation request '+' back to the client,
+     * requesting more data to be sent.
+     */
+    protected abstract void commandContinuationRequest() throws DecodingException;
+
     /**
      * Reads the next regular, non-space character in the current line. Spaces
      * are skipped over, but end-of-line characters will cause a
@@ -107,19 +346,6 @@ public abstract class ImapRequestLineReader {
 
         return Optional.of(next);
     }
-
-    /**
-     * Reads the next character in the current line. This method will continue
-     * to return the same character until the {@link #consume()} method is
-     * called.
-     * 
-     * @return The next character TODO: character encoding is variable and
-     *         cannot be determine at the token level; this char is not accurate
-     *         reported; should be an octet
-     * @throws DecodingException
-     *             If the end-of-stream is reached.
-     */
-    public abstract char nextChar() throws DecodingException;
 
     /**
      * Moves the request line reader to end of the line, checking that no
@@ -167,26 +393,6 @@ public abstract class ImapRequestLineReader {
         nextChar = 0;
         return current;
     }
-
-    /**
-     * Reads and consumes a number of characters from the underlying reader,
-     * filling the char array provided. TODO: remove unnecessary copying of
-     * bits; line reader should maintain an internal ByteBuffer;
-     * 
-     * @param size
-     *            count of characters to read and consume
-     * @param extraCRLF
-     *            <code>true</code> if extra CRLF is wanted, <code>false</code> else
-     * @throws DecodingException
-     *             If a char can't be read into each array element.
-     */
-    public abstract Literal read(int size, boolean extraCRLF) throws IOException;
-
-    /**
-     * Sends a server command continuation request '+' back to the client,
-     * requesting more data to be sent.
-     */
-    protected abstract void commandContinuationRequest() throws DecodingException;
 
     /**
      * Consume the rest of the line
@@ -624,18 +830,6 @@ public abstract class ImapRequestLineReader {
         return number;
     }
 
-    public static boolean isCHAR(char chr) {
-        return (chr >= 0x01 && chr <= 0x7f);
-    }
-
-    public static boolean isListWildcard(char chr) {
-        return (chr == '*' || chr == '%');
-    }
-
-    public static boolean isQuotedSpecial(char chr) {
-        return (chr == '"' || chr == '\\');
-    }
-
     /**
      * Reads a "message set" argument, and parses into an IdSet.
      */
@@ -825,204 +1019,6 @@ public abstract class ImapRequestLineReader {
             }
             return number;
 
-        }
-    }
-
-    /**
-     * Provides the ability to ensure characters are part of a permitted set.
-     */
-    public interface CharacterValidator {
-        /**
-         * Validates the supplied character.
-         * 
-         * @param chr
-         *            The character to validate.
-         * @return <code>true</code> if chr is valid, <code>false</code> if not.
-         */
-        boolean isValid(char chr);
-    }
-
-    /**
-     * Verifies subsequent characters match a specified string
-     */
-    public static class StringMatcherCharacterValidator implements CharacterValidator {
-        public static StringMatcherCharacterValidator ignoreCase(String expectedString) {
-            return new StringMatcherCharacterValidator(expectedString);
-        }
-
-        static boolean asciiEqualsIgnoringCase(Character c1, Character c2) {
-            return Character.toUpperCase(c1) == Character.toUpperCase(c2);
-        }
-
-        private final String expectedString;
-        private int position = 0;
-
-        private StringMatcherCharacterValidator(String expectedString) {
-            this.expectedString = expectedString;
-        }
-
-        /**
-         * Verifies whether the next character is valid or not.
-         *
-         * This call will mutate StringValidator internal state, making it progress to following character validation.
-         */
-        @Override
-        public boolean isValid(char chr) {
-            if (position >= expectedString.length()) {
-                return false;
-            } else {
-                return asciiEqualsIgnoringCase(chr, expectedString.charAt(position++));
-            }
-        }
-    }
-
-    public static class NoopCharValidator implements CharacterValidator {
-        public static CharacterValidator INSTANCE = new NoopCharValidator();
-
-        @Override
-        public boolean isValid(char chr) {
-            return true;
-        }
-    }
-
-    public static class AtomCharValidator implements CharacterValidator {
-        public static CharacterValidator INSTANCE = new AtomCharValidator();
-
-        @Override
-        public boolean isValid(char chr) {
-            return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
-        }
-
-        private boolean isAtomSpecial(char chr) {
-            return (chr == '(' || chr == ')' || chr == '{' || chr == ' ' || chr == Character.CONTROL);
-        }
-    }
-
-    public static class TagCharValidator extends AtomCharValidator {
-        public static CharacterValidator INSTANCE = new TagCharValidator();
-
-        @Override
-        public boolean isValid(char chr) {
-            if (chr == '+') {
-                return false;
-            }
-            return super.isValid(chr);
-        }
-    }
-
-    public static class MessageSetCharValidator implements CharacterValidator {
-        public static CharacterValidator INSTANCE = new MessageSetCharValidator();
-
-        @Override
-        public boolean isValid(char chr) {
-            return (isDigit(chr) || chr == ':' || chr == '*' || chr == ',');
-        }
-
-        private boolean isDigit(char chr) {
-            return '0' <= chr && chr <= '9';
-        }
-    }
-
-    /**
-     * Decodes contents of a quoted string. Charset aware. One shot, not thread
-     * safe.
-     */
-    private static class QuotedStringDecoder {
-        /** Decoder suitable for charset */
-        private final CharsetDecoder decoder;
-
-        /** byte buffer will be filled then flushed to character buffer */
-        private final ByteBuffer buffer;
-
-        /** character buffer may be dynamically resized */
-        CharBuffer charBuffer;
-
-        public QuotedStringDecoder(Charset charset) {
-            decoder = charset.newDecoder();
-            buffer = ByteBuffer.allocate(QUOTED_BUFFER_INITIAL_CAPACITY);
-            charBuffer = CharBuffer.allocate(QUOTED_BUFFER_INITIAL_CAPACITY);
-        }
-
-        public String decode(ImapRequestLineReader request) throws DecodingException {
-            try {
-                decoder.reset();
-                char next = request.nextChar();
-                while (next != '"') {
-                    // fill up byte buffer before decoding
-                    if (!buffer.hasRemaining()) {
-                        decodeByteBufferToCharacterBuffer(false);
-                    }
-                    if (next == '\\') {
-                        request.consume();
-                        next = request.nextChar();
-                        if (!isQuotedSpecial(next)) {
-                            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid escaped character in quote: '" + next + "'");
-                        }
-                    }
-                    // TODO: nextChar does not report accurate chars so safe to
-                    // cast to byte
-                    buffer.put((byte) next);
-                    request.consume();
-                    next = request.nextChar();
-                }
-                completeDecoding();
-                return charBuffer.toString();
-
-            } catch (IllegalStateException e) {
-                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-            }
-        }
-
-        private void completeDecoding() throws DecodingException {
-            decodeByteBufferToCharacterBuffer(true);
-            flush();
-            charBuffer.flip();
-        }
-
-        private void flush() throws DecodingException {
-            final CoderResult coderResult = decoder.flush(charBuffer);
-            if (coderResult.isOverflow()) {
-                upsizeCharBuffer();
-                flush();
-            } else if (coderResult.isError()) {
-                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding");
-            }
-        }
-
-        /**
-         * Decodes contents of the byte buffer to the character buffer. The
-         * character buffer will be replaced by a larger one if required.
-         * 
-         * @param endOfInput
-         *            is the input ended
-         */
-        private CoderResult decodeByteBufferToCharacterBuffer(boolean endOfInput) throws DecodingException {
-            buffer.flip();
-            return decodeMoreBytesToCharacterBuffer(endOfInput);
-        }
-
-        private CoderResult decodeMoreBytesToCharacterBuffer(boolean endOfInput) throws DecodingException {
-            final CoderResult coderResult = decoder.decode(buffer, charBuffer, endOfInput);
-            if (coderResult.isOverflow()) {
-                upsizeCharBuffer();
-                return decodeMoreBytesToCharacterBuffer(endOfInput);
-            } else if (coderResult.isError()) {
-                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding");
-            } else if (coderResult.isUnderflow()) {
-                buffer.clear();
-            }
-            return coderResult;
-        }
-
-        /**
-         * Increases the size of the character buffer.
-         */
-        private void upsizeCharBuffer() {
-            final int oldCapacity = charBuffer.capacity();
-            CharBuffer oldBuffer = charBuffer;
-            charBuffer = CharBuffer.allocate(oldCapacity + QUOTED_BUFFER_INITIAL_CAPACITY);
-            oldBuffer.flip();
-            charBuffer.put(oldBuffer);
         }
     }
 
