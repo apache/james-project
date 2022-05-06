@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.api.identity
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
@@ -27,9 +31,6 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import java.nio.charset.StandardCharsets
-import java.util.UUID
-import javax.inject.Inject
 import scala.jdk.StreamConverters._
 import scala.util.Try
 
@@ -158,6 +159,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
   def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] = {
     val findServerSetIdentity: SMono[Option[Identity]] = SMono.fromCallable(() => identityFactory.listIdentities(user)
       .find(identity => identity.id.equals(identityId)))
+      .subscribeOn(Schedulers.elastic)
     val findCustomIdentity: SMono[Option[Identity]] = SMono(customIdentityDao.findByIdentityId(user, identityId))
       .map(Some(_))
       .switchIfEmpty(SMono.just(None))
