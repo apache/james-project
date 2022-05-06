@@ -33,6 +33,17 @@ import org.apache.james.imap.message.request.ListRequest;
  * Parse LIST commands
  */
 public class ListCommandParser extends AbstractUidCommandParser {
+    private static class ListCharValidator extends AtomCharValidator {
+        public static ImapRequestLineReader.CharacterValidator INSTANCE = new ListCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            if (ImapRequestLineReader.isListWildcard(chr)) {
+                return true;
+            }
+            return super.isValid(chr);
+        }
+    }
 
     public ListCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.LIST_COMMAND, statusResponseFactory);
@@ -57,17 +68,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         case '{':
             return request.consumeLiteral(null);
         default:
-            return request.consumeWord(new ListCharValidator());
-        }
-    }
-
-    private static class ListCharValidator extends AtomCharValidator {
-        @Override
-        public boolean isValid(char chr) {
-            if (ImapRequestLineReader.isListWildcard(chr)) {
-                return true;
-            }
-            return super.isValid(chr);
+            return request.consumeWord(ListCharValidator.INSTANCE);
         }
     }
 

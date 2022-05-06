@@ -63,7 +63,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
         }
 
         MessageManager.FlagsUpdateMode flagsUpdateMode = parseFlagsUpdateMode(request, next);
-        String directive = request.consumeWord(new ImapRequestLineReader.NoopCharValidator());
+        String directive = request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE);
         boolean silent = parseSilent(directive);
         Flags flags = parseFlags(request);
 

@@ -204,15 +204,14 @@ public abstract class ImapRequestLineReader {
      * Reads an argument of type "atom" from the request.
      */
     public String atom() throws DecodingException {
-        return consumeWord(new AtomCharValidator(), true);
+        return consumeWord(AtomCharValidator.INSTANCE, true);
     }
 
     /**
      * Reads a command "tag" from the request.
      */
     public Tag tag() throws DecodingException {
-        CharacterValidator validator = new TagCharValidator();
-        return new Tag(consumeWord(validator));
+        return new Tag(consumeWord(TagCharValidator.INSTANCE));
     }
 
     /**
@@ -546,8 +545,7 @@ public abstract class ImapRequestLineReader {
         Flags flags = new Flags();
         nextWordChar();
 
-        CharacterValidator validator = new NoopCharValidator();
-        String nextFlag = consumeWord(validator);
+        String nextFlag = consumeWord(NoopCharValidator.INSTANCE);
         DecoderUtils.setFlag(nextFlag, flags);
         return flags;
     }
@@ -665,11 +663,10 @@ public abstract class ImapRequestLineReader {
                 return SearchResUtil.getSavedSequenceSet(session);
             }
         }
-        
-        CharacterValidator validator = new MessageSetCharValidator();
+
         // Don't fail to parse id ranges which are enclosed by "(..)"
         // See IMAP-283
-        String nextWord = consumeWord(validator, true);
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
 
         int commaPos = nextWord.indexOf(',');
         if (commaPos == -1) {
@@ -699,10 +696,9 @@ public abstract class ImapRequestLineReader {
      * Reads a "message set" argument, and parses into an IdSet. This also support the use of $ as sequence-set as stated in SEARCHRES RFC5182 
      */
     public UidRange[] parseUidRange() throws DecodingException {
-        CharacterValidator validator = new MessageSetCharValidator();
         // Don't fail to parse id ranges which are enclosed by "(..)"
         // See IMAP-283
-        String nextWord = consumeWord(validator, true);
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
 
         int commaPos = nextWord.indexOf(',');
         if (commaPos == -1) {
@@ -889,6 +885,8 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class NoopCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new NoopCharValidator();
+
         @Override
         public boolean isValid(char chr) {
             return true;
@@ -896,6 +894,8 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class AtomCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new AtomCharValidator();
+
         @Override
         public boolean isValid(char chr) {
             return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
@@ -907,6 +907,8 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class TagCharValidator extends AtomCharValidator {
+        public static CharacterValidator INSTANCE = new TagCharValidator();
+
         @Override
         public boolean isValid(char chr) {
             if (chr == '+') {
@@ -917,6 +919,8 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class MessageSetCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new MessageSetCharValidator();
+
         @Override
         public boolean isValid(char chr) {
             return (isDigit(chr) || chr == ':' || chr == '*' || chr == ',');
