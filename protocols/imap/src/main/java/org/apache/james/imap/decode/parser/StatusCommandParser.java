@@ -61,36 +61,120 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         request.nextWordChar();
 
         while (request.nextChar() != ')') {
-            String nextWord = request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE, true);
-            if (nextWord.isEmpty()) {
-                // Throw to avoid an infinite loop...
-                throw new DecodingException(HumanReadableText.FAILED, "Empty word encountered");
-            }
-            words.add(parseStatus(nextWord));
+            words.add(parseStatus(request));
             request.nextWordChar();
         }
         request.consumeChar(')');
         return words;
     }
 
-    private StatusDataItems.StatusItem parseStatus(String nextWord) throws DecodingException {
+    private StatusDataItems.StatusItem parseStatus(ImapRequestLineReader request) throws DecodingException {
         // All the matching must be done in a case-insensitive fashion.
         // See rfc3501 9. Formal Syntax and IMAP-282
-        if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_MESSAGES)) {
-            return StatusDataItems.StatusItem.MESSAGES;
-        } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_RECENT)) {
-            return StatusDataItems.StatusItem.RECENT;
-        } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UIDNEXT)) {
-            return StatusDataItems.StatusItem.UID_NEXT;
-        } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UIDVALIDITY)) {
-            return StatusDataItems.StatusItem.UID_VALIDITY;
-        } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UNSEEN)) {
-            return StatusDataItems.StatusItem.UNSEEN;
-        } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_HIGHESTMODSEQ)) {
-            // HIGHESTMODSEQ status item as defined in RFC4551 3.6 HIGHESTMODSEQ Status Data Items
-            return StatusDataItems.StatusItem.HIGHEST_MODSEQ;
-        } else {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + nextWord + "'");
+        char c = request.nextWordChar();
+        if (c == 'm' || c == 'M') {
+            return readMessages(request);
+        }
+        if (c == 'r' || c == 'R') {
+            return readRecent(request);
+        }
+        if (c == 'h' || c == 'H') {
+            return readHighestModseq(request);
+        }
+        if (c == 'u' || c == 'U') {
+            return readU(request);
+        }
+        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
+    }
+
+    private StatusDataItems.StatusItem readU(ImapRequestLineReader request) throws DecodingException {
+        char c;
+        assertChar(request, 'u', 'U');
+        c = request.nextWordChar();
+        if (c == 'n' || c == 'N') {
+            return readUnseen(request);
+        }
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'd', 'D');
+        c = request.nextWordChar();
+        if (c == 'n' || c == 'N') {
+            return readUidNext(request);
+        }
+        readValidity(request);
+        return StatusDataItems.StatusItem.UID_VALIDITY;
+    }
+
+    private void readValidity(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'v', 'V');
+        assertChar(request, 'a', 'A');
+        assertChar(request, 'l', 'L');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'd', 'D');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 't', 'T');
+        assertChar(request, 'y', 'Y');
+    }
+
+    private StatusDataItems.StatusItem readUidNext(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'n', 'N');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'x', 'X');
+        assertChar(request, 't', 'T');
+        return StatusDataItems.StatusItem.UID_NEXT;
+    }
+
+    private StatusDataItems.StatusItem readUnseen(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'n', 'N');
+        assertChar(request, 's', 'S');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'n', 'N');
+        return StatusDataItems.StatusItem.UNSEEN;
+    }
+
+    private StatusDataItems.StatusItem readHighestModseq(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'h', 'H');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'g', 'G');
+        assertChar(request, 'h', 'H');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 's', 'S');
+        assertChar(request, 't', 'T');
+        assertChar(request, 'm', 'M');
+        assertChar(request, 'o', 'O');
+        assertChar(request, 'd', 'D');
+        assertChar(request, 's', 'S');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'q', 'Q');
+        return StatusDataItems.StatusItem.HIGHEST_MODSEQ;
+    }
+
+    private StatusDataItems.StatusItem readRecent(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'r', 'R');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'c', 'C');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'n', 'N');
+        assertChar(request, 't', 'T');
+        return StatusDataItems.StatusItem.RECENT;
+    }
+
+    private StatusDataItems.StatusItem readMessages(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'm', 'M');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 's', 'S');
+        assertChar(request, 's', 'S');
+        assertChar(request, 'a', 'A');
+        assertChar(request, 'g', 'G');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 's', 'S');
+        return StatusDataItems.StatusItem.MESSAGES;
+    }
+
+    private void assertChar(ImapRequestLineReader reader, char low, char up) throws DecodingException {
+        char c = reader.consume();
+        if (c != low && c != up) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unexpected token in Status item. Expecting " + up + " got " + c);
         }
     }
 }
