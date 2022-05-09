@@ -28,8 +28,8 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.QueueArguments.NO_ARGUMENTS;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
+import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
@@ -53,6 +53,7 @@ import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 import reactor.util.function.Tuples;
+import reactor.util.retry.Retry;
 
 public class EventDispatcher {
     public static class DispatchingFailureGroup extends Group {
@@ -157,7 +158,7 @@ public class EventDispatcher {
     }
 
     private Mono<Void> remoteGroupsDispatch(byte[] serializedEvent, Event event) {
-        return remoteDispatchWithAcks(serializedEvent, Collections.singletonList(RoutingKey.empty()))
+        return remoteDispatchWithAcks(serializedEvent)
             .doOnError(ex -> LOGGER.error(
                 "cannot dispatch event of type '{}' belonging '{}' with id '{}' to remote groups, store it into dead letter",
                 event.getClass().getSimpleName(),
@@ -182,24 +183,26 @@ public class EventDispatcher {
         return sender.send(toMessages(serializedEvent, routingKeys));
     }
 
-    private Mono<Void> remoteDispatchWithAcks(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
-        if (routingKeys.isEmpty()) {
-            return Mono.empty();
-        }
+    private Mono<Void> remoteDispatchWithAcks(byte[] serializedEvent) {
         if (configuration.isEventBusPublishConfirmEnabled()) {
-            return sender.sendWithPublishConfirms(toMessages(serializedEvent, routingKeys))
-                .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+            return Mono.from(sender.sendWithPublishConfirms(Mono.just(toMessage(serializedEvent, RoutingKey.empty())))
+                .subscribeOn(Schedulers.elastic())) // channel.confirmSelect is synchronous
                 .filter(outboundMessageResult -> !outboundMessageResult.isAck())
-                .next()
-                .handle((result, sink) -> sink.error(new Exception("Publish was not acked")));
+                .handle((result, sink) -> sink.error(new Exception("Publish was not acked")))
+                .retryWhen(Retry.backoff(2, Duration.ofMillis(100)))
+                .then();
         } else {
-            return sender.send(toMessages(serializedEvent, routingKeys));
+            return sender.send(Mono.just(toMessage(serializedEvent, RoutingKey.empty())));
         }
     }
 
     private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
         return Flux.fromIterable(routingKeys)
-                .map(routingKey -> new OutboundMessage(namingStrategy.exchange(), routingKey.asString(), basicProperties, serializedEvent));
+                .map(routingKey -> toMessage(serializedEvent, routingKey));
+    }
+
+    private OutboundMessage toMessage(byte[] serializedEvent, RoutingKey routingKey) {
+        return new OutboundMessage(namingStrategy.exchange(), routingKey.asString(), basicProperties, serializedEvent);
     }
 
     private byte[] serializeEvent(Event event) {
