@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.search;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -33,14 +34,17 @@ import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -52,14 +56,32 @@ import reactor.core.scheduler.Schedulers;
  * notified about message changes. This will then allow to update the underlying index.
  */
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, EventListener.ReactiveGroupEventListener {
+    public interface SearchOverride {
+        boolean applicable(SearchQuery searchQuery, MailboxSession session);
+
+        Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery);
+    }
+
     protected static final int UNLIMITED = -1;
-    private final MailboxSessionMapperFactory factory;
-    private final SessionProvider sessionProvider;
     private static final ImmutableList<Class<? extends Event>> INTERESTING_EVENTS = ImmutableList.of(Added.class, Expunged.class, FlagsUpdated.class, MailboxDeletion.class);
 
-    public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
+    private final MailboxSessionMapperFactory factory;
+    private final Set<SearchOverride> searchOverrides;
+    private final SessionProvider sessionProvider;
+
+    public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, Set<SearchOverride> searchOverrides, SessionProvider sessionProvider) {
         this.factory = factory;
+        this.searchOverrides = searchOverrides;
         this.sessionProvider = sessionProvider;
+    }
+
+    @Override
+    public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        return searchOverrides.stream()
+            .filter(override -> override.applicable(searchQuery, session))
+            .map(override -> override.search(session, mailbox, searchQuery))
+            .findFirst()
+            .orElseGet(Throwing.supplier(() -> doSearch(session, mailbox, searchQuery)).sneakyThrow());
     }
 
     @Override
@@ -112,6 +134,8 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         return factory.getMessageMapper(session)
             .findInMailboxReactive(mailbox, range, FetchType.FULL, UNLIMITED);
     }
+
+    protected abstract Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException;
 
     /**
      * Add the {@link MailboxMessage} for the given {@link Mailbox} to the index

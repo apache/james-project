@@ -39,6 +39,8 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
+import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -50,7 +52,7 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final FakeMessageSearchIndexGroup GROUP = new FakeMessageSearchIndexGroup();
 
     public FakeMessageSearchIndex() {
-        super(null, null);
+        super(null, ImmutableSet.of(), null);
     }
 
     @Override
@@ -79,7 +81,7 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         throw new NotImplementedException("not implemented");
     }
 
