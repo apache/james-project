@@ -155,6 +155,8 @@ public interface UriMatcher {
     }
 
     class Fixed implements UriMatcher {
+        private static final String QUERY_CHARACTER = "?";
+
         private final String fixedPath;
 
         public Fixed(String fixedPath) {
@@ -163,7 +165,12 @@ public interface UriMatcher {
 
         @Override
         public boolean matches(String uri) {
-            return uri.equals(fixedPath);
+            int indexOfQueryCharacter = uri.indexOf(QUERY_CHARACTER);
+            if (indexOfQueryCharacter != -1) {
+                return uri.substring(0, indexOfQueryCharacter).equals(fixedPath);
+            } else {
+                return uri.equals(fixedPath);
+            }
         }
 
         @Override
