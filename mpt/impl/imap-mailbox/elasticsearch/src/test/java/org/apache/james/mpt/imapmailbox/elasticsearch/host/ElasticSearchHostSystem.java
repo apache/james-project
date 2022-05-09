@@ -44,7 +44,6 @@ import org.apache.james.mailbox.elasticsearch.v7.json.MessageToElasticSearchJson
 import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -55,6 +54,8 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
+
+import com.google.common.collect.ImmutableSet;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
@@ -97,6 +98,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             .defaultMessageParser()
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
+                ImmutableSet.of(),
                 new ElasticSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,

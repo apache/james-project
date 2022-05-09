@@ -51,7 +51,6 @@ import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
@@ -92,6 +91,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 class ElasticSearchListeningMessageSearchIndexTest {
@@ -198,7 +198,8 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
         elasticSearchIndexer = new ElasticSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         
-        testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
+        testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
+            ImmutableSet.of(), elasticSearchIndexer, elasticSearchSearcher,
             messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), messageIdFactory);
         session = sessionProvider.createSystemSession(USERNAME);
 
@@ -212,7 +213,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
     
     @Test
-    void addShouldIndexMessageWithoutAttachment() {
+    void addShouldIndexMessageWithoutAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -222,7 +223,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void addShouldIndexMessageWithAttachment() {
+    void addShouldIndexMessageWithAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -232,7 +233,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void addShouldBeIndempotent() {
+    void addShouldBeIndempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_1).block();
 
@@ -244,7 +245,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void addShouldIndexMultipleMessages() {
+    void addShouldIndexMultipleMessages() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
 
@@ -256,13 +257,14 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void addShouldIndexEmailBodyWhenNotIndexableAttachment() {
+    void addShouldIndexEmailBodyWhenNotIndexableAttachment() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new FailingTextExtractor(),
             ZoneId.of("Europe/Paris"),
             IndexAttachments.YES);
 
-        testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
+        testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
+            ImmutableSet.of(), elasticSearchIndexer, elasticSearchSearcher,
             messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), new InMemoryMessageId.Factory());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
@@ -285,7 +287,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void deleteShouldRemoveIndex() {
+    void deleteShouldRemoveIndex() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -298,7 +300,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void deleteShouldOnlyRemoveIndexesPassedAsArguments() {
+    void deleteShouldOnlyRemoveIndexesPassedAsArguments() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 2L);
@@ -312,7 +314,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void deleteShouldRemoveMultipleIndexes() {
+    void deleteShouldRemoveMultipleIndexes() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 2L);
@@ -326,7 +328,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void deleteShouldBeIdempotent() {
+    void deleteShouldBeIdempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -357,7 +359,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void updateShouldUpdateIndex() {
+    void updateShouldUpdateIndex() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -378,7 +380,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void updateShouldNotUpdateNorThrowOnUnknownMessageUid() {
+    void updateShouldNotUpdateNorThrowOnUnknownMessageUid() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -398,7 +400,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void updateShouldBeIdempotent() {
+    void updateShouldBeIdempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
@@ -439,7 +441,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    void deleteAllShouldRemoveAllIndexes() {
+    void deleteAllShouldRemoveAllIndexes() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), 2L);

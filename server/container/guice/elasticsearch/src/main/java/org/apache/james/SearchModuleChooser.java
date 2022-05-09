@@ -47,6 +47,7 @@ import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -67,7 +68,7 @@ public class SearchModuleChooser {
     private static class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
 
         public FakeMessageSearchIndex() {
-            super(null, null);
+            super(null, ImmutableSet.of(), null);
         }
 
         @Override
@@ -101,7 +102,7 @@ public class SearchModuleChooser {
         }
 
         @Override
-        public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
             throw new NotImplementedException("not implemented");
         }
 
