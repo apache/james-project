@@ -60,8 +60,7 @@ public class RecipientDomainIs extends GenericRecipientMatcher {
     Collection<Domain> parseDomainsList(String condition) {
         return Splitter.onPattern("(, |,| )")
                 .omitEmptyStrings()
-                .splitToList(condition)
-                .stream()
+                .splitToStream(condition)
                 .map(Domain::of)
                 .collect(ImmutableList.toImmutableList());
     }

@@ -68,8 +68,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
 
     private void assertMailboxNameJustContainDelimiter(String mailboxName, char delimiter) throws DecodingException {
         Splitter.on(delimiter)
-            .splitToList(mailboxName)
-            .stream()
+            .splitToStream(mailboxName)
             .filter(Predicate.not(Strings::isNullOrEmpty))
             .findAny()
             .orElseThrow(() -> new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox name"));

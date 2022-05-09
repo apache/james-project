@@ -79,8 +79,7 @@ public class HasMimeTypeParameter extends GenericMatcher {
                 try {
                     return Splitter.on(",")
                         .trimResults()
-                        .splitToList(value)
-                        .stream()
+                        .splitToStream(value)
                         .map(this::conditionToPair)
                         .collect(ImmutableList.toImmutableList());
                 } catch (IllegalArgumentException e) {

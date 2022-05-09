@@ -170,8 +170,7 @@ public class DsnParameters {
             return validate(EnumSet.copyOf(Splitter.on(",")
                 .omitEmptyStrings()
                 .trimResults()
-                .splitToList(input)
-                .stream()
+                .splitToStream(input)
                 .map(string -> parseValue(string)
                     .orElseThrow(() -> new IllegalArgumentException(string + " could not be associated with any RCPT NOTIFY value")))
                 .collect(ImmutableList.toImmutableList())));

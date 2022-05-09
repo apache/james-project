@@ -42,8 +42,7 @@ public class Host {
     private static ImmutableList<Host> parseHosts(String hostsString, Optional<Integer> defaultPort) {
         return Splitter.on(',')
             .omitEmptyStrings()
-            .splitToList(hostsString)
-            .stream()
+            .splitToStream(hostsString)
             .map(string -> Host.parse(string, defaultPort))
             .distinct()
             .collect(ImmutableList.toImmutableList());

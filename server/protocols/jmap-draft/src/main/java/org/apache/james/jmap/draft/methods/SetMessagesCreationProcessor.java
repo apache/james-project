@@ -349,7 +349,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private Set<MessageProperties.MessageProperty> collectMessageProperties(List<ValidationResult> validationErrors) {
         Splitter propertiesSplitter = Splitter.on(',').trimResults().omitEmptyStrings();
         return validationErrors.stream()
-                .flatMap(err -> propertiesSplitter.splitToList(err.getProperty()).stream())
+                .flatMap(err -> propertiesSplitter.splitToStream(err.getProperty()))
                 .flatMap(MessageProperty::find)
                 .collect(Collectors.toSet());
     }

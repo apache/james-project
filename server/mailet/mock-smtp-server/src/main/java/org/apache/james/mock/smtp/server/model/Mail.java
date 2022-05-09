@@ -73,8 +73,7 @@ public class Mail {
         }
 
         public static Collection<Mail.Parameter> fromArgLine(String argLine) {
-            return Splitter.on(' ').splitToList(argLine)
-                .stream()
+            return Splitter.on(' ').splitToStream(argLine)
                 .filter(argString -> argString.contains("="))
                 .map(Parameter::fromString)
                 .collect(ImmutableList.toImmutableList());

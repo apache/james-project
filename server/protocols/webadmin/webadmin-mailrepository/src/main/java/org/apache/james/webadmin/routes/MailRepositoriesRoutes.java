@@ -352,8 +352,7 @@ public class MailRepositoriesRoutes implements Routes {
             .on(',')
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(additionalFieldsParam)
-            .stream()
+            .splitToStream(additionalFieldsParam)
             .map(field -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
             .collect(ImmutableSet.toImmutableSet());
     }
