@@ -38,6 +38,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraFirstUnseenDAO {
@@ -46,6 +47,7 @@ public class CassandraFirstUnseenDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement readStatement;
+    private final PreparedStatement listStatement;
 
     @Inject
     public CassandraFirstUnseenDAO(Session session) {
@@ -54,6 +56,7 @@ public class CassandraFirstUnseenDAO {
         this.deleteStatement = prepareDeleteStatement(session);
         this.deleteAllStatement = prepareDeleteAllStatement(session);
         this.readStatement = prepareReadStatement(session);
+        this.listStatement = prepareReadStatement(session);
     }
 
     private PreparedStatement prepareReadStatement(Session session) {
@@ -62,6 +65,13 @@ public class CassandraFirstUnseenDAO {
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
             .orderBy(asc(UID))
             .limit(1));
+    }
+
+    private PreparedStatement prepareListStatement(Session session) {
+        return session.prepare(select(UID)
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .orderBy(asc(UID)));
     }
 
     private PreparedStatement prepareDeleteStatement(Session session) {
@@ -104,6 +114,13 @@ public class CassandraFirstUnseenDAO {
     public Mono<MessageUid> retrieveFirstUnread(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeSingleRow(
             readStatement.bind()
+                .setUUID(MAILBOX_ID, cassandraId.asUuid()))
+            .map(row -> MessageUid.of(row.getLong(UID)));
+    }
+
+    public Flux<MessageUid> listUnseen(CassandraId cassandraId) {
+        return cassandraAsyncExecutor.executeRows(
+            listStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(UID)));
     }

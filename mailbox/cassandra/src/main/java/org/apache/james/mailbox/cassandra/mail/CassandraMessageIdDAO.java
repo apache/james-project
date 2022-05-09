@@ -51,12 +51,14 @@ import static org.apache.james.mailbox.cassandra.table.Flag.RECENT;
 import static org.apache.james.mailbox.cassandra.table.Flag.SEEN;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
+import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID_LOWERCASE;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,6 +111,8 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement selectUidGte;
     private final PreparedStatement selectUidGteLimited;
     private final PreparedStatement selectUidRange;
+    private final PreparedStatement selectUidOnlyRange;
+    private final PreparedStatement selectMetadataRange;
     private final PreparedStatement selectUidRangeLimited;
     private final PreparedStatement update;
     private final PreparedStatement listStatement;
@@ -127,8 +131,10 @@ public class CassandraMessageIdDAO {
         this.selectUidGte = prepareSelectUidGte(session);
         this.selectUidGteLimited = prepareSelectUidGteLimited(session);
         this.selectUidRange = prepareSelectUidRange(session);
+        this.selectUidOnlyRange = prepareSelectUidOnlyRange(session);
         this.selectUidRangeLimited = prepareSelectUidRangeLimited(session);
         this.listStatement = prepareList(session);
+        this.selectMetadataRange = prepareSelectMetadataRange(session);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -224,6 +230,34 @@ public class CassandraMessageIdDAO {
     private PreparedStatement prepareSelectUidRange(Session session) {
         return session.prepare(select()
             .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
+            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
+    }
+
+    private PreparedStatement prepareSelectUidOnlyRange(Session session) {
+        return session.prepare(select(IMAP_UID)
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
+            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
+    }
+
+    private PreparedStatement prepareSelectMetadataRange(Session session) {
+        return session.prepare(
+            select(
+                IMAP_UID,
+                MESSAGE_ID,
+                ANSWERED.toLowerCase(Locale.US),
+                DELETED.toLowerCase(Locale.US),
+                DRAFT.toLowerCase(Locale.US),
+                RECENT.toLowerCase(Locale.US),
+                SEEN.toLowerCase(Locale.US),
+                FLAGGED.toLowerCase(Locale.US),
+                USER.toLowerCase(Locale.US),
+                USER_FLAGS_LOWERCASE,
+                MOD_SEQ_LOWERCASE)
+                .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
             .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
             .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
@@ -367,6 +401,39 @@ public class CassandraMessageIdDAO {
         return cassandraAsyncExecutor.executeRows(selectAllUids.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
+    }
+
+    public Flux<ComposedMessageIdWithMetaData> listMessagesMetadata(CassandraId mailboxId, MessageRange range) {
+        return cassandraAsyncExecutor.executeRows(selectMetadataRange.bind()
+            .setUUID(MAILBOX_ID, mailboxId.asUuid())
+            .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
+            .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
+            .map(row -> {
+                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID_LOWERCASE));
+                return ComposedMessageIdWithMetaData.builder()
+                    .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
+                    .threadId(getThreadIdFromRow(row, messageId))
+                    .flags(FlagsExtractor.getFlags(row))
+                    .composedMessageId(new ComposedMessageId(mailboxId,
+                        messageId,
+                        MessageUid.of(row.getLong(IMAP_UID))))
+                    .build();
+            });
+    }
+
+    public Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {
+        return cassandraAsyncExecutor.executeRows(selectUidOnlyRange.bind()
+                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
+                .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
+            .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
+    }
+
+    public Flux<MessageUid> listUids(CassandraId mailboxId, MessageRange range) {
+        if (range.getType() == MessageRange.Type.ALL) {
+            return listUids(mailboxId);
+        }
+        return doListUids(mailboxId, range);
     }
 
     public Flux<CassandraMessageMetadata> retrieveAllMessages() {

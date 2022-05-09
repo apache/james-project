@@ -50,6 +50,8 @@ import com.google.common.collect.ImmutableSet;
  */
 public class SearchQuery {
     private static final String DATE_HEADER_NAME = "Date";
+    public static final ImmutableList<Sort> DEFAULT_SORTS = ImmutableList.of(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL));
+
 
     /**
      * The Resolution which should get used for {@link Date} searches
@@ -769,7 +771,7 @@ public class SearchQuery {
 
         public SearchQuery build() {
             return new SearchQuery(criterias.build(),
-                sorts.orElse(ImmutableList.of(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL))),
+                sorts.orElse(DEFAULT_SORTS),
                 recentMessageUids.build());
         }
     }
@@ -1896,6 +1898,13 @@ public class SearchQuery {
          */
         public UidRange[] getRange() {
             return ranges;
+        }
+
+        public boolean isAll() {
+            return ranges.length == 0
+                || (ranges.length == 1
+                && ranges[0].getLowValue() == MessageUid.MIN_VALUE
+                && ranges[0].getHighValue() == MessageUid.MAX_VALUE);
         }
 
         
