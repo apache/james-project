@@ -309,6 +309,7 @@ public class ElasticSearchConfiguration {
         private Optional<SSLConfiguration> sslTrustConfiguration;
         private Optional<Integer> maxConnectionsPerHost;
         private Optional<Integer> maxConnections;
+        private ImmutableList.Builder<String> searchOverrides;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -323,6 +324,7 @@ public class ElasticSearchConfiguration {
             sslTrustConfiguration = Optional.empty();
             maxConnectionsPerHost = Optional.empty();
             maxConnections = Optional.empty();
+            searchOverrides = ImmutableList.builder();
         }
 
         public Builder addHost(Host host) {
@@ -398,6 +400,11 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
+        public Builder withSearchOverrides(List<String> searchOverrides) {
+            this.searchOverrides.addAll(searchOverrides);
+            return this;
+        }
+
         public ElasticSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
             Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
@@ -411,7 +418,10 @@ public class ElasticSearchConfiguration {
                 requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT),
                 hostScheme.orElse(DEFAULT_SCHEME),
                 credential,
-                sslTrustConfiguration.orElse(DEFAULT_SSL_TRUST_CONFIGURATION), maxConnections, maxConnectionsPerHost);
+                sslTrustConfiguration.orElse(DEFAULT_SSL_TRUST_CONFIGURATION),
+                maxConnections,
+                maxConnectionsPerHost,
+                searchOverrides.build());
         }
     }
 
@@ -436,6 +446,7 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES = "elasticsearch.retryConnection.maxRetries";
     public static final String ELASTICSEARCH_MAX_CONNECTIONS = "elasticsearch.max.connections";
     public static final String ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS = "elasticsearch.max.connections.per.hosts";
+    public static final String ELASTICSEARCH_SEARCH_OVERRIDES = "elasticsearch.search.overrides";
 
     public static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     public static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
@@ -466,6 +477,7 @@ public class ElasticSearchConfiguration {
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .maxConnections(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS, null)))
             .maxConnectionsPerHost(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS, null)))
+            .withSearchOverrides(Optional.ofNullable(configuration.getStringArray(ELASTICSEARCH_SEARCH_OVERRIDES)).map(ImmutableList::copyOf).orElse(ImmutableList.of()))
             .build();
     }
 
@@ -560,9 +572,10 @@ public class ElasticSearchConfiguration {
     private final SSLConfiguration sslConfiguration;
     private final Optional<Integer> maxConnections;
     private final Optional<Integer> maxConnectionsPerHost;
+    private final List<String> searchOverrides;
 
     private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
-                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration, Optional<Integer> maxConnections, Optional<Integer> maxConnectionsPerHost) {
+                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration, Optional<Integer> maxConnections, Optional<Integer> maxConnectionsPerHost, List<String> searchOverrides) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -575,6 +588,11 @@ public class ElasticSearchConfiguration {
         this.sslConfiguration = sslConfiguration;
         this.maxConnections = maxConnections;
         this.maxConnectionsPerHost = maxConnectionsPerHost;
+        this.searchOverrides = searchOverrides;
+    }
+
+    public List<String> getSearchOverrides() {
+        return searchOverrides;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -641,6 +659,7 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.credential, that.credential)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
                 && Objects.equals(this.maxConnections, that.maxConnections)
+                && Objects.equals(this.searchOverrides, that.searchOverrides)
                 && Objects.equals(this.maxConnectionsPerHost, that.maxConnectionsPerHost);
         }
         return false;
@@ -649,6 +668,6 @@ public class ElasticSearchConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout,
-            hostScheme, credential, sslConfiguration, maxConnections, maxConnectionsPerHost);
+            hostScheme, credential, sslConfiguration, maxConnections, maxConnectionsPerHost, searchOverrides);
     }
 }
