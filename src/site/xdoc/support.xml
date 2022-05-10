@@ -29,6 +29,12 @@
 
     <p>Here is a list of companies which can provide you some support on James.</p>
 
+    <subsection name="Baechler Craftsmanship">
+      <a href="mailto:matthieu@baechler-craftsmanship.fr">Baechler Craftsmanship</a>
+      <p>Baechler Craftsmanship has a very strong knowledge both on email and James. The company is run by a long-time contributor and PMC of James which contributed significant enhancements over the years.</p>
+      <p>The company is commited to contribute to James and offers consultancy for companies willing to use James on their own infrastructure and/or need enhancements to fit their own needs.</p>
+      <p>Free Software is a core value of the company and it can also help customers to work with James community in an efficient and positive way.</p>
+    </subsection>
     <subsection name="Linagora">
       <a href="https://www.linagora.com/ossa"><img src="images/linagora.png" /></a>
       <p>We are an Open Source Software Company.</p>
