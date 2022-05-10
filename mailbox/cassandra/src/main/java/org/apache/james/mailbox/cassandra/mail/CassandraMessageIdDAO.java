@@ -248,6 +248,7 @@ public class CassandraMessageIdDAO {
             select(
                 IMAP_UID,
                 MESSAGE_ID,
+                THREAD_ID_LOWERCASE,
                 ANSWERED.toLowerCase(Locale.US),
                 DELETED.toLowerCase(Locale.US),
                 DRAFT.toLowerCase(Locale.US),
@@ -421,7 +422,7 @@ public class CassandraMessageIdDAO {
             });
     }
 
-    public Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {
+    private Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {
         return cassandraAsyncExecutor.executeRows(selectUidOnlyRange.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())

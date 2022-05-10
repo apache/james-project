@@ -56,7 +56,7 @@ public class CassandraFirstUnseenDAO {
         this.deleteStatement = prepareDeleteStatement(session);
         this.deleteAllStatement = prepareDeleteAllStatement(session);
         this.readStatement = prepareReadStatement(session);
-        this.listStatement = prepareReadStatement(session);
+        this.listStatement = prepareListStatement(session);
     }
 
     private PreparedStatement prepareReadStatement(Session session) {
