@@ -97,6 +97,22 @@ class CassandraFirstUnseenDAOTest {
     }
 
     @Test
+    void listUnseenShouldReturnAllValues() {
+        testee.addUnread(MAILBOX_ID, UID_1).block();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
+        testee.addUnread(CassandraId.timeBased(), MessageUid.of(3)).block();
+
+        assertThat(testee.listUnseen(MAILBOX_ID).collectList().block())
+            .containsOnly(UID_1, UID_2);
+    }
+
+    @Test
+    void listUnseenShouldReturnEmptyByDefault() {
+        assertThat(testee.listUnseen(MAILBOX_ID).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
     void retrieveFirstUnreadShouldBeOrderIndependent() {
         testee.addUnread(MAILBOX_ID, UID_2).block();
 
