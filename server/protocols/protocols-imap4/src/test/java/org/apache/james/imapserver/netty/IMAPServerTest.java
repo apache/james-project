@@ -372,7 +372,7 @@ class IMAPServerTest {
                 "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
                 "MIME-Version: 1.0\r\n" +
                 "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                "C:\r\n" +
+                "\r\n" +
                 "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
                 msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
@@ -393,10 +393,37 @@ class IMAPServerTest {
                 "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
                 "MIME-Version: 1.0\r\n" +
                 "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                "C:\r\n" +
+                "\r\n" +
                 "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
                 msg + "\r\nA005 NOOP").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
+        }
+
+        @Test
+        void extraDataAfterFirstLineShouldNotBeLost() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            String msg = " Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+            clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + (msg.length() + 4) + "+}\r\nDATE").getBytes(StandardCharsets.UTF_8)));
+
+            Thread.sleep(100); // Forces separate TCP messages
+
+            clientConnection.write(ByteBuffer.wrap((msg).getBytes(StandardCharsets.UTF_8)));
+
+            Thread.sleep(100); // Forces separate TCP messages
+
+            clientConnection.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
         }
