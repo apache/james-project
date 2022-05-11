@@ -153,11 +153,6 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
         disableFraming(ctx);
-        if (in.readableBytes() > 0) {
-            ByteBuf spareBytes = in.retainedDuplicate();
-            internalBuffer().clear();
-            ctx.fireChannelRead(spareBytes);
-        }
         in.readerIndex(readerIndex);
     }
 
