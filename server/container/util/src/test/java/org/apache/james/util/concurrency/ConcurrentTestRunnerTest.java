@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
 
 class ConcurrentTestRunnerTest {
     private static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
-    private static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
+    private static final Duration DEFAULT_AWAIT_TIME = Duration.ofSeconds(2);
 
     @Test
     void constructorShouldThrowOnNegativeThreadCount() {
