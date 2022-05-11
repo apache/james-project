@@ -339,6 +339,50 @@ class IMAPServerTest {
     }
 
     @Nested
+    class AppendNonSynchronizedLitterals {
+        IMAPServer imapServer;
+        private SocketChannel clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerNoLimits.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
+        }
+
+        @AfterEach
+        void tearDown() throws Exception {
+            clientConnection.close();
+            imapServer.destroy();
+        }
+
+        @Test
+        void appendShouldSucceedWhenNonSynchronized() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            String msg = "Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "C:\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+            clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
+                msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
+
+        }
+    }
+
+    @Nested
     class Compress {
         IMAPServer imapServer;
         private int port;
