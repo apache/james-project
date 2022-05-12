@@ -80,8 +80,7 @@ public class CassandraIndexTableHandler {
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 Flux.fromIterable(metaData)
                     .flatMap(message -> updateFirstUnseenOnDelete(mailboxId, message.getFlags(), message.getUid()), DEFAULT_CONCURRENCY),
-                Flux.fromIterable(metaData)
-                    .flatMap(message -> updateRecentOnDelete(mailboxId, message.getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
+                updateRecentOnDeleteWithMetadata(mailboxId, metaData),
                 updateDeletedMessageProjectionOnDeleteWithMetadata(mailboxId, metaData),
                 decrementCountersOnDelete(mailboxId, metaData))
             .then();
@@ -91,8 +90,7 @@ public class CassandraIndexTableHandler {
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 Flux.fromIterable(metaData)
                     .flatMap(message -> updateFirstUnseenOnDelete(mailboxId, message.getFlags(), message.getComposedMessageId().getUid()), DEFAULT_CONCURRENCY),
-                Flux.fromIterable(metaData)
-                    .flatMap(message -> updateRecentOnDelete(mailboxId, message.getComposedMessageId().getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
+                updateRecentOnDeleteWithComposeId(mailboxId, metaData),
                 updateDeletedMessageProjectionOnDelete(mailboxId, metaData),
             decrementCountersOnDeleteFlags(mailboxId, metaData.stream()
                 .map(ComposedMessageIdWithMetaData::getFlags)
@@ -100,12 +98,16 @@ public class CassandraIndexTableHandler {
             .then();
     }
 
-    private Mono<Void> updateRecentOnDelete(CassandraId mailboxId, MessageUid uid, Flags flags) {
-        if (flags.contains(Flags.Flag.RECENT)) {
-            return mailboxRecentDAO.removeFromRecent(mailboxId, uid);
-        }
+    private Mono<Void> updateRecentOnDeleteWithMetadata(CassandraId mailboxId, Collection<MessageMetaData> metaDatas) {
+        return mailboxRecentDAO.removeFromRecent(mailboxId, metaDatas.stream().filter(metaData -> metaData.getFlags().contains(Flags.Flag.RECENT))
+            .map(MessageMetaData::getUid)
+            .collect(Collectors.toList()));
+    }
 
-        return Mono.empty();
+    private Mono<Void> updateRecentOnDeleteWithComposeId(CassandraId mailboxId, Collection<ComposedMessageIdWithMetaData> composedMessageIdWithMetaDatas) {
+        return mailboxRecentDAO.removeFromRecent(mailboxId, composedMessageIdWithMetaDatas.stream().filter(composedId -> composedId.getFlags().contains(Flags.Flag.RECENT))
+            .map(composedId -> composedId.getComposedMessageId().getUid())
+            .collect(Collectors.toList()));
     }
 
     private Mono<Void> updateDeletedMessageProjectionOnDelete(CassandraId mailboxId, MessageUid uid, Flags flags) {
@@ -152,8 +154,7 @@ public class CassandraIndexTableHandler {
                 checkDeletedOnAdd(mailboxId, messages),
                 Flux.fromIterable(messages)
                     .flatMap(message -> updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()), reactorConcurrency),
-                Flux.fromIterable(messages)
-                    .flatMap(message -> addRecentOnSave(mailboxId, message), reactorConcurrency),
+                addRecentOnSave(mailboxId, messages),
                 incrementCountersOnSave(mailboxId, flags),
                 applicableFlagDAO.updateApplicableFlags(mailboxId, userFlags))
             .then();
@@ -167,7 +168,7 @@ public class CassandraIndexTableHandler {
     public Mono<Void> updateIndexOnFlagsUpdate(CassandraId mailboxId, List<UpdatedFlags> updatedFlags, int reactorConcurrency) {
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 manageUnseenMessageCountsOnFlagsUpdate(mailboxId, updatedFlags),
-                manageRecentOnFlagsUpdate(mailboxId, updatedFlags, reactorConcurrency),
+                manageRecentOnFlagsUpdate(mailboxId, updatedFlags),
                 updateFirstUnseenOnFlagsUpdate(mailboxId, updatedFlags, reactorConcurrency),
                 manageApplicableFlagsOnFlagsUpdate(mailboxId, updatedFlags),
                 updateDeletedOnFlagsUpdate(mailboxId, updatedFlags))
@@ -249,6 +250,12 @@ public class CassandraIndexTableHandler {
         return Mono.empty();
     }
 
+    private Mono<Void> addRecentOnSave(CassandraId mailboxId, Collection<MailboxMessage> messages) {
+        return mailboxRecentDAO.addToRecent(mailboxId, messages.stream().filter(message -> message.createFlags().contains(Flags.Flag.RECENT))
+            .map(MailboxMessage::getUid)
+            .collect(Collectors.toList()));
+    }
+
     private Mono<Void> manageUnseenMessageCountsOnFlagsUpdate(CassandraId mailboxId,  List<UpdatedFlags> updatedFlags) {
         int sum = updatedFlags.stream()
             .mapToInt(flags -> {
@@ -272,20 +279,21 @@ public class CassandraIndexTableHandler {
         return Mono.empty();
     }
 
-    private Mono<Void> manageRecentOnFlagsUpdate(CassandraId mailboxId, List<UpdatedFlags> updatedFlags, int reactorConcurrency) {
-        return Flux.fromIterable(updatedFlags)
-            .flatMap(flags -> manageRecentOnFlagsUpdate(mailboxId, flags), reactorConcurrency)
-            .then();
-    }
+    private Mono<Void> manageRecentOnFlagsUpdate(CassandraId mailboxId, List<UpdatedFlags> updatedFlags) {
+        ImmutableList.Builder<MessageUid> addRecentUidsBuilder = ImmutableList.builder();
+        ImmutableList.Builder<MessageUid> removeRecentUidsBuilder = ImmutableList.builder();
+        updatedFlags.forEach(flag -> {
+                if (flag.isModifiedToSet(Flags.Flag.RECENT)) {
+                    addRecentUidsBuilder.add(flag.getUid());
+                } else if (flag.isModifiedToUnset(Flags.Flag.RECENT)) {
+                    removeRecentUidsBuilder.add(flag.getUid());
+                }
+            });
 
-    private Mono<Void> manageRecentOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
-        if (updatedFlags.isModifiedToUnset(Flags.Flag.RECENT)) {
-            return mailboxRecentDAO.removeFromRecent(mailboxId, updatedFlags.getUid());
-        }
-        if (updatedFlags.isModifiedToSet(Flags.Flag.RECENT)) {
-            return mailboxRecentDAO.addToRecent(mailboxId, updatedFlags.getUid());
-        }
-        return Mono.empty();
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                mailboxRecentDAO.removeFromRecent(mailboxId, removeRecentUidsBuilder.build()),
+                mailboxRecentDAO.addToRecent(mailboxId, addRecentUidsBuilder.build()))
+            .then();
     }
 
     private Mono<Void> updateFirstUnseenOnAdd(CassandraId mailboxId, Flags flags, MessageUid uid) {
