@@ -119,7 +119,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private void addNextElement(ImapRequestLineReader reader, FetchData.Builder fetch) throws DecodingException {
-        String name = readWord(reader, NEXT_ELEMENT_END);
+        String name = reader.readUntil(NEXT_ELEMENT_END);
         char next = reader.nextChar();
         // Simple elements with no '[]' parameters.
         if (next != '[') {
@@ -127,7 +127,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         } else {
             reader.consumeChar('[');
 
-            String parameter = readWord(reader, CLOSING_BRACKET);
+            String parameter = reader.readUntil(CLOSING_BRACKET);
 
             reader.consumeChar(']');
 
@@ -210,17 +210,6 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         List<String> names = decoder.getNames();
         int[] path = decoder.getPath();
         return new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
-    }
-
-    private String readWord(ImapRequestLineReader request, CharMatcher terminator) throws DecodingException {
-        StringBuilder builder = new StringBuilder();
-        char next = request.nextChar();
-        while (!terminator.matches(next)) {
-            builder.append(next);
-            request.consume();
-            next = request.nextChar();
-        }
-        return builder.toString();
     }
 
     private char nextNonSpaceChar(ImapRequestLineReader request) throws DecodingException {

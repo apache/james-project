@@ -52,6 +52,8 @@ import org.apache.james.imap.api.process.SearchResUtil;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.mailbox.MessageUid;
 
+import com.google.common.base.CharMatcher;
+
 /**
  * Wraps the client input reader with a bunch of convenience methods, allowing
  * lookahead=1 on the underlying character stream. TODO need to look at encoding
@@ -275,6 +277,7 @@ public abstract class ImapRequestLineReader {
 
     protected char nextChar; // unknown
     protected boolean nextSeen = false;
+    private final StringBuilder stringBuilder = new StringBuilder();
 
     /**
      * Reads the next character in the current line. This method will continue
@@ -557,13 +560,12 @@ public abstract class ImapRequestLineReader {
     }
 
     public String consumeWord(CharacterValidator validator, boolean stripParen) throws DecodingException {
-        StringBuilder atom = new StringBuilder();
-
+        stringBuilder.setLength(0);
         char next = nextWordChar();
         while (!isWhitespace(next) && (stripParen == false || next != ')')) {
             if (validator.isValid(next)) {
                 if (stripParen == false || next != '(') {
-                    atom.append(next);
+                    stringBuilder.append(next);
                 }
                 consume();
             } else {
@@ -571,7 +573,18 @@ public abstract class ImapRequestLineReader {
             }
             next = nextChar();
         }
-        return atom.toString();
+        return stringBuilder.toString();
+    }
+
+    public String readUntil(CharMatcher terminator) throws DecodingException {
+        stringBuilder.setLength(0);
+        char next = nextChar();
+        while (!terminator.matches(next)) {
+            stringBuilder.append(next);
+            consume();
+            next = nextChar();
+        }
+        return stringBuilder.toString();
     }
     
     private static boolean isWhitespace(char next) {
@@ -622,10 +635,10 @@ public abstract class ImapRequestLineReader {
         // The 1st character must be '{'
         consumeChar('{');
 
-        StringBuilder digits = new StringBuilder();
+        stringBuilder.setLength(0);
         char next = nextChar();
         while (next != '}' && next != '+') {
-            digits.append(next);
+            stringBuilder.append(next);
             consume();
             next = nextChar();
         }
@@ -650,7 +663,7 @@ public abstract class ImapRequestLineReader {
         }
 
         try {
-            int size = Integer.parseInt(digits.toString());
+            int size = Integer.parseInt(stringBuilder.toString());
             if (size < 0) {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
             }
