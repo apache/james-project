@@ -481,16 +481,24 @@ public final class SearchKey {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
+        MoreObjects.ToStringHelper toStringHelper = MoreObjects.toStringHelper(this)
+            .omitNullValues();
+        if (modSeq >= 0) {
+            toStringHelper.add("modSeq", modSeq);
+        }
+        if (size > 0) {
+            toStringHelper.add("size", size);
+        }
+        if (seconds > 0) {
+            toStringHelper.add("seconds", seconds);
+        }
+        return toStringHelper
             .add("type", type)
             .add("date", date)
-            .add("size", size)
             .add("value", value)
-            .add("seconds", seconds)
-            .add("modSeq", modSeq)
-            .add("uids", Arrays.toString(uids))
-            .add("sequences", Arrays.toString(sequence))
-            .add("keys", Optional.ofNullable(keys).map(ImmutableList::copyOf))
+            .add("uids", Optional.ofNullable(uids).map(ImmutableList::copyOf).orElse(null))
+            .add("sequences", Optional.ofNullable(sequence).map(ImmutableList::copyOf).orElse(null))
+            .add("keys", Optional.ofNullable(keys).map(ImmutableList::copyOf).orElse(null))
             .toString();
     }
 }
