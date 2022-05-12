@@ -46,7 +46,6 @@ import org.apache.james.mailbox.elasticsearch.v7.events.ElasticSearchListeningMe
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex.SearchOverride;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -141,8 +140,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     private ElasticSearchSearcher createMailboxElasticSearchSearcher(ReactorElasticSearchClient client,
                                                                      QueryConverter queryConverter,
-                                                                     MailboxId.Factory mailboxIdFactory,
-                                                                     MessageId.Factory messageIdFactory,
                                                                      ElasticSearchMailboxConfiguration configuration,
                                                                      RoutingKey.Factory<MailboxId> routingKeyFactory) {
         return new ElasticSearchSearcher(
