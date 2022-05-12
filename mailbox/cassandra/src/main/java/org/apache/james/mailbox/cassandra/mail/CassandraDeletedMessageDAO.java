@@ -30,6 +30,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTa
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.UID;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -37,9 +40,11 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MessageRange;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,6 +52,8 @@ import reactor.core.publisher.Mono;
 public class CassandraDeletedMessageDAO {
     private static final String UID_TO = "uid_to";
     private static final String UID_FROM = "uid_from";
+    private static final int BATCH_STATEMENT_WINDOW = 1024;
+    private static final int LOW_CONCURRENCY = 2;
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
@@ -123,10 +130,53 @@ public class CassandraDeletedMessageDAO {
                 .setLong(UID, uid.asLong()));
     }
 
+    public Mono<Void> addDeleted(CassandraId cassandraId, List<MessageUid> uids) {
+        if (uids.size() == 1) {
+            return cassandraAsyncExecutor.executeVoid(
+                addStatement.bind()
+                    .setUUID(MAILBOX_ID, cassandraId.asUuid())
+                    .setLong(UID, uids.iterator().next().asLong()));
+        } else {
+            Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
+                .stream()
+                .map(uidBatch -> {
+                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.add(addStatement.bind()
+                        .setUUID(MAILBOX_ID, cassandraId.asUuid())
+                        .setLong(UID, uid.asLong())));
+                    return batch;
+                });
+            return Flux.fromStream(batches)
+                .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)
+                .then();
+        }
+    }
+
     public Mono<Void> removeDeleted(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
+    }
+
+    public Mono<Void> removeDeleted(CassandraId cassandraId, List<MessageUid> uids) {
+        if (uids.size() == 1) {
+            return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
+                .setUUID(MAILBOX_ID, cassandraId.asUuid())
+                .setLong(UID, uids.iterator().next().asLong()));
+        } else {
+            Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
+                .stream()
+                .map(uidBatch -> {
+                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.add(deleteStatement.bind()
+                        .setUUID(MAILBOX_ID, cassandraId.asUuid())
+                        .setLong(UID, uid.asLong())));
+                    return batch;
+                });
+            return Flux.fromStream(batches)
+                .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)
+                .then();
+        }
     }
 
     public Mono<Void> removeAll(CassandraId cassandraId) {
