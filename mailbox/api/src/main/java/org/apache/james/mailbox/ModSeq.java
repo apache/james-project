@@ -20,7 +20,6 @@
 package org.apache.james.mailbox;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class ModSeq implements Comparable<ModSeq> {
@@ -61,7 +60,7 @@ public class ModSeq implements Comparable<ModSeq> {
     
     @Override
     public final int hashCode() {
-        return Objects.hashCode(modSeq);
+        return Long.hashCode(modSeq);
     }
     
     @Override

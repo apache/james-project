@@ -21,7 +21,6 @@ package org.apache.james.mailbox;
 
 import org.apache.james.mailbox.model.MessageRange;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class MessageUid implements Comparable<MessageUid> {
@@ -54,9 +53,9 @@ public class MessageUid implements Comparable<MessageUid> {
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(uid);
+        return Long.hashCode(uid);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof MessageUid) {
