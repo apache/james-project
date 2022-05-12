@@ -521,7 +521,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<FlagsUpdateStageResult> updateIndexesForUpdatesResult(CassandraId mailboxId, FlagsUpdateStageResult result) {
-        return indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, result.getSucceeded(), reactorConcurrency)
+        return indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, result.getSucceeded())
             .onErrorResume(e -> {
                 LOGGER.error("Could not update flag indexes for mailboxId {}. This will lead to inconsistencies across Cassandra tables", mailboxId, e);
                 return Mono.empty();
@@ -644,7 +644,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .concatMap(id -> imapUidDAO.insert(id).thenReturn(id))
             .flatMap(id -> messageIdDAO.insert(id)
                 .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)), reactorConcurrency)
-            .then(indexTableHandler.updateIndexOnAdd(messages, mailboxId, reactorConcurrency));
+            .then(indexTableHandler.updateIndexOnAdd(messages, mailboxId));
     }
 
     private Mono<FlagsUpdateStageResult> tryFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, ModSeq newModSeq, ComposedMessageIdWithMetaData oldMetaData) {
