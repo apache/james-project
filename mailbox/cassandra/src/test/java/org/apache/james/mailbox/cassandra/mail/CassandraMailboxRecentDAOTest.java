@@ -22,6 +22,8 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -80,8 +82,7 @@ class CassandraMailboxRecentDAOTest {
 
     @Test
     void getRecentMessageUidsInMailboxShouldNotReturnDeletedItems() {
-        testee.addToRecent(CASSANDRA_ID, UID1).block();
-        testee.addToRecent(CASSANDRA_ID, UID2).block();
+        testee.addToRecent(CASSANDRA_ID, List.of(UID1, UID2)).block();
 
         testee.delete(CASSANDRA_ID).block();
 
@@ -108,9 +109,7 @@ class CassandraMailboxRecentDAOTest {
 
     @Test
     void addToRecentShouldAddUidWhenNotEmpty() {
-        testee.addToRecent(CASSANDRA_ID, UID1).block();
-
-        testee.addToRecent(CASSANDRA_ID, UID2).block();
+        testee.addToRecent(CASSANDRA_ID, List.of(UID1, UID2)).block();
 
         assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID)
                 .collectList()
@@ -120,8 +119,7 @@ class CassandraMailboxRecentDAOTest {
 
     @Test
     void removeFromRecentShouldOnlyRemoveUidWhenNotEmpty() {
-        testee.addToRecent(CASSANDRA_ID, UID1).block();
-        testee.addToRecent(CASSANDRA_ID, UID2).block();
+        testee.addToRecent(CASSANDRA_ID, List.of(UID1, UID2)).block();
 
         testee.removeFromRecent(CASSANDRA_ID, UID2).block();
 
@@ -146,9 +144,9 @@ class CassandraMailboxRecentDAOTest {
     void getRecentMessageUidsInMailboxShouldNotTimeoutWhenOverPagingLimit() {
         int pageSize = 5000;
         int size = pageSize + 1000;
-        IntStream.range(0, size)
-            .parallel()
-            .forEach(i -> testee.addToRecent(CASSANDRA_ID, MessageUid.of(i + 1)).block());
+
+        testee.addToRecent(CASSANDRA_ID, IntStream.range(0, size)
+            .mapToObj(i -> MessageUid.of(i + 1)).collect(Collectors.toList())).block();
 
         assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID)
                 .collectList()
