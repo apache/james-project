@@ -22,7 +22,6 @@ package org.apache.james.modules.mailbox;
 import static org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -86,7 +85,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             this.client = client;
         }
 
-        void createIndex() throws IOException {
+        void createIndex() {
             MailboxIndexCreationUtil.prepareClient(client,
                 mailboxConfiguration.getReadAliasMailboxName(),
                 mailboxConfiguration.getWriteAliasMailboxName(),
