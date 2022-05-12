@@ -289,6 +289,35 @@
             </dd>
         </dl>
     </section>
+    <section name="Search overrides">
+
+        <p><b>Search overrides</b> allow resolution of predefined search queries against alternative sources of data
+            and allow bypassing ElasticSearch. This is useful to handle most resynchronisation queries that
+            are simple enough to be resolved against Cassandra.</p>
+
+        <ul>Possible values are:<br/>
+            <li><pre>org.apache.james.mailbox.cassandra.search.AllSearchOverride</pre> Some IMAP clients uses SEARCH ALL to fully list messages in
+                a mailbox and detect deletions. This is typically done by clients not supporting QRESYNC and from an IMAP perspective
+                is considered an optimisation as less data is transmitted compared to a FETCH command. Resolving such requests against
+                Cassandra is enabled by this search override and likely desirable.</li>
+            <li><pre>org.apache.james.mailbox.cassandra.search.UidSearchOverride</pre>. Same as above but restricted by ranges.</li>
+            <li><pre>org.apache.james.mailbox.cassandra.search.DeletedSearchOverride</pre>. Find deleted messages by looking up in the relevant Cassandra
+                table.</li>
+            <li><pre>org.apache.james.mailbox.cassandra.search.DeletedWithRangeSearchOverride</pre>. Same as above but limited by ranges.
+                <li><pre>org.apache.james.mailbox.cassandra.search.NotDeletedWithRangeSearchOverride</pre>. List non deleted messages in a given range.</li>
+                Lists all messages and filters out deleted message thus this is based on the following heuristic: most messages are not marked as deleted.</li>
+            <li><pre>org.apache.james.mailbox.cassandra.search.UnseenSearchOverride</pre>. List unseen messages in the corresponding cassandra projection.</li>
+        </ul>
+
+        <p>
+            Please note that custom overrides can be defined here. <pre>elasticsearch.search.overrides</pre> allow specifying search overrides and is a
+            coma separated list of search override FQDNs. Default to none.
+        </p>
+
+        <p>EG:</p>
+
+        <pre><code>elasticsearch.search.overrides=org.apache.james.mailbox.cassandra.search.AllSearchOverride,org.apache.james.mailbox.cassandra.search.DeletedSearchOverride, org.apache.james.mailbox.cassandra.search.DeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.NotDeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.UidSearchOverride,org.apache.james.mailbox.cassandra.search.UnseenSearchOverride</code></pre>
+    </section>
 </body>
 
 </document>
