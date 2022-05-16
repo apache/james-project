@@ -45,7 +45,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     public static final byte[] FLAGS = "FLAGS".getBytes(US_ASCII);
 
     private static final int LOWER_CASE_OFFSET = 'a' - 'A';
-    public static final int DEFAULT_BUFFER_SIZE = 2048;
+    public static final int DEFAULT_BUFFER_SIZE = 256;
     private static final byte[] SEEN = "\\Seen".getBytes(US_ASCII);
     private static final byte[] RECENT = "\\Recent".getBytes(US_ASCII);
     private static final byte[] FLAGGED = "\\Flagged".getBytes(US_ASCII);
