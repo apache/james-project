@@ -319,7 +319,7 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     private SimpleMailboxMessage createMessage(Mailbox mailbox, ThreadId threadId) {
         MessageId messageId = messageIdFactory.generate();
         String content = "Some content";
-        int bodyStart = 16;
+        int bodyStart = 12;
         return new SimpleMailboxMessage(messageId,
             threadId,
             new Date(),
