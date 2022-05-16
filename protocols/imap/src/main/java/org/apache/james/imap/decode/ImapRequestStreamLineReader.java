@@ -83,9 +83,9 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader implement
         InputStream limited = ByteStreams.limit(input, size);
 
         if (extraCRLF) {
-            return BytesBackedLiteral.copy(new EolInputStream(this, limited));
+            return BytesBackedLiteral.copy(new EolInputStream(this, limited), size);
         } else {
-            return BytesBackedLiteral.copy(limited);
+            return BytesBackedLiteral.copy(limited, size);
         }
     }
 

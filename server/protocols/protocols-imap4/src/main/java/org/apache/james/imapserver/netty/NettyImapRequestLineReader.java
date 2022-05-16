@@ -106,9 +106,9 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
             // limit the size via commons-io as ByteBufInputStream size limiting is buggy
             InputStream in = new BoundedInputStream(new ByteBufInputStream(buffer), size);
             if (extraCRLF) {
-                return BytesBackedLiteral.copy(new EolInputStream(this, in));
+                return BytesBackedLiteral.copy(new EolInputStream(this, in), size);
             } else {
-                return BytesBackedLiteral.copy(in);
+                return BytesBackedLiteral.copy(in, size);
             }
         } catch (IOException e) {
             throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Can not read literal", e);
