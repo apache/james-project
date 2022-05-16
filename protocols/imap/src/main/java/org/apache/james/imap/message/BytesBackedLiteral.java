@@ -24,11 +24,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
+
 public class BytesBackedLiteral implements Literal {
     public static BytesBackedLiteral copy(InputStream stream) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         stream.transferTo(out);
         return of(out.toByteArray());
+    }
+
+    public static BytesBackedLiteral copy(InputStream stream, int size) throws IOException {
+        byte[] buffer = IOUtils.toByteArray(stream, size);
+        if (stream.read() != -1) {
+            throw new IOException("Got a stream of the wrong size...");
+        }
+        return of(buffer);
     }
 
     public static BytesBackedLiteral of(byte[] bytes) {
