@@ -24,6 +24,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -37,6 +38,7 @@ import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
@@ -169,13 +171,21 @@ class KeyRegistrationHandler {
 
         String serializedEventBusId = delivery.getProperties().getHeaders().get(EVENT_BUS_ID).toString();
         EventBusId eventBusId = EventBusId.of(serializedEventBusId);
-
         String routingKey = delivery.getEnvelope().getRoutingKey();
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
+
+        List<EventListener.ReactiveEventListener> listenersToCall = localListenerRegistry.getLocalListeners(registrationKey)
+            .stream()
+            .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
+            .collect(ImmutableList.toImmutableList());
+
+        if (listenersToCall.isEmpty()) {
+            return Mono.empty();
+        }
+
         Event event = toEvent(delivery);
 
-        return localListenerRegistry.getLocalListeners(registrationKey)
-            .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
+        return Flux.fromIterable(listenersToCall)
             .flatMap(listener -> executeListener(listener, event, registrationKey), EventBus.EXECUTION_RATE)
             .then();
     }

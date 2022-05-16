@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -46,7 +47,7 @@ class LocalListenerRegistryTest {
 
     @Test
     void getLocalListenersShouldReturnEmptyWhenNone() {
-        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1))
             .isEmpty();
     }
 
@@ -55,7 +56,7 @@ class LocalListenerRegistryTest {
         EventListener listener = event -> { };
         testee.addListener(KEY_1, listener);
 
-        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1))
             .containsOnly(wrapReactive(listener));
     }
 
@@ -66,7 +67,7 @@ class LocalListenerRegistryTest {
         testee.addListener(KEY_1, listener1);
         testee.addListener(KEY_1, listener2);
 
-        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1))
             .containsOnly(wrapReactive(listener1), wrapReactive(listener2));
     }
 
@@ -79,7 +80,7 @@ class LocalListenerRegistryTest {
 
         registration.unregister();
 
-        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1))
             .containsOnly(wrapReactive(listener1));
     }
 
@@ -135,7 +136,7 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1))
                 .containsOnly(wrapReactive(listener));
         }
 
@@ -154,7 +155,7 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1))
                 .containsOnly(wrapReactive(listener1), wrapReactive(listener2), wrapReactive(listener3));
         }
 
@@ -170,7 +171,7 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1))
                 .isEmpty();
         }
 
@@ -241,7 +242,7 @@ class LocalListenerRegistryTest {
             testee.addListener(KEY_1, listener4);
             LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
-            Mono<List<EventListener.ReactiveEventListener>> listeners = testee.getLocalListeners(KEY_1)
+            Mono<List<EventListener.ReactiveEventListener>> listeners = Flux.fromIterable(testee.getLocalListeners(KEY_1))
                 .publishOn(Schedulers.elastic())
                 .delayElements(Duration.ofMillis(100))
                 .collectList();
