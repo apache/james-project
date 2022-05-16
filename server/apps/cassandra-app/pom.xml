@@ -32,7 +32,8 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Cassandra :: Application</name>
-    <description>An advanced email server - Cassandra backend with guice injection</description>
+    <description>DEPRECATED, to be removed after 3.8.0 release, see JAMES-3766.
+        Users are encouraged to migrate to the distributed server.</description>
 
     <properties>
         <cassandra.includes>empty</cassandra.includes>

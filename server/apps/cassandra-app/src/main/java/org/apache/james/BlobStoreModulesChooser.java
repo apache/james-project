@@ -43,6 +43,14 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+/**
+ * See https://issues.apache.org/jira/browse/JAMES-3767
+ *
+ * Cassandra APP will be removed after 3.8.0 release.
+ *
+ * Please migrate to the distributed APP.
+ */
+@Deprecated(forRemoval = true)
 public class BlobStoreModulesChooser {
     static final String UNENCRYPTED = "unencrypted";
 

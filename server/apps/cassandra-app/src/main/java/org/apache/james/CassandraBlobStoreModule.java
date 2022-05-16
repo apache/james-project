@@ -28,6 +28,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+/**
+ * See https://issues.apache.org/jira/browse/JAMES-3767
+ *
+ * Cassandra APP will be removed after 3.8.0 release.
+ *
+ * Please migrate to the distributed APP.
+ */
+@Deprecated(forRemoval = true)
 public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {

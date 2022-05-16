@@ -37,6 +37,14 @@ import com.google.common.base.MoreObjects;
 
 import io.vavr.control.Try;
 
+/**
+ * See https://issues.apache.org/jira/browse/JAMES-3767
+ *
+ * Cassandra APP will be removed after 3.8.0 release.
+ *
+ * Please migrate to the distributed APP.
+ */
+@Deprecated(forRemoval = true)
 public class BlobStoreConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreConfiguration.class);
 

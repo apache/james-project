@@ -34,6 +34,14 @@ import org.apache.james.utils.PropertiesProvider;
 
 import com.github.fge.lambdas.Throwing;
 
+/**
+ * See https://issues.apache.org/jira/browse/JAMES-3767
+ *
+ * Cassandra APP will be removed after 3.8.0 release.
+ *
+ * Please migrate to the distributed APP.
+ */
+@Deprecated(forRemoval = true)
 public class CassandraJamesServerConfiguration implements Configuration {
     public static class Builder {
         private Optional<SearchConfiguration> searchConfiguration;

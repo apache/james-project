@@ -1,5 +1,9 @@
 = Cassandra Guice Server How-to
 
+*DEPRECATION*: See JAMES-3766. Removal of cassandra-app is planned after Apache James 3.8.0 release.
+
+Users are encouraged to migrate to the distributed server.
+
 *WARNING*: This server only targets single James node deployment on top of a shared database.
 
 It does not target deployments with multiple James nodes as is misses inter-node communication capabilities.
