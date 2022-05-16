@@ -220,7 +220,7 @@ public class CassandraMessageDAOV3 {
 
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
-            byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
+            byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent(), message.getHeaderOctets());
             ByteSource bodyByteSource = new ByteSource() {
                 @Override
                 public InputStream openStream() {

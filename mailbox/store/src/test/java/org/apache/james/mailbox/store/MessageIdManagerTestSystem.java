@@ -43,7 +43,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public class MessageIdManagerTestSystem {
-    private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] MESSAGE_CONTENT = "subject: any\r\n\r\nbody".getBytes(StandardCharsets.UTF_8);
     public static final ModSeq MOD_SEQ = ModSeq.of(452);
 
     private final MessageIdManager messageIdManager;
@@ -115,7 +115,8 @@ public class MessageIdManagerTestSystem {
     }
 
     private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, ThreadId threadId, MessageUid uid) {
-        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, new Date(), MESSAGE_CONTENT.length, 1256,
+        int bodyStartOctet = 20;
+        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, new Date(), MESSAGE_CONTENT.length, bodyStartOctet,
             new ByteContent(MESSAGE_CONTENT), flags, new PropertyBuilder().build(), mailboxId);
         mailboxMessage.setModSeq(MOD_SEQ);
         mailboxMessage.setUid(uid);
