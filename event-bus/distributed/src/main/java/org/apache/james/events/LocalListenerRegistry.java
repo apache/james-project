@@ -22,13 +22,12 @@ package org.apache.james.events;
 import static com.google.common.base.Predicates.not;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
-
-import reactor.core.publisher.Flux;
 
 class LocalListenerRegistry {
 
@@ -102,7 +101,7 @@ class LocalListenerRegistry {
         return remainingListeners;
     }
 
-    Flux<EventListener.ReactiveEventListener> getLocalListeners(RegistrationKey registrationKey) {
-        return Flux.fromIterable(listenersByKey.getOrDefault(registrationKey, ImmutableSet.of()));
+    Set<EventListener.ReactiveEventListener> getLocalListeners(RegistrationKey registrationKey) {
+        return listenersByKey.getOrDefault(registrationKey, ImmutableSet.of());
     }
 }
