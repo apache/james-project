@@ -533,9 +533,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private Date toISODate(String value) throws ParseException {
         StringReader reader = new StringReader(value);
         DateTime dateTime = new DateTimeParser(reader).parseAll();
-        Calendar cal = getGMT();
+        Calendar cal = getGMT(dateTime.getTimeZone());
         cal.set(dateTime.getYear(), dateTime.getMonth() - 1, dateTime.getDay(), dateTime.getHour(),
                 dateTime.getMinute(), dateTime.getSecond());
+        cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
     }
 
@@ -653,6 +654,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
+    }
+
+    private Calendar getGMT(int timeZone) {
+        return Calendar.getInstance(TimeZone.getTimeZone(String.format("GMT%+04d", timeZone)), Locale.ENGLISH);
     }
 
 }

@@ -761,7 +761,7 @@ class SearchUtilsTest {
     
     @Test
     void testMatchHeaderDateOnWithOffset() throws Exception {
-        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
+        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 03:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateOn(DATE_FIELD, getDate(26, 3,
                 2007), DateResolution.Day),row, recent)).isTrue();
@@ -775,7 +775,7 @@ class SearchUtilsTest {
 
     @Test
     void testShouldMatchHeaderDateBeforeWithOffset() throws Exception {
-        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
+        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 03:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateBefore(DATE_FIELD, getDate(26, 3,
                 2007), DateResolution.Day),row, recent)).isFalse();
@@ -788,7 +788,7 @@ class SearchUtilsTest {
 
     @Test
     void testShouldMatchHeaderDateAfterWithOffset() throws Exception {
-        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
+        builder.header(DATE_FIELD, "Mon, 26 Mar 2007 03:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateAfter(DATE_FIELD, getDate(26, 3,
                 2007), DateResolution.Day),row, recent)).isFalse();
