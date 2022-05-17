@@ -270,7 +270,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         if (selected != null) {
             builder.addRecentMessageUids(selected.getRecent());
         }
-        return builder.andCriteria(criterion)
+        return builder.andCriterion(criterion)
             .build();
     }
 
