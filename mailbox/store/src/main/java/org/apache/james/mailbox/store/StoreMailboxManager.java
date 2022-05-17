@@ -293,7 +293,7 @@ public class StoreMailboxManager implements MailboxManager {
                 return createMessageManager(mailboxRow, session);
             }).sneakyThrow())
             .switchIfEmpty(Mono.fromCallable(() -> {
-                LOGGER.info("Mailbox '{}' not found.", mailboxPath);
+                LOGGER.debug("Mailbox '{}' not found.", mailboxPath);
                 throw new MailboxNotFoundException(mailboxPath);
             }));
     }

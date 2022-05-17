@@ -29,8 +29,12 @@ import javax.inject.Named;
 
 import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.service.ExpireMailboxService;
+import org.apache.james.webadmin.service.ExpireMailboxTask;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -48,17 +52,20 @@ public class MessagesRoutes implements Routes {
     private final TaskManager taskManager;
     private final MessageId.Factory messageIdFactory;
     private final MessageIdReIndexer reIndexer;
+    private final ExpireMailboxService expireMailboxService;
     private final JsonTransformer jsonTransformer;
     private final Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration;
 
     public static final String ALL_MESSAGES_TASKS = "allMessagesTasks";
 
     @Inject
-    MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer, JsonTransformer jsonTransformer,
+    MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer,
+                   ExpireMailboxService expireMailboxService, JsonTransformer jsonTransformer,
                    @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration) {
         this.taskManager = taskManager;
         this.messageIdFactory = messageIdFactory;
         this.reIndexer = reIndexer;
+        this.expireMailboxService = expireMailboxService;
         this.jsonTransformer = jsonTransformer;
         this.allMessagesTaskRegistration = allMessagesTaskRegistration;
     }
@@ -70,9 +77,29 @@ public class MessagesRoutes implements Routes {
 
     @Override
     public void define(Service service) {
+        TaskFromRequest expireMailboxTaskRequest = this::expireMailbox;
+        service.delete(BASE_PATH, expireMailboxTaskRequest.asRoute(taskManager), jsonTransformer);
         service.post(MESSAGE_PATH, reIndexMessage(), jsonTransformer);
         allMessagesOperations()
             .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
+    }
+
+    private Task expireMailbox(Request request) {
+        try {
+            ExpireMailboxService.RunningOptions runningOptions = ExpireMailboxService.RunningOptions.fromParams(
+                Optional.ofNullable(request.queryParams("byExpiresHeader")),
+                Optional.ofNullable(request.queryParams("olderThan")),
+                Optional.ofNullable(request.queryParams("usersPerSecond")),
+                Optional.ofNullable(request.queryParams("mailbox")));
+            return new ExpireMailboxTask(expireMailboxService, runningOptions);
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid arguments supplied in the user request")
+                .cause(e)
+                .haltError();
+        }    
     }
 
     private Route reIndexMessage() {
