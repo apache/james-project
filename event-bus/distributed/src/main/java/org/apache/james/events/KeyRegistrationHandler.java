@@ -147,7 +147,9 @@ class KeyRegistrationHandler {
                 if (registration.unregister().lastListenerRemoved()) {
                     return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))));
+                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))))
+                        // Unbind is potentially blocking
+                        .subscribeOn(Schedulers.elastic());
                 }
                 return Mono.empty();
             }));
