@@ -20,8 +20,12 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -296,8 +300,10 @@ public class SearchProcessorTest {
     @Test
     void testNEW() throws Exception {
         expectsGetSelectedMailbox();
-        check(SearchKey.buildNew(), SearchQuery.and(SearchQuery
-                .flagIsSet(Flag.RECENT), SearchQuery.flagIsUnSet(Flag.SEEN)));
+        check(SearchKey.buildNew(), SearchQuery.builder()
+            .andCriteria(SearchQuery.flagIsSet(Flag.RECENT),
+                SearchQuery.flagIsUnSet(Flag.SEEN))
+            .build());
     }
 
     @Test
@@ -332,7 +338,9 @@ public class SearchProcessorTest {
         criteria.add(SearchQuery.internalDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day));
         criteria.add(SearchQuery.flagIsUnSet(Flag.RECENT));
         criteria.add(SearchQuery.sizeGreaterThan(SIZE));
-        check(SearchKey.buildAnd(keys), SearchQuery.and(criteria));
+        check(SearchKey.buildAnd(keys), SearchQuery.builder()
+            .andCriteria(criteria)
+            .build());
     }
 
     @Test

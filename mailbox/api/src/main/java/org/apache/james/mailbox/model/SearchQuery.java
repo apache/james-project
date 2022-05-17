@@ -752,6 +752,18 @@ public class SearchQuery {
             return this;
         }
 
+        public Builder andCriterion(Criterion criterion) {
+            if (criterion instanceof ConjunctionCriterion) {
+                ConjunctionCriterion conjunctionCriterion = (ConjunctionCriterion) criterion;
+                if (conjunctionCriterion.getType() == Conjunction.AND) {
+                    this.criterias.addAll(conjunctionCriterion.getCriteria());
+                    return this;
+                }
+            }
+            this.criterias.add(criterion);
+            return this;
+        }
+
         public Builder sorts(Sort... sorts) {
             return this.sorts(Arrays.asList(sorts));
         }
