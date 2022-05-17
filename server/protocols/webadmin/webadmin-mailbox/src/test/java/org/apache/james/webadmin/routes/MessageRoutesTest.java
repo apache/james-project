@@ -77,7 +77,7 @@ class MessageRoutesTest {
     void beforeEach() {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        searchIndex = mock(ListeningMessageSearchIndex.class);;
+        searchIndex = mock(ListeningMessageSearchIndex.class);
         Mockito.when(searchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
         Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
@@ -93,6 +93,7 @@ class MessageRoutesTest {
                 new MessagesRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
                     new MessageIdReIndexerImpl(reIndexerPerformer),
+                    null,
                     jsonTransformer,
                     ImmutableSet.of()))
             .start();

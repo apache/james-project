@@ -39,6 +39,9 @@ import org.apache.james.webadmin.service.EventDeadLettersRedeliverGroupTaskDTO;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverOneTaskDTO;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ExpireMailboxAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ExpireMailboxDTO;
+import org.apache.james.webadmin.service.ExpireMailboxService;
 import org.apache.james.webadmin.service.SubscribeAllTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.SubscribeAllTaskDTO;
 import org.apache.james.webadmin.service.UserMailboxesService;
@@ -81,6 +84,11 @@ public class WebadminMailboxTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> clearMailboxContentTask(UserMailboxesService userMailboxesService) {
         return ClearMailboxContentTaskDTO.module(userMailboxesService);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> expireMailboxTask(ExpireMailboxService service) {
+        return ExpireMailboxDTO.module(service);
     }
 
     @ProvidesIntoSet
@@ -158,6 +166,17 @@ public class WebadminMailboxTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminClearMailboxContentAdditionalInformation() {
         return ClearMailboxContentTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> expireMailboxAdditionalInformationDTO() {
+        return ExpireMailboxAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminExpireMailboxAdditionalInformationDTO() {
+        return ExpireMailboxAdditionalInformationDTO.module();
     }
 
 }
