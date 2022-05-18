@@ -24,7 +24,7 @@ distributed James operators.
 
 We also included a guide for xref:operate/migrating.adoc[migrating existing data] into the distributed server.
 
-We introduced xref:operate/db-benchmark.adoc[James database's base performance and how to benchmark] them.
+We introduced xref:operate/james-benchmark.adoc[tools and standard benchmark result for Distributed James] also xref:operate/db-benchmark.adoc[James database's base performance and how to benchmark them].
 
 Read more about xref:operate/cassandra-migration.adoc[Cassandra data migration].
 
