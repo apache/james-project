@@ -7,16 +7,19 @@ can test and evaluate if his Distributed James is performing well.
 It includes:
 
 * A sample Distributed James deployment topology
-* Propose benchmark methodology and base performance result. This aims to help operators quickly identify
-performance issues.
+* Propose benchmark methodology
+* Sample performance results
+
+This aims to help operators quickly identify performance issues.
 
 == Sample deployment topology
 
 We deploy a sample topology of Distributed James with these following components:
 
-- Apache Cassandra 4 as main database
-- OpenDistro 1.13.1 as search engine
-- RabbitMQ 3.8.17 as message queue
+- Distributed James: 3 Kubernetes pods, each pod has 2 OVH vCore CPU and 4 GB memory limit.
+- Apache Cassandra 4 as main database: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit.
+- OpenDistro 1.13.1 as search engine: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit.
+- RabbitMQ 3.8.17 as message queue: 3 Kubernetes pods, each pod has 0.6 OVH vCore CPU and 2 GB memory limit.
 - OVH Swift S3 as an object storage
 
 == Benchmark methodology and base performance
@@ -77,7 +80,9 @@ $ sbt
 > gatling:testOnly SIMULATION_FQDN
 ----
 
-We did provide a lot of simulations. You can have a look and choose the suitable simulation, or you can even customize your simulation also!
+In there: `SIMULATION_FQDN` is fully qualified class name of a performance test simulation.
+
+We did provide a lot of simulations in `org.apache.james.gatling.simulation` path. You can have a look and choose the suitable simulation, or you can even customize your simulation also!
 
 Some symbolic simulations we often use:
 
@@ -91,5 +96,5 @@ A sample IMAP performance testing result (PlatformValidationSimulation):
 
 image::james-imap-base-performance.png[]
 
-If you get a IMAP performance far below this base performance, you should consider having performance issues.
+If you get a IMAP performance far below this base performance, you should consider investigating for performance issues.
 
