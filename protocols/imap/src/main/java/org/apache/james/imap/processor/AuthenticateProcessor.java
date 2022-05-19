@@ -39,14 +39,18 @@ import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.OIDCSASLParser;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
@@ -184,12 +188,18 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         } else {
             OIDCSASLParser.parse(initialResponse)
                 .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration()
-                    .flatMap(configuration -> new OidcJwtTokenVerifier().verifyAndExtractClaim(oidcInitialResponseValue.getToken(), configuration.getJwksURL(), configuration.getClaim())))
-                .flatMap(this::extractUserFromClaim)
+                    .flatMap(configure -> validateToken(configure, oidcInitialResponseValue.getToken())))
                 .ifPresentOrElse(username -> authSuccess(username, session, request, responder),
                     () -> manageFailureCount(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED));
         }
         session.stopDetectingCommandInjection();
+    }
+
+    private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
+        return Mono.just(new OidcJwtTokenVerifier(oidcSASLConfiguration.getIntrospectionEndpoint().map(DefaultIntrospectionClient::new)))
+            .flatMap(oidcJwtTokenVerifier -> Mono.from(oidcJwtTokenVerifier.verify(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())))
+            .blockOptional()
+            .flatMap(this::extractUserFromClaim);
     }
 
     private Optional<Username> extractUserFromClaim(String claimValue) {

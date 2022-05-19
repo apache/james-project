@@ -70,8 +70,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     @Override
     public HookResult doSasl(SMTPSession session, OidcSASLConfiguration configuration, String initialResponse) {
         return OIDCSASLParser.parse(initialResponse)
-            .flatMap(value -> new OidcJwtTokenVerifier()
-                .verifyAndExtractClaim(value.getToken(), configuration.getJwksURL(), configuration.getClaim()))
+            .flatMap(value -> OidcJwtTokenVerifier.verifyAndExtractClaim(value.getToken(), configuration.getJwksURL(), configuration.getClaim()))
             .flatMap(this::extractUserFromClaim)
             .map(username -> {
                 try {
