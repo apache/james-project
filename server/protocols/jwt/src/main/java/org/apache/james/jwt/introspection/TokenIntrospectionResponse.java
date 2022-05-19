@@ -23,9 +23,11 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Preconditions;
 
+/**
+ * https://datatracker.ietf.org/doc/html/rfc7662#section-2.2
+ */
 public class TokenIntrospectionResponse {
     public static TokenIntrospectionResponse parse(JsonNode json) {
         return new TokenIntrospectionResponse(json);
@@ -33,6 +35,16 @@ public class TokenIntrospectionResponse {
 
     private final boolean active;
     private final Optional<String> scope;
+    private final Optional<String> clientId;
+    private final Optional<String> username;
+    private final Optional<String> tokenType;
+    private final Optional<Integer> exp;
+    private final Optional<Integer> iat;
+    private final Optional<Integer> nbf;
+    private final Optional<String> sub;
+    private final Optional<String> aud;
+    private final Optional<String> iss;
+    private final Optional<String> jti;
     private final JsonNode json;
 
     public TokenIntrospectionResponse(JsonNode json) {
@@ -41,7 +53,26 @@ public class TokenIntrospectionResponse {
         Preconditions.checkArgument(activeNode instanceof BooleanNode, "Missing / invalid boolean 'active' parameter");
         this.active = activeNode.asBoolean();
         this.scope = Optional.ofNullable(json.get("scope"))
-            .filter(jsonNode -> jsonNode instanceof TextNode)
+            .map(JsonNode::asText);
+        this.clientId = Optional.ofNullable(json.get("client_id"))
+            .map(JsonNode::asText);
+        this.username = Optional.ofNullable(json.get("username"))
+            .map(JsonNode::asText);
+        this.tokenType = Optional.ofNullable(json.get("token_type"))
+            .map(JsonNode::asText);
+        this.exp = Optional.ofNullable(json.get("exp"))
+            .map(JsonNode::asInt);
+        this.iat = Optional.ofNullable(json.get("iat"))
+            .map(JsonNode::asInt);
+        this.nbf = Optional.ofNullable(json.get("nbf"))
+            .map(JsonNode::asInt);
+        this.sub = Optional.ofNullable(json.get("sub"))
+            .map(JsonNode::asText);
+        this.aud = Optional.ofNullable(json.get("aud"))
+            .map(JsonNode::asText);
+        this.iss = Optional.ofNullable(json.get("iss"))
+            .map(JsonNode::asText);
+        this.jti = Optional.ofNullable(json.get("jti"))
             .map(JsonNode::asText);
         this.json = json;
     }
@@ -56,5 +87,45 @@ public class TokenIntrospectionResponse {
 
     public JsonNode json() {
         return json;
+    }
+
+    public Optional<String> clientId() {
+        return clientId;
+    }
+
+    public Optional<String> username() {
+        return username;
+    }
+
+    public Optional<String> tokenType() {
+        return tokenType;
+    }
+
+    public Optional<Integer> exp() {
+        return exp;
+    }
+
+    public Optional<Integer> iat() {
+        return iat;
+    }
+
+    public Optional<Integer> nbf() {
+        return nbf;
+    }
+
+    public Optional<String> sub() {
+        return sub;
+    }
+
+    public Optional<String> aud() {
+        return aud;
+    }
+
+    public Optional<String> iss() {
+        return iss;
+    }
+
+    public Optional<String> jti() {
+        return jti;
     }
 }
