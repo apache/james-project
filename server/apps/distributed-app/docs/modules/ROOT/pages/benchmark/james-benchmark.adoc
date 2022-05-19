@@ -17,8 +17,8 @@ This aims to help operators quickly identify performance issues.
 We deploy a sample topology of Distributed James with these following components:
 
 - Distributed James: 3 Kubernetes pods, each pod has 2 OVH vCore CPU and 4 GB memory limit.
-- Apache Cassandra 4 as main database: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit.
-- OpenDistro 1.13.1 as search engine: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit.
+- Apache Cassandra 4 as main database: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
+- OpenDistro 1.13.1 as search engine: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
 - RabbitMQ 3.8.17 as message queue: 3 Kubernetes pods, each pod has 0.6 OVH vCore CPU and 2 GB memory limit.
 - OVH Swift S3 as an object storage
 
@@ -82,7 +82,8 @@ $ sbt
 
 In there: `SIMULATION_FQDN` is fully qualified class name of a performance test simulation.
 
-We did provide a lot of simulations in `org.apache.james.gatling.simulation` path. You can have a look and choose the suitable simulation, or you can even customize your simulation also!
+We did provide a lot of simulations in `org.apache.james.gatling.simulation` path. You can have a look and choose the suitable simulation.
+`sbt gatling:testOnly org.apache.james.gatling.simulation.imap.PlatformValidationSimulation` is a good starting point. Or you can even customize your simulation also!
 
 Some symbolic simulations we often use:
 
