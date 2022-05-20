@@ -12,7 +12,7 @@ The idea being that it will be easy enough to operate this assembly at a "reason
 
 ## Building
 
-In order to build both the ZIP and docker packaging, run:
+In order to build the docker packaging, run:
 
 ```
 mvn clean install -DskipTests
