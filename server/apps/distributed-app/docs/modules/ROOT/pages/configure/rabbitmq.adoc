@@ -113,7 +113,7 @@ this implementation relies on Cassandra.
 |===
 | Property name | explanation
 
-|cassandra.view.enabled
+| cassandra.view.enabled
 | Whether the Cassandra administrative view should be activated. Boolean value defaulting to true.
 Not necessarily needed for MDA deployments, mail queue management adds significant complexity.
 
