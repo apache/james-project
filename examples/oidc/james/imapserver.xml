@@ -22,6 +22,9 @@
                 <jwksURL>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/certs</jwksURL>
                 <claim>email</claim>
                 <scope>openid profile email</scope>
+                <introspection>
+                    <url>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/certs</url>
+                </introspection>
             </oidc>
         </auth>
     </imapserver>
