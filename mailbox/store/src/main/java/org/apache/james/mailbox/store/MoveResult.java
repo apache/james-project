@@ -19,25 +19,25 @@
 
 package org.apache.james.mailbox.store;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.apache.james.mailbox.model.MessageMetaData;
 
 public class MoveResult {
 
-    private final Iterator<MessageMetaData> movedMessages;
-    private final Iterator<MessageMetaData> originalMessages;
+    private final List<MessageMetaData> movedMessages;
+    private final List<MessageMetaData> originalMessages;
 
-    public MoveResult(Iterator<MessageMetaData> movedMessages, Iterator<MessageMetaData> originalMessages) {
+    public MoveResult(List<MessageMetaData> movedMessages, List<MessageMetaData> originalMessages) {
         this.movedMessages = movedMessages;
         this.originalMessages = originalMessages;
     }
 
-    public Iterator<MessageMetaData> getMovedMessages() {
+    public List<MessageMetaData> getMovedMessages() {
         return movedMessages;
     }
 
-    public Iterator<MessageMetaData> getOriginalMessages() {
+    public List<MessageMetaData> getOriginalMessages() {
         return originalMessages;
     }
 }

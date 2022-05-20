@@ -23,6 +23,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -283,6 +284,16 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
     List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException;
+
+    default Publisher<MessageRange> copyMessagesReactive(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) {
+        return Mono.fromCallable(() -> copyMessages(set, from, to, session))
+            .flatMapIterable(Function.identity());
+    }
+
+    default Publisher<MessageRange> copyMessagesReactive(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.fromCallable(() -> copyMessages(set, from, to, session))
+            .flatMapIterable(Function.identity());
+    }
     
     /**
      * Move the given {@link MessageRange} from one Mailbox to the other. 
@@ -302,6 +313,16 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
     List<MessageRange> moveMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException;
+
+    default Publisher<MessageRange> moveMessagesReactive(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) {
+        return Mono.fromCallable(() -> moveMessages(set, from, to, session))
+            .flatMapIterable(Function.identity());
+    }
+
+    default Publisher<MessageRange> moveMessagesReactive(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.fromCallable(() -> moveMessages(set, from, to, session))
+            .flatMapIterable(Function.identity());
+    }
 
     enum MailboxSearchFetchType {
         Minimal,

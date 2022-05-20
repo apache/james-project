@@ -28,12 +28,18 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+
 public class MessageBatcher {
 
     public static final int NO_BATCH_SIZE = 0;
 
     public interface BatchedOperation {
         List<MessageRange> execute(MessageRange messageRange) throws MailboxException;
+    }
+
+    public interface ReactiveBatchedOperation {
+        Flux<MessageRange> execute(MessageRange messageRange);
     }
 
     private final int batchSize;
@@ -52,8 +58,17 @@ public class MessageBatcher {
             return set.split(batchSize)
                 .stream()
                 .flatMap(Throwing.function(range -> batchedOperation.execute(range)
-                                                                    .stream()))
+                    .stream()))
                 .collect(ImmutableList.toImmutableList());
+        } else {
+            return batchedOperation.execute(set);
+        }
+    }
+
+    public Flux<MessageRange> batchMessagesReactive(MessageRange set, ReactiveBatchedOperation batchedOperation) {
+        if (batchSize > 0) {
+           return Flux.fromIterable(set.split(batchSize))
+                .flatMap(batchedOperation::execute);
         } else {
             return batchedOperation.execute(set);
         }

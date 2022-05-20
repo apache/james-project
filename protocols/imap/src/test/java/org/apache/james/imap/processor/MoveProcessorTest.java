@@ -50,16 +50,17 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
-import com.google.common.collect.Lists;
-
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MoveProcessorTest {
@@ -114,58 +115,29 @@ public class MoveProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
+        when(selectedMailbox.getMailboxId()).thenReturn(TestId.of(234));
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
-        when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
+        when(targetMessageManager.getId()).thenReturn(TestId.of(34));
+        when(mockMailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class))).thenReturn(Mono.just(targetMessageManager));
         Mailbox mailbox = mock(Mailbox.class);
         when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
-        when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, INBOX, mailboxSession))
-            .thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
+        when(mockMailboxManager.moveMessagesReactive(eq(MessageRange.range(MessageUid.of(4), MessageUid.of(6))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession)))
+            .thenReturn(Flux.just(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
 
         testee.process(moveRequest, mockResponder, imapSession);
 
+        verify(mockMailboxManager).hasCapability(MailboxManager.MailboxCapabilities.Move);
         verify(mockMailboxManager).manageProcessing(any(), any());
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
-        verify(mockMailboxManager).getMailbox(INBOX, mailboxSession);
-        verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, INBOX, mailboxSession);
+        verify(mockMailboxManager).getMailboxReactive(INBOX, mailboxSession);
+        verify(mockMailboxManager).moveMessagesReactive(eq(MessageRange.range(MessageUid.of(4), MessageUid.of(6))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession));
         verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
-        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder);
-    }
-
-
-    @Test
-    void processShouldWorkWithMultipleRanges() throws Exception {
-        MoveRequest moveRequest = new MoveRequest(new IdRange[] {new IdRange(5, 6), new IdRange(1,3)}, ImapConstants.INBOX_NAME, true, TAG);
-        MailboxPath selected = new MailboxPath(INBOX, "selected");
-        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
-        when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
-        imapSession.selected(selectedMailbox).block();
-        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
-        MessageManager targetMessageManager = mock(MessageManager.class);
-        when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
-        Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
-        when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
-        StatusResponse okResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
-
-        testee.process(moveRequest, mockResponder, imapSession);
-
-        verify(mockMailboxManager).manageProcessing(any(), any());
-        verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
-        verify(mockMailboxManager).getMailbox(INBOX, mailboxSession);
-        verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, INBOX, mailboxSession);
-        verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, INBOX, mailboxSession);
-        verify(targetMessageManager).getMailboxEntity();
-        verify(mockResponder).respond(okResponse);
-        verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder);
     }
 
     @Test
