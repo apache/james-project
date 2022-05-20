@@ -63,7 +63,7 @@ public class OidcJwtTokenVerifier {
         }
     }
 
-    public static Publisher<String> verify(String jwtToken, URL jwksURL, String claimName, Optional<URL> introspectTokenURL) {
+    public static Publisher<String> verifyWithMaybeIntrospection(String jwtToken, URL jwksURL, String claimName, Optional<URL> introspectTokenURL) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> {
