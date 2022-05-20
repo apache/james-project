@@ -116,7 +116,8 @@
             Only configure this when you want to validate the revocation token by the OIDC provider.
             Note that James always verifies the signature of the token even whether this configuration is provided or not.</dd>
         <dt><strong>auth.oidc.introspection.auth</strong></dt>
-        <dd>Optional. Provide Authorization in header request when introspecting token.</dd>
+        <dd>Optional. Provide Authorization in header request when introspecting token.
+            Eg: `Basic xyz`</dd>
       <dt><strong>handler.authorizedAddresses</strong></dt>
       <dd>Authorize specific addresses/networks.
                If you use SMTP AUTH, addresses that match those specified here will

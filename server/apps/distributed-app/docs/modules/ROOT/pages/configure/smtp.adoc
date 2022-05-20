@@ -110,6 +110,7 @@ Note that James always verifies the signature of the token even whether this con
 
 | auth.oidc.introspection.auth
 | Optional. Provide Authorization in header request when introspecting token.
+Eg: `Basic xyz`
 
 | authorizedAddresses
 | Authorize specific addresses/networks.

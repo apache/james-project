@@ -46,9 +46,7 @@ public class IntrospectionEndpoint {
             IntrospectionEndpoint that = (IntrospectionEndpoint) o;
 
             return Objects.equals(this.url, that.url)
-                &&
-                Objects.equals(this.authorizationHeader, that.authorizationHeader)
-                ;
+                && Objects.equals(this.authorizationHeader, that.authorizationHeader);
         }
         return false;
     }
