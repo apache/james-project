@@ -108,6 +108,9 @@ can be used to enforce strong authentication mechanisms.
 Only configure this when you want to validate the revocation token by the OIDC provider.
 Note that James always verifies the signature of the token even whether this configuration is provided or not.
 
+| auth.oidc.introspection.auth
+| Optional. Provide Authorization in header request when introspecting token.
+
 | authorizedAddresses
 | Authorize specific addresses/networks.
 

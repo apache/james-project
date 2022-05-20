@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
 import org.apache.james.jwt.introspection.IntrospectionClient;
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
 
@@ -63,15 +64,15 @@ public class OidcJwtTokenVerifier {
         }
     }
 
-    public static Publisher<String> verifyWithMaybeIntrospection(String jwtToken, URL jwksURL, String claimName, Optional<URL> introspectTokenURL) {
+    public static Publisher<String> verifyWithMaybeIntrospection(String jwtToken, URL jwksURL, String claimName, Optional<IntrospectionEndpoint> introspectionEndpoint) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> {
-                if (introspectTokenURL.isEmpty()) {
+                if (introspectionEndpoint.isEmpty()) {
                     return Mono.just(claimResult);
                 }
-                return Mono.justOrEmpty(introspectTokenURL)
-                    .flatMap(url -> Mono.from(INTROSPECTION_CLIENT.introspect(url, jwtToken)))
+                return Mono.justOrEmpty(introspectionEndpoint)
+                    .flatMap(endpoint -> Mono.from(INTROSPECTION_CLIENT.introspect(endpoint, jwtToken)))
                     .filter(TokenIntrospectionResponse::active)
                     .map(activeToken -> claimResult);
             });

@@ -19,11 +19,42 @@
 
 package org.apache.james.jwt.introspection;
 
-import org.reactivestreams.Publisher;
+import java.net.URL;
+import java.util.Objects;
+import java.util.Optional;
 
-public interface IntrospectionClient {
+public class IntrospectionEndpoint {
+    private final URL url;
+    private final Optional<String> authorizationHeader;
 
-    Publisher<TokenIntrospectionResponse> introspect(IntrospectionEndpoint introspectionEndpoint, String token);
+    public IntrospectionEndpoint(URL url, Optional<String> authorizationHeader) {
+        this.url = url;
+        this.authorizationHeader = authorizationHeader;
+    }
 
+    public URL getUrl() {
+        return url;
+    }
+
+    public Optional<String> getAuthorizationHeader() {
+        return authorizationHeader;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof IntrospectionEndpoint) {
+            IntrospectionEndpoint that = (IntrospectionEndpoint) o;
+
+            return Objects.equals(this.url, that.url)
+                &&
+                Objects.equals(this.authorizationHeader, that.authorizationHeader)
+                ;
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(url, authorizationHeader);
+    }
 }
-

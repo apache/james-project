@@ -45,7 +45,7 @@ public class OidcSASLConfiguration {
         String introspectionUrl = configuration.getString("introspection.url", null);
 
         return new OidcSASLConfiguration(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope, Optional.ofNullable(introspectionUrl)
-            .map(Throwing.function(URL::new)));
+            .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)));
     }
 
     private final URL jwksURL;
@@ -53,13 +53,20 @@ public class OidcSASLConfiguration {
     private final URL oidcConfigurationURL;
     private final String scope;
     private final Optional<URL> introspectionEndpoint;
+    private final Optional<String> introspectionEndpointAuthorization;
 
-    public OidcSASLConfiguration(URL jwksURL, String claim, URL oidcConfigurationURL, String scope, Optional<URL> introspectionEndpoint) {
+    public OidcSASLConfiguration(URL jwksURL,
+                                 String claim,
+                                 URL oidcConfigurationURL,
+                                 String scope,
+                                 Optional<URL> introspectionEndpoint,
+                                 Optional<String> introspectionEndpointAuthorization) {
         this.jwksURL = jwksURL;
         this.claim = claim;
         this.oidcConfigurationURL = oidcConfigurationURL;
         this.scope = scope;
         this.introspectionEndpoint = introspectionEndpoint;
+        this.introspectionEndpointAuthorization = introspectionEndpointAuthorization;
     }
 
     public URL getJwksURL() {
@@ -86,4 +93,7 @@ public class OidcSASLConfiguration {
         return getIntrospectionEndpoint().isPresent();
     }
 
+    public Optional<String> getIntrospectionEndpointAuthorization() {
+        return introspectionEndpointAuthorization;
+    }
 }

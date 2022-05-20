@@ -23,7 +23,8 @@
                 <claim>email</claim>
                 <scope>openid profile email</scope>
                 <introspection>
-                    <url>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/certs</url>
+                    <url>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/token/introspect</url>
+                    <auth>Basic amFtZXMtdGh1bmRlcmJpcmQ6WHc5aHQxdmVUdTBUazVzTU15MDNQZHpZM0FpRnZzc3c=</auth>
                 </introspection>
             </oidc>
         </auth>

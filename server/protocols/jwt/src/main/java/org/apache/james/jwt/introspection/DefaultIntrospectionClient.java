@@ -19,7 +19,6 @@
 
 package org.apache.james.jwt.introspection;
 
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.reactivestreams.Publisher;
@@ -52,9 +51,12 @@ public class DefaultIntrospectionClient implements IntrospectionClient {
     }
 
     @Override
-    public Publisher<TokenIntrospectionResponse> introspect(URL introspectURL, String token) {
-        return httpClient.post()
-            .uri(introspectURL.toString())
+    public Publisher<TokenIntrospectionResponse> introspect(IntrospectionEndpoint introspectionEndpoint, String token) {
+        return httpClient
+            .headers(builder -> introspectionEndpoint.getAuthorizationHeader()
+                .ifPresent(auth -> builder.add("Authorization", auth)))
+            .post()
+            .uri(introspectionEndpoint.getUrl().toString())
             .sendForm((req, form) -> form.multipart(false)
                 .attr(TOKEN_ATTRIBUTE, token))
             .responseSingle(this::afterHTTPResponseHandler);
