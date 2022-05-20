@@ -22,6 +22,7 @@ package org.apache.james.jwt;
 import java.net.URL;
 import java.util.Optional;
 
+import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
 import org.apache.james.jwt.introspection.IntrospectionClient;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
@@ -35,6 +36,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
+    public static final IntrospectionClient INTROSPECTION_CLIENT = new DefaultIntrospectionClient();
 
     public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
         PublicKeyProvider jwksPublicKeyProvider = getClaimWithoutSignatureVerification(jwtToken, "kid", String.class)
@@ -61,21 +63,15 @@ public class OidcJwtTokenVerifier {
         }
     }
 
-    private final Optional<IntrospectionClient> introspectionClient;
-
-    public OidcJwtTokenVerifier(Optional<IntrospectionClient> introspectionClient) {
-        this.introspectionClient = introspectionClient;
-    }
-
-    public Publisher<String> verify(String jwtToken, URL jwksURL, String claimName) {
+    public static Publisher<String> verify(String jwtToken, URL jwksURL, String claimName, Optional<URL> introspectTokenURL) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> {
-                if (introspectionClient.isEmpty()) {
+                if (introspectTokenURL.isEmpty()) {
                     return Mono.just(claimResult);
                 }
-                return Mono.justOrEmpty(introspectionClient)
-                    .flatMap(client -> Mono.from(client.introspect(jwtToken)))
+                return Mono.justOrEmpty(introspectTokenURL)
+                    .flatMap(url -> Mono.from(INTROSPECTION_CLIENT.introspect(url, jwtToken)))
                     .filter(TokenIntrospectionResponse::active)
                     .map(activeToken -> claimResult);
             });

@@ -39,7 +39,6 @@ import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.OIDCSASLParser;
@@ -196,8 +195,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.just(new OidcJwtTokenVerifier(oidcSASLConfiguration.getIntrospectionEndpoint().map(DefaultIntrospectionClient::new)))
-            .flatMap(oidcJwtTokenVerifier -> Mono.from(oidcJwtTokenVerifier.verify(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())))
+        return Mono.from(OidcJwtTokenVerifier.verify(token,
+                oidcSASLConfiguration.getJwksURL(),
+                oidcSASLConfiguration.getClaim(),
+                oidcSASLConfiguration.getIntrospectionEndpoint()))
             .blockOptional()
             .flatMap(this::extractUserFromClaim);
     }

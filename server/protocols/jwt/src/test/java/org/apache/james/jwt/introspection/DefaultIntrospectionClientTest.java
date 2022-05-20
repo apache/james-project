@@ -63,7 +63,7 @@ public class DefaultIntrospectionClientTest {
     }
 
     private DefaultIntrospectionClient testee() {
-        return new DefaultIntrospectionClient(getIntrospectionTokenEndpointURL());
+        return new DefaultIntrospectionClient();
     }
 
     private void updateMockerServerSpecifications(String response, int statusResponse) {
@@ -90,7 +90,7 @@ public class DefaultIntrospectionClientTest {
 
         updateMockerServerSpecifications(activeResponse, 200);
 
-        TokenIntrospectionResponse introspectionResponse = Mono.from(testee().introspect("abc"))
+        TokenIntrospectionResponse introspectionResponse = Mono.from(testee().introspect(getIntrospectionTokenEndpointURL(),"abc"))
             .block();
         assertThat(introspectionResponse).isNotNull();
 
@@ -124,7 +124,7 @@ public class DefaultIntrospectionClientTest {
 
         updateMockerServerSpecifications(activeResponse, 200);
 
-        Mono.from(testee().introspect("abc"))
+        Mono.from(testee().introspect(getIntrospectionTokenEndpointURL(),"abc"))
             .block();
         mockServer.verify(HttpRequest.request()
                 .withPath(INTROSPECTION_TOKEN_URI_PATH)
@@ -144,7 +144,7 @@ public class DefaultIntrospectionClientTest {
 
         updateMockerServerSpecifications(serverResponse, 401);
 
-        assertThatThrownBy(() -> Mono.from(testee().introspect("abc"))
+        assertThatThrownBy(() -> Mono.from(testee().introspect(getIntrospectionTokenEndpointURL(),"abc"))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Authentication failed")
@@ -157,7 +157,7 @@ public class DefaultIntrospectionClientTest {
 
         updateMockerServerSpecifications(serverResponse, 200);
 
-        assertThatThrownBy(() -> Mono.from(testee().introspect("abc"))
+        assertThatThrownBy(() -> Mono.from(testee().introspect(getIntrospectionTokenEndpointURL(),"abc"))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -178,7 +178,7 @@ public class DefaultIntrospectionClientTest {
 
         updateMockerServerSpecifications(serverResponse, 200);
 
-        assertThatThrownBy(() -> Mono.from(testee().introspect("abc"))
+        assertThatThrownBy(() -> Mono.from(testee().introspect(getIntrospectionTokenEndpointURL(),"abc"))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -194,7 +194,7 @@ public class DefaultIntrospectionClientTest {
         DefaultIntrospectionClient testee = testee();
         String token = "token1bc";
 
-        assertThat(Mono.from(testee.introspect(token))
+        assertThat(Mono.from(testee.introspect(getIntrospectionTokenEndpointURL(),token))
             .block()).isNotNull()
             .satisfies(x -> assertThat(x.active()).isTrue());
 
@@ -204,7 +204,7 @@ public class DefaultIntrospectionClientTest {
         mockServer.reset();
         updateMockerServerSpecifications(updatedResponse, 200);
 
-        assertThat(Mono.from(testee.introspect(token))
+        assertThat(Mono.from(testee.introspect(getIntrospectionTokenEndpointURL(),token))
             .block()).isNotNull()
             .satisfies(x -> assertThat(x.active()).isFalse());
     }

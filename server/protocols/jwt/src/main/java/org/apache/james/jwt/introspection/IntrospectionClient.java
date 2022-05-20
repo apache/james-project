@@ -18,11 +18,13 @@
  ****************************************************************/
 
 package org.apache.james.jwt.introspection;
+import java.net.URL;
+
 import org.reactivestreams.Publisher;
 
 public interface IntrospectionClient {
 
-    Publisher<TokenIntrospectionResponse> introspect(String token);
+    Publisher<TokenIntrospectionResponse> introspect(URL introspectURL, String token);
 
 }
 

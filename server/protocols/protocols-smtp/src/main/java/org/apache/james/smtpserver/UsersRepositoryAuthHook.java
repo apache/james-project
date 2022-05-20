@@ -26,7 +26,6 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
 import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -92,8 +91,10 @@ public class UsersRepositoryAuthHook implements AuthHook {
     }
 
     private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.just(new OidcJwtTokenVerifier(oidcSASLConfiguration.getIntrospectionEndpoint().map(DefaultIntrospectionClient::new)))
-            .flatMap(oidcJwtTokenVerifier -> Mono.from(oidcJwtTokenVerifier.verify(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())))
+        return Mono.from(OidcJwtTokenVerifier.verify(token,
+                oidcSASLConfiguration.getJwksURL(),
+                oidcSASLConfiguration.getClaim(),
+                oidcSASLConfiguration.getIntrospectionEndpoint()))
             .blockOptional()
             .flatMap(this::extractUserFromClaim);
     }

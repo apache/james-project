@@ -39,9 +39,8 @@ public class DefaultIntrospectionClient implements IntrospectionClient {
     public static final String TOKEN_ATTRIBUTE = "token";
     private final HttpClient httpClient;
     private final ObjectMapper deserializer;
-    private final URL introspectionEndpoint;
 
-    public DefaultIntrospectionClient(URL introspectionEndpoint) {
+    public DefaultIntrospectionClient() {
         this.httpClient = HttpClient.create(ConnectionProvider.builder(this.getClass().getName())
                 .build())
             .disableRetry(true)
@@ -50,13 +49,12 @@ public class DefaultIntrospectionClient implements IntrospectionClient {
                 builder.add("Content-Type", "application/x-www-form-urlencoded");
             });
         this.deserializer = new ObjectMapper();
-        this.introspectionEndpoint = introspectionEndpoint;
     }
 
     @Override
-    public Publisher<TokenIntrospectionResponse> introspect(String token) {
+    public Publisher<TokenIntrospectionResponse> introspect(URL introspectURL, String token) {
         return httpClient.post()
-            .uri(introspectionEndpoint.toString())
+            .uri(introspectURL.toString())
             .sendForm((req, form) -> form.multipart(false)
                 .attr(TOKEN_ATTRIBUTE, token))
             .responseSingle(this::afterHTTPResponseHandler);
