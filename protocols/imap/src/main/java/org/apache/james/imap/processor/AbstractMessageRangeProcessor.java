@@ -105,8 +105,8 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                             range -> messageRange(session.getSelected(), range, request.isUseUids()))
                             .sneakyThrow())
                         .filter(Objects::nonNull)
-                        .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range))
-                        .map(IdRange::from)
+                        .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)
+                            .map(IdRange::from))
                         .collect(ImmutableList.toImmutableList())
                         .map(IdRange::mergeRanges)
                         .map(ranges -> StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), ranges.toArray(IdRange[]::new)));
