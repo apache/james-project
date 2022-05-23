@@ -249,6 +249,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
         return renameMailbox(from, to, RenameOption.NONE, session);
     }
 
+    default Publisher<List<MailboxRenamedResult>> renameMailboxReactive(MailboxPath from, MailboxPath to, RenameOption option, MailboxSession session) {
+        return Mono.fromCallable(() -> renameMailbox(from, to, option, session));
+    }
+
     /**
      * Renames a mailbox.
      *
@@ -269,6 +273,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
 
     default List<MailboxRenamedResult> renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
         return renameMailbox(mailboxId, newMailboxPath, RenameOption.NONE, session);
+    }
+
+    default Publisher<List<MailboxRenamedResult>> renameMailboxReactive(MailboxId mailboxId, MailboxPath to, RenameOption option, MailboxSession session) {
+        return Mono.fromCallable(() -> renameMailbox(mailboxId, to, option, session));
     }
 
     /**
