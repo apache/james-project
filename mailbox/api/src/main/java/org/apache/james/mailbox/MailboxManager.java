@@ -160,6 +160,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException;
 
+    default Publisher<MailboxId> createMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> createMailbox(mailboxPath, mailboxSession))
+            .handle((optional, sink) -> optional.ifPresent(sink::next));
+    }
+
     /**
      * Delete the mailbox with the name
      */

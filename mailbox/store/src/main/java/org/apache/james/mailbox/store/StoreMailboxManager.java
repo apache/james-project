@@ -24,14 +24,12 @@ import static org.apache.james.mailbox.store.MailboxReactorUtils.blockOptional;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -52,6 +50,7 @@ import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -98,7 +97,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -334,94 +332,98 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        LOGGER.debug("createMailbox {}", mailboxPath);
-
-        assertMailboxPathBelongToUser(mailboxSession, mailboxPath);
-
-        if (mailboxPath.getName().isEmpty()) {
-            LOGGER.warn("Ignoring mailbox with empty name");
-        } else {
-            MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
-            sanitizedMailboxPath.assertAcceptable(mailboxSession.getPathDelimiter());
-
-            if (block(mailboxExists(sanitizedMailboxPath, mailboxSession))) {
-                throw new MailboxExistsException(sanitizedMailboxPath.asString());
-            }
-
-            List<MailboxId> mailboxIds = createMailboxesForPath(mailboxSession, sanitizedMailboxPath);
-
-            if (!mailboxIds.isEmpty()) {
-                return Optional.ofNullable(Iterables.getLast(mailboxIds));
-            }
-        }
-        return Optional.empty();
+        return MailboxReactorUtils.blockOptional(createMailboxReactive(mailboxPath, mailboxSession));
     }
 
-    private List<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) {
+    public Mono<MailboxId> createMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        LOGGER.debug("createMailbox {}", mailboxPath);
+
+        return assertMailboxPathBelongToUserReactive(mailboxSession, mailboxPath)
+            .then(doCreateMailboxReactive(mailboxPath, mailboxSession));
+    }
+
+    private Mono<MailboxId> doCreateMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        if (mailboxPath.getName().isEmpty()) {
+            LOGGER.warn("Ignoring mailbox with empty name");
+            return Mono.empty();
+        } else {
+            try {
+                MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
+                sanitizedMailboxPath.assertAcceptable(mailboxSession.getPathDelimiter());
+
+                return mailboxExists(sanitizedMailboxPath, mailboxSession)
+                    .flatMap(exists -> {
+                        if (exists) {
+                            return Mono.error(new MailboxExistsException(sanitizedMailboxPath.asString()));
+                        } else {
+                            return createMailboxesForPath(mailboxSession, sanitizedMailboxPath).last();
+                        }
+                    });
+            } catch (MailboxNameException e) {
+                return Mono.error(e);
+            }
+        }
+    }
+
+    private Flux<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) {
         // Create parents first
         // If any creation fails then the mailbox will not be created
         // TODO: transaction
         List<MailboxPath> intermediatePaths = sanitizedMailboxPath.getHierarchyLevels(getDelimiter());
         boolean isRootPath = intermediatePaths.size() == 1;
 
-        return intermediatePaths
-            .stream()
-            .flatMap(Throwing.<MailboxPath, Stream<MailboxId>>function(mailboxPath -> manageMailboxCreation(mailboxSession, isRootPath, mailboxPath)).sneakyThrow())
-            .collect(ImmutableList.toImmutableList());
+        return Flux.fromIterable(intermediatePaths)
+            .concatMap(path -> manageMailboxCreation(mailboxSession, isRootPath, path));
     }
 
-    private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath) throws MailboxException {
+    private Mono<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath)  {
         if (mailboxPath.isInbox()) {
-            if (block(hasInbox(mailboxSession))) {
-                return duplicatedINBOXCreation(isRootPath, mailboxPath);
-            }
-
-            return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession)).stream();
+            return Mono.from(hasInbox(mailboxSession))
+                .flatMap(hasInbox -> {
+                    if (hasInbox) {
+                        return duplicatedINBOXCreation(isRootPath, mailboxPath);
+                    }
+                    return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession));
+                });
         }
 
-        return performConcurrentMailboxCreation(mailboxSession, mailboxPath).stream();
+        return performConcurrentMailboxCreation(mailboxSession, mailboxPath);
     }
 
 
-    private Stream<MailboxId> duplicatedINBOXCreation(boolean isRootPath, MailboxPath mailbox) throws InboxAlreadyCreated {
+    private Mono<MailboxId> duplicatedINBOXCreation(boolean isRootPath, MailboxPath mailbox) {
         if (isRootPath) {
-            throw new InboxAlreadyCreated(mailbox.getName());
+            return Mono.error(new InboxAlreadyCreated(mailbox.getName()));
         }
 
-        return Stream.empty();
+        return Mono.empty();
     }
 
-    private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
-        List<MailboxId> mailboxIds = new ArrayList<>();
+    private Mono<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-        locker.executeWithLock(mailboxPath, () ->
-            block(mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
-                    .doOnNext(mailbox -> mailboxIds.add(mailbox.getMailboxId()))
-                    .flatMap(mailbox ->
-                        // notify listeners
-                        eventBus.dispatch(EventFactory.mailboxAdded()
-                                .randomEventId()
-                                .mailboxSession(mailboxSession)
-                                .mailbox(mailbox)
-                                .build(),
-                            new MailboxIdRegistrationKey(mailbox.getMailboxId()))))
-                    .onErrorResume(e -> {
-                        if (e instanceof MailboxExistsException) {
-                            LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
-                        } else if (e instanceof MailboxException) {
-                            return Mono.error(e);
-                        }
-                        return Mono.empty();
-                    })), MailboxPathLocker.LockType.Write);
-
-        return mailboxIds;
+        return Mono.from(locker.executeReactiveWithLockReactive(mailboxPath,
+            mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
+                .flatMap(mailbox ->
+                    // notify listeners
+                    eventBus.dispatch(EventFactory.mailboxAdded()
+                            .randomEventId()
+                            .mailboxSession(mailboxSession)
+                            .mailbox(mailbox)
+                            .build(),
+                        new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                        .thenReturn(mailbox.getMailboxId()))
+                .onErrorResume(MailboxExistsException.class, e -> {
+                    LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
+                    return Mono.empty();
+                })), MailboxPathLocker.LockType.Write));
     }
 
-    private void assertMailboxPathBelongToUser(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
+    private Mono<Void> assertMailboxPathBelongToUserReactive(MailboxSession mailboxSession, MailboxPath mailboxPath) {
         if (!mailboxPath.belongsTo(mailboxSession)) {
-            throw new InsufficientRightsException("mailboxPath '" + mailboxPath.asString() + "'"
-                + " does not belong to user '" + mailboxSession.getUser().asString() + "'");
+            return Mono.error(new InsufficientRightsException("mailboxPath '" + mailboxPath.asString() + "'"
+                + " does not belong to user '" + mailboxSession.getUser().asString() + "'"));
         }
+        return Mono.empty();
     }
 
     @Override
