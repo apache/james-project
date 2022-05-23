@@ -82,6 +82,7 @@ public class RabbitMQConnectionFactory {
                 .setUsername(rabbitMQConfiguration.getManagementCredentials().getUser());
             connectionFactory.setPassword(
                 String.valueOf(rabbitMQConfiguration.getManagementCredentials().getPassword()));
+            connectionFactory.useNio();
 
             if (configuration.useSsl()) {
                 setupSslConfiguration(connectionFactory);
