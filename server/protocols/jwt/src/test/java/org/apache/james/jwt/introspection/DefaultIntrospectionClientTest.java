@@ -56,7 +56,7 @@ public class DefaultIntrospectionClientTest {
 
     private IntrospectionEndpoint getIntrospectionTokenEndpoint() {
         try {
-            return new IntrospectionEndpoint(new URL(String.format("http://abc:xyz@127.0.0.1:%s%s", mockServer.getLocalPort(), INTROSPECTION_TOKEN_URI_PATH)),
+            return new IntrospectionEndpoint(new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), INTROSPECTION_TOKEN_URI_PATH)),
                 Optional.empty());
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
