@@ -546,6 +546,9 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Mono<List<MessageMetaData>> copyReactive(Mailbox mailbox, List<MailboxMessage> originals) {
+        if (originals.isEmpty()) {
+            return Mono.empty();
+        }
         return setMessagesInMailboxReactive(mailbox, originals.stream()
             .map(original -> {
                 original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
