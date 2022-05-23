@@ -26,6 +26,8 @@ include::partial$DKIMVerify.adoc[]
 
 include::partial$DSNBounce.adoc[]
 
+include::partial$Expires.adoc[]
+
 include::partial$ExtractMDNOriginalJMAPMessageId.adoc[]
 
 include::partial$Forward.adoc[]

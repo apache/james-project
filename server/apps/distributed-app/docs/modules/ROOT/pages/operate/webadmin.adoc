@@ -1206,6 +1206,63 @@ This task could be run safely online and can be scheduled on a recurring
 basis outside of peak traffic by an admin to ensure Cassandra message
 consistency.
 
+=== Deleting old messages of all users
+
+*Note:*
+Consider enabling the xref:configure/vault.adoc[Deleted Messages Vault]
+if you use this feature.
+
+Old messages tend to pile up in user INBOXes. An admin might want to delete
+these on behalf of the users, e.g. all messages older than 30 days:
+....
+curl -XDELETE http://ip:port/messages?olderThan=30d
+....
+
+link:#_endpoints_returning_a_task[More details about endpoints returning a task].
+
+The `olderThan` parameter should be expressed in the following format: `Nunit`.
+`N` should be strictly positive. `unit` could be either in the short form
+(`d`, `w`, `y` etc.), or in the long form (`days`, `weeks`, `months`, `years`).
+The default unit is `days`.
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the type `ExpireMailboxTask` and the following `additionalInformation`:
+
+....
+{
+  "type": "ExpireMailboxTask"
+  "mailboxesExpired": 5,
+  "mailboxesFailed": 2,
+  "mailboxesProcessed": 10,
+  "messagesDeleted": 23,
+}
+....
+
+To delete old mails from a different mailbox than INBOX, e.g. a mailbox
+named "Archived" :
+....
+curl -XDELETE http://ip:port/messages?mailbox=Archived&olderThan=30d
+....
+
+Since this is a somewhat expensive operation, the task is throttled to one user
+per second. You may speed it up via `usersPerSecond=10` for example. But keep
+in mind that a high rate might overwhelm your database or blob store.
+
+*Scanning search only:* (unsupported for Lucene and ElasticSearch search implementations) +
+Some mail clients can add an `Expires` header (RFC 4021) to their messages.
+Instead of specifying an absolute age, you may choose to delete only such
+messages where the expiration date from this header lies in the past:
+....
+curl -XDELETE http://ip:port/messages?byExpiresHeader
+....
+In this case you should also add the xref:configure/mailets.adoc[mailet]
+`Expires` to your mailet container, which can sanitize expiration date headers.
+
+
 == Administrating user mailboxes
 
 === Creating a mailbox
