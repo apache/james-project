@@ -28,12 +28,11 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>pulsar-cassandra-smtp-relay</artifactId>
+    <artifactId>scaling-pulsar-smtp</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Binaries :: SMTP Relay - C* ES Pular</name>
-    <description>An example SMTP relay - Cassandra and Pulsar backend with guice injection
-        and Elasticsearch metrics reporting</description>
+    <name>Apache James :: Server :: Binaries :: pulsar based smtp processing with scaling capabilities</name>
+    <description>An example SMTP processing app - backed by Pulsar mailqueues for scalability</description>
 
     <properties>
         <cassandra.includes>empty</cassandra.includes>
@@ -264,7 +263,7 @@
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>smtp-relay-cassandra-pulsar-es-latest</tag>
+                            <tag>scaling-pulsar-smtp-latest</tag>
                         </tags>
                     </to>
                     <container>
