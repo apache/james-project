@@ -38,8 +38,6 @@ class OidcJwtTokenVerifierTest {
     private static final String JWKS_URI_PATH = "/auth/realms/realm1/protocol/openid-connect/certs";
 
     ClientAndServer mockServer;
-    OidcJwtTokenVerifier testee;
-
     @BeforeEach
     public void setUp() {
         mockServer = ClientAndServer.startClientAndServer(0);
@@ -48,12 +46,11 @@ class OidcJwtTokenVerifierTest {
             .respond(HttpResponse.response().withStatusCode(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
-        testee = new OidcJwtTokenVerifier();
     }
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasKid() {
-        Optional<String> email_address = testee.verifyAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address");
+        Optional<String> email_address = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address");
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(email_address.isPresent()).isTrue();
             softly.assertThat(email_address.get()).isEqualTo("user@domain.org");
@@ -62,7 +59,7 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasNotKid() {
-        Optional<String> email_address = testee.verifyAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID, getJwksURL(), "email_address");
+        Optional<String> email_address = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID, getJwksURL(), "email_address");
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(email_address.isPresent()).isTrue();
             softly.assertThat(email_address.get()).isEqualTo("user@domain.org");
@@ -71,20 +68,20 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenValidTokenHasNotFoundKid() {
-        assertThat(testee.verifyAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_FOUND_KID, getJwksURL(), "email_address"))
+        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_FOUND_KID, getJwksURL(), "email_address"))
             .isEmpty();
     }
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenClaimNameNotFound() {
-        assertThat(testee.verifyAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "not_found"))
+        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "not_found"))
             .isEmpty();
     }
 
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenInvalidToken() {
-        assertThat(testee.verifyAndExtractClaim(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address"))
+        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address"))
             .isEmpty();
     }
 

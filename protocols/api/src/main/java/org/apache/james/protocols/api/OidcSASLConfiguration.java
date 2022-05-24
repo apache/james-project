@@ -21,10 +21,12 @@ package org.apache.james.protocols.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 public class OidcSASLConfiguration {
@@ -40,23 +42,31 @@ public class OidcSASLConfiguration {
         Preconditions.checkNotNull(oidcConfigurationURL, "`oidcConfigurationURL` property need to be specified inside the oidc tag");
         Preconditions.checkNotNull(scope, "`scope` property need to be specified inside the oidc tag");
 
-        return new OidcSASLConfiguration(jwksURL, claim, oidcConfigurationURL, scope);
+        String introspectionUrl = configuration.getString("introspection.url", null);
+
+        return new OidcSASLConfiguration(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope, Optional.ofNullable(introspectionUrl)
+            .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)));
     }
 
     private final URL jwksURL;
     private final String claim;
     private final URL oidcConfigurationURL;
     private final String scope;
+    private final Optional<URL> introspectionEndpoint;
+    private final Optional<String> introspectionEndpointAuthorization;
 
-    public OidcSASLConfiguration(URL jwksURL, String claim, URL oidcConfigurationURL, String scope) {
+    public OidcSASLConfiguration(URL jwksURL,
+                                 String claim,
+                                 URL oidcConfigurationURL,
+                                 String scope,
+                                 Optional<URL> introspectionEndpoint,
+                                 Optional<String> introspectionEndpointAuthorization) {
         this.jwksURL = jwksURL;
         this.claim = claim;
         this.oidcConfigurationURL = oidcConfigurationURL;
         this.scope = scope;
-    }
-
-    public OidcSASLConfiguration(String jwksURL, String claim, String oidcConfigurationURL, String scope) throws MalformedURLException {
-        this(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope);
+        this.introspectionEndpoint = introspectionEndpoint;
+        this.introspectionEndpointAuthorization = introspectionEndpointAuthorization;
     }
 
     public URL getJwksURL() {
@@ -73,5 +83,17 @@ public class OidcSASLConfiguration {
 
     public String getScope() {
         return scope;
+    }
+
+    public Optional<URL> getIntrospectionEndpoint() {
+        return introspectionEndpoint;
+    }
+
+    public boolean introspectionEndpointEnable() {
+        return getIntrospectionEndpoint().isPresent();
+    }
+
+    public Optional<String> getIntrospectionEndpointAuthorization() {
+        return introspectionEndpointAuthorization;
     }
 }

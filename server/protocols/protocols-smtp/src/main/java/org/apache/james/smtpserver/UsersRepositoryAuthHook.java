@@ -26,6 +26,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -36,6 +37,8 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 /**
  * This Auth hook can be used to authenticate against the james user repository
@@ -70,9 +73,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     @Override
     public HookResult doSasl(SMTPSession session, OidcSASLConfiguration configuration, String initialResponse) {
         return OIDCSASLParser.parse(initialResponse)
-            .flatMap(value -> new OidcJwtTokenVerifier()
-                .verifyAndExtractClaim(value.getToken(), configuration.getJwksURL(), configuration.getClaim()))
-            .flatMap(this::extractUserFromClaim)
+            .flatMap(value -> validateToken(configuration, value.getToken()))
             .map(username -> {
                 try {
                     users.assertValid(username);
@@ -88,6 +89,16 @@ public class UsersRepositoryAuthHook implements AuthHook {
                 }
             })
             .orElse(HookResult.DECLINED);
+    }
+
+    private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
+        return Mono.from(OidcJwtTokenVerifier.verifyWithMaybeIntrospection(token,
+                oidcSASLConfiguration.getJwksURL(),
+                oidcSASLConfiguration.getClaim(),
+                oidcSASLConfiguration.getIntrospectionEndpoint()
+                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))))
+            .blockOptional()
+            .flatMap(this::extractUserFromClaim);
     }
 
     private Optional<Username> extractUserFromClaim(String claimValue) {

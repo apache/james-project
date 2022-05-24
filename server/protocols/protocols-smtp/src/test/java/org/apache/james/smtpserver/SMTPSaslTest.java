@@ -92,6 +92,7 @@ class SMTPSaslTest {
     public static final Username USER = Username.of("user@domain.org");
     public static final String PASSWORD = "userpassword";
     public static final String JWKS_URI_PATH = "/jwks";
+    public static final String INTROSPECT_TOKEN_URI_PATH = "/introspect";
     public static final String OIDC_URL = "https://example.com/jwks";
     public static final String SCOPE = "scope";
     public static final String FAIL_RESPONSE_TOKEN = Base64.getEncoder().encodeToString(
@@ -373,6 +374,85 @@ class SMTPSaslTest {
             softly.assertThat(client.getReplyString())
                 .doesNotContain("XOAUTH2");
         });
+    }
+
+    @Test
+    void oauthShouldFailWhenIntrospectTokenReturnActiveIsFalse() throws Exception {
+        smtpServer.destroy();
+        authServer
+            .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"active\": false}", StandardCharsets.UTF_8));
+
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+        config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
+        config.addProperty("auth.oidc.scope", SCOPE);
+        config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), INTROSPECT_TOKEN_URI_PATH));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("334 " + FAIL_RESPONSE_TOKEN);
+
+        client.sendCommand("AQ==");
+        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+
+    }
+
+    @Test
+    void oauthShouldFailWhenIntrospectTokenReturnActiveIsTrue() throws Exception {
+        smtpServer.destroy();
+        authServer
+            .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"active\": true}", StandardCharsets.UTF_8));
+
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+        config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
+        config.addProperty("auth.oidc.scope", SCOPE);
+        config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), INTROSPECT_TOKEN_URI_PATH));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
+    void oauthShouldFailWhenIntrospectTokenServerError() throws Exception {
+        smtpServer.destroy();
+        String invalidURI = "/invalidURI";
+        authServer
+            .when(HttpRequest.request().withPath(invalidURI))
+            .respond(HttpResponse.response().withStatusCode(503)
+                .withHeader("Content-Type", "application/json"));
+
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+        config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
+        config.addProperty("auth.oidc.scope", SCOPE);
+        config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), invalidURI));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("451 Unable to process request");
     }
 
 }

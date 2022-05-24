@@ -1013,6 +1013,7 @@ class IMAPServerTest {
     @Nested
     class Oidc {
         String JWKS_URI_PATH = "/jwks";
+        String INTROSPECT_TOKEN_URI_PATH = "/introspect";
         ClientAndServer authServer;
         IMAPServer imapServer;
         int port;
@@ -1130,6 +1131,85 @@ class IMAPServerTest {
             IMAPSClient imapsClient = imapsClient(port);
             imapsClient.create("INBOX");
             assertThat(imapsClient.getReplyString()).contains("Command not valid in this state.");
+        }
+
+        @Test
+        void oauthShouldFailWhenIntrospectTokenReturnActiveIsFalse() throws Exception {
+            imapServer.destroy();
+
+            authServer
+                .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"active\": false}", StandardCharsets.UTF_8));
+
+            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
+            config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+            config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+            config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
+            config.addProperty("auth.oidc.scope", "email");
+            config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), INTROSPECT_TOKEN_URI_PATH));
+
+            imapServer = createImapServer(config);
+
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            IMAPSClient client = imapsClient(port);
+            client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+            assertThat(client.getReplyString()).contains("NO AUTHENTICATE failed.");
+        }
+
+        @Test
+        void oauthShouldSuccessWhenIntrospectTokenReturnActiveIsTrue() throws Exception {
+            imapServer.destroy();
+
+            authServer
+                .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"active\": true}", StandardCharsets.UTF_8));
+
+            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
+            config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+            config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+            config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
+            config.addProperty("auth.oidc.scope", "email");
+            config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), INTROSPECT_TOKEN_URI_PATH));
+
+            imapServer = createImapServer(config);
+
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            IMAPSClient client = imapsClient(port);
+            client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+            assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
+        }
+
+        @Test
+        void oauthShouldFailWhenIntrospectTokenServerError() throws Exception {
+            imapServer.destroy();
+            String invalidURI = "/invalidURI";
+            authServer
+                .when(HttpRequest.request().withPath(invalidURI))
+                .respond(HttpResponse.response().withStatusCode(401));
+
+            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
+            config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+            config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+            config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
+            config.addProperty("auth.oidc.scope", "email");
+            config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), invalidURI));
+
+            imapServer = createImapServer(config);
+
+            int port = imapServer.getListenAddresses().get(0).getPort();
+
+            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            IMAPSClient client = imapsClient(port);
+            client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+            assertThat(client.getReplyString()).contains("NO AUTHENTICATE processing failed.");
         }
     }
 

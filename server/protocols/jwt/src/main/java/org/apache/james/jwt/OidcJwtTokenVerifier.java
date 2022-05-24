@@ -22,16 +22,24 @@ package org.apache.james.jwt;
 import java.net.URL;
 import java.util.Optional;
 
+import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
+import org.apache.james.jwt.introspection.IntrospectionClient;
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
+import org.reactivestreams.Publisher;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
+    public static final IntrospectionClient INTROSPECTION_CLIENT = new DefaultIntrospectionClient();
 
-    public Optional<String> verifyAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
+    public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
         PublicKeyProvider jwksPublicKeyProvider = getClaimWithoutSignatureVerification(jwtToken, "kid", String.class)
             .map(kidValue -> JwksPublicKeyProvider.of(jwksURL, kidValue))
             .orElse(JwksPublicKeyProvider.of(jwksURL));
@@ -54,5 +62,19 @@ public class OidcJwtTokenVerifier {
         } catch (JwtException e) {
             return Optional.empty();
         }
+    }
+
+    public static Publisher<String> verifyWithMaybeIntrospection(String jwtToken, URL jwksURL, String claimName, Optional<IntrospectionEndpoint> introspectionEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
+            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
+            .flatMap(claimResult -> {
+                if (introspectionEndpoint.isEmpty()) {
+                    return Mono.just(claimResult);
+                }
+                return Mono.justOrEmpty(introspectionEndpoint)
+                    .flatMap(endpoint -> Mono.from(INTROSPECTION_CLIENT.introspect(endpoint, jwtToken)))
+                    .filter(TokenIntrospectionResponse::active)
+                    .map(activeToken -> claimResult);
+            });
     }
 }
