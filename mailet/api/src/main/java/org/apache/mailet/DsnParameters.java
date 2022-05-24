@@ -32,6 +32,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -51,6 +52,96 @@ public class DsnParameters {
     public static final String ORCPT_PARAMETER = "ORCPT";
     public static final String ENVID_PARAMETER = "ENVID";
     public static final String RET_PARAMETER = "RET";
+
+    public static class XText {
+        private static final CharMatcher ESCAPE_CHAR = CharMatcher.isNot('+');
+        // https://datatracker.ietf.org/doc/html/rfc3461#section-4
+        private static CharMatcher XCHAR_VALIDATOR = CharMatcher.inRange('!', '~')
+            .and(CharMatcher.isNot('='))
+            .and(ESCAPE_CHAR);
+        private static CharMatcher HEX_VALIDATOR = CharMatcher.inRange('0', '9')
+            .or(CharMatcher.inRange('A', 'F'));
+
+        static String encode(String text) {
+            if (isOnlyXChar(text)) {
+                return text;
+            }
+            StringBuilder result = new StringBuilder();
+            text.chars()
+                .forEach(i -> encode(i, result));
+            return result.toString();
+        }
+
+        private static StringBuilder encode(int i, StringBuilder result) {
+            if (i < 33 || i > 126 || i == 43 || i == 61) {
+                return result.append('+')
+                    .append(String.format("%02X", i));
+            }
+            return result.append((char) i);
+        }
+
+        static String decode(String text) {
+            Preconditions.checkArgument(isValid(text), "Decoding invalid xtext '%s'", text);
+            if (XCHAR_VALIDATOR.matchesAllOf(text)) {
+                return text;
+            }
+            char[] chars = text.toCharArray();
+            StringBuilder result = new StringBuilder();
+            int i = 0;
+            while (i < chars.length) {
+                char c = chars[i];
+                if (c == 43) {
+                    // + escape sequence
+                    char hex1 = chars[i + 1];
+                    char hex2 = chars[i + 2];
+                    char hexChar = (char) Integer.parseInt("" + hex1 + hex2, 16);
+                    result.append(hexChar);
+                    i += 3;
+                } else {
+                    result.append(c);
+                    i++;
+                }
+            }
+            return result.toString();
+        }
+
+        static boolean isValid(String text) {
+            if (isOnlyXChar(text)) {
+                return true;
+            }
+            char[] chars = text.toCharArray();
+            int i = 0;
+            while (i < chars.length) {
+                char c = chars[i];
+                if (!XCHAR_VALIDATOR.matches(c)) {
+                    if (c == 43) {
+                        // + escape sequence
+                        if (!isValidEscapeSequence(chars, i)) {
+                            return false;
+                        }
+                        i += 3;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    i++;
+                }
+            }
+            return true;
+        }
+
+        private static boolean isValidEscapeSequence(char[] chars, int i) {
+            if (i + 3 > chars.length) {
+                return false;
+            }
+            return HEX_VALIDATOR.matches(chars[i + 1])
+                && HEX_VALIDATOR.matches(chars[i + 2]);
+        }
+
+        private static boolean isOnlyXChar(String text) {
+            return XCHAR_VALIDATOR.matchesAllOf(text);
+        }
+    }
 
     /**
      * RET parameter allow the sender to control which part of the bounced message should be returned to the sender.
@@ -104,6 +195,8 @@ public class DsnParameters {
 
         public static EnvId of(String value) {
             Preconditions.checkNotNull(value);
+            Preconditions.checkArgument(XText.isValid(value), "According to RFC-3461 EnvId should be a valid xtext" +
+                ", thus composed of CHARs between \"!\" (33) and \"~\" (126) inclusive, except for \"+\" and \"=\" or follow the hexadecimal escape sequence.");
 
             return new EnvId(value);
         }

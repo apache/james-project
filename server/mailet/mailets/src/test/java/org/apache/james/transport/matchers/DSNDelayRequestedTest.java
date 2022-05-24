@@ -27,13 +27,11 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.EnumSet;
 
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.DsnParameters;
-import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
