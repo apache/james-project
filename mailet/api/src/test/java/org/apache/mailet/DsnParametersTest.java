@@ -29,8 +29,11 @@ import org.apache.mailet.DsnParameters.EnvId;
 import org.apache.mailet.DsnParameters.Notify;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.DsnParameters.Ret;
+import org.apache.mailet.DsnParameters.XText;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -113,19 +116,23 @@ class DsnParametersTest {
     @Nested
     class EnvIdTest {
         @Test
-        void parseShouldReturnEmptyOnUnknownValue() {
-            assertThat(Ret.parse("unknown")).isEmpty();
-        }
-
-        @Test
-        void parseShouldReturnEmptyOnEmptyValue() {
-            assertThat(EnvId.of("").asString()).isEqualTo("");
-        }
-
-        @Test
         void ofShouldThrowOnNullValue() {
             assertThatThrownBy(() -> EnvId.of(null))
                 .isInstanceOf(NullPointerException.class);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"bad envid", "bad=envid", "Bad+envId", "Bad+"})
+        void ofShouldThrowOnBadValue(String badValue) {
+            assertThatThrownBy(() -> EnvId.of(badValue))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"good", "000023", "good+32space", "+32", "", "+61", "+43"})
+        void ofShouldAcceptGoodValue(String value) {
+            assertThat(EnvId.of(value).asString())
+                .isEqualTo(value);
         }
 
         @Test
@@ -144,6 +151,49 @@ class DsnParametersTest {
         void fromSMTPArgLineShouldRecogniseValidValues() {
             assertThat(EnvId.fromSMTPArgLine(ImmutableMap.of("ENVID", "valueee")))
                 .contains(EnvId.of("valueee"));
+        }
+    }
+
+    @Nested
+    class XTextTest {
+        @ParameterizedTest
+        @ValueSource(strings = {"bad envid", "bad=envid", "Bad+envId", "Bad+", "Bad+2"})
+        void isValidShouldReturnFalseOnBadValue(String badValue) {
+            assertThat(XText.isValid(badValue))
+                .isFalse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"bad envid", "bad=envid", "Bad+envId", "Bad+", "Bad+0o", "Bad+2"})
+        void decodeShouldThrowWhenInvalid(String badValue) {
+            assertThatThrownBy(() -> XText.decode(badValue))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"good", "000023", "", "good+32space", "+32", "+61", "+43"})
+        void isValidShouldReturnTrueOnGoodValue(String value) {
+            assertThat(XText.isValid(value))
+                .isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"abc", "a+32bc", "", " &*^%$@#%^&#%%kefbvvule89623r757'\"\\/?<>=+-_", "0123"})
+        void encodeDecodeShouldNoop(String value) {
+            assertThat(XText.decode(XText.encode(value)))
+                .isEqualTo(value);
+        }
+
+        @Test
+        void encodeShouldReturnTheGoodValue() {
+            assertThat(XText.encode("abc def+0123=gdef"))
+                .isEqualTo("abc+20def+2B0123+3Dgdef");
+        }
+
+        @Test
+        void decodeShouldReturnTheGoodValue() {
+            assertThat(XText.decode("abc+20def+2B0123+3Dgdef"))
+                .isEqualTo("abc def+0123=gdef");
         }
     }
 
