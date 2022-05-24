@@ -19,19 +19,18 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.List;
-
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.CopyRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+
+import reactor.core.publisher.Flux;
 
 public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
 
@@ -46,11 +45,11 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
     }
 
     @Override
-    protected List<MessageRange> process(MailboxPath targetMailbox,
+    protected Flux<MessageRange> process(MailboxId targetMailbox,
                                          SelectedMailbox currentMailbox,
                                          MailboxSession mailboxSession,
-                                         MessageRange messageSet) throws MailboxException {
-        return getMailboxManager().copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
+                                         MessageRange messageSet) {
+        return Flux.from(getMailboxManager().copyMessagesReactive(messageSet, currentMailbox.getMailboxId(), targetMailbox, mailboxSession));
     }
 
     @Override

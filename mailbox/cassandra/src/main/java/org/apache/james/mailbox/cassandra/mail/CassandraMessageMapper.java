@@ -60,6 +60,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
@@ -343,24 +344,32 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = original.getComposedMessageIdWithMetaData();
-
-        MessageMetaData messageMetaData = copy(destinationMailbox, original);
-        deleteAndHandleIndexUpdates(composedMessageIdWithMetaData).block();
-
-        return messageMetaData;
+        return MailboxReactorUtils.block(moveReactive(destinationMailbox, original));
     }
 
     @Override
     public List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
+        return MailboxReactorUtils.block(moveReactive(mailbox, original));
+    }
+
+    @Override
+    public Mono<MessageMetaData> moveReactive(Mailbox destinationMailbox, MailboxMessage original) {
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = original.getComposedMessageIdWithMetaData();
+
+        return copyReactive(destinationMailbox, original)
+            .flatMap(messageMetaData -> deleteAndHandleIndexUpdates(composedMessageIdWithMetaData)
+                .thenReturn(messageMetaData));
+    }
+
+    @Override
+    public Mono<List<MessageMetaData>> moveReactive(Mailbox destinationMailbox, List<MailboxMessage> original) {
         List<ComposedMessageIdWithMetaData> beforeCopy = original.stream()
             .map(MailboxMessage::getComposedMessageIdWithMetaData)
             .collect(ImmutableList.toImmutableList());
 
-        List<MessageMetaData> messageMetaData = copy(mailbox, original);
-        deleteAndHandleIndexUpdates(beforeCopy).block();
-
-        return messageMetaData;
+        return copyReactive(destinationMailbox, original)
+            .flatMap(messageMetaData -> deleteAndHandleIndexUpdates(beforeCopy)
+                .thenReturn(messageMetaData));
     }
 
     @Override
@@ -520,18 +529,31 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
-        return setInMailbox(mailbox, original);
+        return MailboxReactorUtils.block(copyReactive(mailbox, original));
     }
 
     @Override
     public List<MessageMetaData> copy(Mailbox mailbox, List<MailboxMessage> originals) throws MailboxException {
-        return setInMailbox(mailbox, originals.stream()
+        return MailboxReactorUtils.block(copyReactive(mailbox, originals));
+    }
+
+    @Override
+    public Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
+        original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
+        return setInMailboxReactive(mailbox, original);
+    }
+
+    @Override
+    public Mono<List<MessageMetaData>> copyReactive(Mailbox mailbox, List<MailboxMessage> originals) {
+        if (originals.isEmpty()) {
+            return Mono.empty();
+        }
+        return setMessagesInMailboxReactive(mailbox, originals.stream()
             .map(original -> {
                 original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
                 return original;
-            })
-            .collect(ImmutableList.toImmutableList()));
+            }).collect(ImmutableList.toImmutableList()))
+            .collectList();
     }
 
     @Override
@@ -555,18 +577,18 @@ public class CassandraMessageMapper implements MessageMapper {
             .map(flags -> ApplicableFlagBuilder.builder().add(flags).build());
     }
 
-    private MessageMetaData setInMailbox(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    private Mono<MessageMetaData> setInMailboxReactive(Mailbox mailbox, MailboxMessage message) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return block(addUidAndModseq(message, mailboxId)
+        return addUidAndModseq(message, mailboxId)
             .flatMap(messageWithUidAndModseq ->
                 insertMetadata(messageWithUidAndModseq, mailboxId,
                     CassandraMessageMetadata.from(messageWithUidAndModseq)
                         .withMailboxId(mailboxId))
                 .thenReturn(messageWithUidAndModseq))
-            .map(MailboxMessage::metaData));
+            .map(MailboxMessage::metaData);
     }
 
-    private List<MessageMetaData> setInMailbox(Mailbox mailbox, List<MailboxMessage> messages) throws MailboxException {
+    private Flux<MessageMetaData> setMessagesInMailboxReactive(Mailbox mailbox, List<MailboxMessage> messages) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         Mono<List<MessageUid>> uids = uidProvider.nextUids(mailboxId, messages.size());
@@ -582,11 +604,9 @@ public class CassandraMessageMapper implements MessageMapper {
                     return aMessage;
                 }).collect(ImmutableList.toImmutableList()));
 
-        return block(messagesWithUidAndModSeq
-            .flatMap(list -> insertIds(list, mailboxId).thenReturn(list))
-            .map(list -> list.stream()
-                .map(MailboxMessage::metaData)
-                .collect(ImmutableList.toImmutableList())));
+        return messagesWithUidAndModSeq
+            .flatMapMany(list -> insertIds(list, mailboxId).thenMany(Flux.fromIterable(list)))
+            .map(MailboxMessage::metaData);
     }
 
     private Mono<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {

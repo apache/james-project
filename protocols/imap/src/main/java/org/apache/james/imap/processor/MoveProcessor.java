@@ -30,13 +30,14 @@ import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.MoveRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> implements CapabilityImplementingProcessor {
 
@@ -49,9 +50,9 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
     }
 
     @Override
-    protected List<MessageRange> process(MailboxPath targetMailbox, SelectedMailbox currentMailbox,
-                                         MailboxSession mailboxSession, MessageRange messageSet) throws MailboxException {
-        return getMailboxManager().moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
+    protected Flux<MessageRange> process(MailboxId targetMailbox, SelectedMailbox currentMailbox,
+                                         MailboxSession mailboxSession, MessageRange messageSet) {
+        return Flux.from(getMailboxManager().moveMessagesReactive(messageSet, currentMailbox.getMailboxId(), targetMailbox, mailboxSession));
     }
 
     @Override

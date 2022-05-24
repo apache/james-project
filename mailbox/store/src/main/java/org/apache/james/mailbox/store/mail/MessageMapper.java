@@ -42,6 +42,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
@@ -211,6 +212,14 @@ public interface MessageMapper extends Mapper {
             .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> copy(mailbox, message)).sneakyThrow())
             .collect(ImmutableList.toImmutableList());
     }
+
+    default Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
+        return Mono.fromCallable(() -> copy(mailbox, original));
+    }
+
+    default Mono<List<MessageMetaData>> copyReactive(Mailbox mailbox, List<MailboxMessage> original) {
+        return Mono.fromCallable(() -> copy(mailbox, original));
+    }
     
     /**
      * Move the given {@link MailboxMessage} to a new mailbox and return the uid of the moved. Be aware that the given uid is just a suggestion for the uid of the moved
@@ -225,6 +234,16 @@ public interface MessageMapper extends Mapper {
         return original.stream()
             .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> move(mailbox, message)).sneakyThrow())
             .collect(ImmutableList.toImmutableList());
+    }
+
+    default Mono<MessageMetaData> moveReactive(Mailbox mailbox, MailboxMessage original) {
+        return Mono.fromCallable(() -> move(mailbox, original));
+    }
+
+    default Mono<List<MessageMetaData>> moveReactive(Mailbox mailbox, List<MailboxMessage> original) {
+        return Flux.fromIterable(original)
+            .flatMap(message -> moveReactive(mailbox, message), ReactorUtils.DEFAULT_CONCURRENCY)
+            .collectList();
     }
 
     

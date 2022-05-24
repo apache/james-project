@@ -625,40 +625,66 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
-
-        return copyMessages(set, session, toMailbox, fromMailbox);
+        return MailboxReactorUtils.block(copyMessagesReactive(set, from, to, session).collectList());
     }
 
     @Override
     public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
-        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
-
-        return copyMessages(set, session, toMailbox, fromMailbox);
+        return MailboxReactorUtils.block(copyMessagesReactive(set, from, to, session).collectList());
     }
 
+    @Override
+    public Flux<MessageRange> copyMessagesReactive(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> configuration.getMoveBatcher().batchMessagesReactive(set, messageRange -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
 
-    private List<MessageRange> copyMessages(MessageRange set, MailboxSession session, StoreMessageManager toMailbox, StoreMessageManager fromMailbox) throws MailboxException {
-        return configuration.getCopyBatcher().batchMessages(set,
-            messageRange -> fromMailbox.copyTo(messageRange, toMailbox, session));
+                return fromMessageManager.copyTo(messageRange, toMessageManager, session).flatMapIterable(Function.identity());
+            }));
+    }
+
+    @Override
+    public Flux<MessageRange> copyMessagesReactive(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> configuration.getMoveBatcher().batchMessagesReactive(set, messageRange -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
+
+                return fromMessageManager.copyTo(messageRange, toMessageManager, session).flatMapIterable(Function.identity());
+            }));
     }
 
     @Override
     public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
-
-        return configuration.getMoveBatcher().batchMessages(set, messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
+        return MailboxReactorUtils.block(moveMessagesReactive(set, from, to, session).collectList());
     }
 
     @Override
     public List<MessageRange> moveMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
-        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+        return MailboxReactorUtils.block(moveMessagesReactive(set, from, to, session).collectList());
+    }
 
-        return configuration.getMoveBatcher().batchMessages(set, messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
+    @Override
+    public Flux<MessageRange> moveMessagesReactive(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> configuration.getMoveBatcher().batchMessagesReactive(set, messageRange -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
+
+                return fromMessageManager.moveTo(messageRange, toMessageManager, session).flatMapIterable(Function.identity());
+            }));
+    }
+
+    @Override
+    public Flux<MessageRange> moveMessagesReactive(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> configuration.getMoveBatcher().batchMessagesReactive(set, messageRange -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
+
+                return fromMessageManager.moveTo(messageRange, toMessageManager, session).flatMapIterable(Function.identity());
+            }));
     }
 
     @Override
