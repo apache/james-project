@@ -54,13 +54,29 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MetaDataFixInconsistenciesService {
-
-    @FunctionalInterface
-    interface Inconsistency {
-        Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore);
+    private enum Presence {
+        PRESENT,
+        ABSENT
     }
 
-    static final Inconsistency NO_INCONSISTENCY = (context, imapUidDAO, pop3MetadataStore) -> Mono.just(Task.Result.COMPLETED);
+    interface Inconsistency {
+        Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore);
+
+
+        Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore);
+    }
+
+    static final Inconsistency NO_INCONSISTENCY = new Inconsistency() {
+        @Override
+        public Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore) {
+            return Mono.just(Task.Result.COMPLETED);
+        }
+
+        @Override
+        public Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore) {
+            return Mono.just(this);
+        }
+    };
 
     private static class StalePOP3EntryConsistency implements Inconsistency {
         private final MailboxId mailboxId;
@@ -79,18 +95,36 @@ public class MetaDataFixInconsistenciesService {
                 .doOnSuccess(any -> notifySuccess(context))
                 .thenReturn(Task.Result.COMPLETED)
                 .onErrorResume(error -> {
-                    notifyFailure(context);
+                    notifyFailure(context, error);
                     return Mono.just(Task.Result.PARTIAL);
                 });
         }
 
-        private void notifyFailure(Context context) {
+        @Override
+        public Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore) {
+            Mono<Presence> imapView = imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of((CassandraId) mailboxId))
+                .next()
+                .map(any -> Presence.PRESENT)
+                .switchIfEmpty(Mono.just(Presence.ABSENT));
+            Mono<Presence> pop3View = Mono.from(pop3MetadataStore.retrieve(mailboxId, messageId))
+                .map(any -> Presence.PRESENT)
+                .switchIfEmpty(Mono.just(Presence.ABSENT));
+
+            return imapView.zipWith(pop3View)
+                .map(t2 -> {
+                    if (t2.getT1() == Presence.ABSENT && t2.getT2() == Presence.PRESENT) {
+                        return this;
+                    }
+                    return NO_INCONSISTENCY;
+                });
+        }
+
+        private void notifyFailure(Context context, Throwable e) {
             context.addErrors(MessageInconsistenciesEntry.builder()
                 .mailboxId(mailboxId.serialize())
                 .messageId(messageId.serialize()));
-            LOGGER.error("Failed to fix inconsistency for stale POP3 entry: {}", messageId);
+            LOGGER.error("Failed to fix inconsistency for stale POP3 entry: {}", messageId, e);
         }
-
         private void notifySuccess(Context context) {
             context.incrementStalePOP3Entries();
             context.addFixedInconsistency(MessageInconsistenciesEntry.builder()
@@ -122,8 +156,27 @@ public class MetaDataFixInconsistenciesService {
                 .doOnSuccess(any -> notifySuccess(context))
                 .thenReturn(Task.Result.COMPLETED)
                 .onErrorResume(error -> {
-                    notifyFailure(context);
+                    notifyFailure(context, error);
                     return Mono.just(Task.Result.PARTIAL);
+                });
+        }
+
+        @Override
+        public Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore) {
+            Mono<Presence> imapView = imapUidDAO.retrieve(messageId, Optional.of((CassandraId) mailboxId))
+                .next()
+                .map(any -> Presence.PRESENT)
+                .switchIfEmpty(Mono.just(Presence.ABSENT));
+            Mono<Presence> pop3View = Mono.from(pop3MetadataStore.retrieve(mailboxId, messageId))
+                .map(any -> Presence.PRESENT)
+                .switchIfEmpty(Mono.just(Presence.ABSENT));
+
+            return imapView.zipWith(pop3View)
+                .map(t2 -> {
+                    if (t2.getT1() == Presence.PRESENT && t2.getT2() == Presence.ABSENT) {
+                        return this;
+                    }
+                    return NO_INCONSISTENCY;
                 });
         }
 
@@ -134,11 +187,11 @@ public class MetaDataFixInconsistenciesService {
         }
 
 
-        private void notifyFailure(Context context) {
+        private void notifyFailure(Context context, Throwable e) {
             context.addErrors(MessageInconsistenciesEntry.builder()
                 .mailboxId(mailboxId.serialize())
                 .messageId(messageId.serialize()));
-            LOGGER.error("Failed to fix inconsistency for missing POP3 entry: {}", messageId);
+            LOGGER.error("Failed to fix inconsistency for missing POP3 entry: {}", messageId, e);
         }
 
         private void notifySuccess(Context context) {
@@ -168,6 +221,11 @@ public class MetaDataFixInconsistenciesService {
                 .messageId(messageId.serialize()));
             LOGGER.error("Failed to detect inconsistency: {}", messageId);
             return Mono.just(Task.Result.PARTIAL);
+        }
+
+        @Override
+        public Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore) {
+            return Mono.just(this);
         }
     }
 
@@ -422,6 +480,7 @@ public class MetaDataFixInconsistenciesService {
                 .per(PERIOD)
                 .forOperation(fullMetadata -> detectStaleEntriesInPop3MetaDataStore(fullMetadata)
                     .doOnNext(any -> context.incrementProcessedPop3MetaDataStoreEntries())
+                    .flatMap(inconsistency -> inconsistency.confirm(imapUidDAO, pop3MetadataStore))
                     .flatMap(inconsistency -> inconsistency.fix(context, imapUidDAO, pop3MetadataStore))));
     }
 
@@ -443,6 +502,7 @@ public class MetaDataFixInconsistenciesService {
                 .per(PERIOD)
                 .forOperation(metaData -> detectMissingEntriesInPop3MetaDataStore(metaData)
                     .doOnNext(any -> context.incrementProcessedImapUidEntries())
+                    .flatMap(inconsistency -> inconsistency.confirm(imapUidDAO, pop3MetadataStore))
                     .flatMap(inconsistency -> inconsistency.fix(context, imapUidDAO, pop3MetadataStore))));
     }
 
