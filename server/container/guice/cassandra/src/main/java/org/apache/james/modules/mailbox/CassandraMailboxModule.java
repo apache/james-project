@@ -121,7 +121,6 @@ import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
 import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
