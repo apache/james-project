@@ -2736,7 +2736,7 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>5.11.2</version>
+                <version>5.13.2</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
