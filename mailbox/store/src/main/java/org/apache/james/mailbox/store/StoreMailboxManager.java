@@ -356,7 +356,7 @@ public class StoreMailboxManager implements MailboxManager {
                         if (exists) {
                             return Mono.error(new MailboxExistsException(sanitizedMailboxPath.asString()));
                         } else {
-                            return createMailboxesForPath(mailboxSession, sanitizedMailboxPath).last();
+                            return createMailboxesForPath(mailboxSession, sanitizedMailboxPath).takeLast(1).next();
                         }
                     });
             } catch (MailboxNameException e) {
