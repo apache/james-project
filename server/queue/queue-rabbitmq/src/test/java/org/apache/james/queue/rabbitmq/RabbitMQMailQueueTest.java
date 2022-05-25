@@ -463,6 +463,7 @@ class RabbitMQMailQueueTest {
                 .containsExactly(name1, name2, name3);
         }
 
+        @Disabled
         @Test
         void messagesShouldBeProcessedAfterNotPublishedMailsHaveBeenReprocessed() throws Exception {
             clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
@@ -502,6 +503,7 @@ class RabbitMQMailQueueTest {
                 .containsExactlyInAnyOrder(name1, name2, name3);
         }
 
+        @Disabled
         @Test
         void onlyOldMessagesShouldBeProcessedAfterNotPublishedMailsHaveBeenReprocessed() throws Exception {
             clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
@@ -542,6 +544,7 @@ class RabbitMQMailQueueTest {
                     .containsExactlyInAnyOrder(name1, name2);
         }
 
+        @Disabled
         @Test
         void messagesShouldBeProcessedAfterTwoMailsReprocessing() throws Exception {
             clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
