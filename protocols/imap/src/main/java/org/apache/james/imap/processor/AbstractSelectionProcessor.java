@@ -403,8 +403,9 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     .untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed()));
             }
             SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox);
-            return selectedMailbox.finishInit()
-                .then(session.selected(selectedMailbox))
+
+            return session.selected(selectedMailbox)
+                .then(selectedMailbox.finishInit())
                 .thenReturn(selectedMailbox);
         } else {
             return Mono.just(currentMailbox);

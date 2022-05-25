@@ -200,18 +200,18 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
         Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
         if (!flagUpdateUids.isEmpty()) {
-            addApplicableFlagResponse(session, selected, responder, useUid);
-            return Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
-                .concatMap(range ->
-                    addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
-                .then()
-                .onErrorResume(MailboxException.class, e -> {
-                    handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
-                    return Mono.empty();
-                });
+
+            return Mono.fromRunnable(() -> addApplicableFlagResponse(session, selected, responder, useUid))
+                .then(Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
+                    .concatMap(range ->
+                        addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
+                    .then()
+                    .onErrorResume(MailboxException.class, e -> {
+                        handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+                        return Mono.empty();
+                    }));
         } else {
-            addApplicableFlagResponse(session, selected, responder, useUid);
-            return Mono.empty();
+            return Mono.fromRunnable(() -> addApplicableFlagResponse(session, selected, responder, useUid));
         }
     }
 
