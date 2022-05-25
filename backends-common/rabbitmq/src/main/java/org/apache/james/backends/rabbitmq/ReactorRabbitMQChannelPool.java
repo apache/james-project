@@ -728,10 +728,12 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
                 if (!channel.isOpen() || !executeWithoutError(signalType)) {
                     pooledRef.invalidate()
+                        .subscribeOn(Schedulers.elastic())
                         .block();
                     return;
                 }
                 pooledRef.release()
+                    .subscribeOn(Schedulers.elastic())
                     .block();
             });
     }
