@@ -90,7 +90,7 @@ public class DefaultMailboxesProvisionerTest {
     @Test
     public void createMailboxesIfNeededShouldNotGenerateExceptionsInConcurrentEnvironment() throws Exception {
         ConcurrentTestRunner.builder()
-            .operation((threadNumber, step) -> testee.createMailboxesIfNeeded(session).block())
+            .reactorOperation((threadNumber, step) -> testee.createMailboxesIfNeeded(session))
             .threadCount(10)
             .runSuccessfullyWithin(Duration.ofSeconds(10));
 

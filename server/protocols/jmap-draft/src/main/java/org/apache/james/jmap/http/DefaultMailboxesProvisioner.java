@@ -21,7 +21,6 @@ package org.apache.james.jmap.http;
 import static org.apache.james.util.FunctionalUtils.negate;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -30,9 +29,7 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
@@ -42,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class DefaultMailboxesProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioner.class);
@@ -69,8 +65,7 @@ public class DefaultMailboxesProvisioner {
         return Flux.fromIterable(DefaultMailboxes.DEFAULT_MAILBOXES)
             .map(toMailboxPath(session))
             .filterWhen(mailboxPath -> mailboxDoesntExist(mailboxPath, session), DEFAULT_CONCURRENCY)
-            .concatMap(mailboxPath -> Mono.fromRunnable(() -> createMailbox(mailboxPath, session))
-                .subscribeOn(Schedulers.elastic()))
+            .concatMap(mailboxPath -> createMailbox(mailboxPath, session))
             .then();
     }
 
@@ -83,17 +78,12 @@ public class DefaultMailboxesProvisioner {
         return mailbox -> MailboxPath.forUser(session.getUser(), mailbox);
     }
     
-    private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
-        try {
-            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
-            if (mailboxId.isPresent()) {
-                subscriptionManager.subscribe(session, mailboxPath.getName());
-            }
-            LOGGER.info("Provisioning {}. {} created.", mailboxPath, mailboxId);
-        } catch (MailboxExistsException e) {
-            LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+    private Mono<Void> createMailbox(MailboxPath mailboxPath, MailboxSession session) {
+        return Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session))
+            .flatMap(id -> Mono.from(subscriptionManager.subscribeReactive(mailboxPath.getName(), session)))
+            .onErrorResume(MailboxExistsException.class, e -> {
+                LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
+                return Mono.empty();
+            });
     }
 }

@@ -44,7 +44,6 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -158,11 +157,9 @@ public class CreateMissingParentsTask implements Task {
     }
 
     private Mono<Result> createMailbox(MailboxPath path) {
-        return Mono.fromRunnable(() -> {
-            MailboxSession ownerSession = mailboxManager.createSystemSession(path.getUser());
-            Optional<MailboxId> mailboxId = Throwing.supplier(() -> mailboxManager.createMailbox(path, ownerSession)).sneakyThrow().get();
-            recordSuccess(mailboxId);
-        })
+        MailboxSession ownerSession = mailboxManager.createSystemSession(path.getUser());
+        return Mono.from(mailboxManager.createMailboxReactive(path, ownerSession))
+            .doOnNext(this::recordSuccess)
         .then(Mono.just(Result.COMPLETED))
         .onErrorResume(e -> {
             LOGGER.error("Error creating missing parent mailbox: {}", path.getName(), e);
@@ -185,11 +182,9 @@ public class CreateMissingParentsTask implements Task {
             totalFailure.get()));
     }
 
-    private void recordSuccess(Optional<MailboxId> mailboxId) {
-        if (mailboxId.isPresent()) {
-            created.add(mailboxId.get());
-            totalCreated.incrementAndGet();
-        }
+    private void recordSuccess(MailboxId mailboxId) {
+        created.add(mailboxId);
+        totalCreated.incrementAndGet();
     }
 
     private void recordFailure(MailboxPath mailboxPath) {

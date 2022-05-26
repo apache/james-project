@@ -41,11 +41,9 @@ import org.apache.james.server.core.MimeMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class MailboxAppenderImpl implements MailboxAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppenderImpl.class);
@@ -119,8 +117,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
     private Mono<MessageManager> createMailboxIfNotExist(MailboxSession session, MailboxPath path) {
         return Mono.from(mailboxManager.getMailboxReactive(path, session))
             .onErrorResume(MailboxNotFoundException.class, e ->
-                Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.createMailbox(path, session)).sneakyThrow())
-                    .subscribeOn(Schedulers.elastic())
+                Mono.from(mailboxManager.createMailboxReactive(path, session))
                     .then(Mono.from(mailboxManager.getMailboxReactive(path, session)))
                     .onErrorResume(MailboxExistsException.class, e2 -> {
                         LOGGER.info("Mailbox {} have been created concurrently", path);

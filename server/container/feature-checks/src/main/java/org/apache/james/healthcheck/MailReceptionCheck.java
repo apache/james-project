@@ -230,7 +230,7 @@ public class MailReceptionCheck implements HealthCheck {
     private Mono<MessageManager> retrieveInbox(Username username, MailboxSession session) {
         MailboxPath mailboxPath = MailboxPath.inbox(username);
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session))
-            .onErrorResume(MailboxNotFoundException.class, e -> Mono.fromCallable(() -> mailboxManager.createMailbox(mailboxPath, session))
+            .onErrorResume(MailboxNotFoundException.class, e -> Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session))
                 .then(Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session))));
     }
 
