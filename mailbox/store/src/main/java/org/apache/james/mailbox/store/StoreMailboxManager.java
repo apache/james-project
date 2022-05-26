@@ -627,7 +627,7 @@ public class StoreMailboxManager implements MailboxManager {
                             .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
                     }, LOW_CONCURRENCY)
                     .then(), MailboxPathLocker.LockType.Write)))
-            .then(Flux.fromIterable(resultBuilder.build())
+            .then(Mono.defer(() -> Flux.fromIterable(resultBuilder.build())
                 .concatMap(result -> eventBus.dispatch(EventFactory.mailboxRenamed()
                         .randomEventId()
                         .mailboxSession(session)
@@ -636,7 +636,7 @@ public class StoreMailboxManager implements MailboxManager {
                         .newPath(result.getDestinationPath())
                         .build(),
                     new MailboxIdRegistrationKey(result.getMailboxId())))
-                .then())
+                .then()))
             .then(Mono.fromCallable(resultBuilder::build));
     }
 
