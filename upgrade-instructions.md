@@ -16,7 +16,22 @@ Changes to apply between 3.7.x and 3.8.x will be reported here.
 
 Change list:
 
- - No changes yet
+- [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
+
+### Adding authorized_users column to user table
+
+Date 26/05/2022
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3756
+
+Concerned product: Distributed James, Cassandra James Server
+
+Add `authorized_users` column to `user` table in order to store delegated users.
+
+In order to add this `authorized_users` column you need to run the following CQL command:
+```
+ALTER TABLE james_keyspace.user ADD authorized_users set<text>;
+```
 
 ## 3.7.0 version
 
