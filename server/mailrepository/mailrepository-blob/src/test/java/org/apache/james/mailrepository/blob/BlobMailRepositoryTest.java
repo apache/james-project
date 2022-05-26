@@ -21,7 +21,6 @@ package org.apache.james.mailrepository.blob;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;

@@ -19,11 +19,10 @@
 
 package org.apache.james.jmap.method
 
-import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.identity.{IdentityForbiddenDeleteException, IdentityRepository}
 import org.apache.james.jmap.api.model.IdentityId
-import org.apache.james.jmap.core.{Properties, SetError}
+import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{IdentitySetRequest, UnparsedIdentityId}
 import org.apache.james.jmap.method.IdentitySetDeletePerformer.{IdentityDeletionFailure, IdentityDeletionResult, IdentityDeletionResults, IdentityDeletionSuccess}

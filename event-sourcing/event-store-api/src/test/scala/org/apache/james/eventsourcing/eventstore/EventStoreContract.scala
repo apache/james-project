@@ -22,7 +22,6 @@ import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 
-import reactor.core.scala.publisher
 import reactor.core.scala.publisher.SMono
 
 object EventStoreContract {

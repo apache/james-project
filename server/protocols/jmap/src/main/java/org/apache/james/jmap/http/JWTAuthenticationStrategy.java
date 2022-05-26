@@ -23,9 +23,6 @@ import javax.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
-import org.apache.james.jmap.http.AuthenticationChallenge;
-import org.apache.james.jmap.http.AuthenticationScheme;
-import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;

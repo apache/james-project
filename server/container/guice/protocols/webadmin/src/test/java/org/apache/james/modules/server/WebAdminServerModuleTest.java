@@ -22,10 +22,6 @@ package org.apache.james.modules.server;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.james.utils.PropertiesProvider;
 import org.junit.jupiter.api.Test;
 

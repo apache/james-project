@@ -42,7 +42,6 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-import spark.Service;
 
 public class WebAdminUtils {
     public interface Startable {

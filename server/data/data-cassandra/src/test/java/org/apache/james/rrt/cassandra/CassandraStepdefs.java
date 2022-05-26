@@ -28,7 +28,6 @@ import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
-import org.apache.james.user.lib.model.Algorithm;
 import org.junit.Rule;
 
 import com.github.fge.lambdas.Throwing;

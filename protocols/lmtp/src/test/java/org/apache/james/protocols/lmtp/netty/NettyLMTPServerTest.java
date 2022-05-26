@@ -24,8 +24,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.lmtp.AbstractLMTPServerTest;
 import org.apache.james.protocols.netty.NettyServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 public class NettyLMTPServerTest extends AbstractLMTPServerTest {
 

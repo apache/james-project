@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
-import io.restassured.RestAssured.{`given`, _}
+import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.authentication.NoAuthScheme
 import io.restassured.http.Header
 import org.apache.http.HttpStatus.SC_OK

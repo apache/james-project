@@ -24,8 +24,6 @@ import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
 import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfigurationEnvironnementVariables;
 import org.apache.james.mpt.imapmailbox.external.james.host.external.NoopDomainsAndUserAdder;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 

@@ -36,8 +36,6 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 
-import javax.inject.Inject
-
 case class CustomMailboxNamespace(value: String) extends MailboxNamespace {
   override def serialize(): String = value
 }
