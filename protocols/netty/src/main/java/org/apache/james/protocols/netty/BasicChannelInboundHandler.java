@@ -134,7 +134,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     connectHandler.onDisconnect(session);
                 }
             }
-            LOGGER.info("Connection closed for {}", session.getRemoteAddress().getAddress().getHostAddress());
+            LOGGER.info("Connection closed for {}", ctx.channel().remoteAddress());
             cleanup(ctx);
             super.channelInactive(ctx);
         }
@@ -187,7 +187,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
      * Cleanup the channel
      */
     protected void cleanup(ChannelHandlerContext ctx) {
-        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).getAndRemove();
+        ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).getAndSet(null);
         if (session != null) {
             session.resetState();
         }
