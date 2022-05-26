@@ -22,7 +22,9 @@ package org.apache.james.modules.data;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.cassandra.CassandraDelegationStore;
 import org.apache.james.user.cassandra.CassandraRepositoryConfiguration;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.lib.UsersDAO;
@@ -47,6 +49,7 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         bind(UsersRepository.class).to(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {});
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
+        bind(DelegationStore.class).to(CassandraDelegationStore.class);
     }
 
     @Provides
