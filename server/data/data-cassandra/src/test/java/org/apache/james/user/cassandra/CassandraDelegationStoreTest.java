@@ -17,14 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.user.cassandra.tables;
+package org.apache.james.user.cassandra;
 
-public interface CassandraUserTable {
-    String TABLE_NAME = "user";
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.DelegationStoreContract;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-    String ALGORITHM = "algorithm";
-    String NAME = "name";
-    String PASSWORD = "passwd";
-    String REALNAME = "realname";
-    String AUTHORIZED_USERS = "authorized_users";
+public class CassandraDelegationStoreTest implements DelegationStoreContract {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
+
+    private CassandraDelegationStore testee;
+
+    @BeforeEach
+    void setUp() {
+        testee = new CassandraDelegationStore(new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf()));
+    }
+
+    @Override
+    public DelegationStore testee() {
+        return testee;
+    }
+
 }

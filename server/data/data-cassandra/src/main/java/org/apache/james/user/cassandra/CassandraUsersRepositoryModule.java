@@ -19,6 +19,7 @@
 
 package org.apache.james.user.cassandra;
 
+import static com.datastax.driver.core.DataType.set;
 import static com.datastax.driver.core.DataType.text;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -31,6 +32,7 @@ public interface CassandraUsersRepositoryModule {
             .addPartitionKey(CassandraUserTable.NAME, text())
             .addColumn(CassandraUserTable.REALNAME, text())
             .addColumn(CassandraUserTable.PASSWORD, text())
-            .addColumn(CassandraUserTable.ALGORITHM, text()))
+            .addColumn(CassandraUserTable.ALGORITHM, text())
+            .addColumn(CassandraUserTable.AUTHORIZED_USERS, set(text())))
         .build();
 }

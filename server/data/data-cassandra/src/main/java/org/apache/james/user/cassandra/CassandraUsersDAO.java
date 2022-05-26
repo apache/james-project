@@ -19,19 +19,23 @@
 
 package org.apache.james.user.cassandra;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.removeAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.ALGORITHM;
+import static org.apache.james.user.cassandra.tables.CassandraUserTable.AUTHORIZED_USERS;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.NAME;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.PASSWORD;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.TABLE_NAME;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
@@ -54,6 +58,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraUsersDAO implements UsersDAO {
@@ -65,6 +70,10 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement countUserStatement;
     private final PreparedStatement listStatement;
     private final PreparedStatement insertStatement;
+    private final PreparedStatement addAuthorizedUserStatement;
+    private final PreparedStatement removeAuthorizedUserStatement;
+    private final PreparedStatement removeAllAuthorizedUsersStatement;
+    private final PreparedStatement getAuthorizedUsersStatement;
 
     private final Algorithm preferredAlgorithm;
     private final HashingMode fallbackHashingMode;
@@ -83,6 +92,10 @@ public class CassandraUsersDAO implements UsersDAO {
             .value(PASSWORD, bindMarker(PASSWORD))
             .value(ALGORITHM, bindMarker(ALGORITHM))
             .ifNotExists());
+        this.addAuthorizedUserStatement = prepareAddAuthorizedUserStatement(session);
+        this.removeAuthorizedUserStatement = prepareRemoveAuthorizedUserStatement(session);
+        this.removeAllAuthorizedUsersStatement = prepareRemoveAllAuthorizedUsersStatement(session);
+        this.getAuthorizedUsersStatement = prepareGetAuthorizedUsersStatement(session);
         this.preferredAlgorithm = configuration.getPreferredAlgorithm();
         this.fallbackHashingMode = configuration.getFallbackHashingMode();
     }
@@ -123,6 +136,30 @@ public class CassandraUsersDAO implements UsersDAO {
             .where(eq(NAME, bindMarker(NAME))));
     }
 
+    private PreparedStatement prepareAddAuthorizedUserStatement(Session session) {
+        return session.prepare(update(TABLE_NAME)
+            .with(addAll(AUTHORIZED_USERS, bindMarker(AUTHORIZED_USERS)))
+            .where(eq(NAME, bindMarker(NAME))));
+    }
+
+    private PreparedStatement prepareRemoveAuthorizedUserStatement(Session session) {
+        return session.prepare(update(TABLE_NAME)
+            .with(removeAll(AUTHORIZED_USERS, bindMarker(AUTHORIZED_USERS)))
+            .where(eq(NAME, bindMarker(NAME))));
+    }
+
+    private PreparedStatement prepareRemoveAllAuthorizedUsersStatement(Session session) {
+        return session.prepare(delete(AUTHORIZED_USERS)
+            .from(TABLE_NAME)
+            .where(eq(NAME, bindMarker(NAME))));
+    }
+
+    private PreparedStatement prepareGetAuthorizedUsersStatement(Session session) {
+        return session.prepare(select(AUTHORIZED_USERS)
+            .from(TABLE_NAME)
+            .where(eq(NAME, bindMarker(NAME))));
+    }
+
     @Override
     public Optional<DefaultUser> getUserByName(Username name) {
         return getUserByNameReactive(name)
@@ -152,6 +189,35 @@ public class CassandraUsersDAO implements UsersDAO {
         if (!executed) {
             throw new UsersRepositoryException("Unable to update user");
         }
+    }
+
+    public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess) {
+        return executor.executeVoid(
+                addAuthorizedUserStatement.bind()
+                    .setSet(AUTHORIZED_USERS, Collections.singleton(userWithAccess.asString()))
+                    .setString(NAME, baseUser.asString()));
+    }
+
+    public Mono<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
+        return executor.executeVoid(
+            removeAuthorizedUserStatement.bind()
+                .setSet(AUTHORIZED_USERS, Collections.singleton(userWithAccess.asString()))
+                .setString(NAME, baseUser.asString()));
+    }
+
+    public Mono<Void> removeAllAuthorizedUsers(Username baseUser) {
+        return executor.executeVoid(
+            removeAllAuthorizedUsersStatement.bind()
+                .setString(NAME, baseUser.asString()));
+    }
+
+    public Flux<Username> getAuthorizedUsers(Username name) {
+        return executor.executeSingleRow(
+                getAuthorizedUsersStatement.bind()
+                    .setString(NAME, name.asString()))
+            .map(row -> row.getSet(AUTHORIZED_USERS, String.class))
+            .flatMapIterable(set -> set)
+            .map(Username::of);
     }
 
     @Override
