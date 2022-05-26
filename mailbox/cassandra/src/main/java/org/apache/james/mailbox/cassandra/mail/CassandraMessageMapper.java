@@ -175,7 +175,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private void readRepair(Mailbox mailbox, MailboxCounters counters) {
         if (shouldReadRepair(counters)) {
             fixCounters(mailbox)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.parallel())
                 .subscribe();
         }
     }

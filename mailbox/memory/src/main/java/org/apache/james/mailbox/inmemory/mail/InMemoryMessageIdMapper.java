@@ -53,7 +53,6 @@ import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class InMemoryMessageIdMapper implements MessageIdMapper {
     private final MailboxMapper mailboxMapper;
@@ -137,15 +136,13 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds,
                                                             Flags newState, FlagsUpdateMode updateMode) {
-        return Mono.<Multimap<MailboxId, UpdatedFlags>>fromCallable(() -> find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
-            .stream()
+        return findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .map(updateMessage(newState, updateMode))
             .distinct()
             .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
-                Pair::getValue)))
-            .subscribeOn(Schedulers.elastic());
+                Pair::getValue));
     }
 
     private Function<MailboxMessage, Pair<MailboxId, UpdatedFlags>> updateMessage(Flags newState, FlagsUpdateMode updateMode) {

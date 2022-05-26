@@ -67,7 +67,6 @@ import com.google.common.collect.Multimap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
@@ -243,7 +242,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
         return Flux.fromIterable(ids.asMap()
             .entrySet())
-            .publishOn(Schedulers.elastic())
             .flatMap(entry -> deleteReactive(entry.getKey(), entry.getValue()), cassandraConfiguration.getExpungeChunkSize(),
                 DEFAULT_CONCURRENCY)
             .then();

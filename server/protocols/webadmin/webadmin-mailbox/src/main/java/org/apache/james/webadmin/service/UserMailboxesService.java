@@ -42,6 +42,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.dto.MailboxResponse;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
@@ -54,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class UserMailboxesService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesService.class);
@@ -133,7 +133,7 @@ public class UserMailboxesService {
                     return Result.PARTIAL;
                 }
             })
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {

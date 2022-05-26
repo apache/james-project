@@ -157,7 +157,7 @@ public class MemoryTaskManager implements TaskManager {
     @Override
     public TaskExecutionDetails await(TaskId id, Duration timeout) throws TaskNotFoundException, ReachedTimeoutException {
         try {
-            return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
+            return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.parallel())
                 .map(ignored -> getExecutionDetails(id))
                 .filter(details -> details.getStatus().isFinished())
                 .blockFirst(timeout);

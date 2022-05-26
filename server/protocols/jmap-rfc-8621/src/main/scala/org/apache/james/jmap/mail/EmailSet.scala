@@ -42,7 +42,6 @@ import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
 import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -190,7 +189,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   }
 
   private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): Either[Throwable, LoadedAttachment] =
-    Try(blobResolvers.resolve(attachment.blobId, mailboxSession).subscribeOn(Schedulers.elastic()).block())
+    Try(blobResolvers.resolve(attachment.blobId, mailboxSession).block())
       .toEither.flatMap(blob => load(blob).map(content => LoadedAttachment(attachment, blob, content)))
 
   private def load(blob: Blob): Either[Throwable, Array[Byte]] =

@@ -12,9 +12,9 @@ import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 object PushSubscriptionSetCreatePerformer {
   trait CreationResult
@@ -82,7 +82,7 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
         .`then`(SMono.just(subscription)))
       .map(subscription => CreationSuccess(clientId, PushSubscriptionCreationResponse(subscription.id, showExpires(subscription.expires, request))))
       .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def showExpires(expires: PushSubscriptionExpiredTime, request: PushSubscriptionCreationRequest): Option[PushSubscriptionExpiredTime] = request.expires match {
     case Some(requestExpires) if expires.eq(requestExpires) => None

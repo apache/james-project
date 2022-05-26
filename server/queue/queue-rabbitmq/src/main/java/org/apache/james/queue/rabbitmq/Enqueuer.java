@@ -118,7 +118,7 @@ class Enqueuer {
 
         if (configuration.isMailQueuePublishConfirmEnabled()) {
             return sender.sendWithPublishConfirms(Mono.just(data))
-                .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+                .subscribeOn(Schedulers.boundedElastic()) // channel.confirmSelect is synchronous
                 .next()
                 .handle((result, sink) -> {
                     if (!result.isAck()) {

@@ -40,6 +40,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.concurrent.Queues;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
@@ -48,6 +50,17 @@ public class ReactorUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorUtils.class);
     public static final String MDC_KEY_PREFIX = "MDC-";
     public static final int DEFAULT_CONCURRENCY = 16;
+    private static final int DEFAULT_BOUNDED_ELASTIC_SIZE = Optional.ofNullable(System.getProperty("james.schedulers.defaultBoundedElasticSize"))
+        .map(Integer::parseInt)
+        .orElseGet(() -> 10 * Runtime.getRuntime().availableProcessors());
+    public static final int DEFAULT_BOUNDED_ELASTIC_QUEUESIZE = Optional.ofNullable(System.getProperty("james.schedulers.defaultBoundedElasticQueueSize"))
+        .map(Integer::parseInt)
+        .orElse(100000);
+    private static final int TTL_SECONDS = 60;
+    private static final boolean DAEMON = true;
+    public static final Scheduler BLOCKING_CALL_WRAPPER = Schedulers.newBoundedElastic(DEFAULT_BOUNDED_ELASTIC_SIZE, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE,
+        "blocking-call-wrapper", TTL_SECONDS, DAEMON);
+
 
     public static <T, U> RequiresQuantity<T, U> throttle() {
         return elements -> duration -> operation -> {

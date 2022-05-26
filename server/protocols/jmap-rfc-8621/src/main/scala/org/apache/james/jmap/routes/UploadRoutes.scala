@@ -50,7 +50,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
 case class TooBigUploadException() extends RuntimeException
@@ -111,7 +110,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
               INTERNAL_SERVER_ERROR)
         }
         .asJava()
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
         .`then`()
       case _ => response.status(BAD_REQUEST).send
     }

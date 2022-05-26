@@ -41,6 +41,7 @@ import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
@@ -64,7 +65,7 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
 
   def withRegistration(registration: Option[Registration]): Unit = Option(pushRegistration.getAndSet(registration.orNull))
     .foreach(oldRegistration => SMono(oldRegistration.unregister())
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe())
 }
 
@@ -93,7 +94,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         .`then`
         .`then`(SMono(httpServerResponse.sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
       .`then`()
   }
@@ -130,7 +131,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
             jmapApi.process(request.requestObject, clientContext.session)
               .map[OutboundMessage](WebSocketResponse(request.id, _))
               .onErrorResume(e => SMono.just(asError(request.id)(e)))
-              .subscribeOn(Schedulers.elastic)
+              .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
           case pushEnable: WebSocketPushEnable =>
             SMono(eventBus.register(
                 StateChangeListener(pushEnable.dataTypes.getOrElse(typeStateFactory.all.toSet), clientContext.outbound),

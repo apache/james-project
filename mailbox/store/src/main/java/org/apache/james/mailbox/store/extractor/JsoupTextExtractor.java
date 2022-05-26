@@ -78,11 +78,11 @@ public class JsoupTextExtractor implements TextExtractor {
         Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
         if (contentType.mimeType().equals(TEXT_HTML)) {
             return Mono.fromCallable(() -> parseHtmlContent(inputStream, charset))
-                .subscribeOn(Schedulers.elastic());
+                .subscribeOn(Schedulers.boundedElastic());
         }
         if (contentType.mimeType().equals(TEXT_PLAIN)) {
             return Mono.fromCallable(() -> parsePlainTextContent(inputStream, charset))
-                .subscribeOn(Schedulers.elastic());
+                .subscribeOn(Schedulers.boundedElastic());
         }
         return Mono.just(ParsedContent.empty());
     }

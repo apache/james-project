@@ -94,7 +94,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
         return Mono.fromCallable(() -> taskWithId.getTask().details())
-            .delayElement(pollingInterval, Schedulers.elastic())
+            .delayElement(pollingInterval, Schedulers.parallel())
             .repeat()
             .handle(publishIfPresent())
             .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), information)).thenReturn(information), DEFAULT_CONCURRENCY);

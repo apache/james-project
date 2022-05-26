@@ -76,7 +76,7 @@ public class MessageSender {
     public Mono<Void> sendMessage(MetaDataWithContent message, Envelope envelope, MailboxSession session) {
         return Mono.usingWhen(Mono.fromCallable(() -> buildMail(message, envelope)),
             mail -> sendMessage(message.getMessageId(), mail, session),
-            mail -> Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.elastic()));
+            mail -> Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()));
     }
 
     @VisibleForTesting

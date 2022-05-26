@@ -47,9 +47,9 @@ import org.apache.james.mime4j.stream.MimeConfig
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.server.core.MailImpl
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -121,7 +121,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
           (MDNSendResults.merge(acc._1, creationResult) -> updatedProcessingContext)
         }
       }
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def createMDNSend(session: MailboxSession,
                             identity: Identity,

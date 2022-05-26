@@ -78,7 +78,7 @@ public class CassandraMailQueueMailDelete {
         findNewBrowseStart(mailQueueName)
             .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart)
                 .then(clearContentBeforeBrowse(mailQueueName, newBrowseStart)))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.parallel())
             .subscribe();
     }
 
@@ -117,7 +117,7 @@ public class CassandraMailQueueMailDelete {
     private Mono<SlicingContext> deleteEmailsFromBrowseProjection(MailQueueName mailQueueName, SlicingContext slicingContext) {
         return enqueuedMailsDAO.selectEnqueuedMails(mailQueueName, Slice.of(slicingContext.getTimeRangeStart()), slicingContext.getBucketId())
             .flatMap(item -> deletedMailsDao.removeDeletedMark(mailQueueName, item.getEnqueuedItem().getEnqueueId())
-                .then(Mono.fromRunnable(item::dispose).subscribeOn(Schedulers.elastic())), DEFAULT_CONCURRENCY)
+                .then(Mono.fromRunnable(item::dispose).subscribeOn(Schedulers.boundedElastic())), DEFAULT_CONCURRENCY)
             .then()
             .thenReturn(slicingContext);
     }

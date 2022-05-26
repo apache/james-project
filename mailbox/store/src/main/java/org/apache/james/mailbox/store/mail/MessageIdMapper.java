@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
@@ -40,7 +41,6 @@ import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface MessageIdMapper {
 
@@ -60,7 +60,7 @@ public interface MessageIdMapper {
 
     default Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
         return Mono.<Void>fromRunnable(Throwing.runnable(() -> copyInMailbox(mailboxMessage, mailbox)).sneakyThrow())
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     void delete(MessageId messageId);
@@ -69,7 +69,7 @@ public interface MessageIdMapper {
 
     default Mono<Void> deleteReactive(MessageId messageId, Collection<MailboxId> mailboxIds) {
         return Mono.fromRunnable(() -> delete(messageId, mailboxIds))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
     }
 
@@ -80,7 +80,7 @@ public interface MessageIdMapper {
 
     default Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
         return Mono.fromRunnable(() -> delete(ids))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
     }
 

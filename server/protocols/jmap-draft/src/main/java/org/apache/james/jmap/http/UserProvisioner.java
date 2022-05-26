@@ -29,12 +29,12 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.FunctionalUtils;
+import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class UserProvisioner {
     private final JMAPConfiguration jmapConfiguration;
@@ -67,7 +67,7 @@ public class UserProvisioner {
 
     private Mono<Void> createAccount(Username username) {
         return Mono.fromRunnable(Throwing.runnable(() -> usersRepository.addUser(username, generatePassword())))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
     }
 

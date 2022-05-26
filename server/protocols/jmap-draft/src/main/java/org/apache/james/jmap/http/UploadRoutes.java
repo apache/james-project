@@ -112,7 +112,7 @@ public class UploadRoutes implements JMAPRoutes {
                 .onErrorResume(e -> handleInternalError(response, LOGGER, e))
                 .contextWrite(jmapContext(request))
                 .contextWrite(jmapAction("upload-get"))
-                .subscribeOn(Schedulers.elastic());
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
         }
     }
 
@@ -121,7 +121,7 @@ public class UploadRoutes implements JMAPRoutes {
             // Unwrapping to byte array needed to solve data races and buffer reordering when using .asByteBuffer()
             .asByteArray()
             .map(ByteBuffer::wrap)
-            .subscribeOn(Schedulers.elastic()));
+            .subscribeOn(Schedulers.boundedElastic()));
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-upload-post",
             handle(contentType, content, session, response)));
     }

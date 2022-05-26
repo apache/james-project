@@ -86,7 +86,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         sendQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendQueueHandle = sender
             .send(sendQueue.asFlux())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
 
         listener = Sinks.many().multicast().directBestEffort();
@@ -104,7 +104,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
                 receiverProvider::createReceiver,
                 receiver -> receiver.consumeAutoAck(queueName.asString()),
                 Receiver::close)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .map(this::toEvent)
             .handle(publishIfPresent())
             .subscribe(e -> listener.emitNext(e, FAIL_FAST));

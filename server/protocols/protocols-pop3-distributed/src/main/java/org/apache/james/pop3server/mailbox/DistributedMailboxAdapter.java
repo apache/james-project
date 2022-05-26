@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class DistributedMailboxAdapter implements Mailbox {
     public static class Factory implements MailboxAdapterFactory {
@@ -119,7 +118,6 @@ public class DistributedMailboxAdapter implements Mailbox {
         return Flux.from(metadataStore.stat(mailbox.getId()))
             .map(message -> new MessageMetaData(message.getMessageId().serialize(), message.getSize()))
             .collect(ImmutableList.toImmutableList())
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

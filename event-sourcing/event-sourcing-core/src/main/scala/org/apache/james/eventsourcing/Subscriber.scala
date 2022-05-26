@@ -18,9 +18,9 @@
  * ***************************************************************/
 package org.apache.james.eventsourcing
 
+import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 trait Subscriber {
   def handle(event: Event) : Unit
@@ -43,6 +43,6 @@ class ReactiveSubscriberWrapper(delegate: Subscriber) extends ReactiveSubscriber
   override def handle(event: Event) : Unit = delegate.handle(event)
 
   def handleReactive(event: Event): Publisher[Void] = SMono.fromCallable(() => handle(event))
-    .subscribeOn(Schedulers.elastic())
+    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     .`then`()
 }

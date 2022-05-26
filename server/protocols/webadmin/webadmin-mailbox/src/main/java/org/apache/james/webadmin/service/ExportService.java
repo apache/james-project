@@ -103,7 +103,7 @@ public class ExportService {
         PipedInputStream in = new PipedInputStream(out);
 
         writeUserMailboxesContent(username, out)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
 
         return in;
@@ -132,7 +132,7 @@ public class ExportService {
                 .fileExtension(FileExtension.ZIP)
                 .export())
             .sneakyThrow())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
 

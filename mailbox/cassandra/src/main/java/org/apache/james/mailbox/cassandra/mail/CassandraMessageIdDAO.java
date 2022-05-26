@@ -497,7 +497,7 @@ public class CassandraMessageIdDAO {
             // We filter out such records, and cleanup them.
             delete(CassandraId.of(row.getUUID(MAILBOX_ID)),
                 MessageUid.of(row.getLong(IMAP_UID)))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.parallel())
                 .subscribe();
             return Optional.empty();
         }

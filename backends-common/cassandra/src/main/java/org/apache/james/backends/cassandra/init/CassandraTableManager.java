@@ -65,7 +65,7 @@ public class CassandraTableManager {
     public void clearAllTables() {
         CassandraAsyncExecutor executor = new CassandraAsyncExecutor(session);
         Flux.fromIterable(module.moduleTables())
-                .publishOn(Schedulers.elastic())
+                .publishOn(Schedulers.boundedElastic())
                 .map(CassandraTable::getName)
                 .flatMap(name -> truncate(executor, name), DEFAULT_CONCURRENCY)
                 .then()

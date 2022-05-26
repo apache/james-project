@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore.StoragePolicy;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Optional;
@@ -103,7 +104,7 @@ public interface Store<T, I> {
         @Override
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
-                .publishOn(Schedulers.elastic())
+                .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .collectMap(Map.Entry::getKey, entry -> readByteSource(bucketName, entry.getValue(), entry.getKey().getStoragePolicy()))
                 .map(decoder::decode);
         }

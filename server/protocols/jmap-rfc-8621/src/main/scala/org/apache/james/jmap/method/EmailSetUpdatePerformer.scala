@@ -34,9 +34,9 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, MailboxId, MessageId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
@@ -153,7 +153,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
 
     mailboxMono.flatMap(mailbox => updateByRange(ranges, metaData,
       range => mailbox.setFlags(flags, updateMode, range, session)))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
   }
 
   private def moveByRange(mailboxId: MailboxId,
@@ -180,7 +180,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
           messageIds.map(EmailUpdateSuccess)
         })
           .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
-          .subscribeOn(Schedulers.elastic())
+          .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       })
       .reduce(Seq[EmailUpdateResult]())( _ ++ _)
 
@@ -224,7 +224,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
         .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
         .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }
   }
 
@@ -238,7 +238,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     } else {
       SMono(messageIdManager.setFlagsReactive(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }
   }
 }

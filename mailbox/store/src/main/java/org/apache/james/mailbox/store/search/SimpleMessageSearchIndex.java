@@ -54,13 +54,13 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link MessageSearchIndex} which just fetch {@link MailboxMessage}'s from the {@link MessageMapper} and use {@link MessageSearcher}
@@ -162,10 +162,10 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) {
         return mailboxes.concatMap(mailbox -> Mono.fromCallable(() -> getSearchResultStream(session, query, mailbox))
                 .flatMapMany(Flux::fromStream)
-                .subscribeOn(Schedulers.elastic()))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
             .collectSortedList(CombinedComparator.create(query.getSorts()))
             .flatMapMany(list -> Iterators.toFlux(new MessageSearches(list.iterator(), query, textExtractor, attachmentContentLoader, session).iterator()))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Stream<MailboxMessage> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {

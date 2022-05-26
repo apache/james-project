@@ -22,9 +22,9 @@ package org.apache.james.jmap.draft.methods;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.util.ReactorUtils;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface SetMessagesProcessor {
     default SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
@@ -33,6 +33,6 @@ public interface SetMessagesProcessor {
 
     default Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
         return Mono.fromCallable(() -> process(request, mailboxSession))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 }

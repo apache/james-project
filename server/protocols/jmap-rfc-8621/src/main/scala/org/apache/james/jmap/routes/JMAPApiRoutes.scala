@@ -37,11 +37,11 @@ import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
 object JMAPApiRoutes {
@@ -69,7 +69,7 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .`then`(this.requestAsJsonStream(httpServerRequest)
           .flatMap(requestObject => this.process(requestObject, httpServerResponse, mailboxSession))))
       .onErrorResume(throwable => handleError(throwable, httpServerResponse))
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
       .`then`()
 

@@ -37,7 +37,7 @@ public class MemoryWorkQueue implements WorkQueue {
         this.worker = worker;
         this.tasks = Sinks.many().unicast().onBackpressureBuffer();
         this.subscription = tasks.asFlux()
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .limitRate(1)
             .concatMap(this::dispatchTaskToWorker)
             .subscribe();

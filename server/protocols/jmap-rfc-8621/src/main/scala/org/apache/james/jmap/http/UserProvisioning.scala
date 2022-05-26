@@ -27,8 +27,8 @@ import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.user.api.{AlreadyExistInUsersRepositoryException, UsersRepository}
+import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactory: MetricFactory, jmapConfiguration: JMAPConfiguration = JMAPConfiguration.DEFAULT) {
   def provisionUser(session: MailboxSession): SMono[Unit] =
@@ -50,7 +50,7 @@ class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactor
 
   private def createAccount(username: Username): SMono[Unit] =
     SMono.fromCallable(() => usersRepository.addUser(username, generatePassword))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def needsAccountCreation(username: Username): SMono[Boolean] =
     SMono(usersRepository.containsReactive(username)).map(b => !b)

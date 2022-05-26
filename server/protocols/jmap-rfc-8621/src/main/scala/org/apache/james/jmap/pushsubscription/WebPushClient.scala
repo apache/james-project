@@ -111,7 +111,7 @@ class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) ext
   private def validate(pushServerUrl: PushSubscriptionServerURL): SMono[PushSubscriptionServerURL] =
     if (configuration.preventServerSideRequestForgery) {
       SMono.just(pushServerUrl.value.getHost)
-        .flatMap(host => SMono.fromCallable(() => InetAddress.getByName(host)).subscribeOn(Schedulers.elastic()))
+        .flatMap(host => SMono.fromCallable(() => InetAddress.getByName(host)).subscribeOn(Schedulers.boundedElastic()))
         .handle[InetAddress]((inetAddress, sink) => validate(pushServerUrl, inetAddress).fold(sink.error, sink.next))
         .`then`(SMono.just(pushServerUrl))
     } else {

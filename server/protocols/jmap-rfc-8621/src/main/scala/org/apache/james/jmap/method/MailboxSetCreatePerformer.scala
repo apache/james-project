@@ -32,9 +32,9 @@ import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxE
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.util.Try
 
@@ -94,7 +94,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
           (MailboxCreationResults(acc._1.created :+ creationResult), updatedProcessingContext)
         }
       }
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
   }
 
   private def createMailbox(mailboxSession: MailboxSession,

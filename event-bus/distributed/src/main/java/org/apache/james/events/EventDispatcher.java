@@ -186,7 +186,7 @@ public class EventDispatcher {
     private Mono<Void> remoteDispatchWithAcks(byte[] serializedEvent) {
         if (configuration.isEventBusPublishConfirmEnabled()) {
             return Mono.from(sender.sendWithPublishConfirms(Mono.just(toMessage(serializedEvent, RoutingKey.empty())))
-                .subscribeOn(Schedulers.elastic())) // channel.confirmSelect is synchronous
+                .subscribeOn(Schedulers.boundedElastic())) // channel.confirmSelect is synchronous
                 .filter(outboundMessageResult -> !outboundMessageResult.isAck())
                 .handle((result, sink) -> sink.error(new Exception("Publish was not acked")))
                 .retryWhen(Retry.backoff(2, Duration.ofMillis(100)))

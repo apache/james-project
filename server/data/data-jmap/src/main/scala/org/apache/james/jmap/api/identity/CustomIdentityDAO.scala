@@ -27,9 +27,9 @@ import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.user.api.UsersRepository
+import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.StreamConverters._
 import scala.util.Try
@@ -149,7 +149,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
 
   private def listServerSetIdentity(user: Username): SMono[(Set[MailAddress], List[Identity])] =
     SMono.fromCallable(() => identityFactory.listIdentities(user))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .map(list => (list.map(_.email).toSet, list))
 
   private def listCustomIdentity(user: Username, availableMailAddresses: Set[MailAddress]): SFlux[Identity] =
@@ -159,7 +159,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
   def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] = {
     val findServerSetIdentity: SMono[Option[Identity]] = SMono.fromCallable(() => identityFactory.listIdentities(user)
       .find(identity => identity.id.equals(identityId)))
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     val findCustomIdentity: SMono[Option[Identity]] = SMono(customIdentityDao.findByIdentityId(user, identityId))
       .map(Some(_))
       .switchIfEmpty(SMono.just(None))
@@ -190,7 +190,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
         }
       }
       .flatMap(ids => SMono.fromPublisher(customIdentityDao.delete(username, ids)))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }
 
 case class IdentityNotFoundException(id: IdentityId) extends RuntimeException(s"$id could not be found")

@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface MessageIdManager {
     default Publisher<ComposedMessageIdWithMetaData> messageMetadata(MessageId id, MailboxSession session) {
@@ -82,7 +81,6 @@ public interface MessageIdManager {
 
     default DeleteResult delete(MessageId messageId, MailboxSession mailboxSession) {
         return Mono.from(delete(ImmutableList.of(messageId), mailboxSession))
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

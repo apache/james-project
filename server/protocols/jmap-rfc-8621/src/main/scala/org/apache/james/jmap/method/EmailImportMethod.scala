@@ -42,10 +42,10 @@ import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.MimeConfig
+import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import play.api.libs.json.JsError
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.util.{Try, Using}
 
@@ -98,7 +98,7 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
     for {
       oldState <- retrieveState(capabilities, mailboxSession)
       importResults <- importEmails(request, mailboxSession)
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       newState <- retrieveState(capabilities, mailboxSession)
     } yield {
       val updatedContext = updateProcessingContext(importResults, invocation.processingContext)

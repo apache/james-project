@@ -148,7 +148,7 @@ public class DownloadRoutes implements JMAPRoutes {
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .contextWrite(jmapContext(request))
             .contextWrite(jmapAction("download-post"))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Mono<Void> getFromId(HttpServerRequest request, HttpServerResponse response) {
@@ -179,7 +179,7 @@ public class DownloadRoutes implements JMAPRoutes {
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .contextWrite(jmapContext(request))
             .contextWrite(jmapAction("download-get"))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Mono<Void> respondAttachmentAccessToken(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServerResponse resp) {
@@ -235,7 +235,7 @@ public class DownloadRoutes implements JMAPRoutes {
             .status(OK)
             .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer)
-                .subscribeOn(Schedulers.elastic()))
+                .subscribeOn(Schedulers.boundedElastic()))
             .then();
     }
 

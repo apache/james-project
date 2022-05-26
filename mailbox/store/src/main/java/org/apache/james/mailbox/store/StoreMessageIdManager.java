@@ -85,7 +85,6 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class StoreMessageIdManager implements MessageIdManager {
 
@@ -403,20 +402,19 @@ public class StoreMessageIdManager implements MessageIdManager {
     
     private Mono<Void> dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, ImmutableList<UpdatedFlags> updatedFlags, List<Mailbox> knownMailboxes) {
         if (updatedFlags.stream().anyMatch(UpdatedFlags::flagsChanged)) {
-            Mailbox mailbox = knownMailboxes.stream()
+            return knownMailboxes.stream()
                 .filter(knownMailbox -> knownMailbox.getMailboxId().equals(mailboxId))
                 .findFirst()
-                .orElseGet(Throwing.supplier(() -> MailboxReactorUtils.block(mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
-                        .findMailboxById(mailboxId)
-                        .subscribeOn(Schedulers.elastic())))
-                    .sneakyThrow());
-            return eventBus.dispatch(EventFactory.flagsUpdated()
-                        .randomEventId()
-                        .mailboxSession(mailboxSession)
-                        .mailbox(mailbox)
-                        .updatedFlags(updatedFlags)
-                        .build(),
-                    new MailboxIdRegistrationKey(mailboxId));
+                .map(Mono::just)
+                .orElseGet(() -> mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId))
+                .flatMap(mailbox ->
+                    eventBus.dispatch(EventFactory.flagsUpdated()
+                            .randomEventId()
+                            .mailboxSession(mailboxSession)
+                            .mailbox(mailbox)
+                            .updatedFlags(updatedFlags)
+                            .build(),
+                        new MailboxIdRegistrationKey(mailboxId)));
         }
         return Mono.empty();
     }
