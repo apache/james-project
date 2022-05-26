@@ -39,6 +39,7 @@ class WithoutMailQueueViewImmutableTest implements JmapJamesServerContract, Jame
                     .deduplication()
                     .noCryptoConfig())
                 .mailQueueViewChoice(MailQueueViewChoice.NONE)
+                .searchConfiguration(SearchConfiguration.scanning())
                 .build())
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))
