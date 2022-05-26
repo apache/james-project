@@ -21,7 +21,7 @@ package org.apache.james.task.eventsourcing
 import org.apache.james.eventsourcing.Command
 import org.apache.james.task.Task.Result
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
-import org.apache.james.task.{Task, TaskId, TaskType}
+import org.apache.james.task.{Task, TaskId}
 
 sealed trait TaskCommand extends Command
 

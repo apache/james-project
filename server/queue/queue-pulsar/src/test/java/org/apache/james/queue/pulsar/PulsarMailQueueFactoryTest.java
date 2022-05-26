@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.pulsar;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -37,8 +39,6 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.apache.james.queue.pulsar.PulsarMailQueue;
-import org.apache.james.queue.pulsar.PulsarMailQueueFactory;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -46,10 +46,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import akka.actor.ActorSystem;
 
 @ExtendWith(MailQueueMetricExtension.class)
 @ExtendWith(DockerPulsarExtension.class)

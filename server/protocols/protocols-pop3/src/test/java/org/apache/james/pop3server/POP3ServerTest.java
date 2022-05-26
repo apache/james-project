@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;

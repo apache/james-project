@@ -30,7 +30,6 @@ import org.apache.james.rrt.lib.RecipientRewriteTableContract;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
-import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;

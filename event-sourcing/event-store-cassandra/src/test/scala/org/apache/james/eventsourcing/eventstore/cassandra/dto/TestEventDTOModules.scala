@@ -19,7 +19,6 @@
 package org.apache.james.eventsourcing.eventstore.cassandra.dto
 
 import org.apache.james.eventsourcing.TestEvent
-import org.apache.james.json.DTOModule
 
 object TestEventDTOModules {
   val TEST_TYPE: EventDTOModule[TestEvent, TestEventDTO] = EventDTOModule.forEvent(classOf[TestEvent])

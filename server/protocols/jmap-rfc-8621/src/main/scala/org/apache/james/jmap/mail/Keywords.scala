@@ -18,10 +18,9 @@
  ****************************************************************/
 package org.apache.james.jmap.mail
 
-import javax.mail.Flags
 import org.apache.james.mailbox.FlagsBuilder
 
-import scala.collection.IterableOnce
+import javax.mail.Flags
 import scala.util.{Failure, Success, Try}
 
 trait ToKeyword {

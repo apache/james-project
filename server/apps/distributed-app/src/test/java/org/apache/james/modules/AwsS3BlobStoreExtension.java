@@ -25,7 +25,6 @@ import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 public class AwsS3BlobStoreExtension implements GuiceModuleTestExtension {
 

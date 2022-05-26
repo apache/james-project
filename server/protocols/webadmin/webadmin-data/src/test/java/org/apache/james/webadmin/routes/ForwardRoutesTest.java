@@ -61,7 +61,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 
 class ForwardRoutesTest {

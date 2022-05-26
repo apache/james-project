@@ -62,7 +62,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import spark.Service;
 
 class RecomputeAllFastViewProjectionItemsRequestToTaskTest {

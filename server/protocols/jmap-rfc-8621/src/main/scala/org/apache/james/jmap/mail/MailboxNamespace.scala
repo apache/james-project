@@ -23,8 +23,6 @@ import org.apache.james.core.Username
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MailboxPath
 
-import javax.inject.Inject
-
 trait NamespaceFactory {
   def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace
 }

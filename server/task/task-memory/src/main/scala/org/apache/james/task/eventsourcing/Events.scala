@@ -21,7 +21,7 @@ package org.apache.james.task.eventsourcing
 import org.apache.james.eventsourcing.{Event, EventId}
 import org.apache.james.task.Task.Result
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
-import org.apache.james.task.{Hostname, Task, TaskType}
+import org.apache.james.task.{Hostname, Task}
 
 sealed abstract class TaskEvent(aggregateId: TaskAggregateId, val eventId: EventId) extends Event {
   override def getAggregateId: TaskAggregateId = aggregateId

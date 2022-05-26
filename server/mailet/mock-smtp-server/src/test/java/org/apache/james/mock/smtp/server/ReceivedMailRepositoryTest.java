@@ -34,8 +34,6 @@ import org.apache.james.util.MimeMessageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableList;
-
 class ReceivedMailRepositoryTest {
     private ReceivedMailRepository testee;
     private Mail mail;

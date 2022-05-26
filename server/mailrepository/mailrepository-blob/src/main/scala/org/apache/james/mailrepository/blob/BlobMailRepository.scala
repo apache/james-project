@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.blob
 
-import java.{lang, util}
+import java.util
 import java.util.Date
 import java.util.stream.Stream
 

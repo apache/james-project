@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
