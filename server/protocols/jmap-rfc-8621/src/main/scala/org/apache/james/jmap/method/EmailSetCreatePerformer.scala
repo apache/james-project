@@ -38,9 +38,9 @@ import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaEx
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.util.ReactorUtils
 import org.apache.james.util.html.HtmlTextExtractor
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.OptionConverters._
 
@@ -105,7 +105,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
               .fold(e => SMono.error(e),
               appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds))))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }
   }
 

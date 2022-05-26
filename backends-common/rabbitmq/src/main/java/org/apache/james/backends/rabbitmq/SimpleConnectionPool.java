@@ -120,7 +120,7 @@ public class SimpleConnectionPool implements AutoCloseable, Startable {
 
     public Mono<Connection> getResilientConnection() {
         return Mono.defer(this::getOpenConnection)
-            .retryWhen(Retry.backoff(configuration.getNumRetries(), configuration.getInitialDelay()).scheduler(Schedulers.elastic()));
+            .retryWhen(Retry.backoff(configuration.getNumRetries(), configuration.getInitialDelay()).scheduler(Schedulers.boundedElastic()));
     }
 
     private Mono<Connection> getOpenConnection() {

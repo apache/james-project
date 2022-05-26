@@ -32,8 +32,8 @@ import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxE
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
+import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
@@ -121,7 +121,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
           subscriptionManager.unsubscribe(mailboxSession, mailbox.getMailboxPath.getName)
         }
       }).`then`(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     })
       .getOrElse(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
   }
@@ -155,7 +155,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
           case e: Exception => MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch))
         }
       })
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     } else {
       SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId))
     }
@@ -222,7 +222,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     SFlux.merge(Seq(resetOperation, partialUpdatesOperation))
       .`then`()
       .`then`(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   }
 

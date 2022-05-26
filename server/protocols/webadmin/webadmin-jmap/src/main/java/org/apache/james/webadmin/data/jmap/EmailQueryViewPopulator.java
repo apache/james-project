@@ -60,7 +60,6 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class EmailQueryViewPopulator {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailQueryViewPopulator.class);
@@ -196,12 +195,7 @@ public class EmailQueryViewPopulator {
     }
 
     private Flux<MessageResult> listAllMessages(MessageManager messageManager, MailboxSession session) {
-        try {
-            return Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.HEADERS, session))
-                .subscribeOn(Schedulers.elastic());
-        } catch (MailboxException e) {
-            return Flux.error(e);
-        }
+        return Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.HEADERS, session));
     }
 
     private Message parseMessage(MessageResult messageResult) throws IOException, MailboxException {

@@ -68,6 +68,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,6 @@ import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
@@ -153,10 +153,10 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .flatMap(messages -> {
                 if (isAMassiveFlagUpdate(patches, messages)) {
                     return Mono.fromCallable(() -> applyRangedFlagUpdate(patches, messages, mailboxSession))
-                        .subscribeOn(Schedulers.elastic());
+                        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
                 } else if (isAMassiveMove(patches, messages)) {
                     return Mono.fromCallable(() -> applyMove(patches, messages, mailboxSession))
-                        .subscribeOn(Schedulers.elastic());
+                        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
                 } else {
                     return Flux.fromIterable(patches.entrySet())
                         .flatMap(entry -> {
@@ -340,7 +340,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         .map(Username::fromMailAddress);
                     assertUserCanSendFrom(mailboxSession.getUser(), fromUser);
                     return Pair.of(messageToSend, mail);
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
                 .flatMap(Throwing.<Pair<MessageResult, MailImpl>, Mono<SetMessagesResponse.Builder>>function(
                     pair -> messageSender.sendMessage(messageId, pair.getRight(), mailboxSession)
                         .then(referenceUpdater.updateReferences(pair.getKey().getHeaders(), mailboxSession))

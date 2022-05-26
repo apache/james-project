@@ -154,7 +154,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         return computeProjection(messageContent, hasAttachments)
             .doOnNext(projection -> Mono.from(fastViewProjection.store(messageId, projection))
                 .doOnError(throwable -> LOGGER.error("Cannot store the projection to MessageFastViewProjection", throwable))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.parallel())
                 .subscribe());
     }
 

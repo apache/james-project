@@ -59,7 +59,7 @@ public class DefaultTextExtractor implements TextExtractor {
         if (applicable(contentType)) {
             Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
             return Mono.fromCallable(() -> new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), new HashMap<>()))
-                .subscribeOn(Schedulers.elastic());
+                .subscribeOn(Schedulers.boundedElastic());
         } else {
             return Mono.just(new ParsedContent(Optional.empty(), new HashMap<>()));
         }

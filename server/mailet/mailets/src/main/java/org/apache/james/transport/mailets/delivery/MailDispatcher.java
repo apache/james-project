@@ -174,7 +174,7 @@ public class MailDispatcher {
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
        return Mono.from(mailStore.storeMail(recipient, mail))
            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error))
-           .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
+           .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.parallel()))
            .then();
     }
 

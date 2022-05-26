@@ -146,7 +146,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 receiverProvider::createReceiver,
                 receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
                 Receiver::close)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .concatMap(this::executeTask)
             .subscribe();
     }
@@ -195,7 +195,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         sendCancelRequestsQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendCancelRequestsQueueHandle = sender
             .send(sendCancelRequestsQueue.asFlux().map(this::makeCancelRequestMessage))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
     }
 
@@ -204,7 +204,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 receiverProvider::createReceiver,
                 receiver -> receiver.consumeAutoAck(queueName),
                 Receiver::close)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .map(this::readCancelRequestMessage)
             .doOnNext(worker::cancelTask)
             .subscribe();

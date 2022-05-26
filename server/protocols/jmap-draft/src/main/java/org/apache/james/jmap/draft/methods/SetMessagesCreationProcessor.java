@@ -62,6 +62,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.Envelope;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
@@ -299,7 +299,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             } else {
                 LOG.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), from);
             }
-        }).sneakyThrow()).subscribeOn(Schedulers.elastic())
+        }).sneakyThrow()).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
     }
 

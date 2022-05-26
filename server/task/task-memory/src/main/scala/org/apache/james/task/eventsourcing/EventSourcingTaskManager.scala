@@ -33,7 +33,6 @@ import org.apache.james.task._
 import org.apache.james.task.eventsourcing.TaskCommand._
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](
                                                                                   workQueueSupplier: WorkQueueSupplier,
@@ -115,7 +114,6 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
         .`then`(details)
 
       Flux.merge(findEvent, details)
-        .subscribeOn(Schedulers.elastic)
         .blockFirst(timeout)
     } catch {
       case _: IllegalStateException => throw new ReachedTimeoutException

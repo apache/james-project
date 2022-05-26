@@ -213,7 +213,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             attachment.put(SINK, sink);
 
             Disposable subscribe = sink.asFlux()
-                .publishOn(Schedulers.elastic())
+                .publishOn(Schedulers.boundedElastic())
                 .doOnNext(next -> {
                     try {
                         int amount = Math.min(next.length, size - written.get());

@@ -27,8 +27,8 @@ import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFa
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
+import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 object MailboxSetDeletePerformer {
   sealed trait MailboxDeletionResult
@@ -76,7 +76,7 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
     MailboxGet.parse(mailboxIdFactory)(id)
       .fold(e => SMono.error(e),
         id => SMono.fromCallable(() => doDelete(mailboxSession, id, onDestroy))
-          .subscribeOn(Schedulers.elastic())
+          .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
           .`then`(SMono.just[MailboxDeletionResult](MailboxDeletionSuccess(id))))
 
   }

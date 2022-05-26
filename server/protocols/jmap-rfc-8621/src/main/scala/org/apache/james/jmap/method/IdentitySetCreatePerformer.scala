@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import javax.inject.Inject
 import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityRepository}
 import org.apache.james.jmap.api.model.{ForbiddenSendFromException, HtmlSignature, Identity, IdentityName, TextSignature}
 import org.apache.james.jmap.core.SetError
@@ -28,11 +29,9 @@ import org.apache.james.jmap.mail.IdentityCreation.{knownProperties, serverSetPr
 import org.apache.james.jmap.mail.{IdentityCreationId, IdentityCreationResponse, IdentitySet, IdentitySetParseException, IdentitySetRequest}
 import org.apache.james.jmap.method.IdentitySetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
-
-import javax.inject.Inject
 
 object IdentitySetCreatePerformer {
   case class CreationResults(results: Seq[CreationResult]) {
@@ -88,7 +87,7 @@ class IdentitySetCreatePerformer @Inject()(identityRepository: IdentityRepositor
     SMono.fromPublisher(identityRepository.save(mailboxSession.getUser, request))
       .map(identity => CreationSuccess(clientId, evaluateCreationResponse(request, identity)))
       .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def evaluateCreationResponse(request: IdentityCreationRequest, identity: Identity): IdentityCreationResponse =
     IdentityCreationResponse(

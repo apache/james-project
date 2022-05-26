@@ -169,7 +169,7 @@ public class MailReceptionCheck implements HealthCheck {
         public Publisher<Void> reactiveEvent(Event event) {
             if (event instanceof Added) {
                 return Mono.fromRunnable(() -> sink.emitNext((Added) event, FAIL_FAST))
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.boundedElastic())
                     .then();
             }
             return Mono.empty();
@@ -219,7 +219,7 @@ public class MailReceptionCheck implements HealthCheck {
                 registration -> sendMail(username)
                     .flatMap(content -> checkReceived(session, listener, mailbox, content)),
                 Registration::unregister))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
             .onErrorResume(e -> {
                 LOGGER.error("Mail reception check failed", e);

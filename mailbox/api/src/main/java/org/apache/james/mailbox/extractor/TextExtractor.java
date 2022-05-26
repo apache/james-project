@@ -35,7 +35,7 @@ public interface TextExtractor {
 
     default Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
         return Mono.fromCallable(() -> extractContent(inputStream, contentType))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
 }

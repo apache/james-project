@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,28 +41,25 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public class PeriodicalHealthChecks implements Startable {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodicalHealthChecks.class);
+
     private final Set<HealthCheck> healthChecks;
-    private final Scheduler scheduler;
     private final PeriodicalHealthChecksConfiguration configuration;
     private Disposable disposable;
 
     @Inject
     PeriodicalHealthChecks(Set<HealthCheck> healthChecks, PeriodicalHealthChecksConfiguration configuration) {
         this.healthChecks = healthChecks;
-        this.scheduler = Schedulers.elastic();
         this.configuration = configuration;
     }
 
     PeriodicalHealthChecks(Set<HealthCheck> healthChecks, Scheduler scheduler, PeriodicalHealthChecksConfiguration configuration) {
         this.healthChecks = healthChecks;
-        this.scheduler = scheduler;
         this.configuration = configuration;
     }
 
     public void start() {
-        disposable = Flux.interval(configuration.getPeriod(), scheduler)
+        disposable = Flux.interval(configuration.getPeriod(), Schedulers.parallel())
             .flatMapIterable(any -> healthChecks)
             .flatMap(healthCheck -> Mono.from(healthCheck.check())
                 .timeout(configuration.getPeriod())
@@ -69,7 +67,7 @@ public class PeriodicalHealthChecks implements Startable {
                 DEFAULT_CONCURRENCY)
             .doOnNext(this::logResult)
             .onErrorContinue(this::logError)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .subscribe();
     }
 

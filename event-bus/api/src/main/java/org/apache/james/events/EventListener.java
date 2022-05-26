@@ -21,12 +21,12 @@ package org.apache.james.events;
 
 import java.util.Objects;
 
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * Listens to events.<br>
@@ -64,7 +64,7 @@ public interface EventListener {
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
             return Mono.fromRunnable(Throwing.runnable(() -> delegate.event(event)))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .then();
         }
 

@@ -31,9 +31,9 @@ import org.apache.james.jmap.mail.{IdentityGet, IdentityGetRequest, IdentityGetR
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
+import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
                                    val metricFactory: MetricFactory,
@@ -45,7 +45,7 @@ class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
     val requestedProperties: Properties = request.properties.getOrElse(IdentityGet.allProperties)
     (requestedProperties -- IdentityGet.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getIdentities(request, mailboxSession)
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
         .map(identityGetResponse => Invocation(
           methodName = methodName,
           arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ IdentityGet.idProperty).as[JsObject]),

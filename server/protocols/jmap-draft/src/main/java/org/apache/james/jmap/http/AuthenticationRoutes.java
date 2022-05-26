@@ -64,6 +64,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +144,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
             .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .contextWrite(jmapContext(request))
             .contextWrite(jmapAction("auth-post"))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Mono<Void> returnEndPointsResponse(HttpServerRequest req, HttpServerResponse resp) {
@@ -157,7 +158,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
                 .contextWrite(jmapContext(req))
                 .contextWrite(jmapAction("returnEndPoints"))
-                .subscribeOn(Schedulers.elastic());
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Mono<Void> returnEndPointsResponse(HttpServerResponse resp) {
@@ -190,7 +191,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
             .contextWrite(jmapContext(req))
             .contextWrite(jmapAction("auth-delete"))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private HttpServerRequest assertJsonContentType(HttpServerRequest req) {
@@ -283,7 +284,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 LOGGER.error("Error while trying to validate authentication for user '{}'", username, e);
                 return false;
             }
-        }).subscribeOn(Schedulers.elastic());
+        }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     private Mono<Void> returnAccessTokenResponse(HttpServerResponse resp, Username username) {

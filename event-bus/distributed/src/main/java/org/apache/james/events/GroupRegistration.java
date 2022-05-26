@@ -32,6 +32,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ import com.google.common.base.Preconditions;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.ConsumeOptions;
@@ -83,6 +85,7 @@ class GroupRegistration implements Registration {
     private final RabbitMQConfiguration configuration;
     private Optional<Disposable> receiverSubscriber;
     private final ReceiverProvider receiverProvider;
+    private Scheduler scheduler;
 
     GroupRegistration(NamingStrategy namingStrategy, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
@@ -105,11 +108,12 @@ class GroupRegistration implements Registration {
     }
 
     GroupRegistration start() {
+        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "group-handler");
         receiverSubscriber = Optional
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
                 .then(Mono.fromCallable(this::consumeWorkQueue))
-                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
+                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))
                 .block());
         return this;
     }
@@ -141,7 +145,7 @@ class GroupRegistration implements Registration {
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(scheduler)
             .subscribe();
     }
 
@@ -152,11 +156,11 @@ class GroupRegistration implements Registration {
         return deserializeEvent(eventAsBytes)
             .flatMap(event -> delayGenerator.delayIfHaveTo(currentRetryCount)
                 .flatMap(any -> runListenerReliably(currentRetryCount, event))
-                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic())))
+                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.boundedElastic())))
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", group, e);
                 return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE))
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.boundedElastic())
                     .then();
             });
     }
@@ -197,6 +201,7 @@ class GroupRegistration implements Registration {
             receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
             unregisterGroup.run();
+            scheduler.dispose();
         });
     }
 }

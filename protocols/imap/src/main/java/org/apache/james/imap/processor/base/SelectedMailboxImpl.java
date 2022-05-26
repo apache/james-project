@@ -195,7 +195,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     public Mono<Void> deselect() {
         return Mono.from(registration.get().unregister())
             .then(Mono.fromRunnable(this::clearInternalStructures)
-                .subscribeOn(Schedulers.elastic()))
+                .subscribeOn(Schedulers.boundedElastic()))
             .then();
     }
 

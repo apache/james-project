@@ -616,7 +616,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
         .hasAttachment(fullView.bodyMetadata.hasAttachment.value)
         .build()))
       .doOnError(e => EmailFastViewReader.logger.error(s"Cannot store the projection to MessageFastViewProjection for ${fullView.metadata.id}", e))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.parallel())
       .subscribe()
   }
 

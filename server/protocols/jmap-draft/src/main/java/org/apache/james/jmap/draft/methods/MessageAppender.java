@@ -49,6 +49,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,6 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class MessageAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageAppender.class);
@@ -106,7 +106,7 @@ public class MessageAppender {
                 Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
                 return new NewMessage(messageContent, message, internalDate);
-            }).subscribeOn(Schedulers.elastic())
+            }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .flatMap(newMessage -> Mono.from(mailboxManager.getMailboxReactive(targetMailboxes.get(0), session))
                 .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(
                     MessageManager.AppendCommand.builder()

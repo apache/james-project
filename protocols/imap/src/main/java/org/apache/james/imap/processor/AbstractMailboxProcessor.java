@@ -71,7 +71,6 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
@@ -356,7 +355,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        })).subscribeOn(Schedulers.elastic())
+        })).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
     }
 

@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class PreDeletionHooks {
     private static final int CONCURRENCY = 1;
@@ -54,7 +53,6 @@ public class PreDeletionHooks {
 
     public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
         return Flux.fromIterable(hooks)
-            .publishOn(Schedulers.elastic())
             .flatMap(hook -> metricFactory.map(factory -> publishMetric(deleteOperation, hook, factory))
                     .orElse(Mono.empty()),
                 CONCURRENCY)

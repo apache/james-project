@@ -408,7 +408,7 @@ public class StoreMessageManager implements MessageManager {
                 throw new MailboxException("Unable to parse message", e);
             }
         }).flatMap(Function.identity())
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     private Pair<PropertyBuilder, HeaderImpl> parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
@@ -700,7 +700,6 @@ public class StoreMessageManager implements MessageManager {
                 .updatedFlags(updatedFlags)
                 .build(),
                 new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-            .subscribeOn(Schedulers.elastic())
             .block();
 
         return updatedFlags.stream().collect(ImmutableMap.toImmutableMap(

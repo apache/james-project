@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -52,7 +53,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class DefaultMailboxBackup implements MailboxBackup {
 
@@ -120,7 +120,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
         }
 
         return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(username, source)).sneakyThrow())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .doOnError(e -> LOGGER.error("Error during account restoration for user : " + username.asString(), e))
             .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
             .thenReturn(BackupStatus.DONE)

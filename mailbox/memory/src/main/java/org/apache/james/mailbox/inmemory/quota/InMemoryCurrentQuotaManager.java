@@ -87,7 +87,7 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
     @Override
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(this::wrapAsMailboxException);
     }
 

@@ -180,7 +180,7 @@ public class RabbitMQConnectionFactory {
         return Mono.fromCallable(this::createConnection)
             .retryWhen(Retry.backoff(configuration.getMaxRetries(),
                 Duration.ofMillis(configuration.getMinDelayInMs()))
-                .scheduler(Schedulers.elastic()));
+                .scheduler(Schedulers.boundedElastic()));
     }
 
     private Connection createConnection() throws IOException, TimeoutException {

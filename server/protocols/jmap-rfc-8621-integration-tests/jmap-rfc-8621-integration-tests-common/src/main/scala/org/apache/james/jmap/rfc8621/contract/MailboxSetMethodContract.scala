@@ -48,7 +48,6 @@ import org.assertj.core.api.{Assertions, SoftAssertions}
 import org.hamcrest.Matchers.{equalTo, hasSize, not}
 import org.junit.jupiter.api.{BeforeEach, Disabled, RepeatedTest, Tag, Test}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 trait MailboxSetMethodContract {
 
@@ -3062,7 +3061,6 @@ trait MailboxSetMethodContract {
     SFlux.range(0, 100)
       .concatMap(i =>  SMono.fromCallable(() => server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, s"mailbox1.$i"))))
       .asJava()
-      .subscribeOn(Schedulers.elastic())
       .blockLast()
 
     val request =

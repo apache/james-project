@@ -38,7 +38,6 @@ import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.{BeforeEach, Test, Timeout}
 import play.api.libs.json.{JsString, Json}
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 import sttp.capabilities.WebSockets
 import sttp.client3.monad.IdMonad
 import sttp.client3.okhttp.OkHttpSyncBackend
@@ -1021,7 +1020,6 @@ trait WebSocketContract {
                 t.payload
               })
               .timeout(scala.concurrent.duration.Duration.fromNanos(100000000), Some(SMono.just("No notification received")))
-              .subscribeOn(Schedulers.elastic())
               .block()
 
           List(response, maybeNotification)

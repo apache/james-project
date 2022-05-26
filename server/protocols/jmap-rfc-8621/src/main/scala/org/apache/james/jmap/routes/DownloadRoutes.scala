@@ -276,7 +276,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
             INTERNAL_SERVER_ERROR)
       }
-      .subscribeOn(Schedulers.elastic)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
       .`then`
 
@@ -321,7 +321,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
         .status(OK)
         .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
           .map(Unpooled.wrappedBuffer(_))
-          .subscribeOn(Schedulers.elastic))
+          .subscribeOn(Schedulers.boundedElastic()))
         .`then`,
       asJavaConsumer[InputStream]((stream: InputStream) => stream.close())))
       .`then`

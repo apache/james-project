@@ -25,7 +25,6 @@ import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -34,18 +33,19 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
@@ -56,7 +56,6 @@ import reactor.util.retry.Retry;
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
     private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
-    static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
@@ -73,6 +72,7 @@ class KeyRegistrationHandler {
     private final ReceiverProvider receiverProvider;
     private Optional<Disposable> receiverSubscriber;
     private final MetricFactory metricFactory;
+    private Scheduler scheduler;
     private Disposable newSubscription;
 
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
@@ -95,6 +95,7 @@ class KeyRegistrationHandler {
     }
 
     void start() {
+        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "keys-handler");
         declareQueue();
 
         newSubscription = Flux.using(
@@ -102,7 +103,7 @@ class KeyRegistrationHandler {
             receiver -> receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
             Receiver::close)
             .flatMap(this::handleDelivery, EventBus.EXECUTION_RATE)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(scheduler)
             .subscribe();
         receiverSubscriber = Optional.of(newSubscription);
     }
@@ -135,10 +136,11 @@ class KeyRegistrationHandler {
     void stop() {
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
+            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.parallel()))
             .block();
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
+        Optional.ofNullable(scheduler).ifPresent(Scheduler::dispose);
     }
 
     Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
@@ -149,9 +151,9 @@ class KeyRegistrationHandler {
                 if (registration.unregister().lastListenerRemoved()) {
                     return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))))
+                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))))
                         // Unbind is potentially blocking
-                        .subscribeOn(Schedulers.elastic());
+                        .subscribeOn(Schedulers.boundedElastic());
                 }
                 return Mono.empty();
             }));
@@ -161,7 +163,7 @@ class KeyRegistrationHandler {
         if (registration.isFirstListener()) {
             return registrationBinder.bind(key)
                 .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()));
+                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()));
         }
         return Mono.empty();
     }

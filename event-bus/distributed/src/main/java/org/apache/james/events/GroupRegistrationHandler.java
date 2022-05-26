@@ -37,6 +37,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.BindingSpecification;
@@ -56,8 +58,6 @@ import reactor.util.retry.Retry;
 
 class GroupRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupRegistrationHandler.class);
-
-    private final GroupRegistration.WorkQueueName queueName;
 
     public static class GroupRegistrationHandlerGroup extends Group {
 
@@ -75,6 +75,8 @@ class GroupRegistrationHandler {
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
     private final RabbitMQConfiguration configuration;
+    private final GroupRegistration.WorkQueueName queueName;
+    private Scheduler scheduler;
     private Optional<Disposable> consumer;
 
     GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
@@ -92,6 +94,7 @@ class GroupRegistrationHandler {
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
         this.consumer = Optional.empty();
+
     }
 
     GroupRegistration retrieveGroupRegistration(Group group) {
@@ -100,6 +103,7 @@ class GroupRegistrationHandler {
     }
 
     public void start() {
+        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
                 .durable(DURABLE)
@@ -112,7 +116,7 @@ class GroupRegistrationHandler {
                 .exchange(namingStrategy.exchange())
                 .queue(queueName.asString())
                 .routingKey(EMPTY_ROUTING_KEY))
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
+            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))
             .block();
 
         this.consumer = Optional.of(consumeWorkQueue());
@@ -125,7 +129,7 @@ class GroupRegistrationHandler {
             Receiver::close)
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(scheduler)
             .subscribe();
     }
 
@@ -138,12 +142,12 @@ class GroupRegistrationHandler {
                 .map(group -> Pair.of(group, aa))
                 .collect(ImmutableList.toImmutableList()))
             .flatMap(event -> event.getLeft().runListenerReliably(DEFAULT_RETRY_COUNT, event.getRight()))
-            .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic()))
+            .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.boundedElastic()))
             .then()
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", GROUP, e);
                 return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE))
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.boundedElastic())
                     .then();
             });
     }
@@ -155,6 +159,7 @@ class GroupRegistrationHandler {
     void stop() {
         groupRegistrations.values().forEach(groupRegistration -> Mono.from(groupRegistration.unregister()).block());
         consumer.ifPresent(Disposable::dispose);
+        Optional.ofNullable(scheduler).ifPresent(Scheduler::dispose);
     }
 
     void restart() {

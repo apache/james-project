@@ -31,10 +31,10 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.UserCredential._
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.user.api.UsersRepository
+import org.apache.james.util.ReactorUtils
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.jdk.CollectionConverters._
@@ -130,5 +130,5 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
 
   private def isValid(userCredential: UserCredential): SMono[Boolean] =
     SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password))
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }

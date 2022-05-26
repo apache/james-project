@@ -74,7 +74,7 @@ public class TikaHttpClientImpl implements TikaHttpClient {
             .uri(recursiveMetaData)
             .send(ReactorUtils.toChunks(inputStream, 16 * 1024)
                 .map(Unpooled::wrappedBuffer)
-                .subscribeOn(Schedulers.elastic()))
+                .subscribeOn(Schedulers.boundedElastic()))
             .responseSingle((resp, content) -> {
                 if (resp.status().code() == 200) {
                     return content.asInputStream();

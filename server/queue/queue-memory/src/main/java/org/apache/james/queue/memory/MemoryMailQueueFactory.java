@@ -102,7 +102,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
             this.name = name;
             this.flux = Mono.fromCallable(mailItems::take)
                 .repeat()
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(item ->
                     Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item), DEFAULT_CONCURRENCY)
                 .map(item -> mailQueueItemDecoratorFactory.decorate(item, name));

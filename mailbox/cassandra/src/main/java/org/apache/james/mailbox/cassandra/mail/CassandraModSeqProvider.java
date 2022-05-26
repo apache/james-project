@@ -101,7 +101,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         this.select = prepareSelect(session);
         Duration firstBackoff = Duration.ofMillis(10);
         this.retrySpec = Retry.backoff(cassandraConfiguration.getModSeqMaxRetry(), firstBackoff)
-            .scheduler(Schedulers.elastic());
+            .scheduler(Schedulers.parallel());
     }
 
     private PreparedStatement prepareInsert(Session session) {

@@ -77,7 +77,7 @@ public class CassandraUidProvider implements UidProvider {
         this.insertStatement = prepareInsert(session);
         Duration firstBackoff = Duration.ofMillis(10);
         this.retrySpec = Retry.backoff(cassandraConfiguration.getUidMaxRetry(), firstBackoff)
-            .scheduler(Schedulers.elastic());
+            .scheduler(Schedulers.parallel());
     }
 
     private PreparedStatement prepareSelect(Session session) {

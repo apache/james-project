@@ -188,7 +188,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
@@ -215,7 +215,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
@@ -244,7 +244,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
@@ -278,7 +278,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(2000)
@@ -306,7 +306,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
@@ -339,7 +339,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
@@ -373,7 +373,7 @@ trait EventSourceContract {
         new String(bytes, StandardCharsets.UTF_8)
       })
       .doOnNext(seq.addOne)
-      .subscribeOn(Schedulers.elastic())
+      .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
     Thread.sleep(500)
