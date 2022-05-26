@@ -52,9 +52,11 @@ import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.memory.MemoryDelegationStore;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -80,8 +82,15 @@ import com.google.common.collect.ImmutableMap;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class UserRoutesTest {
+
+    private static final String GET_DELEGATED_USERS_PATH = "/%s/authorizedUsers";
+    private static final String CLEAR_DELEGATED_USERS_PATH = "/%s/authorizedUsers";
+    private static final String ADD_DELEGATED_USER_PATH = "/%s/authorizedUsers/%s";
+    private static final String REMOVE_DELEGATED_USER_PATH = "/%s/authorizedUsers/%s";
 
     private static class UserRoutesExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
@@ -106,6 +115,7 @@ class UserRoutesTest {
         final MemoryRecipientRewriteTable recipientRewriteTable;
         final AliasReverseResolver aliasReverseResolver;
         final CanSendFrom canSendFrom;
+        final MemoryDelegationStore delegationStore;
 
         WebAdminServer webAdminServer;
 
@@ -123,6 +133,7 @@ class UserRoutesTest {
             this.usersRepository.setValidator(validator);
             recipientRewriteTable.setUsersRepository(usersRepository);
             recipientRewriteTable.setUserEntityValidator(validator);
+            this.delegationStore = new MemoryDelegationStore();
         }
 
         @Override
@@ -139,7 +150,8 @@ class UserRoutesTest {
         public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
             Class<?> parameterType = parameterContext.getParameter().getType();
             return parameterType.isAssignableFrom(UsersRepository.class)
-                || parameterType.isAssignableFrom(RecipientRewriteTable.class);
+                || parameterType.isAssignableFrom(RecipientRewriteTable.class)
+                || parameterType.isAssignableFrom(DelegationStore.class);
         }
 
         @Override
@@ -151,11 +163,15 @@ class UserRoutesTest {
             if (parameterType.isAssignableFrom(RecipientRewriteTable.class)) {
                 return recipientRewriteTable;
             }
+            if (parameterType.isAssignableFrom(DelegationStore.class)) {
+                return delegationStore;
+            }
             throw new RuntimeException("Unknown parameter type: " + parameterType);
         }
 
         private WebAdminServer startServer(UsersRepository usersRepository) {
-            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer()))
+            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer(),
+                    delegationStore))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -171,6 +187,237 @@ class UserRoutesTest {
         }
 
         interface NormalBehaviourContract {
+
+            @Test
+            default void getDelegatedUsersShouldReturnEmptyByDefault(UsersRepository usersRepository) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+
+                List<Map<String, String>> delegatedUserList = when()
+                        .get(String.format(GET_DELEGATED_USERS_PATH, ALICE.asString()))
+                    .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .extract()
+                        .body()
+                        .jsonPath()
+                        .getList(".");
+
+                assertThat(delegatedUserList).isEmpty();
+            }
+
+            @Test
+            default void getDelegatedUsersShouldReturnAddedUsers(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, BOB)).block();
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, ANDRE)).block();
+
+                List<String> delegatedUserList = when()
+                    .get(String.format(GET_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+                assertThat(delegatedUserList).containsOnly(ANDRE.asString(), BOB.asString());
+            }
+
+            @Test
+            default void getDelegatedUsersShouldReturn404NotFoundWhenBaseUserIsNotExisted() {
+                when()
+                    .get(String.format(GET_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                    .body("message", is(String.format("User '%s' does not exist", ALICE.asString())));
+            }
+
+            @Test
+            default void addDelegatedUserShouldSucceed(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+
+                when()
+                    .put(String.format(ADD_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).containsOnly(BOB);
+            }
+
+            @Test
+            default void addDelegatedUserShouldReturn404NotFoundWhenBaseUserIsNotExisted() {
+                when()
+                    .put(String.format(ADD_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                    .body("message", is(String.format("User '%s' does not exist", ALICE.asString())));
+            }
+
+            @Test
+            default void addDelegatedUserShouldReturn400BadRequestWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+
+                when()
+                    .put(String.format(ADD_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(String.format("Delegated user '%s' does not exist", BOB.asString())));
+            }
+
+            @Test
+            default void removeDelegatedUserShouldRemoveThatDelegatedUser(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+                when(usersRepository.contains(ANDRE)).thenReturn(true);
+
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, BOB)).block();
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, ANDRE)).block();
+
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).containsOnly(ANDRE);
+            }
+
+            @Test
+            default void removeDelegatedUserShouldSucceedWhenEmptyAddedUsers(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).isEmpty();
+            }
+
+            @Test
+            default void removeDelegatedUserShouldReturn404NotFoundWhenBaseUserIsNotExisted() {
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                    .body("message", is(String.format("User '%s' does not exist", ALICE.asString())));
+            }
+
+            @Test
+            default void removeDelegatedUserShouldReturn400BadRequestWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(String.format("Delegated user '%s' does not exist", BOB.asString())));
+            }
+
+
+            @Test
+            default void removeDelegatedUserShouldBeIdempotent(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, BOB)).block();
+
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                when()
+                    .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).isEmpty();
+            }
+
+            @Test
+            default void clearAllDelegatedUsersShouldSucceedWhenEmptyAddedUsers(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+
+                when()
+                    .delete(String.format(CLEAR_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).isEmpty();
+            }
+
+            @Test
+            default void clearAllDelegatedUsersShouldBeIdempotent(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+                when(usersRepository.contains(ANDRE)).thenReturn(true);
+
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, BOB)).block();
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, ANDRE)).block();
+
+                when()
+                    .delete(String.format(CLEAR_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                when()
+                    .delete(String.format(CLEAR_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).isEmpty();
+            }
+
+            @Test
+            default void clearAllDelegatedUsersShouldReturn404NotFoundWhenBaseUserIsNotExisted() {
+                when()
+                    .delete(String.format(CLEAR_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                    .body("message", is(String.format("User '%s' does not exist", ALICE.asString())));
+            }
+
+            @Test
+            default void clearAllDelegatedUsersShouldClearAllAddedUsers(UsersRepository usersRepository, DelegationStore delegationStore) throws UsersRepositoryException {
+                when(usersRepository.contains(ALICE)).thenReturn(true);
+                when(usersRepository.contains(BOB)).thenReturn(true);
+                when(usersRepository.contains(ANDRE)).thenReturn(true);
+
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, BOB)).block();
+                Mono.from(delegationStore.addAuthorizedUser(ALICE, ANDRE)).block();
+
+                when()
+                    .delete(String.format(CLEAR_DELEGATED_USERS_PATH, ALICE.asString()))
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON);
+
+                assertThat(Flux.from(delegationStore.authorizedUsers(ALICE)).collectList().block()).isEmpty();
+            }
 
             @Test
             default void getUsersShouldBeEmptyByDefault() {
@@ -527,6 +774,9 @@ class UserRoutesTest {
         Username.fromLocalPartWithDomain(USERNAME_WITHOUT_DOMAIN.asString(), DOMAIN);
     private static final Username OTHER_USERNAME_WITH_DOMAIN =
         Username.fromLocalPartWithDomain("other", DOMAIN);
+    private static final Username ALICE  = Username.fromLocalPartWithDomain("alice", DOMAIN);
+    private static final Username BOB  = Username.fromLocalPartWithDomain("bob", DOMAIN);
+    private static final Username ANDRE  = Username.fromLocalPartWithDomain("andre", DOMAIN);
     private static final String PASSWORD = "password";
 
     @Nested

@@ -32,6 +32,7 @@ import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
+import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
@@ -51,6 +52,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
@@ -59,27 +62,31 @@ import spark.Service;
 public class UserRoutes implements Routes {
 
     private static final String USER_NAME = ":userName";
+    private static final String DELEGATED_USER_NAME = ":delegatedUserName";
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRoutes.class);
 
     public static final String USERS = "/users";
     private static final String FORCE_PARAM = "force";
     private static final String VERIFY = "verify";
+    private static final String AUTHORIZED_USERS = "authorizedUsers";
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
     private final CanSendFrom canSendFrom;
     private final JsonExtractor<AddUserRequest> jsonExtractor;
+    private final DelegationStore delegationStore;
 
     private Service service;
 
     @Inject
-    public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer) {
+    public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer, DelegationStore delegationStore) {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
         this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
         this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
+        this.delegationStore = delegationStore;
     }
 
     @Override
@@ -102,6 +109,30 @@ public class UserRoutes implements Routes {
         defineUserExist();
 
         defineVerifyUsers();
+
+        getDelegatedUsers();
+
+        clearAllDelegatedUsers();
+
+        addDelegatedUser();
+
+        removeDelegatedUser();
+    }
+
+    public void getDelegatedUsers() {
+        service.get(USERS + SEPARATOR + USER_NAME + SEPARATOR + AUTHORIZED_USERS, this::getAuthorizedUsers, jsonTransformer);
+    }
+
+    public void clearAllDelegatedUsers() {
+        service.delete(USERS + SEPARATOR + USER_NAME + SEPARATOR + AUTHORIZED_USERS, this::clearAllAuthorizedUsers);
+    }
+
+    public void addDelegatedUser() {
+        service.put(USERS + SEPARATOR + USER_NAME + SEPARATOR + AUTHORIZED_USERS + SEPARATOR + DELEGATED_USER_NAME, this::addAuthorizedUser);
+    }
+
+    public void removeDelegatedUser() {
+        service.delete(USERS + SEPARATOR + USER_NAME + SEPARATOR + AUTHORIZED_USERS + SEPARATOR + DELEGATED_USER_NAME, this::removeAuthorizedUser);
     }
 
     public void defineVerifyUsers() {
@@ -224,6 +255,82 @@ public class UserRoutes implements Routes {
         }
     }
 
+    private List<String> getAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
+        Username baseUser = extractUsername(request);
+
+        if (userService.userExists(baseUser)) {
+            return Flux.from(delegationStore.authorizedUsers(baseUser))
+                .map(Username::asString)
+                .collectList()
+                .block();
+        } else {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .haltError();
+        }
+    }
+
+    private String clearAllAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
+        Username baseUser = extractUsername(request);
+
+        if (userService.userExists(baseUser)) {
+            Mono.from(delegationStore.clear(baseUser)).block();
+            return Constants.EMPTY_BODY;
+        } else {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .haltError();
+        }
+    }
+
+    private String addAuthorizedUser(Request request, Response response) throws UsersRepositoryException {
+        Username baseUser = extractUsername(request);
+        Username delegatedUser = extractDelegatedUsername(request);
+
+        if (!userService.userExists(baseUser)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .haltError();
+        } else if (!userService.userExists(delegatedUser)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                .haltError();
+        } else {
+            Mono.from(delegationStore.addAuthorizedUser(baseUser, delegatedUser)).block();
+            return Constants.EMPTY_BODY;
+        }
+    }
+
+    private String removeAuthorizedUser(Request request, Response response) throws UsersRepositoryException {
+        Username baseUser = extractUsername(request);
+        Username delegatedUser = extractDelegatedUsername(request);
+
+        if (!userService.userExists(baseUser)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .haltError();
+        } else if (!userService.userExists(delegatedUser)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                .haltError();
+        } else {
+            Mono.from(delegationStore.removeAuthorizedUser(baseUser, delegatedUser)).block();
+            return Constants.EMPTY_BODY;
+        }
+    }
+
     private List<String> allowedFromHeaders(Request request, Response response) {
         Username username = extractUsername(request);
 
@@ -255,6 +362,10 @@ public class UserRoutes implements Routes {
 
     private Username extractUsername(Request request) {
         return Username.of(request.params(USER_NAME));
+    }
+
+    private Username extractDelegatedUsername(Request request) {
+        return Username.of(request.params(DELEGATED_USER_NAME));
     }
 
 }
