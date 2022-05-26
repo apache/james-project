@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
+import reactor.core.publisher.Mono;
 import spark.Service;
 
 class CreateMissingParentsRequestToTaskTest {
@@ -248,9 +249,9 @@ class CreateMissingParentsRequestToTaskTest {
         mailboxManager.createMailbox(path, session);
         mailboxManager.deleteMailbox(MailboxPath.forUser(USERNAME, "INBOX"), session);
 
-        doThrow(new RuntimeException())
+        doReturn(Mono.error(new RuntimeException()))
             .when(mailboxManager)
-            .createMailbox(any(), any());
+            .createMailboxReactive(any(), any());
 
         String taskId = with()
             .queryParam("action", "createMissingParents")

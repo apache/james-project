@@ -81,6 +81,9 @@ public class DefaultMailboxesProvisioner {
     private Mono<Void> createMailbox(MailboxPath mailboxPath, MailboxSession session) {
         return Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session))
             .flatMap(id -> Mono.from(subscriptionManager.subscribeReactive(mailboxPath.getName(), session)))
-            .onErrorContinue(MailboxExistsException.class, (e, o) -> LOGGER.info("Mailbox {} have been created concurrently", mailboxPath));
+            .onErrorResume(MailboxExistsException.class, e -> {
+                LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
+                return Mono.empty();
+            });
     }
 }

@@ -55,6 +55,7 @@ public class DefaultMailboxesProvisionerThreadTest {
     public void before() {
         session = MailboxSessionUtil.create(USERNAME);
         mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.createMailboxReactive(any(), any())).thenReturn(Mono.empty());
         subscriptionManager = mock(SubscriptionManager.class);
         testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
     }
