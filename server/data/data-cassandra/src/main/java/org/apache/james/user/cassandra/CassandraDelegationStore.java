@@ -17,14 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.user.cassandra.tables;
+package org.apache.james.user.cassandra;
 
-public interface CassandraUserTable {
-    String TABLE_NAME = "user";
+import javax.inject.Inject;
 
-    String ALGORITHM = "algorithm";
-    String NAME = "name";
-    String PASSWORD = "passwd";
-    String REALNAME = "realname";
-    String AUTHORIZED_USERS = "authorized_users";
+import org.apache.james.core.Username;
+import org.apache.james.user.api.DelegationStore;
+import org.reactivestreams.Publisher;
+
+public class CassandraDelegationStore implements DelegationStore {
+    private final CassandraUsersDAO cassandraUsersDAO;
+
+    @Inject
+    public CassandraDelegationStore(CassandraUsersDAO cassandraUsersDAO) {
+        this.cassandraUsersDAO = cassandraUsersDAO;
+    }
+
+    @Override
+    public Publisher<Username> authorizedUsers(Username baseUser) {
+        return cassandraUsersDAO.getAuthorizedUsers(baseUser);
+    }
+
+    @Override
+    public Publisher<Void> clear(Username baseUser) {
+        return cassandraUsersDAO.removeAllAuthorizedUsers(baseUser);
+    }
+
+    @Override
+    public Publisher<Void> addAuthorizedUser(Username baseUser, Username userWithAccess) {
+        return cassandraUsersDAO.addAuthorizedUsers(baseUser, userWithAccess);
+    }
+
+    @Override
+    public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
+        return cassandraUsersDAO.removeAuthorizedUser(baseUser, userWithAccess);
+    }
 }
