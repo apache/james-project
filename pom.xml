@@ -2989,7 +2989,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.5.6</version>
+                    <version>4.6.1</version>
                     <configuration>
                         <recompileMode>all</recompileMode>
                         <source>${target.jdk}</source>
