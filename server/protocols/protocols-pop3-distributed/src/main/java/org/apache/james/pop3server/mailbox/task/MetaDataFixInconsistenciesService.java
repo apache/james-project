@@ -62,7 +62,6 @@ public class MetaDataFixInconsistenciesService {
     interface Inconsistency {
         Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore);
 
-
         Mono<Inconsistency> confirm(CassandraMessageIdToImapUidDAO imapUidDAO, Pop3MetadataStore pop3MetadataStore);
     }
 
@@ -125,6 +124,7 @@ public class MetaDataFixInconsistenciesService {
                 .messageId(messageId.serialize()));
             LOGGER.error("Failed to fix inconsistency for stale POP3 entry: {}", messageId, e);
         }
+
         private void notifySuccess(Context context) {
             context.incrementStalePOP3Entries();
             context.addFixedInconsistency(MessageInconsistenciesEntry.builder()
