@@ -150,6 +150,12 @@ class RabbitMQMailQueueTest {
             ManageableMailQueueContract.super.enQueue(mail);
             clock.tick();
         }
+        
+        @Disabled
+        @Test
+        public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+
+        }
 
         @Override
         public RabbitMQMailQueue getMailQueue() {
