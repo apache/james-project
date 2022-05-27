@@ -21,8 +21,8 @@ package org.apache.james.mailbox.store;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -38,53 +38,60 @@ import reactor.core.publisher.Mono;
  * per {@link MailboxPath} so its only usable in a single JVM.
  */
 public final class JVMMailboxPathLocker implements MailboxPathLocker {
-    private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<MailboxPath, StampedLock> paths = new ConcurrentHashMap<>();
 
     @Override
     public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType writeLock) throws MailboxException {
+        Lock lock = lock(path, writeLock);
         try {
-            lock(path, writeLock);
             return execution.execute();
         } finally {
-            unlock(path, writeLock);
+            lock.unlock();
         }
     }
 
     @Override
     public <T> Publisher<T> executeReactiveWithLockReactive(MailboxPath path, Publisher<T> execution, LockType lockType) {
-        return Mono.fromRunnable(() -> lock(path, lockType))
-            .then(Mono.from(execution))
-            .doFinally(any -> unlock(path, lockType));
+        StampedLock stampedLock = getStampedLock(path);
+        switch (lockType) {
+            case Read:
+                return Mono.using(stampedLock::readLock,
+                    stamp -> Mono.from(execution),
+                    stampedLock::unlockRead);
+            case Write:
+                return Mono.using(stampedLock::writeLock,
+                    stamp -> Mono.from(execution),
+                    stampedLock::unlockWrite);
+            default:
+                throw new RuntimeException("Lock type not supported");
+        }
     }
 
-    private MailboxPath lock(MailboxPath path, LockType lockType) {
-        ReadWriteLock lock = paths.get(path);
-        if (lock == null) {
-            lock = new ReentrantReadWriteLock();
-            ReadWriteLock storedLock = paths.putIfAbsent(path, lock);
+    private Lock lock(MailboxPath path, LockType lockType) {
+        StampedLock stampedLock = getStampedLock(path);
+        Lock lock = getLock(stampedLock, lockType);
+        lock.lock();
+        return lock;
+    }
+
+    private StampedLock getStampedLock(MailboxPath path) {
+        StampedLock stampedLock = paths.get(path);
+        if (stampedLock == null) {
+            stampedLock = new StampedLock();
+            StampedLock storedLock = paths.putIfAbsent(path, stampedLock);
             if (storedLock != null) {
-                lock = storedLock;
+                stampedLock = storedLock;
             }
         }
-        getLock(lock, lockType).lock();
-        return path;
+        return stampedLock;
     }
 
-    private MailboxPath unlock(MailboxPath path, LockType lockType) {
-        ReadWriteLock lock = paths.get(path);
-
-        if (lock != null) {
-            getLock(lock, lockType).unlock();
-        }
-        return path;
-    }
-
-    private Lock getLock(ReadWriteLock lock, LockType lockType) {
+    private Lock getLock(StampedLock lock, LockType lockType) {
         switch (lockType) {
             case Write:
-                return lock.writeLock();
+                return lock.asWriteLock();
             case Read:
-                return lock.readLock();
+                return lock.asReadLock();
             default:
                 throw new NotImplementedException("Unsupported lock tuype " + lockType);
         }
