@@ -1,5 +1,5 @@
 FROM nginx:1.22
 
-COPY nginx-conf/ /etc/nginx/conf.d/
-COPY default.crt /etc/ssl/certs/default.crt
-COPY default.key /etc/ssl/private/default.key
+COPY conf/nginx-conf/ /etc/nginx/conf.d/
+COPY conf/default.crt /etc/ssl/certs/default.crt
+COPY conf/default.key /etc/ssl/private/default.key
