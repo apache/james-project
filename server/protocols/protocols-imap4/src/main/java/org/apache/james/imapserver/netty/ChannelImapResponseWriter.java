@@ -77,7 +77,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
                     channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
                 }
             } else {
-                channel.writeAndFlush(new ChunkedStream(literal.getInputStream()));
+                channel.writeAndFlush(new ChunkedStream(in));
             }
         }
     }
