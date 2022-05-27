@@ -38,6 +38,8 @@ import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
+import org.apache.james.mime4j.stream.BodyDescriptor;
+import org.apache.james.mime4j.stream.BodyDescriptorBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.RawField;
@@ -53,9 +55,69 @@ public class ResultUtils {
         FetchGroup.Profile.FULL_CONTENT,
         FetchGroup.Profile.MIME_DESCRIPTOR);
 
+    private static class NoopBodyDescriptor implements BodyDescriptorBuilder {
+        static final NoopBodyDescriptor INSTANCE = new NoopBodyDescriptor();
+
+        @Override
+        public void reset() {
+
+        }
+
+        @Override
+        public Field addField(RawField rawField) {
+            return rawField;
+        }
+
+        @Override
+        public BodyDescriptor build() {
+            return new BodyDescriptor() {
+                @Override
+                public String getBoundary() {
+                    return null;
+                }
+
+                @Override
+                public String getMimeType() {
+                    return null;
+                }
+
+                @Override
+                public String getMediaType() {
+                    return null;
+                }
+
+                @Override
+                public String getSubType() {
+                    return null;
+                }
+
+                @Override
+                public String getCharset() {
+                    return null;
+                }
+
+                @Override
+                public String getTransferEncoding() {
+                    return null;
+                }
+
+                @Override
+                public long getContentLength() {
+                    return 0;
+                }
+            };
+        }
+
+        @Override
+        public BodyDescriptorBuilder newChild() {
+            return this;
+        }
+    }
+
     public static List<Header> createHeaders(MailboxMessage document) throws IOException {
         List<Header> results = new ArrayList<>();
-        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE, null, NoopBodyDescriptor.INSTANCE);
+
         parser.setContentHandler(new AbstractContentHandler() {
             @Override
             public void endHeader() {
