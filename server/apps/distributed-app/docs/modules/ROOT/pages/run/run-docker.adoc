@@ -69,7 +69,7 @@ You need a running *ElasticSearch* in docker which connects to *james* network. 
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika container which connects to *james* network:
 
-    $ docker run -d --network james --name=tika apache/tika:1.24
+    $ docker run -d --network james --name=tika apache/tika:1.28.2
 
 You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
@@ -116,7 +116,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika connect to *james* network:
 
-    $ docker run -d --network james --name tika apache/tika:1.24
+    $ docker run -d --network james --name tika apache/tika:1.28.2
 
 Run James:
 
