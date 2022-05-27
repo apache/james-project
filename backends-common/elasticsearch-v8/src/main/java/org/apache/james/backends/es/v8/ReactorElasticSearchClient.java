@@ -20,160 +20,129 @@
 package org.apache.james.backends.es.v8;
 
 import java.io.IOException;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRequest;
-import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
-import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptResponse;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.explain.ExplainRequest;
-import org.elasticsearch.action.explain.ExplainResponse;
-import org.elasticsearch.action.fieldcaps.FieldCapabilitiesRequest;
-import org.elasticsearch.action.fieldcaps.FieldCapabilitiesResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.ClearScrollRequest;
-import org.elasticsearch.action.search.ClearScrollResponse;
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.IndicesClient;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.core.MainResponse;
-import org.elasticsearch.index.rankeval.RankEvalRequest;
-import org.elasticsearch.index.rankeval.RankEvalResponse;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.script.mustache.MultiSearchTemplateRequest;
-import org.elasticsearch.script.mustache.MultiSearchTemplateResponse;
-import org.elasticsearch.script.mustache.SearchTemplateRequest;
-import org.elasticsearch.script.mustache.SearchTemplateResponse;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.cluster.HealthRequest;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ClearScrollRequest;
+import co.elastic.clients.elasticsearch.core.ClearScrollResponse;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
+import co.elastic.clients.elasticsearch.core.InfoResponse;
+import co.elastic.clients.elasticsearch.core.ScrollRequest;
+import co.elastic.clients.elasticsearch.core.ScrollResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
+import co.elastic.clients.elasticsearch.indices.ExistsAliasRequest;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
+import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
+import co.elastic.clients.elasticsearch.indices.UpdateAliasesResponse;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.core.scheduler.Schedulers;
 
 public class ReactorElasticSearchClient implements AutoCloseable {
-    private final RestHighLevelClient client;
+    private final ElasticsearchAsyncClient client;
+    private final RestClient lowLevelRestClient;
 
-    public ReactorElasticSearchClient(RestHighLevelClient client) {
+    public ReactorElasticSearchClient(ElasticsearchAsyncClient client, RestClient lowLevelRestClient) {
         this.client = client;
+        this.lowLevelRestClient = lowLevelRestClient;
     }
 
-    public Mono<BulkResponse> bulk(BulkRequest bulkRequest, RequestOptions options) {
-        return toReactor(listener -> client.bulkAsync(bulkRequest, options, listener));
+    public Mono<BulkResponse> bulk(BulkRequest bulkRequest) {
+        return toReactor(client.bulk(bulkRequest));
     }
 
-    public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest, RequestOptions options) {
-        return toReactor(listener -> client.clearScrollAsync(clearScrollRequest, options, listener));
+    public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest) {
+        return toReactor(client.clearScroll(clearScrollRequest));
     }
 
-    public DeleteResponse delete(DeleteRequest deleteRequest, RequestOptions options) throws IOException {
-        return client.delete(deleteRequest, options);
+    public Mono<DeleteResponse> delete(DeleteRequest deleteRequest) {
+        return toReactor(client.delete(deleteRequest));
     }
 
-    public Mono<BulkByScrollResponse> deleteByQuery(DeleteByQueryRequest deleteRequest, RequestOptions options) {
-        return toReactor(listener -> client.deleteByQueryAsync(deleteRequest, options, listener));
-    }
-
-    public Mono<AcknowledgedResponse> deleteScript(DeleteStoredScriptRequest request, RequestOptions options) {
-        return toReactor(listener -> client.deleteScriptAsync(request, options, listener));
-    }
-
-    public Mono<ExplainResponse> explain(ExplainRequest explainRequest, RequestOptions options) {
-        return toReactor(listener -> client.explainAsync(explainRequest, options, listener));
-    }
-
-    public Mono<FieldCapabilitiesResponse> fieldCaps(FieldCapabilitiesRequest fieldCapabilitiesRequest, RequestOptions options) {
-        return toReactor(listener -> client.fieldCapsAsync(fieldCapabilitiesRequest, options, listener));
+    public Mono<DeleteByQueryResponse> deleteByQuery(DeleteByQueryRequest deleteRequest) {
+        return toReactor(client.deleteByQuery(deleteRequest));
     }
 
     public RestClient getLowLevelClient() {
-        return client.getLowLevelClient();
+        return lowLevelRestClient;
     }
 
-    public Mono<GetStoredScriptResponse> getScript(GetStoredScriptRequest request, RequestOptions options) {
-        return toReactor(listener -> client.getScriptAsync(request, options, listener));
+    public <T> Mono<IndexResponse> index(IndexRequest<T> indexRequest) {
+        return toReactor(client.index(indexRequest));
     }
 
-    public Mono<IndexResponse> index(IndexRequest indexRequest, RequestOptions options) {
-        return toReactor(listener -> client.indexAsync(indexRequest, options, listener));
+    public Mono<BooleanResponse> indexExists(ExistsRequest existsRequest) {
+        return toReactor(client.indices().exists(existsRequest));
     }
 
-    public IndicesClient indices() {
-        return client.indices();
+    public Mono<BooleanResponse> aliasExists(ExistsAliasRequest existsAliasRequest) {
+        return toReactor(client.indices().existsAlias(existsAliasRequest));
     }
 
-    public MainResponse info(RequestOptions options) throws IOException {
-        return client.info(options);
+    public Mono<CreateIndexResponse> createIndex(CreateIndexRequest indexRequest) {
+        return toReactor(client.indices().create(indexRequest));
     }
 
-    public Mono<MultiSearchResponse> msearch(MultiSearchRequest multiSearchRequest, RequestOptions options) {
-        return toReactor(listener -> client.msearchAsync(multiSearchRequest, options, listener));
+    public Mono<UpdateAliasesResponse> updateAliases(UpdateAliasesRequest updateAliasesRequest) {
+        return toReactor(client.indices().updateAliases(updateAliasesRequest));
     }
 
-    public Mono<MultiSearchTemplateResponse> msearchTemplate(MultiSearchTemplateRequest multiSearchTemplateRequest, RequestOptions options) {
-        return toReactor(listener -> client.msearchTemplateAsync(multiSearchTemplateRequest, options, listener));
+    public Mono<InfoResponse> info() {
+        return toReactor(client.info());
     }
 
-    public Mono<RankEvalResponse> rankEval(RankEvalRequest rankEvalRequest, RequestOptions options) {
-        return toReactor(listener -> client.rankEvalAsync(rankEvalRequest, options, listener));
+    public Mono<ScrollResponse<ObjectNode>> scroll(ScrollRequest scrollRequest) {
+        return toReactor(client.scroll(scrollRequest, ObjectNode.class));
     }
 
-    public Mono<SearchResponse> scroll(SearchScrollRequest searchScrollRequest, RequestOptions options) {
-        return toReactor(listener -> client.scrollAsync(searchScrollRequest, options, listener));
+    public Mono<SearchResponse<ObjectNode>> search(SearchRequest searchRequest) {
+        return toReactor(client.search(searchRequest, ObjectNode.class));
     }
 
-    public Mono<SearchResponse> search(SearchRequest searchRequest, RequestOptions options) {
-        return toReactor(listener -> client.searchAsync(searchRequest, options, listener));
+    public Mono<HealthResponse> health(HealthRequest request) {
+        return toReactor(client.cluster().health(request));
     }
 
-    public Mono<ClusterHealthResponse> health(ClusterHealthRequest request) {
-        return toReactor(listener -> client.cluster()
-            .healthAsync(request, RequestOptions.DEFAULT, listener));
-    }
-
-    public Mono<SearchTemplateResponse> searchTemplate(SearchTemplateRequest searchTemplateRequest, RequestOptions options) {
-        return toReactor(listener -> client.searchTemplateAsync(searchTemplateRequest, options, listener));
-    }
-
-    public Mono<GetResponse> get(GetRequest getRequest, RequestOptions options) {
-        return toReactor(listener -> client.getAsync(getRequest, options, listener));
+    public Mono<GetResponse<ObjectNode>> get(GetRequest getRequest) {
+        return toReactor(client.get(getRequest, ObjectNode.class));
     }
 
     @Override
     public void close() throws IOException {
-        client.close();
+        lowLevelRestClient.close();
     }
 
-    private static <T> Mono<T> toReactor(Consumer<ActionListener<T>> async) {
-        return Mono.<T>create(sink -> async.accept(getListener(sink)))
+    private static <T> Mono<T> toReactor(CompletableFuture<T> async) {
+        return Mono.<T>create(sink -> async.whenComplete(getFuture(sink)))
             .publishOn(Schedulers.elastic());
     }
 
-    private static <T> ActionListener<T> getListener(MonoSink<T> sink) {
-        return new ActionListener<T>() {
-            @Override
-            public void onResponse(T t) {
-                sink.success(t);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                sink.error(e);
+    private static <T> BiConsumer<? super T, ? super Throwable> getFuture(MonoSink<T> sink) {
+        return (response, exception) -> {
+            if (exception != null) {
+                sink.error(exception);
+            } else {
+                sink.success(response);
             }
         };
     }

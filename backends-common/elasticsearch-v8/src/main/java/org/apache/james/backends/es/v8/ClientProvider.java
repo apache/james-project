@@ -50,10 +50,13 @@ import org.apache.james.backends.es.v8.ElasticSearchConfiguration.SSLConfigurati
 import org.apache.james.backends.es.v8.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
@@ -185,7 +188,8 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final ElasticSearchConfiguration configuration;
-    private final RestHighLevelClient elasticSearchRestHighLevelClient;
+    private final RestClient lowLevelRestClient;
+    private final ElasticsearchAsyncClient elasticSearchClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorElasticSearchClient client;
 
@@ -193,15 +197,22 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     public ClientProvider(ElasticSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.elasticSearchRestHighLevelClient = connect(configuration);
-        this.client = new ReactorElasticSearchClient(this.elasticSearchRestHighLevelClient);
+        this.lowLevelRestClient = buildRestClient();
+        this.elasticSearchClient = connect();
+        this.client = new ReactorElasticSearchClient(this.elasticSearchClient, lowLevelRestClient);
     }
 
-    private RestHighLevelClient connect(ElasticSearchConfiguration configuration) {
+    private RestClient buildRestClient() {
+        return RestClient.builder(hostsToHttpHosts())
+            .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure)
+            .build();
+    }
+
+    private ElasticsearchAsyncClient connect() {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
-        return Mono.fromCallable(() -> connectToCluster(configuration))
+        return Mono.fromCallable(this::connectToCluster)
             .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
             .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.elastic()))
@@ -209,13 +220,12 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) {
+    private ElasticsearchAsyncClient connectToCluster() {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        return new RestHighLevelClient(
-            RestClient
-                .builder(hostsToHttpHosts())
-                .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure));
+        ElasticsearchTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
+
+        return new ElasticsearchAsyncClient(transport);
     }
 
     private HttpHost[] hostsToHttpHosts() {
@@ -231,6 +241,6 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     @PreDestroy
     public void close() throws IOException {
-        elasticSearchRestHighLevelClient.close();
+        lowLevelRestClient.close();
     }
 }

@@ -19,78 +19,82 @@
 
 package org.apache.james.backends.es.v8;
 
-import static org.apache.james.backends.es.v8.IndexCreationFactory.ANALYZER;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.TOKENIZER;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.TYPE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Optional;
 
 import org.apache.james.backends.es.v8.IndexCreationFactory.IndexCreationCustomElement;
-import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.analysis.Analyzer;
+import co.elastic.clients.elasticsearch._types.analysis.TokenFilter;
+import co.elastic.clients.elasticsearch._types.analysis.TokenFilterDefinition;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.elasticsearch.indices.IndexSettingsAnalysis;
+import co.elastic.clients.json.JsonpMappingException;
+
 class IndexCreationFactoryTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    public static XContentBuilder getValidIndexSetting() throws IOException {
-        return jsonBuilder()
-            .startObject()
-                .startObject("settings")
-                    .startObject("index")
-                        .field("max_ngram_diff", 10)
-                    .endObject()
-                    .startObject("analysis")
-                        .startObject(ANALYZER)
-                            .startObject("email_ngram_filter_analyzer")
-                                .field(TOKENIZER, "uax_url_email")
-                                .startArray("filter")
-                                    .value("ngram_filter")
-                                .endArray()
-                            .endObject()
-                        .endObject()
-                        .startObject("filter")
-                            .startObject("ngram_filter")
-                                .field(TYPE, "ngram")
-                                .field("min_gram", 3)
-                                .field("max_gram", 13)
-                            .endObject()
-                        .endObject()
-                    .endObject()
-                .endObject()
-            .endObject();
+    public static IndexSettings getValidIndexSetting() {
+        return new IndexSettings.Builder()
+            .index(new IndexSettings.Builder()
+                .maxNgramDiff(10)
+                .build())
+            .analysis(new IndexSettingsAnalysis.Builder()
+                .analyzer("email_ngram_filter_analyzer", new Analyzer.Builder()
+                    .withJson(generateAnalyzer())
+                    .build())
+                .filter("ngram_filter", new TokenFilter.Builder()
+                    .definition(new TokenFilterDefinition.Builder()
+                        .withJson(generateFilter())
+                        .build())
+                    .build())
+                .build())
+            .build();
     }
 
-    public static XContentBuilder getInvalidIndexSetting() throws IOException {
-        return jsonBuilder()
-            .startObject()
-                .startObject("settings")
-                    .startObject("analysis")
-                        .startObject(ANALYZER)
-                            .startObject("email_ngram_filter_analyzer")
-                                .field(TOKENIZER, "uax_url_email")
-                                .startArray("filter")
-                                    .value("ngram_filter")
-                                .endArray()
-                            .endObject()
-                        .endObject()
-                        .startObject("filter")
-                            .startObject("ngram_filter")
-                                .field(TYPE, "ngram")
-                                .field("min_gram", 3)
-                                .field("max_gram", 13)
-                            .endObject()
-                        .endObject()
-                    .endObject()
-                .endObject()
-            .endObject();
+    public static IndexSettings getInvalidIndexSetting() {
+        return new IndexSettings.Builder()
+            .analysis(new IndexSettingsAnalysis.Builder()
+                .analyzer("email_ngram_filter_analyzer", new Analyzer.Builder()
+                    .withJson(generateAnalyzer())
+                    .build())
+                .filter("ngram_filter", new TokenFilter.Builder()
+                    .definition(new TokenFilterDefinition.Builder()
+                        .withJson(generateFilter())
+                        .build())
+                    .build())
+                .build())
+            .build();
+    }
+
+    private static Reader generateAnalyzer() {
+        return new StringReader(
+            ("{" +
+             "  'type': 'custom'," +
+             "  'tokenizer': 'uax_url_email'," +
+             "  'filter': ['ngram_filter']" +
+             "}")
+            .replace('\'', '"'));
+    }
+
+    private static Reader generateFilter() {
+        return new StringReader(
+            ("{" +
+             "  'type': 'ngram'," +
+             "  'min_gram': 3," +
+             "  'max_gram': 13" +
+             "}")
+            .replace('\'', '"'));
     }
 
     @RegisterExtension
@@ -133,18 +137,16 @@ class IndexCreationFactoryTest {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .customAnalyzers(IndexCreationCustomElement.from("{" +
-                "    \"my_custom_analyzer\": {" +
-                "        \"type\": \"custom\"," +
-                "        \"tokenizer\": \"standard\"," +
-                "        \"char_filter\": [" +
-                "            \"html_strip\"" +
-                "        ]," +
-                "        \"filter\": [" +
-                "            \"lowercase\"," +
-                "            \"asciifolding\"" +
-                "        ]" +
-                "    }" +
+            .customAnalyzers(IndexCreationCustomElement.from("my_custom_analyzer", "{" +
+                "    \"type\": \"custom\"," +
+                "    \"tokenizer\": \"standard\"," +
+                "    \"char_filter\": [" +
+                "        \"html_strip\"" +
+                "    ]," +
+                "    \"filter\": [" +
+                "        \"lowercase\"," +
+                "        \"asciifolding\"" +
+                "    ]" +
                 "}"))
             .createIndexAndAliases(client);
     }
@@ -155,14 +157,12 @@ class IndexCreationFactoryTest {
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
-                .customAnalyzers(IndexCreationCustomElement.from("{" +
-                    "    \"my_custom_analyzer\": {" +
-                    "        \"type\": \"invalid\"," +
-                    "        \"tokenizer\": \"not_Found_tokenizer\"" +
-                    "    }" +
+                .customAnalyzers(IndexCreationCustomElement.from("my_custom_analyzer", "{" +
+                    "    \"type\": \"invalid\"," +
+                    "    \"tokenizer\": \"not_Found_tokenizer\"" +
                     "}"))
                 .createIndexAndAliases(client))
-            .isInstanceOf(ElasticsearchStatusException.class);
+            .isInstanceOf(JsonpMappingException.class);
     }
 
     @Test
@@ -170,12 +170,12 @@ class IndexCreationFactoryTest {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .customTokenizers(IndexCreationCustomElement.from("{" +
-                "        \"custom_tokenizer\": { " +
-                "          \"type\": \"pattern\"," +
-                "          \"pattern\": \"[ .,!?]\"" +
-                "        }" +
-                "      }"))
+            .customTokenizers(IndexCreationCustomElement.from("custom_tokenizer", "{" +
+                "    \"type\": \"pattern\"," +
+                "    \"pattern\": \"[ .,!?]\"," +
+                "    \"flags\": \"CASE_INSENSITIVE|COMMENTS\"," +
+                "    \"group\": 0" +
+                "}"))
             .createIndexAndAliases(client);
     }
 
@@ -185,14 +185,12 @@ class IndexCreationFactoryTest {
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
-                .customTokenizers(IndexCreationCustomElement.from("{" +
-                    "        \"custom_tokenizer\": { " +
-                    "          \"type\": \"invalidType\"," +
-                    "          \"pattern\": \"[ .,!?]\"" +
-                    "        }" +
-                    "      }"))
+                .customTokenizers(IndexCreationCustomElement.from("custom_tokenizer", "{" +
+                    "    \"type\": \"invalidType\"," +
+                    "    \"pattern\": \"[ .,!?]\"" +
+                    "}"))
                 .createIndexAndAliases(client))
-            .isInstanceOf(ElasticsearchStatusException.class);
+            .isInstanceOf(JsonpMappingException.class);
     }
 
     @Test
@@ -200,25 +198,24 @@ class IndexCreationFactoryTest {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .customAnalyzers(IndexCreationCustomElement.from("{" +
-                "        \"my_custom_analyzer\": { " +
-                "          \"tokenizer\": \"custom_tokenizer\"," +
-                "          \"filter\": [" +
-                "            \"lowercase\"" +
-                "          ]" +
-                "        }" +
-                "      }"))
-            .customTokenizers(IndexCreationCustomElement.from("{" +
-                "        \"custom_tokenizer\": { " +
-                "          \"type\": \"pattern\"," +
-                "          \"pattern\": \"[ .,!?]\"" +
-                "        }" +
-                "      }"))
+            .customAnalyzers(IndexCreationCustomElement.from("my_custom_analyzer", "{" +
+                "    \"type\": \"custom\"," +
+                "    \"tokenizer\": \"custom_tokenizer\"," +
+                "    \"filter\": [" +
+                "        \"lowercase\"" +
+                "    ]" +
+                "}"))
+            .customTokenizers(IndexCreationCustomElement.from("custom_tokenizer", "{" +
+                "    \"type\": \"pattern\"," +
+                "    \"pattern\": \"[ .,!?]\"," +
+                "    \"flags\": \"CASE_INSENSITIVE|COMMENTS\"," +
+                "    \"group\": 0" +
+                "}"))
             .createIndexAndAliases(client);
     }
 
     @Test
-    void customIndexSettingShouldNotThrowWhenValidSetting() throws IOException {
+    void customIndexSettingShouldNotThrowWhenValidSetting() {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
@@ -232,7 +229,7 @@ class IndexCreationFactoryTest {
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
                 .createIndexAndAliases(client, Optional.of(getInvalidIndexSetting()), Optional.empty()))
-            .isInstanceOf(ElasticsearchStatusException.class);
+            .isInstanceOf(ElasticsearchException.class);
     }
 
 }

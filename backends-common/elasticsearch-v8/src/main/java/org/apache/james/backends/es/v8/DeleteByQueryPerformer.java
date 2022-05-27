@@ -19,10 +19,8 @@
 
 package org.apache.james.backends.es.v8;
 
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
 import reactor.core.publisher.Mono;
 
 public class DeleteByQueryPerformer {
@@ -35,12 +33,14 @@ public class DeleteByQueryPerformer {
         this.aliasName = aliasName;
     }
 
-    public Mono<Void> perform(QueryBuilder queryBuilder, RoutingKey routingKey) {
-        DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest(aliasName.getValue());
-        deleteRequest.setQuery(queryBuilder);
-        deleteRequest.setRouting(routingKey.asString());
+    public Mono<Void> perform(Query query, RoutingKey routingKey) {
+        DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest.Builder()
+            .index(aliasName.getValue())
+            .query(query)
+            .routing(routingKey.asString())
+            .build();
 
-        return client.deleteByQuery(deleteRequest, RequestOptions.DEFAULT)
+        return client.deleteByQuery(deleteRequest)
             .then();
     }
 }

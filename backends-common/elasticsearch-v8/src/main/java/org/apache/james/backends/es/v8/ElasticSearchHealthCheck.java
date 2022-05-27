@@ -20,7 +20,9 @@
 package org.apache.james.backends.es.v8;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -28,12 +30,11 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.Requests;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import co.elastic.clients.elasticsearch.cluster.HealthRequest;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchHealthCheck implements HealthCheck {
@@ -55,10 +56,12 @@ public class ElasticSearchHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        String[] indices = indexNames.stream()
+        List<String> indices = indexNames.stream()
             .map(IndexName::getValue)
-            .toArray(String[]::new);
-        ClusterHealthRequest request = Requests.clusterHealthRequest(indices);
+            .collect(Collectors.toList());
+        HealthRequest request = new HealthRequest.Builder()
+            .index(indices)
+            .build();
 
         return client.health(request)
             .map(this::toHealthCheckResult)
@@ -67,13 +70,13 @@ public class ElasticSearchHealthCheck implements HealthCheck {
     }
 
     @VisibleForTesting
-    Result toHealthCheckResult(ClusterHealthResponse response) {
-        switch (response.getStatus()) {
-            case GREEN:
-            case YELLOW:
+    Result toHealthCheckResult(HealthResponse response) {
+        switch (response.status()) {
+            case Green:
+            case Yellow:
                 return Result.healthy(COMPONENT_NAME);
-            case RED:
-                return Result.unhealthy(COMPONENT_NAME, response.getClusterName() + " status is RED");
+            case Red:
+                return Result.unhealthy(COMPONENT_NAME, response.clusterName() + " status is RED");
             default:
                 throw new NotImplementedException("Un-handled ElasticSearch cluster status");
         }
