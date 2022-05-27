@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Header;
 
 /**
@@ -34,7 +33,7 @@ import org.apache.james.mailbox.model.Header;
  */
 public class HeaderBodyElement extends MimeBodyElement {
 
-    public HeaderBodyElement(String name, List<Header> headers) throws MailboxException {
+    public HeaderBodyElement(String name, List<Header> headers) {
         super(name, headers);
     }
     
@@ -49,7 +48,7 @@ public class HeaderBodyElement extends MimeBodyElement {
     }
 
     @Override
-    protected long calculateSize(List<Header> headers) throws MailboxException {
+    protected long calculateSize(List<Header> headers) {
         if (headers.isEmpty()) {
             // even if the headers are empty we need to include the headers body
             // seperator
