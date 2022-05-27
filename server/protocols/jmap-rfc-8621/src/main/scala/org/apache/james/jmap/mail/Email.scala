@@ -482,7 +482,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
       bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
       bodyValues <- extractBodyValues(htmlTextExtractor)(bodyStructure, request)
       blobId <- BlobId.of(messageId)
-      preview <- Try(previewFactory.fromMessageResult(firstMessage))
+      preview <- Try(previewFactory.fromMime4JMessage(mime4JMessage))
       keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
     } yield {
       EmailFullView(
