@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.util.io.BodyOffsetInputStream;
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +54,14 @@ class BodyOffsetInputStreamTest {
         }
         assertThat(in.getBodyStartOffset()).isEqualTo(expectedOffset);
         assertThat(in.getReadBytes()).isEqualTo(bytes);
+        in.close();
+    }
+
+    @Test
+    void testReadWithArrayShouldPreserveContent() throws IOException {
+        BodyOffsetInputStream in = new BodyOffsetInputStream(new ByteArrayInputStream(mail.getBytes()));
+
+        assertThat(IOUtils.toByteArray(in)).isEqualTo(mail.getBytes());
         in.close();
     }
 

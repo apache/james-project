@@ -21,11 +21,12 @@ package org.apache.james.util.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
+import java.util.Objects;
 
 /**
  * {@link InputStream} which helps to keep track of the BodyOffset of the wrapped
  * {@link InputStream}
- *  
+ *
  *  IMPORTANT: This class is not thread-safe!
  *
  */
@@ -70,7 +71,7 @@ public class BodyOffsetInputStream extends InputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (bodyStartOctet == -1) {
-            return super.read(b, off, len);
+            return readOneByOneUntilHeaders(b, off, len);
         } else {
             int r = in.read(b, off, len);
             if (r != -1) {
@@ -80,16 +81,44 @@ public class BodyOffsetInputStream extends InputStream {
         }
     }
 
-    @Override
-    public int read(byte[] b) throws IOException {
-        if (bodyStartOctet == -1) {
-            return super.read(b);
+    /**
+     * Copied from InputStream class, modified to stop at header limit
+     * This enables using buffering for the body reads straight away,
+     * without filling a buffer bytes per bytes with body content.
+     * */
+    public int readOneByOneUntilHeaders(byte[] b, int off, int len) throws IOException {
+        Objects.checkFromIndexSize(off, len, b.length);
+        if (len == 0) {
+            return 0;
         } else {
-            int r = in.read(b);
-            if (r != -1) {
-                readBytes += r;
+            int c = this.read();
+            if (c == -1) {
+                return -1;
+            } else {
+                b[off] = (byte) c;
+                int i = 1;
+
+                // Stops reading one by one when we found the body delimiter
+                while (i < len && bodyStartOctet == -1) {
+                    c = this.read();
+                    if (c == -1) {
+                        break;
+                    }
+
+                    b[off + i] = (byte)c;
+                    ++i;
+                }
+
+                if (bodyStartOctet != -1 && i < len) {
+                    int r = in.read(b, off + i, len - i);
+                    i += r;
+                    if (r != -1) {
+                        readBytes += r;
+                    }
+                }
+
+                return i;
             }
-            return r;
         }
     }
 
@@ -105,7 +134,7 @@ public class BodyOffsetInputStream extends InputStream {
 
     @Override
     public void mark(int readlimit) {
-        
+
     }
 
     @Override
@@ -120,7 +149,7 @@ public class BodyOffsetInputStream extends InputStream {
 
     @Override
     public long skip(long n) throws IOException {
-        long i = 0; 
+        long i = 0;
         while (i++ < n) {
             if (read() == -1) {
                 break;
@@ -128,26 +157,26 @@ public class BodyOffsetInputStream extends InputStream {
         }
         return i;
     }
-    
+
     /**
      * Return the bodyStartOffset or -1 if it could not be found. 
      * Be aware you can only expect some valid result from the method
      * if you have consumed the whole InputStream or if you are
      * sure that you reached the body
-     * 
+     *
      * @return offset
      */
     public long getBodyStartOffset() {
         return bodyStartOctet;
     }
-    
+
     /**
      * Return the read bytes so far
-     * 
+     *
      * @return readBytes
      */
     public long getReadBytes() {
         return readBytes;
     }
-    
+
 }
