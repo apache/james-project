@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
-
-No changes yet.
+### Changed
+- Upgrade docker relevant: rabbitmq -> 3.9.18
+- Upgrade docker relevant: tika -> 1.28.2 
+- Upgrade docker relevant: spamassassin -> 3.4.6-1 T
+- Upgrade docker relevant: nginx -> 1.22 
 
 ## [3.7.0] - 2022-03-01
 
@@ -343,7 +346,7 @@ No changes yet.
      - [CVE-2021-32718](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-c3hj-rg5h-2772)
      - [CVE-2021-32719](https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-5452-hxj4-773x)
 
-### Miscaleneous
+### Miscellaneous
  - Mock SMTP version 0.5 (#733)
    - report mock email count directly instead of copy+count
    - http GET for mock email count
