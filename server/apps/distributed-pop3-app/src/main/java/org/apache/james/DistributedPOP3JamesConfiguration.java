@@ -26,6 +26,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -42,6 +43,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
+        private Optional<MailQueueViewChoice> mailQueueViewChoice;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -49,6 +51,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
             configurationPath = Optional.empty();
             blobStoreConfiguration = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            mailQueueViewChoice = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -115,12 +118,17 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            MailQueueViewChoice mailQueueViewChoice = this.mailQueueViewChoice.orElseGet(Throwing.supplier(
+                () -> MailQueueViewChoice.parse(
+                    new PropertiesProvider(fileSystem, configurationPath))));
+
             return new DistributedPOP3JamesConfiguration(
                 configurationPath,
                 directories,
                 blobStoreConfiguration,
                 searchConfiguration,
-                usersRepositoryChoice);
+                usersRepositoryChoice,
+                mailQueueViewChoice);
         }
     }
 
@@ -133,13 +141,19 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final MailQueueViewChoice mailQueueViewChoice;
 
-    public DistributedPOP3JamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    public DistributedPOP3JamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueViewChoice mailQueueViewChoice) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.mailQueueViewChoice = mailQueueViewChoice;
+    }
+
+    public MailQueueViewChoice getMailQueueViewChoice() {
+        return mailQueueViewChoice;
     }
 
     @Override
