@@ -96,11 +96,14 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
     }
 
     @Test
-    void usedChannelShouldBeClosedWhenPoolIsClosed() {
+    void usedChannelShouldBeClosedWhenPoolIsClosed() throws Exception {
         ChannelPool channelPool = generateChannelPool(2);
         Channel channel = channelPool.getChannelMono().block();
         assertThat(channel.isOpen()).isTrue();
         channelPool.close();
+
+        Thread.sleep(100); // Release of channels is done asynchronously
+
         assertThat(channel.isOpen()).isFalse();
     }
 
