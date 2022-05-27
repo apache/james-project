@@ -551,6 +551,66 @@ Response codes:
 * 400: The user is invalid
 * 404: The user is unknown
 
+=== Add a delegated user of a base user
+
+....
+curl -XPUT http://ip:port/users/baseUser/authorizedUsers/delegatedUser
+....
+
+Response codes:
+
+* 200: Addition of the delegated user succeeded
+* 404: The base user does not exist
+* 400: The delegated user does not exist
+
+Note: Delegation is only available on top of Cassandra products and not implemented yet on top of JPA backends.
+
+=== Remove a delegated user of a base user
+
+....
+curl -XDELETE http://ip:port/users/baseUser/authorizedUsers/delegatedUser
+....
+
+Response codes:
+
+* 200: Removal of the delegated user succeeded
+* 404: The base user does not exist
+* 400: The delegated user does not exist
+
+Note: Delegation is only available on top of Cassandra products and not implemented yet on top of JPA backends.
+
+=== Retrieving the list of delegated users of a base user
+
+....
+curl -XGET http://ip:port/users/baseUser/authorizedUsers
+....
+
+The answer looks like:
+
+....
+["alice@domain.tld","bob@domain.tld"]
+....
+
+Response codes:
+
+* 200: The list was successfully retrieved
+* 404: The base user does not exist
+
+Note: Delegation is only available on top of Cassandra products and not implemented yet on top of JPA backends.
+
+=== Remove all delegated users of a base user
+
+....
+curl -XDELETE http://ip:port/users/baseUser/authorizedUsers
+....
+
+Response codes:
+
+* 200: Removal of the delegated users succeeded
+* 404: The base user does not exist
+
+Note: Delegation is only available on top of Cassandra products and not implemented yet on top of JPA backends.
+
 == Administrating vacation settings
 
 === Get vacation settings
