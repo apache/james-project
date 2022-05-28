@@ -26,8 +26,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -50,6 +50,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -71,7 +72,7 @@ public class RandomStoring extends GenericMailet {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
         this.randomRecipientsNumbers = () -> ThreadLocalRandom.current().nextInt(MIN_NUMBER_OF_RECIPIENTS, MAX_NUMBER_OF_RECIPIENTS + 1);
-        this.reroutingInfos = Mono.fromCallable(this::retrieveReroutingInfos).cache(CACHE_DURATION);
+        this.reroutingInfos = Mono.fromCallable(this::retrieveReroutingInfos).flatMap(Function.identity()).cache(CACHE_DURATION);
     }
 
     @Override
@@ -109,18 +110,17 @@ public class RandomStoring extends GenericMailet {
             .collect(ImmutableSet.toImmutableSet());
     }
 
-    private List<ReroutingInfos> retrieveReroutingInfos() throws UsersRepositoryException {
-        return Iterators.toStream(usersRepository.list())
+    private Mono<List<ReroutingInfos>> retrieveReroutingInfos() throws UsersRepositoryException {
+        return Iterators.toFlux(usersRepository.list())
             .flatMap(this::buildReRoutingInfos)
             .collect(ImmutableList.toImmutableList());
     }
 
-    private Stream<ReroutingInfos> buildReRoutingInfos(Username username) {
+    private Flux<ReroutingInfos> buildReRoutingInfos(Username username) {
         try {
             MailboxSession session = mailboxManager.createSystemSession(username);
             return mailboxManager
                 .search(MailboxQuery.privateMailboxesBuilder(session).build(), Minimal, session)
-                .toStream()
                 .map(metaData -> new ReroutingInfos(metaData.getPath().getName(), username));
         } catch (Exception e) {
             throw new RuntimeException(e);
