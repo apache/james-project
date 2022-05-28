@@ -77,6 +77,11 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
+    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+        return metricFactory.decoratePublisherWithTimerMetric(READ_TIMER_NAME, blobStoreImpl.readReactive(bucketName, blobId));
+    }
+
+    @Override
     public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
         return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId, storagePolicy));
     }

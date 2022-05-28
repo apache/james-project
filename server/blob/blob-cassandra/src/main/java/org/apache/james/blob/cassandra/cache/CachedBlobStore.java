@@ -143,6 +143,15 @@ public class CachedBlobStore implements BlobStore {
             .orElseThrow(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId.asString())));
     }
 
+    @Override
+    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+        if (storagePolicy == LOW_COST) {
+            return backend.readReactive(bucketName, blobId);
+        }
+        return readInputStream(bucketName, blobId)
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId.asString()))));
+    }
+
     private Mono<InputStream> readInputStream(BucketName bucketName, BlobId blobId) {
         if (bucketName.equals(getDefaultBucketName())) {
             return readInDefaultBucket(bucketName, blobId);
@@ -179,6 +188,11 @@ public class CachedBlobStore implements BlobStore {
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
         return read(bucketName, blobId, LOW_COST);
+    }
+
+    @Override
+    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+        return readReactive(bucketName, blobId, LOW_COST);
     }
 
     private Mono<byte[]> readBytesInDefaultBucket(BucketName bucketName, BlobId blobId) {
