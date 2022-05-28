@@ -48,12 +48,18 @@ public interface BlobStore {
 
     InputStream read(BucketName bucketName, BlobId blobId);
 
+    Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
+
     default Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
        return readBytes(bucketName, blobId);
     }
 
     default InputStream read(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
         return read(bucketName, blobId);
+    }
+
+    default Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+        return readReactive(bucketName, blobId);
     }
 
     BucketName getDefaultBucketName();

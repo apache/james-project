@@ -167,6 +167,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .flux);
     }
 
+    @Override
+    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.just(read(bucketName, blobId));
+    }
+
     private static class FluxResponse {
         final CompletableFuture<FluxResponse> supportingCompletableFuture = new CompletableFuture<>();
         GetObjectResponse sdkResponse;

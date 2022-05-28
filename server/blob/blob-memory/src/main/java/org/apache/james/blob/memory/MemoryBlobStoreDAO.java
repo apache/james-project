@@ -57,6 +57,12 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+        return readBytes(bucketName, blobId)
+            .map(ByteArrayInputStream::new);
+    }
+
+    @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))));

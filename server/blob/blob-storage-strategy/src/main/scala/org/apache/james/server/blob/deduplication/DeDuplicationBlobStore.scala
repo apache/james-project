@@ -100,6 +100,12 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     blobStoreDAO.read(bucketName, blobId)
   }
 
+  override def readReactive(bucketName: BucketName, blobId: BlobId): Publisher[InputStream] = {
+    Preconditions.checkNotNull(bucketName)
+
+    blobStoreDAO.readReactive(bucketName, blobId)
+  }
+
   override def getDefaultBucketName: BucketName = defaultBucketName
 
   override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
