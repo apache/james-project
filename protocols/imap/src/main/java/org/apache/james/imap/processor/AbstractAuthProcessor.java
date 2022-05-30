@@ -89,7 +89,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
         Username givenUser = authenticationAttempt.getAuthenticationId();
-        Optional<Username> otherUser = authenticationAttempt.getDelegateUserName();
+        Username otherUser = authenticationAttempt.getDelegateUserName().get();
         try {
             boolean authFailure = false;
             if (givenUser == null) {
@@ -100,7 +100,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 try {
                     final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(givenUser,
                         authenticationAttempt.getPassword(),
-                        otherUser.get());
+                        otherUser);
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
@@ -113,10 +113,10 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 manageFailureCount(session, request, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            LOGGER.info("User {} does not exist", otherUser.get(), e);
+            LOGGER.info("User {} does not exist", otherUser, e);
             no(request, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (ForbiddenDelegationException e) {
-            LOGGER.info("User {} is not delegated by {}", givenUser, otherUser.get(), e);
+            LOGGER.info("User {} is not delegated by {}", givenUser, otherUser, e);
             no(request, responder, HumanReadableText.DELEGATION_FORBIDDEN);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);

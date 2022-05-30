@@ -20,14 +20,13 @@
 package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.user.api.DelegationStore;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryDelegationStore;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,35 +35,33 @@ import reactor.core.publisher.Mono;
 class DelegationStoreAuthorizatorTest {
     private static final Username OTHER_USER = Username.of("other_user");
     private static final Username GIVEN_USER = Username.of("given_user");
+    private static final Username ADMIN_USER = Username.of("admin_user");
     private static final Username NOT_GIVEN_USER = Username.of("not_given_user");
 
-    private UsersRepository usersRepository;
+    private MemoryUsersRepository usersRepository;
     private DelegationStore delegationStore;
     private DelegationStoreAuthorizator testee;
 
     @BeforeEach
     public void setUp() throws Exception {
-        usersRepository = mock(UsersRepository.class);
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting(null);
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        configuration.addProperty("administratorId", ADMIN_USER.asString());
+        usersRepository.configure(configuration);
         delegationStore = new MemoryDelegationStore();
         testee = new DelegationStoreAuthorizator(delegationStore, usersRepository);
     }
 
     @Test
     void canLoginAsOtherUserShouldReturnAllowedWhenGivenUserIsAdmin() throws Exception {
-        when(usersRepository.isAdministrator(GIVEN_USER))
-            .thenReturn(true);
-        when(usersRepository.contains(OTHER_USER))
-            .thenReturn(true);
+        usersRepository.addUser(OTHER_USER, "secret");
 
-        assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
+        assertThat(testee.canLoginAsOtherUser(ADMIN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
     }
 
     @Test
     void canLoginAsOtherUserShouldReturnAllowedWhenGivenUserIsDelegatedByOtherUser() throws Exception {
-        when(usersRepository.isAdministrator(GIVEN_USER))
-            .thenReturn(false);
-        when(usersRepository.contains(OTHER_USER))
-            .thenReturn(true);
+        usersRepository.addUser(OTHER_USER, "secret");
         Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, GIVEN_USER)).block();
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
@@ -72,10 +69,7 @@ class DelegationStoreAuthorizatorTest {
 
     @Test
     void canLoginAsOtherUserShouldReturnForbiddenWhenGivenUserIsNotAdminAndNotDelegated() throws Exception {
-        when(usersRepository.isAdministrator(GIVEN_USER))
-            .thenReturn(false);
-        when(usersRepository.contains(OTHER_USER))
-            .thenReturn(true);
+        usersRepository.addUser(OTHER_USER, "secret");
         Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, NOT_GIVEN_USER)).block();
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.FORBIDDEN);
@@ -83,11 +77,6 @@ class DelegationStoreAuthorizatorTest {
 
     @Test
     void canLoginAsOtherUserShouldReturnUnknownUserWhenOtherUserDoesNotExist() throws Exception {
-        when(usersRepository.isAdministrator(GIVEN_USER))
-            .thenReturn(false);
-        when(usersRepository.contains(OTHER_USER))
-            .thenReturn(false);
-
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.UNKNOWN_USER);
     }
 }

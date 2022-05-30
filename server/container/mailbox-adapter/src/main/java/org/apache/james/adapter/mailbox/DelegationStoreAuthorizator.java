@@ -47,7 +47,7 @@ public class DelegationStoreAuthorizator implements Authorizator {
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException {
         boolean isAuthorized = Flux.from(delegationStore.authorizedUsers(otherUserId)).hasElement(userId).block();
         try {
-            if (usersRepository.isAdministrator(userId) || isAuthorized) {
+            if (isAuthorized || usersRepository.isAdministrator(userId)) {
                 return AuthorizationState.ALLOWED;
             }
             if (!usersRepository.contains(otherUserId)) {
