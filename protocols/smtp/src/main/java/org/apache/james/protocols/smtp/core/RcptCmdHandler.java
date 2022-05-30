@@ -223,9 +223,11 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     private Map<String, String> parseParameters(String rcptOptions) {
-        return Splitter.on(' ').splitToStream(rcptOptions)
-            .map(this::parseParameter)
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
+        for (String option: Splitter.on(' ').split(rcptOptions)) {
+            result.put(parseParameter(option));
+        }
+        return result.build();
     }
 
     private Pair<String, String> parseParameter(String rcptOption) {

@@ -22,6 +22,7 @@
 package org.apache.james.protocols.api.handler;
 
 import java.util.LinkedList;
+import java.util.Optional;
 
 /**
  * Chain which can be used to get all Handlers for a given Class.
@@ -35,7 +36,9 @@ public interface ProtocolHandlerChain {
      * @return a List of handlers
      */
     <T> LinkedList<T> getHandlers(Class<T> type);
-    
+
+    <T> Optional<T> getFirstHandler(Class<T> type);
+
     /**
      * Destroy the {@link ProtocolHandlerChain}. After this call it will not be usable anymore
      */

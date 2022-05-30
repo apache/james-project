@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +51,6 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     private static final ProtocolSession.AttachmentKey<Integer> MESG_SIZE = ProtocolSession.AttachmentKey.of("MESG_SIZE", Integer.class); // The size of the
     private static final ProtocolSession.AttachmentKey<Boolean> MESG_FAILED = ProtocolSession.AttachmentKey.of("MESG_FAILED", Boolean.class);   // Message failed flag
-    public static final ProtocolSession.AttachmentKey<Long> CURRENT_SIZE = ProtocolSession.AttachmentKey.of("CURRENT_SIZE", Long.class);
     private static final String[] MAIL_PARAMS = { "SIZE" };
     
     private static final HookResult SYNTAX_ERROR = HookResult.builder()
@@ -136,13 +134,12 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
 
     @Override
-    public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    public Response onLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
         // If we already defined we failed and sent a reply we should simply
         // wait for a CRLF.CRLF to be sent by the client.
         if (failed.isPresent() && failed.get()) {
             if (isDataTerminated(line)) {
-                line.rewind();
                 next.onLine(session, line);
                 return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, "Quota exceeded");
             } else {
@@ -150,15 +147,13 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
             }
         } else {
             if (isDataTerminated(line)) {
-                line.rewind();
                 return next.onLine(session, line);
             } else {
-                line.rewind();
-                Long newSize = session.getAttachment(CURRENT_SIZE, State.Transaction)
-                    .map(currentSize -> Long.valueOf(currentSize.intValue() + line.remaining()))
-                    .orElseGet(() -> Long.valueOf(line.remaining()));
+                Long newSize = Optional.ofNullable(session.currentMessageSize())
+                    .map(currentSize -> Long.valueOf(currentSize.intValue() + line.length))
+                    .orElseGet(() -> Long.valueOf(line.length));
 
-                session.setAttachment(CURRENT_SIZE, newSize, State.Transaction);
+                session.setCurrentMessageSize(newSize);
 
                 if (session.getConfiguration().getMaxMessageSize() > 0 && newSize.intValue() > session.getConfiguration().getMaxMessageSize()) {
                     // Add an item to the state to suppress
@@ -169,15 +164,14 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
                     return null;
                 } else {
-                    line.rewind();
                     return next.onLine(session, line);
                 }
             }
         }
     }
 
-    private boolean isDataTerminated(ByteBuffer line) {
-        return line.remaining() == SINGLE_CHARACTER_LINE && line.get() == DOT_BYTE;
+    private boolean isDataTerminated(byte[] line) {
+        return line.length == SINGLE_CHARACTER_LINE && line[0] == DOT_BYTE;
     }
 
     @Override

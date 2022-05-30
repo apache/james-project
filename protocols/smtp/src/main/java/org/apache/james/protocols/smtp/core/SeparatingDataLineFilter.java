@@ -18,10 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
-import java.nio.ByteBuffer;
-
-import org.apache.james.protocols.api.ProtocolSession;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -39,27 +35,22 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * 
  * Subclasses should override at least one of these methods:
  * </br>
- * {@link #onHeadersLine(SMTPSession, ByteBuffer, LineHandler)}</br>
- * {@link #onSeparatorLine(SMTPSession, ByteBuffer, LineHandler)}</br>
- * {@link #onBodyLine(SMTPSession, ByteBuffer, LineHandler)}</br>
+ * {@link #onHeadersLine(SMTPSession, byte[], LineHandler)}</br>
+ * {@link #onSeparatorLine(SMTPSession, byte[], LineHandler)}</br>
+ * {@link #onBodyLine(SMTPSession, byte[], LineHandler)}</br>
  * 
  *
  */
 public abstract class SeparatingDataLineFilter implements DataLineFilter {
-
-    private static final ProtocolSession.AttachmentKey<Boolean> HEADERS_COMPLETE = ProtocolSession.AttachmentKey.of("HEADERS_COMPLETE", Boolean.class);
-    
     @Override
-    public final Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        if (!session.getAttachment(HEADERS_COMPLETE, State.Transaction).isPresent()) {
-            if (line.remaining() == 2) {
-                if (line.get() == '\r' && line.get() == '\n') {
-                    line.rewind();
+    public final Response onLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
+        if (!session.headerComplete()) {
+            if (line.length == 2) {
+                if (line[0] == '\r' && line[1] == '\n') {
                     Response response = onSeparatorLine(session, line, next);
-                    session.setAttachment(HEADERS_COMPLETE, Boolean.TRUE, State.Transaction);
+                    session.setHeaderComplete(true);
                     return response;
                 }
-                line.rewind();
             }
             return onHeadersLine(session, line, next);
         }
@@ -70,42 +61,42 @@ public abstract class SeparatingDataLineFilter implements DataLineFilter {
     /**
      * Gets called when the separating line is received. This is the CLRF sequence. 
      * 
-     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, ByteBuffer)} but subclasses should override it if needed.
+     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, byte[])} but subclasses should override it if needed.
      *
      * @param session
      * @param line
      * @param next
      * @return response
      */
-    protected Response onSeparatorLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    protected Response onSeparatorLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         return next.onLine(session, line);
     }
     
     /**
      * Gets called for each received line until the CRLF sequence was received.
      * 
-     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, ByteBuffer)} but subclasses should override it if needed.
+     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, byte[])} but subclasses should override it if needed.
      * 
      * @param session
      * @param line
      * @param next
      * @return response
      */
-    protected Response onHeadersLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    protected Response onHeadersLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         return next.onLine(session, line);
     }
     
     /**
      * Gets called for each received line after the CRLF sequence was received.
      * 
-     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, ByteBuffer)} but subclasses should override it if needed.
+     * This implementation just calls {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, byte[])} but subclasses should override it if needed.
      * 
      * @param session
      * @param line
      * @param next
      * @return response
      */
-    protected Response onBodyLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    protected Response onBodyLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         return next.onLine(session, line);
     }
 }

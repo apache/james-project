@@ -385,7 +385,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new SMTPChannelInboundHandler(transport, getEncryption(), smtpMetrics, getExecutorGroup());
+        return new SMTPChannelInboundHandler(transport, getEncryption(), smtpMetrics);
     }
 
     @Override

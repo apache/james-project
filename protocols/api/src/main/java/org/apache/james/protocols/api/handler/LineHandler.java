@@ -19,8 +19,6 @@
 
 package org.apache.james.protocols.api.handler;
 
-import java.nio.ByteBuffer;
-
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 
@@ -38,6 +36,6 @@ public interface LineHandler<SessionT extends ProtocolSession> extends ProtocolH
      * @param buffer not null
      * @return response or null
      */
-    Response onLine(SessionT session, ByteBuffer buffer);
+    Response onLine(SessionT session, byte[] buffer);
     
 }

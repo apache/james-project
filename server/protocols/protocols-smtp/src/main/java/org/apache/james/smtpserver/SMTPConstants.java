@@ -21,7 +21,6 @@ package org.apache.james.smtpserver;
 
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.mailet.Mail;
 
 import io.netty.util.AttributeKey;
@@ -31,7 +30,6 @@ import io.netty.util.AttributeKey;
  */
 public interface SMTPConstants {
 
-    ProtocolSession.AttachmentKey<MimeMessageInputStreamSource> DATA_MIMEMESSAGE_STREAMSOURCE = ProtocolSession.AttachmentKey.of("org.apache.james.core.DataCmdHandler.DATA_MIMEMESSAGE_STREAMSOURCE", MimeMessageInputStreamSource.class);
     ProtocolSession.AttachmentKey<Mail> MAIL = ProtocolSession.AttachmentKey.of("MAIL", Mail.class);
 
     AttributeKey<SMTPSession> SMTP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("SmtpSession");

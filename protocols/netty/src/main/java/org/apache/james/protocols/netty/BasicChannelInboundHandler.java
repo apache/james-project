@@ -43,8 +43,6 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -61,11 +59,13 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     public static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY =
             AttributeKey.valueOf("session");
 
-    private final ProtocolMDCContextFactory mdcContextFactory;
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
+    private final ProtocolMDCContextFactory mdcContextFactory;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
+    private final Optional<LineHandler> lineHandler;
+    protected final LinkedList<ProtocolHandlerResultHandler> resultHandlers;
 
     public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
         this(mdcContextFactory, protocol, null);
@@ -76,6 +76,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
         this.protocol = protocol;
         this.chain = protocol.getProtocolChain();
         this.secure = secure;
+        this.lineHandler = chain.getFirstHandler(LineHandler.class);
+        this.resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
     }
 
 
@@ -147,7 +149,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ChannelInboundHandlerAdapter override = Iterables.getFirst(behaviourOverrides, null);
+        ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
             override.channelRead(ctx, msg);
             return;
@@ -155,16 +157,14 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
 
         try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
-            LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
-            LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
 
-
-            if (!lineHandlers.isEmpty()) {
-
+            if (lineHandler.isPresent()) {
                 ByteBuf buf = (ByteBuf) msg;
-                LineHandler lHandler = lineHandlers.getLast();
+                byte[] bytes = new byte[buf.readableBytes()];
+                buf.getBytes(0, bytes);
+                LineHandler lHandler = lineHandler.get();
                 long start = System.currentTimeMillis();
-                Response response = lHandler.onLine(pSession, buf.nioBuffer());
+                Response response = lHandler.onLine(pSession, bytes);
                 long executionTime = System.currentTimeMillis() - start;
 
                 for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {

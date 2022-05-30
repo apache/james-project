@@ -34,6 +34,7 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
 
@@ -46,7 +47,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
 
 
     @Override
-    protected Response processExtensions(SMTPSession session, Mail mail) {
+    protected Response processExtensions(SMTPSession session, Mail mail, MimeMessageInputStreamSource mmiss) {
         LMTPMultiResponse mResponse = null;
         executeJamesMessageHooks(session, mail);
 

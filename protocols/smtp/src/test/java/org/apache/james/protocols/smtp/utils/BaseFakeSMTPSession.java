@@ -37,6 +37,10 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public class BaseFakeSMTPSession implements SMTPSession {
 
+    private long currentMessageSize = 0L;
+    private boolean headerComplete = false;
+    private boolean messageFailed = false;
+
     @Override
     public boolean needsCommandInjectionDetection() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
@@ -182,4 +186,33 @@ public class BaseFakeSMTPSession implements SMTPSession {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
+    public long currentMessageSize() {
+        return currentMessageSize;
+    }
+
+    @Override
+    public void setCurrentMessageSize(long increment) {
+        currentMessageSize = increment;
+    }
+
+    @Override
+    public boolean headerComplete() {
+        return headerComplete;
+    }
+
+    @Override
+    public void setHeaderComplete(boolean value) {
+        headerComplete = value;
+    }
+
+    @Override
+    public boolean messageFailed() {
+        return messageFailed;
+    }
+
+    @Override
+    public void setMessageFailed(boolean value) {
+        messageFailed = value;
+    }
 }
