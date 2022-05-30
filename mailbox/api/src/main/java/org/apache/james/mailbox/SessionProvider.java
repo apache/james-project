@@ -58,22 +58,22 @@ public interface SessionProvider {
     MailboxSession login(Username userid, String passwd) throws MailboxException;
 
     /**
-     * Autenticates the given administrator against the given password,
-     * then switch to an other user<br>
+     * Authenticates the given user against the given password,
+     * then switch to another user.<br>
      * When authenticated and authorized, a session for the other user will be supplied
      *
-     * @param adminUserid
-     *            user name of the admin user, matching the credentials
+     * @param givenUserid
+     *            username of the given user, matching the credentials
      * @param passwd
-     *            password supplied for the admin user
+     *            password supplied for the given user
      * @param otherUserId
-     *            user name of the real user
+     *            username of the real user
      * @return a <code>MailboxSession</code> for the real user
-     *            when the admin is authenticated and authorized to access
+     *            when the given user is authenticated and authorized to access
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException;
+    MailboxSession loginAsOtherUser(Username givenUserid, String passwd, Username otherUserId) throws MailboxException;
 
     /**
      * <p>
