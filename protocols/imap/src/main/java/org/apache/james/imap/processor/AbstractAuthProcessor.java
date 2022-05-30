@@ -89,17 +89,19 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
 
     protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
+        Username givenUser = authenticationAttempt.getAuthenticationId();
+        Optional<Username> otherUser = authenticationAttempt.getDelegateUserName();
         try {
             boolean authFailure = false;
-            if (authenticationAttempt.getAuthenticationId() == null) {
+            if (givenUser == null) {
                 authFailure = true;
             }
             if (!authFailure) {
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(authenticationAttempt.getAuthenticationId(),
+                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(givenUser,
                         authenticationAttempt.getPassword(),
-                        authenticationAttempt.getDelegateUserName().get());
+                        otherUser.get());
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
@@ -112,13 +114,13 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 manageFailureCount(session, request, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            LOGGER.info("User {} does not exist", authenticationAttempt.getAuthenticationId(), e);
+            LOGGER.info("User {} does not exist", otherUser.get(), e);
             no(request, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (NotAdminException e) {
-            LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
+            LOGGER.info("User {} is not an admin", givenUser, e);
             no(request, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (UserIsNotDelegatedException e) {
-            LOGGER.info("User {} is not delegated by {}", authenticationAttempt.getAuthenticationId(), authenticationAttempt.getDelegateUserName(), e);
+            LOGGER.info("User {} is not delegated by {}", givenUser, otherUser.get(), e);
             no(request, responder, HumanReadableText.NOT_DELEGATED_USER);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);
