@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.CancelCallback;
@@ -682,7 +681,11 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
                 }
                 return false;
             })
-            .destroyHandler(channel -> Mono.fromRunnable(Throwing.runnable(channel::close)))
+            .destroyHandler(channel -> Mono.fromRunnable(Throwing.runnable(() -> {
+                if (channel.isOpen()) {
+                    channel.close();
+                }
+            })))
             .buildPool();
     }
 
@@ -796,10 +799,9 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     @Override
     public void close() {
         sender.close();
-        ImmutableList.copyOf(refs.values())
-            .stream()
-            .map(PooledRef::poolable)
-            .forEach(channel -> getChannelCloseHandler().accept(SignalType.ON_NEXT, channel));
+       Flux.fromIterable(refs.values())
+           .flatMap(PooledRef::invalidate)
+           .blockLast();
         refs.clear();
         newPool.dispose();
     }
