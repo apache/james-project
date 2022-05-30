@@ -25,7 +25,7 @@ public class NoAuthorizator implements Authorizator {
 
     @Override
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) {
-        return AuthorizationState.NOT_ADMIN;
+        return AuthorizationState.FORBIDDEN;
     }
 
 }

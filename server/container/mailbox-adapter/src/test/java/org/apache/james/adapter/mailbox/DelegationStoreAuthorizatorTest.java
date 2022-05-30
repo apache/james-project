@@ -27,14 +27,16 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.memory.MemoryDelegationStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class DelegationStoreAuthorizatorTest {
     private static final Username OTHER_USER = Username.of("other_user");
     private static final Username GIVEN_USER = Username.of("given_user");
+    private static final Username NOT_GIVEN_USER = Username.of("not_given_user");
 
     private UsersRepository usersRepository;
     private DelegationStore delegationStore;
@@ -43,7 +45,7 @@ class DelegationStoreAuthorizatorTest {
     @BeforeEach
     public void setUp() throws Exception {
         usersRepository = mock(UsersRepository.class);
-        delegationStore = mock(DelegationStore.class);
+        delegationStore = new MemoryDelegationStore();
         testee = new DelegationStoreAuthorizator(delegationStore, usersRepository);
     }
 
@@ -53,8 +55,6 @@ class DelegationStoreAuthorizatorTest {
             .thenReturn(true);
         when(usersRepository.contains(OTHER_USER))
             .thenReturn(true);
-        when(delegationStore.authorizedUsers(OTHER_USER))
-            .thenReturn(Flux.empty());
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
     }
@@ -65,22 +65,20 @@ class DelegationStoreAuthorizatorTest {
             .thenReturn(false);
         when(usersRepository.contains(OTHER_USER))
             .thenReturn(true);
-        when(delegationStore.authorizedUsers(OTHER_USER))
-            .thenReturn(Flux.just(GIVEN_USER));
+        Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, GIVEN_USER)).block();
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
     }
 
     @Test
-    void canLoginAsOtherUserShouldReturnNotDelegatedWhenGivenUserIsNotAdminAndNotDelegated() throws Exception {
+    void canLoginAsOtherUserShouldReturnForbiddenWhenGivenUserIsNotAdminAndNotDelegated() throws Exception {
         when(usersRepository.isAdministrator(GIVEN_USER))
             .thenReturn(false);
         when(usersRepository.contains(OTHER_USER))
             .thenReturn(true);
-        when(delegationStore.authorizedUsers(OTHER_USER))
-            .thenReturn(Flux.empty());
+        Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, NOT_GIVEN_USER)).block();
 
-        assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.NOT_DELEGATED);
+        assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.FORBIDDEN);
     }
 
     @Test
@@ -89,8 +87,6 @@ class DelegationStoreAuthorizatorTest {
             .thenReturn(false);
         when(usersRepository.contains(OTHER_USER))
             .thenReturn(false);
-        when(delegationStore.authorizedUsers(OTHER_USER))
-            .thenReturn(Flux.empty());
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.UNKNOWN_USER);
     }

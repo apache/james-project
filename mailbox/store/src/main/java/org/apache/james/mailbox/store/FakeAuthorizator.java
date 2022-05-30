@@ -44,10 +44,10 @@ public class FakeAuthorizator implements Authorizator {
     @Override
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) {
         if (!adminId.isPresent() || !this.delegatedUserId.isPresent()) {
-            return AuthorizationState.NOT_ADMIN;
+            return AuthorizationState.FORBIDDEN;
         }
         if (!adminId.get().equals(userId)) {
-            return AuthorizationState.NOT_ADMIN;
+            return AuthorizationState.FORBIDDEN;
         }
         if (!otherUserId.equals(this.delegatedUserId.get())) {
             return AuthorizationState.UNKNOWN_USER;

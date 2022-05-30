@@ -19,11 +19,5 @@
 
 package org.apache.james.mailbox.exception;
 
-import org.apache.james.core.Username;
-
-public class UserIsNotDelegatedException extends MailboxException {
-
-    public UserIsNotDelegatedException(Username baseUser, Username nonDelegatedUser) {
-        super("User " + nonDelegatedUser.asString() + " is not delegated by " + baseUser.asString());
-    }
+public class ForbiddenDelegationException extends MailboxException {
 }

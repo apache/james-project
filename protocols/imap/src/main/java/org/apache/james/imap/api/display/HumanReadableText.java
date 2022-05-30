@@ -120,9 +120,7 @@ public class HumanReadableText {
 
     public static final HumanReadableText USER_DOES_NOT_EXIST = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "User does not exist");
 
-    public static final HumanReadableText NOT_AN_ADMIN = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "Not an admin");
-
-    public static final HumanReadableText NOT_DELEGATED_USER = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "User is not delegated.");
+    public static final HumanReadableText DELEGATION_FORBIDDEN = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "Delegation is forbidden.");
 
     public static final HumanReadableText GENERIC_FAILURE_DURING_PROCESSING = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "processing failed.");
 

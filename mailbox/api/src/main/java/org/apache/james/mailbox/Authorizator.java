@@ -29,9 +29,8 @@ public interface Authorizator {
 
     enum AuthorizationState {
         ALLOWED,
-        NOT_ADMIN,
-        UNKNOWN_USER,
-        NOT_DELEGATED
+        FORBIDDEN,
+        UNKNOWN_USER
     }
 
     AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;

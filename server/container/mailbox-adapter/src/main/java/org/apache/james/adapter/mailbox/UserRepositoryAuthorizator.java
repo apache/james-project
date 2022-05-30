@@ -43,7 +43,7 @@ public class UserRepositoryAuthorizator implements Authorizator {
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException {
         try {
             if (!repos.isAdministrator(userId)) {
-                return AuthorizationState.NOT_ADMIN;
+                return AuthorizationState.FORBIDDEN;
             }
             if (!repos.contains(otherUserId)) {
                 return AuthorizationState.UNKNOWN_USER;

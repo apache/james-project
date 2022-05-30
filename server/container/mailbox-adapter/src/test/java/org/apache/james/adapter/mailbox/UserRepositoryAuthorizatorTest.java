@@ -61,7 +61,7 @@ public class UserRepositoryAuthorizatorTest {
         when(usersRepository.contains(USER))
             .thenReturn(false);
         
-        assertThat(testee.canLoginAsOtherUser(ADMIN, USER)).isEqualTo(Authorizator.AuthorizationState.NOT_ADMIN);
+        assertThat(testee.canLoginAsOtherUser(ADMIN, USER)).isEqualTo(Authorizator.AuthorizationState.FORBIDDEN);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class UserRepositoryAuthorizatorTest {
         when(usersRepository.contains(USER))
             .thenReturn(true);
 
-        assertThat(testee.canLoginAsOtherUser(ADMIN, USER)).isEqualTo(Authorizator.AuthorizationState.NOT_ADMIN);
+        assertThat(testee.canLoginAsOtherUser(ADMIN, USER)).isEqualTo(Authorizator.AuthorizationState.FORBIDDEN);
     }
 
     @Test

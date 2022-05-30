@@ -29,11 +29,10 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
-import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
-import org.apache.james.mailbox.exception.UserIsNotDelegatedException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -116,12 +115,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } catch (UserDoesNotExistException e) {
             LOGGER.info("User {} does not exist", otherUser.get(), e);
             no(request, responder, HumanReadableText.USER_DOES_NOT_EXIST);
-        } catch (NotAdminException e) {
-            LOGGER.info("User {} is not an admin", givenUser, e);
-            no(request, responder, HumanReadableText.NOT_AN_ADMIN);
-        } catch (UserIsNotDelegatedException e) {
+        } catch (ForbiddenDelegationException e) {
             LOGGER.info("User {} is not delegated by {}", givenUser, otherUser.get(), e);
-            no(request, responder, HumanReadableText.NOT_DELEGATED_USER);
+            no(request, responder, HumanReadableText.DELEGATION_FORBIDDEN);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);

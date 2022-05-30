@@ -30,10 +30,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
-import org.apache.james.mailbox.exception.UserIsNotDelegatedException;
 import org.apache.james.mailbox.model.MailboxConstants;
 
 public class SessionProviderImpl implements SessionProvider {
@@ -76,12 +75,10 @@ public class SessionProviderImpl implements SessionProvider {
         switch (authorizationState) {
             case ALLOWED:
                 return createSystemSession(otherUserId);
-            case NOT_ADMIN:
-                throw new NotAdminException();
+            case FORBIDDEN:
+                throw new ForbiddenDelegationException();
             case UNKNOWN_USER:
                 throw new UserDoesNotExistException(otherUserId);
-            case NOT_DELEGATED:
-                throw new UserIsNotDelegatedException(otherUserId, thisUserId);
             default:
                 throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
         }
