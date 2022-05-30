@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
+import org.apache.james.mailbox.exception.UserIsNotDelegatedException;
 import org.apache.james.mailbox.model.MailboxConstants;
 
 public class SessionProviderImpl implements SessionProvider {
@@ -67,11 +68,11 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     @Override
-    public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
-        if (! isValidLogin(adminUserid, passwd)) {
+    public MailboxSession loginAsOtherUser(Username thisUserId, String passwd, Username otherUserId) throws MailboxException {
+        if (! isValidLogin(thisUserId, passwd)) {
             throw new BadCredentialsException();
         }
-        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
+        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(thisUserId, otherUserId);
         switch (authorizationState) {
             case ALLOWED:
                 return createSystemSession(otherUserId);
@@ -79,6 +80,8 @@ public class SessionProviderImpl implements SessionProvider {
                 throw new NotAdminException();
             case UNKNOWN_USER:
                 throw new UserDoesNotExistException(otherUserId);
+            case NOT_DELEGATED:
+                throw new UserIsNotDelegatedException(otherUserId, thisUserId);
             default:
                 throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
         }

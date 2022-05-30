@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
+import org.apache.james.mailbox.exception.UserIsNotDelegatedException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -116,6 +117,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } catch (NotAdminException e) {
             LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
             no(request, responder, HumanReadableText.NOT_AN_ADMIN);
+        } catch (UserIsNotDelegatedException e) {
+            LOGGER.info("User {} is not delegated by {}", authenticationAttempt.getAuthenticationId(), authenticationAttempt.getDelegateUserName(), e);
+            no(request, responder, HumanReadableText.NOT_DELEGATED_USER);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);

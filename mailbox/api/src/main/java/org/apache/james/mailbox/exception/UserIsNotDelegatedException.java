@@ -17,23 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox;
+package org.apache.james.mailbox.exception;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.MailboxException;
 
-/**
- * Authenticates user credentials.
- */
-public interface Authorizator {
+public class UserIsNotDelegatedException extends MailboxException {
 
-    enum AuthorizationState {
-        ALLOWED,
-        NOT_ADMIN,
-        UNKNOWN_USER,
-        NOT_DELEGATED
+    public UserIsNotDelegatedException(Username baseUser, Username nonDelegatedUser) {
+        super("User " + nonDelegatedUser.asString() + " is not delegated by " + baseUser.asString());
     }
-
-    AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;
 }
-
