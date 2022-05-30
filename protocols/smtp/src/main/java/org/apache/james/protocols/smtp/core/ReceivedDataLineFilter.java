@@ -19,7 +19,6 @@
 package org.apache.james.protocols.smtp.core;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -134,7 +133,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     }
 
     @Override
-    protected Response onSeparatorLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    protected Response onSeparatorLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         if (getLocation() == Location.SUFFIX && !session.getAttachment(headersSuffixAdded, State.Transaction).isPresent()) {
             session.setAttachment(headersSuffixAdded, Boolean.TRUE, State.Transaction);
             return addHeaders(session, line, next);
@@ -143,7 +142,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     }
 
     @Override
-    protected Response onHeadersLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    protected Response onHeadersLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         if (getLocation() == Location.PREFIX && !session.getAttachment(headersPrefixAdded, State.Transaction).isPresent()) {
             session.setAttachment(headersPrefixAdded, Boolean.TRUE, State.Transaction);
             return addHeaders(session, line, next);
@@ -156,7 +155,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
      *
      * @return response
      */
-    private Response addHeaders(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    private Response addHeaders(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         Response response;
         for (Header header: headers(session)) {
             response = header.transferTo(session, next);
@@ -195,7 +194,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
         /**
          * Transfer the content of the {@link Header} to the given {@link LineHandler}.
          *
-         * This is done for each line of the {@link Header} until the end is reached or the {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, ByteBuffer)}
+         * This is done for each line of the {@link Header} until the end is reached or the {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, byte[])}
          * return <code>non-null</code>
          *
          * @return response
@@ -212,7 +211,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
                     } else {
                         line = MULTI_LINE_PREFIX + values.get(i);
                     }
-                    response = handler.onLine(session, ByteBuffer.wrap((line + session.getLineDelimiter()).getBytes(charset)));
+                    response = handler.onLine(session, (line + session.getLineDelimiter()).getBytes(charset));
                     if (response != null) {
                         break;
                     }

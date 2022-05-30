@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.smtpserver.netty.SMTPServer.SMTPHandlerConfigurationDataImpl;
 
 /**
@@ -29,6 +31,7 @@ import org.apache.james.smtpserver.netty.SMTPServer.SMTPHandlerConfigurationData
 public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSessionImpl {
    
     private final SMTPConfiguration smtpConfiguration;
+    private MimeMessageInputStreamSource mimeMessageInputStreamSource;
 
     public ExtendedSMTPSession(SMTPConfiguration smtpConfiguration, ProtocolTransport transport) {
         super(transport, smtpConfiguration);
@@ -37,5 +40,20 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
 
     public boolean verifyIdentity() {
         return !(smtpConfiguration instanceof SMTPHandlerConfigurationDataImpl) || ((SMTPHandlerConfigurationDataImpl) smtpConfiguration).verifyIdentity();
+    }
+
+    public MimeMessageInputStreamSource getMimeMessageWriter() {
+        return mimeMessageInputStreamSource;
+    }
+
+    public void setMimeMessageInputStreamSource(MimeMessageInputStreamSource mimeMessageInputStreamSource) {
+        this.mimeMessageInputStreamSource = mimeMessageInputStreamSource;
+    }
+
+    @Override
+    public void resetState() {
+        super.resetState();
+        LifecycleUtil.dispose(mimeMessageInputStreamSource);
+        mimeMessageInputStreamSource = null;
     }
 }

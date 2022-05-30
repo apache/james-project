@@ -20,6 +20,7 @@ package org.apache.james.protocols.api.handler;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -40,13 +41,22 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
     @Override
     @SuppressWarnings("unchecked")
     public <T> LinkedList<T> getHandlers(Class<T> type) {
-        List<ProtocolHandler> handlers = getHandlers();
-        return handlers.stream()
+        return getHandlers()
+            .stream()
             .filter(type::isInstance)
             .map(handler -> (T) handler)
             .collect(Collectors.toCollection(LinkedList::new));
     }
-    
+
+    @Override
+    public <T> Optional<T> getFirstHandler(Class<T> type) {
+        return getHandlers()
+            .stream()
+            .filter(type::isInstance)
+            .map(handler -> (T) handler)
+            .findFirst();
+    }
+
     /**
      * ExtensibleHandler wiring. This should get called after the class was constructed
      * and every stuff was set

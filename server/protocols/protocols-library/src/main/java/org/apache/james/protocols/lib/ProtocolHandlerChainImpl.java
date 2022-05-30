@@ -20,6 +20,7 @@ package org.apache.james.protocols.lib;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -140,6 +141,16 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
             .filter(type::isInstance)
             .map(h -> (T) h)
             .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    @Override
+    public <T> Optional<T> getFirstHandler(Class<T> type) {
+        for (Object handler: handlers) {
+            if (type.isInstance(handler)) {
+                return Optional.of((T) handler);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

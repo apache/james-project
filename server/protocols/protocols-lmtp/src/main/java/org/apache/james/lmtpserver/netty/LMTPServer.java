@@ -26,6 +26,8 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
@@ -33,6 +35,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
+import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,8 +144,13 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig);
-        return new SMTPChannelInboundHandler(protocol, lmtpMetrics, getExecutorGroup());
+        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig) {
+            @Override
+            public ProtocolSession newSession(ProtocolTransport transport) {
+                return new ExtendedSMTPSession(lmtpConfig, transport);
+            }
+        };
+        return new SMTPChannelInboundHandler(transport, lmtpMetrics);
     }
 
     @Override

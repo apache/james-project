@@ -187,14 +187,13 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
      */
     @Override
     public InputStream getInputStream() throws IOException {
-        InputStream in;
         if (getResource().getOut().isInMemory()) {
-            in = new SharedByteArrayInputStream(getResource().getOut().getData());
+            return new SharedByteArrayInputStream(getResource().getOut().getData());
         } else {
-            in = new SharedFileInputStream(getResource().getOut().getFile());
+            InputStream in = new SharedFileInputStream(getResource().getOut().getFile());
+            getResource().streams.add(in);
+            return in;
         }
-        getResource().streams.add(in);
-        return in;
     }
 
     /**

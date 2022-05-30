@@ -23,7 +23,6 @@ package org.apache.james.protocols.smtp.core;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -58,16 +57,15 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
     private List<?> rHooks;
 
     @Override
-    public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    public Response onLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         MailEnvelope env = session.getAttachment(DataCmdHandler.MAILENV, ProtocolSession.State.Transaction)
             .orElseThrow(() -> new RuntimeException("'" + DataCmdHandler.MAILENV.asString() + "' has not been filled."));
 
         OutputStream out = getMessageOutputStream(env);
         try {
             // 46 is "."
-            // Stream terminated            
-            int c = line.get();
-            if (line.remaining() == 2 && c == 46) {
+            // Stream terminated
+            if (line.length == 3 && line[0] == 46) {
                 out.flush();
                 out.close();
                 
@@ -77,15 +75,14 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
                 return response;
                 
             // DotStuffing.
-            } else if (c == 46 && line.get() == 46) {
-                byte[] bline = readBytes(line);
-                out.write(bline,1,bline.length - 1);
+            } else if (line[0] == 46 && line[1] == 46) {
+                out.write(line,1,line.length - 1);
             // Standard write
             } else {
                 // TODO: maybe we should handle the Header/Body recognition here
                 // and if needed let a filter to cache the headers to apply some
                 // transformation before writing them to output.
-                out.write(readBytes(line));
+                out.write(line);
             }
             out.flush();
         } catch (IOException e) {
@@ -103,18 +100,6 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private byte[] readBytes(ByteBuffer line) {
-        line.rewind();
-        byte[] bline;
-        if (line.hasArray()) {
-            bline = line.array();
-        } else {
-            bline = new byte[line.remaining()];
-            line.get(bline);
-        }
-        return bline;
     }
 
     protected Response processExtensions(SMTPSession session, MailEnvelope mail) {

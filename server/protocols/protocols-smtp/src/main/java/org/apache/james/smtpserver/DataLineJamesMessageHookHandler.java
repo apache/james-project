@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -70,13 +69,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     private List<MessageHook> mHandlers;
 
     @Override
-    public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {
-
-        byte[] line = new byte[lineByteBuffer.remaining()];
-        lineByteBuffer.get(line, 0, line.length);
-
-        MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
-            .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
+    public Response onLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
+        ExtendedSMTPSession extendedSMTPSession = (ExtendedSMTPSession) session;
+        MimeMessageInputStreamSource mmiss = extendedSMTPSession.getMimeMessageWriter();
 
         try {
             OutputStream out = mmiss.getWritableOutputStream();
@@ -84,7 +79,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             // 46 is "."
             // Stream terminated
             if (line.length == 3 && line[0] == 46) {
-                String mailName = MailImpl.getId();
+                String mailName = mmiss.getSourceId();
                 try (Closeable closeable = SMTPMDCContextFactory.forSession(session).addToContext("mail", mailName).build()) {
                     out.flush();
                     out.close();
@@ -104,7 +99,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                     try {
                         mail.setMessageContent(mmiss);
 
-                        Response response = processExtensions(session, mail);
+                        Response response = processExtensions(session, mail, mmiss);
 
                         session.popLineHandler();
                         return response;
@@ -138,11 +133,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         return null;
     }
 
-    protected Response processExtensions(SMTPSession session, Mail mail) {
+    protected Response processExtensions(SMTPSession session, Mail mail, MimeMessageInputStreamSource mmiss) {
         if (mail != null && messageHandlers != null) {
             try {
-                MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
-                    .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
                 OutputStream out;
                 out = mmiss.getWritableOutputStream();
                 for (MessageHook rawHandler : mHandlers) {

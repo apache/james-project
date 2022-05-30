@@ -37,6 +37,7 @@ import org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
 
@@ -90,11 +91,11 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
     }
 
     @Override
-    protected Response processExtensions(SMTPSession session, Mail mail) {
+    protected Response processExtensions(SMTPSession session, Mail mail, MimeMessageInputStreamSource mmiss) {
         Collection<MailAddress> recipients = ImmutableList.copyOf(mail.getRecipients());
         executeJamesMessageHooks(session, mail);
 
-        if (recipients.size() == 0) {
+        if (recipients.isEmpty()) {
             // Return 503 see https://datatracker.ietf.org/doc/html/rfc2033#section-4.2
             AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
                 .hookReturnCode(HookReturnCode.ok())

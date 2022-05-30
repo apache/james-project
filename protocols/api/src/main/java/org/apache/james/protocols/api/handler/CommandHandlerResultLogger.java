@@ -32,7 +32,7 @@ public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<
 
     @Override
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
-        if (handler instanceof CommandHandler) {
+        if (handler instanceof CommandHandler && LOGGER.isDebugEnabled()) {
             LOGGER.debug("{}: {}", handler.getClass().getName(), response);
         }
         return response;

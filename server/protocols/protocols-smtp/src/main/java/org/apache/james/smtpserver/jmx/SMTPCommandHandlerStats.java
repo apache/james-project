@@ -29,16 +29,12 @@ import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.lib.jmx.AbstractCommandHandlerStats;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
  * Expose statistics for {@link CommandHandler} via JMX
  */
 public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats implements SMTPCommandHandlerStatsMBean, Disposable {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPCommandHandlerStats.class);
     private final AtomicLong temp = new AtomicLong(0);
     private final AtomicLong perm = new AtomicLong(0);
     private final AtomicLong ok = new AtomicLong(0);
@@ -64,19 +60,14 @@ public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats impleme
 
     @Override
     protected void incrementStats(Response response) {
-        try {
-            String code = response.getRetCode();
-            char c = code.charAt(0);
-            if (c == '5') {
-                perm.incrementAndGet();
-            } else if (c == '4') {
-                temp.incrementAndGet();
-            } else if (c == '2' || c == '3') {
-                ok.incrementAndGet();
-            }
-
-        } catch (NumberFormatException e) {
-            LOGGER.error("Error while reading SMTP return code {}", response.getRetCode(), e);
+        String code = response.getRetCode();
+        char c = code.charAt(0);
+        if (c == '5') {
+            perm.incrementAndGet();
+        } else if (c == '4') {
+            temp.incrementAndGet();
+        } else if (c == '2' || c == '3') {
+            ok.incrementAndGet();
         }
     }
 

@@ -18,17 +18,19 @@
  ****************************************************************/
 package org.apache.james.smtpserver.netty;
 
+import java.util.Optional;
+
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
 import org.apache.james.protocols.netty.BasicChannelInboundHandler;
 import org.apache.james.protocols.netty.Encryption;
-import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
+import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.SMTPConstants;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * {@link BasicChannelInboundHandler} which is used by the SMTPServer
@@ -37,26 +39,29 @@ public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
 
     private final SmtpMetrics smtpMetrics;
 
-    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics) {
         super(new SMTPMDCContextFactory(), protocol, encryption);
         this.smtpMetrics = smtpMetrics;
+        this.resultHandlers.add(recordCommandCount(smtpMetrics));
     }
 
-    public SMTPChannelInboundHandler(Protocol protocol, SmtpMetrics smtpMetrics, EventExecutorGroup eventExecutorGroup) {
+    public SMTPChannelInboundHandler(Protocol protocol, SmtpMetrics smtpMetrics) {
         super(new SMTPMDCContextFactory(), protocol);
         this.smtpMetrics = smtpMetrics;
+        this.resultHandlers.add(recordCommandCount(smtpMetrics));
+    }
+
+    private ProtocolHandlerResultHandler recordCommandCount(SmtpMetrics smtpMetrics) {
+        return (session, response, executionTime, handler) -> {
+            smtpMetrics.getCommandsMetric().increment();
+            return response;
+        };
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         smtpMetrics.getConnectionMetric().increment();
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        super.channelRead(ctx, msg);
-        smtpMetrics.getCommandsMetric().increment();
     }
 
     @Override
@@ -71,11 +76,11 @@ public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
     @Override
     protected void cleanup(ChannelHandlerContext ctx) {
         // Make sure we dispose everything on exit on session close
-        SMTPSession smtpSession = ctx.channel().attr(SMTPConstants.SMTP_SESSION_ATTRIBUTE_KEY).get();
+        ExtendedSMTPSession smtpSession = (ExtendedSMTPSession) ctx.channel().attr(SMTPConstants.SMTP_SESSION_ATTRIBUTE_KEY).get();
 
         if (smtpSession != null) {
             smtpSession.getAttachment(SMTPConstants.MAIL, State.Transaction).ifPresent(LifecycleUtil::dispose);
-            smtpSession.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction).ifPresent(LifecycleUtil::dispose);
+            Optional.ofNullable(smtpSession.getMimeMessageWriter()).ifPresent(LifecycleUtil::dispose);
         }
 
         super.cleanup(ctx);

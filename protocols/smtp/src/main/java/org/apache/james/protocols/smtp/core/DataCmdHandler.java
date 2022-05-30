@@ -20,7 +20,6 @@ package org.apache.james.protocols.smtp.core;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,9 +63,9 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     public static final class DataConsumerLineHandler implements LineHandler<SMTPSession> {
 
         @Override
-        public SMTPResponse onLine(SMTPSession session, ByteBuffer line) {
+        public SMTPResponse onLine(SMTPSession session, byte[] line) {
             // Discard everything until the end of DATA session
-            if (line.remaining() == 3 && line.get() == 46) {
+            if (line.length == 3 && line[0] == 46) {
                 session.popLineHandler();
             }
             return null;
@@ -84,8 +83,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         }
 
         @Override
-        public Response onLine(SMTPSession session, ByteBuffer line) {
-            line.rewind();
+        public Response onLine(SMTPSession session, byte[] line) {
             return filter.onLine(session, line, next);
         }
     }

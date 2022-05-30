@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.api.handler;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,7 +56,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     }
     
     public CommandDispatcher() {
-        this(Collections.<String>emptyList());
+        this(Collections.emptyList());
     }
 
     /**
@@ -127,7 +126,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     }
     
     @Override
-    public Response onLine(SessionT session, ByteBuffer line) {
+    public Response onLine(SessionT session, byte[] line) {
         Request request;
         try {
             
@@ -193,16 +192,9 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     /**
      * Parse the line into a {@link Request}
      */
-    protected Request parseRequest(SessionT session, ByteBuffer buffer) throws Exception {
+    protected Request parseRequest(SessionT session, byte[] line) throws Exception {
         String curCommandName;
         String curCommandArgument = null;
-        byte[] line;
-        if (buffer.hasArray()) {
-            line = buffer.array();
-        } else {
-            line = new byte[buffer.remaining()];
-            buffer.get(line);
-        }
         // This should be changed once we move to java6
         String cmdString = new String(line, session.getCharset().name()).trim();
         int spaceIndex = cmdString.indexOf(" ");

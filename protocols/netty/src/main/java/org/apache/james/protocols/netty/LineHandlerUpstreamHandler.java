@@ -47,14 +47,14 @@ public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends Chann
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
-
-        Response response = handler.onLine(session, buf.nioBuffer());
+        byte[] bytes = new byte[buf.readableBytes()];
+        buf.getBytes(0, bytes);
+        Response response = handler.onLine(session, bytes);
         if (response != null) {
             // TODO: This kind of sucks but I was not able to come up with something more elegant here
             ((ProtocolSessionImpl)session).getProtocolTransport().writeResponse(response, session);
         }
-
-        ((ByteBuf) msg).release();
+        buf.release();
     }
 
 }
