@@ -20,6 +20,7 @@
 package org.apache.james.sieve.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.util.Optional;
 
@@ -28,6 +29,9 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
+import org.awaitility.Awaitility;
+import org.awaitility.Durations;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -55,6 +59,10 @@ class CassandraSieveDAOTest {
         .copyOf(SCRIPT)
         .content("newContent")
         .build();
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .await();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
@@ -105,10 +113,11 @@ class CassandraSieveDAOTest {
     void deleteScriptInCassandraShouldWork() {
         sieveDAO.insertScript(USERNAME, SCRIPT).block();
 
-        sieveDAO.deleteScriptInCassandra(USERNAME, SCRIPT_NAME).block();
-
-        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
-        assertThat(actual).isEmpty();
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> {
+                sieveDAO.deleteScriptInCassandra(USERNAME, SCRIPT_NAME).block();
+                assertThat(sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional()).isEmpty();
+            });
     }
 
     @Test
