@@ -18,6 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
@@ -25,6 +30,8 @@ import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
+import javax.inject.{Inject, Named}
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundException}
@@ -43,6 +50,7 @@ import org.apache.james.mailbox.model._
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
+import org.apache.james.mime4j.dom.SingleBody
 import org.apache.james.mime4j.message.DefaultMessageWriter
 import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -52,11 +60,6 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
-import java.nio.charset.StandardCharsets
-import java.util.stream
-import java.util.stream.Stream
-import javax.inject.{Inject, Named}
 import scala.compat.java8.FunctionConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -125,11 +128,13 @@ case class EmailBodyPartBlob(blobId: BlobId, part: EmailBodyPart) extends Blob {
 
   override def contentType: ContentType = ContentType.of(part.`type`.value)
 
-  override def content: InputStream = {
-    val writer = new DefaultMessageWriter
-    val outputStream = new ByteArrayOutputStream()
-    writer.writeBody(part.entity.getBody, outputStream)
-    new ByteArrayInputStream(outputStream.toByteArray)
+  override def content: InputStream = part.entity.getBody match {
+    case body: SingleBody => body.getInputStream
+    case body =>
+      val writer = new DefaultMessageWriter
+      val outputStream = new UnsynchronizedByteArrayOutputStream()
+      writer.writeBody(body, outputStream)
+      outputStream.toInputStream
   }
 }
 

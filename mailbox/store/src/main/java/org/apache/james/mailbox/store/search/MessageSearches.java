@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.store.search;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -70,7 +68,6 @@ import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
-import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
@@ -269,13 +266,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             LOGGER.error("Error while parsing attachment content", e);
             return Stream.of();
         }
-    }
-
-    private InputStream textHeaders(MailboxMessage message) throws MimeIOException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new DefaultMessageWriter()
-            .writeHeader(buildTextHeaders(message), out);
-        return new ByteArrayInputStream(out.toByteArray());
     }
 
     private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {

@@ -19,8 +19,6 @@
 
 package org.apache.james.server.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 
@@ -139,12 +138,12 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             try {
 
                 if (useMemoryCopy) {
-                    ByteArrayOutputStream bos;
+                    UnsynchronizedByteArrayOutputStream bos;
                     int size = original.getSize();
                     if (size > 0) {
-                        bos = new ByteArrayOutputStream(size);
+                        bos = new UnsynchronizedByteArrayOutputStream(size);
                     } else {
-                        bos = new ByteArrayOutputStream();
+                        bos = new UnsynchronizedByteArrayOutputStream();
                     }
                     original.writeTo(bos);
                     bos.close();
@@ -680,9 +679,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 } else {
                     // the body was changed so we have no other solution to copy
                     // it into memory first :(
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream();
                     writeTo(out);
-                    return new ByteArrayInputStream(out.toByteArray());
+                    return out.toInputStream();
                 }
             } catch (IOException e) {
                 throw new MessagingException("Unable to get inputstream", e);

@@ -18,14 +18,16 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.streaming;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
 
@@ -34,6 +36,10 @@ import org.apache.james.mailbox.model.Header;
  * the body a email
  */
 public class FullByteContent implements Content {
+    private static final String NAME_DELIMITER = ": ";
+    private static final byte[] NAME_DELIMITER_BYTES = NAME_DELIMITER.getBytes(US_ASCII);
+    private static final String END_OF_LINE = "\r\n";
+    private static final byte[] END_OF_LINE_BYTES = END_OF_LINE.getBytes(US_ASCII);
 
     private final List<Header> headers;
     private final byte[] body;
@@ -59,15 +65,17 @@ public class FullByteContent implements Content {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream((int) size);
         for (Header header : headers) {
             if (header != null) {
-                out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes(StandardCharsets.US_ASCII));
+                out.write(header.getName().getBytes(StandardCharsets.US_ASCII));
+                out.write(NAME_DELIMITER_BYTES);
+                out.write(header.getValue().getBytes(StandardCharsets.US_ASCII));
+                out.write(END_OF_LINE_BYTES);
             }
         }
-        out.write("\r\n".getBytes(StandardCharsets.US_ASCII));
-        out.flush();
-        return new SequenceInputStream(new ByteArrayInputStream(out.toByteArray()), new ByteArrayInputStream(body));
+        out.write(END_OF_LINE_BYTES);
+        return new SequenceInputStream(out.toInputStream(), new ByteArrayInputStream(body));
     }
 
     @Override

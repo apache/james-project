@@ -20,15 +20,15 @@
 package org.apache.james.imap.message;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 
 public class BytesBackedLiteral implements Literal {
     public static BytesBackedLiteral copy(InputStream stream) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream();
         stream.transferTo(out);
         return of(out.toByteArray());
     }
