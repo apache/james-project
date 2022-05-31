@@ -19,13 +19,13 @@
 
 package org.apache.james.server.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 
 /**
  * Provide an {@link InputStream} over an {@link MimeMessage}
@@ -45,23 +45,18 @@ public class MimeMessageInputStream extends InputStream {
      * @throws MessagingException
      */
     public MimeMessageInputStream(MimeMessage message, boolean tryCast) throws MessagingException {
-        MimeMessage m = message;
-
         // check if we can use optimized operations
-        if (tryCast && m instanceof MimeMessageWrapper) {
-            in = ((MimeMessageWrapper) m).getMessageInputStream();
+        if (tryCast && message instanceof MimeMessageWrapper) {
+            in = ((MimeMessageWrapper) message).getMessageInputStream();
         } else {
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream();
             try {
                 message.writeTo(out);
-                in = new ByteArrayInputStream(out.toByteArray());
+                in = out.toInputStream();
             } catch (IOException e1) {
                 throw new MessagingException("Unable to read message " + message, e1);
             }
-
         }
-
     }
 
     /**

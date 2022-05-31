@@ -20,12 +20,11 @@
 
 package org.apache.james.protocols.smtp;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 
@@ -38,7 +37,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
 
     private MaybeSender sender;
 
-    private ByteArrayOutputStream outputStream;
+    private UnsynchronizedByteArrayOutputStream outputStream;
 
     @Override
     public long getSize() {
@@ -76,14 +75,14 @@ public class MailEnvelopeImpl implements MailEnvelope {
     public OutputStream getMessageOutputStream() {
         if (outputStream == null) {
             // use 100kb as default which should be enough for most emails
-            this.outputStream = new ByteArrayOutputStream(100 * 1024);
+            this.outputStream = new UnsynchronizedByteArrayOutputStream(100 * 1024);
         }
         return outputStream;
     }
 
     @Override
     public InputStream getMessageInputStream() {
-        return new ByteArrayInputStream(outputStream.toByteArray());
+        return outputStream.toInputStream();
     }
 }
 

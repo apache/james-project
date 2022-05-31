@@ -19,7 +19,6 @@
 package org.apache.james.util;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
@@ -28,6 +27,8 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
+
 public class MimeMessageUtil {
 
     public static String asString(MimeMessage mimeMessage) throws Exception {
@@ -35,7 +36,7 @@ public class MimeMessageUtil {
     }
 
     public static byte[] asBytes(MimeMessage mimeMessage) throws Exception {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        UnsynchronizedByteArrayOutputStream byteArrayOutputStream = new UnsynchronizedByteArrayOutputStream();
         mimeMessage.writeTo(byteArrayOutputStream);
         return byteArrayOutputStream.toByteArray();
     }

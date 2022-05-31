@@ -19,12 +19,12 @@
 
 package org.apache.mailet.base.test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
@@ -82,7 +82,7 @@ public class MailUtil {
     }
     
     public static String toString(Mail mail, String charset) throws IOException, MessagingException {
-        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
+        UnsynchronizedByteArrayOutputStream rawMessage = new UnsynchronizedByteArrayOutputStream();
         mail.getMessage().writeTo(
                 rawMessage,
                 new String[] { "Bcc", "Content-Length", "Message-ID" });

@@ -19,8 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +45,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.javax.MultipartUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
@@ -360,8 +359,8 @@ public class StripAttachment extends GenericMailet {
             .map(ImmutableMap.<String, byte[]>builder()::putAll)
             .orElse(ImmutableMap.builder());
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bodyPart.writeTo(new BufferedOutputStream(byteArrayOutputStream));
+        UnsynchronizedByteArrayOutputStream byteArrayOutputStream = new UnsynchronizedByteArrayOutputStream();
+        bodyPart.writeTo(byteArrayOutputStream);
         fileNamesToPartContent.put(fileName, byteArrayOutputStream.toByteArray());
         mail.setAttribute(new Attribute(attributeName, AttributeValue.ofAny(fileNamesToPartContent.build())));
     }

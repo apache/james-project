@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -29,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -152,7 +151,7 @@ public class MessageParser {
                             return singleBody.getInputStream();
                         }
                         // Fallback to a memory copy
-                        return new ByteArrayInputStream(getContent(body));
+                        return getContent(body);
                     }
                 })
                 .name(name)
@@ -236,11 +235,11 @@ public class MessageParser {
         return readHeader(part, CONTENT_ID, ContentIdField.class).isPresent();
     }
 
-    private byte[] getContent(Body body) throws IOException {
+    private InputStream getContent(Body body) throws IOException {
         DefaultMessageWriter messageWriter = new DefaultMessageWriter();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream();
         messageWriter.writeBody(body, out);
-        return out.toByteArray();
+        return out.toInputStream();
     }
 
     private enum Context {
