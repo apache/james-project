@@ -111,8 +111,8 @@ public interface Store<T, I> {
         private CloseableByteSource readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
             FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
             try (InputStream in = blobStore.read(bucketName, blobId, storagePolicy)) {
-                in.transferTo(out);
-                return new DelegateCloseableByteSource(out.asByteSource(), out::reset);
+                long size = in.transferTo(out);
+                return new DelegateCloseableByteSource(out.asByteSource(), out::reset, size);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -133,10 +133,12 @@ public interface Store<T, I> {
     class DelegateCloseableByteSource extends CloseableByteSource {
         private final ByteSource wrapped;
         private final Closeable closeable;
+        private final long size;
 
-        DelegateCloseableByteSource(ByteSource wrapped, Closeable closeable) {
+        DelegateCloseableByteSource(ByteSource wrapped, Closeable closeable, long size) {
             this.wrapped = wrapped;
             this.closeable = closeable;
+            this.size = size;
         }
 
         @Override
@@ -166,12 +168,12 @@ public interface Store<T, I> {
 
         @Override
         public Optional<Long> sizeIfKnown() {
-            return wrapped.sizeIfKnown();
+            return Optional.of(size);
         }
 
         @Override
-        public long size() throws IOException {
-            return wrapped.size();
+        public long size() {
+            return size;
         }
 
         @Override
