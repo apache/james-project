@@ -43,6 +43,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jwt.OidcTokenFixture;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -90,6 +91,7 @@ import com.google.inject.TypeLiteral;
 class SMTPSaslTest {
     public static final String LOCAL_DOMAIN = "domain.org";
     public static final Username USER = Username.of("user@domain.org");
+    public static final Username USER2 = Username.of("user2@domain.org");
     public static final String PASSWORD = "userpassword";
     public static final String JWKS_URI_PATH = "/jwks";
     public static final String INTROSPECT_TOKEN_URI_PATH = "/introspect";
@@ -122,6 +124,7 @@ class SMTPSaslTest {
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.addUser(USER, PASSWORD);
+        usersRepository.addUser(USER2, PASSWORD);
 
         createMailRepositoryStore();
 
@@ -186,6 +189,13 @@ class SMTPSaslTest {
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
+        Authorizator authorizator = (userId, otherUserId) -> {
+            if (userId.equals(USER) && otherUserId.equals(USER2)) {
+                return Authorizator.AuthorizationState.ALLOWED;
+            }
+            return Authorizator.AuthorizationState.FORBIDDEN;
+        };
+
         chain = MockProtocolHandlerLoader.builder()
             .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
             .put(binder -> binder.bind(new TypeLiteral<MailQueueFactory<?>>() {}).toInstance(queueFactory))
@@ -197,6 +207,7 @@ class SMTPSaslTest {
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
             .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
             .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
+            .put(binder -> binder.bind(Authorizator.class).toInstance(authorizator))
             .build();
     }
 
@@ -453,6 +464,57 @@ class SMTPSaslTest {
         client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
 
         assertThat(client.getReplyString()).contains("451 Unable to process request");
+    }
+
+    @Test
+    void oauthShouldImpersonateFailWhenNOTDelegated() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+        String tokenWithImpersonation = OIDCSASLHelper.generateOauthBearer("another@domain.org", OidcTokenFixture.VALID_TOKEN);
+        client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
+
+        assertThat(client.getReplyString()).contains("334 ");
+
+        client.sendCommand("AQ==");
+        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+    }
+    @Test
+    void oauthShouldImpersonateSuccessWhenDelegated() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+        String tokenWithImpersonation = OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
+        client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
+    void impersonationShouldWorkWhenDelegated() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("EHLO localhost");
+
+        client.sendCommand("AUTH OAUTHBEARER " + OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN));
+
+        client.setSender(USER2.asString());
+        client.addRecipient("mail@domain.org");
+        client.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        client.quit();
+
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
+    }
+
+
+    @Test
+    void oauthShouldImpersonateFailWhenNOTDelegated2() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+        String tokenWithImpersonation = OIDCSASLHelper.generateOauthBearer("another@@@!!!domain.org", OidcTokenFixture.VALID_TOKEN);
+        client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
+
+        assertThat(client.getReplyString()).contains("334 ");
+
+        client.sendCommand("AQ==");
+        assertThat(client.getReplyString()).contains("535 Authentication Failed");
     }
 
 }
