@@ -133,6 +133,7 @@ class IMAPServerTest {
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
     private static final Username USER = Username.of("user@domain.org");
     private static final Username USER2 = Username.of("bobo@domain.org");
+    private static final Username USER3= Username.of("user3@domain.org");
     private static final String USER_PASS = "pass";
     public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
     private InMemoryIntegrationResources memoryIntegrationResources;
@@ -140,21 +141,10 @@ class IMAPServerTest {
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
 
-    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        FakeAuthenticator authenticator = new FakeAuthenticator();
-        authenticator.addUser(USER, USER_PASS);
-        authenticator.addUser(USER2, USER_PASS);
+    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
+                                        InMemoryIntegrationResources inMemoryIntegrationResources) throws Exception {
+        memoryIntegrationResources = inMemoryIntegrationResources;
 
-        memoryIntegrationResources = InMemoryIntegrationResources.builder()
-            .authenticator(authenticator)
-            .authorizator(FakeAuthorizator.defaultReject())
-            .inVmEventBus()
-            .defaultAnnotationLimits()
-            .defaultMessageParser()
-            .scanningSearchIndex()
-            .noPreDeletionHooks()
-            .storeQuotaManager()
-            .build();
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
         IMAPServer imapServer = new IMAPServer(
             DefaultImapDecoderFactory.createDecoder(),
@@ -180,6 +170,26 @@ class IMAPServerTest {
         imapServer.init();
 
         return imapServer;
+    }
+
+    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
+        FakeAuthenticator authenticator = new FakeAuthenticator();
+        authenticator.addUser(USER, USER_PASS);
+        authenticator.addUser(USER2, USER_PASS);
+        authenticator.addUser(USER3, USER_PASS);
+
+        memoryIntegrationResources = InMemoryIntegrationResources.builder()
+            .authenticator(authenticator)
+            .authorizator(FakeAuthorizator.defaultReject())
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
+
+        return createImapServer(config, memoryIntegrationResources);
     }
 
     private IMAPServer createImapServer(String configurationFile) throws Exception {
@@ -1027,12 +1037,28 @@ class IMAPServerTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
 
+            FakeAuthenticator authenticator = new FakeAuthenticator();
+            authenticator.addUser(USER, USER_PASS);
+            authenticator.addUser(USER2, USER_PASS);
+
+            InMemoryIntegrationResources integrationResources = InMemoryIntegrationResources.builder()
+                .authenticator(authenticator)
+                .authorizator(FakeAuthorizator.forGivenUserAndDelegatedUser(USER, USER2))
+                .inVmEventBus()
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .scanningSearchIndex()
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
+
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
             config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
             config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
             config.addProperty("auth.oidc.scope", "email");
-            imapServer = createImapServer(config);
+
+            imapServer = createImapServer(config, integrationResources);
             port = imapServer.getListenAddresses().get(0).getPort();
         }
 
@@ -1210,6 +1236,41 @@ class IMAPServerTest {
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("NO AUTHENTICATE processing failed.");
+        }
+
+        @Test
+        void oauthShouldImpersonateFailWhenNOTDelegated() throws Exception {
+            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER3.asString(), OidcTokenFixture.VALID_TOKEN);
+            IMAPSClient client = imapsClient(port);
+            client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+            assertThat(client.getReplyString()).contains("NO AUTHENTICATE");
+        }
+
+        @Test
+        void oauthShouldImpersonateSuccessWhenDelegated() throws Exception {
+            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
+            IMAPSClient client = imapsClient(port);
+            client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+            assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
+        }
+
+        @Test
+        void impersonationShouldWorkWhenDelegated() throws Exception {
+            // USER2: append a message
+            try (TestIMAPClient client = new TestIMAPClient(imapsClient(port))) {
+                client.login(USER2.asString(), USER_PASS)
+                    .append("INBOX", SMALL_MESSAGE);
+            }
+
+            // USER1 authenticate and impersonate as USER2
+            try (TestIMAPClient client = new TestIMAPClient(imapsClient(port))) {
+                String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
+                String authenticateResponse = client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+                assertThat(authenticateResponse).contains("OK AUTHENTICATE completed.");
+
+                assertThat(client.select("INBOX")
+                    .readFirstMessage()).contains(SMALL_MESSAGE);
+            }
         }
     }
 

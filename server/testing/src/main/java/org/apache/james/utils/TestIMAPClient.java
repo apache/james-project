@@ -24,12 +24,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
+import org.apache.commons.net.imap.IMAPClient;
 import org.apache.commons.net.io.CRLFLineReader;
 import org.apache.james.core.Username;
 import org.assertj.core.api.Assertions;
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -48,17 +51,15 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     public static final String INBOX = "INBOX";
 
     public static class Utf8IMAPSClient extends AuthenticatingIMAPClient {
-        private static final String UTF8_ENCODING = "UTF-8";
-
         @Override
         protected void _connectAction_() throws IOException {
             super._connectAction_();
-            _reader = new CRLFLineReader(new InputStreamReader(_input_, UTF8_ENCODING));
-            __writer = new BufferedWriter(new OutputStreamWriter(_output_, UTF8_ENCODING));
+            _reader = new CRLFLineReader(new InputStreamReader(_input_, StandardCharsets.UTF_8));
+            __writer = new BufferedWriter(new OutputStreamWriter(_output_, StandardCharsets.UTF_8));
         }
     }
 
-    private final Utf8IMAPSClient imapClient;
+    private final IMAPClient imapClient;
 
     @VisibleForTesting
     TestIMAPClient(Utf8IMAPSClient imapClient) {
@@ -67,6 +68,10 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public TestIMAPClient() {
         this(new Utf8IMAPSClient());
+    }
+
+    public TestIMAPClient(IMAPClient imapClient) {
+        this.imapClient = imapClient;
     }
 
     public TestIMAPClient connect(String host, int port) throws IOException {
@@ -93,7 +98,8 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public TestIMAPClient authenticatePlain(String user, String password) throws Exception {
-        final boolean authenticatePlain = imapClient.authenticate(AuthenticatingIMAPClient.AUTH_METHOD.PLAIN, user, password);
+        Preconditions.checkArgument(imapClient instanceof AuthenticatingIMAPClient);
+        final boolean authenticatePlain = ((AuthenticatingIMAPClient) imapClient).authenticate(AuthenticatingIMAPClient.AUTH_METHOD.PLAIN, user, password);
         if (!authenticatePlain) {
             throw new Exception("Login failed");
         }
@@ -286,6 +292,11 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public String getQuotaRoot(String mailbox) throws IOException {
         imapClient.sendCommand("GETQUOTAROOT " + mailbox);
+        return imapClient.getReplyString();
+    }
+
+    public String sendCommand(String command) throws IOException {
+        imapClient.sendCommand(command);
         return imapClient.getReplyString();
     }
 
