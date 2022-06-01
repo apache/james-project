@@ -21,6 +21,7 @@ package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.lib.SieveRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ class CassandraSieveRepositoryTest implements SieveRepositoryContract {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         sieveRepository = new CassandraSieveRepository(
-            new CassandraSieveDAO(cassandra.getConf()),
+            new CassandraSieveDAO(cassandra.getConf(), CassandraConsistenciesConfiguration.DEFAULT),
             new CassandraSieveQuotaDAO(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }

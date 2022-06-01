@@ -35,6 +35,7 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_N
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.Script;
@@ -57,9 +58,10 @@ public class CassandraSieveDAO {
     private final PreparedStatement selectScriptStatement;
     private final PreparedStatement updateScriptActivationStatement;
     private final PreparedStatement deleteScriptStatement;
+    private final CassandraConsistenciesConfiguration consistenciesConfiguration;
 
     @Inject
-    public CassandraSieveDAO(Session session) {
+    public CassandraSieveDAO(Session session, CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         insertScriptStatement = session.prepare(
@@ -68,7 +70,8 @@ public class CassandraSieveDAO {
                 .value(SCRIPT_NAME, bindMarker(SCRIPT_NAME))
                 .value(SCRIPT_CONTENT, bindMarker(SCRIPT_CONTENT))
                 .value(IS_ACTIVE, bindMarker(IS_ACTIVE))
-                .value(SIZE, bindMarker(SIZE)));
+                .value(SIZE, bindMarker(SIZE))
+                .ifNotExists());
 
         selectScriptsStatement = session.prepare(getScriptsQuery());
 
@@ -88,6 +91,7 @@ public class CassandraSieveDAO {
                 .where(eq(USER_NAME, bindMarker(USER_NAME)))
                 .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME)))
                 .ifExists());
+        this.consistenciesConfiguration = consistenciesConfiguration;
     }
 
     private Select.Where getScriptsQuery() {
@@ -109,7 +113,8 @@ public class CassandraSieveDAO {
     public Flux<ScriptSummary> listScripts(Username username) {
         return cassandraAsyncExecutor.executeRows(
                 selectScriptsStatement.bind()
-                    .setString(USER_NAME, username.asString()))
+                    .setString(USER_NAME, username.asString())
+                    .setConsistencyLevel(consistenciesConfiguration.getLightweightTransaction()))
             .map(row -> new ScriptSummary(
                     new ScriptName(row.getString(SCRIPT_NAME)),
                     row.getBool(IS_ACTIVE)));
@@ -143,7 +148,8 @@ public class CassandraSieveDAO {
         return cassandraAsyncExecutor.executeSingleRow(
             selectScriptStatement.bind()
                 .setString(USER_NAME, username.asString())
-                .setString(SCRIPT_NAME, name.getValue()));
+                .setString(SCRIPT_NAME, name.getValue())
+                .setConsistencyLevel(consistenciesConfiguration.getLightweightTransaction()));
     }
 
 }

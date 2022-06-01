@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -63,7 +64,7 @@ class CassandraSieveDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        sieveDAO = new CassandraSieveDAO(cassandra.getConf());
+        sieveDAO = new CassandraSieveDAO(cassandra.getConf(), CassandraConsistenciesConfiguration.DEFAULT);
     }
     
      @Test
