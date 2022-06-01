@@ -56,6 +56,10 @@
             <artifactId>james-server-guice-configuration</artifactId>
         </dependency>
         <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailbox-adapter</artifactId>
+        </dependency>
+        <dependency>
             <!-- Added because of https://issues.apache.org/jira/browse/SUREFIRE-1266 -->
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-testing</artifactId>
@@ -66,6 +70,5 @@
             <artifactId>guice</artifactId>
         </dependency>
     </dependencies>
-
 
 </project>
