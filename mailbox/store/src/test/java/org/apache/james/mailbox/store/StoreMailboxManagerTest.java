@@ -220,6 +220,13 @@ class StoreMailboxManagerTest {
     }
 
     @Test
+    void loginAsOtherUserWithoutPasswordShouldCreateUserSession() throws MailboxException {
+        MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, CURRENT_USER);
+
+        assertThat(expected.getUser()).isEqualTo(CURRENT_USER);
+    }
+
+    @Test
     void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() {
         //Given
         MailboxSession session = MailboxSessionUtil.create(CURRENT_USER);
