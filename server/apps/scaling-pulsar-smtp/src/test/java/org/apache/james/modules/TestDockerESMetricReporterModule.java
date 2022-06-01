@@ -21,7 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Singleton;
 
-import org.apache.james.metrics.es.v7.ESReporterConfiguration;
+import org.apache.james.metrics.es.v8.ESReporterConfiguration;
 import org.apache.james.util.Host;
 
 import com.google.inject.AbstractModule;

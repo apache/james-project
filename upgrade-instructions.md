@@ -17,6 +17,24 @@ Changes to apply between 3.7.x and 3.8.x will be reported here.
 Change list:
 
 - [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
+- [Migration to ElasticSearch 8](#migration-to-elasticsearch-8)
+
+### Migration to ElasticSearch 8
+
+Date: 09/06/2022
+
+Concerned products: Distributed James, Cassandra James
+
+ElasticSearch implementation has been upgraded to support the version 8 of it.
+
+You should migrate your ElasticSearch servers from version 7 to 8 before upgrading James. We recommend to use
+at least the version 8.2 of ElasticSearch.
+
+Users can either perform a migration of their data from version 7 to 8 or might start from an empty 
+version 8 ElasticSearch cluster and [reindex data](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#reindexing-all-mails).
+
+Keep in mind as well that the group listeners related to ElasticSearch changed names (v7 to v8).
+You would need to manually delete the bindings from the event queues in RabbitMQ before restarting James.
 
 ### Adding authorized_users column to user table
 

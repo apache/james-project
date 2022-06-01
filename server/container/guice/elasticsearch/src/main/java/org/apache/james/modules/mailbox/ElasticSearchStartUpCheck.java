@@ -19,23 +19,20 @@
 
 package org.apache.james.modules.mailbox;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 
-import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v8.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.elasticsearch.Version;
-import org.elasticsearch.client.RequestOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import co.elastic.clients.transport.Version;
 
 public class ElasticSearchStartUpCheck implements StartUpCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchConfiguration.class);
-
-    private static final Version RECOMMENDED_ES_VERSION = Version.V_7_10_2;
+    private static final Version RECOMMENDED_ES_VERSION = Version.parse("8.0.0");
     private static final String VERSION_CHECKING_ERROR_MESSAGE = "Error when checking ES version";
 
     public static final String CHECK_NAME = "ElasticSearchStartUpCheck";
@@ -50,10 +47,9 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     @Override
     public CheckResult check() {
         try {
+            Version esVersion = Version.parse(client.info().block().version().number());
 
-            Version esVersion = Version.fromString(client.info(RequestOptions.DEFAULT).getVersion().getNumber());
-
-            if (esVersion.isCompatible(RECOMMENDED_ES_VERSION)) {
+            if (isCompatible(esVersion)) {
                 return CheckResult.builder()
                     .checkName(checkName())
                     .resultType(ResultType.GOOD)
@@ -71,7 +67,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
                 .resultType(ResultType.BAD)
                 .description(esVersionCompatibilityWarn)
                 .build();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error(VERSION_CHECKING_ERROR_MESSAGE, e);
             return CheckResult.builder()
                 .checkName(checkName())
@@ -84,5 +80,10 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     @Override
     public String checkName() {
         return CHECK_NAME;
+    }
+
+    private boolean isCompatible(Version usedVersion) {
+        return usedVersion.major() > RECOMMENDED_ES_VERSION.major()
+            || usedVersion.major() == RECOMMENDED_ES_VERSION.major() && usedVersion.minor() >= RECOMMENDED_ES_VERSION.minor();
     }
 }

@@ -670,12 +670,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-backends-es-v7</artifactId>
+                <artifactId>apache-james-backends-es-v8</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-backends-es-v7</artifactId>
+                <artifactId>apache-james-backends-es-v8</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -763,12 +763,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
+                <artifactId>apache-james-mailbox-elasticsearch-v8</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
+                <artifactId>apache-james-mailbox-elasticsearch-v8</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -834,7 +834,7 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
+                <artifactId>apache-james-mailbox-quota-search-elasticsearch-v8</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

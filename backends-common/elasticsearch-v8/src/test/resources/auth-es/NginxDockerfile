@@ -1,0 +1,5 @@
+FROM nginx:1.15.1
+
+COPY conf/nginx-conf/ /etc/nginx/conf.d/
+COPY conf/default.crt /etc/ssl/certs/default.crt
+COPY conf/default.key /etc/ssl/private/default.key

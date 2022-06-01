@@ -21,13 +21,13 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import org.apache.james.backends.es.v7.ClientProvider;
-import org.apache.james.backends.es.v7.ElasticSearchHealthCheck;
-import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v8.ClientProvider;
+import org.apache.james.backends.es.v8.ElasticSearchHealthCheck;
+import org.apache.james.backends.es.v8.IndexName;
+import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.mailbox.elasticsearch.v7.ElasticSearchMailboxConfiguration;
-import org.apache.james.quota.search.elasticsearch.v7.ElasticSearchQuotaConfiguration;
+import org.apache.james.mailbox.elasticsearch.v8.ElasticSearchMailboxConfiguration;
+import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
