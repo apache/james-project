@@ -405,6 +405,31 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
+    void setDsnParametersShouldUpdateStoredValue() throws Exception {
+        DsnParameters dsnParameters1 = DsnParameters.builder()
+            .envId(DsnParameters.EnvId.of("434554-55445-33443"))
+            .ret(DsnParameters.Ret.FULL)
+            .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
+            .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
+            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+            .build().get();
+        DsnParameters dsnParameters2 = DsnParameters.builder()
+            .envId(DsnParameters.EnvId.of("434554-55445-33434ee4"))
+            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+            .build().get();
+
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .build();
+
+        mail.setDsnParameters(dsnParameters1);
+        mail.setDsnParameters(dsnParameters2);
+
+        assertThat(mail.dsnParameters())
+            .contains(dsnParameters2);
+    }
+
+    @Test
     void dsnParametersShouldBeEmptyByDefault() {
         MailImpl mail = MailImpl.builder()
             .name("mail-id")
