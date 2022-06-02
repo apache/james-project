@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.mail.internet.AddressException;
 
@@ -385,6 +386,13 @@ public class DsnParameters {
                     .flatMap(attribute -> attribute.getValue().asMapAttributeValueOf(String.class));
 
             return new DsnAttributeValues(notify, orcpt, envId, ret);
+        }
+
+        public static void forEachDsnAttributeName(Consumer<AttributeName> action) {
+            action.accept(ENVID_ATTRIBUTE_NAME);
+            action.accept(RET_ATTRIBUTE_NAME);
+            action.accept(NOTIFY_ATTRIBUTE_NAME);
+            action.accept(ORCPT_ATTRIBUTE_NAME);
         }
 
         private final Optional<AttributeValue<Map<String, AttributeValue<String>>>> notifyAttributeValue;
