@@ -444,6 +444,7 @@ public interface Mail extends Serializable, Cloneable {
     }
 
     default void setDsnParameters(DsnParameters dsnParameters) {
+        DsnParameters.DsnAttributeValues.forEachDsnAttributeName(this::removeAttribute);
         dsnParameters.toAttributes()
             .asAttributes()
             .forEach(this::setAttribute);
