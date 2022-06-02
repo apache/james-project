@@ -32,12 +32,12 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
-import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
+import org.apache.james.mailbox.elasticsearch.v8.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.elasticsearch.v8.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.elasticsearch.v8.query.CriterionConverter;
+import org.apache.james.mailbox.elasticsearch.v8.query.QueryConverter;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -47,12 +47,11 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 
 public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -64,7 +63,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private ReactorElasticSearchClient client;
 
     @RegisterExtension
-    org.apache.james.backends.es.v7.DockerElasticSearchExtension elasticSearch = new org.apache.james.backends.es.v7.DockerElasticSearchExtension();
+    org.apache.james.backends.es.v8.DockerElasticSearchExtension elasticSearch = new org.apache.james.backends.es.v8.DockerElasticSearchExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -103,13 +102,14 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
             elasticSearch.getDockerElasticSearch().configuration());
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForElasticSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
-                    .source(new SearchSourceBuilder().query(query)),
-                RequestOptions.DEFAULT)
+                new SearchRequest.Builder()
+                    .index(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                    .query(query)
+                    .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(totalHits));
+                .hits().total().value()).isEqualTo(totalHits));
     }
 }

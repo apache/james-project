@@ -38,7 +38,7 @@
         <module>api</module>
         <module>backup</module>
         <module>cassandra</module>
-        <module>elasticsearch-v7</module>
+        <module>elasticsearch-v8</module>
 
         <module>event/json</module>
 
