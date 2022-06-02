@@ -16,32 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
-import org.apache.james.server.core.configuration.ConfigurationProvider;
+package org.apache.james.user.memory;
+
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.jpa.JPAUsersRepository;
-import org.apache.james.user.memory.NaiveDelegationStore;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+import org.reactivestreams.Publisher;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
-
-public class JPAUsersRepositoryModule extends AbstractModule {
+public class NaiveDelegationStore implements DelegationStore {
     @Override
-    public void configure() {
-        bind(JPAUsersRepository.class).in(Scopes.SINGLETON);
-        bind(UsersRepository.class).to(JPAUsersRepository.class);
-        bind(DelegationStore.class).to(NaiveDelegationStore.class);
+    public Publisher<Username> authorizedUsers(Username baseUser) {
+        throw new NotImplementedException();
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureJpaUsers(ConfigurationProvider configurationProvider, JPAUsersRepository usersRepository) {
-        return InitilizationOperationBuilder
-            .forClass(JPAUsersRepository.class)
-            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
+    @Override
+    public Publisher<Void> clear(Username baseUser) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Publisher<Void> addAuthorizedUser(Username baseUser, Username userWithAccess) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
+        throw new NotImplementedException();
     }
 }

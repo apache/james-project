@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
@@ -256,78 +257,114 @@ public class UserRoutes implements Routes {
     }
 
     private List<String> getAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
-        Username baseUser = extractUsername(request);
+        try {
+            Username baseUser = extractUsername(request);
 
-        if (userService.userExists(baseUser)) {
-            return Flux.from(delegationStore.authorizedUsers(baseUser))
-                .map(Username::asString)
-                .collectList()
-                .block();
-        } else {
+            if (userService.userExists(baseUser)) {
+                return Flux.from(delegationStore.authorizedUsers(baseUser))
+                    .map(Username::asString)
+                    .collectList()
+                    .block();
+            } else {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.NOT_FOUND)
+                    .message(String.format("User '%s' does not exist", baseUser.asString()))
+                    .haltError();
+            }
+        } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.NOT_FOUND)
-                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("This version of James does not support delegation.")
+                .cause(e)
                 .haltError();
         }
     }
 
     private String clearAllAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
-        Username baseUser = extractUsername(request);
+        try {
+            Username baseUser = extractUsername(request);
 
-        if (userService.userExists(baseUser)) {
-            Mono.from(delegationStore.clear(baseUser)).block();
-            return Constants.EMPTY_BODY;
-        } else {
+            if (userService.userExists(baseUser)) {
+                Mono.from(delegationStore.clear(baseUser)).block();
+                return Constants.EMPTY_BODY;
+            } else {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.NOT_FOUND)
+                    .message(String.format("User '%s' does not exist", baseUser.asString()))
+                    .haltError();
+            }
+        } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.NOT_FOUND)
-                .message(String.format("User '%s' does not exist", baseUser.asString()))
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("This version of James does not support delegation.")
+                .cause(e)
                 .haltError();
         }
     }
 
     private String addAuthorizedUser(Request request, Response response) throws UsersRepositoryException {
-        Username baseUser = extractUsername(request);
-        Username delegatedUser = extractDelegatedUsername(request);
+        try {
+            Username baseUser = extractUsername(request);
+            Username delegatedUser = extractDelegatedUsername(request);
 
-        if (!userService.userExists(baseUser)) {
+            if (!userService.userExists(baseUser)) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.NOT_FOUND)
+                    .message(String.format("User '%s' does not exist", baseUser.asString()))
+                    .haltError();
+            } else if (!userService.userExists(delegatedUser)) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                    .haltError();
+            } else {
+                Mono.from(delegationStore.addAuthorizedUser(baseUser, delegatedUser)).block();
+                return Constants.EMPTY_BODY;
+            }
+        } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.NOT_FOUND)
-                .message(String.format("User '%s' does not exist", baseUser.asString()))
-                .haltError();
-        } else if (!userService.userExists(delegatedUser)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                .message("This version of James does not support delegation.")
+                .cause(e)
                 .haltError();
-        } else {
-            Mono.from(delegationStore.addAuthorizedUser(baseUser, delegatedUser)).block();
-            return Constants.EMPTY_BODY;
         }
     }
 
     private String removeAuthorizedUser(Request request, Response response) throws UsersRepositoryException {
-        Username baseUser = extractUsername(request);
-        Username delegatedUser = extractDelegatedUsername(request);
+        try {
+            Username baseUser = extractUsername(request);
+            Username delegatedUser = extractDelegatedUsername(request);
 
-        if (!userService.userExists(baseUser)) {
+            if (!userService.userExists(baseUser)) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.NOT_FOUND)
+                    .message(String.format("User '%s' does not exist", baseUser.asString()))
+                    .haltError();
+            } else if (!userService.userExists(delegatedUser)) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                    .haltError();
+            } else {
+                Mono.from(delegationStore.removeAuthorizedUser(baseUser, delegatedUser)).block();
+                return Constants.EMPTY_BODY;
+            }
+        } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.NOT_FOUND)
-                .message(String.format("User '%s' does not exist", baseUser.asString()))
-                .haltError();
-        } else if (!userService.userExists(delegatedUser)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
+                .message("This version of James does not support delegation.")
+                .cause(e)
                 .haltError();
-        } else {
-            Mono.from(delegationStore.removeAuthorizedUser(baseUser, delegatedUser)).block();
-            return Constants.EMPTY_BODY;
         }
     }
 
