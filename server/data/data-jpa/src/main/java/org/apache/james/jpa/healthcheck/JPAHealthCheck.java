@@ -22,6 +22,7 @@ import static org.apache.james.core.healthcheck.Result.healthy;
 import static org.apache.james.core.healthcheck.Result.unhealthy;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.core.healthcheck.ComponentName;
@@ -47,7 +48,7 @@ public class JPAHealthCheck implements HealthCheck {
     @Override
     public Mono<Result> check() {
         return Mono.fromCallable(entityManagerFactory::createEntityManager)
-            .map(entityManager -> entityManager.isOpen())
+            .map(EntityManager::isOpen)
             .map(open -> {
                 if (open) {
                     return healthy(componentName());

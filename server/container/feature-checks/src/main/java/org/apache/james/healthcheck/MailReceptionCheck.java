@@ -54,6 +54,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.DurationParser;
+import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.MailetContext;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -219,7 +220,7 @@ public class MailReceptionCheck implements HealthCheck {
                 registration -> sendMail(username)
                     .flatMap(content -> checkReceived(session, listener, mailbox, content)),
                 Registration::unregister))
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
             .onErrorResume(e -> {
                 LOGGER.error("Mail reception check failed", e);

@@ -94,7 +94,6 @@ public class PeriodicalHealthChecksTest {
 
         scheduler = VirtualTimeScheduler.getOrSet();
         testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
     }
 
@@ -106,7 +105,6 @@ public class PeriodicalHealthChecksTest {
     @Test
     void healthChecksShouldBeConsideredFailedIfExceedingTimeout() {
         testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(Duration.ofMillis(1)));
 
         when(mockHealthCheck1.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))).delayElement(Duration.ofMillis(10)));
@@ -132,7 +130,6 @@ public class PeriodicalHealthChecksTest {
 
         TestingHealthCheck unhealthy = () -> Mono.just(Result.unhealthy(COMPONENT_NAME, "cause"));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(unhealthy),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
         testee.start();
 
@@ -150,7 +147,6 @@ public class PeriodicalHealthChecksTest {
 
         TestingHealthCheck degraded = () -> Mono.just(Result.degraded(COMPONENT_NAME, "cause"));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(degraded),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
         testee.start();
 
@@ -168,7 +164,6 @@ public class PeriodicalHealthChecksTest {
 
         TestingHealthCheck healthy = () -> Mono.just(Result.healthy(COMPONENT_NAME));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(healthy),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
         testee.start();
 
@@ -185,7 +180,6 @@ public class PeriodicalHealthChecksTest {
         TestingHealthCheck healthy = () -> Mono.just(Result.healthy(COMPONENT_NAME));
 
         testee = new PeriodicalHealthChecks(ImmutableSet.of(unhealthy, degraded, healthy),
-            scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
         testee.start();
 
