@@ -22,7 +22,7 @@ package org.apache.james.transport.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -57,7 +57,7 @@ public class MimeMessageBodyGeneratorTest {
                 Optional.empty())
                 .getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo("Plain text");
-        verifyZeroInteractions(htmlTextExtractor);
+        verifyNoMoreInteractions(htmlTextExtractor);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class MimeMessageBodyGeneratorTest {
             .getInputStream();
 
         assertThat(original.getSubject()).isEqualTo(subject);
-        verifyZeroInteractions(htmlTextExtractor);
+        verifyNoMoreInteractions(htmlTextExtractor);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class MimeMessageBodyGeneratorTest {
 
         assertThat(rowContent).containsSequence(htmlText);
         assertThat(rowContent).containsSequence(plainText);
-        verifyZeroInteractions(htmlTextExtractor);
+        verifyNoMoreInteractions(htmlTextExtractor);
     }
 
     @Test

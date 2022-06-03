@@ -21,7 +21,7 @@ package org.apache.james.webadmin.authentication;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -55,7 +55,7 @@ class JwtFilterTest {
 
         jwtFilter.handle(request, response);
 
-        verifyZeroInteractions(response);
+        verifyNoMoreInteractions(response);
     }
 
 

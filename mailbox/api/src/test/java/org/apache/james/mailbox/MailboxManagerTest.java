@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -2716,8 +2716,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
                 inboxManager.expunge(MessageRange.all(), session);
 
-                verifyZeroInteractions(preDeletionHook1);
-                verifyZeroInteractions(preDeletionHook2);
+                verifyNoMoreInteractions(preDeletionHook1);
+                verifyNoMoreInteractions(preDeletionHook2);
             }
 
             @Test

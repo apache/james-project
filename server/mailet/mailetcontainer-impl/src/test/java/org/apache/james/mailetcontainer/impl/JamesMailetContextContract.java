@@ -26,7 +26,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
@@ -281,7 +280,7 @@ public interface JamesMailetContextContract {
 
         testee().bounce(mail, "message");
 
-        verifyZeroInteractions(spoolMailQueue());
+        verifyNoMoreInteractions(spoolMailQueue());
     }
 
     @Test
@@ -294,7 +293,7 @@ public interface JamesMailetContextContract {
 
         testee().bounce(mail, "message");
 
-        verifyZeroInteractions(spoolMailQueue());
+        verifyNoMoreInteractions(spoolMailQueue());
     }
 
     @Test

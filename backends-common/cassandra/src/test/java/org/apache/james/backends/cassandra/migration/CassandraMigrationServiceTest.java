@@ -27,7 +27,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -200,7 +199,6 @@ class CassandraMigrationServiceTest {
 
         verify(failingTask, times(1)).run();
         verifyNoMoreInteractions(failingTask);
-        verifyZeroInteractions(migration2);
     }
 
     public static class InMemorySchemaDAO extends CassandraSchemaVersionDAO {

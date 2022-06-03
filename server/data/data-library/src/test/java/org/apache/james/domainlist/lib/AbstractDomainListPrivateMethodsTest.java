@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
@@ -179,7 +179,7 @@ class AbstractDomainListPrivateMethodsTest {
             .autoDetectIp(false));
         domainList.getDomains();
 
-        verifyZeroInteractions(dnsService);
+        verifyNoMoreInteractions(dnsService);
     }
 
     @Test
@@ -323,7 +323,7 @@ class AbstractDomainListPrivateMethodsTest {
             .autoDetectIp(false));
         domainList.containsDomain(Domain.of("added.tld"));
 
-        verifyZeroInteractions(dnsService);
+        verifyNoMoreInteractions(dnsService);
     }
 
     @Test
