@@ -144,6 +144,10 @@ public interface MessageManager {
      */
     void delete(List<MessageUid> uids, MailboxSession mailboxSession) throws MailboxException;
 
+    default Mono<Void> deleteReactive(List<MessageUid> uids, MailboxSession mailboxSession) {
+        return Mono.fromRunnable(Throwing.runnable(() -> delete(uids, mailboxSession)));
+    }
+
     /**
      * Sets flags on messages within the given range. The new flags are returned
      * for each message altered.

@@ -21,6 +21,7 @@ package org.apache.james.healthcheck;
 
 import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -46,7 +47,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.DurationParser;
-import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.MailetContext;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -220,7 +219,6 @@ public class MailReceptionCheck implements HealthCheck {
                 registration -> sendMail(username)
                     .flatMap(content -> checkReceived(session, listener, mailbox, content)),
                 Registration::unregister))
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
             .onErrorResume(e -> {
                 LOGGER.error("Mail reception check failed", e);
@@ -238,17 +236,16 @@ public class MailReceptionCheck implements HealthCheck {
     private Mono<Result> checkReceived(MailboxSession session, AwaitReceptionListener listener, MessageManager mailbox, Content content) {
         return listener.addedEvents()
             .flatMapIterable(Added::getUids)
-            .flatMap(uid -> Mono.fromCallable(() -> mailbox.getMessages(MessageRange.one(uid), FetchGroup.FULL_CONTENT, session)))
-            .flatMapIterable(ImmutableList::copyOf)
-            .filter(Throwing.predicate(messageResult -> IOUtils.toString(messageResult.getBody().getInputStream()).contains(content.asString())))
+            .flatMap(uid -> Flux.from(mailbox.getMessagesReactive(MessageRange.one(uid), FetchGroup.FULL_CONTENT, session)))
+            .filter(Throwing.predicate(messageResult -> IOUtils.toString(messageResult.getBody().getInputStream(), StandardCharsets.US_ASCII)
+                .contains(content.asString())))
             // Cleanup our testing mail
-            .doOnNext(messageResult -> {
-                try {
-                    mailbox.delete(ImmutableList.of(messageResult.getUid()), session);
-                } catch (MailboxException e) {
+            .concatMap(messageResult -> Mono.from(mailbox.deleteReactive(ImmutableList.of(messageResult.getUid()), session))
+                .onErrorResume(e -> {
                     LOGGER.warn("Failed to delete Health check testing email", e);
-                }
-            })
+                    return Mono.empty();
+                })
+                .thenReturn(messageResult))
             .map(any -> Result.healthy(componentName()))
             .next();
     }
@@ -270,6 +267,7 @@ public class MailReceptionCheck implements HealthCheck {
                     .build(),
                     mail -> Mono.fromRunnable(Throwing.runnable(() -> mailetContext.sendMail(mail))),
                     LifecycleUtil::dispose))
-            .thenReturn(content);
+            .thenReturn(content)
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }

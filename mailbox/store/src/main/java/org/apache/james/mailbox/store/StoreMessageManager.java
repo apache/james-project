@@ -289,6 +289,12 @@ public class StoreMessageManager implements MessageManager {
         dispatchExpungeEvent(mailboxSession, deletedMessages).block();
     }
 
+    @Override
+    public Mono<Void> deleteReactive(List<MessageUid> uids, MailboxSession mailboxSession) {
+        return deleteMessages(uids, mailboxSession)
+            .flatMap(deleteMessages -> dispatchExpungeEvent(mailboxSession, deleteMessages));
+    }
+
     private Mono<Map<MessageUid, MessageMetaData>> deleteMessages(List<MessageUid> messageUids, MailboxSession session) {
         if (messageUids.isEmpty()) {
             return Mono.just(ImmutableMap.of());
