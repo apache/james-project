@@ -19,20 +19,18 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import static com.datastax.driver.core.DataType.text;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
-
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailRepositoryUrlModule {
     CassandraModule MODULE = CassandraModule.table(UrlsTable.TABLE_NAME)
         .comment("Holds the list of available mail repository")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(UrlsTable.URL, text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(UrlsTable.URL, TEXT))
         .build();
 }

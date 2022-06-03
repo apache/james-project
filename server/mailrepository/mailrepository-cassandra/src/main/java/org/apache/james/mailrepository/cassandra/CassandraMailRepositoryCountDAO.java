@@ -19,12 +19,10 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.decr;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.COUNT;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.COUNT_TABLE;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
@@ -36,9 +34,9 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 
 import reactor.core.publisher.Mono;
 
@@ -50,7 +48,7 @@ public class CassandraMailRepositoryCountDAO {
     private final PreparedStatement select;
 
     @Inject
-    public CassandraMailRepositoryCountDAO(Session session) {
+    public CassandraMailRepositoryCountDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
 
         this.increment = prepareIncrement(session);
@@ -58,22 +56,25 @@ public class CassandraMailRepositoryCountDAO {
         this.select = prepareSelect(session);
     }
 
-    private PreparedStatement prepareDecrement(Session session) {
+    private PreparedStatement prepareDecrement(CqlSession session) {
         return session.prepare(update(COUNT_TABLE)
-            .with(decr(COUNT))
-            .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
+            .decrement(COUNT)
+            .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
+            .build());
     }
 
-    private PreparedStatement prepareIncrement(Session session) {
+    private PreparedStatement prepareIncrement(CqlSession session) {
         return session.prepare(update(COUNT_TABLE)
-            .with(incr(COUNT))
-            .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
+            .increment(COUNT)
+            .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(COUNT)
-            .from(COUNT_TABLE)
-            .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(COUNT_TABLE)
+            .column(COUNT)
+            .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
+            .build());
     }
 
     public Mono<Void> increment(MailRepositoryUrl url) {

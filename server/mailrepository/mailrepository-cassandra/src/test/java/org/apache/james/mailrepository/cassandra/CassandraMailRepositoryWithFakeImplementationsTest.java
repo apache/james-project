@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,7 +44,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 
 class CassandraMailRepositoryWithFakeImplementationsTest {
     @RegisterExtension
@@ -81,7 +81,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO blobParts (id,chunkNumber,data) VALUES (:id,:chunkNumber,:data);"));
+                    .whenQueryStartsWith("INSERT INTO blobparts"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -109,7 +109,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO mailRepositoryContent"));
+                    .whenQueryStartsWith("INSERT INTO mailrepositorycontent"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -134,7 +134,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO mailRepositoryContent"));
+                    .whenQueryStartsWith("INSERT INTO mailrepositorycontent"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -151,8 +151,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class);
 
-            ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTables.DefaultBucketBlobTable.TABLE_NAME));
+            ResultSet resultSet = cassandra.getConf().execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME).all().build());
             assertThat(resultSet.all()).hasSize(2);
         }
     }
@@ -164,7 +163,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO mailRepositoryKeys (name,mailKey)"));
+                    .whenQueryStartsWith("INSERT INTO mailrepositorykeys"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -189,7 +188,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO mailRepositoryKeys (name,mailKey)"));
+                    .whenQueryStartsWith("INSERT INTO mailrepositorykeys"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -206,8 +205,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class);
 
-            ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTables.DefaultBucketBlobTable.TABLE_NAME));
+            ResultSet resultSet = cassandra.getConf().execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME).all().build());
             assertThat(resultSet.all()).hasSize(2);
         }
 
@@ -216,7 +214,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO mailRepositoryKeys (name,mailKey)"));
+                    .whenQueryStartsWith("INSERT INTO mailrepositorykeys"));
 
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
@@ -233,8 +231,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class);
 
-            ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(MailRepositoryTableV2.CONTENT_TABLE_NAME));
+            ResultSet resultSet = cassandra.getConf().execute(selectFrom(MailRepositoryTableV2.CONTENT_TABLE_NAME).all().build());
             assertThat(resultSet.all()).hasSize(1);
         }
     }
