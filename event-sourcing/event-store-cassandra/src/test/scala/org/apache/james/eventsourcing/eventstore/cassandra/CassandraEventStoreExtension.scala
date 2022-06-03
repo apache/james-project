@@ -20,14 +20,7 @@ package org.apache.james.eventsourcing.eventstore.cassandra
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension
 import org.apache.james.eventsourcing.eventstore.EventStore
-import org.junit.jupiter.api.extension.AfterAllCallback
-import org.junit.jupiter.api.extension.AfterEachCallback
-import org.junit.jupiter.api.extension.BeforeAllCallback
-import org.junit.jupiter.api.extension.BeforeEachCallback
-import org.junit.jupiter.api.extension.ExtensionContext
-import org.junit.jupiter.api.extension.ParameterContext
-import org.junit.jupiter.api.extension.ParameterResolutionException
-import org.junit.jupiter.api.extension.ParameterResolver
+import org.junit.jupiter.api.extension.{AfterAllCallback, AfterEachCallback, BeforeAllCallback, BeforeEachCallback, ExtensionContext, ParameterContext, ParameterResolutionException, ParameterResolver}
 
 class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val eventSerializer: JsonEventSerializer)
   extends BeforeAllCallback with AfterAllCallback with BeforeEachCallback with AfterEachCallback with ParameterResolver {
@@ -43,7 +36,7 @@ class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val
   override def afterAll(context: ExtensionContext): Unit = cassandra.afterAll(context)
 
   override def beforeEach(context: ExtensionContext): Unit = eventStoreDao =
-    Some(new EventStoreDao(cassandra.getCassandraCluster.getConf, eventSerializer, cassandra.getCassandraConsistenciesConfiguration))
+    Some(new EventStoreDao(cassandra.getCassandraCluster.getConf, eventSerializer))
 
   override def afterEach(context: ExtensionContext): Unit = cassandra.afterEach(context)
 
