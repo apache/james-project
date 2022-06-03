@@ -448,6 +448,19 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Mono<Mailbox> deleteMailboxReactive(MailboxId mailboxId, MailboxSession session) {
+        LOGGER.info("deleteMailbox {}", mailboxId);
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+
+        return mailboxMapper.executeReactive(mailboxMapper.findMailboxById(mailboxId)
+            .map(Throwing.<Mailbox, Mailbox>function(mailbox -> {
+                assertIsOwner(session, mailbox.generateAssociatedPath());
+                return mailbox;
+            }).sneakyThrow())
+            .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session)));
+    }
+
+    @Override
     public Mono<Void> deleteMailboxReactive(MailboxPath mailboxPath, MailboxSession session) {
         LOGGER.info("deleteMailbox {}", mailboxPath);
         if (!mailboxPath.belongsTo(session)) {
