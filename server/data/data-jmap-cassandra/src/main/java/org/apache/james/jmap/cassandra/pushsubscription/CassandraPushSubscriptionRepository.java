@@ -60,22 +60,26 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
 
     @Override
     public Publisher<PushSubscription> save(Username username, PushSubscriptionCreationRequest request) {
-        return Mono.just(request)
-            .handle((req, sink) -> {
-                if (isInThePast(req.expires(), clock)) {
-                    sink.error(new ExpireTimeInvalidException(req.expires().get().value(), "expires must be greater than now"));
+        PushSubscription pushSubscription = PushSubscription.from(request,
+            evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock));
+
+        return isDuplicatedDeviceClientId(username, request.deviceClientId())
+            .handle((isDuplicated, sink) -> {
+                if (isInThePast(request.expires(), clock)) {
+                    sink.error(new ExpireTimeInvalidException(request.expires().get().value(), "expires must be greater than now"));
+                    return;
                 }
-                if (!isUniqueDeviceClientId(username, req.deviceClientId())) {
-                    sink.error(new DeviceClientIdInvalidException(req.deviceClientId(), "deviceClientId must be unique"));
+                if (isDuplicated) {
+                    sink.error(new DeviceClientIdInvalidException(request.deviceClientId(), "deviceClientId must be unique"));
+                    return;
                 }
-                if (isInvalidPushSubscriptionKey(req.keys())) {
-                    sink.error(new InvalidPushSubscriptionKeys(req.keys().get()));
+                if (isInvalidPushSubscriptionKey(request.keys())) {
+                    sink.error(new InvalidPushSubscriptionKeys(request.keys().get()));
+                    return;
                 }
             })
-            .thenReturn(PushSubscription.from(request,
-                evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)),
-                    clock)))
-            .flatMap(subscription -> dao.insert(username, subscription).thenReturn(subscription));
+            .then(dao.insert(username, pushSubscription))
+            .thenReturn(pushSubscription);
     }
 
     @Override
@@ -135,12 +139,10 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
         return dao.selectAll(username).filter(subscription -> subscription.id().equals(id)).next();
     }
 
-    private boolean isUniqueDeviceClientId(Username username, String deviceClientId) {
-        return Boolean.TRUE.equals(dao.selectAll(username)
+    private Mono<Boolean> isDuplicatedDeviceClientId(Username username, String deviceClientId) {
+        return dao.selectAll(username)
             .filter(subscription -> subscription.deviceClientId().equals(deviceClientId))
-            .count()
-            .map(value -> value == 0)
-            .block());
+            .hasElements();
     }
 
 }
