@@ -503,18 +503,4 @@ class SMTPSaslTest {
             .as("mail received by mail server")
             .isNotNull();
     }
-
-
-    @Test
-    void oauthShouldImpersonateFailWhenNOTDelegated2() throws Exception {
-        SMTPSClient client = initSMTPSClient();
-        String tokenWithImpersonation = OIDCSASLHelper.generateOauthBearer("another@@@!!!domain.org", OidcTokenFixture.VALID_TOKEN);
-        client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
-
-        assertThat(client.getReplyString()).contains("334 ");
-
-        client.sendCommand("AQ==");
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
-    }
-
 }
