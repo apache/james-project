@@ -18,21 +18,22 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
+import com.datastax.oss.driver.api.core.`type`.DataTypes
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTableWithOptions
 import org.apache.james.backends.cassandra.components.CassandraModule
 import org.apache.james.backends.cassandra.utils.CassandraConstants
-import com.datastax.driver.core.DataType
-import com.datastax.driver.core.schemabuilder.{Create, SchemaBuilder}
 
 object CassandraEventStoreModule {
   val MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
     .comment("Store events of a EventSourcing aggregate")
-    .options((options: Create.Options) => options
-      .compactionOptions(SchemaBuilder.leveledStrategy())
-      .caching(
-        SchemaBuilder.KeyCaching.ALL,
-        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-    .statement(_.addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar)
-      .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint)
-      .addColumn(CassandraEventStoreTable.EVENT, DataType.text))
+    .options((options: CreateTableWithOptions) => options
+      .withCompaction(SchemaBuilder.leveledCompactionStrategy())
+      .withCaching(
+        true,
+        SchemaBuilder.RowsPerPartition.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+    .statement(statement => _ => statement.withPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataTypes.TEXT)
+      .withClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataTypes.INT)
+      .withColumn(CassandraEventStoreTable.EVENT, DataTypes.TEXT))
     .build
 }
