@@ -44,7 +44,6 @@ import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.PingPolicy.Interval
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
-import org.apache.james.util.ReactorUtils
 import play.api.libs.json.Json
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
@@ -178,7 +177,6 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
             .`then`
             .`then`(registerSSE(response, mailboxSession, options))))
       .onErrorResume(throwable => handleConnectionEstablishmentError(throwable, response))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
       .`then`()
 

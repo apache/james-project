@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -146,7 +145,6 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         case _: MailboxNotFoundException => SMono.just(MailboxGetResults.notFound(mailboxId))
         case error => SMono.error(error)
       }
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def filterShared(capabilities: Set[CapabilityIdentifier], mailbox: Mailbox): MailboxGetResults = {
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
@@ -166,7 +164,6 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         getAllMailboxesMetaData(capabilities, mailboxSession),
         quotaFactory.loadFor(mailboxSession),
         retrieveSubscriptions(mailboxSession))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .flatMapMany {
         case (mailboxes, quotaLoader, subscriptions) => SFlux.fromIterable(mailboxes)
           .flatMap(mailbox => mailboxFactory.create(mailboxMetaData = mailbox,
