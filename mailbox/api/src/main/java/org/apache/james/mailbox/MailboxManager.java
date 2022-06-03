@@ -182,6 +182,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     Mailbox deleteMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
+    default Mono<Mailbox> deleteMailboxReactive(MailboxId mailboxId, MailboxSession session) {
+        return Mono.fromCallable(() -> deleteMailbox(mailboxId, session));
+    }
+
     class MailboxRenamedResult {
         private final MailboxId mailboxId;
         private final MailboxPath originPath;
