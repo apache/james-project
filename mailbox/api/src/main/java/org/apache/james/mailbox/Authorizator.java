@@ -29,7 +29,7 @@ public interface Authorizator {
 
     enum AuthorizationState {
         ALLOWED,
-        NOT_ADMIN,
+        FORBIDDEN,
         UNKNOWN_USER
     }
 

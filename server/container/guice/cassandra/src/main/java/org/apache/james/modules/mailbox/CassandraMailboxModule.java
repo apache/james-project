@@ -23,7 +23,6 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
-import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -47,7 +46,6 @@ import org.apache.james.jmap.cassandra.change.MailboxChangeRepositoryDAO;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
-import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -172,7 +170,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
-        bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
         bind(EmailChangeRepositoryDAO.class).in(Scopes.SINGLETON);
         bind(MailboxChangeRepositoryDAO.class).in(Scopes.SINGLETON);
 
@@ -191,7 +188,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
-        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxManager.class).to(CassandraMailboxManager.class);
         bind(StoreMailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxChangeRepository.class).to(CassandraMailboxChangeRepository.class);

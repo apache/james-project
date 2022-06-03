@@ -38,7 +38,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -185,7 +185,7 @@ class StoreMailboxManagerTest {
     @Test
     void loginAsOtherUserShouldNotCreateUserSessionWhenNotAdmin() {
         assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(CURRENT_USER, CURRENT_USER_PASSWORD, UNKNOWN_USER))
-            .isInstanceOf(NotAdminException.class);
+            .isInstanceOf(ForbiddenDelegationException.class);
     }
 
     @Test

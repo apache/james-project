@@ -19,5 +19,5 @@
 
 package org.apache.james.mailbox.exception;
 
-public class NotAdminException extends MailboxException {
+public class ForbiddenDelegationException extends MailboxException {
 }

@@ -29,9 +29,9 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
-import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -88,17 +88,19 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
 
     protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
+        Username givenUser = authenticationAttempt.getAuthenticationId();
+        Username otherUser = authenticationAttempt.getDelegateUserName().get();
         try {
             boolean authFailure = false;
-            if (authenticationAttempt.getAuthenticationId() == null) {
+            if (givenUser == null) {
                 authFailure = true;
             }
             if (!authFailure) {
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(authenticationAttempt.getAuthenticationId(),
+                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(givenUser,
                         authenticationAttempt.getPassword(),
-                        authenticationAttempt.getDelegateUserName().get());
+                        otherUser);
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
@@ -111,11 +113,11 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 manageFailureCount(session, request, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            LOGGER.info("User {} does not exist", authenticationAttempt.getAuthenticationId(), e);
+            LOGGER.info("User {} does not exist", otherUser, e);
             no(request, responder, HumanReadableText.USER_DOES_NOT_EXIST);
-        } catch (NotAdminException e) {
-            LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
-            no(request, responder, HumanReadableText.NOT_AN_ADMIN);
+        } catch (ForbiddenDelegationException e) {
+            LOGGER.info("User {} is not delegated by {}", givenUser, otherUser, e);
+            no(request, responder, HumanReadableText.DELEGATION_FORBIDDEN);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);

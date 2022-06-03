@@ -24,34 +24,38 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
-/**
- * Authorizator which use an UsersRepository to check if the delegation is allowed
- */
-public class UserRepositoryAuthorizator implements Authorizator {
+import reactor.core.publisher.Flux;
 
-    private final UsersRepository repos;
+/**
+ * Authorizator which use an DelegationStore to check if the delegation is allowed
+ */
+public class DelegationStoreAuthorizator implements Authorizator {
+    private final DelegationStore delegationStore;
+    private final UsersRepository usersRepository;
 
     @Inject
-    public UserRepositoryAuthorizator(UsersRepository repos) {
-        this.repos = repos;
+    public DelegationStoreAuthorizator(DelegationStore delegationStore, UsersRepository usersRepository) {
+        this.delegationStore = delegationStore;
+        this.usersRepository = usersRepository;
     }
 
     @Override
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException {
+        boolean isAuthorized = Flux.from(delegationStore.authorizedUsers(otherUserId)).hasElement(userId).block();
         try {
-            if (!repos.isAdministrator(userId)) {
-                return AuthorizationState.FORBIDDEN;
+            if (isAuthorized || usersRepository.isAdministrator(userId)) {
+                return AuthorizationState.ALLOWED;
             }
-            if (!repos.contains(otherUserId)) {
+            if (!usersRepository.contains(otherUserId)) {
                 return AuthorizationState.UNKNOWN_USER;
             }
-            return AuthorizationState.ALLOWED;
+            return AuthorizationState.FORBIDDEN;
         } catch (UsersRepositoryException e) {
             throw new MailboxException("Unable to access usersRepository", e);
         }
     }
-
 }
