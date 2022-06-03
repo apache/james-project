@@ -26,7 +26,6 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{PushSubscriptionSetRequest, SetError, UnparsedPushSubscriptionId}
 import org.apache.james.jmap.method.PushSubscriptionSetDeletePerformer.{PushSubscriptionDeletionFailure, PushSubscriptionDeletionResult, PushSubscriptionDeletionResults, PushSubscriptionDeletionSuccess}
 import org.apache.james.mailbox.MailboxSession
-import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object PushSubscriptionSetDeletePerformer {
@@ -68,5 +67,4 @@ class PushSubscriptionSetDeletePerformer @Inject()(pushSubscriptionRepository: P
       .fold(e => SMono.error(e),
         id => SMono.fromPublisher(pushSubscriptionRepository.revoke(mailboxSession.getUser, id))
           .`then`(SMono.just[PushSubscriptionDeletionResult](PushSubscriptionDeletionSuccess(id))))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }

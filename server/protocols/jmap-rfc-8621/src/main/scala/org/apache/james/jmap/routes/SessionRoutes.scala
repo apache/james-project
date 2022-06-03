@@ -35,7 +35,6 @@ import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Mono
@@ -61,7 +60,6 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       }
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
 
   private val redirectToSession: JMAPRoute.Action = JMAPRoutes.redirectTo(JMAP_SESSION)

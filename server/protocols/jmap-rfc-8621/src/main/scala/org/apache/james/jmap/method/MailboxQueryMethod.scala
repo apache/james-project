@@ -28,7 +28,6 @@ import org.apache.james.jmap.mail.{MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -68,5 +67,4 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
         position = Position.zero,
         limit = Some(Limit.default)))
       .map(response => Invocation(methodName = methodName, arguments = Arguments(MailboxQuerySerializer.serialize(response)), methodCallId = invocation.methodCallId))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }

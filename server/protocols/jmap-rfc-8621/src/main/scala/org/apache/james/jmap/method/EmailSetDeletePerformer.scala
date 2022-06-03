@@ -26,7 +26,6 @@ import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, Unpars
 import org.apache.james.jmap.method.EmailSetDeletePerformer.{DestroyFailure, DestroyResult, DestroyResults}
 import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
-import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -90,7 +89,6 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
         .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
         .map(_ ++ parsingErrors)
         .map(DestroyResults)
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     } else {
       SMono.just(DestroyResults(Seq()))
     }
