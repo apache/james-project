@@ -42,7 +42,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.dto.MailboxResponse;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
@@ -123,17 +122,13 @@ public class UserMailboxesService {
     }
 
     private Mono<Result> deleteMessage(MessageManager messageManager, MessageUid messageUid, MailboxSession mailboxSession, ClearMailboxContentTask.Context context) {
-        return Mono.fromCallable(() -> {
-                try {
-                    messageManager.delete(List.of(messageUid), mailboxSession);
-                    context.incrementSuccesses();
-                    return Result.COMPLETED;
-                } catch (MailboxException e) {
-                    context.incrementMessageFails();
-                    return Result.PARTIAL;
-                }
-            })
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+        return Mono.from(messageManager.deleteReactive(List.of(messageUid), mailboxSession))
+            .thenReturn(Result.COMPLETED)
+            .doOnNext(next -> context.incrementSuccesses())
+            .onErrorResume(e -> {
+                context.incrementMessageFails();
+                return Mono.just(Result.PARTIAL);
+            });
     }
 
     public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {

@@ -56,7 +56,6 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 
 public class ExpireMailboxService {
@@ -237,12 +236,8 @@ public class ExpireMailboxService {
         if (uids.isEmpty()) {
             return Mono.just(0);
         } else {
-            return Mono.fromCallable(
-                    () -> {
-                        mgr.delete(uids, session);
-                        return uids.size();
-                    })
-                .subscribeOn(Schedulers.elastic());
+            return Mono.from(mgr.deleteReactive(uids, session))
+                .thenReturn(uids.size());
         }
     }
 }
