@@ -33,24 +33,11 @@ import com.google.common.base.Preconditions;
 public class CassandraCacheConfiguration {
 
     public static class Builder {
-        private static final Duration DEFAULT_READ_TIMEOUT = Duration.ofMillis(100);
-        private static final Duration MAX_READ_TIMEOUT = Duration.ofHours(1);
         private static final Duration DEFAULT_TTL = Duration.ofDays(7);
         private static final int DEFAULT_BYTE_THRESHOLD_SIZE = 8 * 1024;
 
-        private Optional<Duration> readTimeout = Optional.empty();
         private Optional<Integer> sizeThresholdInBytes = Optional.empty();
         private Optional<Duration> ttl = Optional.empty();
-
-        public Builder timeOut(Duration timeout) {
-            Preconditions.checkNotNull(timeout, "'Read timeout' must not to be null");
-            Preconditions.checkArgument(timeout.toMillis() > 0, "'Read timeout' needs to be positive");
-            Preconditions.checkArgument(timeout.getSeconds() <= MAX_READ_TIMEOUT.getSeconds(),
-                "'Read timeout' needs to be less than %s sec", MAX_READ_TIMEOUT.getSeconds());
-
-            this.readTimeout = Optional.of(timeout);
-            return this;
-        }
 
         public Builder sizeThresholdInBytes(int sizeThresholdInBytes) {
             Preconditions.checkArgument(sizeThresholdInBytes >= 0, "'Threshold size' needs to be positive");
@@ -74,11 +61,6 @@ public class CassandraCacheConfiguration {
             return this;
         }
 
-        public Builder timeOut(Optional<Duration> timeOut) {
-            timeOut.ifPresent(this::timeOut);
-            return this;
-        }
-
         public Builder sizeThresholdInBytes(Optional<Integer> sizeThresholdInBytes) {
             sizeThresholdInBytes.ifPresent(this::sizeThresholdInBytes);
             return this;
@@ -86,7 +68,6 @@ public class CassandraCacheConfiguration {
 
         public CassandraCacheConfiguration build() {
             return new CassandraCacheConfiguration(
-                readTimeout.orElse(DEFAULT_READ_TIMEOUT),
                 sizeThresholdInBytes.orElse(DEFAULT_BYTE_THRESHOLD_SIZE),
                 ttl.orElse(DEFAULT_TTL));
         }
@@ -109,24 +90,18 @@ public class CassandraCacheConfiguration {
 
         return builder()
             .ttl(ttl)
-            .timeOut(timeOut)
             .sizeThresholdInBytes(sizeThreshold)
             .build();
     }
 
-    private final Duration readTimeOut;
     private final int sizeThresholdInBytes;
     private final Duration ttl;
 
-    private CassandraCacheConfiguration(Duration timeout, int sizeThresholdInBytes, Duration ttl) {
-        this.readTimeOut = timeout;
+    private CassandraCacheConfiguration(int sizeThresholdInBytes, Duration ttl) {
         this.sizeThresholdInBytes = sizeThresholdInBytes;
         this.ttl = ttl;
     }
 
-    public Duration getReadTimeOut() {
-        return readTimeOut;
-    }
 
     public Duration getTtl() {
         return ttl;
@@ -142,7 +117,6 @@ public class CassandraCacheConfiguration {
             CassandraCacheConfiguration that = (CassandraCacheConfiguration) o;
 
             return Objects.equals(this.sizeThresholdInBytes, that.sizeThresholdInBytes)
-                && Objects.equals(this.readTimeOut, that.readTimeOut)
                 && Objects.equals(this.ttl, that.ttl);
         }
         return false;
@@ -150,6 +124,6 @@ public class CassandraCacheConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(readTimeOut, sizeThresholdInBytes, ttl);
+        return Objects.hash(sizeThresholdInBytes, ttl);
     }
 }

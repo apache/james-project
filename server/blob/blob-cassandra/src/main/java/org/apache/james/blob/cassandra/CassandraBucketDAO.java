@@ -19,12 +19,10 @@
 
 package org.apache.james.blob.cassandra;
 
-import static com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.BUCKET;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.NUMBER_OF_CHUNK;
@@ -34,14 +32,16 @@ import java.nio.ByteBuffer;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.cassandra.BlobTables.BucketBlobParts;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
@@ -58,76 +58,60 @@ public class CassandraBucketDAO {
     private final PreparedStatement deleteParts;
     private final PreparedStatement listAll;
     private final PreparedStatement listBucketContent;
+    private final DriverExecutionProfile optimisticConsistencyLevelProfile;
 
     @Inject
     @VisibleForTesting
-    public CassandraBucketDAO(BlobId.Factory blobIdFactory, Session session) {
+    public CassandraBucketDAO(BlobId.Factory blobIdFactory, CqlSession session) {
         this.blobIdFactory = blobIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.insert = prepareInsert(session);
-        this.select = prepareSelect(session);
-        this.delete = prepareDelete(session);
-        this.insertPart = prepareInsertPart(session);
-        this.selectPart = prepareSelectPart(session);
-        this.deleteParts = prepareDeleteParts(session);
-        this.listAll = prepareListAll(session);
-        this.listBucketContent = prepareListBucketContent(session);
-    }
+        this.optimisticConsistencyLevelProfile = JamesExecutionProfiles.getOptimisticConsistencyLevelProfile(session);
 
-    private PreparedStatement prepareDeleteParts(Session session) {
-        return session.prepare(
-            delete().from(BucketBlobParts.TABLE_NAME)
-                .where(eq(BucketBlobParts.BUCKET, bindMarker(BucketBlobParts.BUCKET)))
-                .and(eq(BucketBlobParts.ID, bindMarker(BucketBlobParts.ID))));
-    }
-
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(
-            delete().from(BlobTables.BucketBlobTable.TABLE_NAME)
-                .where(eq(BUCKET, bindMarker(BUCKET)))
-                .and(eq(ID, bindMarker(ID))));
-    }
-
-    private PreparedStatement prepareListAll(Session session) {
-        return session.prepare(select()
-            .from(BlobTables.BucketBlobTable.TABLE_NAME));
-    }
-
-    private PreparedStatement prepareListBucketContent(Session session) {
-        return session.prepare(select()
-            .from(BlobTables.BucketBlobTable.TABLE_NAME)
-            .where(eq(BUCKET, bindMarker(BUCKET)))
-            .allowFiltering());
-    }
-
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select()
-            .from(BlobTables.BucketBlobTable.TABLE_NAME)
-            .where(eq(BUCKET, bindMarker(BUCKET)))
-            .and(eq(ID, bindMarker(ID))));
-    }
-
-    private PreparedStatement prepareSelectPart(Session session) {
-        return session.prepare(select()
-            .from(BucketBlobParts.TABLE_NAME)
-            .where(eq(BUCKET, bindMarker(BUCKET)))
-            .and(eq(ID, bindMarker(ID)))
-            .and(eq(BucketBlobParts.CHUNK_NUMBER, bindMarker(BucketBlobParts.CHUNK_NUMBER))));
-    }
-
-    private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(BlobTables.BucketBlobTable.TABLE_NAME)
+        this.insert = session.prepare(insertInto(BlobTables.BucketBlobTable.TABLE_NAME)
             .value(BUCKET, bindMarker(BUCKET))
             .value(ID, bindMarker(ID))
-            .value(NUMBER_OF_CHUNK, bindMarker(NUMBER_OF_CHUNK)));
-    }
+            .value(NUMBER_OF_CHUNK, bindMarker(NUMBER_OF_CHUNK))
+            .build());
 
-    private PreparedStatement prepareInsertPart(Session session) {
-        return session.prepare(insertInto(BucketBlobParts.TABLE_NAME)
+        this.insertPart = session.prepare(insertInto(BucketBlobParts.TABLE_NAME)
             .value(BucketBlobParts.BUCKET, bindMarker(BucketBlobParts.BUCKET))
             .value(BucketBlobParts.ID, bindMarker(BucketBlobParts.ID))
             .value(BucketBlobParts.CHUNK_NUMBER, bindMarker(BucketBlobParts.CHUNK_NUMBER))
-            .value(BucketBlobParts.DATA, bindMarker(BucketBlobParts.DATA)));
+            .value(BucketBlobParts.DATA, bindMarker(BucketBlobParts.DATA))
+            .build());
+
+        this.select = session.prepare(selectFrom(BlobTables.BucketBlobTable.TABLE_NAME)
+            .all()
+            .whereColumn(BUCKET).isEqualTo(bindMarker(BUCKET))
+            .whereColumn(ID).isEqualTo(bindMarker(ID))
+            .build());
+
+        this.selectPart = session.prepare(selectFrom(BucketBlobParts.TABLE_NAME)
+            .all()
+            .whereColumn(BUCKET).isEqualTo(bindMarker(BUCKET))
+            .whereColumn(ID).isEqualTo(bindMarker(ID))
+            .whereColumn(BucketBlobParts.CHUNK_NUMBER).isEqualTo(bindMarker(BucketBlobParts.CHUNK_NUMBER))
+            .build());
+
+        this.listAll = session.prepare(selectFrom(BlobTables.BucketBlobTable.TABLE_NAME)
+            .all()
+            .build());
+
+        this.listBucketContent = session.prepare(selectFrom(BlobTables.BucketBlobTable.TABLE_NAME)
+            .all()
+            .whereColumn(BUCKET).isEqualTo(bindMarker(BUCKET))
+            .allowFiltering()
+            .build());
+
+        this.deleteParts = session.prepare(deleteFrom(BucketBlobParts.TABLE_NAME)
+            .whereColumn(BucketBlobParts.BUCKET).isEqualTo(bindMarker(BucketBlobParts.BUCKET))
+            .whereColumn(BucketBlobParts.ID).isEqualTo(bindMarker(BucketBlobParts.ID))
+            .build());
+
+        this.delete = session.prepare(deleteFrom(BlobTables.BucketBlobTable.TABLE_NAME)
+            .whereColumn(BUCKET).isEqualTo(bindMarker(BUCKET))
+            .whereColumn(ID).isEqualTo(bindMarker(ID))
+            .build());
     }
 
     Mono<Void> writePart(ByteBuffer data, BucketName bucketName, BlobId blobId, int position) {
@@ -136,7 +120,7 @@ public class CassandraBucketDAO {
                 .setString(BucketBlobParts.BUCKET, bucketName.asString())
                 .setString(BucketBlobParts.ID, blobId.asString())
                 .setInt(BucketBlobParts.CHUNK_NUMBER, position)
-                .setBytes(BucketBlobParts.DATA, data));
+                .setByteBuffer(BucketBlobParts.DATA, data));
     }
 
     Mono<Void> saveBlobPartsReferences(BucketName bucketName, BlobId blobId, int numberOfChunk) {
@@ -157,29 +141,29 @@ public class CassandraBucketDAO {
 
     Mono<Integer> selectRowCountClOne(BucketName bucketName, BlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
-            select.bind()
-                .setString(BUCKET, bucketName.asString())
-                .setString(ID, blobId.asString())
-                .setConsistencyLevel(LOCAL_ONE))
+                select.bind()
+                    .setString(BUCKET, bucketName.asString())
+                    .setString(ID, blobId.asString())
+                    .setExecutionProfile(optimisticConsistencyLevelProfile))
             .map(row -> row.getInt(NUMBER_OF_CHUNK));
     }
 
     Mono<ByteBuffer> readPart(BucketName bucketName, BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
-            selectPart.bind()
-                .setString(BucketBlobParts.BUCKET, bucketName.asString())
-                .setString(BucketBlobParts.ID, blobId.asString())
-                .setInt(BucketBlobParts.CHUNK_NUMBER, position))
+                selectPart.bind()
+                    .setString(BucketBlobParts.BUCKET, bucketName.asString())
+                    .setString(BucketBlobParts.ID, blobId.asString())
+                    .setInt(BucketBlobParts.CHUNK_NUMBER, position))
             .map(this::rowToData);
     }
 
     Mono<ByteBuffer> readPartClOne(BucketName bucketName, BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
-            selectPart.bind()
-                .setString(BucketBlobParts.BUCKET, bucketName.asString())
-                .setString(BucketBlobParts.ID, blobId.asString())
-                .setInt(BucketBlobParts.CHUNK_NUMBER, position)
-                .setConsistencyLevel(LOCAL_ONE))
+                selectPart.bind()
+                    .setString(BucketBlobParts.BUCKET, bucketName.asString())
+                    .setString(BucketBlobParts.ID, blobId.asString())
+                    .setInt(BucketBlobParts.CHUNK_NUMBER, position)
+                    .setExecutionProfile(optimisticConsistencyLevelProfile))
             .map(this::rowToData);
     }
 
@@ -204,11 +188,11 @@ public class CassandraBucketDAO {
 
     public Flux<BlobId> listAll(BucketName bucketName) {
         return cassandraAsyncExecutor.executeRows(listBucketContent.bind()
-            .setString(BUCKET, bucketName.asString()))
+                .setString(BUCKET, bucketName.asString()))
             .map(row -> blobIdFactory.from(row.getString(ID)));
     }
 
     private ByteBuffer rowToData(Row row) {
-        return row.getBytes(BucketBlobParts.DATA);
+        return row.getByteBuffer(BucketBlobParts.DATA);
     }
 }

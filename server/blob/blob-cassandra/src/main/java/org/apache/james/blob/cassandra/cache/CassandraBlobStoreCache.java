@@ -19,14 +19,11 @@
 
 package org.apache.james.blob.cassandra.cache;
 
-import static com.datastax.driver.core.ConsistencyLevel.ALL;
-import static com.datastax.driver.core.ConsistencyLevel.ONE;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.DATA;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TABLE_NAME;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TTL_FOR_ROW;
@@ -38,14 +35,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
@@ -59,20 +58,32 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
     private final PreparedStatement selectStatement;
     private final PreparedStatement deleteStatement;
 
-    private final int readTimeOutFromDataBase;
     private final int timeToLive;
+    private final DriverExecutionProfile cachingProfile;
 
     @Inject
     @VisibleForTesting
-    CassandraBlobStoreCache(@Named(InjectionNames.CACHE) Session session,
+    CassandraBlobStoreCache(@Named(InjectionNames.CACHE) CqlSession session,
                             CassandraCacheConfiguration cacheConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.insertStatement = prepareInsert(session);
-        this.selectStatement = prepareSelect(session);
-        this.deleteStatement = prepareDelete(session);
-
-        this.readTimeOutFromDataBase = Math.toIntExact(cacheConfiguration.getReadTimeOut().toMillis());
         this.timeToLive = Math.toIntExact(cacheConfiguration.getTtl().getSeconds());
+
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(ID, bindMarker(ID))
+            .value(DATA, bindMarker(DATA))
+            .usingTtl(bindMarker(TTL_FOR_ROW))
+            .build());
+
+        this.selectStatement = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(ID).isEqualTo(bindMarker(ID))
+            .build());
+
+        this.deleteStatement = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(ID).isEqualTo(bindMarker(ID))
+            .build());
+
+        cachingProfile = JamesExecutionProfiles.getCachingProfile(session);
     }
 
     @Override
@@ -85,8 +96,7 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
         return cassandraAsyncExecutor.executeSingleRow(
                 selectStatement.bind()
                     .setString(ID, blobId.asString())
-                    .setConsistencyLevel(ONE)
-                    .setReadTimeoutMillis(readTimeOutFromDataBase))
+                    .setExecutionProfile(cachingProfile))
             .map(this::toByteArray)
             .onErrorResume(e -> {
                 LOGGER.warn("Fail reading blob store cache", e);
@@ -99,16 +109,16 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
         return cassandraAsyncExecutor.executeVoid(
             deleteStatement.bind()
                 .setString(ID, blobId.asString())
-                .setConsistencyLevel(ALL));
+                .setExecutionProfile(cachingProfile));
     }
 
     private Mono<Void> save(BlobId blobId, ByteBuffer data) {
         return cassandraAsyncExecutor.executeVoid(
-            insertStatement.bind()
-                .setString(ID, blobId.asString())
-                .setBytes(DATA, data)
-                .setInt(TTL_FOR_ROW, timeToLive)
-                .setConsistencyLevel(ONE))
+                insertStatement.bind()
+                    .setString(ID, blobId.asString())
+                    .setByteBuffer(DATA, data)
+                    .setInt(TTL_FOR_ROW, timeToLive)
+                    .setExecutionProfile(cachingProfile))
             .onErrorResume(e -> {
                 LOGGER.warn("Failed saving {} in blob store cache", blobId, e);
                 return Mono.empty();
@@ -120,32 +130,10 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
     }
 
     private byte[] toByteArray(Row row) {
-        ByteBuffer byteBuffer = row.getBytes(DATA);
+        ByteBuffer byteBuffer = row.getByteBuffer(DATA);
+        assert byteBuffer != null;
         byte[] data = new byte[byteBuffer.remaining()];
         byteBuffer.get(data);
         return data;
-    }
-
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(
-            delete()
-                .from(TABLE_NAME)
-                .where(eq(ID, bindMarker(ID))));
-    }
-
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(
-            select()
-                .from(TABLE_NAME)
-                .where(eq(ID, bindMarker(ID))));
-    }
-
-    private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(
-            insertInto(TABLE_NAME)
-                .value(ID, bindMarker(ID))
-                .value(DATA, bindMarker(DATA))
-                .using(ttl(bindMarker(TTL_FOR_ROW)))
-        );
     }
 }

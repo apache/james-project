@@ -25,10 +25,10 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 
 public class CassandraBlobStoreFactory {
-    public static BlobStoreFactory.RequireStoringStrategy forTesting(Session session, MetricFactory metricFactory) {
+    public static BlobStoreFactory.RequireStoringStrategy forTesting(CqlSession session, MetricFactory metricFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
         CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session, blobIdFactory);

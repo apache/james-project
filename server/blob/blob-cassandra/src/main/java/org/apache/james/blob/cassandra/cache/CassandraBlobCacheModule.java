@@ -19,31 +19,28 @@
 
 package org.apache.james.blob.cassandra.cache;
 
-import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.DATA;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.ID;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TABLE_NAME;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.schema.compaction.TimeWindowCompactionStrategy;
 
 public interface CassandraBlobCacheModule {
-
-    double NO_READ_REPAIR = 0d;
 
     CassandraModule MODULE = CassandraModule
         .builder()
         .table(TABLE_NAME)
         .options(options -> options
-            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
-                .compactionWindowSize(1)
-                .compactionWindowUnit(HOURS))
-            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8)))
+            .withCompaction(SchemaBuilder.timeWindowCompactionStrategy()
+                .withCompactionWindow(1, TimeWindowCompactionStrategy.CompactionWindowUnit.HOURS))
+            .withCompression("LZ4Compressor", 8, 1.0)) // todo check
         .comment("Write through cache for small blobs stored in a slower blob store implementation.")
-        .statement(statement -> statement
-            .addPartitionKey(ID, DataType.text())
-            .addColumn(DATA, DataType.blob()))
+        .statement(statement ->  types -> statement
+            .withPartitionKey(ID, DataTypes.TEXT)
+            .withColumn(DATA, DataTypes.BLOB))
         .build();
 }
