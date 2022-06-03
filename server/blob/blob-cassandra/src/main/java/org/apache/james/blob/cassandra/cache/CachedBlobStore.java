@@ -38,6 +38,7 @@ import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
@@ -165,6 +166,7 @@ public class CachedBlobStore implements BlobStore {
             .switchIfEmpty(readFromBackend(bucketName, blobId)
                 .flatMap(inputStream ->
                     Mono.fromCallable(() -> ReadAheadInputStream.eager().of(inputStream).length(sizeThresholdInBytes))
+                        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                         .flatMap(readAheadInputStream -> putInCacheIfNeeded(bucketName, readAheadInputStream, blobId)
                             .thenReturn(readAheadInputStream.in))));
     }
@@ -329,7 +331,7 @@ public class CachedBlobStore implements BlobStore {
 
     private Mono<InputStream> readFromBackend(BucketName bucketName, BlobId blobId) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
-            Mono.fromCallable(() -> backend.read(bucketName, blobId))));
+            Mono.from(backend.readReactive(bucketName, blobId))));
     }
 
     private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {

@@ -38,7 +38,6 @@ class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobCacheModule.MODULE);
 
-    private static final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(50);
     private static final int DEFAULT_THRESHOLD_IN_BYTES = EIGHT_KILOBYTES.length;
     private static final Duration _2_SEC_TTL = Duration.ofSeconds(2);
 
@@ -50,7 +49,6 @@ class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
         blobIdFactory = new HashBlobId.Factory();
         CassandraCacheConfiguration cacheConfiguration = new CassandraCacheConfiguration.Builder()
             .sizeThresholdInBytes(DEFAULT_THRESHOLD_IN_BYTES)
-            .timeOut(DEFAULT_READ_TIMEOUT)
             .ttl(_2_SEC_TTL)
             .build();
         testee = new CassandraBlobStoreCache(cassandra.getConf(), cacheConfiguration);
@@ -70,7 +68,7 @@ class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
     void cacheShouldNotPropagateFailures(CassandraCluster cassandra) {
         cassandra.getConf().registerScenario(fail()
             .forever()
-            .whenQueryStartsWith("INSERT INTO blob_cache (id,data) VALUES (:id,:data) USING TTL :ttl;"));
+            .whenQueryStartsWith("INSERT INTO blob_cache"));
 
         BlobId blobId = blobIdFactory().randomId();
 
