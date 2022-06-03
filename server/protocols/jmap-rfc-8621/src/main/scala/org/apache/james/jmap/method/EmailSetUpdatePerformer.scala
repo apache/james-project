@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.method
 
-import java.util.function.Consumer
-
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import javax.mail.Flags
@@ -34,7 +32,6 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, MailboxId, MessageId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
-import org.apache.james.util.ReactorUtils
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -149,11 +146,11 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
                                  metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
                                  updateMode: FlagsUpdateMode,
                                  session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
-    val mailboxMono: SMono[MessageManager] = SMono.fromCallable(() => mailboxManager.getMailbox(mailboxId, session))
+    val mailboxMono: SMono[MessageManager] = SMono(mailboxManager.getMailboxReactive(mailboxId, session))
 
     mailboxMono.flatMap(mailbox => updateByRange(ranges, metaData,
-      range => mailbox.setFlags(flags, updateMode, range, session)))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+
+      range => SMono(mailbox.setFlagsReactive(flags, updateMode, range, session)).`then`()))
   }
 
   private def moveByRange(mailboxId: MailboxId,
@@ -164,23 +161,20 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
 
     updateByRange(ranges, metaData,
-      range => mailboxManager.moveMessages(range, mailboxId, targetId, session))
+      range => SMono(mailboxManager.moveMessagesReactive(range, mailboxId, targetId, session)).`then`())
   }
 
   private def updateByRange(ranges: List[MessageRange],
                             metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
-                            operation: Consumer[MessageRange]): SMono[Seq[EmailUpdateResult]] =
+                            operation: MessageRange => SMono[Unit]): SMono[Seq[EmailUpdateResult]] =
     SFlux.fromIterable(ranges)
       .concatMap(range => {
         val messageIds = metaData.filter(entry => entry._2.exists(composedId => range.includes(composedId.getComposedMessageId.getUid)))
           .keys
           .toSeq
-        SMono.fromCallable[Seq[EmailUpdateResult]](() => {
-          operation.accept(range)
-          messageIds.map(EmailUpdateSuccess)
-        })
+        operation.apply(range)
+          .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
           .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
-          .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       })
       .reduce(Seq[EmailUpdateResult]())( _ ++ _)
 
@@ -224,7 +218,6 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
         .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
         .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }
   }
 
@@ -238,7 +231,6 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     } else {
       SMono(messageIdManager.setFlagsReactive(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }
   }
 }
