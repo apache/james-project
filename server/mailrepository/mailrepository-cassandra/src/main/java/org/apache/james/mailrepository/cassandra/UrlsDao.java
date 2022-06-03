@@ -19,10 +19,10 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailrepository.cassandra.UrlsTable.TABLE_NAME;
 import static org.apache.james.mailrepository.cassandra.UrlsTable.URL;
 
@@ -33,9 +33,9 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,7 +47,7 @@ public class UrlsDao {
     private final PreparedStatement select;
 
     @Inject
-    public UrlsDao(Session session) {
+    public UrlsDao(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
 
         this.insert = prepareInsert(session);
@@ -55,20 +55,23 @@ public class UrlsDao {
         this.select = prepareSelect(session);
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(URL)
-            .from(TABLE_NAME)
-            .where(eq(URL, bindMarker(URL))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+                .column(URL)
+                .where(column(URL).isEqualTo(bindMarker(URL)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAll(Session session) {
-        return session.prepare(select(URL)
-            .from(TABLE_NAME));
+    private PreparedStatement prepareSelectAll(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+                .column(URL)
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
-            .value(URL, bindMarker(URL)));
+            .value(URL, bindMarker(URL))
+            .build());
     }
 
     public Mono<Void> addUrl(MailRepositoryUrl url) {

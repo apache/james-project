@@ -19,11 +19,12 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
+import static java.util.List.of;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.KEYS_TABLE_NAME;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
@@ -35,10 +36,10 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Delete;
-import com.datastax.driver.core.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.querybuilder.delete.Delete;
+import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -52,7 +53,7 @@ public class CassandraMailRepositoryKeysDAO {
     private final boolean strongConsistency;
 
     @Inject
-    public CassandraMailRepositoryKeysDAO(Session session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMailRepositoryKeysDAO(CqlSession session, CassandraConfiguration cassandraConfiguration) {
         this.strongConsistency = cassandraConfiguration.isMailRepositoryStrongConsistency();
         this.executor = new CassandraAsyncExecutor(session);
 
@@ -61,50 +62,62 @@ public class CassandraMailRepositoryKeysDAO {
         this.listKeys = prepareList(session);
     }
 
-    private PreparedStatement prepareList(Session session) {
-        return session.prepare(select(MAIL_KEY)
-            .from(KEYS_TABLE_NAME)
-            .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
+    private PreparedStatement prepareList(CqlSession session) {
+        return session.prepare(selectFrom(KEYS_TABLE_NAME)
+            .column(MAIL_KEY)
+            .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
+            .build());
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        Delete.Where deleteStatement = delete()
-            .from(KEYS_TABLE_NAME)
-            .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME)))
-            .and(eq(MAIL_KEY, bindMarker(MAIL_KEY)));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        Delete deleteStatement = deleteFrom(KEYS_TABLE_NAME)
+            .where(of(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)),
+                column(MAIL_KEY).isEqualTo(bindMarker(MAIL_KEY))));
 
         if (strongConsistency) {
-            return session.prepare(deleteStatement.ifExists());
+            return session.prepare(deleteStatement.ifExists().build());
         }
-        return session.prepare(deleteStatement);
+        return session.prepare(deleteStatement.build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         Insert insertStatement = insertInto(KEYS_TABLE_NAME)
             .value(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))
             .value(MAIL_KEY, bindMarker(MAIL_KEY));
 
         if (strongConsistency) {
-            return session.prepare(insertStatement.ifNotExists());
+            return session.prepare(insertStatement.ifNotExists().build());
         }
-        return session.prepare(insertStatement);
+        return session.prepare(insertStatement.build());
     }
 
     public Mono<Boolean> store(MailRepositoryUrl url, MailKey key) {
-        return executor.executeReturnApplied(insertKey.bind()
+        Mono<Boolean> operation = executor.executeReturnApplied(insertKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
+
+        if (strongConsistency) {
+            return operation;
+        } else {
+            return operation.switchIfEmpty(Mono.just(true));
+        }
     }
 
     public Flux<MailKey> list(MailRepositoryUrl url) {
         return executor.executeRows(listKeys.bind()
-            .setString(REPOSITORY_NAME, url.asString()))
+                .setString(REPOSITORY_NAME, url.asString()))
             .map(row -> new MailKey(row.getString(MAIL_KEY)));
     }
 
     public Mono<Boolean> remove(MailRepositoryUrl url, MailKey key) {
-        return executor.executeReturnApplied(deleteKey.bind()
+        Mono<Boolean> operation = executor.executeReturnApplied(deleteKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
+
+        if (strongConsistency) {
+            return operation;
+        } else {
+            return operation.switchIfEmpty(Mono.just(true));
+        }
     }
 }
