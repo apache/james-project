@@ -27,7 +27,7 @@ import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFa
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
-import org.apache.james.util.ReactorUtils
+import reactor.core.publisher.SynchronousSink
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object MailboxSetDeletePerformer {
@@ -63,47 +63,47 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
                                           subscriptionManager: SubscriptionManager,
                                           mailboxIdFactory: MailboxId.Factory) {
 
-  def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest): SMono[MailboxDeletionResults] = {
+  def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest): SMono[MailboxDeletionResults] =
     SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))
       .flatMap(id => delete(mailboxSession, id, mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)))
         .onErrorRecover(e => MailboxDeletionFailure(id, e)),
         maxConcurrency = 5)
       .collectSeq()
       .map(MailboxDeletionResults)
-  }
 
-  private def delete(mailboxSession: MailboxSession, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[MailboxDeletionResult] = {
+  private def delete(mailboxSession: MailboxSession, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[MailboxDeletionResult] =
     MailboxGet.parse(mailboxIdFactory)(id)
       .fold(e => SMono.error(e),
-        id => SMono.fromCallable(() => doDelete(mailboxSession, id, onDestroy))
-          .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+        id => doDelete(mailboxSession, id, onDestroy)
           .`then`(SMono.just[MailboxDeletionResult](MailboxDeletionSuccess(id))))
 
-  }
+  private def doDelete(mailboxSession: MailboxSession, id: MailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[Unit] =
+    SMono(mailboxManager.getMailboxReactive(id, mailboxSession))
+      .flatMap((mailbox: MessageManager) => {
+        if (isASystemMailbox(mailbox)) {
+          throw SystemMailboxChangeException(id)
+        }
 
-  private def doDelete(mailboxSession: MailboxSession, id: MailboxId, onDestroy: RemoveEmailsOnDestroy): Unit = {
-    val mailbox = mailboxManager.getMailbox(id, mailboxSession)
+        if (mailboxManager.hasChildren(mailbox.getMailboxPath, mailboxSession)) {
+          throw MailboxHasChildException(id)
+        }
 
-    if (isASystemMailbox(mailbox)) {
-      throw SystemMailboxChangeException(id)
-    }
-
-    if (mailboxManager.hasChildren(mailbox.getMailboxPath, mailboxSession)) {
-      throw MailboxHasChildException(id)
-    }
-
-    if (onDestroy.value) {
-      val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
-      subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
-    } else {
-      if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
-        throw MailboxHasMailException(id)
-      }
-
-      val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
-      subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
-    }
-  }
+        if (onDestroy.value) {
+          SMono(mailboxManager.deleteMailboxReactive(id, mailboxSession))
+            .flatMap(deletedMailbox => SMono(subscriptionManager.unsubscribeReactive(deletedMailbox.getName, mailboxSession)))
+            .`then`()
+        } else {
+          SMono(mailbox.getMessagesReactive(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession)).hasElement
+            .handle((hasElement: Boolean, sink: SynchronousSink[Unit]) => {
+              if (hasElement) {
+                sink.error(MailboxHasMailException(id))
+              }
+            })
+            .`then`(SMono(mailboxManager.deleteMailboxReactive(id, mailboxSession))
+              .flatMap(deletedMailbox => SMono(subscriptionManager.unsubscribeReactive(deletedMailbox.getName, mailboxSession)))
+              .`then`())
+        }
+      })
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
 }
