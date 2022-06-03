@@ -43,6 +43,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -168,6 +169,7 @@ class DSNTest {
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
             .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
             .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
+            .put(binder -> binder.bind(Authorizator.class).toInstance((userId, otherUserId) -> Authorizator.AuthorizationState.ALLOWED))
             .build();
     }
 
