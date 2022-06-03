@@ -27,7 +27,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
@@ -111,7 +110,7 @@ class PreDeletionHooksTest {
             // ignored
         }
 
-        verifyZeroInteractions(hook2);
+        verifyNoMoreInteractions(hook2);
     }
 
     @Test
@@ -133,7 +132,7 @@ class PreDeletionHooksTest {
             // ignored
         }
 
-        verifyZeroInteractions(hook2);
+        verifyNoMoreInteractions(hook2);
     }
 
     @Test

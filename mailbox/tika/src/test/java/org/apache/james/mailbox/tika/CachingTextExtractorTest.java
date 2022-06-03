@@ -26,7 +26,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -133,7 +132,7 @@ class CachingTextExtractorTest {
 
         textExtractor.extractContent(STREAM_GENERATOR.apply(0), CONTENT_TYPE);
 
-        verifyZeroInteractions(wrappedTextExtractor);
+        verifyNoMoreInteractions(wrappedTextExtractor);
     }
 
     @RepeatedTest(10)

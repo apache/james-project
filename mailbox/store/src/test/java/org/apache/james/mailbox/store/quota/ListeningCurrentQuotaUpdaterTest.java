@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
@@ -192,6 +192,6 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(deletion);
 
-        verifyZeroInteractions(mockedCurrentQuotaManager);
+        verifyNoMoreInteractions(mockedCurrentQuotaManager);
     }
 }
