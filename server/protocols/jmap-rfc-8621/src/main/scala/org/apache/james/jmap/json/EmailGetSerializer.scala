@@ -69,7 +69,7 @@ object EmailGetSerializer {
   private implicit val cidWrites: Writes[Cid] = cid => JsString(cid.getValue)
   private implicit val nameWrites: Writes[Name] = Json.valueWrites[Name]
   private implicit val threadIdWrites: Writes[ThreadId] = Json.valueWrites[ThreadId]
-  private implicit val mailboxIdsWrites: Writes[MailboxIds] = ids => JsObject(ids.value.map(id => (id.serialize(), JsBoolean(true))))
+  private implicit val mailboxIdsWrites: Writes[MailboxIds] = ids => JsObject(ids.value.map(id => (id.serialize(), JsTrue)))
   private implicit val typeWrites: Writes[Type] = Json.valueWrites[Type]
   private implicit val charsetWrites: Writes[Charset] = Json.valueWrites[Charset]
   private implicit val dispositionWrites: Writes[Disposition] = Json.valueWrites[Disposition]
@@ -193,7 +193,7 @@ object EmailGetSerializer {
       }).get
 
   private def bodyPropertiesFilteringTransformation(bodyProperties: Properties): Reads[JsValue] = {
-    case serializedMailbox: JsObject =>
+    case serializedBody: JsObject =>
       val bodyPropertiesToRemove = EmailBodyPart.allowedProperties -- bodyProperties
       val noop: JsValue => JsValue = o => o
 
@@ -204,13 +204,13 @@ object EmailGetSerializer {
           bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "htmlBody"))
         .reduceLeftOption(_ compose _)
         .getOrElse(noop)
-        .apply(serializedMailbox))
+        .apply(serializedBody))
     case js => JsSuccess(js)
   }
 
   private def bodyPropertiesFilteringTransformation(properties: Properties, field: String): JsValue => JsValue =
   {
-    case JsObject(underlying) =>JsObject(underlying.map {
+    case JsObject(underlying) => JsObject(underlying.map {
       case (key, jsValue) if key.equals(field) => (field, removeFieldsRecursively(properties).apply(jsValue))
       case (key, jsValue) => (key, jsValue)
     })

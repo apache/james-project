@@ -60,7 +60,7 @@ object ResponseSerializer {
     ) (core.Invocation.apply _)
 
   private implicit val invocationWrite: Writes[Invocation] = (invocation: Invocation) =>
-    Json.arr(invocation.methodName, invocation.arguments, invocation.methodCallId)
+    JsArray(Seq(JsString(invocation.methodName.value.value), invocation.arguments.value, JsString(invocation.methodCallId.value.value)))
   private implicit val statusWrite: Writes[HttpResponseStatus] = status => JsNumber(status.code())
 
   // RequestObject

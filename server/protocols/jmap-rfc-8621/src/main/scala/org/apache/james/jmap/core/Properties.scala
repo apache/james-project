@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.core
 
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
@@ -50,14 +51,13 @@ case class Properties(value: Set[NonEmptyString]) {
   def isEmpty(): Boolean = value.isEmpty
 
   def contains(property: NonEmptyString): Boolean = value.contains(property)
-  def containsString(property: String): Boolean = refineV[NonEmpty](property).fold(e => false, refined => contains(refined))
+
+  def containsString(property: String): Boolean = {
+    val refined: NonEmptyString = Refined.unsafeApply(property)
+    contains(refined)
+  }
 
   def format(): String = value.mkString(", ")
 
-  def filter(o: JsObject): JsObject =
-    JsObject(o.fields.filter(entry => {
-      val refined: Either[String, NonEmptyString] = refineV[NonEmpty](entry._1)
-      refined.fold(e => throw new RuntimeException(e),
-        property => value.contains(property))
-    }))
+  def filter(o: JsObject): JsObject = JsObject(o.value.filter(entry => containsString(entry._1)))
 }
