@@ -143,9 +143,10 @@ object Mailbox {
     CapabilityIdentifier.JAMES_SHARES -> Properties("namespace", "rights"))
 
   def propertiesFiltered(requestedProperties: Properties, allowedCapabilities : Set[CapabilityIdentifier]) : Properties = {
-    val propertiesToHide: Properties = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
+    val propertiesToHide: Properties = Properties(propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
       .values
-      .fold(Properties.empty())(_ ++ _)
+      .flatMap(p => p.value)
+      .toSet)
 
     (idProperty ++ requestedProperties) -- propertiesToHide
   }
