@@ -20,6 +20,7 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, Preview}
 import org.apache.james.jmap.core.Id.IdConstraint
@@ -180,17 +181,33 @@ object EmailGetSerializer {
 
   def serializeChanges(changesResponse: EmailChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 
-  def serialize(emailGetResponse: EmailGetResponse, properties: Properties, bodyProperties: Properties): JsValue =
-    Json.toJson(emailGetResponse)
-      .transform((__ \ "list").json.update {
-        case JsArray(underlying) => JsSuccess(JsArray(underlying.map(js => js.transform {
-          case jsonObject: JsObject =>
-           bodyPropertiesFilteringTransformation(bodyProperties)
-             .reads(properties.filter(jsonObject))
-          case js => JsSuccess(js)
-        }.fold(_ => JsArray(underlying), o => o))))
-        case jsValue => JsSuccess(jsValue)
-      }).get
+  def serialize(emailGetResponse: EmailGetResponse, properties: Properties, bodyProperties: Properties): JsValue = {
+    if (includesBodyProperties(properties)) {
+      val bodyTransformation = bodyPropertiesFilteringTransformation(bodyProperties)
+      Json.toJson(emailGetResponse)
+        .transform((__ \ "list").json.update {
+          case JsArray(underlying) => JsSuccess(JsArray(underlying.map(js => js.transform {
+            case jsonObject: JsObject => bodyTransformation.reads(properties.filter(jsonObject))
+            case js => JsSuccess(js)
+          }.fold(_ => JsArray(underlying), o => o))))
+          case jsValue => JsSuccess(jsValue)
+        }).get
+    } else
+      Json.toJson(emailGetResponse)
+        .transform((__ \ "list").json.update {
+          case JsArray(underlying) => JsSuccess(JsArray(underlying.map(js => js.transform {
+            case jsonObject: JsObject => JsSuccess(properties.filter(jsonObject))
+            case js => JsSuccess(js)
+          }.fold(_ => JsArray(underlying), o => o))))
+          case jsValue => JsSuccess(jsValue)
+        }).get
+  }
+
+  private def includesBodyProperties(properties: Properties): Boolean =
+    properties.contains("attachments") ||
+      properties.contains("bodyStructure") ||
+      properties.contains("textBody") ||
+      properties.contains("htmlBody")
 
   private def bodyPropertiesFilteringTransformation(bodyProperties: Properties): Reads[JsValue] = {
     case serializedBody: JsObject =>
