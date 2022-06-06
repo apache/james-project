@@ -19,11 +19,10 @@
 
 package org.apache.james.vault.metadata;
 
-import static com.datastax.driver.core.DataType.text;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface DeletedMessageMetadataModule {
 
@@ -59,30 +58,30 @@ public interface DeletedMessageMetadataModule {
         .table(StorageInformationTable.TABLE)
         .comment("Holds storage information for deleted messages in the BlobStore based DeletedMessages vault")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.noRows()))
-        .statement(statement -> statement
-            .addPartitionKey(StorageInformationTable.OWNER, text())
-            .addPartitionKey(StorageInformationTable.MESSAGE_ID, text())
-            .addColumn(StorageInformationTable.BUCKET_NAME, text())
-            .addColumn(StorageInformationTable.BLOB_ID, text()))
+            .withCaching(true, SchemaBuilder.RowsPerPartition.NONE))
+        .statement(statement -> types -> statement
+            .withPartitionKey(StorageInformationTable.OWNER, DataTypes.TEXT)
+            .withPartitionKey(StorageInformationTable.MESSAGE_ID, DataTypes.TEXT)
+            .withColumn(StorageInformationTable.BUCKET_NAME, DataTypes.TEXT)
+            .withColumn(StorageInformationTable.BLOB_ID, DataTypes.TEXT))
 
         .table(UserPerBucketTable.TABLE)
         .comment("Holds user list having deletedMessages stored in a given bucket in the BlobStore based DeletedMessages vault")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.noRows()))
-        .statement(statement -> statement
-            .addPartitionKey(UserPerBucketTable.BUCKET_NAME, text())
-            .addClusteringColumn(UserPerBucketTable.USER, text()))
+            .withCaching(true, SchemaBuilder.RowsPerPartition.NONE))
+        .statement(statement -> types -> statement
+            .withPartitionKey(UserPerBucketTable.BUCKET_NAME, DataTypes.TEXT)
+            .withClusteringColumn(UserPerBucketTable.USER, DataTypes.TEXT))
 
         .table(DeletedMessageMetadataTable.TABLE)
         .comment("Holds storage information for deleted messages in the BlobStore based DeletedMessages vault")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.noRows()))
-        .statement(statement -> statement
-            .addPartitionKey(DeletedMessageMetadataTable.BUCKET_NAME, text())
-            .addPartitionKey(DeletedMessageMetadataTable.OWNER, text())
-            .addClusteringColumn(DeletedMessageMetadataTable.MESSAGE_ID, text())
-            .addColumn(DeletedMessageMetadataTable.PAYLOAD, text()))
+            .withCaching(true, SchemaBuilder.RowsPerPartition.NONE))
+        .statement(statement -> types -> statement
+            .withPartitionKey(DeletedMessageMetadataTable.BUCKET_NAME, DataTypes.TEXT)
+            .withPartitionKey(DeletedMessageMetadataTable.OWNER, DataTypes.TEXT)
+            .withClusteringColumn(DeletedMessageMetadataTable.MESSAGE_ID, DataTypes.TEXT)
+            .withColumn(DeletedMessageMetadataTable.PAYLOAD, DataTypes.TEXT))
 
         .build();
 }

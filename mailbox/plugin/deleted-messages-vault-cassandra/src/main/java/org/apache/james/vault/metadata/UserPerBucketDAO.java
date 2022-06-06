@@ -19,11 +19,10 @@
 
 package org.apache.james.vault.metadata;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.BUCKET_NAME;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.TABLE;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.USER;
@@ -34,8 +33,8 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -48,7 +47,7 @@ public class UserPerBucketDAO {
     private final PreparedStatement listBucketsStatement;
 
     @Inject
-    UserPerBucketDAO(Session session) {
+    UserPerBucketDAO(CqlSession session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         addStatement = prepareAddUser(session);
         removeStatement = prepareRemoveBucket(session);
@@ -56,24 +55,28 @@ public class UserPerBucketDAO {
         listBucketsStatement = prepareListBuckets(session);
     }
 
-    private PreparedStatement prepareAddUser(Session session) {
+    private PreparedStatement prepareAddUser(CqlSession session) {
         return session.prepare(insertInto(TABLE)
             .value(BUCKET_NAME, bindMarker(BUCKET_NAME))
-            .value(USER, bindMarker(USER)));
+            .value(USER, bindMarker(USER))
+            .build());
     }
 
-    private PreparedStatement prepareRemoveBucket(Session session) {
-        return session.prepare(delete().from(TABLE)
-            .where(eq(BUCKET_NAME, bindMarker(BUCKET_NAME))));
+    private PreparedStatement prepareRemoveBucket(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE)
+            .whereColumn(BUCKET_NAME).isEqualTo(bindMarker(BUCKET_NAME))
+            .build());
     }
 
-    private PreparedStatement prepareListUser(Session session) {
-        return session.prepare(select(USER).from(TABLE)
-            .where(eq(BUCKET_NAME, bindMarker(BUCKET_NAME))));
+    private PreparedStatement prepareListUser(CqlSession session) {
+        return session.prepare(selectFrom(TABLE)
+            .column(USER)
+            .whereColumn(BUCKET_NAME).isEqualTo(bindMarker(BUCKET_NAME))
+            .build());
     }
 
-    private PreparedStatement prepareListBuckets(Session session) {
-        return session.prepare(select(BUCKET_NAME).from(TABLE).perPartitionLimit(1));
+    private PreparedStatement prepareListBuckets(CqlSession session) {
+        return session.prepare(selectFrom(TABLE).column(BUCKET_NAME).perPartitionLimit(1).build());
     }
 
     Flux<Username> retrieveUsers(BucketName bucketName) {

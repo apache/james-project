@@ -79,7 +79,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO storageInformation (owner,messageId,bucketName,blobId) VALUES (:owner,:messageId,:bucketName,:blobId);"));
+                    .whenQueryStartsWith("INSERT INTO storageinformation (owner,messageid,bucketname,blobid)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -96,7 +96,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO deletedMessageMetadata (bucketName,owner,messageId,payload) VALUES (:bucketName,:owner,:messageId,:payload);"));
+                    .whenQueryStartsWith("INSERT INTO deletedmessagemetadata (bucketname,owner,messageid,payload)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -113,7 +113,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -130,7 +130,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -151,7 +151,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -172,7 +172,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -193,7 +193,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -216,7 +216,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -238,7 +238,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("INSERT INTO userPerBucket (bucketName,user) VALUES (:bucketName,:user);"));
+                    .whenQueryStartsWith("INSERT INTO userperbucket (bucketName,user)"));
 
             try {
                 Mono.from(testee.store(DELETED_MESSAGE)).block();
@@ -262,7 +262,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("DELETE FROM userPerBucket WHERE bucketName=:bucketName;"));
+                    .whenQueryStartsWith("DELETE FROM userperbucket WHERE bucketname=:bucketname"));
             Mono.from(testee.store(DELETED_MESSAGE)).block();
 
             try {
@@ -282,7 +282,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("DELETE FROM deletedMessageMetadata WHERE owner=:owner AND bucketName=:bucketName;"));
+                    .whenQueryStartsWith("DELETE FROM deletedmessagemetadata WHERE owner=:owner AND bucketname=:bucketname"));
 
             Mono.from(testee.store(DELETED_MESSAGE)).block();
 
@@ -303,7 +303,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(1)
-                    .whenQueryStartsWith("DELETE FROM storageInformation WHERE owner=:owner AND messageId=:messageId;"));
+                    .whenQueryStartsWith("DELETE FROM storageinformation WHERE owner=:owner AND messageid=:messageid"));
 
             Mono.from(testee.store(DELETED_MESSAGE)).block();
 
