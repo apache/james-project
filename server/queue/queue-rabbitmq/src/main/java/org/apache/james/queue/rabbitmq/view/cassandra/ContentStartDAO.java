@@ -19,27 +19,25 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.ContentStartTable.CONTENT_START;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.ContentStartTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.ContentStartTable.TABLE_NAME;
 
 import java.time.Instant;
-import java.util.Date;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
@@ -52,58 +50,47 @@ public class ContentStartDAO {
     private final PreparedStatement updateOne;
 
     @Inject
-    ContentStartDAO(Session session) {
+    ContentStartDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
 
-        this.selectOne = prepareSelectOne(session);
-        this.updateOne = prepareUpdate(session);
-        this.insertOne = prepareInsertOne(session);
-    }
+        this.selectOne = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .build());
 
-    private PreparedStatement prepareSelectOne(Session session) {
-        return session.prepare(select()
-                .from(TABLE_NAME)
-                .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME))));
-    }
+        this.updateOne = session.prepare(update(TABLE_NAME)
+            .setColumn(CONTENT_START, bindMarker(CONTENT_START))
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .build());
 
-    private PreparedStatement prepareUpdate(Session session) {
-        return session.prepare(update(TABLE_NAME)
-            .with(set(CONTENT_START, bindMarker(CONTENT_START)))
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME))));
-    }
-
-    private PreparedStatement prepareInsertOne(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-            .ifNotExists()
+        this.insertOne = session.prepare(insertInto(TABLE_NAME)
             .value(CONTENT_START, bindMarker(CONTENT_START))
-            .value(QUEUE_NAME, bindMarker(QUEUE_NAME)));
+            .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
+            .ifNotExists()
+            .build());
     }
 
     Mono<Instant> findContentStart(MailQueueName queueName) {
         return selectOne(queueName)
-            .map(this::getContentStart);
+            .mapNotNull(row -> row.getInstant(CONTENT_START));
     }
 
     Mono<Void> updateContentStart(MailQueueName mailQueueName, Instant sliceStart) {
         return executor.executeVoid(updateOne.bind()
-            .setTimestamp(CONTENT_START, Date.from(sliceStart))
+            .setInstant(CONTENT_START, sliceStart)
             .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     Mono<Void> insertInitialContentStart(MailQueueName mailQueueName, Instant sliceStart) {
         return executor.executeVoid(insertOne.bind()
-            .setTimestamp(CONTENT_START, Date.from(sliceStart))
+            .setInstant(CONTENT_START, sliceStart)
             .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     @VisibleForTesting
     Mono<Row> selectOne(MailQueueName queueName) {
         return executor.executeSingleRow(
-                selectOne.bind()
-                    .setString(QUEUE_NAME, queueName.asString()));
-    }
-
-    private Instant getContentStart(Row row) {
-        return row.getTimestamp(CONTENT_START).toInstant();
+            selectOne.bind()
+                .setString(QUEUE_NAME, queueName.asString()));
     }
 }

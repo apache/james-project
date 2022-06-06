@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.Function;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -35,7 +36,6 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Flux;

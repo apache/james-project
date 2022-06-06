@@ -19,12 +19,11 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ATTRIBUTES;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BODY_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BUCKET_ID;
@@ -47,6 +46,7 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUti
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toRawAttributeMap;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toTupleList;
 
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Optional;
 
@@ -63,10 +63,12 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.TupleType;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.data.TupleValue;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.TupleType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -75,48 +77,51 @@ import reactor.core.publisher.Mono;
 
 public class EnqueuedMailsDAO {
     private final CassandraAsyncExecutor executor;
-    private final PreparedStatement selectFrom;
-    private final PreparedStatement selectBlobIds;
-    private final PreparedStatement insert;
-    private final PreparedStatement deleteBucket;
+    private final PreparedStatement selectStatement;
+    private final PreparedStatement selectBlobIdsStatement;
+    private final PreparedStatement insertStatement;
+    private final PreparedStatement deleteBucketStatement;
     private final BlobId.Factory blobFactory;
     private final TupleType userHeaderNameHeaderValueTriple;
 
     @VisibleForTesting
     @Inject
-    public EnqueuedMailsDAO(Session session, BlobId.Factory blobIdFactory) {
+    public EnqueuedMailsDAO(CqlSession session, BlobId.Factory blobIdFactory) {
         this.executor = new CassandraAsyncExecutor(session);
 
-        this.selectFrom = prepareSelectFrom(session);
-        this.insert = prepareInsert(session);
-        this.deleteBucket = prepareDeleteBucket(session);
-        this.selectBlobIds = prepareSelectBlobIds(session);
+        this.selectStatement = prepareSelectFrom(session);
+        this.insertStatement = prepareInsert(session);
+        this.deleteBucketStatement = prepareDeleteBucket(session);
+        this.selectBlobIdsStatement = prepareSelectBlobIds(session);
         this.blobFactory = blobIdFactory;
-        this.userHeaderNameHeaderValueTriple = session.getCluster().getMetadata().newTupleType(text(), text(), text());
+
+        this.userHeaderNameHeaderValueTriple = DataTypes.tupleOf(DataTypes.TEXT, DataTypes.TEXT, DataTypes.TEXT);
     }
 
-    private PreparedStatement prepareSelectFrom(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
-            .and(eq(TIME_RANGE_START, bindMarker(TIME_RANGE_START)))
-            .and(eq(BUCKET_ID, bindMarker(BUCKET_ID))));
+    private PreparedStatement prepareSelectFrom(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .whereColumn(TIME_RANGE_START).isEqualTo(bindMarker(TIME_RANGE_START))
+            .whereColumn(BUCKET_ID).isEqualTo(bindMarker(BUCKET_ID))
+            .build());
     }
 
-    private PreparedStatement prepareSelectBlobIds(Session session) {
-        return session.prepare(select(HEADER_BLOB_ID, BODY_BLOB_ID)
-            .from(TABLE_NAME));
+    private PreparedStatement prepareSelectBlobIds(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(HEADER_BLOB_ID, BODY_BLOB_ID)
+            .build());
     }
 
-    private PreparedStatement prepareDeleteBucket(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
-            .and(eq(TIME_RANGE_START, bindMarker(TIME_RANGE_START)))
-            .and(eq(BUCKET_ID, bindMarker(BUCKET_ID))));
+    private PreparedStatement prepareDeleteBucket(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .whereColumn(TIME_RANGE_START).isEqualTo(bindMarker(TIME_RANGE_START))
+            .whereColumn(BUCKET_ID).isEqualTo(bindMarker(BUCKET_ID))
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
             .value(TIME_RANGE_START, bindMarker(TIME_RANGE_START))
@@ -134,7 +139,8 @@ public class EnqueuedMailsDAO {
             .value(REMOTE_ADDR, bindMarker(REMOTE_ADDR))
             .value(REMOTE_HOST, bindMarker(REMOTE_HOST))
             .value(LAST_UPDATED, bindMarker(LAST_UPDATED))
-            .value(PER_RECIPIENT_SPECIFIC_HEADERS, bindMarker(PER_RECIPIENT_SPECIFIC_HEADERS)));
+            .value(PER_RECIPIENT_SPECIFIC_HEADERS, bindMarker(PER_RECIPIENT_SPECIFIC_HEADERS))
+            .build());
     }
 
     Mono<Void> insert(EnqueuedItemWithSlicingContext enqueuedItemWithSlicing) {
@@ -143,55 +149,57 @@ public class EnqueuedMailsDAO {
         Mail mail = enqueuedItem.getMail();
         MimeMessagePartsId mimeMessagePartsId = enqueuedItem.getPartsId();
 
-        BoundStatement statement = insert.bind()
+        BoundStatementBuilder statement = insertStatement.boundStatementBuilder()
             .setString(QUEUE_NAME, enqueuedItem.getMailQueueName().asString())
-            .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
+            .setInstant(TIME_RANGE_START, slicingContext.getTimeRangeStart())
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
-            .setTimestamp(ENQUEUED_TIME, Date.from(enqueuedItem.getEnqueuedTime()))
-            .setUUID(ENQUEUE_ID, enqueuedItem.getEnqueueId().asUUID())
+            .setInstant(ENQUEUED_TIME, enqueuedItem.getEnqueuedTime())
+            .setUuid(ENQUEUE_ID, enqueuedItem.getEnqueueId().asUUID())
             .setString(NAME, mail.getName())
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())
-            .setList(RECIPIENTS, asStringList(mail.getRecipients()))
-
+            .setList(RECIPIENTS, asStringList(mail.getRecipients()), String.class)
             .setString(REMOTE_ADDR, mail.getRemoteAddr())
             .setString(REMOTE_HOST, mail.getRemoteHost())
-            .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
-            .setMap(ATTRIBUTES, toRawAttributeMap(mail))
-            .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(userHeaderNameHeaderValueTriple, mail.getPerRecipientSpecificHeaders()));
+            .setMap(ATTRIBUTES, toRawAttributeMap(mail), String.class, ByteBuffer.class)
+            .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(userHeaderNameHeaderValueTriple, mail.getPerRecipientSpecificHeaders()), TupleValue.class);
 
         Optional.ofNullable(mail.getErrorMessage())
             .ifPresent(errorMessage -> statement.setString(ERROR_MESSAGE, mail.getErrorMessage()));
+
+        Optional.ofNullable(mail.getLastUpdated())
+            .map(Date::toInstant)
+            .ifPresent(lastUpdated -> statement.setInstant(LAST_UPDATED, lastUpdated));
 
         mail.getMaybeSender()
             .asOptional()
             .map(MailAddress::asString)
             .ifPresent(mailAddress -> statement.setString(SENDER, mailAddress));
 
-        return executor.executeVoid(statement);
+        return executor.executeVoid(statement.build());
     }
 
     @VisibleForTesting
     public Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(MailQueueName queueName, Slice slice, BucketId bucketId) {
         return executor.executeRows(
-                selectFrom.bind()
+                selectStatement.bind()
                     .setString(QUEUE_NAME, queueName.asString())
-                    .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
+                    .setInstant(TIME_RANGE_START, slice.getStartSliceInstant())
                     .setInt(BUCKET_ID, bucketId.getValue()))
             .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory));
     }
 
     Mono<Void> deleteBucket(MailQueueName queueName, Slice slice, BucketId bucketId) {
         return executor.executeVoid(
-                deleteBucket.bind()
-                    .setString(QUEUE_NAME, queueName.asString())
-                    .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
-                    .setInt(BUCKET_ID, bucketId.getValue()));
+            deleteBucketStatement.bind()
+                .setString(QUEUE_NAME, queueName.asString())
+                .setInstant(TIME_RANGE_START, slice.getStartSliceInstant())
+                .setInt(BUCKET_ID, bucketId.getValue()));
     }
 
     Flux<BlobId> listBlobIds() {
-        return executor.executeRows(selectBlobIds.bind())
+        return executor.executeRows(selectBlobIdsStatement.bind())
             .flatMapIterable(row -> ImmutableList.of(
                 blobFactory.from(row.getString(HEADER_BLOB_ID)),
                 blobFactory.from(row.getString(BODY_BLOB_ID))));

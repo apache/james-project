@@ -67,7 +67,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.github.fge.lambdas.Throwing;
 
 class RabbitMQMailQueueConfigurationChangeTest {
@@ -142,11 +142,10 @@ class RabbitMQMailQueueConfigurationChangeTest {
         return mailQueueFactory.createQueue(SPOOL);
     }
 
-    private StartUpCheck.ResultType performStartUpCheck(Session session, CassandraMailQueueViewConfiguration configuration) {
+    private StartUpCheck.ResultType performStartUpCheck(CqlSession session, CassandraMailQueueViewConfiguration configuration) {
         EventStoreDao eventStoreDao = new EventStoreDao(
                 session,
-                JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType(),
-                cassandraCluster.getCassandraConsistenciesConfiguration());
+                JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType());
         EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(eventStoreDao));
 
         StartUpCheck check = new CassandraMailQueueViewStartUpCheck(eventsourcingConfigurationManagement, configuration);

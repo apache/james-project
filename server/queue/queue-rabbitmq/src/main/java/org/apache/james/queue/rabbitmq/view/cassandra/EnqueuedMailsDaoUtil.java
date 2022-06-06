@@ -69,9 +69,9 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.TupleType;
-import com.datastax.driver.core.TupleValue;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.data.TupleValue;
+import com.datastax.oss.driver.api.core.type.TupleType;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -81,10 +81,10 @@ public class EnqueuedMailsDaoUtil {
 
     static EnqueuedItemWithSlicingContext toEnqueuedMail(Row row, BlobId.Factory blobFactory) {
         MailQueueName queueName = MailQueueName.fromString(row.getString(QUEUE_NAME));
-        EnqueueId enqueueId = EnqueueId.of(row.getUUID(ENQUEUE_ID));
-        Instant timeRangeStart = row.getTimestamp(TIME_RANGE_START).toInstant();
+        EnqueueId enqueueId = EnqueueId.of(row.getUuid(ENQUEUE_ID));
+        Instant timeRangeStart = row.getInstant(TIME_RANGE_START);
         BucketedSlices.BucketId bucketId = BucketedSlices.BucketId.of(row.getInt(BUCKET_ID));
-        Instant enqueuedTime = row.getTimestamp(ENQUEUED_TIME).toInstant();
+        Instant enqueuedTime = row.getInstant(ENQUEUED_TIME);
         BlobId headerBlobId = blobFactory.from(row.getString(HEADER_BLOB_ID));
         BlobId bodyBlobId = blobFactory.from(row.getString(BODY_BLOB_ID));
         MimeMessagePartsId mimeMessagePartsId = MimeMessagePartsId
@@ -105,7 +105,11 @@ public class EnqueuedMailsDaoUtil {
         String remoteHost = row.getString(REMOTE_HOST);
         String errorMessage = row.getString(ERROR_MESSAGE);
         String name = row.getString(NAME);
-        Date lastUpdated = row.getTimestamp(LAST_UPDATED);
+
+        Date lastUpdated = Optional.ofNullable(row.getInstant(LAST_UPDATED))
+            .map(Date::from)
+            .orElse(null);
+
         Map<String, ByteBuffer> rawAttributes = row.getMap(ATTRIBUTES, String.class, ByteBuffer.class);
         PerRecipientHeaders perRecipientHeaders = fromList(row.getList(PER_RECIPIENT_SPECIFIC_HEADERS, TupleValue.class));
 

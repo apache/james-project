@@ -19,27 +19,24 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.BrowseStartTable.BROWSE_START;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.BrowseStartTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.BrowseStartTable.TABLE_NAME;
 
 import java.time.Instant;
-import java.util.Date;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
@@ -52,58 +49,47 @@ public class BrowseStartDAO {
     private final PreparedStatement updateOne;
 
     @Inject
-    BrowseStartDAO(Session session) {
+    BrowseStartDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
 
-        this.selectOne = prepareSelectOne(session);
-        this.updateOne = prepareUpdate(session);
-        this.insertOne = prepareInsertOne(session);
-    }
+        this.selectOne = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .build());
 
-    private PreparedStatement prepareSelectOne(Session session) {
-        return session.prepare(select()
-                .from(TABLE_NAME)
-                .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME))));
-    }
+        this.updateOne = session.prepare(update(TABLE_NAME)
+            .setColumn(BROWSE_START, bindMarker(BROWSE_START))
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .build());
 
-    private PreparedStatement prepareUpdate(Session session) {
-        return session.prepare(update(TABLE_NAME)
-            .with(set(BROWSE_START, bindMarker(BROWSE_START)))
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME))));
-    }
-
-    private PreparedStatement prepareInsertOne(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-            .ifNotExists()
+        this.insertOne = session.prepare(insertInto(TABLE_NAME)
             .value(BROWSE_START, bindMarker(BROWSE_START))
-            .value(QUEUE_NAME, bindMarker(QUEUE_NAME)));
+            .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
+            .ifNotExists()
+            .build());
     }
 
     Mono<Instant> findBrowseStart(MailQueueName queueName) {
         return selectOne(queueName)
-            .map(this::getBrowseStart);
+            .mapNotNull(row -> row.getInstant(BROWSE_START));
     }
 
     Mono<Void> updateBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
         return executor.executeVoid(updateOne.bind()
-            .setTimestamp(BROWSE_START, Date.from(sliceStart))
+            .setInstant(BROWSE_START, sliceStart)
             .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     Mono<Void> insertInitialBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
         return executor.executeVoid(insertOne.bind()
-            .setTimestamp(BROWSE_START, Date.from(sliceStart))
+            .setInstant(BROWSE_START, sliceStart)
             .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     @VisibleForTesting
     Mono<Row> selectOne(MailQueueName queueName) {
         return executor.executeSingleRow(
-                selectOne.bind()
-                    .setString(QUEUE_NAME, queueName.asString()));
-    }
-
-    private Instant getBrowseStart(Row row) {
-        return row.getTimestamp(BROWSE_START).toInstant();
+            selectOne.bind()
+                .setString(QUEUE_NAME, queueName.asString()));
     }
 }

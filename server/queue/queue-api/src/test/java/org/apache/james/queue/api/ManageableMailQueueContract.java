@@ -46,6 +46,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -55,6 +56,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
 
@@ -82,13 +85,15 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(2L));
     }
 
+    @Timeout(30)
     @Test
     default void dequeueShouldDecreaseQueueSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
         Flux.from(getManageableMailQueue().deQueue())
-            .doOnNext(Throwing.consumer(item -> item.done(true)))
-            .blockFirst();
+            .concatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true))).subscribeOn(Schedulers.elastic()))
+            .subscribeOn(Schedulers.elastic())
+            .subscribe();
 
         Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(0L));
     }
@@ -137,6 +142,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .containsExactly("name");
     }
 
+    @Timeout(30)
     @Test
     default void browseShouldReturnEmptyWhenSingleDequeueMessage() throws Exception {
         var mail = defaultMail()
@@ -145,14 +151,14 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         enQueue(mail);
 
         Flux.from(getManageableMailQueue().deQueue())
-                .doOnNext(Throwing.consumer(item -> item.done(true)))
+            .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true)))
+                .subscribeOn(Schedulers.elastic())
+                .thenReturn(item))
                 .blockFirst();
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        assertThat(items)
-                .toIterable()
-                .isEmpty();
+        assertThat(items.hasNext()).isFalse();
     }
 
     @Test
