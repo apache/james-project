@@ -19,11 +19,10 @@
 
 package org.apache.james.vault.metadata;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.BLOB_ID;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.BUCKET_NAME;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.MESSAGE_ID;
@@ -38,8 +37,8 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -51,7 +50,7 @@ public class StorageInformationDAO {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    StorageInformationDAO(Session session, BlobId.Factory blobIdFactory) {
+    StorageInformationDAO(CqlSession session, BlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAdd(session);
         this.removeStatement = prepareRemove(session);
@@ -59,25 +58,28 @@ public class StorageInformationDAO {
         this.blobIdFactory = blobIdFactory;
     }
 
-    private PreparedStatement prepareRead(Session session) {
-        return session.prepare(select(BUCKET_NAME, BLOB_ID)
-            .from(TABLE)
-            .where(eq(OWNER, bindMarker(OWNER)))
-            .and(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    private PreparedStatement prepareRead(CqlSession session) {
+        return session.prepare(selectFrom(TABLE)
+            .columns(BUCKET_NAME, BLOB_ID)
+            .whereColumn(OWNER).isEqualTo(bindMarker(OWNER))
+            .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
+            .build());
     }
 
-    private PreparedStatement prepareRemove(Session session) {
-        return session.prepare(delete().from(TABLE)
-            .where(eq(OWNER, bindMarker(OWNER)))
-            .and(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    private PreparedStatement prepareRemove(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE)
+            .whereColumn(OWNER).isEqualTo(bindMarker(OWNER))
+            .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
+            .build());
     }
 
-    private PreparedStatement prepareAdd(Session session) {
+    private PreparedStatement prepareAdd(CqlSession session) {
         return session.prepare(insertInto(TABLE)
             .value(OWNER, bindMarker(OWNER))
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
             .value(BUCKET_NAME, bindMarker(BUCKET_NAME))
-            .value(BLOB_ID, bindMarker(BLOB_ID)));
+            .value(BLOB_ID, bindMarker(BLOB_ID))
+            .build());
     }
 
     Mono<Void> referenceStorageInformation(Username username, MessageId messageId, StorageInformation storageInformation) {
