@@ -19,11 +19,11 @@
 
 package org.apache.james.jmap.cassandra.pushsubscription;
 
-import static com.datastax.driver.core.DataType.cboolean;
-import static com.datastax.driver.core.DataType.frozenSet;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timestamp;
-import static com.datastax.driver.core.DataType.uuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BOOLEAN;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMESTAMP;
+import static com.datastax.oss.driver.api.core.type.DataTypes.UUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenSetOf;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.DEVICE_CLIENT_ID;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.ENCRYPT_AUTH_SECRET;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.ENCRYPT_PUBLIC_KEY;
@@ -42,16 +42,16 @@ public interface CassandraPushSubscriptionModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraPushSubscriptionTable.TABLE_NAME)
         .comment("Hold user push subscriptions data")
-        .statement(statement -> statement
-            .addPartitionKey(USER, text())
-            .addClusteringColumn(DEVICE_CLIENT_ID, text())
-            .addColumn(ID, uuid())
-            .addColumn(EXPIRES, timestamp())
-            .addColumn(TYPES, frozenSet(text()))
-            .addColumn(URL, text())
-            .addColumn(VERIFICATION_CODE, text())
-            .addColumn(ENCRYPT_PUBLIC_KEY, text())
-            .addColumn(ENCRYPT_AUTH_SECRET, text())
-            .addColumn(VALIDATED, cboolean()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(USER, TEXT)
+            .withClusteringColumn(DEVICE_CLIENT_ID, TEXT)
+            .withColumn(ID, UUID)
+            .withColumn(EXPIRES, TIMESTAMP)
+            .withColumn(TYPES, frozenSetOf(TEXT))
+            .withColumn(URL, TEXT)
+            .withColumn(VERIFICATION_CODE, TEXT)
+            .withColumn(ENCRYPT_PUBLIC_KEY, TEXT)
+            .withColumn(ENCRYPT_AUTH_SECRET, TEXT)
+            .withColumn(VALIDATED, BOOLEAN))
         .build();
 }

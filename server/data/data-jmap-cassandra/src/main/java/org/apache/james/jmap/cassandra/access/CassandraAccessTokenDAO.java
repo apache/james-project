@@ -19,12 +19,10 @@
 
 package org.apache.james.jmap.cassandra.access;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.api.access.AccessTokenRepository.TOKEN_EXPIRATION_IN_MS;
 
 import java.util.concurrent.TimeUnit;
@@ -37,8 +35,8 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.primitives.Ints;
 
 import reactor.core.publisher.Mono;
@@ -54,39 +52,42 @@ public class CassandraAccessTokenDAO {
     private final int durationInSeconds;
 
     @Inject
-    public CassandraAccessTokenDAO(Session session, @Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
+    public CassandraAccessTokenDAO(CqlSession session, @Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.durationInSeconds = Ints.checkedCast(TimeUnit.MILLISECONDS.toSeconds(durationInMilliseconds));
 
-        this.removeStatement = session.prepare(delete()
-            .from(CassandraAccessTokenTable.TABLE_NAME)
-            .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
+        this.removeStatement = session.prepare(deleteFrom(CassandraAccessTokenTable.TABLE_NAME)
+            .whereColumn(CassandraAccessTokenTable.TOKEN).isEqualTo(bindMarker(CassandraAccessTokenTable.TOKEN))
+            .build());
 
         this.insertStatement = session.prepare(insertInto(CassandraAccessTokenTable.TABLE_NAME)
             .value(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))
             .value(CassandraAccessTokenTable.USERNAME, bindMarker(CassandraAccessTokenTable.USERNAME))
-            .using(ttl(bindMarker(TTL))));
+            .usingTtl(bindMarker(TTL))
+            .build());
 
-        this.selectStatement = session.prepare(select()
-            .from(CassandraAccessTokenTable.TABLE_NAME)
-            .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
+        this.selectStatement = session.prepare(selectFrom(CassandraAccessTokenTable.TABLE_NAME)
+            .all()
+            .whereColumn(CassandraAccessTokenTable.TOKEN)
+            .isEqualTo(bindMarker(CassandraAccessTokenTable.TOKEN))
+            .build());
     }
 
     public Mono<Void> addToken(Username username, AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(insertStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID())
+            .setUuid(CassandraAccessTokenTable.TOKEN, accessToken.asUUID())
             .setString(CassandraAccessTokenTable.USERNAME, username.asString())
             .setInt(TTL, durationInSeconds));
     }
 
     public Mono<Void> removeToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(removeStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()));
+            .setUuid(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()));
     }
 
     public Mono<Username> getUsernameFromToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeSingleRow(selectStatement.bind()
-                .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
+                .setUuid(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
             .map(row -> row.getString(CassandraAccessTokenTable.USERNAME))
             .map(Username::of);
     }

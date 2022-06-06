@@ -19,13 +19,11 @@
 
 package org.apache.james.jmap.cassandra.change;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.asc;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.desc;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.ASC;
+import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.DESC;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.cassandra.change.tables.CassandraMailboxChangeTable.ACCOUNT_ID;
 import static org.apache.james.jmap.cassandra.change.tables.CassandraMailboxChangeTable.CREATED;
 import static org.apache.james.jmap.cassandra.change.tables.CassandraMailboxChangeTable.DATE;
@@ -51,27 +49,27 @@ import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.datastax.driver.core.CodecRegistry;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.TypeCodec;
-import com.datastax.driver.core.TypeTokens;
-import com.datastax.driver.core.UserType;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.UserDefinedType;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
+import com.datastax.oss.driver.api.core.type.reflect.GenericType;
+import com.datastax.oss.driver.internal.core.type.codec.BooleanCodec;
+import com.datastax.oss.driver.internal.querybuilder.DefaultLiteral;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.TypeToken;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MailboxChangeRepositoryDAO {
-    private static final TypeToken<Set<UUID>> SET_OF_UUIDS = TypeTokens.setOf(UUID.class);
-    private static final TypeCodec<Set<UUID>> SET_OF_UUIDS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.frozenSet(DataType.uuid()), SET_OF_UUIDS);
+    private static final TypeCodec<Set<UUID>> SET_OF_UUIDS_CODEC = CodecRegistry.DEFAULT.codecFor(DataTypes.frozenSetOf(DataTypes.UUID), GenericType.setOf(UUID.class));
 
     private final CassandraAsyncExecutor executor;
-    private final UserType zonedDateTimeUserType;
+    private final UserDefinedType zonedDateTimeUserType;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectAllStatement;
     private final PreparedStatement selectFromStatement;
@@ -79,7 +77,7 @@ public class MailboxChangeRepositoryDAO {
     private final PreparedStatement selectLatestNotDelegatedStatement;
 
     @Inject
-    public MailboxChangeRepositoryDAO(Session session, CassandraTypesProvider cassandraTypesProvider) {
+    public MailboxChangeRepositoryDAO(CqlSession session, CassandraTypesProvider cassandraTypesProvider) {
         executor = new CassandraAsyncExecutor(session);
         zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME);
 
@@ -91,42 +89,49 @@ public class MailboxChangeRepositoryDAO {
             .value(IS_COUNT_CHANGE, bindMarker(IS_COUNT_CHANGE))
             .value(CREATED, bindMarker(CREATED))
             .value(UPDATED, bindMarker(UPDATED))
-            .value(DESTROYED, bindMarker(DESTROYED)));
+            .value(DESTROYED, bindMarker(DESTROYED))
+            .build());
 
-        selectAllStatement = session.prepare(select().from(TABLE_NAME)
-            .where(eq(ACCOUNT_ID, bindMarker(ACCOUNT_ID)))
-            .orderBy(asc(STATE)));
+        selectAllStatement = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(ACCOUNT_ID).isEqualTo(bindMarker(ACCOUNT_ID))
+            .orderBy(STATE, ASC)
+            .build());
 
-        selectFromStatement = session.prepare(select().from(TABLE_NAME)
-            .where(eq(ACCOUNT_ID, bindMarker(ACCOUNT_ID)))
-            .and(gte(STATE, bindMarker(STATE)))
-            .orderBy(asc(STATE)));
+        selectFromStatement = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(ACCOUNT_ID).isEqualTo(bindMarker(ACCOUNT_ID))
+            .whereColumn(STATE).isGreaterThanOrEqualTo(bindMarker(STATE))
+            .orderBy(STATE, ASC)
+            .build());
 
-        selectLatestStatement = session.prepare(select(STATE)
-            .from(TABLE_NAME)
-            .where(eq(ACCOUNT_ID, bindMarker(ACCOUNT_ID)))
-            .orderBy(desc(STATE))
-            .limit(1));
-
-        selectLatestNotDelegatedStatement = session.prepare(select(STATE)
-            .from(TABLE_NAME)
-            .where(eq(ACCOUNT_ID, bindMarker(ACCOUNT_ID)))
-            .and(eq(IS_DELEGATED, false))
-            .orderBy(desc(STATE))
+        selectLatestStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(STATE)
+            .whereColumn(ACCOUNT_ID).isEqualTo(bindMarker(ACCOUNT_ID))
+            .orderBy(STATE, DESC)
             .limit(1)
-            .allowFiltering());
+            .build());
+
+        selectLatestNotDelegatedStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(STATE)
+            .whereColumn(ACCOUNT_ID).isEqualTo(bindMarker(ACCOUNT_ID))
+            .whereColumn(IS_DELEGATED).isEqualTo(new DefaultLiteral<>(false, new BooleanCodec()))
+            .orderBy(STATE, DESC)
+            .limit(1)
+            .allowFiltering()
+            .build());
     }
 
     Mono<Void> insert(MailboxChange change) {
         return executor.executeVoid(insertStatement.bind()
             .setString(ACCOUNT_ID, change.getAccountId().getIdentifier())
-            .setUUID(STATE, change.getState().getValue())
-            .setBool(IS_COUNT_CHANGE, change.isCountChange())
-            .setBool(IS_DELEGATED, change.isDelegated())
+            .setUuid(STATE, change.getState().getValue())
+            .setBoolean(IS_COUNT_CHANGE, change.isCountChange())
+            .setBoolean(IS_DELEGATED, change.isDelegated())
             .set(CREATED, toUuidSet(change.getCreated()), SET_OF_UUIDS_CODEC)
             .set(UPDATED, toUuidSet(change.getUpdated()), SET_OF_UUIDS_CODEC)
             .set(DESTROYED, toUuidSet(change.getDestroyed()), SET_OF_UUIDS_CODEC)
-            .setUDTValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate())));
+            .setUdtValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate())));
     }
 
     private ImmutableSet<UUID> toUuidSet(List<MailboxId> idSet) {
@@ -146,29 +151,29 @@ public class MailboxChangeRepositoryDAO {
     Flux<MailboxChange> getChangesSince(AccountId accountId, State state) {
         return executor.executeRows(selectFromStatement.bind()
                 .setString(ACCOUNT_ID, accountId.getIdentifier())
-                .setUUID(STATE, state.getValue()))
+                .setUuid(STATE, state.getValue()))
             .map(this::readRow);
     }
 
     Mono<State> latestState(AccountId accountId) {
         return executor.executeSingleRow(selectLatestStatement.bind()
             .setString(ACCOUNT_ID, accountId.getIdentifier()))
-            .map(row -> State.of(row.getUUID(STATE)));
+            .map(row -> State.of(row.getUuid(STATE)));
     }
 
     Mono<State> latestStateNotDelegated(AccountId accountId) {
         return executor.executeSingleRow(selectLatestNotDelegatedStatement.bind()
             .setString(ACCOUNT_ID, accountId.getIdentifier()))
-            .map(row -> State.of(row.getUUID(STATE)));
+            .map(row -> State.of(row.getUuid(STATE)));
     }
 
     private MailboxChange readRow(Row row) {
         return MailboxChange.builder()
             .accountId(AccountId.fromString(row.getString(ACCOUNT_ID)))
-            .state(State.of(row.getUUID(STATE)))
-            .date(CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(DATE)))
-            .isCountChange(row.getBool(IS_COUNT_CHANGE))
-            .delegated(row.getBool(IS_DELEGATED))
+            .state(State.of(row.getUuid(STATE)))
+            .date(CassandraZonedDateTimeModule.fromUDT(row.getUdtValue(DATE)))
+            .isCountChange(row.getBoolean(IS_COUNT_CHANGE))
+            .delegated(row.getBoolean(IS_DELEGATED))
             .created(toIdSet(row.get(CREATED, SET_OF_UUIDS_CODEC)))
             .updated(toIdSet(row.get(UPDATED, SET_OF_UUIDS_CODEC)))
             .destroyed(toIdSet(row.get(DESTROYED, SET_OF_UUIDS_CODEC)))

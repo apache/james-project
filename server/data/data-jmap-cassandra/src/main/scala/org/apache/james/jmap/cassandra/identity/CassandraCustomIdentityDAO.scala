@@ -19,9 +19,11 @@
 
 package org.apache.james.jmap.cassandra.identity
 
-import com.datastax.driver.core.querybuilder.QueryBuilder
-import com.datastax.driver.core.querybuilder.QueryBuilder.{bindMarker, insertInto, select}
-import com.datastax.driver.core.{BoundStatement, PreparedStatement, Row, Session, UDTValue}
+import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.core.cql.{BoundStatement, PreparedStatement, Row}
+import com.datastax.oss.driver.api.core.data.UdtValue
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, deleteFrom, insertInto, selectFrom}
+import javax.inject.Inject
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.core.{MailAddress, Username}
@@ -33,10 +35,9 @@ import org.apache.james.jmap.cassandra.utils.EmailAddressTupleUtil
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import javax.inject.Inject
 import scala.jdk.javaapi.CollectionConverters
 
-case class CassandraCustomIdentityDAO @Inject()(session: Session,
+case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
                                                 typesProvider: CassandraTypesProvider) extends CustomIdentityDAO {
   val executor: CassandraAsyncExecutor = new CassandraAsyncExecutor(session)
   val emailAddressTupleUtil: EmailAddressTupleUtil = EmailAddressTupleUtil(typesProvider)
@@ -50,21 +51,24 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
     .value(BCC, bindMarker(BCC))
     .value(TEXT_SIGNATURE, bindMarker(TEXT_SIGNATURE))
     .value(HTML_SIGNATURE, bindMarker(HTML_SIGNATURE))
-    .value(MAY_DELETE, bindMarker(MAY_DELETE)))
+    .value(MAY_DELETE, bindMarker(MAY_DELETE))
+    .build())
 
-  val selectAllStatement: PreparedStatement = session.prepare(select()
-    .from(TABLE_NAME)
-    .where(QueryBuilder.eq(USER, bindMarker(USER))))
+  val selectAllStatement: PreparedStatement = session.prepare(selectFrom(TABLE_NAME)
+    .all()
+    .whereColumn(USER).isEqualTo(bindMarker(USER))
+    .build())
 
-  val selectOneStatement: PreparedStatement = session.prepare(select()
-    .from(TABLE_NAME)
-    .where(QueryBuilder.eq(USER, bindMarker(USER)))
-    .and(QueryBuilder.eq(ID, bindMarker(ID))))
+  val selectOneStatement: PreparedStatement = session.prepare(selectFrom(TABLE_NAME)
+    .all()
+    .whereColumn(USER).isEqualTo(bindMarker(USER))
+    .whereColumn(ID).isEqualTo(bindMarker(ID))
+    .build())
 
-  val deleteOneStatement: PreparedStatement = session.prepare(QueryBuilder.delete()
-    .from(TABLE_NAME)
-    .where(QueryBuilder.eq(USER, bindMarker(USER)))
-    .and(QueryBuilder.eq(ID, bindMarker(ID))))
+  val deleteOneStatement: PreparedStatement = session.prepare(deleteFrom(TABLE_NAME)
+    .whereColumn(USER).isEqualTo(bindMarker(USER))
+    .whereColumn(ID).isEqualTo(bindMarker(ID))
+    .build())
 
   override def save(user: Username, creationRequest: IdentityCreationRequest): SMono[Identity] =
     save(user, IdentityId.generate, creationRequest)
@@ -80,15 +84,15 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
 
   override def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity] =
     SMono.fromPublisher(executor.executeSingleRow(selectOneStatement.bind().setString(USER, user.asString())
-      .setUUID(ID, identityId.id))
+      .setUuid(ID, identityId.id))
       .map(toIdentity))
 
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): SMono[Unit] =
     SMono.fromPublisher(executor.executeSingleRow(selectOneStatement.bind().setString(USER, user.asString())
-      .setUUID(ID, identityId.id))
+      .setUuid(ID, identityId.id))
       .switchIfEmpty(Mono.error(() => IdentityNotFoundException(identityId)))
       .map(toIdentity)
-      .map(identityUpdate.update)
+      .map(identityUpdate.update(_))
       .flatMap(patch => insert(user, patch).`then`().asJava()))
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
@@ -98,54 +102,53 @@ case class CassandraCustomIdentityDAO @Inject()(session: Session,
     SFlux.fromIterable(ids)
       .flatMap(id => executor.executeVoid(deleteOneStatement.bind()
         .setString(USER, username.asString())
-        .setUUID(ID, id.id)))
+        .setUuid(ID, id.id)))
       .`then`()
 
   private def insert(username: Username, identity: Identity): SMono[Identity] = {
+    val replyTo: java.util.Set[UdtValue] = toJavaSet(identity.replyTo.getOrElse(List()))
+    val bcc: java.util.Set[UdtValue] = toJavaSet(identity.bcc.getOrElse(List()))
     val insertIdentity: BoundStatement = insertStatement.bind()
       .setString(USER, username.asString())
-      .setUUID(ID, identity.id.id)
+      .setUuid(ID, identity.id.id)
       .setString(NAME, identity.name.name)
       .setString(EMAIL, identity.email.asString())
       .setString(TEXT_SIGNATURE, identity.textSignature.name)
       .setString(HTML_SIGNATURE, identity.htmlSignature.name)
-      .setBool(MAY_DELETE, identity.mayDelete.value)
-
-    identity.replyTo
-      .map(listEmailAddress => insertIdentity.setSet(REPLY_TO, toJavaSet(listEmailAddress)))
-    identity.bcc
-      .map(listEmailAddress => insertIdentity.setSet(BCC, toJavaSet(listEmailAddress)))
+      .setBoolean(MAY_DELETE, identity.mayDelete.value)
+      .setSet(REPLY_TO, replyTo, classOf[UdtValue])
+      .setSet(BCC, bcc, classOf[UdtValue])
 
     SMono.fromPublisher(executor.executeVoid(insertIdentity)
       .thenReturn(identity))
   }
 
   private def toIdentity(row: Row): Identity =
-    Identity(IdentityId(row.getUUID(ID)),
+    Identity(IdentityId(row.getUuid(ID)),
       IdentityName(row.getString(NAME)),
       new MailAddress(row.getString(EMAIL)),
       toReplyTo(row),
       toBcc(row),
       TextSignature(row.getString(TEXT_SIGNATURE)),
       HtmlSignature(row.getString(HTML_SIGNATURE)),
-      MayDeleteIdentity(row.getBool(MAY_DELETE)))
+      MayDeleteIdentity(row.getBoolean(MAY_DELETE)))
 
   private def toReplyTo(row: Row): Option[List[EmailAddress]] =
-    Option(CollectionConverters.asScala(row.getSet(REPLY_TO, classOf[UDTValue]))
+    Option(CollectionConverters.asScala(row.getSet(REPLY_TO, classOf[UdtValue]))
       .toList
       .map(toEmailAddress))
 
   private def toBcc(row: Row): Option[List[EmailAddress]] =
-    Option(CollectionConverters.asScala(row.getSet(BCC, classOf[UDTValue]))
+    Option(CollectionConverters.asScala(row.getSet(BCC, classOf[UdtValue]))
       .toList
       .map(toEmailAddress))
 
-  private def toJavaSet(listEmailAddress: List[EmailAddress]): java.util.Set[UDTValue] =
+  private def toJavaSet(listEmailAddress: List[EmailAddress]): java.util.Set[UdtValue] =
     CollectionConverters.asJava(listEmailAddress.map(emailAddress =>
       emailAddressTupleUtil.createEmailAddressUDT(emailAddress.name.map(name => name.value), emailAddress.email.asString()))
       .toSet)
 
-  private def toEmailAddress(udtValue: UDTValue): EmailAddress =
+  private def toEmailAddress(udtValue: UdtValue): EmailAddress =
     EmailAddress(name = Option(udtValue.getString(CassandraCustomIdentityTable.EmailAddress.NAME)).map(string => EmailerName(string)),
       email = new MailAddress(udtValue.getString(CassandraCustomIdentityTable.EmailAddress.EMAIL)))
 }

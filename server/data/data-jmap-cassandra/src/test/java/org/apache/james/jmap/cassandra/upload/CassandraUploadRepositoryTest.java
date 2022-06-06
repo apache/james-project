@@ -39,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 import reactor.core.publisher.Mono;
 
@@ -59,7 +59,7 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
 
     @Override
     public UploadId randomUploadId() {
-        return UploadId.from(UUIDs.timeBased());
+        return UploadId.from(Uuids.timeBased());
     }
 
     @Override

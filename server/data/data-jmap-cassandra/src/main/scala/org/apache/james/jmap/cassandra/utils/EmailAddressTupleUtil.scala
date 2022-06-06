@@ -19,13 +19,15 @@
 
 package org.apache.james.jmap.cassandra.utils
 
-import com.datastax.driver.core.UDTValue
+import com.datastax.oss.driver.api.core.data.UdtValue
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable
 
 case class EmailAddressTupleUtil(typesProvider: CassandraTypesProvider) {
-  def createEmailAddressUDT(name: Option[String], email: String): UDTValue = {
-    val value = typesProvider.getDefinedUserType(CassandraCustomIdentityTable.EMAIL_ADDRESS)
+  val emailAddressType = typesProvider.getDefinedUserType(CassandraCustomIdentityTable.EMAIL_ADDRESS)
+
+  def createEmailAddressUDT(name: Option[String], email: String): UdtValue = {
+    val value = emailAddressType
       .newValue()
       .setString(CassandraCustomIdentityTable.EmailAddress.EMAIL, email)
 
