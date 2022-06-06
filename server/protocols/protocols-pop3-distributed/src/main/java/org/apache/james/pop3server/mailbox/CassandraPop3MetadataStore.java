@@ -19,15 +19,17 @@
 
 package org.apache.james.pop3server.mailbox;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.asc;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.ASC;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -35,13 +37,12 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 
 public class CassandraPop3MetadataStore implements Pop3MetadataStore {
-    private static final int LIST_ALL_TIME_OUT_MILLIS = 3600000;
 
     private final CassandraAsyncExecutor executor;
 
@@ -51,9 +52,10 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
     private final PreparedStatement add;
     private final PreparedStatement remove;
     private final PreparedStatement clear;
+    private final DriverExecutionProfile batchProfile;
 
     @Inject
-    public CassandraPop3MetadataStore(Session session) {
+    public CassandraPop3MetadataStore(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.clear = prepareClear(session);
         this.list = prepareList(session);
@@ -61,45 +63,49 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         this.select = prepareSelect(session);
         this.add = prepareAdd(session);
         this.remove = prepareRemove(session);
+
+        batchProfile = JamesExecutionProfiles.getBatchProfile(session);
     }
 
-    private PreparedStatement prepareRemove(Session session) {
-        return session.prepare(delete()
-            .from(Pop3MetadataModule.TABLE_NAME)
-            .where(QueryBuilder.eq(Pop3MetadataModule.MAILBOX_ID, bindMarker(Pop3MetadataModule.MAILBOX_ID)))
-            .and(QueryBuilder.eq(Pop3MetadataModule.MESSAGE_ID, bindMarker(Pop3MetadataModule.MESSAGE_ID))));
+    private PreparedStatement prepareRemove(CqlSession session) {
+        return session.prepare(deleteFrom(Pop3MetadataModule.TABLE_NAME)
+            .whereColumn(Pop3MetadataModule.MAILBOX_ID).isEqualTo(bindMarker(Pop3MetadataModule.MAILBOX_ID))
+            .whereColumn(Pop3MetadataModule.MESSAGE_ID).isEqualTo(bindMarker(Pop3MetadataModule.MESSAGE_ID))
+            .build());
     }
 
-    private PreparedStatement prepareClear(Session session) {
-        return session.prepare(delete()
-            .from(Pop3MetadataModule.TABLE_NAME)
-            .where(QueryBuilder.eq(Pop3MetadataModule.MAILBOX_ID, bindMarker(Pop3MetadataModule.MAILBOX_ID))));
+    private PreparedStatement prepareClear(CqlSession session) {
+        return session.prepare(deleteFrom(Pop3MetadataModule.TABLE_NAME)
+            .whereColumn(Pop3MetadataModule.MAILBOX_ID).isEqualTo(bindMarker(Pop3MetadataModule.MAILBOX_ID))
+            .build());
     }
 
-    private PreparedStatement prepareAdd(Session session) {
-        return session.prepare(QueryBuilder.insertInto(Pop3MetadataModule.TABLE_NAME)
+    private PreparedStatement prepareAdd(CqlSession session) {
+        return session.prepare(insertInto(Pop3MetadataModule.TABLE_NAME)
             .value(Pop3MetadataModule.MAILBOX_ID, bindMarker(Pop3MetadataModule.MAILBOX_ID))
             .value(Pop3MetadataModule.MESSAGE_ID, bindMarker(Pop3MetadataModule.MESSAGE_ID))
-            .value(Pop3MetadataModule.SIZE, bindMarker(Pop3MetadataModule.SIZE)));
+            .value(Pop3MetadataModule.SIZE, bindMarker(Pop3MetadataModule.SIZE))
+            .build());
     }
 
-    private PreparedStatement prepareList(Session session) {
-        return session.prepare(select()
-            .from(Pop3MetadataModule.TABLE_NAME)
-            .where(QueryBuilder.eq(Pop3MetadataModule.MAILBOX_ID, bindMarker(Pop3MetadataModule.MAILBOX_ID)))
-            .orderBy(asc(Pop3MetadataModule.MESSAGE_ID)));
+    private PreparedStatement prepareList(CqlSession session) {
+        return session.prepare(selectFrom(Pop3MetadataModule.TABLE_NAME)
+            .all()
+            .whereColumn(Pop3MetadataModule.MAILBOX_ID).isEqualTo(bindMarker(Pop3MetadataModule.MAILBOX_ID))
+            .orderBy(Pop3MetadataModule.MESSAGE_ID, ASC)
+            .build());
     }
 
-    private PreparedStatement prepareListAll(Session session) {
-        return session.prepare(select()
-            .from(Pop3MetadataModule.TABLE_NAME));
+    private PreparedStatement prepareListAll(CqlSession session) {
+        return session.prepare(selectFrom(Pop3MetadataModule.TABLE_NAME).all().build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select()
-            .from(Pop3MetadataModule.TABLE_NAME)
-            .where(QueryBuilder.eq(Pop3MetadataModule.MAILBOX_ID, bindMarker(Pop3MetadataModule.MAILBOX_ID)))
-            .and(QueryBuilder.eq(Pop3MetadataModule.MESSAGE_ID, bindMarker(Pop3MetadataModule.MESSAGE_ID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(Pop3MetadataModule.TABLE_NAME)
+            .all()
+            .whereColumn(Pop3MetadataModule.MAILBOX_ID).isEqualTo(bindMarker(Pop3MetadataModule.MAILBOX_ID))
+            .whereColumn(Pop3MetadataModule.MESSAGE_ID).isEqualTo(bindMarker(Pop3MetadataModule.MESSAGE_ID))
+            .build());
     }
 
     @Override
@@ -107,16 +113,16 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         CassandraId id = (CassandraId) mailboxId;
 
         return executor.executeRows(list.bind()
-                .setUUID(Pop3MetadataModule.MAILBOX_ID, id.asUuid()))
+                .setUuid(Pop3MetadataModule.MAILBOX_ID, id.asUuid()))
             .map(row -> new StatMetadata(
-                CassandraMessageId.Factory.of(row.getUUID(Pop3MetadataModule.MESSAGE_ID)),
+                CassandraMessageId.Factory.of(row.getUuid(Pop3MetadataModule.MESSAGE_ID)),
                 row.getLong(Pop3MetadataModule.SIZE)));
     }
 
     @Override
     public Publisher<FullMetadata> listAllEntries() {
         return executor.executeRows(listAll.bind()
-            .setReadTimeoutMillis(LIST_ALL_TIME_OUT_MILLIS))
+            .setExecutionProfile(batchProfile))
             .map(rowToFullMetadataFunction());
     }
 
@@ -125,8 +131,8 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         CassandraId id = (CassandraId) mailboxId;
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         return executor.executeRows(select.bind()
-            .setUUID(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
-            .setUUID(Pop3MetadataModule.MESSAGE_ID, cassandraMessageId.get()))
+            .setUuid(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
+            .setUuid(Pop3MetadataModule.MESSAGE_ID, cassandraMessageId.get()))
             .map(rowToFullMetadataFunction());
     }
 
@@ -136,8 +142,8 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         CassandraMessageId messageId = (CassandraMessageId) statMetadata.getMessageId();
 
         return executor.executeVoid(add.bind()
-            .setUUID(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
-            .setUUID(Pop3MetadataModule.MESSAGE_ID, messageId.get())
+            .setUuid(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
+            .setUuid(Pop3MetadataModule.MESSAGE_ID, messageId.get())
             .setLong(Pop3MetadataModule.SIZE, statMetadata.getSize()));
     }
 
@@ -147,8 +153,8 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
 
         return executor.executeVoid(remove.bind()
-            .setUUID(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
-            .setUUID(Pop3MetadataModule.MESSAGE_ID, cassandraMessageId.get()));
+            .setUuid(Pop3MetadataModule.MAILBOX_ID, id.asUuid())
+            .setUuid(Pop3MetadataModule.MESSAGE_ID, cassandraMessageId.get()));
     }
 
     @Override
@@ -156,13 +162,13 @@ public class CassandraPop3MetadataStore implements Pop3MetadataStore {
         CassandraId id = (CassandraId) mailboxId;
 
         return executor.executeVoid(clear.bind()
-            .setUUID(Pop3MetadataModule.MAILBOX_ID, id.asUuid()));
+            .setUuid(Pop3MetadataModule.MAILBOX_ID, id.asUuid()));
     }
 
     private Function<Row, FullMetadata> rowToFullMetadataFunction() {
         return row -> new FullMetadata(
-            CassandraId.of(row.getUUID(Pop3MetadataModule.MAILBOX_ID)),
-            CassandraMessageId.Factory.of(row.getUUID(Pop3MetadataModule.MESSAGE_ID)),
+            CassandraId.of(row.getUuid(Pop3MetadataModule.MAILBOX_ID)),
+            CassandraMessageId.Factory.of(row.getUuid(Pop3MetadataModule.MESSAGE_ID)),
             row.getLong(Pop3MetadataModule.SIZE));
     }
 }

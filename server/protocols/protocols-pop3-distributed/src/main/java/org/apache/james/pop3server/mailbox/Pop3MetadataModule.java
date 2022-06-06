@@ -19,14 +19,13 @@
 
 package org.apache.james.pop3server.mailbox;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.timeuuid;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.Direction.ASC;
+import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.ASC;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 import static org.apache.james.backends.cassandra.utils.CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface Pop3MetadataModule {
     String TABLE_NAME = "pop3metadata";
@@ -37,11 +36,11 @@ public interface Pop3MetadataModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Store metadata to answer efficiently the STAT queries based on the messageId. No further reads required on other tables.")
         .options(options -> options
-            .clusteringOrder(MESSAGE_ID, ASC)
-            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(MAILBOX_ID, timeuuid())
-            .addClusteringColumn(MESSAGE_ID, timeuuid())
-            .addColumn(SIZE, bigint()))
+            .withClusteringOrder(MESSAGE_ID, ASC)
+            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(MAILBOX_ID, DataTypes.TIMEUUID)
+            .withClusteringColumn(MESSAGE_ID, DataTypes.TIMEUUID)
+            .withColumn(SIZE, DataTypes.BIGINT))
         .build();
 }
