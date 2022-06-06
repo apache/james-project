@@ -386,7 +386,7 @@ trait PushSubscriptionRepositoryContract {
 
   @Test
   def saveSubscriptionWithFullKeyPairShouldSucceed(): Unit = {
-    val fullKeyPair = Some(PushSubscriptionKeys.apply(p256dh = "p256h", auth = "auth"))
+    val fullKeyPair = Some(PushSubscriptionKeys(p256dh = "p256h", auth = "auth"))
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URL("https://example.com/push")),

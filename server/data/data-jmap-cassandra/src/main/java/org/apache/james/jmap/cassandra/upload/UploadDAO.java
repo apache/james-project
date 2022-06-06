@@ -19,11 +19,9 @@
 
 package org.apache.james.jmap.cassandra.upload;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.cassandra.upload.UploadModule.BLOB_ID;
 import static org.apache.james.jmap.cassandra.upload.UploadModule.BUCKET_ID;
 import static org.apache.james.jmap.cassandra.upload.UploadModule.CONTENT_TYPE;
@@ -41,8 +39,8 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.mailbox.model.ContentType;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -131,7 +129,7 @@ public class UploadDAO {
     private final PreparedStatement selectOne;
 
     @Inject
-    public UploadDAO(Session session, BlobId.Factory blobIdFactory, UploadConfiguration configuration) {
+    public UploadDAO(CqlSession session, BlobId.Factory blobIdFactory, UploadConfiguration configuration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.blobIdFactory = blobIdFactory;
         this.insert = session.prepare(insertInto(TABLE_NAME)
@@ -141,14 +139,18 @@ public class UploadDAO {
             .value(SIZE, bindMarker(SIZE))
             .value(USER, bindMarker(USER))
             .value(CONTENT_TYPE, bindMarker(CONTENT_TYPE))
-            .using(ttl((int) configuration.getUploadTtlDuration().getSeconds())));
-        this.selectOne = session.prepare(select().from(TABLE_NAME)
-            .where(eq(ID, bindMarker(ID))));
+            .usingTtl((int) configuration.getUploadTtlDuration().getSeconds())
+            .build());
+        this.selectOne = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(ID)
+            .isEqualTo(bindMarker(ID))
+            .build());
     }
 
     public Mono<Void> save(UploadRepresentation uploadRepresentation) {
         return executor.executeVoid(insert.bind()
-            .setUUID(ID, uploadRepresentation.getId().getId())
+            .setUuid(ID, uploadRepresentation.getId().getId())
             .setString(BUCKET_ID, uploadRepresentation.getBucketName().asString())
             .setString(BLOB_ID, uploadRepresentation.getBlobId().asString())
             .setLong(SIZE, uploadRepresentation.getSize())
@@ -158,7 +160,7 @@ public class UploadDAO {
 
     public Mono<UploadRepresentation> retrieve(UploadId id) {
         return executor.executeSingleRow(selectOne.bind()
-            .setUUID(ID, id.getId()))
+            .setUuid(ID, id.getId()))
             .map(row -> new UploadRepresentation(id,
                 BucketName.of(row.getString(BUCKET_ID)),
                 blobIdFactory.from(row.getString(BLOB_ID)),

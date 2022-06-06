@@ -19,14 +19,12 @@
 
 package org.apache.james.jmap.cassandra.change;
 
-import static com.datastax.driver.core.DataType.cboolean;
-import static com.datastax.driver.core.DataType.frozenSet;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.Direction.ASC;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.KeyCaching.ALL;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.frozen;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.rows;
+import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.ASC;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BOOLEAN;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenSetOf;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 import static org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule.ZONED_DATE_TIME;
 import static org.apache.james.backends.cassandra.utils.CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION;
 import static org.apache.james.jmap.cassandra.change.tables.CassandraMailboxChangeTable.ACCOUNT_ID;
@@ -45,16 +43,16 @@ public interface CassandraMailboxChangeModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Holds MailboxChange definition. Used to manage Mailbox state in JMAP.")
         .options(options -> options
-            .clusteringOrder(STATE, ASC)
-            .caching(ALL, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(ACCOUNT_ID, text())
-            .addClusteringColumn(STATE, timeuuid())
-            .addUDTColumn(DATE, frozen(ZONED_DATE_TIME))
-            .addColumn(IS_DELEGATED, cboolean())
-            .addColumn(IS_COUNT_CHANGE, cboolean())
-            .addColumn(CREATED, frozenSet(timeuuid()))
-            .addColumn(UPDATED, frozenSet(timeuuid()))
-            .addColumn(DESTROYED, frozenSet(timeuuid())))
+            .withClusteringOrder(STATE, ASC)
+            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(ACCOUNT_ID, TEXT)
+            .withClusteringColumn(STATE, TIMEUUID)
+            .withColumn(DATE, types.getDefinedUserType(ZONED_DATE_TIME))
+            .withColumn(IS_DELEGATED, BOOLEAN)
+            .withColumn(IS_COUNT_CHANGE, BOOLEAN)
+            .withColumn(CREATED, frozenSetOf(TIMEUUID))
+            .withColumn(UPDATED, frozenSetOf(TIMEUUID))
+            .withColumn(DESTROYED, frozenSetOf(TIMEUUID)))
         .build();
 }

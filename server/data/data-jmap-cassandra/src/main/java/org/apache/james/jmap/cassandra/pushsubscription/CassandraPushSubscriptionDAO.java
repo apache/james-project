@@ -19,11 +19,10 @@
 
 package org.apache.james.jmap.cassandra.pushsubscription;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.DEVICE_CLIENT_ID;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.ENCRYPT_AUTH_SECRET;
 import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraPushSubscriptionTable.ENCRYPT_PUBLIC_KEY;
@@ -39,7 +38,6 @@ import static org.apache.james.jmap.cassandra.pushsubscription.tables.CassandraP
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -56,10 +54,10 @@ import org.apache.james.jmap.api.model.PushSubscriptionServerURL;
 import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.model.VerificationCode;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -77,7 +75,7 @@ public class CassandraPushSubscriptionDAO {
     private final PreparedStatement deleteOne;
 
     @Inject
-    public CassandraPushSubscriptionDAO(Session session, TypeStateFactory typeStateFactory) {
+    public CassandraPushSubscriptionDAO(CqlSession session, TypeStateFactory typeStateFactory) {
         executor = new CassandraAsyncExecutor(session);
 
         insert = session.prepare(insertInto(TABLE_NAME)
@@ -90,16 +88,17 @@ public class CassandraPushSubscriptionDAO {
             .value(VERIFICATION_CODE, bindMarker(VERIFICATION_CODE))
             .value(ENCRYPT_PUBLIC_KEY, bindMarker(ENCRYPT_PUBLIC_KEY))
             .value(ENCRYPT_AUTH_SECRET, bindMarker(ENCRYPT_AUTH_SECRET))
-            .value(VALIDATED, bindMarker(VALIDATED)));
+            .value(VALIDATED, bindMarker(VALIDATED))
+            .build());
 
-        selectAll = session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER))));
+        selectAll = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(USER).isEqualTo(bindMarker(USER)).build());
 
-        deleteOne = session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER)))
-            .and(eq(DEVICE_CLIENT_ID, bindMarker(DEVICE_CLIENT_ID))));
+        deleteOne = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(USER).isEqualTo(bindMarker(USER))
+            .whereColumn(DEVICE_CLIENT_ID).isEqualTo(bindMarker(DEVICE_CLIENT_ID))
+            .build());
 
         this.typeStateFactory = typeStateFactory;
     }
@@ -110,21 +109,21 @@ public class CassandraPushSubscriptionDAO {
             .toSet());
         Instant utcInstant = subscription.expires().value().withZoneSameInstant(ZoneOffset.UTC).toInstant();
 
-        BoundStatement insertSubscription = insert.bind()
+        BoundStatementBuilder insertSubscription = insert.boundStatementBuilder()
             .setString(USER, username.asString())
             .setString(DEVICE_CLIENT_ID, subscription.deviceClientId())
-            .setUUID(ID, subscription.id().value())
-            .setTimestamp(EXPIRES, Date.from(utcInstant))
-            .setSet(TYPES, typeNames)
+            .setUuid(ID, subscription.id().value())
+            .setInstant(EXPIRES, utcInstant)
+            .setSet(TYPES, typeNames, String.class)
             .setString(URL, subscription.url().value().toString())
             .setString(VERIFICATION_CODE, subscription.verificationCode())
-            .setBool(VALIDATED, subscription.validated());
+            .setBoolean(VALIDATED, subscription.validated());
 
         OptionConverters.toJava(subscription.keys())
             .ifPresent(keys -> insertSubscription.setString(ENCRYPT_PUBLIC_KEY, keys.p256dh())
                 .setString(ENCRYPT_AUTH_SECRET, keys.auth()));
 
-        return executor.executeVoid(insertSubscription)
+        return executor.executeVoid(insertSubscription.build())
             .thenReturn(subscription);
     }
 
@@ -141,12 +140,12 @@ public class CassandraPushSubscriptionDAO {
 
     private PushSubscription toPushSubscription(Row row) {
         return PushSubscription.apply(
-            PushSubscriptionId.apply(row.getUUID(ID)),
+            PushSubscriptionId.apply(row.getUuid(ID)),
             DeviceClientId.apply(row.getString(DEVICE_CLIENT_ID)),
             PushSubscriptionServerURL.from(row.getString(URL)).get(),
             toKeys(row),
             VerificationCode.apply(row.getString(VERIFICATION_CODE)),
-            row.getBool(VALIDATED),
+            row.getBoolean(VALIDATED),
             toExpires(row),
             toTypes(row));
     }
@@ -163,7 +162,7 @@ public class CassandraPushSubscriptionDAO {
 
     private PushSubscriptionExpiredTime toExpires(Row row) {
         return PushSubscriptionExpiredTime.apply(
-            ZonedDateTime.ofInstant(row.getTimestamp(EXPIRES).toInstant(), ZoneOffset.UTC));
+            ZonedDateTime.ofInstant(row.getInstant(EXPIRES), ZoneOffset.UTC));
     }
 
     private Seq<TypeName> toTypes(Row row) {

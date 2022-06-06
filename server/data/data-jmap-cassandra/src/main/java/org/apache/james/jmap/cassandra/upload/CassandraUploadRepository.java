@@ -17,7 +17,7 @@ import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.io.CountingInputStream;
 
 import reactor.core.publisher.Flux;
@@ -67,6 +67,6 @@ public class CassandraUploadRepository implements UploadRepository {
     }
 
     private UploadId generateId() {
-        return UploadId.from(UUIDs.timeBased());
+        return UploadId.from(Uuids.timeBased());
     }
 }

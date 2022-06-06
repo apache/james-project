@@ -21,11 +21,11 @@ package org.apache.james.jmap.cassandra.change;
 
 import org.apache.james.jmap.api.change.State;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 public class CassandraStateFactory implements State.Factory {
     @Override
     public State generate() {
-        return State.of(UUIDs.timeBased());
+        return State.of(Uuids.timeBased());
     }
 }
