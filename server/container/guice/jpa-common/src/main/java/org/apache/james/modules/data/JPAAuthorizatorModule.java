@@ -19,17 +19,17 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.mailbox.Authorizator;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
-public class JPANoAuthorizatorModule extends AbstractModule {
+public class JPAAuthorizatorModule extends AbstractModule {
 
-    @Provides
-    @Singleton
-    Authorizator provideAuthorizator() {
-        return (userId, otherUserId) -> Authorizator.AuthorizationState.FORBIDDEN;
+
+    @Override
+    protected void configure() {
+        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
     }
+
 }
