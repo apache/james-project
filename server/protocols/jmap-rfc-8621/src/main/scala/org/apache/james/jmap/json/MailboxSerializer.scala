@@ -172,16 +172,16 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(mailbox: Mailbox): JsValue = Json.toJson(mailbox)
 
-  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsValue =
+  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsValue = {
+    val mailboxTransformation = Mailbox.propertiesFiltered(properties, capabilities)
     Json.toJson(mailboxGetResponse)
       .transform((__ \ "list").json.update {
         case JsArray(underlying) => JsSuccess(JsArray(underlying.map {
-          case jsonObject: JsObject =>
-            Mailbox.propertiesFiltered(properties, capabilities)
-              .filter(jsonObject)
+          case jsonObject: JsObject => mailboxTransformation.filter(jsonObject)
           case jsValue => jsValue
         }))
       }).get
+  }
 
   def serialize(mailboxSetResponse: MailboxSetResponse, capabilities: Set[CapabilityIdentifier]): JsValue =
     Json.toJson(mailboxSetResponse)
