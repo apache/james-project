@@ -33,7 +33,6 @@ object MailboxQuerySerializer {
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
 
-
   private implicit val roleReads: Reads[Role] = {
     case JsString(value) => Role.from(value).toScala.map(JsSuccess(_))
       .getOrElse(JsError(s"$value is not a valid role"))
@@ -41,14 +40,13 @@ object MailboxQuerySerializer {
   }
 
   private implicit val filterReads: Reads[MailboxFilter] =  {
-    case JsObject(underlying) => {
-      val unsupported: collection.Set[String] = underlying.keySet.diff(MailboxFilter.SUPPORTED)
+    case jsObject: JsObject =>
+      val unsupported: collection.Set[String] = jsObject.keys.diff(MailboxFilter.SUPPORTED)
       if (unsupported.nonEmpty) {
         JsError(s"These '${unsupported.mkString("[", ", ", "]")}' was unsupported filter options")
       } else {
-        Json.reads[MailboxFilter].reads(JsObject(underlying))
+        Json.reads[MailboxFilter].reads(jsObject)
       }
-    }
     case jsValue: JsValue => Json.reads[MailboxFilter].reads(jsValue)
   }
 
