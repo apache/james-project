@@ -84,6 +84,9 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
   override def getExecutionDetails(id: TaskId): TaskExecutionDetails = executionDetailsProjection.load(id)
     .getOrElse(throw new TaskNotFoundException())
 
+  private def getExecutionDetailsReactive(id: TaskId): SMono[TaskExecutionDetails] = SMono(executionDetailsProjection.loadReactive(id))
+    .switchIfEmpty(SMono.error(new TaskNotFoundException()))
+
   override def list: util.List[TaskExecutionDetails] = listScala.asJava
 
   override def list(status: TaskManager.Status): util.List[TaskExecutionDetails] = listScala
@@ -102,7 +105,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
   @throws(classOf[ReachedTimeoutException])
   override def await(id: TaskId, timeout: Duration): TaskExecutionDetails = {
     try {
-      val details = Mono.fromSupplier[TaskExecutionDetails](() => getExecutionDetails(id))
+      val details = Mono.from(getExecutionDetailsReactive(id))
         .filter(_.getStatus.isFinished)
 
       val findEvent = Flux.from(terminationSubscriber.listenEvents)

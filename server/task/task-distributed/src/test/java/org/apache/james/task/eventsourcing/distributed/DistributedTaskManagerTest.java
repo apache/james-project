@@ -31,8 +31,10 @@ import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.awaitility.Durations.ONE_SECOND;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +58,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -77,6 +80,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
+import org.apache.james.task.TaskType;
 import org.apache.james.task.TaskWithId;
 import org.apache.james.task.WorkQueue;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
@@ -91,6 +95,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -156,6 +162,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     ImmutableSet<TaskDTOModule<?, ?>> taskDTOModules =
         ImmutableSet.of(
+            CassandraExecutingTask.module(CASSANDRA_CLUSTER.getCassandraCluster().getConf()),
             TestTaskDTOModules.FAILS_DESERIALIZATION_TASK_MODULE,
             TestTaskDTOModules.COMPLETED_TASK_MODULE,
             TestTaskDTOModules.FAILED_TASK_MODULE,
@@ -538,16 +545,16 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         cassandra.getConf().registerScenario(Scenario.combine(
             executeNormally()
                 .times(2) // submit + inProgress
-                .whenQueryStartsWith("INSERT INTO eventStore"),
+                .whenQueryStartsWith("INSERT INTO eventstore"),
             executeNormally()
                 .times(2) // submit + inProgress
-                .whenQueryStartsWith("INSERT INTO taskExecutionDetailsProjection"),
+                .whenQueryStartsWith("INSERT INTO taskexecutiondetailsprojection"),
             fail()
                 .forever()
-                .whenQueryStartsWith("INSERT INTO eventStore"),
+                .whenQueryStartsWith("INSERT INTO eventstore"),
             fail()
                 .forever()
-                .whenQueryStartsWith("INSERT INTO taskExecutionDetailsProjection")));
+                .whenQueryStartsWith("INSERT INTO taskexecutiondetailsprojection")));
         taskManager.submit(new FailedTask());
 
         Thread.sleep(1000);
@@ -557,6 +564,100 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         TaskId id2 = taskManager.submit(new CompletedTask());
 
         awaitUntilTaskHasStatus(id2, TaskManager.Status.COMPLETED, taskManager);
+    }
+
+    @Test
+    void cassandraTasksShouldSucceed(CassandraCluster cassandra) throws Exception {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        TaskId taskId = taskManager.submit(new CassandraExecutingTask(cassandra.getConf(), false));
+
+        TaskExecutionDetails await = taskManager.await(taskId, Duration.ofSeconds(30));
+
+        assertThat(await.getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+    void cassandraTasksShouldBeCancealable(CassandraCluster cassandra) {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        TaskId taskId = taskManager.submit(new CassandraExecutingTask(cassandra.getConf(), true));
+
+        taskManager.cancel(taskId);
+
+        awaitAtMostTwoSeconds.untilAsserted(() ->
+            assertThat(taskManager.getExecutionDetails(taskId).getStatus())
+                .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
+    }
+
+    static class CassandraExecutingTask implements Task {
+        public static class CassandraExecutingTaskDTO implements TaskDTO {
+            private final String type;
+            private final boolean pause;
+
+            public CassandraExecutingTaskDTO(@JsonProperty("type") String type, @JsonProperty("pause") boolean pause) {
+                this.type = type;
+                this.pause = pause;
+            }
+
+            public boolean isPause() {
+                return pause;
+            }
+
+            @Override
+            public String getType() {
+                return type;
+            }
+        }
+
+        public static TaskDTOModule<CassandraExecutingTask, CassandraExecutingTaskDTO> module(CqlSession session) {
+            return DTOModule
+                .forDomainObject(CassandraExecutingTask.class)
+                .convertToDTO(CassandraExecutingTaskDTO.class)
+                .toDomainObjectConverter(dto -> new CassandraExecutingTask(session, dto.isPause()))
+                .toDTOConverter((task, typeName) -> new CassandraExecutingTaskDTO(typeName, task.pause))
+                .typeName("CassandraExecutingTask")
+                .withFactory(TaskDTOModule::new);
+        }
+
+        private final CqlSession session;
+        private final boolean pause;
+
+        CassandraExecutingTask(CqlSession session, boolean pause) {
+            this.session = session;
+            this.pause = pause;
+
+            // Some task requires cassandra query execution upon their creation
+            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+                .block();
+        }
+
+        @Override
+        public Result run() throws InterruptedException {
+            // Task often execute Cassandra logic
+            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+                .block();
+
+            if (pause) {
+                Thread.sleep(120000);
+            }
+
+            return Result.COMPLETED;
+        }
+
+        @Override
+        public TaskType type() {
+            return TaskType.of("CassandraExecutingTask");
+        }
+
+        @Override
+        public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+            // Some task requires cassandra query execution upon detail generation
+            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+                .block();
+
+            return Optional.empty();
+        }
     }
 
     private Hostname getOtherNode(ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager, Hostname node) {

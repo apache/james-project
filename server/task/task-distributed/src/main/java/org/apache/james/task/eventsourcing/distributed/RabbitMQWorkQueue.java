@@ -182,8 +182,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .onErrorResume(error -> {
                 String errorMessage = String.format("Unable to run submitted Task %s", taskId.asString());
                 LOGGER.warn(errorMessage, error);
-                return Mono.from(worker.fail(taskId, task.details(), errorMessage, error))
-                    .then(Mono.empty());
+                return Mono.fromCallable(task::details)
+                    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                    .flatMap(details ->  Mono.from(worker.fail(taskId, details, errorMessage, error))
+                    .then(Mono.empty()));
             });
     }
 

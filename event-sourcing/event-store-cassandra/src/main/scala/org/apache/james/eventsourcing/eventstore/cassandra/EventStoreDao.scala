@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.eventsourcing.eventstore.History
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreTable.{AGGREGATE_ID, EVENT, EVENTS_TABLE, EVENT_ID}
 import org.apache.james.eventsourcing.{AggregateId, Event}
+import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 class EventStoreDao @Inject() (val session: CqlSession,
@@ -80,12 +81,13 @@ class EventStoreDao @Inject() (val session: CqlSession,
       .setExecutionProfile(executionProfile)
     val rows: SFlux[Row] = SFlux[Row](cassandraAsyncExecutor.executeRows(preparedStatement))
 
-    val events: SFlux[Event] = rows.map(toEvent)
+    val events: SFlux[Event] = rows.concatMap(toEvent)
     val listEvents: SMono[List[Event]] = events.collectSeq()
       .map(_.toList)
 
     listEvents.map(History.of(_))
   }
 
-  private def toEvent(row: Row): Event = jsonEventSerializer.deserialize(row.getString(EVENT))
+  private def toEvent(row: Row): SMono[Event] = SMono.fromCallable(() => jsonEventSerializer.deserialize(row.getString(EVENT)))
+    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }
