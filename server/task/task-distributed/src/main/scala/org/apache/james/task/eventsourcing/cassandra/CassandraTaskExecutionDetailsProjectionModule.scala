@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.task.eventsourcing.cassandra
 
-import com.datastax.driver.core.DataType.{text, uuid}
-import com.datastax.driver.core.schemabuilder.{Create, SchemaBuilder}
+import com.datastax.oss.driver.api.core.`type`.DataTypes
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
 import org.apache.james.backends.cassandra.components.CassandraModule
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule
 
@@ -44,22 +44,19 @@ object CassandraTaskExecutionDetailsProjectionModule {
 
   val MODULE: CassandraModule = CassandraModule.table(CassandraTaskExecutionDetailsProjectionTable.TABLE_NAME)
     .comment("Projection of TaskExecutionDetails used by the distributed task manager")
-    .options((options: Create.Options) => options
-      .caching(
-        SchemaBuilder.KeyCaching.ALL,
-        SchemaBuilder.noRows()))
-    .statement((statement: Create) => statement
-      .addPartitionKey(CassandraTaskExecutionDetailsProjectionTable.TASK_ID, uuid)
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.ADDITIONAL_INFORMATION, text)
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.TYPE, text)
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.STATUS, text)
-      .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_NODE, text)
-      .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.STARTED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.RAN_NODE, text)
-      .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.COMPLETED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-      .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.CANCELED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-      .addColumn(CassandraTaskExecutionDetailsProjectionTable.CANCEL_REQUESTED_NODE, text)
-      .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.FAILED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME)))
+    .options(options => options.withCaching(true, SchemaBuilder.RowsPerPartition.NONE))
+    .statement(statement => types => statement
+      .withPartitionKey(CassandraTaskExecutionDetailsProjectionTable.TASK_ID, DataTypes.UUID)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.ADDITIONAL_INFORMATION, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.TYPE, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.STATUS, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_NODE, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.STARTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.RAN_NODE, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.COMPLETED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.CANCELED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.CANCEL_REQUESTED_NODE, DataTypes.TEXT)
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.FAILED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME)))
     .build
 }

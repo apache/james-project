@@ -20,38 +20,46 @@ package org.apache.james.task.eventsourcing
 
 import java.util.concurrent.ConcurrentHashMap
 
-import org.apache.james.eventsourcing.Subscriber
+import org.apache.james.eventsourcing.ReactiveSubscriber
 import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
+import org.reactivestreams.Publisher
+import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.compat.java8.OptionConverters._
 import scala.jdk.CollectionConverters._
 
 trait TaskExecutionDetailsProjection {
-  def asSubscriber(hostname: Hostname): Subscriber = {
+  def asSubscriber(hostname: Hostname): ReactiveSubscriber = {
     case created: Created =>
-      update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
+      updateReactive(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
     case cancelRequested: CancelRequested =>
-      update(cancelRequested.aggregateId.taskId)(_.cancelRequested(hostname))
+      updateReactive(cancelRequested.aggregateId.taskId)(_.cancelRequested(hostname))
     case started: Started =>
-      update(started.aggregateId.taskId)(_.started(hostname))
+      updateReactive(started.aggregateId.taskId)(_.started(hostname))
     case completed: Completed =>
-      update(completed.aggregateId.taskId)(_.completed(completed.additionalInformation.asJava))
+      updateReactive(completed.aggregateId.taskId)(_.completed(completed.additionalInformation.asJava))
     case failed: Failed =>
-      update(failed.aggregateId.taskId)(_.failed(failed.additionalInformation.asJava))
+      updateReactive(failed.aggregateId.taskId)(_.failed(failed.additionalInformation.asJava))
     case canceled: Cancelled =>
-      update(canceled.aggregateId.taskId)(_.cancelEffectively(canceled.additionalInformation.asJava))
+      updateReactive(canceled.aggregateId.taskId)(_.cancelEffectively(canceled.additionalInformation.asJava))
     case updated: AdditionalInformationUpdated =>
-      update(updated.aggregateId.taskId)(_.updateInformation(updated.additionalInformation))
+      updateReactive(updated.aggregateId.taskId)(_.updateInformation(updated.additionalInformation))
   }
 
-  private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =
-    load(taskId)
+  private def updateReactive(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Publisher[Void] =
+    SMono.fromPublisher(loadReactive(taskId))
       .map(updater)
-      .foreach(update)
+      .flatMap(taskExecutionDetails => SMono.fromPublisher(updateReactive(taskExecutionDetails)))
 
   def load(taskId: TaskId): Option[TaskExecutionDetails]
   def list: List[TaskExecutionDetails]
   def update(details: TaskExecutionDetails): Unit
+
+  def loadReactive(taskId: TaskId): Publisher[TaskExecutionDetails]
+
+  def listReactive(): Publisher[TaskExecutionDetails]
+
+  def updateReactive(details: TaskExecutionDetails): Publisher[Void]
 }
 
 class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProjection {
@@ -62,4 +70,11 @@ class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProject
   override def list: List[TaskExecutionDetails] = this.details.values().asScala.toList
 
   override def update(details: TaskExecutionDetails): Unit = this.details.put(details.taskId, details)
+
+
+  override def loadReactive(taskId: TaskId): Publisher[TaskExecutionDetails] = SMono.fromCallable(() => this.details.get(taskId))
+
+  override def listReactive(): Publisher[TaskExecutionDetails] = SFlux.fromIterable(this.details.values().asScala)
+
+  override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = SMono.fromCallable(() => this.details.put(details.taskId, details)).`then`()
 }
