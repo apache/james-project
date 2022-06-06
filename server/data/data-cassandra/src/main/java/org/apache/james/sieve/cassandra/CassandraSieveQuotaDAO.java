@@ -19,13 +19,11 @@
 
 package org.apache.james.sieve.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 
 import java.util.Optional;
 
@@ -38,8 +36,8 @@ import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -56,54 +54,60 @@ public class CassandraSieveQuotaDAO {
     private final PreparedStatement deleteUserQuotaStatement;
 
     @Inject
-    public CassandraSieveQuotaDAO(Session session) {
+    public CassandraSieveQuotaDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         selectClusterQuotaStatement = session.prepare(
-            select(CassandraSieveClusterQuotaTable.VALUE)
-                .from(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
+            selectFrom(CassandraSieveClusterQuotaTable.TABLE_NAME)
+                .column(CassandraSieveClusterQuotaTable.VALUE)
+                .whereColumn(CassandraSieveClusterQuotaTable.NAME).isEqualTo(bindMarker(CassandraSieveClusterQuotaTable.NAME))
+                .build());
 
         selectSpaceUsedByUserStatement = session.prepare(
-            select(CassandraSieveSpaceTable.SPACE_USED)
-                .from(CassandraSieveSpaceTable.TABLE_NAME)
-                .where(eq(CassandraSieveSpaceTable.USER_NAME, bindMarker(CassandraSieveSpaceTable.USER_NAME))));
+            selectFrom(CassandraSieveSpaceTable.TABLE_NAME)
+                .column(CassandraSieveSpaceTable.SPACE_USED)
+                .whereColumn(CassandraSieveSpaceTable.USER_NAME).isEqualTo(bindMarker(CassandraSieveSpaceTable.USER_NAME))
+                .build());
 
         selectUserQuotaStatement = session.prepare(
-            select(CassandraSieveQuotaTable.QUOTA)
-                .from(CassandraSieveQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
+            selectFrom(CassandraSieveQuotaTable.TABLE_NAME)
+                .column(CassandraSieveQuotaTable.QUOTA)
+                .whereColumn(CassandraSieveQuotaTable.USER_NAME).isEqualTo(bindMarker(CassandraSieveQuotaTable.USER_NAME))
+                .build());
 
         updateClusterQuotaStatement = session.prepare(
             update(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .with(set(CassandraSieveClusterQuotaTable.VALUE, bindMarker(CassandraSieveClusterQuotaTable.VALUE)))
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
+                .setColumn(CassandraSieveClusterQuotaTable.VALUE, bindMarker(CassandraSieveClusterQuotaTable.VALUE))
+                .whereColumn(CassandraSieveClusterQuotaTable.NAME).isEqualTo(bindMarker(CassandraSieveClusterQuotaTable.NAME))
+                .build());
 
         updateSpaceUsedStatement = session.prepare(
             update(CassandraSieveSpaceTable.TABLE_NAME)
-                .with(incr(CassandraSieveSpaceTable.SPACE_USED, bindMarker(CassandraSieveSpaceTable.SPACE_USED)))
-                .where(eq(CassandraSieveSpaceTable.USER_NAME, bindMarker(CassandraSieveSpaceTable.USER_NAME))));
+                .increment(CassandraSieveSpaceTable.SPACE_USED, bindMarker(CassandraSieveSpaceTable.SPACE_USED))
+                .whereColumn(CassandraSieveSpaceTable.USER_NAME).isEqualTo(bindMarker(CassandraSieveSpaceTable.USER_NAME))
+                .build());
 
         updateUserQuotaStatement = session.prepare(
             update(CassandraSieveQuotaTable.TABLE_NAME)
-                .with(set(CassandraSieveQuotaTable.QUOTA, bindMarker(CassandraSieveQuotaTable.QUOTA)))
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
+                .setColumn(CassandraSieveQuotaTable.QUOTA, bindMarker(CassandraSieveQuotaTable.QUOTA))
+                .whereColumn(CassandraSieveQuotaTable.USER_NAME).isEqualTo(bindMarker(CassandraSieveQuotaTable.USER_NAME))
+                .build());
 
         deleteClusterQuotaStatement = session.prepare(
-            delete()
-                .from(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
+            deleteFrom(CassandraSieveClusterQuotaTable.TABLE_NAME)
+                .whereColumn(CassandraSieveClusterQuotaTable.NAME).isEqualTo(bindMarker(CassandraSieveClusterQuotaTable.NAME))
+                .build());
 
         deleteUserQuotaStatement = session.prepare(
-            delete()
-                .from(CassandraSieveQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
+            deleteFrom(CassandraSieveQuotaTable.TABLE_NAME)
+                .whereColumn(CassandraSieveQuotaTable.USER_NAME).isEqualTo(bindMarker(CassandraSieveQuotaTable.USER_NAME))
+                .build());
     }
 
     public Mono<Long> spaceUsedBy(Username username) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            selectSpaceUsedByUserStatement.bind()
-                .setString(CassandraSieveSpaceTable.USER_NAME, username.asString()))
+                selectSpaceUsedByUserStatement.bind()
+                    .setString(CassandraSieveSpaceTable.USER_NAME, username.asString()))
             .map(optional -> optional.map(row -> row.getLong(CassandraSieveSpaceTable.SPACE_USED))
                 .orElse(0L));
     }
@@ -117,8 +121,8 @@ public class CassandraSieveQuotaDAO {
 
     public Mono<Optional<QuotaSizeLimit>> getQuota() {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            selectClusterQuotaStatement.bind()
-                .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME))
+                selectClusterQuotaStatement.bind()
+                    .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME))
             .map(optional -> optional.map(row ->
                 QuotaSizeLimit.size(row.getLong(CassandraSieveClusterQuotaTable.VALUE))));
     }
@@ -138,8 +142,8 @@ public class CassandraSieveQuotaDAO {
 
     public Mono<Optional<QuotaSizeLimit>> getQuota(Username username) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            selectUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()))
+                selectUserQuotaStatement.bind()
+                    .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()))
             .map(optional -> optional.map(row ->
                 QuotaSizeLimit.size(row.getLong(CassandraSieveQuotaTable.QUOTA))));
     }
@@ -151,7 +155,7 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()));
     }
 
-    public Mono<Void> removeQuota(Username username)  {
+    public Mono<Void> removeQuota(Username username) {
         return cassandraAsyncExecutor.executeVoid(
             deleteUserQuotaStatement.bind()
                 .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()));

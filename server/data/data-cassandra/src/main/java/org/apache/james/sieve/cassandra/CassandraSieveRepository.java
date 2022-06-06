@@ -65,7 +65,7 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public ZonedDateTime getActivationDateForActiveScript(Username username) throws ScriptNotFoundException {
-        return cassandraActiveScriptDAO.getActiveSctiptInfo(username)
+        return cassandraActiveScriptDAO.getActiveScriptInfo(username)
             .blockOptional()
             .orElseThrow(ScriptNotFoundException::new)
             .getActivationDate();
@@ -155,7 +155,7 @@ public class CassandraSieveRepository implements SieveRepository {
     @Override
     public InputStream getActive(Username username) throws ScriptNotFoundException {
         return IOUtils.toInputStream(
-            cassandraActiveScriptDAO.getActiveSctiptInfo(username)
+            cassandraActiveScriptDAO.getActiveScriptInfo(username)
                 .flatMap(activeScriptInfo -> cassandraSieveDAO.getScript(username, activeScriptInfo.getName()))
                 .blockOptional()
                 .orElseThrow(ScriptNotFoundException::new)
@@ -166,18 +166,18 @@ public class CassandraSieveRepository implements SieveRepository {
     @Override
     public void setActive(Username username, ScriptName name) throws ScriptNotFoundException {
         Mono<Boolean> activateNewScript =
-            unactivateOldScript(username)
+            unActivateOldScript(username)
                 .then(updateScriptActivation(username, name, true))
                 .filter(FunctionalUtils.identityPredicate())
                 .flatMap(any -> cassandraActiveScriptDAO.activate(username, name).thenReturn(any));
 
-        if (!activateNewScript.blockOptional().isPresent()) {
+        if (activateNewScript.blockOptional().isEmpty()) {
             throw new ScriptNotFoundException();
         }
     }
 
-    private Mono<Void> unactivateOldScript(Username username) {
-        return cassandraActiveScriptDAO.getActiveSctiptInfo(username)
+    private Mono<Void> unActivateOldScript(Username username) {
+        return cassandraActiveScriptDAO.getActiveScriptInfo(username)
             .flatMap(activeScriptInfo -> updateScriptActivation(username, activeScriptInfo.getName(), false))
             .then();
     }
@@ -186,7 +186,7 @@ public class CassandraSieveRepository implements SieveRepository {
         if (!scriptName.equals(SieveRepository.NO_SCRIPT_NAME)) {
             return cassandraSieveDAO.updateScriptActivation(username, scriptName, active);
         }
-        return cassandraActiveScriptDAO.unactivate(username).thenReturn(true);
+        return cassandraActiveScriptDAO.unActivate(username).thenReturn(true);
     }
 
     @Override
@@ -206,7 +206,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     private void ensureIsNotActive(Username username, ScriptName name) throws IsActiveException {
-        Optional<ScriptName> activeName = cassandraActiveScriptDAO.getActiveSctiptInfo(username).blockOptional().map(ActiveScriptInfo::getName);
+        Optional<ScriptName> activeName = cassandraActiveScriptDAO.getActiveScriptInfo(username).blockOptional().map(ActiveScriptInfo::getName);
         if (activeName.isPresent() && name.equals(activeName.get())) {
             throw new IsActiveException();
         }
@@ -241,7 +241,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     private Mono<Void> performActiveScriptRename(Username username, ScriptName oldName, ScriptName newName) {
-        return cassandraActiveScriptDAO.getActiveSctiptInfo(username)
+        return cassandraActiveScriptDAO.getActiveScriptInfo(username)
             .filter(activeScriptInfo -> activeScriptInfo.getName().equals(oldName))
             .flatMap(name -> cassandraActiveScriptDAO.activate(username, newName));
     }

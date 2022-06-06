@@ -19,11 +19,10 @@
 
 package org.apache.james.domainlist.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.DOMAIN;
 import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.TABLE_NAME;
 
@@ -37,8 +36,8 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 public class CassandraDomainList extends AbstractDomainList {
     private final CassandraAsyncExecutor executor;
@@ -48,37 +47,27 @@ public class CassandraDomainList extends AbstractDomainList {
     private final PreparedStatement removeStatement;
 
     @Inject
-    public CassandraDomainList(DNSService dnsService, Session session) {
+    public CassandraDomainList(DNSService dnsService, CqlSession session) {
         super(dnsService);
         this.executor = new CassandraAsyncExecutor(session);
-        this.readAllStatement = prepareReadAllStatement(session);
-        this.readStatement = prepareReadStatement(session);
-        this.insertStatement = prepareInsertStatement(session);
-        this.removeStatement = prepareRemoveStatement(session);
-    }
+        this.readAllStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(DOMAIN)
+            .build());
 
-    private PreparedStatement prepareRemoveStatement(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .ifExists()
-            .where(eq(DOMAIN, bindMarker(DOMAIN))));
-    }
+        this.readStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(DOMAIN)
+            .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
+            .build());
 
-    private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(DOMAIN, bindMarker(DOMAIN))
             .ifNotExists()
-            .value(DOMAIN, bindMarker(DOMAIN)));
-    }
+            .build());
 
-    private PreparedStatement prepareReadStatement(Session session) {
-        return session.prepare(select(DOMAIN)
-            .from(TABLE_NAME)
-            .where(eq(DOMAIN, bindMarker(DOMAIN))));
-    }
-
-    private PreparedStatement prepareReadAllStatement(Session session) {
-        return session.prepare(select(DOMAIN)
-            .from(TABLE_NAME));
+        this.removeStatement = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
+            .ifExists()
+            .build());
     }
 
     @Override
@@ -100,7 +89,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     public void addDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(insertStatement.bind()
-            .setString(DOMAIN, domain.asString()))
+                .setString(DOMAIN, domain.asString()))
             .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " already exists.");
@@ -110,7 +99,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     public void doRemoveDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
-            .setString(DOMAIN, domain.asString()))
+                .setString(DOMAIN, domain.asString()))
             .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " was not found");

@@ -19,29 +19,28 @@
 
 package org.apache.james.vacation.cassandra;
 
-import static com.datastax.driver.core.DataType.cboolean;
-import static com.datastax.driver.core.DataType.text;
+
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.vacation.cassandra.tables.CassandraVacationTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraVacationModule {
     CassandraModule MODULE = CassandraModule.table(CassandraVacationTable.TABLE_NAME)
         .comment("Holds vacation definition. Allow one to automatically respond to emails with a custom message.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraVacationTable.ACCOUNT_ID, text())
-            .addColumn(CassandraVacationTable.IS_ENABLED, cboolean())
-            .addUDTColumn(CassandraVacationTable.FROM_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-            .addUDTColumn(CassandraVacationTable.TO_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-            .addColumn(CassandraVacationTable.TEXT, text())
-            .addColumn(CassandraVacationTable.SUBJECT, text())
-            .addColumn(CassandraVacationTable.HTML, text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraVacationTable.ACCOUNT_ID, DataTypes.TEXT)
+            .withColumn(CassandraVacationTable.IS_ENABLED, DataTypes.BOOLEAN)
+            .withColumn(CassandraVacationTable.FROM_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+            .withColumn(CassandraVacationTable.TO_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+            .withColumn(CassandraVacationTable.TEXT, DataTypes.TEXT)
+            .withColumn(CassandraVacationTable.SUBJECT, DataTypes.TEXT)
+            .withColumn(CassandraVacationTable.HTML, DataTypes.TEXT))
         .build();
 }

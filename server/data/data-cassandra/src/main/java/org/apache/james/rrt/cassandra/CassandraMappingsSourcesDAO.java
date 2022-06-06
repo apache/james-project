@@ -19,12 +19,11 @@
 
 package org.apache.james.rrt.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.MAPPING_TYPE;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.MAPPING_VALUE;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.SOURCE;
@@ -36,8 +35,8 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -50,38 +49,27 @@ public class CassandraMappingsSourcesDAO {
     private final PreparedStatement truncateStatement;
 
     @Inject
-    public CassandraMappingsSourcesDAO(Session session) {
+    public CassandraMappingsSourcesDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.insertStatement = prepareInsertStatement(session);
-        this.deleteStatement = prepareDelete(session);
-        this.retrieveSourcesStatement = prepareRetrieveSourcesStatement(session);
-        this.truncateStatement = prepareTruncateStatement(session);
-    }
-
-    private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
             .value(MAPPING_TYPE, bindMarker(MAPPING_TYPE))
             .value(MAPPING_VALUE, bindMarker(MAPPING_VALUE))
-            .value(SOURCE, bindMarker(SOURCE)));
-    }
+            .value(SOURCE, bindMarker(SOURCE))
+            .build());
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(MAPPING_TYPE, bindMarker(MAPPING_TYPE)))
-            .and(eq(MAPPING_VALUE, bindMarker(MAPPING_VALUE)))
-            .and(eq(SOURCE, bindMarker(SOURCE))));
-    }
+        this.deleteStatement = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(MAPPING_TYPE).isEqualTo(bindMarker(MAPPING_TYPE))
+            .whereColumn(MAPPING_VALUE).isEqualTo(bindMarker(MAPPING_VALUE))
+            .whereColumn(SOURCE).isEqualTo(bindMarker(SOURCE))
+            .build());
 
-    private PreparedStatement prepareRetrieveSourcesStatement(Session session) {
-        return session.prepare(select(SOURCE)
-            .from(TABLE_NAME)
-            .where(eq(MAPPING_TYPE, bindMarker(MAPPING_TYPE)))
-            .and(eq(MAPPING_VALUE, bindMarker(MAPPING_VALUE))));
-    }
+        this.retrieveSourcesStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(SOURCE)
+            .whereColumn(MAPPING_TYPE).isEqualTo(bindMarker(MAPPING_TYPE))
+            .whereColumn(MAPPING_VALUE).isEqualTo(bindMarker(MAPPING_VALUE))
+            .build());
 
-    private PreparedStatement prepareTruncateStatement(Session session) {
-        return session.prepare(truncate(TABLE_NAME));
+        this.truncateStatement = session.prepare(truncate(TABLE_NAME).build());
     }
 
     public Mono<Void> addMapping(Mapping mapping, MappingSource source) {
@@ -100,8 +88,8 @@ public class CassandraMappingsSourcesDAO {
 
     public Flux<MappingSource> retrieveSources(Mapping mapping) {
         return executor.executeRows(retrieveSourcesStatement.bind()
-            .setString(MAPPING_TYPE, mapping.getType().asPrefix())
-            .setString(MAPPING_VALUE, mapping.getMappingValue()))
+                .setString(MAPPING_TYPE, mapping.getType().asPrefix())
+                .setString(MAPPING_VALUE, mapping.getMappingValue()))
             .map(row -> MappingSource.parse(row.getString(SOURCE)));
     }
 

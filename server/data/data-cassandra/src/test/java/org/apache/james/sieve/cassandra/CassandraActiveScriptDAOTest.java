@@ -49,7 +49,7 @@ class CassandraActiveScriptDAOTest {
 
     @Test
     void getActiveSctiptInfoShouldReturnEmptyByDefault() {
-        assertThat(activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional().isPresent())
+        assertThat(activeScriptDAO.getActiveScriptInfo(USERNAME).blockOptional().isPresent())
             .isFalse();
     }
 
@@ -57,7 +57,7 @@ class CassandraActiveScriptDAOTest {
     void getActiveSctiptInfoShouldReturnStoredName() {
         activeScriptDAO.activate(USERNAME, SCRIPT_NAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveScriptInfo(USERNAME).blockOptional();
 
         assertThat(actual.isPresent()).isTrue();
         assertThat(actual.get().getName()).isEqualTo(SCRIPT_NAME);
@@ -69,7 +69,7 @@ class CassandraActiveScriptDAOTest {
 
         activeScriptDAO.activate(USERNAME, NEW_SCRIPT_NAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveScriptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isTrue();
         assertThat(actual.get().getName()).isEqualTo(NEW_SCRIPT_NAME);
     }
@@ -78,17 +78,17 @@ class CassandraActiveScriptDAOTest {
     void unactivateShouldAllowRemovingActiveScript() {
         activeScriptDAO.activate(USERNAME, SCRIPT_NAME).block();
 
-        activeScriptDAO.unactivate(USERNAME).block();
+        activeScriptDAO.unActivate(USERNAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveScriptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isFalse();
     }
 
     @Test
     void unactivateShouldWorkWhenNoneStore() {
-        activeScriptDAO.unactivate(USERNAME).block();
+        activeScriptDAO.unActivate(USERNAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveScriptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isFalse();
     }
 }

@@ -71,6 +71,6 @@ public class CassandraNotificationRegistry implements NotificationRegistry {
     }
 
     private boolean isValid(Optional<Integer> waitDelay) {
-        return !waitDelay.isPresent() || waitDelay.get() >= 0;
+        return waitDelay.isEmpty() || waitDelay.get() >= 0;
     }
 }

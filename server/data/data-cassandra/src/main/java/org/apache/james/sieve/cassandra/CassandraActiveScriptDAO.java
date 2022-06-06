@@ -19,19 +19,19 @@
 
 package org.apache.james.sieve.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.DATE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.SCRIPT_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.TABLE_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.USER_NAME;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 import javax.inject.Inject;
 
@@ -40,8 +40,8 @@ import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
 import org.apache.james.sieverepository.api.ScriptName;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -52,30 +52,34 @@ public class CassandraActiveScriptDAO {
     private final PreparedStatement selectActiveName;
 
     @Inject
-    public CassandraActiveScriptDAO(Session session) {
+    public CassandraActiveScriptDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insertActive = session.prepare(insertInto(TABLE_NAME)
             .value(SCRIPT_NAME, bindMarker(SCRIPT_NAME))
             .value(USER_NAME, bindMarker(USER_NAME))
-            .value(DATE, bindMarker(DATE)));
-        this.deleteActive = session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME))));
-        this.selectActiveName = session.prepare(select(SCRIPT_NAME, DATE)
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME))));
+            .value(DATE, bindMarker(DATE))
+            .build());
+
+        this.deleteActive = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(USER_NAME).isEqualTo(bindMarker(USER_NAME))
+            .build());
+
+        this.selectActiveName = session.prepare(selectFrom(TABLE_NAME)
+            .columns(SCRIPT_NAME, DATE)
+            .whereColumn(USER_NAME).isEqualTo(bindMarker(USER_NAME))
+            .build());
     }
 
-    public Mono<ActiveScriptInfo> getActiveSctiptInfo(Username username) {
+    public Mono<ActiveScriptInfo> getActiveScriptInfo(Username username) {
         return cassandraAsyncExecutor.executeSingleRow(
-            selectActiveName.bind()
-                .setString(USER_NAME, username.asString()))
+                selectActiveName.bind()
+                    .setString(USER_NAME, username.asString()))
             .map(row -> new ActiveScriptInfo(
                 new ScriptName(row.getString(SCRIPT_NAME)),
-                ZonedDateTime.ofInstant(row.getTimestamp(DATE).toInstant(), ZoneOffset.UTC)));
+                ZonedDateTime.ofInstant(row.getInstant(DATE), ZoneOffset.UTC)));
     }
 
-    public Mono<Void> unactivate(Username username) {
+    public Mono<Void> unActivate(Username username) {
         return cassandraAsyncExecutor.executeVoid(
             deleteActive.bind()
                 .setString(USER_NAME, username.asString()));
@@ -86,6 +90,6 @@ public class CassandraActiveScriptDAO {
             insertActive.bind()
                 .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, scriptName.getValue())
-                .setTimestamp(DATE, new Date()));
+                .setInstant(DATE, Instant.now()));
     }
 }

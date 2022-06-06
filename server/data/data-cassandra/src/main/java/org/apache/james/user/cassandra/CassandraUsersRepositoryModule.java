@@ -19,20 +19,19 @@
 
 package org.apache.james.user.cassandra;
 
-import static com.datastax.driver.core.DataType.set;
-import static com.datastax.driver.core.DataType.text;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.user.cassandra.tables.CassandraUserTable;
+
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraUsersRepositoryModule {
     CassandraModule MODULE = CassandraModule.table(CassandraUserTable.TABLE_NAME)
         .comment("Holds users of this James server.")
-        .statement(statement -> statement
-            .addPartitionKey(CassandraUserTable.NAME, text())
-            .addColumn(CassandraUserTable.REALNAME, text())
-            .addColumn(CassandraUserTable.PASSWORD, text())
-            .addColumn(CassandraUserTable.ALGORITHM, text())
-            .addColumn(CassandraUserTable.AUTHORIZED_USERS, set(text())))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraUserTable.NAME, DataTypes.TEXT)
+            .withColumn(CassandraUserTable.REALNAME, DataTypes.TEXT)
+            .withColumn(CassandraUserTable.PASSWORD, DataTypes.TEXT)
+            .withColumn(CassandraUserTable.ALGORITHM, DataTypes.TEXT)
+            .withColumn(CassandraUserTable.AUTHORIZED_USERS, DataTypes.setOf(DataTypes.TEXT)))
         .build();
 }

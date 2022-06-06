@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -70,7 +71,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     public Map<MappingSource, Mappings> getAllMappings() {
         return cassandraRecipientRewriteTableDAO.getAllMappings()
             .collect(ImmutableMap.toImmutableMap(
-                pair -> pair.getLeft(),
+                Pair::getLeft,
                 pair -> MappingsImpl.fromMappings(pair.getRight()),
                 Mappings::union))
             .block();

@@ -19,13 +19,12 @@
 
 package org.apache.james.sieve.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.IS_ACTIVE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SCRIPT_CONTENT;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SCRIPT_NAME;
@@ -41,10 +40,10 @@ import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -59,41 +58,42 @@ public class CassandraSieveDAO {
     private final PreparedStatement deleteScriptStatement;
 
     @Inject
-    public CassandraSieveDAO(Session session) {
+    public CassandraSieveDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
-        insertScriptStatement = session.prepare(
-            insertInto(TABLE_NAME)
-                .value(USER_NAME, bindMarker(USER_NAME))
-                .value(SCRIPT_NAME, bindMarker(SCRIPT_NAME))
-                .value(SCRIPT_CONTENT, bindMarker(SCRIPT_CONTENT))
-                .value(IS_ACTIVE, bindMarker(IS_ACTIVE))
-                .value(SIZE, bindMarker(SIZE)));
+        insertScriptStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(USER_NAME, bindMarker(USER_NAME))
+            .value(SCRIPT_NAME, bindMarker(SCRIPT_NAME))
+            .value(SCRIPT_CONTENT, bindMarker(SCRIPT_CONTENT))
+            .value(IS_ACTIVE, bindMarker(IS_ACTIVE))
+            .value(SIZE, bindMarker(SIZE))
+            .build());
 
-        selectScriptsStatement = session.prepare(getScriptsQuery());
+        selectScriptsStatement = session.prepare(getScriptsQuery().build());
 
         selectScriptStatement = session.prepare(getScriptsQuery()
-            .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME))));
+            .whereColumn(SCRIPT_NAME).isEqualTo(bindMarker(SCRIPT_NAME))
+            .build());
 
         updateScriptActivationStatement = session.prepare(
             update(TABLE_NAME)
-                .with(set(IS_ACTIVE, bindMarker(IS_ACTIVE)))
-                .where(eq(USER_NAME, bindMarker(USER_NAME)))
-                .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME)))
-                .ifExists());
+                .setColumn(IS_ACTIVE, bindMarker(IS_ACTIVE))
+                .whereColumn(USER_NAME).isEqualTo(bindMarker(USER_NAME))
+                .whereColumn(SCRIPT_NAME).isEqualTo(bindMarker(SCRIPT_NAME))
+                .ifExists().build());
 
         deleteScriptStatement = session.prepare(
-            delete()
-                .from(TABLE_NAME)
-                .where(eq(USER_NAME, bindMarker(USER_NAME)))
-                .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME)))
-                .ifExists());
+            deleteFrom(TABLE_NAME)
+                .whereColumn(USER_NAME).isEqualTo(bindMarker(USER_NAME))
+                .whereColumn(SCRIPT_NAME).isEqualTo(bindMarker(SCRIPT_NAME))
+                .ifExists()
+                .build());
     }
 
-    private Select.Where getScriptsQuery() {
-        return select(SCRIPT_CONTENT, IS_ACTIVE, SCRIPT_NAME, SIZE)
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME)));
+    private Select getScriptsQuery() {
+        return selectFrom(TABLE_NAME)
+            .columns(SCRIPT_CONTENT, IS_ACTIVE, SCRIPT_NAME, SIZE)
+            .whereColumn(USER_NAME).isEqualTo(bindMarker(USER_NAME));
     }
 
     public Mono<Void> insertScript(Username username, Script script) {
@@ -102,7 +102,7 @@ public class CassandraSieveDAO {
                 .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, script.getName().getValue())
                 .setString(SCRIPT_CONTENT, script.getContent().getValue())
-                .setBool(IS_ACTIVE, script.isActive())
+                .setBoolean(IS_ACTIVE, script.isActive())
                 .setLong(SIZE, script.getSize()));
     }
 
@@ -111,8 +111,8 @@ public class CassandraSieveDAO {
                 selectScriptsStatement.bind()
                     .setString(USER_NAME, username.asString()))
             .map(row -> new ScriptSummary(
-                    new ScriptName(row.getString(SCRIPT_NAME)),
-                    row.getBool(IS_ACTIVE)));
+                new ScriptName(row.getString(SCRIPT_NAME)),
+                row.getBoolean(IS_ACTIVE)));
     }
 
     public Mono<Boolean> updateScriptActivation(Username username, ScriptName scriptName, boolean active) {
@@ -120,16 +120,16 @@ public class CassandraSieveDAO {
             updateScriptActivationStatement.bind()
                 .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, scriptName.getValue())
-                .setBool(IS_ACTIVE, active));
+                .setBoolean(IS_ACTIVE, active));
     }
 
     public Mono<Script> getScript(Username username, ScriptName name) {
         return getScriptRow(username, name).map(row -> Script.builder()
-                .content(row.getString(SCRIPT_CONTENT))
-                .isActive(row.getBool(IS_ACTIVE))
-                .name(name)
-                .size(row.getLong(SIZE))
-                .build());
+            .content(row.getString(SCRIPT_CONTENT))
+            .isActive(row.getBoolean(IS_ACTIVE))
+            .name(name)
+            .size(row.getLong(SIZE))
+            .build());
     }
 
     public Mono<Boolean> deleteScriptInCassandra(Username username, ScriptName name) {
