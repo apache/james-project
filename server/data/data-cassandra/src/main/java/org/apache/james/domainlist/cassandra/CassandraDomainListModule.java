@@ -19,21 +19,20 @@
 
 package org.apache.james.domainlist.cassandra;
 
-import static com.datastax.driver.core.DataType.text;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraDomainListModule {
     CassandraModule MODULE = CassandraModule.table(CassandraDomainsTable.TABLE_NAME)
         .comment("Holds domains this James server is operating on.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraDomainsTable.DOMAIN, text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraDomainsTable.DOMAIN, DataTypes.TEXT))
         .build();
 }

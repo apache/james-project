@@ -19,11 +19,10 @@
 
 package org.apache.james.rrt.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.DOMAIN;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.MAPPING;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.TABLE_NAME;
@@ -39,8 +38,8 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.MappingsImpl;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -54,39 +53,29 @@ public class CassandraRecipientRewriteTableDAO {
     private final PreparedStatement retrieveAllMappingsStatement;
 
     @Inject
-    public CassandraRecipientRewriteTableDAO(Session session) {
+    public CassandraRecipientRewriteTableDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.insertStatement = prepareInsertStatement(session);
-        this.deleteStatement = prepareDelete(session);
-        this.retrieveMappingStatement = prepareRetrieveMappingStatement(session);
-        this.retrieveAllMappingsStatement = prepareRetrieveAllMappingStatement(session);
-    }
-
-    private PreparedStatement prepareRetrieveAllMappingStatement(Session session) {
-        return session.prepare(select(USER, DOMAIN, MAPPING)
-            .from(TABLE_NAME));
-    }
-
-    private PreparedStatement prepareRetrieveMappingStatement(Session session) {
-        return session.prepare(select(MAPPING)
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER)))
-            .and(eq(DOMAIN, bindMarker(DOMAIN))));
-    }
-
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER)))
-            .and(eq(DOMAIN, bindMarker(DOMAIN)))
-            .and(eq(MAPPING, bindMarker(MAPPING))));
-    }
-
-    private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
             .value(USER, bindMarker(USER))
             .value(DOMAIN, bindMarker(DOMAIN))
-            .value(MAPPING, bindMarker(MAPPING)));
+            .value(MAPPING, bindMarker(MAPPING))
+            .build());
+
+        this.retrieveMappingStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(MAPPING)
+            .whereColumn(USER).isEqualTo(bindMarker(USER))
+            .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
+            .build());
+
+        this.retrieveAllMappingsStatement = session.prepare(selectFrom(TABLE_NAME)
+            .columns(USER, DOMAIN, MAPPING)
+            .build());
+
+        this.deleteStatement = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(USER).isEqualTo(bindMarker(USER))
+            .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
+            .whereColumn(MAPPING).isEqualTo(bindMarker(MAPPING))
+            .build());
     }
 
     public Mono<Void> addMapping(MappingSource source, Mapping mapping) {
@@ -105,9 +94,9 @@ public class CassandraRecipientRewriteTableDAO {
 
     Mono<MappingsImpl> retrieveMappings(MappingSource source) {
         return executor.executeRows(retrieveMappingStatement.bind()
-            .setString(USER, source.getFixedUser())
-            .setString(DOMAIN, source.getFixedDomain()))
-            .map(row -> row.getString(MAPPING))
+                .setString(USER, source.getFixedUser())
+                .setString(DOMAIN, source.getFixedDomain()))
+            .mapNotNull(row -> row.getString(MAPPING))
             .collect(ImmutableList.toImmutableList())
             .map(MappingsImpl::fromCollection)
             .filter(Predicate.not(MappingsImpl::isEmpty));

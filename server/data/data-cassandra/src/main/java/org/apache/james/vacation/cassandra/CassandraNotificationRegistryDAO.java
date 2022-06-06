@@ -19,12 +19,11 @@
 
 package org.apache.james.vacation.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 
 import java.util.Optional;
 
@@ -35,9 +34,9 @@ import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.cassandra.tables.CassandraNotificationTable;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 
 import reactor.core.publisher.Mono;
 
@@ -51,24 +50,25 @@ public class CassandraNotificationRegistryDAO {
     private final PreparedStatement flushStatement;
 
     @Inject
-    public CassandraNotificationRegistryDAO(Session session) {
+    public CassandraNotificationRegistryDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
-        this.registerStatement = session.prepare(createInsert());
+        this.registerStatement = session.prepare(createInsert().build());
 
-        this.registerWithTTLStatement = session.prepare(createInsert().using(ttl(bindMarker(TTL))));
+        this.registerWithTTLStatement = session.prepare(createInsert().usingTtl(bindMarker(TTL)).build());
 
-        this.isRegisteredStatement = session.prepare(select()
-            .from(CassandraNotificationTable.TABLE_NAME)
-            .where(eq(CassandraNotificationTable.ACCOUNT_ID, bindMarker(CassandraNotificationTable.ACCOUNT_ID)))
-            .and(eq(CassandraNotificationTable.RECIPIENT_ID, bindMarker(CassandraNotificationTable.RECIPIENT_ID))));
+        this.isRegisteredStatement = session.prepare(selectFrom(CassandraNotificationTable.TABLE_NAME)
+            .all()
+            .whereColumn(CassandraNotificationTable.ACCOUNT_ID).isEqualTo(bindMarker(CassandraNotificationTable.ACCOUNT_ID))
+            .whereColumn(CassandraNotificationTable.RECIPIENT_ID).isEqualTo(bindMarker(CassandraNotificationTable.RECIPIENT_ID))
+            .build());
 
-        this.flushStatement = session.prepare(delete()
-            .from(CassandraNotificationTable.TABLE_NAME)
-            .where(eq(CassandraNotificationTable.ACCOUNT_ID, bindMarker(CassandraNotificationTable.ACCOUNT_ID))));
+        this.flushStatement = session.prepare(deleteFrom(CassandraNotificationTable.TABLE_NAME)
+            .whereColumn(CassandraNotificationTable.ACCOUNT_ID).isEqualTo(bindMarker(CassandraNotificationTable.ACCOUNT_ID))
+            .build());
     }
 
-    private Insert createInsert() {
+    private RegularInsert createInsert() {
         return insertInto(CassandraNotificationTable.TABLE_NAME)
             .value(CassandraNotificationTable.ACCOUNT_ID, bindMarker(CassandraNotificationTable.ACCOUNT_ID))
             .value(CassandraNotificationTable.RECIPIENT_ID, bindMarker(CassandraNotificationTable.RECIPIENT_ID));
@@ -84,9 +84,9 @@ public class CassandraNotificationRegistryDAO {
 
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            isRegisteredStatement.bind()
-                .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
-                .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()))
+                isRegisteredStatement.bind()
+                    .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
+                    .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()))
             .map(Optional::isPresent);
     }
 

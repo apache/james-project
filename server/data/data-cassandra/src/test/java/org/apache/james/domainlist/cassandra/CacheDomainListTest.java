@@ -74,7 +74,7 @@ class CacheDomainListTest {
             .blockLast();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain;")))
+            StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain")))
             .hasSize(1);
     }
 
@@ -92,7 +92,7 @@ class CacheDomainListTest {
             .blockLast();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain;")))
+            StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain")))
             .hasSize(2);
     }
 

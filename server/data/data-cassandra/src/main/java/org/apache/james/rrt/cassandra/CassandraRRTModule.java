@@ -19,34 +19,32 @@
 
 package org.apache.james.rrt.cassandra;
 
-import static com.datastax.driver.core.DataType.text;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable;
 import org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraRRTModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraRecipientRewriteTableTable.TABLE_NAME)
         .comment("Holds address re-writing rules.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
-            .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
-            .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraRecipientRewriteTableTable.USER, DataTypes.TEXT)
+            .withClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, DataTypes.TEXT)
+            .withClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, DataTypes.TEXT))
         .table(CassandraMappingsSourcesTable.TABLE_NAME)
         .comment("Projection table for retrieving sources associated with given mappings.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMappingsSourcesTable.MAPPING_TYPE, text())
-            .addPartitionKey(CassandraMappingsSourcesTable.MAPPING_VALUE, text())
-            .addClusteringColumn(CassandraMappingsSourcesTable.SOURCE, text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMappingsSourcesTable.MAPPING_TYPE, DataTypes.TEXT)
+            .withPartitionKey(CassandraMappingsSourcesTable.MAPPING_VALUE, DataTypes.TEXT)
+            .withClusteringColumn(CassandraMappingsSourcesTable.SOURCE, DataTypes.TEXT))
         .build();
 }
