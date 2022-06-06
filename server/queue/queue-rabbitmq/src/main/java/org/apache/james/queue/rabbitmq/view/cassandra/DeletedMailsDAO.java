@@ -19,11 +19,11 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.TABLE_NAME;
@@ -35,8 +35,8 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -48,51 +48,41 @@ public class DeletedMailsDAO {
     private final PreparedStatement deleteOne;
 
     @Inject
-    DeletedMailsDAO(Session session) {
+    DeletedMailsDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.selectOne = prepareSelectExist(session);
-        this.insertOne = prepareInsert(session);
-        this.deleteOne = prepareDeleteOne(session);
-    }
-
-    private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
+        this.selectOne = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .whereColumn(ENQUEUE_ID).isEqualTo(bindMarker(ENQUEUE_ID))
+            .build());
+        this.insertOne = session.prepare(insertInto(TABLE_NAME)
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
-            .value(ENQUEUE_ID, bindMarker(ENQUEUE_ID)));
-    }
-
-    private PreparedStatement prepareSelectExist(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
-            .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
-    }
-
-    private PreparedStatement prepareDeleteOne(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
-            .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
+            .value(ENQUEUE_ID, bindMarker(ENQUEUE_ID))
+            .build());
+        this.deleteOne = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .whereColumn(ENQUEUE_ID).isEqualTo(bindMarker(ENQUEUE_ID))
+            .build());
     }
 
     Mono<Void> markAsDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
-            .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
+            .setUuid(ENQUEUE_ID, enqueueId.asUUID()));
     }
 
     Mono<Boolean> isDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeReturnExists(
             selectOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
+                .setUuid(ENQUEUE_ID, enqueueId.asUUID()));
     }
 
     Mono<Void> removeDeletedMark(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeVoid(
             deleteOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
+                .setUuid(ENQUEUE_ID, enqueueId.asUUID()));
     }
 
     Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, EnqueueId enqueueId) {

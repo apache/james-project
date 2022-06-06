@@ -27,11 +27,12 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+
 
 public class CassandraMailQueueViewTestFactory {
 
-    public static CassandraMailQueueView.Factory factory(Clock clock, Session session,
+    public static CassandraMailQueueView.Factory factory(Clock clock, CqlSession session,
                                                          CassandraMailQueueViewConfiguration configuration,
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
@@ -52,7 +53,7 @@ public class CassandraMailQueueViewTestFactory {
             mimeMessageStoreFactory);
     }
 
-    public static boolean isInitialized(Session session, MailQueueName mailQueueName) {
+    public static boolean isInitialized(CqlSession session, MailQueueName mailQueueName) {
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
         return browseStartDao.findBrowseStart(mailQueueName)
             .map(Optional::ofNullable)

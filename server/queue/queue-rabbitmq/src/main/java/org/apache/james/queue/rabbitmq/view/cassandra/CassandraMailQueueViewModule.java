@@ -19,21 +19,13 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static com.datastax.driver.core.DataType.blob;
-import static com.datastax.driver.core.DataType.cint;
-import static com.datastax.driver.core.DataType.frozenList;
-import static com.datastax.driver.core.DataType.frozenMap;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timestamp;
-import static com.datastax.driver.core.DataType.uuid;
-import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
-import com.datastax.driver.core.CodecRegistry;
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.TupleType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.schema.compaction.TimeWindowCompactionStrategy;
+
 
 public interface CassandraMailQueueViewModule {
 
@@ -94,55 +86,54 @@ public interface CassandraMailQueueViewModule {
             " table and will not be deleted immediately regarding to the performance impacts," +
             " but after some scheduled tasks")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
-                .compactionWindowSize(1)
-                .compactionWindowUnit(HOURS)))
-        .statement(statement -> statement
-            .addPartitionKey(EnqueuedMailsTable.QUEUE_NAME, text())
-            .addPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, timestamp())
-            .addPartitionKey(EnqueuedMailsTable.BUCKET_ID, cint())
-            .addClusteringColumn(EnqueuedMailsTable.ENQUEUE_ID, uuid())
-            .addColumn(EnqueuedMailsTable.ENQUEUED_TIME, timestamp())
-            .addColumn(EnqueuedMailsTable.NAME, text())
-            .addColumn(EnqueuedMailsTable.STATE, text())
-            .addColumn(EnqueuedMailsTable.HEADER_BLOB_ID, text())
-            .addColumn(EnqueuedMailsTable.BODY_BLOB_ID, text())
-            .addColumn(EnqueuedMailsTable.ATTRIBUTES, frozenMap(text(), blob()))
-            .addColumn(EnqueuedMailsTable.ERROR_MESSAGE, text())
-            .addColumn(EnqueuedMailsTable.SENDER, text())
-            .addColumn(EnqueuedMailsTable.RECIPIENTS, frozenList(text()))
-            .addColumn(EnqueuedMailsTable.REMOTE_HOST, text())
-            .addColumn(EnqueuedMailsTable.REMOTE_ADDR, text())
-            .addColumn(EnqueuedMailsTable.LAST_UPDATED, timestamp())
-            .addColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, frozenList(TupleType.of(ProtocolVersion.NEWEST_SUPPORTED, CodecRegistry.DEFAULT_INSTANCE, text(), text(), text()))))
+            .withCompaction(SchemaBuilder.timeWindowCompactionStrategy()
+                .withCompactionWindow(1, TimeWindowCompactionStrategy.CompactionWindowUnit.HOURS)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(EnqueuedMailsTable.QUEUE_NAME, DataTypes.TEXT)
+            .withPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, DataTypes.TIMESTAMP)
+            .withPartitionKey(EnqueuedMailsTable.BUCKET_ID, DataTypes.INT)
+            .withClusteringColumn(EnqueuedMailsTable.ENQUEUE_ID, DataTypes.UUID)
+            .withColumn(EnqueuedMailsTable.ENQUEUED_TIME, DataTypes.TIMESTAMP)
+            .withColumn(EnqueuedMailsTable.NAME, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.STATE, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.HEADER_BLOB_ID, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.BODY_BLOB_ID, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.ATTRIBUTES, DataTypes.frozenMapOf(DataTypes.TEXT, DataTypes.BLOB))
+            .withColumn(EnqueuedMailsTable.ERROR_MESSAGE, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.SENDER, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.RECIPIENTS, DataTypes.frozenListOf(DataTypes.TEXT))
+            .withColumn(EnqueuedMailsTable.REMOTE_HOST, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.REMOTE_ADDR, DataTypes.TEXT)
+            .withColumn(EnqueuedMailsTable.LAST_UPDATED, DataTypes.TIMESTAMP)
+            .withColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, DataTypes.frozenListOf(DataTypes.tupleOf(DataTypes.TEXT, DataTypes.TEXT, DataTypes.TEXT))))
 
         .table(BrowseStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of iteration from the table: "
             + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operation through mail queues")
         .options(options -> options)
-        .statement(statement -> statement
-            .addPartitionKey(BrowseStartTable.QUEUE_NAME, text())
-            .addColumn(BrowseStartTable.BROWSE_START, timestamp()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(BrowseStartTable.QUEUE_NAME, DataTypes.TEXT)
+            .withColumn(BrowseStartTable.BROWSE_START, DataTypes.TIMESTAMP))
 
         .table(ContentStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of content from the table: "
             + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operation through mail queues. Strictly " +
             "before browse start, it enables queue cleanup.")
         .options(options -> options)
-        .statement(statement -> statement
-            .addPartitionKey(ContentStartTable.QUEUE_NAME, text())
-            .addColumn(ContentStartTable.CONTENT_START, timestamp()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(ContentStartTable.QUEUE_NAME, DataTypes.TEXT)
+            .withColumn(ContentStartTable.CONTENT_START, DataTypes.TIMESTAMP))
 
         .table(DeletedMailTable.TABLE_NAME)
         .comment("this table stores the dequeued mails, while browsing mail from table: "
             + DeletedMailTable.TABLE_NAME + " we need to filter out mails have been dequeued by checking their " +
             "existence in this table")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy())
-            .bloomFilterFPChance(0.01))
-        .statement(statement -> statement
-            .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())
-            .addPartitionKey(DeletedMailTable.ENQUEUE_ID, uuid()))
+            .withCompaction(SchemaBuilder.timeWindowCompactionStrategy())
+            .withBloomFilterFpChance(0.01))
+        .statement(statement -> types -> statement
+            .withPartitionKey(DeletedMailTable.QUEUE_NAME, DataTypes.TEXT)
+            .withPartitionKey(DeletedMailTable.ENQUEUE_ID, DataTypes.UUID))
 
         .build();
 }
