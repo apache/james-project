@@ -23,6 +23,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
+import org.apache.james.modules.data.JPANoAuthorizatorModule;
 import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
@@ -60,7 +61,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new JPADataModule(),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
-        new ElasticSearchMetricReporterModule());
+        new ElasticSearchMetricReporterModule(),
+        new JPANoAuthorizatorModule());
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
