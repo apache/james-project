@@ -17,6 +17,28 @@ Changes to apply between 3.7.x and 3.8.x will be reported here.
 Change list:
 
 - [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
+- [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
+
+### Migration to Cassandra driver 4
+
+Date: 07/06/200
+
+Concerned product: Distributed James, Cassandra James Server
+
+Cassandra driver had been updated to its version 4, empowering better reactive chains,
+more frequent releases, more configuration options amongst other.
+
+Users need to be aware that Cassandra driver 4 no longer allow in depth programmatic
+configuration, and instead relies on its own configuration mechanisms.
+
+Especially, SSL, consistency levels, timeouts, slow logs, metrics are now only configurable
+through the mean of Cassandra driver native configuration. We dropped related options from the `cassandra.properties`
+file.
+
+You can find here an [example](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra-driver.conf) of what `conf/cassandra-driver-conf` looks like, with sane defaults.
+
+
+Formal driver documentation: https://docs.datastax.com/en/developer/java-driver/4.13/manual/core/configuration/
 
 ### Adding authorized_users column to user table
 

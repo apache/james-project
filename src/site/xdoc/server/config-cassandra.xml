@@ -26,10 +26,16 @@
 <body>
 
   <section name="Cassandra Configuration">
+      <p>This configuration file allow setting some configuration properties in conjunction to
+          Cassandra driver native configuration.</p>
 
-    Note: Cassandra is only available with Guice wiring (cassandra-guice and cassandra-guice-ldap).
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra.properties">cassandra.properties</a> to get some examples and hints.</p>
 
-    <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra.properties">cassandra.properties</a> to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra-driver.conf">cassandra-driver.conf</a> to get some examples and hints regarding native driver configuration.</p>
+
+      <p>Cassandra native configuration allows configuring SSL, timeouts, logs and metrics as well as execution profiles.</p>
+
+      <p>Note: Cassandra is only available with Guice wiring (cassandra-guice and cassandra-guice-ldap).</p>
 
       <dl>
         <dt><strong>cassandra.nodes</strong></dt>
@@ -51,72 +57,9 @@
         <dd>Password used as a credential for contacting Cassandra cluster. Optional, default is absent,
           required if <strong>cassandra.user</strong> is supplied</dd>
 
-        <dt><strong>cassandra.ssl</strong></dt>
-        <dd>Whether SSL should be enabled on the communications with Cassandra cluster. Optional, defaults to false.<br/>
-        The keystore used for trusting SSL server socket can be set via JSSE system properties as explained on
-        <a href="https://docs.datastax.com/en/developer/java-driver/3.7/manual/ssl/">Cassandra driver manual</a>.</dd>
-
         <dt><strong>cassandra.replication.factor</strong></dt>
         <dd>Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
         will have no effect. Optional. Default value 1.</dd>
-
-        <dt><strong>cassandra.query.logger.constant.threshold</strong></dt>
-        <dd>Optional.
-        If specified all queries that take more than the given integer in millisecond will be considered slow and logged.
-          If not specified by default a DynamicThresholdQueryLogger will be used (see above)</dd>
-
-        <dt><strong>cassandra.query.slow.query.latency.threshold.percentile</strong></dt>
-        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE.
-        The latency percentile beyond which queries are considered 'slow' and will be logged.
-          If you specify cassandra.query.logger.constant.threshold, you should not specify this property</dd>
-
-        <dt><strong>cassandra.query.logger.max.query.string.length</strong></dt>
-        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_QUERY_STRING.LENGTH.
-          The maximum length of a CQL query string that can be logged verbatim by the cassandra driver</dd>
-
-        <dt><strong>cassandra.query.logger.max.logged.parameters</strong></dt>
-        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_LOGGED_PARAMETERS.
-          The maximum number of query parameters that can be logged by the cassandra driver</dd>
-
-        <dt><strong>cassandra.query.logger.max.parameter.value.length</strong></dt>
-        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_PARAMETER_VALUE_LENGTH.
-          The maximum length of query parameter value that can be logged by the cassandra driver</dd>
-
-        <dt><strong>cassandra.readTimeoutMillis</strong></dt>
-        <dd>Optional.
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/socket_options/">driver read timeout</a>.</dd>
-
-
-        <pre><code># Read com.datastax.driver.core.PoolingOptions for knowing defaults value
-# No value here will default to driver's default value
-
-# cassandra.pooling.local.max.connections=8
-# cassandra.pooling.local.max.requests=128
-## In ms. Should be higher than socket read timeout
-# cassandra.pooling.timeout=5000
-## In seconds.
-# cassandra.pooling.heartbeat.timeout=30
-# cassandra.pooling.max.queue.size=256</code></pre>
-
-        <dt><strong>cassandra.pooling.local.max.connections</strong></dt>
-        <dd>Optional. Defaults to 8.<br/>
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#pool-size">maximum number of connections to hosts</a> (remote and local).</dd>
-
-        <dt><strong>cassandra.pooling.local.max.requests</strong></dt>
-        <dd>Optional. Defaults to 128.<br/>
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/">maximum number of concurrent requests per connection</a>.</dd>
-
-        <dt><strong>cassandra.pooling.timeout</strong></dt>
-        <dd>Optional. Defaults to 5000 (ms).<br/>
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue">timeout for waiting in the pool queue</a>. Should be higher than sockets timeout.</dd>
-
-        <dt><strong>cassandra.pooling.heartbeat.timeout</strong></dt>
-        <dd>Optional. Defaults to 30 (s).<br/>
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#heartbeat">heartbeat timeout</a>.</dd>
-
-        <dt><strong>cassandra.pooling.max.queue.size</strong></dt>
-        <dd>Optional. Defaults to 256.<br/>
-          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue">maximum size of the connection pool queue</a>.</dd>
 
         <dt><strong>mailbox.read.repair.chance</strong></dt>
         <dd>Optional. Defaults to 0.1 (10% chance).<br/> Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.</dd>
@@ -140,8 +83,6 @@
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageMapper.</dd>
         <dt><strong>mailbox.max.retry.message.id.flags.update</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageIdMapper.</dd>
-        <dt><strong>fetch.advance.row.count</strong></dt>
-        <dd>Optional. Defaults to 1000.<br/> Controls the number of remaining rows we should wait before prefetch when paging.</dd>
         <dt><strong>chunk.size.message.read</strong></dt>
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
         <dt><strong>chunk.size.expunge</strong></dt>
@@ -170,11 +111,6 @@
             potentially update loss. Better performance are expected
             by turning it off. Reads performed as part of write transaction are also performed with a relaxed consistency.</dd>
 
-        <dt><strong>Allows specifying the driver default consistency level.</strong></dt>
-        <dt><strong>cassandra.consistency_level.regular</strong></dt>
-        <dd>Optional. Defaults to QUORUM.<br/> <a href="https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html">QUORUM, LOCAL_QUORUM, or EACH_QUORUM</a>.</dd>
-        <dt><strong>cassandra.consistency_level.lightweight_transaction</strong></dt>
-        <dd>Optional. Defaults to SERIAL.<br/> <a href="https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html">SERIAL or LOCAL_SERIAL</a>.</dd>
         <dt><strong>cassandra.local.dc</strong></dt>
         <dd>Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
             would result in the use of <code>new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())</code> as a LoadBalancingPolicy.
