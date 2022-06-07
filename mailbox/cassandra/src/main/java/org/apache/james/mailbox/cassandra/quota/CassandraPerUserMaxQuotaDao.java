@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Optional;
@@ -36,11 +36,11 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Delete;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.querybuilder.delete.Delete;
+import com.datastax.oss.driver.api.querybuilder.insert.Insert;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 
 import reactor.core.publisher.Mono;
 
@@ -54,31 +54,29 @@ public class CassandraPerUserMaxQuotaDao {
     private final PreparedStatement removeMaxMessageStatement;
 
     @Inject
-    public CassandraPerUserMaxQuotaDao(Session session) {
+    public CassandraPerUserMaxQuotaDao(CqlSession session) {
         this.queryExecutor = new CassandraAsyncExecutor(session);
-        this.setMaxStorageStatement = session.prepare(setMaxStorageStatement());
-        this.setMaxMessageStatement = session.prepare(setMaxMessageStatement());
-        this.getMaxStatement = session.prepare(getMaxStatement());
-        this.removeMaxStorageStatement = session.prepare(removeMaxStorageStatement());
-        this.removeMaxMessageStatement = session.prepare(removeMaxMessageStatement());
+        this.setMaxStorageStatement = session.prepare(setMaxStorageStatement().build());
+        this.setMaxMessageStatement = session.prepare(setMaxMessageStatement().build());
+        this.getMaxStatement = session.prepare(getMaxStatement().build());
+        this.removeMaxStorageStatement = session.prepare(removeMaxStorageStatement().build());
+        this.removeMaxMessageStatement = session.prepare(removeMaxMessageStatement().build());
     }
 
-    private Delete.Where removeMaxMessageStatement() {
-        return delete().column(CassandraMaxQuota.MESSAGE_COUNT)
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    private Delete removeMaxMessageStatement() {
+        return deleteFrom(CassandraMaxQuota.TABLE_NAME).column(CassandraMaxQuota.MESSAGE_COUNT)
+            .where(column(CassandraMaxQuota.QUOTA_ROOT).isEqualTo(bindMarker()));
     }
 
-    private Delete.Where removeMaxStorageStatement() {
-        return delete().column(CassandraMaxQuota.STORAGE)
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    private Delete removeMaxStorageStatement() {
+        return deleteFrom(CassandraMaxQuota.TABLE_NAME).column(CassandraMaxQuota.STORAGE)
+            .where(column(CassandraMaxQuota.QUOTA_ROOT).isEqualTo(bindMarker()));
     }
 
-    private Select.Where getMaxStatement() {
-        return select()
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    private Select getMaxStatement() {
+        return selectFrom(CassandraMaxQuota.TABLE_NAME)
+            .all()
+            .where(column(CassandraMaxQuota.QUOTA_ROOT).isEqualTo(bindMarker()));
     }
 
     private Insert setMaxMessageStatement() {

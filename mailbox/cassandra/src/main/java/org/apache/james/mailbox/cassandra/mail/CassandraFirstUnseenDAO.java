@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.asc;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraFirstUnseenTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraFirstUnseenTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraFirstUnseenTable.UID;
@@ -38,9 +37,12 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
+import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.BatchType;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -58,7 +60,7 @@ public class CassandraFirstUnseenDAO {
     private final PreparedStatement listStatement;
 
     @Inject
-    public CassandraFirstUnseenDAO(Session session) {
+    public CassandraFirstUnseenDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAddStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
@@ -67,44 +69,47 @@ public class CassandraFirstUnseenDAO {
         this.listStatement = prepareListStatement(session);
     }
 
-    private PreparedStatement prepareReadStatement(Session session) {
-        return session.prepare(select(UID)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .orderBy(asc(UID))
-            .limit(1));
+    private PreparedStatement prepareReadStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .orderBy(UID, ClusteringOrder.ASC)
+            .limit(1)
+            .build());
     }
 
-    private PreparedStatement prepareListStatement(Session session) {
-        return session.prepare(select(UID)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .orderBy(asc(UID)));
+    private PreparedStatement prepareListStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .orderBy(UID, ClusteringOrder.ASC)
+            .build());
     }
 
-    private PreparedStatement prepareDeleteStatement(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(eq(UID, bindMarker(UID))));
+    private PreparedStatement prepareDeleteStatement(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
+            .whereColumn(UID).isEqualTo(bindMarker(UID))
+            .build());
     }
 
-    private PreparedStatement prepareDeleteAllStatement(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareDeleteAllStatement(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareAddStatement(Session session) {
+    private PreparedStatement prepareAddStatement(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .value(UID, bindMarker(UID)));
+            .value(UID, bindMarker(UID))
+            .build());
     }
 
     public Mono<Void> addUnread(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(
             addStatement.bind()
-                .setUUID(MAILBOX_ID, cassandraId.asUuid())
+                .setUuid(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
@@ -112,17 +117,17 @@ public class CassandraFirstUnseenDAO {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(
                 addStatement.bind()
-                    .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
                     .setLong(UID, uids.iterator().next().asLong()));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
                 .map(uidBatch -> {
-                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
-                    uidBatch.forEach(uid -> batch.add(addStatement.bind()
-                        .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                    BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.addStatement(addStatement.bind()
+                        .setUuid(MAILBOX_ID, mailboxId.asUuid())
                         .setLong(UID, uid.asLong())));
-                    return batch;
+                    return batch.build();
                 });
             return Flux.fromStream(batches)
                 .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)
@@ -132,24 +137,24 @@ public class CassandraFirstUnseenDAO {
 
     public Mono<Void> removeUnread(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
-            .setUUID(MAILBOX_ID, cassandraId.asUuid())
+            .setUuid(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
     }
 
     public Mono<Void> removeUnread(CassandraId mailboxId, List<MessageUid> uids) {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(UID, uids.iterator().next().asLong()));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
                 .map(uidBatch -> {
-                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
-                    uidBatch.forEach(uid -> batch.add(deleteStatement.bind()
-                        .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                    BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.addStatement(deleteStatement.bind()
+                        .setUuid(MAILBOX_ID, mailboxId.asUuid())
                         .setLong(UID, uid.asLong())));
-                    return batch;
+                    return batch.build();
                 });
             return Flux.fromStream(batches)
                 .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)
@@ -159,20 +164,20 @@ public class CassandraFirstUnseenDAO {
 
     public Mono<Void> removeAll(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
-            .setUUID(MAILBOX_ID, cassandraId.asUuid()));
+            .setUuid(MAILBOX_ID, cassandraId.asUuid()));
     }
 
     public Mono<MessageUid> retrieveFirstUnread(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeSingleRow(
-            readStatement.bind()
-                .setUUID(MAILBOX_ID, cassandraId.asUuid()))
+                readStatement.bind()
+                    .setUuid(MAILBOX_ID, cassandraId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(UID)));
     }
 
     public Flux<MessageUid> listUnseen(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
-            listStatement.bind()
-                .setUUID(MAILBOX_ID, cassandraId.asUuid()))
+                listStatement.bind()
+                    .setUuid(MAILBOX_ID, cassandraId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(UID)));
     }
 

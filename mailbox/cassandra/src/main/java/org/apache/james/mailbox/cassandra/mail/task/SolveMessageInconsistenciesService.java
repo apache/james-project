@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
-import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
@@ -494,7 +494,8 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(CassandraMessageMetadata message) {
-        return messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getComposedMessageId().getMessageId(), Optional.of((CassandraId) message.getComposedMessageId().getComposedMessageId().getMailboxId()), STRONG)
+        return messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getComposedMessageId().getMessageId(),
+                Optional.of((CassandraId) message.getComposedMessageId().getComposedMessageId().getMailboxId()), STRONG)
             .map(uidRecord -> NO_INCONSISTENCY)
             .next()
             .switchIfEmpty(detectOrphanMessageIdEntry(message))

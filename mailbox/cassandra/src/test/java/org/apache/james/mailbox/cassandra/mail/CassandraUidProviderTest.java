@@ -56,8 +56,7 @@ class CassandraUidProviderTest {
     void setUp(CassandraCluster cassandra) {
         uidProvider = new CassandraUidProvider(
             cassandra.getConf(),
-            CassandraConfiguration.DEFAULT_CONFIGURATION,
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", Username.of("ieugen"), "Trash");
         mailbox = new Mailbox(path, UidValidity.of(1234), CASSANDRA_ID);
     }

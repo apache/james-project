@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
@@ -48,7 +47,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -60,7 +59,7 @@ import com.google.inject.util.Modules;
 
 public class GuiceUtils {
     public static Injector testInjector(CassandraCluster cluster) {
-        Session session = cluster.getConf();
+        CqlSession session = cluster.getConf();
         CassandraTypesProvider typesProvider = cluster.getTypesProvider();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraConfiguration configuration = CassandraConfiguration.DEFAULT_CONFIGURATION;
@@ -68,14 +67,14 @@ public class GuiceUtils {
         return testInjector(session, typesProvider, messageIdFactory, configuration);
     }
 
-    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider,
+    public static Injector testInjector(CqlSession session, CassandraTypesProvider typesProvider,
                                         CassandraMessageId.Factory messageIdFactory,
                                         CassandraConfiguration configuration) {
         return Guice.createInjector(
             commonModules(session, typesProvider, messageIdFactory, configuration));
     }
 
-    private static Module commonModules(Session session, CassandraTypesProvider typesProvider,
+    private static Module commonModules(CqlSession session, CassandraTypesProvider typesProvider,
                                         CassandraMessageId.Factory messageIdFactory,
                                         CassandraConfiguration configuration) {
         return Modules.combine(
@@ -85,7 +84,7 @@ public class GuiceUtils {
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session, new RecordingMetricFactory()).passthrough()),
-            binder -> binder.bind(Session.class).toInstance(session),
+            binder -> binder.bind(CqlSession.class).toInstance(session),
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
                 .addBinding().toInstance(ACLModule.ACL_UPDATE),
             binder -> binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
@@ -93,8 +92,6 @@ public class GuiceUtils {
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {}),
             binder -> binder.bind(EventStore.class).to(CassandraEventStore.class),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
-            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
-            binder -> binder.bind(CassandraConsistenciesConfiguration.class)
-                .toInstance(CassandraConsistenciesConfiguration.fromConfiguration(configuration)));
+            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration));
     }
 }

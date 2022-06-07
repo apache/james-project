@@ -19,26 +19,26 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraMailboxRecentsModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxRecentsTable.TABLE_NAME)
         .comment("Denormalisation table. This table holds for each mailbox the messages marked as RECENT. This" +
             " is a SELECT optimisation.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .gcGraceSeconds(0)
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bigint()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withGcGraceSeconds(0)
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, BIGINT))
         .build();
 }

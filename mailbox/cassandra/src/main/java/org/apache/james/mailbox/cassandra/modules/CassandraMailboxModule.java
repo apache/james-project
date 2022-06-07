@@ -19,49 +19,46 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-
 public interface CassandraMailboxModule {
     CassandraModule MODULE = CassandraModule.builder()
 
         .type(CassandraMailboxTable.MAILBOX_BASE)
         .statement(statement -> statement
-            .addColumn(CassandraMailboxTable.MailboxBase.NAMESPACE, text())
-            .addColumn(CassandraMailboxTable.MailboxBase.USER, text()))
+            .withField(CassandraMailboxTable.MailboxBase.NAMESPACE, TEXT)
+            .withField(CassandraMailboxTable.MailboxBase.USER, TEXT))
 
         .table(CassandraMailboxTable.TABLE_NAME)
         .comment("Holds the mailboxes information.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
-            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
-            .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
-            .addColumn(CassandraMailboxTable.NAME, text())
-            .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+            .withLZ4Compression(8, 1))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMailboxTable.ID, TIMEUUID)
+            .withColumn(CassandraMailboxTable.MAILBOX_BASE, types.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE))
+            .withColumn(CassandraMailboxTable.NAME, TEXT)
+            .withColumn(CassandraMailboxTable.UIDVALIDITY, BIGINT))
 
         .table(CassandraMailboxPathV3Table.TABLE_NAME)
         .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
             "LIST optimisation.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxPathV3Table.NAMESPACE, text())
-            .addPartitionKey(CassandraMailboxPathV3Table.USER, text())
-            .addClusteringColumn(CassandraMailboxPathV3Table.MAILBOX_NAME, text())
-            .addColumn(CassandraMailboxPathV3Table.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraMailboxPathV3Table.UIDVALIDITY, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMailboxPathV3Table.NAMESPACE, TEXT)
+            .withPartitionKey(CassandraMailboxPathV3Table.USER, TEXT)
+            .withClusteringColumn(CassandraMailboxPathV3Table.MAILBOX_NAME, TEXT)
+            .withColumn(CassandraMailboxPathV3Table.MAILBOX_ID, TIMEUUID)
+            .withColumn(CassandraMailboxPathV3Table.UIDVALIDITY, BIGINT))
 
         .build();
 }

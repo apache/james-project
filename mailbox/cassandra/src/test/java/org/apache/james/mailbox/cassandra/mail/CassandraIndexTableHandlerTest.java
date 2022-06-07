@@ -114,7 +114,7 @@ class CassandraIndexTableHandlerTest {
 
             cassandra.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("INSERT INTO messageDeleted (mailboxId,uid) VALUES (:mailboxId,:uid);"));
+                .whenQueryStartsWith("INSERT INTO messagedeleted (mailboxid,uid)"));
 
             testee.updateIndexOnAdd(message, MAILBOX_ID)
                 .onErrorResume(any -> Mono.empty())

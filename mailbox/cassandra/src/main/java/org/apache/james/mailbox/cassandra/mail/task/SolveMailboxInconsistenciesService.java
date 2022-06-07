@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
-import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Collection;
@@ -384,7 +384,8 @@ public class SolveMailboxInconsistenciesService {
     private final CassandraSchemaVersionManager versionManager;
 
     @Inject
-    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO mailboxPathV3DAO, CassandraSchemaVersionManager versionManager) {
+    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO mailboxPathV3DAO,
+                                       CassandraSchemaVersionManager versionManager) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathV3DAO = mailboxPathV3DAO;
         this.versionManager = versionManager;

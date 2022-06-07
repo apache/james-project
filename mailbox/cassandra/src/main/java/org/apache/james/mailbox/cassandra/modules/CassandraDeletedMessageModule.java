@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.UID;
@@ -26,18 +29,16 @@ import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTa
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraDeletedMessageModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Denormalisation table. Allows to retrieve UID marked as DELETED in specific mailboxes.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
-            .addClusteringColumn(UID, DataType.bigint()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(UID, BIGINT))
         .build();
 }

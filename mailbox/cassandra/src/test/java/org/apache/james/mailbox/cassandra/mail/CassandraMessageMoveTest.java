@@ -33,7 +33,6 @@ class CassandraMessageMoveTest extends MessageMoveTest {
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(
             cassandraCluster.getCassandraCluster(),
-            cassandraCluster.getCassandraConsistenciesConfiguration(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 }

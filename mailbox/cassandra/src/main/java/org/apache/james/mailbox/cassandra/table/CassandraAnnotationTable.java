@@ -26,5 +26,8 @@ public interface CassandraAnnotationTable {
     String KEY = "key";
     String VALUE = "value";
 
+    String GREATER_BIND_KEY = "greater_bind_key";
+    String LESSER_BIND_KEY = "lesser_bind_key";
+
     String[] SELECT_FIELDS = { KEY, VALUE };
 }

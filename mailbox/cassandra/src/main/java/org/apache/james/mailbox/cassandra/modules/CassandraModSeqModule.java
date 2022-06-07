@@ -19,24 +19,24 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraModSeqModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMessageModseqTable.TABLE_NAME)
         .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, TIMEUUID)
+            .withColumn(CassandraMessageModseqTable.NEXT_MODSEQ, BIGINT))
         .build();
 }

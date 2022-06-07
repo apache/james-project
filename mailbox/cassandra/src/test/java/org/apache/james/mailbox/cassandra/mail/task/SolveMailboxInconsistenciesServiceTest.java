@@ -75,11 +75,9 @@ class SolveMailboxInconsistenciesServiceTest {
     void setUp(CassandraCluster cassandra) {
         mailboxDAO = new CassandraMailboxDAO(
             cassandra.getConf(),
-            cassandra.getTypesProvider(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandra.getTypesProvider());
         mailboxPathV3DAO = new CassandraMailboxPathV3DAO(
-            cassandra.getConf(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandra.getConf());
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV3DAO, new CassandraSchemaVersionManager(versionDAO));
 

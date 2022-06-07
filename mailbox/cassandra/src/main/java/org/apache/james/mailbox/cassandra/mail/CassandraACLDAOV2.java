@@ -19,13 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.removeAll;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 
 import javax.inject.Inject;
 
@@ -36,9 +34,8 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.model.MailboxACL;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -54,7 +51,7 @@ public class CassandraACLDAOV2 {
     private final PreparedStatement read;
 
     @Inject
-    public CassandraACLDAOV2(Session session) {
+    public CassandraACLDAOV2(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.insertRights = prepareInsertRights(session);
         this.removeRights = prepareRemoveRights(session);
@@ -63,53 +60,53 @@ public class CassandraACLDAOV2 {
         this.delete = prepareDelete(session);
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(
-            QueryBuilder.delete().from(CassandraACLV2Table.TABLE_NAME)
-                .where(eq(CassandraACLV2Table.ID, bindMarker(CassandraACLV2Table.ID))));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        return session.prepare(deleteFrom(CassandraACLV2Table.TABLE_NAME)
+            .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)))
+            .build());
     }
 
-    private PreparedStatement prepareInsertRights(Session session) {
-        return session.prepare(
-            update(CassandraACLV2Table.TABLE_NAME)
-                .with(addAll(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS)))
-                .where(eq(CassandraACLV2Table.ID, bindMarker(CassandraACLV2Table.ID)))
-                .and(eq(CassandraACLV2Table.KEY, bindMarker(CassandraACLV2Table.KEY))));
+    private PreparedStatement prepareInsertRights(CqlSession session) {
+        return session.prepare(update(CassandraACLV2Table.TABLE_NAME)
+            .append(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS))
+            .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)),
+                column(CassandraACLV2Table.KEY).isEqualTo(bindMarker(CassandraACLV2Table.KEY)))
+            .build());
     }
 
-    private PreparedStatement prepareReplaceRights(Session session) {
-        return session.prepare(
-            update(CassandraACLV2Table.TABLE_NAME)
-                .with(set(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS)))
-                .where(eq(CassandraACLV2Table.ID, bindMarker(CassandraACLV2Table.ID)))
-                .and(eq(CassandraACLV2Table.KEY, bindMarker(CassandraACLV2Table.KEY))));
+    private PreparedStatement prepareReplaceRights(CqlSession session) {
+        return session.prepare(update(CassandraACLV2Table.TABLE_NAME)
+            .setColumn(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS))
+            .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)),
+                column(CassandraACLV2Table.KEY).isEqualTo(bindMarker(CassandraACLV2Table.KEY)))
+            .build());
     }
 
-    private PreparedStatement prepareRemoveRights(Session session) {
-        return session.prepare(
-            update(CassandraACLV2Table.TABLE_NAME)
-                .with(removeAll(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS)))
-                .where(eq(CassandraACLV2Table.ID, bindMarker(CassandraACLV2Table.ID)))
-                .and(eq(CassandraACLV2Table.KEY, bindMarker(CassandraACLV2Table.KEY))));
+    private PreparedStatement prepareRemoveRights(CqlSession session) {
+        return session.prepare(update(CassandraACLV2Table.TABLE_NAME)
+            .remove(CassandraACLV2Table.RIGHTS, bindMarker(CassandraACLV2Table.RIGHTS))
+            .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)),
+                column(CassandraACLV2Table.KEY).isEqualTo(bindMarker(CassandraACLV2Table.KEY)))
+            .build());
     }
 
-    private PreparedStatement prepareRead(Session session) {
-        return session.prepare(
-            select()
-                .from(CassandraACLV2Table.TABLE_NAME)
-                .where(eq(CassandraACLV2Table.ID, bindMarker(CassandraACLV2Table.ID))));
+    private PreparedStatement prepareRead(CqlSession session) {
+        return session.prepare(selectFrom(CassandraACLV2Table.TABLE_NAME)
+                .all()
+                .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)))
+                .build());
     }
 
     public Mono<Void> delete(CassandraId cassandraId) {
         return executor.executeVoid(
             delete.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
+                .setUuid(CassandraACLTable.ID, cassandraId.asUuid()));
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return executor.executeRows(
-            read.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid()))
+                read.bind()
+                    .setUuid(CassandraACLTable.ID, cassandraId.asUuid()))
             .map(Throwing.function(row -> {
                 MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(row.getString(CassandraACLV2Table.KEY));
                 MailboxACL.Rfc4314Rights rights = row.getSet(CassandraACLV2Table.RIGHTS, String.class)
@@ -126,17 +123,17 @@ public class CassandraACLDAOV2 {
         switch (command.getEditMode()) {
             case ADD:
                 return executor.executeVoid(insertRights.bind()
-                    .setUUID(CassandraACLV2Table.ID, cassandraId.asUuid())
+                    .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
                     .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class));
             case REMOVE:
                 return executor.executeVoid(removeRights.bind()
-                    .setUUID(CassandraACLV2Table.ID, cassandraId.asUuid())
+                    .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
                     .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class));
             case REPLACE:
                 return executor.executeVoid(replaceRights.bind()
-                    .setUUID(CassandraACLV2Table.ID, cassandraId.asUuid())
+                    .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
                     .setSet(CassandraACLV2Table.RIGHTS, rightStrings, String.class));
             default:

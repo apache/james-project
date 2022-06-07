@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.base.MoreObjects;
 
 public class CassandraId implements MailboxId, Serializable {
@@ -39,7 +39,7 @@ public class CassandraId implements MailboxId, Serializable {
     private final UUID id;
 
     public static CassandraId timeBased() {
-        return of(UUIDs.timeBased());
+        return of(Uuids.timeBased());
     }
 
     public static CassandraId of(UUID id) {

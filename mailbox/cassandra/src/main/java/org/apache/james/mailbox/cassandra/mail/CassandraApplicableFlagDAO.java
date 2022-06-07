@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.TABLE_NAME;
@@ -36,9 +36,9 @@ import javax.mail.Flags;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Mono;
 
@@ -49,41 +49,43 @@ public class CassandraApplicableFlagDAO {
     private final PreparedStatement delete;
 
     @Inject
-    public CassandraApplicableFlagDAO(Session session) {
+    public CassandraApplicableFlagDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.select = prepareSelect(session);
         this.delete = prepareDelete(session);
         this.update = prepareUpdate(session);
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(FIELDS)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(QueryBuilder.delete()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareUpdate(Session session) {
+    private PreparedStatement prepareUpdate(CqlSession session) {
         return session.prepare(QueryBuilder.update(TABLE_NAME)
-            .with(addAll(USER_FLAGS, bindMarker(USER_FLAGS)))
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+            .append(USER_FLAGS, bindMarker(USER_FLAGS))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
     public Mono<Void> delete(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(
             delete.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()));
+                .setUuid(MAILBOX_ID, mailboxId.asUuid()));
     }
 
     public Mono<Flags> retrieveApplicableFlag(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRow(
-            select.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                select.bind()
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
             .map(FlagsExtractor::getApplicableFlags);
     }
 
@@ -92,7 +94,7 @@ public class CassandraApplicableFlagDAO {
             return Mono.empty();
         }
         return cassandraAsyncExecutor.executeVoid(update.bind()
-            .setUUID(MAILBOX_ID, cassandraId.asUuid())
-            .setSet(USER_FLAGS, toBeAdded));
+            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .setSet(USER_FLAGS, toBeAdded, String.class));
     }
 }

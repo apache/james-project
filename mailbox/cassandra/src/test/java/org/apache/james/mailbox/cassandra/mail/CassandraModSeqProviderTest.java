@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.MAILBOX_ID;
@@ -48,7 +51,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.scheduler.Schedulers;
@@ -67,8 +69,7 @@ class CassandraModSeqProviderTest {
     void setUp(CassandraCluster cassandra) {
         modSeqProvider = new CassandraModSeqProvider(
             cassandra.getConf(),
-            CassandraConfiguration.DEFAULT_CONFIGURATION,
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", Username.of("ieugen"), "Trash");
         mailbox = new Mailbox(path, UidValidity.of(1234), CASSANDRA_ID);
     }
@@ -105,15 +106,15 @@ class CassandraModSeqProviderTest {
             .registerScenario(
                 executeNormally()
                     .times(2)
-                    .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"),
+                    .whenQueryStartsWith("SELECT nextmodseq FROM modseq WHERE mailboxid=:mailboxid"),
                 awaitOn(insertBarrier)
                     .thenExecuteNormally()
                     .times(2)
-                    .whenQueryStartsWith("INSERT INTO modseq (nextModseq,mailboxId) VALUES (:nextModseq,:mailboxId) IF NOT EXISTS;"),
+                    .whenQueryStartsWith("INSERT INTO modseq (nextmodseq,mailboxid)"),
                 awaitOn(retryBarrier)
                     .thenExecuteNormally()
                     .times(1)
-                    .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT nextmodseq FROM modseq WHERE mailboxid=:mailboxid"));
 
         CompletableFuture<ModSeq> operation1 = modSeqProvider.nextModSeqReactive(CASSANDRA_ID)
             .subscribeOn(Schedulers.elastic())
@@ -130,8 +131,9 @@ class CassandraModSeqProviderTest {
 
         // Artificially fail the insert failure
         cassandra.getConf()
-            .execute(QueryBuilder.delete().from(TABLE_NAME)
-                .where(QueryBuilder.eq(MAILBOX_ID, CASSANDRA_ID.asUuid())));
+            .execute(deleteFrom(TABLE_NAME)
+                .where(column(MAILBOX_ID).isEqualTo(literal(CASSANDRA_ID.asUuid())))
+                .build());
 
         retryBarrier.releaseCaller();
 

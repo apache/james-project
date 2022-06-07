@@ -19,25 +19,25 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraAnnotationModule {
     CassandraModule MODULE = CassandraModule.table(CassandraAnnotationTable.TABLE_NAME)
         .comment("Holds Cassandra mailbox annotations")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraAnnotationTable.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraAnnotationTable.KEY, text())
-            .addColumn(CassandraAnnotationTable.VALUE, text()))
+            .withCompaction(SchemaBuilder.leveledCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraAnnotationTable.MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(CassandraAnnotationTable.KEY, TEXT)
+            .withColumn(CassandraAnnotationTable.VALUE, TEXT))
         .build();
 }

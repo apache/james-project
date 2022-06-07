@@ -19,9 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.counter;
-import static com.datastax.driver.core.DataType.text;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.COUNTER;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -30,48 +31,42 @@ import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-
 public interface CassandraQuotaModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraCurrentQuota.TABLE_NAME)
         .comment("Holds per quota-root current values. Quota-roots defines groups of mailboxes which shares quotas limitations.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraCurrentQuota.QUOTA_ROOT, text())
-            .addColumn(CassandraCurrentQuota.MESSAGE_COUNT, counter())
-            .addColumn(CassandraCurrentQuota.STORAGE, counter()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraCurrentQuota.QUOTA_ROOT, TEXT)
+            .withColumn(CassandraCurrentQuota.MESSAGE_COUNT, COUNTER)
+            .withColumn(CassandraCurrentQuota.STORAGE, COUNTER))
 
         .table(CassandraMaxQuota.TABLE_NAME)
         .comment("Holds per quota-root limitations. Limitations can concern the number of messages in a quota-root or the total size of a quota-root.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMaxQuota.QUOTA_ROOT, text())
-            .addColumn(CassandraMaxQuota.MESSAGE_COUNT, bigint())
-            .addColumn(CassandraMaxQuota.STORAGE, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMaxQuota.QUOTA_ROOT, TEXT)
+            .withColumn(CassandraMaxQuota.MESSAGE_COUNT, BIGINT)
+            .withColumn(CassandraMaxQuota.STORAGE, BIGINT))
 
         .table(CassandraDomainMaxQuota.TABLE_NAME)
         .comment("Holds per domain limitations. Limitations can concern the number of messages in a quota-root or the total size of a quota-root.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraDomainMaxQuota.DOMAIN, text())
-            .addColumn(CassandraDomainMaxQuota.MESSAGE_COUNT, bigint())
-            .addColumn(CassandraDomainMaxQuota.STORAGE, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraDomainMaxQuota.DOMAIN, TEXT)
+            .withColumn(CassandraDomainMaxQuota.MESSAGE_COUNT, BIGINT)
+            .withColumn(CassandraDomainMaxQuota.STORAGE, BIGINT))
 
         .table(CassandraGlobalMaxQuota.TABLE_NAME)
         .comment("Holds defaults limitations definition.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraGlobalMaxQuota.KEY, text())
-            .addColumn(CassandraGlobalMaxQuota.STORAGE, bigint())
-            .addColumn(CassandraGlobalMaxQuota.MESSAGE, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraGlobalMaxQuota.KEY, TEXT)
+            .withColumn(CassandraGlobalMaxQuota.STORAGE, BIGINT)
+            .withColumn(CassandraGlobalMaxQuota.MESSAGE, BIGINT))
         .build();
 }

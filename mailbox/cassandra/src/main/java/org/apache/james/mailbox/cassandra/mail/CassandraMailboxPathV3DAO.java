@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table.MAILBOX_ID;
@@ -34,8 +36,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Tab
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.GhostMailbox;
@@ -46,11 +47,12 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -62,84 +64,90 @@ public class CassandraMailboxPathV3DAO {
     private final PreparedStatement select;
     private final PreparedStatement selectUser;
     private final PreparedStatement selectAll;
-    private final CassandraConsistenciesConfiguration consistenciesConfiguration;
+    private final CqlSession session;
+    private final DriverExecutionProfile lwtProfile;
 
     @Inject
-    public CassandraMailboxPathV3DAO(Session session, CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public CassandraMailboxPathV3DAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.consistenciesConfiguration = consistenciesConfiguration;
-        this.insert = prepareInsert(session);
-        this.delete = prepareDelete(session);
-        this.select = prepareSelect(session);
-        this.selectUser = prepareSelectUser(session);
-        this.selectAll = prepareSelectAll(session);
+        this.session = session;
+        this.insert = prepareInsert();
+        this.delete = prepareDelete();
+        this.select = prepareSelect();
+        this.selectUser = prepareSelectUser();
+        this.selectAll = prepareSelectAll();
+        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(QueryBuilder.delete()
-            .from(TABLE_NAME)
-            .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
-            .and(eq(USER, bindMarker(USER)))
-            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME)))
-            .ifExists());
+    private PreparedStatement prepareDelete() {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(NAMESPACE).isEqualTo(bindMarker(NAMESPACE)),
+                column(USER).isEqualTo(bindMarker(USER)),
+                column(MAILBOX_NAME).isEqualTo(bindMarker(MAILBOX_NAME)))
+            .ifExists()
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert() {
         return session.prepare(insertInto(TABLE_NAME)
             .value(NAMESPACE, bindMarker(NAMESPACE))
             .value(USER, bindMarker(USER))
             .value(MAILBOX_NAME, bindMarker(MAILBOX_NAME))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .value(UIDVALIDITY, bindMarker(UIDVALIDITY))
-            .ifNotExists());
+            .ifNotExists()
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(MAILBOX_ID, UIDVALIDITY)
-            .from(TABLE_NAME)
-            .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
-            .and(eq(USER, bindMarker(USER)))
-            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME))));
+    private PreparedStatement prepareSelect() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(MAILBOX_ID, UIDVALIDITY)
+            .where(column(NAMESPACE).isEqualTo(bindMarker(NAMESPACE)),
+                column(USER).isEqualTo(bindMarker(USER)),
+                column(MAILBOX_NAME).isEqualTo(bindMarker(MAILBOX_NAME)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectUser(Session session) {
-        return session.prepare(select(MAILBOX_ID, UIDVALIDITY, MAILBOX_NAME)
-            .from(TABLE_NAME)
-            .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
-            .and(eq(USER, bindMarker(USER))));
+    private PreparedStatement prepareSelectUser() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(MAILBOX_ID, UIDVALIDITY, MAILBOX_NAME)
+            .where(column(NAMESPACE).isEqualTo(bindMarker(NAMESPACE)),
+                column(USER).isEqualTo(bindMarker(USER)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAll(Session session) {
-        return session.prepare(select(FIELDS)
-            .from(TABLE_NAME));
+    private PreparedStatement prepareSelectAll() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .build());
     }
 
     public Mono<Mailbox> retrieve(MailboxPath mailboxPath) {
-        return retrieve(mailboxPath, consistenciesConfiguration.getLightweightTransaction());
+        return retrieve(mailboxPath, STRONG);
     }
 
-    public Mono<Mailbox> retrieve(MailboxPath mailboxPath, ConsistencyChoice consistencyChoice) {
-        return retrieve(mailboxPath, consistencyChoice.choose(consistenciesConfiguration));
-    }
+    public Mono<Mailbox> retrieve(MailboxPath mailboxPath, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
+        BoundStatement statement = select.bind()
+            .setString(NAMESPACE, mailboxPath.getNamespace())
+            .setString(USER, sanitizeUser(mailboxPath.getUser()))
+            .setString(MAILBOX_NAME, mailboxPath.getName());
 
-    private Mono<Mailbox> retrieve(MailboxPath mailboxPath, ConsistencyLevel consistencyLevel) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            select.bind()
-                .setString(NAMESPACE, mailboxPath.getNamespace())
-                .setString(USER, sanitizeUser(mailboxPath.getUser()))
-                .setString(MAILBOX_NAME, mailboxPath.getName())
-                .setConsistencyLevel(consistencyLevel))
+        return cassandraAsyncExecutor.executeSingleRow(setExecutionProfileIfNeeded(statement, consistencyChoice))
             .map(row -> fromRow(row, mailboxPath.getUser(), mailboxPath.getNamespace(), mailboxPath.getName()))
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
     }
 
-    public Flux<Mailbox> listUserMailboxes(String namespace, Username user, ConsistencyChoice consistencyChoice) {
-        return cassandraAsyncExecutor.executeRows(
-            selectUser.bind()
-                .setString(NAMESPACE, namespace)
-                .setString(USER, sanitizeUser(user))
-                .setConsistencyLevel(consistencyChoice.choose(consistenciesConfiguration)))
+    public Flux<Mailbox> listUserMailboxes(String namespace, Username user, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
+        BoundStatementBuilder statementBuilder = selectUser.boundStatementBuilder()
+            .setString(NAMESPACE, namespace)
+            .setString(USER, sanitizeUser(user));
+
+        if (consistencyChoice.equals(STRONG)) {
+            statementBuilder.setExecutionProfile(lwtProfile);
+        }
+
+        return cassandraAsyncExecutor.executeRows(statementBuilder.build())
             .map(row -> fromRow(row, user, namespace))
             .map(FunctionalUtils.toFunction(this::logReadSuccess));
     }
@@ -152,7 +160,7 @@ public class CassandraMailboxPathV3DAO {
 
     /**
      * See https://issues.apache.org/jira/browse/MAILBOX-322 to read about the Ghost mailbox bug.
-     *
+     * <p>
      * A missed read on an existing mailbox is the cause of the ghost mailbox bug. Here we log missing reads. Successful
      * reads and write operations are also added in order to allow audit in order to know if the mailbox existed.
      */
@@ -171,7 +179,7 @@ public class CassandraMailboxPathV3DAO {
 
     /**
      * See https://issues.apache.org/jira/browse/MAILBOX-322 to read about the Ghost mailbox bug.
-     *
+     * <p>
      * Read success allows to know if a mailbox existed before (mailbox write history might be older than this log introduction
      * or log history might have been dropped)
      */
@@ -199,7 +207,7 @@ public class CassandraMailboxPathV3DAO {
                 username,
                 name),
             UidValidity.of(row.getLong(UIDVALIDITY)),
-            CassandraId.of(row.getUUID(MAILBOX_ID)));
+            CassandraId.of(row.getUuid(MAILBOX_ID)));
     }
 
     public Mono<Boolean> save(Mailbox mailbox) {
@@ -210,7 +218,7 @@ public class CassandraMailboxPathV3DAO {
             .setString(USER, sanitizeUser(mailbox.getUser()))
             .setLong(UIDVALIDITY, mailbox.getUidValidity().asLong())
             .setString(MAILBOX_NAME, mailbox.getName())
-            .setUUID(MAILBOX_ID, id.asUuid()));
+            .setUuid(MAILBOX_ID, id.asUuid()));
     }
 
     public Mono<Void> delete(MailboxPath mailboxPath) {
@@ -225,5 +233,13 @@ public class CassandraMailboxPathV3DAO {
             return "";
         }
         return user.asString();
+    }
+
+    private BoundStatement setExecutionProfileIfNeeded(BoundStatement statement, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
+        if (consistencyChoice.equals(STRONG)) {
+            return statement.setExecutionProfile(lwtProfile);
+        } else {
+            return statement;
+        }
     }
 }

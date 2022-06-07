@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.jupiter.api.Test;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -42,11 +42,11 @@ class FlagsUpdateStageResultTest {
 
     private static final ComposedMessageId UID = new ComposedMessageId(
         CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b")),
-        new CassandraMessageId.Factory().of(UUIDs.timeBased()),
+        new CassandraMessageId.Factory().of(Uuids.timeBased()),
         MessageUid.of(1L));
     private static final ComposedMessageId OTHER_UID = new ComposedMessageId(
         CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b")),
-        new CassandraMessageId.Factory().of(UUIDs.timeBased()),
+        new CassandraMessageId.Factory().of(Uuids.timeBased()),
         MessageUid.of(2L));
     private static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID.getUid())

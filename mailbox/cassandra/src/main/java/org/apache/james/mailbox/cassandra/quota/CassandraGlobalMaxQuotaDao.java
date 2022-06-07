@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota.KEY;
 import static org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota.MESSAGE;
 import static org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota.STORAGE;
@@ -39,11 +40,11 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Delete;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.querybuilder.delete.Delete;
+import com.datastax.oss.driver.api.querybuilder.insert.Insert;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 
 import reactor.core.publisher.Mono;
 
@@ -57,43 +58,43 @@ public class CassandraGlobalMaxQuotaDao {
     private final PreparedStatement removeStorageMaxQuotaStatement;
 
     @Inject
-    public CassandraGlobalMaxQuotaDao(Session session) {
+    public CassandraGlobalMaxQuotaDao(CqlSession session) {
         this.queryExecutor = new CassandraAsyncExecutor(session);
-        this.getGlobalMaxStatement = session.prepare(getGlobalMaxStatement());
-        this.setGlobalMaxMessageStatement = session.prepare(setGlobalMaxMessageStatement());
-        this.setGlobalMaxStorageStatement = session.prepare(setGlobalMaxStorageStatement());
-        this.removeMessageMaxQuotaStatement = session.prepare(removeMessageMaxQuotaStatement());
-        this.removeStorageMaxQuotaStatement = session.prepare(removeStorageMaxQuotaStatement());
+        this.getGlobalMaxStatement = session.prepare(getGlobalMaxStatement().build());
+        this.setGlobalMaxMessageStatement = session.prepare(setGlobalMaxMessageStatement().build());
+        this.setGlobalMaxStorageStatement = session.prepare(setGlobalMaxStorageStatement().build());
+        this.removeMessageMaxQuotaStatement = session.prepare(removeMessageMaxQuotaStatement().build());
+        this.removeStorageMaxQuotaStatement = session.prepare(removeStorageMaxQuotaStatement().build());
     }
 
-    private Delete.Where removeMessageMaxQuotaStatement() {
-        return delete(MESSAGE)
-            .from(TABLE_NAME)
-            .where(eq(KEY, bindMarker(KEY)));
+    private Delete removeMessageMaxQuotaStatement() {
+        return deleteFrom(TABLE_NAME)
+            .column(MESSAGE)
+            .where(column(KEY).isEqualTo(bindMarker(KEY)));
     }
 
-    private Delete.Where removeStorageMaxQuotaStatement() {
-        return delete(STORAGE)
-            .from(TABLE_NAME)
-            .where(eq(KEY, bindMarker(KEY)));
+    private Delete removeStorageMaxQuotaStatement() {
+        return deleteFrom(TABLE_NAME)
+            .column(STORAGE)
+            .where(column(KEY).isEqualTo(bindMarker(KEY)));
     }
 
     private Insert setGlobalMaxStorageStatement() {
         return insertInto(TABLE_NAME)
-            .value(KEY, VALUE)
+            .value(KEY, literal(VALUE))
             .value(STORAGE, bindMarker(STORAGE));
     }
 
     private Insert setGlobalMaxMessageStatement() {
         return insertInto(TABLE_NAME)
-            .value(KEY, VALUE)
+            .value(KEY, literal(VALUE))
             .value(MESSAGE, bindMarker(MESSAGE));
     }
 
-    private Select.Where getGlobalMaxStatement() {
-        return select()
-            .from(TABLE_NAME)
-            .where(eq(KEY, bindMarker(KEY)));
+    private Select getGlobalMaxStatement() {
+        return selectFrom(TABLE_NAME)
+            .all()
+            .where(column(KEY).isEqualTo(bindMarker(KEY)));
     }
 
     Mono<Void> setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {

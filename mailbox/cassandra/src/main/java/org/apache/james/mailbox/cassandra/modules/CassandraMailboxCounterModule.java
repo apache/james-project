@@ -19,26 +19,26 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.counter;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.COUNTER;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraMailboxCounterModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxCountersTable.TABLE_NAME)
         .comment("Holds messages count and unseen message count for each mailbox.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .bloomFilterFPChance(0.01)
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraMailboxCountersTable.COUNT, counter())
-            .addColumn(CassandraMailboxCountersTable.UNSEEN, counter()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withBloomFilterFpChance(0.01)
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, TIMEUUID)
+            .withColumn(CassandraMailboxCountersTable.COUNT, COUNTER)
+            .withColumn(CassandraMailboxCountersTable.UNSEEN, COUNTER))
         .build();
 }

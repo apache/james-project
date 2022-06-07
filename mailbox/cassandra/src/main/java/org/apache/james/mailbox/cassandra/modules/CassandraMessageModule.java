@@ -19,15 +19,17 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.cboolean;
-import static com.datastax.driver.core.DataType.cint;
-import static com.datastax.driver.core.DataType.frozenList;
-import static com.datastax.driver.core.DataType.frozenMap;
-import static com.datastax.driver.core.DataType.set;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timestamp;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BOOLEAN;
+import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMESTAMP;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenListOf;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenMapOf;
+import static com.datastax.oss.driver.api.core.type.DataTypes.listOf;
+import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
@@ -37,7 +39,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table;
 import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraMessageModule {
 
@@ -48,100 +50,98 @@ public interface CassandraMessageModule {
         .table(CassandraMessageIdTable.TABLE_NAME)
         .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageIds.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
-            .addColumn(CassandraMessageIds.MESSAGE_ID, timeuuid())
-            .addColumn(CassandraMessageIdTable.THREAD_ID, timeuuid())
-            .addColumn(CassandraMessageIdTable.MOD_SEQ, bigint())
-            .addColumn(Flag.ANSWERED, cboolean())
-            .addColumn(Flag.DELETED, cboolean())
-            .addColumn(Flag.DRAFT, cboolean())
-            .addColumn(Flag.FLAGGED, cboolean())
-            .addColumn(Flag.RECENT, cboolean())
-            .addColumn(Flag.SEEN, cboolean())
-            .addColumn(Flag.USER, cboolean())
-            .addColumn(Flag.USER_FLAGS, set(text()))
-            .addColumn(CassandraMessageV3Table.INTERNAL_DATE, timestamp())
-            .addColumn(CassandraMessageV3Table.BODY_START_OCTET, cint())
-            .addColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, bigint())
-            .addColumn(CassandraMessageV3Table.HEADER_CONTENT, text()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCaching(true, rows(CACHED_MESSAGE_ID_ROWS)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMessageIds.MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(CassandraMessageIds.IMAP_UID, BIGINT)
+            .withColumn(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
+            .withColumn(CassandraMessageIdTable.THREAD_ID, TIMEUUID)
+            .withColumn(CassandraMessageIdTable.MOD_SEQ, BIGINT)
+            .withColumn(Flag.ANSWERED, BOOLEAN)
+            .withColumn(Flag.DELETED, BOOLEAN)
+            .withColumn(Flag.DRAFT, BOOLEAN)
+            .withColumn(Flag.FLAGGED, BOOLEAN)
+            .withColumn(Flag.RECENT, BOOLEAN)
+            .withColumn(Flag.SEEN, BOOLEAN)
+            .withColumn(Flag.USER, BOOLEAN)
+            .withColumn(Flag.USER_FLAGS, setOf(TEXT))
+            .withColumn(CassandraMessageV3Table.INTERNAL_DATE, TIMESTAMP)
+            .withColumn(CassandraMessageV3Table.BODY_START_OCTET, INT)
+            .withColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, BIGINT)
+            .withColumn(CassandraMessageV3Table.HEADER_CONTENT, TEXT))
         .table(MessageIdToImapUid.TABLE_NAME)
         .comment("Holds mailbox and flags for each message, lookup by message ID")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8))
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-            .addClusteringColumn(CassandraMessageIds.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
-            .addColumn(MessageIdToImapUid.THREAD_ID, timeuuid())
-            .addColumn(MessageIdToImapUid.MOD_SEQ, bigint())
-            .addColumn(Flag.ANSWERED, cboolean())
-            .addColumn(Flag.DELETED, cboolean())
-            .addColumn(Flag.DRAFT, cboolean())
-            .addColumn(Flag.FLAGGED, cboolean())
-            .addColumn(Flag.RECENT, cboolean())
-            .addColumn(Flag.SEEN, cboolean())
-            .addColumn(Flag.USER, cboolean())
-            .addColumn(Flag.USER_FLAGS, set(text()))
-            .addColumn(CassandraMessageV3Table.INTERNAL_DATE, timestamp())
-            .addColumn(CassandraMessageV3Table.BODY_START_OCTET, cint())
-            .addColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, bigint())
-            .addColumn(CassandraMessageV3Table.HEADER_CONTENT, text()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withLZ4Compression(8, 1)
+            .withCaching(true, rows(CACHED_IMAP_UID_ROWS)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
+            .withClusteringColumn(CassandraMessageIds.MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(CassandraMessageIds.IMAP_UID, BIGINT)
+            .withColumn(MessageIdToImapUid.THREAD_ID, TIMEUUID)
+            .withColumn(MessageIdToImapUid.MOD_SEQ, BIGINT)
+            .withColumn(Flag.ANSWERED, BOOLEAN)
+            .withColumn(Flag.DELETED, BOOLEAN)
+            .withColumn(Flag.DRAFT, BOOLEAN)
+            .withColumn(Flag.FLAGGED, BOOLEAN)
+            .withColumn(Flag.RECENT, BOOLEAN)
+            .withColumn(Flag.SEEN, BOOLEAN)
+            .withColumn(Flag.USER, BOOLEAN)
+            .withColumn(Flag.USER_FLAGS, setOf(TEXT))
+            .withColumn(CassandraMessageV3Table.INTERNAL_DATE, TIMESTAMP)
+            .withColumn(CassandraMessageV3Table.BODY_START_OCTET, INT)
+            .withColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, BIGINT)
+            .withColumn(CassandraMessageV3Table.HEADER_CONTENT, TEXT))
         .table(CassandraMessageV2Table.TABLE_NAME)
         .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
             "in `blobs` and `blobparts` tables.")
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-            .addColumn(CassandraMessageV2Table.INTERNAL_DATE, timestamp())
-            .addColumn(CassandraMessageV2Table.BODY_START_OCTET, cint())
-            .addColumn(CassandraMessageV2Table.BODY_OCTECTS, bigint())
-            .addColumn(CassandraMessageV2Table.TEXTUAL_LINE_COUNT, bigint())
-            .addColumn(CassandraMessageV2Table.FULL_CONTENT_OCTETS, bigint())
-            .addColumn(CassandraMessageV2Table.BODY_CONTENT, text())
-            .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
-            .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
-            .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
+            .withColumn(CassandraMessageV2Table.INTERNAL_DATE, TIMESTAMP)
+            .withColumn(CassandraMessageV2Table.BODY_START_OCTET, INT)
+            .withColumn(CassandraMessageV2Table.BODY_OCTECTS, BIGINT)
+            .withColumn(CassandraMessageV2Table.TEXTUAL_LINE_COUNT, BIGINT)
+            .withColumn(CassandraMessageV2Table.FULL_CONTENT_OCTETS, BIGINT)
+            .withColumn(CassandraMessageV2Table.BODY_CONTENT, TEXT)
+            .withColumn(CassandraMessageV2Table.HEADER_CONTENT, TEXT)
+            .withColumn(CassandraMessageV2Table.ATTACHMENTS, listOf(SchemaBuilder.udt(CassandraMessageV2Table.ATTACHMENTS, true)))
+            .withColumn(CassandraMessageV2Table.PROPERTIES, listOf(SchemaBuilder.udt(CassandraMessageV2Table.PROPERTIES, true))))
         .table(CassandraMessageV3Table.TABLE_NAME)
         .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
             "in `blobs` and `blobparts` tables. Optimizes property storage compared to V2.")
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-            .addColumn(CassandraMessageV3Table.INTERNAL_DATE, timestamp())
-            .addColumn(CassandraMessageV3Table.BODY_START_OCTET, cint())
-            .addColumn(CassandraMessageV3Table.BODY_OCTECTS, bigint())
-            .addColumn(CassandraMessageV3Table.TEXTUAL_LINE_COUNT, bigint())
-            .addColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, bigint())
-            .addColumn(CassandraMessageV3Table.BODY_CONTENT, text())
-            .addColumn(CassandraMessageV3Table.HEADER_CONTENT, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE, text())
-            .addColumn(CassandraMessageV3Table.Properties.MEDIA_TYPE, text())
-            .addColumn(CassandraMessageV3Table.Properties.SUB_TYPE, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_ID, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_MD5, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_TRANSFER_ENCODING, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_LOCATION, text())
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_LANGUAGE, frozenList(text()))
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS, frozenMap(text(), text()))
-            .addColumn(CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS, frozenMap(text(), text()))
-            .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV3Table.ATTACHMENTS)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
+            .withColumn(CassandraMessageV3Table.INTERNAL_DATE, TIMESTAMP)
+            .withColumn(CassandraMessageV3Table.BODY_START_OCTET, INT)
+            .withColumn(CassandraMessageV3Table.BODY_OCTECTS, BIGINT)
+            .withColumn(CassandraMessageV3Table.TEXTUAL_LINE_COUNT, BIGINT)
+            .withColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, BIGINT)
+            .withColumn(CassandraMessageV3Table.BODY_CONTENT, TEXT)
+            .withColumn(CassandraMessageV3Table.HEADER_CONTENT, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.MEDIA_TYPE, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.SUB_TYPE, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_ID, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_MD5, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_TRANSFER_ENCODING, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_LOCATION, TEXT)
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_LANGUAGE, frozenListOf(TEXT))
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS, frozenMapOf(TEXT, TEXT))
+            .withColumn(CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS, frozenMapOf(TEXT, TEXT))
+            .withColumn(CassandraMessageV3Table.ATTACHMENTS, listOf(SchemaBuilder.udt(CassandraMessageV3Table.ATTACHMENTS, true))))
         .type(CassandraMessageV2Table.PROPERTIES)
         .statement(statement -> statement
-            .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())
-            .addColumn(CassandraMessageV2Table.Properties.NAME, text())
-            .addColumn(CassandraMessageV2Table.Properties.VALUE, text()))
+            .withField(CassandraMessageV2Table.Properties.NAMESPACE, TEXT)
+            .withField(CassandraMessageV2Table.Properties.NAME, TEXT)
+            .withField(CassandraMessageV2Table.Properties.VALUE, TEXT))
         .type(CassandraMessageV2Table.ATTACHMENTS)
         .statement(statement -> statement
-            .addColumn(CassandraMessageV2Table.Attachments.ID, text())
-            .addColumn(CassandraMessageV2Table.Attachments.NAME, text())
-            .addColumn(CassandraMessageV2Table.Attachments.CID, text())
-            .addColumn(CassandraMessageV2Table.Attachments.IS_INLINE, cboolean()))
+            .withField(CassandraMessageV2Table.Attachments.ID, TEXT)
+            .withField(CassandraMessageV2Table.Attachments.NAME, TEXT)
+            .withField(CassandraMessageV2Table.Attachments.CID, TEXT)
+            .withField(CassandraMessageV2Table.Attachments.IS_INLINE, BOOLEAN))
         .build();
 }

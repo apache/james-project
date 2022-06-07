@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
+import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColumn;
 
 import java.io.IOException;
 import java.util.function.Function;
@@ -32,24 +34,22 @@ import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.json.MailboxACLJsonConverter;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.util.FunctionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import reactor.core.publisher.Mono;
@@ -65,51 +65,52 @@ public class CassandraACLDAOV1 {
     private final PreparedStatement conditionalUpdateStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement deleteStatement;
-    private final ConsistencyLevel consistencyLevel;
+    private final CqlSession session;
+    private final DriverExecutionProfile lwtProfile;
 
     @Inject
-    public CassandraACLDAOV1(Session session,
-                             CassandraConfiguration cassandraConfiguration,
-                             CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public CassandraACLDAOV1(CqlSession session,
+                             CassandraConfiguration cassandraConfiguration) {
+        this.session = session;
         this.executor = new CassandraAsyncExecutor(session);
         this.maxAclRetry = cassandraConfiguration.getAclMaxRetry();
-        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
-        this.conditionalInsertStatement = prepareConditionalInsert(session);
-        this.conditionalUpdateStatement = prepareConditionalUpdate(session);
-        this.readStatement = prepareReadStatement(session);
-        this.deleteStatement = prepareDelete(session);
+        this.conditionalInsertStatement = prepareConditionalInsert();
+        this.conditionalUpdateStatement = prepareConditionalUpdate();
+        this.readStatement = prepareReadStatement();
+        this.deleteStatement = prepareDelete();
+        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(
-            QueryBuilder.delete().from(CassandraACLTable.TABLE_NAME)
-                .where(eq(CassandraACLTable.ID, bindMarker(CassandraACLTable.ID)))
-                .ifExists());
+    private PreparedStatement prepareDelete() {
+        return session.prepare(deleteFrom(CassandraACLTable.TABLE_NAME)
+            .where(column(CassandraACLTable.ID).isEqualTo(bindMarker(CassandraACLTable.ID)))
+            .ifExists()
+            .build());
     }
 
-    private PreparedStatement prepareConditionalInsert(Session session) {
-        return session.prepare(
-            insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, bindMarker(CassandraACLTable.ID))
-                .value(CassandraACLTable.ACL, bindMarker(CassandraACLTable.ACL))
-                .value(CassandraACLTable.VERSION, INITIAL_VALUE)
-                .ifNotExists());
+    private PreparedStatement prepareConditionalInsert() {
+        return session.prepare(insertInto(CassandraACLTable.TABLE_NAME)
+            .value(CassandraACLTable.ID, bindMarker(CassandraACLTable.ID))
+            .value(CassandraACLTable.ACL, bindMarker(CassandraACLTable.ACL))
+            .value(CassandraACLTable.VERSION, literal(INITIAL_VALUE))
+            .ifNotExists()
+            .build());
     }
 
-    private PreparedStatement prepareConditionalUpdate(Session session) {
-        return session.prepare(
-            update(CassandraACLTable.TABLE_NAME)
-                .where(eq(CassandraACLTable.ID, bindMarker(CassandraACLTable.ID)))
-                .with(set(CassandraACLTable.ACL, bindMarker(CassandraACLTable.ACL)))
-                .and(set(CassandraACLTable.VERSION, bindMarker(CassandraACLTable.VERSION)))
-                .onlyIf(eq(CassandraACLTable.VERSION, bindMarker(OLD_VERSION))));
+    private PreparedStatement prepareConditionalUpdate() {
+        return session.prepare(update(CassandraACLTable.TABLE_NAME)
+            .set(setColumn(CassandraACLTable.ACL, bindMarker(CassandraACLTable.ACL)),
+                setColumn(CassandraACLTable.VERSION, bindMarker(CassandraACLTable.VERSION)))
+            .where(column(CassandraACLTable.ID).isEqualTo(bindMarker(CassandraACLTable.ID)))
+            .ifColumn(CassandraACLTable.VERSION).isEqualTo(bindMarker(OLD_VERSION))
+            .build());
     }
 
-    private PreparedStatement prepareReadStatement(Session session) {
-        return session.prepare(
-            select(CassandraACLTable.ACL, CassandraACLTable.VERSION)
-                .from(CassandraACLTable.TABLE_NAME)
-                .where(eq(CassandraMailboxTable.ID, bindMarker(CassandraACLTable.ID))));
+    private PreparedStatement prepareReadStatement() {
+        return session.prepare(selectFrom(CassandraACLTable.TABLE_NAME)
+            .columns(CassandraACLTable.ACL, CassandraACLTable.VERSION)
+            .where(column(CassandraACLTable.ID).isEqualTo(bindMarker(CassandraACLTable.ID)))
+            .build());
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
@@ -145,17 +146,17 @@ public class CassandraACLDAOV1 {
     private Mono<Row> getStoredACLRow(CassandraId cassandraId) {
         return executor.executeSingleRow(
             readStatement.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                .setConsistencyLevel(consistencyLevel));
+                .setUuid(CassandraACLTable.ID, cassandraId.asUuid())
+                .setExecutionProfile(lwtProfile));
     }
 
     private Mono<MailboxACL> updateStoredACL(CassandraId cassandraId, ACLWithVersion aclWithVersion) {
         return executor.executeReturnApplied(
-            conditionalUpdateStatement.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                .setString(CassandraACLTable.ACL, convertAclToJson(aclWithVersion.mailboxACL))
-                .setLong(CassandraACLTable.VERSION, aclWithVersion.version + 1)
-                .setLong(OLD_VERSION, aclWithVersion.version))
+                conditionalUpdateStatement.bind()
+                    .setUuid(CassandraACLTable.ID, cassandraId.asUuid())
+                    .setString(CassandraACLTable.ACL, convertAclToJson(aclWithVersion.mailboxACL))
+                    .setLong(CassandraACLTable.VERSION, aclWithVersion.version + 1)
+                    .setLong(OLD_VERSION, aclWithVersion.version))
             .filter(FunctionalUtils.identityPredicate())
             .map(any -> aclWithVersion.mailboxACL);
     }
@@ -163,13 +164,13 @@ public class CassandraACLDAOV1 {
     public Mono<Void> delete(CassandraId cassandraId) {
         return executor.executeVoid(
             deleteStatement.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
+                .setUuid(CassandraACLTable.ID, cassandraId.asUuid()));
     }
 
     private Mono<MailboxACL> insertACL(CassandraId cassandraId, MailboxACL acl) {
         return executor.executeReturnApplied(
-            conditionalInsertStatement.bind()
-                    .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
+                conditionalInsertStatement.bind()
+                    .setUuid(CassandraACLTable.ID, cassandraId.asUuid())
                     .setString(CassandraACLTable.ACL, convertAclToJson(acl)))
             .filter(FunctionalUtils.identityPredicate())
             .map(any -> acl);

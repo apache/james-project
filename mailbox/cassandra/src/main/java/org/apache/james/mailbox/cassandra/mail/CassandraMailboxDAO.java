@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
+import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColumn;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MAILBOX_BASE;
@@ -36,7 +37,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -46,12 +47,11 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.data.UdtValue;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -65,90 +65,98 @@ public class CassandraMailboxDAO {
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement updateUidValidityStatement;
-    private final ConsistencyLevel consistencyLevel;
+    private final CqlSession session;
+    private final DriverExecutionProfile lwtProfile;
 
     @Inject
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider,
-                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public CassandraMailboxDAO(CqlSession session, CassandraTypesProvider typesProvider) {
+        this.session = session;
         this.executor = new CassandraAsyncExecutor(session);
-        this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
-        this.insertStatement = prepareInsert(session);
-        this.updateStatement = prepareUpdate(session);
-        this.updateUidValidityStatement = prepareUpdateUidValidity(session);
-        this.deleteStatement = prepareDelete(session);
-        this.listStatement = prepareList(session);
-        this.readStatement = prepareRead(session);
+        this.insertStatement = prepareInsert();
+        this.updateStatement = prepareUpdate();
+        this.updateUidValidityStatement = prepareUpdateUidValidity();
+        this.deleteStatement = prepareDelete();
+        this.listStatement = prepareList();
+        this.readStatement = prepareRead();
+        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert() {
         return session.prepare(insertInto(TABLE_NAME)
             .value(ID, bindMarker(ID))
             .value(NAME, bindMarker(NAME))
             .value(UIDVALIDITY, bindMarker(UIDVALIDITY))
-            .value(MAILBOX_BASE, bindMarker(MAILBOX_BASE)));
+            .value(MAILBOX_BASE, bindMarker(MAILBOX_BASE))
+            .build());
     }
 
-    private PreparedStatement prepareUpdate(Session session) {
+    private PreparedStatement prepareUpdate() {
         return session.prepare(update(TABLE_NAME)
-            .with(set(MAILBOX_BASE, bindMarker(MAILBOX_BASE)))
-            .and(set(NAME, bindMarker(NAME)))
-            .where(eq(ID, bindMarker(ID))));
+            .set(setColumn(MAILBOX_BASE, bindMarker(MAILBOX_BASE)),
+                setColumn(NAME, bindMarker(NAME)))
+            .where(column(ID).isEqualTo(bindMarker(ID)))
+            .build());
     }
 
-    private PreparedStatement prepareUpdateUidValidity(Session session) {
+    private PreparedStatement prepareUpdateUidValidity() {
         return session.prepare(update(TABLE_NAME)
-            .with(set(UIDVALIDITY, bindMarker(UIDVALIDITY)))
-            .where(eq(ID, bindMarker(ID))));
+            .setColumn(UIDVALIDITY, bindMarker(UIDVALIDITY))
+            .where(column(ID).isEqualTo(bindMarker(ID)))
+            .build());
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(QueryBuilder.delete()
-            .from(TABLE_NAME)
-            .where(eq(ID, bindMarker(ID))));
+    private PreparedStatement prepareDelete() {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(ID).isEqualTo(bindMarker(ID)))
+            .build());
     }
 
-    private PreparedStatement prepareList(Session session) {
-        return session.prepare(select(FIELDS).from(TABLE_NAME));
+    private PreparedStatement prepareList() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .build());
     }
 
-    private PreparedStatement prepareRead(Session session) {
-        return session.prepare(select(FIELDS).from(TABLE_NAME)
-            .where(eq(ID, bindMarker(ID))));
+    private PreparedStatement prepareRead() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .where(column(ID).isEqualTo(bindMarker(ID)))
+            .build());
     }
 
     public Mono<Void> save(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return executor.executeVoid(insertStatement.bind()
-            .setUUID(ID, cassandraId.asUuid())
+            .setUuid(ID, cassandraId.asUuid())
             .setString(NAME, mailbox.getName())
             .setLong(UIDVALIDITY, mailbox.getUidValidity().asLong())
-            .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
+            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
     }
 
     public Mono<Void> updatePath(CassandraId mailboxId, MailboxPath mailboxPath) {
         return executor.executeVoid(updateStatement.bind()
-            .setUUID(ID, mailboxId.asUuid())
+            .setUuid(ID, mailboxId.asUuid())
             .setString(NAME, mailboxPath.getName())
-            .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser())));
+            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser())));
     }
 
     public Mono<Void> delete(CassandraId mailboxId) {
         return executor.executeVoid(deleteStatement.bind()
-            .setUUID(ID, mailboxId.asUuid()));
+            .setUuid(ID, mailboxId.asUuid()));
     }
 
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
-            .setUUID(ID, mailboxId.asUuid())
-            .setConsistencyLevel(consistencyLevel))
+                .setUuid(ID, mailboxId.asUuid())
+                .setExecutionProfile(lwtProfile))
             .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
 
     private Mono<Mailbox> mailboxFromRow(Row row, CassandraId cassandraId) {
         return sanitizeUidValidity(cassandraId, row.getLong(UIDVALIDITY))
             .map(uidValidity -> {
-                UDTValue mailboxBase = row.getUDTValue(MAILBOX_BASE);
+                UdtValue mailboxBase = row.getUdtValue(MAILBOX_BASE);
                 return new Mailbox(
                     new MailboxPath(
                         mailboxBase.getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
@@ -158,7 +166,7 @@ public class CassandraMailboxDAO {
                     cassandraId);
             });
     }
-    
+
     private Mono<UidValidity> sanitizeUidValidity(CassandraId cassandraId, long uidValidityAsLong) {
         if (!UidValidity.isValid(uidValidityAsLong)) {
             UidValidity newUidValidity = UidValidity.generate();
@@ -175,8 +183,8 @@ public class CassandraMailboxDAO {
      */
     private Mono<Void> updateUidValidity(CassandraId cassandraId, UidValidity uidValidity) {
         return executor.executeVoid(updateUidValidityStatement.bind()
-                .setUUID(ID, cassandraId.asUuid())
-                .setLong(UIDVALIDITY, uidValidity.asLong()));
+            .setUuid(ID, cassandraId.asUuid())
+            .setLong(UIDVALIDITY, uidValidity.asLong()));
     }
 
     public Flux<Mailbox> retrieveAllMailboxes() {
@@ -185,6 +193,6 @@ public class CassandraMailboxDAO {
     }
 
     private Mono<Mailbox> toMailboxWithId(Row row) {
-        return mailboxFromRow(row, CassandraId.of(row.getUUID(ID)));
+        return mailboxFromRow(row, CassandraId.of(row.getUuid(ID)));
     }
 }

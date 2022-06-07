@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.NEXT_MODSEQ;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
@@ -38,7 +37,7 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -47,9 +46,9 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -88,14 +87,13 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private final PreparedStatement select;
     private final PreparedStatement update;
     private final PreparedStatement insert;
-    private final ConsistencyLevel consistencyLevel;
     private final RetryBackoffSpec retrySpec;
+    private final DriverExecutionProfile lwtProfile;
 
     @Inject
-    public CassandraModSeqProvider(Session session, CassandraConfiguration cassandraConfiguration,
-                                   CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public CassandraModSeqProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
+        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
         this.select = prepareSelect(session);
@@ -104,24 +102,27 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .scheduler(Schedulers.parallel());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(NEXT_MODSEQ, bindMarker(NEXT_MODSEQ))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .ifNotExists());
+            .ifNotExists()
+            .build());
     }
 
-    private PreparedStatement prepareUpdate(Session session) {
+    private PreparedStatement prepareUpdate(CqlSession session) {
         return session.prepare(update(TABLE_NAME)
-            .onlyIf(eq(NEXT_MODSEQ, bindMarker(MOD_SEQ_CONDITION)))
-            .with(set(NEXT_MODSEQ, bindMarker(NEXT_MODSEQ)))
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+            .setColumn(NEXT_MODSEQ, bindMarker(NEXT_MODSEQ))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .ifColumn(NEXT_MODSEQ).isEqualTo(bindMarker(MOD_SEQ_CONDITION))
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(NEXT_MODSEQ)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(NEXT_MODSEQ)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
     @Override
@@ -150,18 +151,18 @@ public class CassandraModSeqProvider implements ModSeqProvider {
 
     private Mono<Optional<ModSeq>> findHighestModSeq(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            select.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setConsistencyLevel(consistencyLevel))
+                select.bind()
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setExecutionProfile(lwtProfile))
             .map(maybeRow -> maybeRow.map(row -> ModSeq.of(row.getLong(NEXT_MODSEQ))));
     }
 
     private Mono<ModSeq> tryInsertModSeq(CassandraId mailboxId, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
         return cassandraAsyncExecutor.executeReturnApplied(
-            insert.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setLong(NEXT_MODSEQ, nextModSeq.asLong()))
+                insert.bind()
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setLong(NEXT_MODSEQ, nextModSeq.asLong()))
             .map(success -> successToModSeq(nextModSeq, success))
             .handle(publishIfPresent());
     }
@@ -169,10 +170,10 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private Mono<ModSeq> tryUpdateModSeq(CassandraId mailboxId, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
         return cassandraAsyncExecutor.executeReturnApplied(
-            update.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setLong(NEXT_MODSEQ, nextModSeq.asLong())
-                .setLong(MOD_SEQ_CONDITION, modSeq.asLong()))
+                update.bind()
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setLong(NEXT_MODSEQ, nextModSeq.asLong())
+                    .setLong(MOD_SEQ_CONDITION, modSeq.asLong()))
             .map(success -> successToModSeq(nextModSeq, success))
             .handle(publishIfPresent());
     }
@@ -189,8 +190,8 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         CassandraId cassandraId = (CassandraId) mailboxId;
         return findHighestModSeq(cassandraId)
             .flatMap(maybeHighestModSeq -> maybeHighestModSeq
-                        .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
-                        .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
+                .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
+                .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
             .single()
             .retryWhen(retrySpec);
     }
