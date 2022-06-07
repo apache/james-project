@@ -95,10 +95,6 @@ To be noted that blobs are stored within a single Cassandra row, hence a low thr
 | cache.cassandra.ttl
 | DEFAULT: 7 days, optional, must be a duration. Cache eviction policy is TTL based.
 
-| cache.cassandra.timeout
-| DEFAULT: 100ms, optional, must be a duration, cannot exceed 1 hour.
-Timeout after which this cache should be bypassed.
-
 | cache.sizeThresholdInBytes
 | DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
 Supported units: bytes, Kib, MiB, GiB, TiB

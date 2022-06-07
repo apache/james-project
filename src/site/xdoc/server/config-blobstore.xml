@@ -89,11 +89,6 @@
                     <dd>DEFAULT: 7 days, optional, must be a duration. Cache eviction policy is TTL based. </dd>
                 </dl>
                 <dl>
-                    <dt><strong>cache.cassandra.timeout</strong></dt>
-                    <dd>DEFAULT: 100ms, optional, must be a duration, cannot exceed 1 hour.
-                        Timeout after which this cache should be bypassed.</dd>
-                </dl>
-                <dl>
                     <dt><strong>cache.sizeThresholdInBytes</strong></dt>
                     <dd>DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
                         Supported units: bytes, Kib, MiB, GiB, TiB

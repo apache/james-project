@@ -1,8 +1,16 @@
 = Distributed James Server &mdash; cassandra.properties
 :navtitle: cassandra.properties
 
+This configuration file allow setting some configuration properties in conjunction to
+Cassandra driver native configuration.
+
 Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra.properties[example]
 to get some examples and hints.
+
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra-driver.conf[example]
+to get some examples and hints for Cassandra driver native configuration.
+
+Cassandra native configuration allows configuring SSL, timeouts, logs and metrics as well as execution profiles.
 
 == Configuration
 
@@ -30,48 +38,9 @@ required if *cassandra.password* is supplied
 |Password used as a credential for contacting Cassandra cluster. Optional, default is absent,
 required if <strong>cassandra.user</strong> is supplied
 
-|cassandra.ssl
-|Whether SSL should be enabled on the communications with Cassandra cluster. Optional, defaults to false.
-
-The keystore used for trusting SSL server socket can be set via JSSE system properties as explained on
-https://docs.datastax.com/en/developer/java-driver/3.7/manual/ssl/[Cassandra driver manual].
-
 |cassandra.replication.factor
 |Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
 will have no effect. Optional. Default value 1.
-
-|cassandra.query.logger.constant.threshold
-| If specified all queries that take more than the given integer in millisecond will be considered slow and logged.
-If not specified by default a DynamicThresholdQueryLogger will be used (see above)
-
-|cassandra.query.slow.query.latency.threshold.percentile
-| Default is com.datastax.driver.core.QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE.
-The latency percentile beyond which queries are considered 'slow' and will be logged.
-If you specify cassandra.query.logger.constant.threshold, you should not specify this property
-
-|cassandra.query.logger.max.query.string.length
-|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_QUERY_STRING.LENGTH.
-The maximum length of a CQL query string that can be logged verbatim by the cassandra driver
-
-|cassandra.query.logger.max.logged.parameters
-|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_LOGGED_PARAMETERS.
-The maximum number of query parameters that can be logged by the cassandra driver
-
-|cassandra.query.logger.max.parameter.value.length
-|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_PARAMETER_VALUE_LENGTH.
-The maximum length of query parameter value that can be logged by the cassandra driver
-
-|cassandra.readTimeoutMillis
-|Optional.
-If specified defines the Cassandra https://docs.datastax.com/en/developer/java-driver/3.5/manual/socket_options/[driver read timeout].
-
-|cassandra.consistency_level.regular
-|Optional. Allows specifying the driver default consistency level. Defaults to QUORUM.
-Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html[QUORUM, LOCAL_QUORUM, or EACH_QUORUM]
-
-|cassandra.consistency_level.lightweight_transaction
-|Optional. Allows specifying the driver serial consistency level. Defaults to SERIAL.
-Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html[SERIAL or LOCAL_SERIAL]
 
 |cassandra.local.dc
 |Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
@@ -84,58 +53,6 @@ Not specifying this value results in the driver's default load balancing policy 
 Falls back to default read consistency level if the blob is missing. Defaults to false.
 
 |===
-
-== Pooling options
-
-Here are some properties for Pooling options:
-
-....
-# Read com.datastax.driver.core.PoolingOptions for knowing defaults value
-# No value here will default to driver's default value
-
-# cassandra.pooling.local.max.connections=8
-# cassandra.pooling.local.max.requests=128
-## In ms. Should be higher than socket read timeout
-# cassandra.pooling.timeout=5000
-## In seconds.
-# cassandra.pooling.heartbeat.timeout=30
-# cassandra.pooling.max.queue.size=256
-....
-
-.cassandra.properties content
-|===
-| Property name | explanation
-
-| cassandra.pooling.local.max.connections
-| Optional. Defaults to 8.
-If specified defines the Cassandra
-https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#pool-size[maximum number of connections to hosts]
-(remote and local).
-
-| cassandra.pooling.local.max.requests
-| Optional. Defaults to 128.
-If specified defines the Cassandra
-https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/[maximum number of concurrent requests per connection].
-
-| cassandra.pooling.timeout
-| Optional. Defaults to 5000 (ms).
-If specified defines the Cassandra
-https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue[timeout for waiting in the pool queue].
-Should be higher than sockets timeout.
-
-| cassandra.pooling.heartbeat.timeout
-| Optional. Defaults to 30 (s).
-If specified defines the Cassandra
-https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#heartbeat[heartbeat timeout].
-
-| cassandra.pooling.max.queue.size
-| Optional. Defaults to 256.
-If specified defines the Cassandra
-https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue[maximum size of the connection pool queue].
-
-|===
-
-If you want more explanation about Cassandra configuration, you should visit the dedicated https://docs.datastax.com/en/developer/java-driver/3.9[documentation].
 
 == Cassandra Mailbox Configuration
 
@@ -182,10 +99,6 @@ Controls the number of retries upon Cassandra flags update, in MessageMapper.
 | mailbox.max.retry.message.id.flags.update
 | Optional. Defaults to 1000.
 Controls the number of retries upon Cassandra flags update, in MessageIdMapper.
-
-| fetch.advance.row.count
-| Optional. Defaults to 1000.
-Controls the number of remaining rows we should wait before prefetch when paging.
 
 | chunk.size.message.read
 | Optional. Defaults to 100.
