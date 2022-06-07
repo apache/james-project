@@ -57,7 +57,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -91,7 +91,7 @@ public class CassandraMailboxManagerProvider {
             mailboxManagerConfiguration, messageIdFactory, threadIdGuessingAlgorithm);
     }
 
-    private static CassandraMailboxManager provideMailboxManager(Session session,
+    private static CassandraMailboxManager provideMailboxManager(CqlSession session,
                                                                  PreDeletionHooks preDeletionHooks,
                                                                  CassandraMailboxSessionMapperFactory mapperFactory,
                                                                  MailboxManagerConfiguration mailboxManagerConfiguration,

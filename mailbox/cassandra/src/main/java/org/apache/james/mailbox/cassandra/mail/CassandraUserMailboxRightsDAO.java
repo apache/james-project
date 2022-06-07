@@ -18,10 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.RIGHTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.TABLE_NAME;
@@ -43,10 +44,9 @@ import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
@@ -61,7 +61,7 @@ public class CassandraUserMailboxRightsDAO {
     private final PreparedStatement selectUser;
 
     @Inject
-    public CassandraUserMailboxRightsDAO(Session session) {
+    public CassandraUserMailboxRightsDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
@@ -69,31 +69,34 @@ public class CassandraUserMailboxRightsDAO {
         this.selectUser = prepareSelectAllForUser(session);
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(QueryBuilder.delete()
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME)))
-            .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(USER_NAME).isEqualTo(bindMarker(USER_NAME)),
+                column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(USER_NAME, bindMarker(USER_NAME))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .value(RIGHTS, bindMarker(RIGHTS)));
+            .value(RIGHTS, bindMarker(RIGHTS))
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(RIGHTS)
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME)))
-            .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(RIGHTS)
+            .where(column(USER_NAME).isEqualTo(bindMarker(USER_NAME)),
+                column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAllForUser(Session session) {
-        return session.prepare(select(MAILBOX_ID, RIGHTS)
-            .from(TABLE_NAME)
-            .where(eq(USER_NAME, bindMarker(USER_NAME))));
+    private PreparedStatement prepareSelectAllForUser(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(MAILBOX_ID, RIGHTS)
+            .where(column(USER_NAME).isEqualTo(bindMarker(USER_NAME)))
+            .build());
     }
 
     public Mono<Void> update(CassandraId cassandraId, ACLDiff aclDiff) {
@@ -108,41 +111,41 @@ public class CassandraUserMailboxRightsDAO {
     private Flux<Void> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
         return Flux.fromStream(removedEntries)
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
-                delete.bind()
-                    .setString(USER_NAME, entry.getKey().getName())
-                    .setUUID(MAILBOX_ID, cassandraId.asUuid())),
+                    delete.bind()
+                        .setString(USER_NAME, entry.getKey().getName())
+                        .setUuid(MAILBOX_ID, cassandraId.asUuid())),
                 DEFAULT_CONCURRENCY);
     }
 
     private Flux<Void> addAll(CassandraId cassandraId, Stream<MailboxACL.Entry> addedEntries) {
         return Flux.fromStream(addedEntries)
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
-                insert.bind()
-                    .setString(USER_NAME, entry.getKey().getName())
-                    .setUUID(MAILBOX_ID, cassandraId.asUuid())
-                    .setString(RIGHTS, entry.getValue().serialize())),
+                    insert.bind()
+                        .setString(USER_NAME, entry.getKey().getName())
+                        .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                        .setString(RIGHTS, entry.getValue().serialize())),
                 DEFAULT_CONCURRENCY);
     }
 
     public Mono<Optional<Rfc4314Rights>> retrieve(Username userName, CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
-            select.bind()
-                .setString(USER_NAME, userName.asString())
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                select.bind()
+                    .setString(USER_NAME, userName.asString())
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
             .map(rowOptional ->
                 rowOptional.map(Throwing.function(row -> Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS)))));
     }
 
     public Flux<Pair<CassandraId, Rfc4314Rights>> listRightsForUser(Username userName) {
         return cassandraAsyncExecutor.executeRows(
-            selectUser.bind()
-                .setString(USER_NAME, userName.asString()))
+                selectUser.bind()
+                    .setString(USER_NAME, userName.asString()))
             .map(Throwing.function(this::toPair));
     }
 
     private Pair<CassandraId, Rfc4314Rights> toPair(Row row) throws UnsupportedRightException {
         return Pair.of(
-            CassandraId.of(row.getUUID(MAILBOX_ID)),
+            CassandraId.of(row.getUuid(MAILBOX_ID)),
             Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS)));
     }
 }

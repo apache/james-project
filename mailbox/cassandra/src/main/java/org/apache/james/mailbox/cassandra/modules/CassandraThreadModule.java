@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.frozenSet;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenSetOf;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadLookupTable.MIME_MESSAGE_IDS;
@@ -37,18 +37,18 @@ public interface CassandraThreadModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(TABLE_NAME)
         .comment("Related data needed for guessing threadId algorithm")
-        .statement(statement -> statement
-            .addPartitionKey(USERNAME, text())
-            .addPartitionKey(MIME_MESSAGE_ID, text())
-            .addClusteringColumn(MESSAGE_ID, timeuuid())
-            .addColumn(THREAD_ID, timeuuid())
-            .addColumn(BASE_SUBJECT, text()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(USERNAME, TEXT)
+            .withPartitionKey(MIME_MESSAGE_ID, TEXT)
+            .withClusteringColumn(MESSAGE_ID, TIMEUUID)
+            .withColumn(THREAD_ID, TIMEUUID)
+            .withColumn(BASE_SUBJECT, TEXT))
         .table(CassandraThreadLookupTable.TABLE_NAME)
         .comment("Thread table lookup by messageId, using for deletion thread data")
-        .statement(statement -> statement
-            .addPartitionKey(MESSAGE_ID, timeuuid())
-            .addColumn(USERNAME, text())
-            .addColumn(MIME_MESSAGE_IDS, frozenSet(text())))
+        .statement(statement -> types -> statement
+            .withPartitionKey(MESSAGE_ID, TIMEUUID)
+            .withColumn(USERNAME, TEXT)
+            .withColumn(MIME_MESSAGE_IDS, frozenSetOf(TEXT)))
         .build();
 
 }

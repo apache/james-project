@@ -36,7 +36,6 @@ class CassandraMessageIdMapperRelaxedConsistencyTest {
         protected CassandraMapperProvider provideMapper() {
             return new CassandraMapperProvider(
                 cassandraCluster.getCassandraCluster(),
-                cassandraCluster.getCassandraConsistenciesConfiguration(),
                 CassandraConfiguration.builder()
                     .messageReadStrongConsistency(false)
                     .messageWriteStrongConsistency(true)
@@ -50,7 +49,6 @@ class CassandraMessageIdMapperRelaxedConsistencyTest {
         protected CassandraMapperProvider provideMapper() {
             return new CassandraMapperProvider(
                 cassandraCluster.getCassandraCluster(),
-                cassandraCluster.getCassandraConsistenciesConfiguration(),
                 CassandraConfiguration.builder()
                     .messageReadStrongConsistency(false)
                     .messageWriteStrongConsistency(false)

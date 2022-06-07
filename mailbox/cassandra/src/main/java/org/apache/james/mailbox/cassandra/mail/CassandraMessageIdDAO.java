@@ -19,15 +19,13 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.removeAll;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
+import static com.datastax.oss.driver.api.querybuilder.update.Assignment.append;
+import static com.datastax.oss.driver.api.querybuilder.update.Assignment.remove;
+import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColumn;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
@@ -58,6 +56,7 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,11 +79,12 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.util.streams.Limit;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -118,7 +118,7 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement listStatement;
 
     @Inject
-    public CassandraMessageIdDAO(Session session, BlobId.Factory blobIdFactory) {
+    public CassandraMessageIdDAO(CqlSession session, BlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.blobIdFactory = blobIdFactory;
         this.delete = prepareDelete(session);
@@ -137,146 +137,157 @@ public class CassandraMessageIdDAO {
         this.selectMetadataRange = prepareSelectMetadataRange(session);
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(QueryBuilder.delete()
-                .from(TABLE_NAME)
-                .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-                .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(update(TABLE_NAME)
-            .with(set(THREAD_ID, bindMarker(THREAD_ID)))
-            .and(set(MESSAGE_ID, bindMarker(MESSAGE_ID)))
-            .and(set(MOD_SEQ, bindMarker(MOD_SEQ)))
-            .and(set(ANSWERED, bindMarker(ANSWERED)))
-            .and(set(DELETED, bindMarker(DELETED)))
-            .and(set(DRAFT, bindMarker(DRAFT)))
-            .and(set(FLAGGED, bindMarker(FLAGGED)))
-            .and(set(RECENT, bindMarker(RECENT)))
-            .and(set(SEEN, bindMarker(SEEN)))
-            .and(set(USER, bindMarker(USER)))
-            .and(addAll(USER_FLAGS, bindMarker(USER_FLAGS)))
-            .and(set(INTERNAL_DATE, bindMarker(INTERNAL_DATE)))
-            .and(set(BODY_START_OCTET, bindMarker(BODY_START_OCTET)))
-            .and(set(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)))
-            .and(set(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
+            .set(setColumn(THREAD_ID, bindMarker(THREAD_ID)),
+                setColumn(MESSAGE_ID, bindMarker(MESSAGE_ID)),
+                setColumn(MOD_SEQ, bindMarker(MOD_SEQ)),
+                setColumn(ANSWERED, bindMarker(ANSWERED)),
+                setColumn(DELETED, bindMarker(DELETED)),
+                setColumn(DRAFT, bindMarker(DRAFT)),
+                setColumn(FLAGGED, bindMarker(FLAGGED)),
+                setColumn(RECENT, bindMarker(RECENT)),
+                setColumn(SEEN, bindMarker(SEEN)),
+                setColumn(USER, bindMarker(USER)),
+                setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
+                setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
+                setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
+                setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)),
+                append(USER_FLAGS, bindMarker(USER_FLAGS)))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
-    private PreparedStatement prepareUpdate(Session session) {
+    private PreparedStatement prepareUpdate(CqlSession session) {
         return session.prepare(update(TABLE_NAME)
-                .with(set(MOD_SEQ, bindMarker(MOD_SEQ)))
-                .and(set(ANSWERED, bindMarker(ANSWERED)))
-                .and(set(DELETED, bindMarker(DELETED)))
-                .and(set(DRAFT, bindMarker(DRAFT)))
-                .and(set(FLAGGED, bindMarker(FLAGGED)))
-                .and(set(RECENT, bindMarker(RECENT)))
-                .and(set(SEEN, bindMarker(SEEN)))
-                .and(set(USER, bindMarker(USER)))
-                .and(addAll(USER_FLAGS, bindMarker(ADDED_USERS_FLAGS)))
-                .and(removeAll(USER_FLAGS, bindMarker(REMOVED_USERS_FLAGS)))
-                .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-                .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
+            .set(setColumn(MOD_SEQ, bindMarker(MOD_SEQ)),
+                setColumn(ANSWERED, bindMarker(ANSWERED)),
+                setColumn(DELETED, bindMarker(DELETED)),
+                setColumn(DRAFT, bindMarker(DRAFT)),
+                setColumn(FLAGGED, bindMarker(FLAGGED)),
+                setColumn(RECENT, bindMarker(RECENT)),
+                setColumn(SEEN, bindMarker(SEEN)),
+                setColumn(USER, bindMarker(USER)),
+                append(USER_FLAGS, bindMarker(ADDED_USERS_FLAGS)),
+                remove(USER_FLAGS, bindMarker(REMOVED_USERS_FLAGS)))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select()
-                .from(TABLE_NAME)
-                .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-                .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAll(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelectAll(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAllUids(Session session) {
-        return session.prepare(select(IMAP_UID)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelectAllUids(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .column(IMAP_UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectAllLimited(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .limit(bindMarker(LIMIT)));
+    private PreparedStatement prepareSelectAllLimited(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .limit(bindMarker(LIMIT))
+            .build());
     }
 
-    private PreparedStatement prepareList(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME));
+    private PreparedStatement prepareList(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all().build());
     }
 
-    private PreparedStatement prepareSelectUidGte(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID))));
+    private PreparedStatement prepareSelectUidGte(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectUidGteLimited(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID)))
-            .limit(bindMarker(LIMIT)));
+    private PreparedStatement prepareSelectUidGteLimited(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID)))
+            .limit(bindMarker(LIMIT))
+            .build());
     }
 
-    private PreparedStatement prepareSelectUidRange(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
-            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
+    private PreparedStatement prepareSelectUidRange(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
+                column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectUidOnlyRange(Session session) {
-        return session.prepare(select(IMAP_UID)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
-            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
+    private PreparedStatement prepareSelectUidOnlyRange(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .column(IMAP_UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
+                column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+            .build());
     }
 
-    private PreparedStatement prepareSelectMetadataRange(Session session) {
+    private PreparedStatement prepareSelectMetadataRange(CqlSession session) {
         return session.prepare(
-            select(
-                IMAP_UID,
-                MESSAGE_ID,
-                THREAD_ID_LOWERCASE,
-                ANSWERED.toLowerCase(Locale.US),
-                DELETED.toLowerCase(Locale.US),
-                DRAFT.toLowerCase(Locale.US),
-                RECENT.toLowerCase(Locale.US),
-                SEEN.toLowerCase(Locale.US),
-                FLAGGED.toLowerCase(Locale.US),
-                USER.toLowerCase(Locale.US),
-                USER_FLAGS_LOWERCASE,
-                MOD_SEQ_LOWERCASE)
-                .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
-            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
+            QueryBuilder.selectFrom(TABLE_NAME)
+                .columns(IMAP_UID,
+                    MESSAGE_ID,
+                    THREAD_ID_LOWERCASE,
+                    ANSWERED.toLowerCase(Locale.US),
+                    DELETED.toLowerCase(Locale.US),
+                    DRAFT.toLowerCase(Locale.US),
+                    RECENT.toLowerCase(Locale.US),
+                    SEEN.toLowerCase(Locale.US),
+                    FLAGGED.toLowerCase(Locale.US),
+                    USER.toLowerCase(Locale.US),
+                    USER_FLAGS_LOWERCASE,
+                    MOD_SEQ_LOWERCASE)
+                .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                    column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
+                    column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+                .build());
     }
 
-    private PreparedStatement prepareSelectUidRangeLimited(Session session) {
-        return session.prepare(select()
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-            .and(gte(IMAP_UID, bindMarker(IMAP_UID_GTE)))
-            .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE)))
-            .limit(bindMarker(LIMIT)));
+    private PreparedStatement prepareSelectUidRangeLimited(CqlSession session) {
+        return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
+            .all()
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
+                column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+            .limit(bindMarker(LIMIT))
+            .build());
     }
 
     public Mono<Void> delete(CassandraId mailboxId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setLong(IMAP_UID, uid.asLong()));
+            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .setLong(IMAP_UID, uid.asLong()));
     }
 
     public Mono<Void> insert(CassandraMessageMetadata metadata) {
@@ -286,30 +297,30 @@ public class CassandraMessageIdDAO {
         Flags flags = metadata.getComposedMessageId().getFlags();
         ThreadId threadId = metadata.getComposedMessageId().getThreadId();
 
-        BoundStatement boundStatement = insert.bind();
+        BoundStatementBuilder statementBuilder = insert.boundStatementBuilder();
         if (flags.getUserFlags().length == 0) {
-            boundStatement.unset(USER_FLAGS);
+            statementBuilder.unset(USER_FLAGS);
         } else {
-            boundStatement.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()));
+            statementBuilder.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class);
         }
-
-        return cassandraAsyncExecutor.executeVoid(boundStatement
-                .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
-                .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-                .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
-                .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
-                .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
-                .setBool(DELETED, flags.contains(Flag.DELETED))
-                .setBool(DRAFT, flags.contains(Flag.DRAFT))
-                .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
-                .setBool(RECENT, flags.contains(Flag.RECENT))
-                .setBool(SEEN, flags.contains(Flag.SEEN))
-                .setBool(USER, flags.contains(Flag.USER))
-                .setTimestamp(INTERNAL_DATE, metadata.getInternalDate().get())
-                .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
-                .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
-                .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
+        return cassandraAsyncExecutor.executeVoid(statementBuilder
+            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, composedMessageId.getUid().asLong())
+            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+            .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
+            .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
+            .setBoolean(ANSWERED, flags.contains(Flag.ANSWERED))
+            .setBoolean(DELETED, flags.contains(Flag.DELETED))
+            .setBoolean(DRAFT, flags.contains(Flag.DRAFT))
+            .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
+            .setBoolean(RECENT, flags.contains(Flag.RECENT))
+            .setBoolean(SEEN, flags.contains(Flag.SEEN))
+            .setBoolean(USER, flags.contains(Flag.USER))
+            .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
+            .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
+            .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
+            .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString())
+            .build());
     }
 
     public Mono<Void> updateMetadata(ComposedMessageId composedMessageId, UpdatedFlags updatedFlags) {
@@ -317,45 +328,45 @@ public class CassandraMessageIdDAO {
     }
 
     private BoundStatement updateBoundStatement(ComposedMessageId id, UpdatedFlags updatedFlags) {
-        final BoundStatement boundStatement = update.bind()
+        final BoundStatementBuilder statementBuilder = update.boundStatementBuilder()
             .setLong(MOD_SEQ, updatedFlags.getModSeq().asLong())
-            .setUUID(MAILBOX_ID, ((CassandraId) id.getMailboxId()).asUuid())
+            .setUuid(MAILBOX_ID, ((CassandraId) id.getMailboxId()).asUuid())
             .setLong(IMAP_UID, id.getUid().asLong());
 
         if (updatedFlags.isChanged(Flag.ANSWERED)) {
-            boundStatement.setBool(ANSWERED, updatedFlags.isModifiedToSet(Flag.ANSWERED));
+            statementBuilder.setBoolean(ANSWERED, updatedFlags.isModifiedToSet(Flag.ANSWERED));
         } else {
-            boundStatement.unset(ANSWERED);
+            statementBuilder.unset(ANSWERED);
         }
         if (updatedFlags.isChanged(Flag.DRAFT)) {
-            boundStatement.setBool(DRAFT, updatedFlags.isModifiedToSet(Flag.DRAFT));
+            statementBuilder.setBoolean(DRAFT, updatedFlags.isModifiedToSet(Flag.DRAFT));
         } else {
-            boundStatement.unset(DRAFT);
+            statementBuilder.unset(DRAFT);
         }
         if (updatedFlags.isChanged(Flag.FLAGGED)) {
-            boundStatement.setBool(FLAGGED, updatedFlags.isModifiedToSet(Flag.FLAGGED));
+            statementBuilder.setBoolean(FLAGGED, updatedFlags.isModifiedToSet(Flag.FLAGGED));
         } else {
-            boundStatement.unset(FLAGGED);
+            statementBuilder.unset(FLAGGED);
         }
         if (updatedFlags.isChanged(Flag.DELETED)) {
-            boundStatement.setBool(DELETED, updatedFlags.isModifiedToSet(Flag.DELETED));
+            statementBuilder.setBoolean(DELETED, updatedFlags.isModifiedToSet(Flag.DELETED));
         } else {
-            boundStatement.unset(DELETED);
+            statementBuilder.unset(DELETED);
         }
         if (updatedFlags.isChanged(Flag.RECENT)) {
-            boundStatement.setBool(RECENT, updatedFlags.getNewFlags().contains(Flag.RECENT));
+            statementBuilder.setBoolean(RECENT, updatedFlags.getNewFlags().contains(Flag.RECENT));
         } else {
-            boundStatement.unset(RECENT);
+            statementBuilder.unset(RECENT);
         }
         if (updatedFlags.isChanged(Flag.SEEN)) {
-            boundStatement.setBool(SEEN, updatedFlags.isModifiedToSet(Flag.SEEN));
+            statementBuilder.setBoolean(SEEN, updatedFlags.isModifiedToSet(Flag.SEEN));
         } else {
-            boundStatement.unset(SEEN);
+            statementBuilder.unset(SEEN);
         }
         if (updatedFlags.isChanged(Flag.USER)) {
-            boundStatement.setBool(USER, updatedFlags.isModifiedToSet(Flag.USER));
+            statementBuilder.setBoolean(USER, updatedFlags.isModifiedToSet(Flag.USER));
         } else {
-            boundStatement.unset(USER);
+            statementBuilder.unset(USER);
         }
         Sets.SetView<String> removedFlags = Sets.difference(
             ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()),
@@ -364,16 +375,16 @@ public class CassandraMessageIdDAO {
             ImmutableSet.copyOf(updatedFlags.getNewFlags().getUserFlags()),
             ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()));
         if (addedFlags.isEmpty()) {
-            boundStatement.unset(ADDED_USERS_FLAGS);
+            statementBuilder.unset(ADDED_USERS_FLAGS);
         } else {
-            boundStatement.setSet(ADDED_USERS_FLAGS, addedFlags);
+            statementBuilder.setSet(ADDED_USERS_FLAGS, addedFlags, String.class);
         }
         if (removedFlags.isEmpty()) {
-            boundStatement.unset(REMOVED_USERS_FLAGS);
+            statementBuilder.unset(REMOVED_USERS_FLAGS);
         } else {
-            boundStatement.setSet(REMOVED_USERS_FLAGS, removedFlags);
+            statementBuilder.setSet(REMOVED_USERS_FLAGS, removedFlags, String.class);
         }
-        return boundStatement;
+        return statementBuilder.build();
     }
 
     public Mono<Optional<CassandraMessageMetadata>> retrieve(CassandraId mailboxId, MessageUid uid) {
@@ -382,14 +393,14 @@ public class CassandraMessageIdDAO {
 
     private Mono<Optional<CassandraMessageMetadata>> asOptionalOfCassandraMessageId(Mono<Row> row) {
         return row
-                .map(this::fromRowToComposedMessageIdWithFlags)
-                .defaultIfEmpty(Optional.empty());
+            .map(this::fromRowToComposedMessageIdWithFlags)
+            .defaultIfEmpty(Optional.empty());
     }
 
     private Mono<Row> selectOneRow(CassandraId mailboxId, MessageUid uid) {
         return cassandraAsyncExecutor.executeSingleRow(select.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setLong(IMAP_UID, uid.asLong()));
+            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .setLong(IMAP_UID, uid.asLong()));
     }
 
     public Flux<CassandraMessageMetadata> retrieveMessages(CassandraId mailboxId, MessageRange set, Limit limit) {
@@ -400,17 +411,17 @@ public class CassandraMessageIdDAO {
 
     public Flux<MessageUid> listUids(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeRows(selectAllUids.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                .setUuid(MAILBOX_ID, mailboxId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
     }
 
     public Flux<ComposedMessageIdWithMetaData> listMessagesMetadata(CassandraId mailboxId, MessageRange range) {
         return cassandraAsyncExecutor.executeRows(selectMetadataRange.bind()
-            .setUUID(MAILBOX_ID, mailboxId.asUuid())
-            .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
-            .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
+                .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
             .map(row -> {
-                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID_LOWERCASE));
+                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID_LOWERCASE));
                 return ComposedMessageIdWithMetaData.builder()
                     .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
                     .threadId(getThreadIdFromRow(row, messageId))
@@ -424,7 +435,7 @@ public class CassandraMessageIdDAO {
 
     private Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {
         return cassandraAsyncExecutor.executeRows(selectUidOnlyRange.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
                 .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
             .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
@@ -439,21 +450,21 @@ public class CassandraMessageIdDAO {
 
     public Flux<CassandraMessageMetadata> retrieveAllMessages() {
         return cassandraAsyncExecutor.executeRows(listStatement.bind()
-                .setReadTimeoutMillis(Duration.ofDays(1).toMillisPart()))
+                .setTimeout(Duration.ofDays(1)))
             .map(this::fromRowToComposedMessageIdWithFlags)
             .handle(publishIfPresent());
     }
 
     private Flux<Row> retrieveRows(CassandraId mailboxId, MessageRange set, Limit limit) {
         switch (set.getType()) {
-        case ALL:
-            return selectAll(mailboxId, limit);
-        case FROM:
-            return selectFrom(mailboxId, set.getUidFrom(), limit);
-        case RANGE:
-            return selectRange(mailboxId, set.getUidFrom(), set.getUidTo(), limit);
-        case ONE:
-            return Flux.from(selectOneRow(mailboxId, set.getUidFrom()));
+            case ALL:
+                return selectAll(mailboxId, limit);
+            case FROM:
+                return selectFrom(mailboxId, set.getUidFrom(), limit);
+            case RANGE:
+                return selectRange(mailboxId, set.getUidFrom(), set.getUidTo(), limit);
+            case ONE:
+                return Flux.from(selectOneRow(mailboxId, set.getUidFrom()));
         }
         throw new UnsupportedOperationException();
     }
@@ -461,51 +472,51 @@ public class CassandraMessageIdDAO {
     private Flux<Row> selectAll(CassandraId mailboxId, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectAllLimited.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectAll.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())));
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())));
     }
 
     private Flux<Row> selectFrom(CassandraId mailboxId, MessageUid uid, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectUidGteLimited.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong())
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectUidGte.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong())));
     }
 
     private Flux<Row> selectRange(CassandraId mailboxId, MessageUid from, MessageUid to, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectUidRangeLimited.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectUidRange.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())));
     }
 
     private Optional<CassandraMessageMetadata> fromRowToComposedMessageIdWithFlags(Row row) {
-        if (row.getUUID(MESSAGE_ID) == null) {
+        if (row.getUuid(MESSAGE_ID) == null) {
             // Out of order updates with concurrent deletes can result in the row being partially deleted
             // We filter out such records, and cleanup them.
-            delete(CassandraId.of(row.getUUID(MAILBOX_ID)),
+            delete(CassandraId.of(row.getUuid(MAILBOX_ID)),
                 MessageUid.of(row.getLong(IMAP_UID)))
                 .subscribeOn(Schedulers.parallel())
                 .subscribe();
             return Optional.empty();
         }
-        final CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUUID(MESSAGE_ID_LOWERCASE));
+        final CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID_LOWERCASE));
         return Optional.of(CassandraMessageMetadata.builder()
             .ids(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
-                    CassandraId.of(row.getUUID(MAILBOX_ID_LOWERCASE)),
+                    CassandraId.of(row.getUuid(MAILBOX_ID_LOWERCASE)),
                     messageId,
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
@@ -513,7 +524,7 @@ public class CassandraMessageIdDAO {
                 .threadId(getThreadIdFromRow(row, messageId))
                 .build())
             .bodyStartOctet(row.getInt(BODY_START_OCTET_LOWERCASE))
-            .internalDate(row.getTimestamp(INTERNAL_DATE_LOWERCASE))
+            .internalDate(Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)))
             .size(row.getLong(FULL_CONTENT_OCTETS_LOWERCASE))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT_LOWERCASE))
                 .map(blobIdFactory::from))
@@ -521,7 +532,7 @@ public class CassandraMessageIdDAO {
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.getUUID(THREAD_ID_LOWERCASE);
+        UUID threadIdUUID = row.getUuid(THREAD_ID_LOWERCASE);
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }

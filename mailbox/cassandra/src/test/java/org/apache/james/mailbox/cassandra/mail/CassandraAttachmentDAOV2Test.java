@@ -37,7 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 import reactor.core.publisher.Mono;
 
@@ -56,8 +56,7 @@ class CassandraAttachmentDAOV2Test {
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraAttachmentDAOV2(
             BLOB_ID_FACTORY,
-            cassandra.getConf(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandra.getConf());
         blobReferenceSource = new AttachmentBlobReferenceSource(testee);
     }
 
@@ -78,7 +77,7 @@ class CassandraAttachmentDAOV2Test {
     void getAttachmentShouldReturnAttachmentWhenStored() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .type("application/json")
             .size(4)
             .build();
@@ -94,7 +93,7 @@ class CassandraAttachmentDAOV2Test {
     @Test
     void getAttachmentShouldNotReturnDeletedAttachments() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
             .size(36)
@@ -121,7 +120,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
         BlobId blobId1 = BLOB_ID_FACTORY.from("blobId");
@@ -131,7 +130,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID_2)
             .type("application/json")
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
         BlobId blobId2 = BLOB_ID_FACTORY.from("blobId");
@@ -147,7 +146,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
         BlobId blobId = BLOB_ID_FACTORY.from("blobId");
@@ -157,7 +156,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID_2)
             .type("application/json")
-            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
         DAOAttachment daoAttachment2 = CassandraAttachmentDAOV2.from(attachment2, blobId);

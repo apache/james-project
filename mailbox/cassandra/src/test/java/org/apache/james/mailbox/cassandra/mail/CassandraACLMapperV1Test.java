@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +34,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -63,13 +63,13 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
         schemaVersionDAO.truncateVersion().block();
         schemaVersionDAO.updateVersion(new SchemaVersion(9)).block();
         CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
-        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
+        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
             .forModules(ACLModule.ACL_UPDATE)
             .withoutNestedType();
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
-        CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
+        CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer));
         cassandraACLMapper = new CassandraACLMapper(
             new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
@@ -85,9 +85,10 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
     void retrieveACLWhenInvalidInBaseShouldReturnEmptyACL(CassandraCluster cassandra) {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
-                .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
-                .value(CassandraACLTable.VERSION, 1));
+                .value(CassandraACLTable.ID, literal(MAILBOX_ID.asUuid()))
+                .value(CassandraACLTable.ACL, literal("{\"entries\":{\"bob\":invalid}}"))
+                .value(CassandraACLTable.VERSION, literal(1))
+                .build());
 
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
     }
@@ -96,9 +97,10 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
     void updateInvalidACLShouldBeBasedOnEmptyACL(CassandraCluster cassandra) throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
-                .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
-                .value(CassandraACLTable.VERSION, 1));
+                .value(CassandraACLTable.ID, literal(MAILBOX_ID.asUuid()))
+                .value(CassandraACLTable.ACL, literal("{\"entries\":{\"bob\":invalid}}"))
+                .value(CassandraACLTable.VERSION, literal(1))
+                .build());
         MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -114,7 +116,7 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(2)
-                .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
+                .whenQueryStartsWith("SELECT acl,version FROM acl"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
@@ -142,7 +144,7 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(2)
-                .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
+                .whenQueryStartsWith("SELECT acl,version FROM acl"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);

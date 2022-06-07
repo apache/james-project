@@ -19,12 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.decr;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.MESSAGE_COUNT;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.QUOTA_ROOT;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.STORAGE;
@@ -43,8 +41,8 @@ import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -58,25 +56,30 @@ public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
     private final PreparedStatement getCurrentQuotasStatement;
 
     @Inject
-    public CassandraCurrentQuotaManager(Session session) {
+    public CassandraCurrentQuotaManager(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.increaseStatement = session.prepare(update(TABLE_NAME)
-            .with(incr(MESSAGE_COUNT, bindMarker()))
-            .and(incr(STORAGE, bindMarker()))
-            .where(eq(QUOTA_ROOT, bindMarker())));
+            .increment(MESSAGE_COUNT, bindMarker())
+            .increment(STORAGE, bindMarker())
+            .where(column(QUOTA_ROOT).isEqualTo(bindMarker()))
+            .build());
         this.decreaseStatement = session.prepare(update(TABLE_NAME)
-            .with(decr(MESSAGE_COUNT, bindMarker()))
-            .and(decr(STORAGE, bindMarker()))
-            .where(eq(QUOTA_ROOT, bindMarker())));
-        this.getCurrentMessageCountStatement = session.prepare(select(MESSAGE_COUNT)
-            .from(TABLE_NAME)
-            .where(eq(QUOTA_ROOT, bindMarker())));
-        this.getCurrentStorageStatement = session.prepare(select(STORAGE)
-            .from(TABLE_NAME)
-            .where(eq(QUOTA_ROOT, bindMarker())));
-        this.getCurrentQuotasStatement = session.prepare(select(MESSAGE_COUNT, STORAGE)
-            .from(TABLE_NAME)
-            .where(eq(QUOTA_ROOT, bindMarker())));
+            .decrement(MESSAGE_COUNT, bindMarker())
+            .decrement(STORAGE, bindMarker())
+            .where(column(QUOTA_ROOT).isEqualTo(bindMarker()))
+            .build());
+        this.getCurrentMessageCountStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(MESSAGE_COUNT)
+            .where(column(QUOTA_ROOT).isEqualTo(bindMarker()))
+            .build());
+        this.getCurrentStorageStatement = session.prepare(selectFrom(TABLE_NAME)
+            .column(STORAGE)
+            .where(column(QUOTA_ROOT).isEqualTo(bindMarker()))
+            .build());
+        this.getCurrentQuotasStatement = session.prepare(selectFrom(TABLE_NAME)
+            .columns(MESSAGE_COUNT, STORAGE)
+            .where(column(QUOTA_ROOT).isEqualTo(bindMarker()))
+            .build());
     }
 
     @Override
@@ -121,8 +124,8 @@ public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
         return getCurrentQuotas(quotaOperation.quotaRoot())
             .filter(Predicate.not(Predicate.isEqual(CurrentQuotas.from(quotaOperation))))
             .flatMap(storedQuotas -> cassandraAsyncExecutor.executeVoid(decreaseStatement.bind(storedQuotas.count().asLong(),
-                storedQuotas.size().asLong(),
-                quotaOperation.quotaRoot().asString()))
+                    storedQuotas.size().asLong(),
+                    quotaOperation.quotaRoot().asString()))
                 .then(increase(quotaOperation)));
     }
 }

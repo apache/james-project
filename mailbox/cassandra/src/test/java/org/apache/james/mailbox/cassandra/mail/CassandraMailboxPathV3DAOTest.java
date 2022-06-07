@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_1;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_2;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_3;
@@ -50,8 +50,7 @@ class CassandraMailboxPathV3DAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxPathV3DAO(
-            cassandra.getConf(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandra.getConf());
     }
 
     @Test

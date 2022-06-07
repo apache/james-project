@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -57,7 +57,7 @@ class AttachmentLoaderTest {
             .attachmentId(attachmentId)
             .size(11)
             .type("type")
-            .messageId(CassandraMessageId.Factory.of(UUIDs.random()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.random()))
             .build();
 
         when(attachmentMapper.getAttachmentsAsMono(attachmentId))
@@ -83,7 +83,7 @@ class AttachmentLoaderTest {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .size(11)
-            .messageId(CassandraMessageId.Factory.of(UUIDs.random()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.random()))
             .type("type")
             .build();
 
@@ -112,13 +112,13 @@ class AttachmentLoaderTest {
 
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(attachmentId1)
-            .messageId(CassandraMessageId.Factory.of(UUIDs.random()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.random()))
             .size(12)
             .type("type")
             .build();
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(attachmentId2)
-            .messageId(CassandraMessageId.Factory.of(UUIDs.random()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.random()))
             .size(13)
             .type("type")
             .build();
@@ -150,7 +150,7 @@ class AttachmentLoaderTest {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .size(11)
-            .messageId(CassandraMessageId.Factory.of(UUIDs.random()))
+            .messageId(CassandraMessageId.Factory.of(Uuids.random()))
             .type("type")
             .build();
 

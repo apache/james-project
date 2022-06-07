@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.BASE_SUBJECT;
@@ -46,9 +46,9 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 
 import reactor.core.publisher.Flux;
 
@@ -59,7 +59,7 @@ public class CassandraThreadDAO {
     private final PreparedStatement deleteOne;
 
     @Inject
-    public CassandraThreadDAO(Session session) {
+    public CassandraThreadDAO(CqlSession session) {
         executor = new CassandraAsyncExecutor(session);
 
         insertOne = session.prepare(insertInto(TABLE_NAME)
@@ -67,16 +67,19 @@ public class CassandraThreadDAO {
             .value(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
             .value(THREAD_ID, bindMarker(THREAD_ID))
-            .value(BASE_SUBJECT, bindMarker(BASE_SUBJECT)));
+            .value(BASE_SUBJECT, bindMarker(BASE_SUBJECT))
+            .build());
 
-        selectOne = session.prepare(select(BASE_SUBJECT, THREAD_ID)
-            .from(TABLE_NAME)
-            .where(eq(USERNAME, bindMarker(USERNAME)))
-            .and(eq(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))));
+        selectOne = session.prepare(selectFrom(TABLE_NAME)
+            .columns(BASE_SUBJECT, THREAD_ID)
+            .where(column(USERNAME).isEqualTo(bindMarker(USERNAME)),
+                column(MIME_MESSAGE_ID).isEqualTo(bindMarker(MIME_MESSAGE_ID)))
+            .build());
 
-        deleteOne = session.prepare(delete().from(TABLE_NAME)
-            .where(eq(USERNAME, bindMarker(USERNAME)))
-            .and(eq(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))));
+        deleteOne = session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(USERNAME).isEqualTo(bindMarker(USERNAME)),
+                column(MIME_MESSAGE_ID).isEqualTo(bindMarker(MIME_MESSAGE_ID)))
+            .build());
     }
 
     public Flux<Void> insertSome(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
@@ -84,8 +87,8 @@ public class CassandraThreadDAO {
             .flatMap(mimeMessageId -> executor.executeVoid(insertOne.bind()
                 .setString(USERNAME, username.asString())
                 .setString(MIME_MESSAGE_ID, mimeMessageId.getValue())
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
-                .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
+                .setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get())
+                .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
                 .setString(BASE_SUBJECT, baseSubject.map(Subject::getValue).orElse(null))), DEFAULT_CONCURRENCY);
     }
 
@@ -108,7 +111,7 @@ public class CassandraThreadDAO {
 
     public Pair<Optional<Subject>, ThreadId> readRow(Row row) {
         return Pair.of(Optional.ofNullable(row.getString(BASE_SUBJECT)).map(Subject::new),
-            ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(row.getUUID(THREAD_ID))));
+            ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(row.getUuid(THREAD_ID))));
     }
 
 }

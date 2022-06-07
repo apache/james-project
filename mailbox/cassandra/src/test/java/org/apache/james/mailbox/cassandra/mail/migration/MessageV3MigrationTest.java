@@ -85,14 +85,12 @@ class MessageV3MigrationTest {
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             blobStore,
-            blobIdFactory,
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            blobIdFactory);
         daoV3 = new CassandraMessageDAOV3(
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             blobStore,
-            blobIdFactory,
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            blobIdFactory);
         messageIdFactory = new CassandraMessageId.Factory();
     }
 

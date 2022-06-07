@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.NEXT_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.TABLE_NAME;
@@ -38,7 +37,7 @@ import java.util.stream.LongStream;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -47,9 +46,9 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -64,14 +63,13 @@ public class CassandraUidProvider implements UidProvider {
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement selectStatement;
-    private final ConsistencyLevel consistencyLevel;
+    private final DriverExecutionProfile lwtProfile;
     private final RetryBackoffSpec retrySpec;
 
     @Inject
-    public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration,
-                                CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public CassandraUidProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
+        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.selectStatement = prepareSelect(session);
         this.updateStatement = prepareUpdate(session);
         this.insertStatement = prepareInsert(session);
@@ -80,24 +78,27 @@ public class CassandraUidProvider implements UidProvider {
             .scheduler(Schedulers.parallel());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(NEXT_UID)
-            .from(TABLE_NAME)
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(NEXT_UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareUpdate(Session session) {
+    private PreparedStatement prepareUpdate(CqlSession session) {
         return session.prepare(update(TABLE_NAME)
-            .onlyIf(eq(NEXT_UID, bindMarker(CONDITION)))
-            .with(set(NEXT_UID, bindMarker(NEXT_UID)))
-            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+            .setColumn(NEXT_UID, bindMarker(NEXT_UID))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .ifColumn(NEXT_UID).isEqualTo(bindMarker(CONDITION))
+            .build());
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(NEXT_UID, bindMarker(NEXT_UID))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .ifNotExists());
+            .ifNotExists()
+            .build());
     }
 
     @Override
@@ -151,7 +152,7 @@ public class CassandraUidProvider implements UidProvider {
     @Override
     public Optional<MessageUid> lastUid(Mailbox mailbox) {
         return findHighestUid((CassandraId) mailbox.getMailboxId())
-                .blockOptional();
+            .blockOptional();
     }
 
     @Override
@@ -163,9 +164,9 @@ public class CassandraUidProvider implements UidProvider {
 
     private Mono<MessageUid> findHighestUid(CassandraId mailboxId) {
         return executor.executeSingleRow(
-            selectStatement.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setConsistencyLevel(consistencyLevel))
+                selectStatement.bind()
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setExecutionProfile(lwtProfile))
             .map(row -> MessageUid.of(row.getLong(NEXT_UID)));
     }
 
@@ -177,27 +178,27 @@ public class CassandraUidProvider implements UidProvider {
         MessageUid nextUid = uid.next(count);
         return executor.executeReturnApplied(
                 updateStatement.bind()
-                        .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                        .setLong(CONDITION, uid.asLong())
-                        .setLong(NEXT_UID, nextUid.asLong()))
-                .map(success -> successToUid(nextUid, success))
-                .handle(publishIfPresent());
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setLong(CONDITION, uid.asLong())
+                    .setLong(NEXT_UID, nextUid.asLong()))
+            .map(success -> successToUid(nextUid, success))
+            .handle(publishIfPresent());
     }
 
     private Mono<MessageUid> tryInsert(CassandraId mailboxId) {
         return executor.executeReturnApplied(
-            insertStatement.bind()
-                .setLong(NEXT_UID, MessageUid.MIN_VALUE.asLong())
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                insertStatement.bind()
+                    .setLong(NEXT_UID, MessageUid.MIN_VALUE.asLong())
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
             .map(success -> successToUid(MessageUid.MIN_VALUE, success))
             .handle(publishIfPresent());
     }
 
     private Mono<MessageUid> tryInsert(CassandraId mailboxId, int count) {
         return executor.executeReturnApplied(
-            insertStatement.bind()
-                .setLong(NEXT_UID, MessageUid.MIN_VALUE.next(count).asLong())
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                insertStatement.bind()
+                    .setLong(NEXT_UID, MessageUid.MIN_VALUE.next(count).asLong())
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
             .map(success -> successToUid(MessageUid.MIN_VALUE.next(count), success))
             .handle(publishIfPresent());
     }

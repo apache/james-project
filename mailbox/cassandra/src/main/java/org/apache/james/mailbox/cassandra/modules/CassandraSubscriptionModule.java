@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.text;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
-
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraSubscriptionModule {
 
@@ -33,10 +32,9 @@ public interface CassandraSubscriptionModule {
     CassandraModule MODULE = CassandraModule.table(CassandraSubscriptionTable.TABLE_NAME)
         .comment("Holds per user list of IMAP subscriptions")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraSubscriptionTable.USER, text())
-            .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text()))
+            .withCaching(true, rows(PER_USER_CACHED_SUBSCRIPTIONS)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraSubscriptionTable.USER, TEXT)
+            .withClusteringColumn(CassandraSubscriptionTable.MAILBOX, TEXT))
         .build();
 }

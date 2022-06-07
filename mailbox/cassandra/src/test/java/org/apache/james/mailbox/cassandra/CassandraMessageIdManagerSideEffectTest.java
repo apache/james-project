@@ -59,10 +59,10 @@ class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSi
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(statementRecorder.listExecutedStatements(
-                StatementRecorder.Selector.preparedStatement("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;")))
+                StatementRecorder.Selector.preparedStatement("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id")))
                 .hasSize(3); // an extra read is still performed
             softly.assertThat(statementRecorder.listExecutedStatements(
-                StatementRecorder.Selector.preparedStatement("SELECT acl,version FROM acl WHERE id=:id;")))
+                StatementRecorder.Selector.preparedStatement("SELECT acl,version FROM acl WHERE id=:id")))
                 .hasSize(2);
         });
     }

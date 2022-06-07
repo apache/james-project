@@ -19,24 +19,27 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraFirstUnseenTable;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraFirstUnseenModule {
     CassandraModule MODULE = CassandraModule.table(CassandraFirstUnseenTable.TABLE_NAME)
         .comment("Denormalisation table. Allow to quickly retrieve the first UNSEEN UID of a specific mailbox.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .bloomFilterFPChance(0.01)
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
-            .clusteringOrder(CassandraFirstUnseenTable.UID, SchemaBuilder.Direction.ASC))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraFirstUnseenTable.MAILBOX_ID, DataType.timeuuid())
-            .addClusteringColumn(CassandraFirstUnseenTable.UID, DataType.bigint()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withBloomFilterFpChance(0.01)
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+            .withClusteringOrder(CassandraFirstUnseenTable.UID, ClusteringOrder.ASC))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraFirstUnseenTable.MAILBOX_ID, TIMEUUID)
+            .withClusteringColumn(CassandraFirstUnseenTable.UID, BIGINT))
         .build();
 }

@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.set;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -30,7 +31,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraAclModule {
     CassandraModule MODULE = CassandraModule
@@ -38,32 +39,29 @@ public interface CassandraAclModule {
         .table(CassandraACLTable.TABLE_NAME)
         .comment("Holds mailbox ACLs")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraACLTable.ID, timeuuid())
-            .addColumn(CassandraACLTable.ACL, text())
-            .addColumn(CassandraACLTable.VERSION, bigint()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraACLTable.ID, TIMEUUID)
+            .withColumn(CassandraACLTable.ACL, TEXT)
+            .withColumn(CassandraACLTable.VERSION, BIGINT))
 
         .table(CassandraACLV2Table.TABLE_NAME)
         .comment("Holds mailbox ACLs. This table do not rely on a JSON representation nor on LWT, contrary to the acl table it replaces.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraACLV2Table.ID, timeuuid())
-            .addClusteringColumn(CassandraACLV2Table.KEY, text())
-            .addColumn(CassandraACLV2Table.RIGHTS, set(text())))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraACLV2Table.ID, TIMEUUID)
+            .withClusteringColumn(CassandraACLV2Table.KEY, TEXT)
+            .withColumn(CassandraACLV2Table.RIGHTS, setOf(TEXT)))
 
         .table(CassandraUserMailboxRightsTable.TABLE_NAME)
         .comment("Denormalisation table. Allow to retrieve non personal mailboxIds a user has right on")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraUserMailboxRightsTable.USER_NAME, text())
-            .addClusteringColumn(CassandraUserMailboxRightsTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraUserMailboxRightsTable.RIGHTS, text()))
+            .withCompaction(SchemaBuilder.leveledCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraUserMailboxRightsTable.USER_NAME, TEXT)
+            .withClusteringColumn(CassandraUserMailboxRightsTable.MAILBOX_ID, TIMEUUID)
+            .withColumn(CassandraUserMailboxRightsTable.RIGHTS, TEXT))
         .build();
 }

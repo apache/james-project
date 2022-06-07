@@ -18,27 +18,26 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
+
 import java.util.Set;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
 
-import com.datastax.driver.core.CodecRegistry;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.TypeCodec;
-import com.datastax.driver.core.TypeTokens;
-import com.google.common.reflect.TypeToken;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 
 public class FlagsExtractor {
-    public static final TypeToken<Set<String>> STRING_SET = TypeTokens.setOf(String.class);
-    public static final TypeCodec<Set<String>> SET_OF_STRINGS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.set(DataType.text()), STRING_SET);
+    public static final TypeCodec<Set<String>> SET_OF_STRINGS_CODEC = CodecRegistry.DEFAULT.codecFor(setOf(TEXT));
 
     public static Flags getFlags(Row row) {
         Flags flags = new Flags();
         for (String flag : Flag.ALL_LOWERCASE) {
-            if (row.getBool(flag)) {
+            if (row.getBoolean(flag)) {
                 flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
             }
         }

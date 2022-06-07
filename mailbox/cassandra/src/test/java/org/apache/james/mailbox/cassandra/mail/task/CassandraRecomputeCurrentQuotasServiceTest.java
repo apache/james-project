@@ -131,7 +131,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
 
         cassandraCluster.getCassandraCluster().getConf().registerScenario(fail()
             .times(1)
-            .whenQueryStartsWith("UPDATE currentQuota SET"));
+            .whenQueryStartsWith("UPDATE currentquota SET"));
 
         assertThat(testee().recomputeCurrentQuotas(new RecomputeCurrentQuotasService.Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.PARTIAL);
@@ -149,7 +149,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
 
         cassandraCluster.getCassandraCluster().getConf().registerScenario(fail()
             .times(1)
-            .whenQueryStartsWith("UPDATE currentQuota SET"));
+            .whenQueryStartsWith("UPDATE currentquota SET"));
 
         RecomputeCurrentQuotasService.Context context = new RecomputeCurrentQuotasService.Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();

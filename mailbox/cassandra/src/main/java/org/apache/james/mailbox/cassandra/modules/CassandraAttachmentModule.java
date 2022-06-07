@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
-import static com.datastax.driver.core.DataType.uuid;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.core.type.DataTypes.UUID;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -30,7 +31,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTabl
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraAttachmentModule {
 
@@ -38,37 +39,34 @@ public interface CassandraAttachmentModule {
         .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
             "in `blobs` and `blobparts` tables.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraAttachmentV2Table.ID_AS_UUID, uuid())
-            .addColumn(CassandraAttachmentV2Table.ID, text())
-            .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
-            .addColumn(CassandraAttachmentV2Table.TYPE, text())
-            .addColumn(CassandraAttachmentV2Table.MESSAGE_ID, timeuuid())
-            .addColumn(CassandraAttachmentV2Table.SIZE, bigint()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraAttachmentV2Table.ID_AS_UUID, UUID)
+            .withColumn(CassandraAttachmentV2Table.ID, TEXT)
+            .withColumn(CassandraAttachmentV2Table.BLOB_ID, TEXT)
+            .withColumn(CassandraAttachmentV2Table.TYPE, TEXT)
+            .withColumn(CassandraAttachmentV2Table.MESSAGE_ID, TIMEUUID)
+            .withColumn(CassandraAttachmentV2Table.SIZE, BIGINT))
 
         .table(CassandraAttachmentMessageIdTable.TABLE_NAME)
         .comment("Holds ids of messages owning the attachment")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.sizedTieredStategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraAttachmentMessageIdTable.ATTACHMENT_ID_AS_UUID, uuid())
-            .addColumn(CassandraAttachmentMessageIdTable.ATTACHMENT_ID, text())
-            .addClusteringColumn(CassandraAttachmentMessageIdTable.MESSAGE_ID, text()))
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraAttachmentMessageIdTable.ATTACHMENT_ID_AS_UUID, UUID)
+            .withColumn(CassandraAttachmentMessageIdTable.ATTACHMENT_ID, TEXT)
+            .withClusteringColumn(CassandraAttachmentMessageIdTable.MESSAGE_ID, TEXT))
 
         .table(CassandraAttachmentOwnerTable.TABLE_NAME)
         .comment("Holds explicit owners of some attachments")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
-            .bloomFilterFPChance(0.01)
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraAttachmentOwnerTable.ID, uuid())
-            .addClusteringColumn(CassandraAttachmentOwnerTable.OWNER, text()))
+            .withCompaction(SchemaBuilder.leveledCompactionStrategy())
+            .withBloomFilterFpChance(0.01)
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraAttachmentOwnerTable.ID, UUID)
+            .withClusteringColumn(CassandraAttachmentOwnerTable.OWNER, TEXT))
         .build();
 }

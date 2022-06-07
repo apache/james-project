@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -36,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
@@ -192,7 +191,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             mailboxManager.deleteMailbox(inbox, session);
 
-            assertThat(cassandraCluster.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+            assertThat(cassandraCluster.getConf().execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME).all().build()))
                 .isEmpty();
         }
 
@@ -203,7 +202,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
-            assertThat(cassandraCluster.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+            assertThat(cassandraCluster.getConf().execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME).all().build()))
                 .isEmpty();
         }
 
@@ -221,7 +220,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM attachmentV2 WHERE idAsUUID=:idAsUUID;"));
+                .whenQueryStartsWith("DELETE FROM attachmentv2 WHERE idAsUUID=:idAsUUID"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -260,7 +259,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM messageV2 WHERE messageId=:messageId;"));
+                .whenQueryStartsWith("DELETE FROM messagev2 WHERE messageId=:messageId"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -338,7 +337,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM imapUidTable"));
+                .whenQueryStartsWith("DELETE FROM imapuidtable"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -405,7 +404,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM messageV2 WHERE messageId=:messageId;"));
+                .whenQueryStartsWith("DELETE FROM messagev2 WHERE messageid=:messageid"));
 
             inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
@@ -437,7 +436,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM attachmentV2 WHERE idAsUUID=:idAsUUID;"));
+                .whenQueryStartsWith("DELETE FROM attachmentv2 WHERE idasuuid=:idasuuid"));
 
             inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
@@ -478,7 +477,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM UserMailboxACL WHERE userName=:userName AND mailboxid=:mailboxid;"));
+                .whenQueryStartsWith("DELETE FROM usermailboxacl WHERE username=:username AND mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -498,7 +497,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM acl WHERE id=:id IF EXISTS;"));
+                .whenQueryStartsWith("DELETE FROM acl WHERE id=:id IF EXISTS"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -531,7 +530,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM applicableFlag WHERE mailboxId=:mailboxId;"));
+                .whenQueryStartsWith("DELETE FROM applicableflag WHERE mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -559,7 +558,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM firstUnseen WHERE mailboxId=:mailboxId;"));
+                .whenQueryStartsWith("DELETE FROM firstunseen WHERE mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -589,7 +588,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM messageDeleted WHERE mailboxId=:mailboxId;"));
+                .whenQueryStartsWith("DELETE FROM messagedeleted WHERE mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -618,7 +617,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM mailboxCounters WHERE mailboxId=:mailboxId;"));
+                .whenQueryStartsWith("DELETE FROM mailboxcounters WHERE mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -650,7 +649,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM mailboxRecents WHERE mailboxId=:mailboxId;"));
+                .whenQueryStartsWith("DELETE FROM mailboxrecents WHERE mailboxid=:mailboxid"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -713,10 +712,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM threadTable"));
+                .whenQueryStartsWith("DELETE FROM threadtable"));
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM threadLookupTable"));
+                .whenQueryStartsWith("DELETE FROM threadlookuptable"));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -784,10 +783,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM threadTable"));
+                .whenQueryStartsWith("DELETE FROM threadtable"));
             cassandraCluster.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("DELETE FROM threadLookupTable"));
+                .whenQueryStartsWith("DELETE FROM threadlookuptable"));
 
             inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
 
@@ -821,13 +820,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         private CassandraACLMapper aclMapper(CassandraCluster cassandraCluster) {
             CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandraCluster.getConf());
             CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
-            CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandraCluster.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
+            CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandraCluster.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
             CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandraCluster.getConf());
             JsonEventSerializer jsonEventSerializer = JsonEventSerializer
                 .forModules(ACLModule.ACL_UPDATE)
                 .withoutNestedType();
             CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandraCluster.getConf());
-            CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandraCluster.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
+            CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandraCluster.getConf(), jsonEventSerializer));
             return new CassandraACLMapper(
                 new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
                 new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
@@ -845,8 +844,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         private CassandraAttachmentDAOV2 attachmentDAO(CassandraCluster cassandraCluster) {
             return new CassandraAttachmentDAOV2(
                 new HashBlobId.Factory(),
-                cassandraCluster.getConf(),
-                cassandra.getCassandraConsistenciesConfiguration());
+                cassandraCluster.getConf());
         }
 
         private CassandraMessageIdDAO messageIdDAO(CassandraCluster cassandraCluster) {
@@ -857,7 +855,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             return new CassandraMessageIdToImapUidDAO(
                 cassandraCluster.getConf(),
                 new HashBlobId.Factory(),
-                cassandra.getCassandraConsistenciesConfiguration(),
                 CassandraConfiguration.DEFAULT_CONFIGURATION);
         }
 
@@ -866,8 +863,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 cassandraCluster.getConf(),
                 cassandraCluster.getTypesProvider(),
                 mock(BlobStore.class),
-                new HashBlobId.Factory(),
-                cassandra.getCassandraConsistenciesConfiguration());
+                new HashBlobId.Factory());
         }
 
         private CassandraThreadDAO threadDAO(CassandraCluster cassandraCluster) {

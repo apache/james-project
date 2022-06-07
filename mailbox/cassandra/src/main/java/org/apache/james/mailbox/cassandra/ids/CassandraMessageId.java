@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import org.apache.james.mailbox.model.MessageId;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.base.MoreObjects;
 
 public class CassandraMessageId implements MessageId {
@@ -33,7 +33,7 @@ public class CassandraMessageId implements MessageId {
 
         @Override
         public CassandraMessageId generate() {
-            return of(UUIDs.timeBased());
+            return of(Uuids.timeBased());
         }
 
         public static CassandraMessageId of(UUID uuid) {

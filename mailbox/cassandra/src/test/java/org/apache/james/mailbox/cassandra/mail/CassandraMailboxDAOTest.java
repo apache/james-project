@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -71,8 +71,7 @@ class CassandraMailboxDAOTest {
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxDAO(
             cassandra.getConf(),
-            cassandra.getTypesProvider(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandra.getTypesProvider());
 
         mailbox1 = new Mailbox(MailboxPath.forUser(USER, "abcd"),
             UID_VALIDITY_1,
@@ -101,8 +100,9 @@ class CassandraMailboxDAOTest {
 
         // Hack to insert a faulty value
         cassandra.getConf().execute(update("mailbox")
-            .with(set("uidvalidity", -12))
-            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+            .setColumn("uidvalidity", literal(-12))
+            .where(column("id").isEqualTo(literal(CASSANDRA_ID_1.asUuid())))
+            .build());
 
         Optional<Mailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
             .blockOptional();
@@ -116,8 +116,9 @@ class CassandraMailboxDAOTest {
 
         // Hack to insert a faulty value
         cassandra.getConf().execute(update("mailbox")
-            .with(set("uidvalidity", -12))
-            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+            .setColumn("uidvalidity", literal(-12))
+            .where(column("id").isEqualTo(literal(CASSANDRA_ID_1.asUuid())))
+            .build());
 
         List<Mailbox> readMailbox = testee.retrieveAllMailboxes().collectList().block();
         assertThat(readMailbox).hasSize(1)
@@ -133,8 +134,9 @@ class CassandraMailboxDAOTest {
 
         // Hack to insert a faulty value
         cassandra.getConf().execute(update("mailbox")
-            .with(set("uidvalidity", -12))
-            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+            .setColumn("uidvalidity", literal(-12))
+            .where(column("id").isEqualTo(literal(CASSANDRA_ID_1.asUuid())))
+            .build());
 
         Barrier barrier = new Barrier(2);
         cassandra.getConf().registerScenario(awaitOn(barrier)

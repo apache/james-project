@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -34,11 +35,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
+import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.BatchType;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -55,7 +57,7 @@ public class CassandraMailboxRecentsDAO {
     private final PreparedStatement addStatement;
 
     @Inject
-    public CassandraMailboxRecentsDAO(Session session) {
+    public CassandraMailboxRecentsDAO(CqlSession session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
         deleteStatement = createDeleteStatement(session);
@@ -63,33 +65,35 @@ public class CassandraMailboxRecentsDAO {
         addStatement = createAddStatement(session);
     }
 
-    private PreparedStatement createReadStatement(Session session) {
+    private PreparedStatement createReadStatement(CqlSession session) {
         return session.prepare(
-            select(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)
-                .from(CassandraMailboxRecentsTable.TABLE_NAME)
-                .where(eq(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID))));
+            selectFrom(CassandraMailboxRecentsTable.TABLE_NAME)
+                .column(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)
+                .where(column(CassandraMailboxRecentsTable.MAILBOX_ID).isEqualTo(bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID)))
+                .build());
     }
 
-    private PreparedStatement createDeleteStatement(Session session) {
+    private PreparedStatement createDeleteStatement(CqlSession session) {
         return session.prepare(
-            QueryBuilder.delete()
-                .from(CassandraMailboxRecentsTable.TABLE_NAME)
-                .where(eq(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID)))
-                .and(eq(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))));
+            deleteFrom(CassandraMailboxRecentsTable.TABLE_NAME)
+                .whereColumn(CassandraMailboxRecentsTable.MAILBOX_ID).isEqualTo(bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID))
+                .whereColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID).isEqualTo(bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))
+                .build());
     }
 
-    private PreparedStatement createDeleteAllStatement(Session session) {
+    private PreparedStatement createDeleteAllStatement(CqlSession session) {
         return session.prepare(
-            QueryBuilder.delete()
-                .from(CassandraMailboxRecentsTable.TABLE_NAME)
-                .where(eq(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID))));
+            deleteFrom(CassandraMailboxRecentsTable.TABLE_NAME)
+                .where(column(CassandraMailboxRecentsTable.MAILBOX_ID).isEqualTo(bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID)))
+                .build());
     }
 
-    private PreparedStatement createAddStatement(Session session) {
+    private PreparedStatement createAddStatement(CqlSession session) {
         return session.prepare(
             insertInto(CassandraMailboxRecentsTable.TABLE_NAME)
                 .value(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID))
-                .value(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)));
+                .value(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))
+                .build());
     }
 
     public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
@@ -100,29 +104,29 @@ public class CassandraMailboxRecentsDAO {
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {
         return statement.bind()
-            .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid());
+            .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid());
     }
 
     public Mono<Void> removeFromRecent(CassandraId mailboxId, MessageUid messageUid) {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
-            .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+            .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
     public Mono<Void> removeFromRecent(CassandraId mailboxId, List<MessageUid> uids) {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
-                .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
                 .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, uids.iterator().next().asLong()));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
                 .map(uidBatch -> {
-                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
-                    uidBatch.forEach(uid -> batch.add(deleteStatement.bind()
-                        .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+                    BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.addStatement(deleteStatement.bind()
+                        .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
                         .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, uid.asLong())));
-                    return batch;
+                    return batch.build();
                 });
             return Flux.fromStream(batches)
                 .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)
@@ -132,29 +136,29 @@ public class CassandraMailboxRecentsDAO {
 
     public Mono<Void> delete(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
-            .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid()));
+            .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {
         return cassandraAsyncExecutor.executeVoid(addStatement.bind()
-            .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+            .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, List<MessageUid> uids) {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(addStatement.bind()
-                .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+                .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
                 .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, uids.iterator().next().asLong()));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
                 .map(uidBatch -> {
-                    BatchStatement batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
-                    uidBatch.forEach(uid -> batch.add(addStatement.bind()
-                        .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
+                    BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
+                    uidBatch.forEach(uid -> batch.addStatement(addStatement.bind()
+                        .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
                         .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, uid.asLong())));
-                    return batch;
+                    return batch.build();
                 });
             return Flux.fromStream(batches)
                 .flatMap(cassandraAsyncExecutor::executeVoid, LOW_CONCURRENCY)

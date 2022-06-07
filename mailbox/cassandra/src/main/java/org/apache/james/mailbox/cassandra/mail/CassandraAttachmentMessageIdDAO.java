@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable.ATTACHMENT_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable.ATTACHMENT_ID_AS_UUID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable.FIELDS;
@@ -36,10 +37,9 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -55,7 +55,7 @@ public class CassandraAttachmentMessageIdDAO {
     private final MessageId.Factory messageIdFactory;
 
     @Inject
-    public CassandraAttachmentMessageIdDAO(Session session, MessageId.Factory messageIdFactory) {
+    public CassandraAttachmentMessageIdDAO(CqlSession session, MessageId.Factory messageIdFactory) {
         this.messageIdFactory = messageIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
@@ -65,38 +65,40 @@ public class CassandraAttachmentMessageIdDAO {
         this.listStatement = prepareList(session);
     }
 
-    private PreparedStatement prepareInsert(Session session) {
+    private PreparedStatement prepareInsert(CqlSession session) {
         return session.prepare(
             insertInto(TABLE_NAME)
                 .value(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID))
                 .value(ATTACHMENT_ID, bindMarker(ATTACHMENT_ID))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID)));
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+                .build());
     }
 
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(
-            QueryBuilder.delete()
-                .from(TABLE_NAME)
-                .where(eq(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID)))
-                .and(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    private PreparedStatement prepareDelete(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .where(column(ATTACHMENT_ID_AS_UUID).isEqualTo(bindMarker(ATTACHMENT_ID_AS_UUID)),
+                column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)))
+            .build());
     }
 
-    private PreparedStatement prepareSelect(Session session) {
-        return session.prepare(select(FIELDS)
-            .from(TABLE_NAME)
-            .where(eq(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID))));
+    private PreparedStatement prepareSelect(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .where(column(ATTACHMENT_ID_AS_UUID).isEqualTo(bindMarker(ATTACHMENT_ID_AS_UUID)))
+            .build());
     }
 
-    private PreparedStatement prepareList(Session session) {
-        return session.prepare(select(FIELDS)
-            .from(TABLE_NAME));
+    private PreparedStatement prepareList(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .columns(FIELDS)
+            .build());
     }
 
     public Flux<MessageId> getOwnerMessageIds(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeRows(
                 selectStatement.bind()
-                    .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID()))
+                    .setUuid(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID()))
             .map(this::rowToMessageId);
     }
 
@@ -107,7 +109,7 @@ public class CassandraAttachmentMessageIdDAO {
     public Mono<Void> storeAttachmentForMessageId(AttachmentId attachmentId, MessageId ownerMessageId) {
         return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
-                .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
+                .setUuid(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(ATTACHMENT_ID, attachmentId.getId())
                 .setString(MESSAGE_ID, ownerMessageId.serialize()));
     }
@@ -115,7 +117,7 @@ public class CassandraAttachmentMessageIdDAO {
     public Mono<Void> delete(AttachmentId attachmentId, MessageId ownerMessageId) {
         return cassandraAsyncExecutor.executeVoid(
             deleteStatement.bind()
-                .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
+                .setUuid(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(MESSAGE_ID, ownerMessageId.serialize()));
     }
 
