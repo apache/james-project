@@ -29,24 +29,24 @@ public class FakeAuthorizator implements Authorizator {
         return new FakeAuthorizator(Optional.empty(), Optional.empty());
     }
 
-    public static FakeAuthorizator forUserAndAdmin(Username admin, Username user) {
-        return new FakeAuthorizator(Optional.of(admin), Optional.of(user));
+    public static FakeAuthorizator forGivenUserAndDelegatedUser(Username givenUser, Username delegatedUser) {
+        return new FakeAuthorizator(Optional.of(givenUser), Optional.of(delegatedUser));
     }
 
-    private final Optional<Username> adminId;
+    private final Optional<Username> givenUserId;
     private final Optional<Username> delegatedUserId;
 
-    private FakeAuthorizator(Optional<Username> adminId, Optional<Username> userId) {
-        this.adminId = adminId;
+    private FakeAuthorizator(Optional<Username> givenUserId, Optional<Username> userId) {
+        this.givenUserId = givenUserId;
         this.delegatedUserId = userId;
     }
 
     @Override
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) {
-        if (!adminId.isPresent() || !this.delegatedUserId.isPresent()) {
+        if (givenUserId.isEmpty() || this.delegatedUserId.isEmpty()) {
             return AuthorizationState.FORBIDDEN;
         }
-        if (!adminId.get().equals(userId)) {
+        if (!givenUserId.get().equals(userId)) {
             return AuthorizationState.FORBIDDEN;
         }
         if (!otherUserId.equals(this.delegatedUserId.get())) {

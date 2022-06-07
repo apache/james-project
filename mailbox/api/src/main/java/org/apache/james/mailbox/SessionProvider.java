@@ -76,6 +76,21 @@ public interface SessionProvider {
     MailboxSession loginAsOtherUser(Username givenUserid, String passwd, Username otherUserId) throws MailboxException;
 
     /**
+     * Checking given user can log in as another user
+     * When delegated and authorized, a session for the other user will be supplied
+     *
+     * @param givenUserid
+     *            username of the given user, matching the credentials
+     * @param otherUserId
+     *            username of the real user
+     * @return a <code>MailboxSession</code> for the real user
+     *            when the given user is authenticated and authorized to access
+     * @throws MailboxException
+     *             when the creation fails for other reasons
+     */
+    MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException;
+
+    /**
      * <p>
      * Logs the session out, freeing any resources. Clients who open session
      * should make best efforts to call this when the session is closed.

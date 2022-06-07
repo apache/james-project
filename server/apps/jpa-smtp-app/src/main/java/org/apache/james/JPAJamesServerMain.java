@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.data.JPAAuthorizatorModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.modules.data.JPAUsersRepositoryModule;
@@ -53,14 +54,15 @@ public class JPAJamesServerMain implements JamesServerMain {
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new TaskManagerModule());
-    
+
     private static final Module JPA_SERVER_MODULE = Modules.combine(
         new MailetProcessingModule(),
         new JPAEntityManagerModule(),
         new JPADataModule(),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
-        new ElasticSearchMetricReporterModule());
+        new ElasticSearchMetricReporterModule(),
+        new JPAAuthorizatorModule());
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
@@ -77,7 +79,7 @@ public class JPAJamesServerMain implements JamesServerMain {
 
     public static GuiceJamesServer createServer(JPAJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule())
+            .combineWith(JPA_SERVER_MODULE, PROTOCOLS, new DKIMMailetModule())
             .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()));
     }

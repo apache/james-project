@@ -21,13 +21,10 @@ package org.apache.james.protocols.api;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 /**
  * https://datatracker.ietf.org/doc/rfc7628/
@@ -35,22 +32,26 @@ import com.google.common.collect.ImmutableList;
 public class OIDCSASLParser {
     public static final char SASL_SEPARATOR = 1;
     public static final String PREFIX_TOKEN = "Bearer ";
+    public static final String TOKEN_PART_PREFIX = "auth=";
+    public static final String USER_PART_PREFIX = "user=";
+    public static final int TOKEN_PART_INDEX = TOKEN_PART_PREFIX.length();
+    public static final int USER_PART_INDEX = USER_PART_PREFIX.length();
 
     public static class OIDCInitialResponse {
-        private final String user;
+        private final String associatedUser;
         private final String token;
 
         public OIDCInitialResponse(String user, String token) {
-            this.user = user;
+            this.associatedUser = user;
             this.token = token;
-        }
-
-        public String getUser() {
-            return user;
         }
 
         public String getToken() {
             return token;
+        }
+
+        public String getAssociatedUser() {
+            return associatedUser;
         }
     }
 
@@ -61,11 +62,26 @@ public class OIDCSASLParser {
             String decodeValueWithoutDanglingPart = decodeResult.filter(value -> value.startsWith("n,"))
                 .map(value -> value.substring(2))
                 .orElse(decodeResult.get());
-            List<String> parts = Splitter.on(SASL_SEPARATOR).splitToList(decodeValueWithoutDanglingPart);
-            ImmutableList<String> tokenPart = parts.stream().filter(part -> part.startsWith("auth=")).collect(ImmutableList.toImmutableList());
-            ImmutableList<String> userPart = parts.stream().filter(part -> part.startsWith("user=")).collect(ImmutableList.toImmutableList());
-            if (tokenPart.size() == 1 && userPart.size() == 1) {
-                return Optional.of(new OIDCInitialResponse(userPart.get(0).substring(5), tokenPart.get(0).substring(5).replace(PREFIX_TOKEN, "")));
+
+            StringTokenizer stringTokenizer = new StringTokenizer(decodeValueWithoutDanglingPart, String.valueOf(SASL_SEPARATOR));
+            String tokenPart = null;
+            String userPart = null;
+            int tokenPartCounter = 0;
+            int userPartCounter = 0;
+
+            while (stringTokenizer.hasMoreTokens()) {
+                String stringToken = stringTokenizer.nextToken();
+                if (stringToken.startsWith(TOKEN_PART_PREFIX)) {
+                    tokenPart = StringUtils.replace(stringToken.substring(TOKEN_PART_INDEX), PREFIX_TOKEN, "");
+                    tokenPartCounter++;
+                } else if (stringToken.startsWith(USER_PART_PREFIX)) {
+                    userPart = stringToken.substring(USER_PART_INDEX);
+                    userPartCounter++;
+                }
+            }
+
+            if (tokenPart != null && userPart != null && tokenPartCounter == 1 && userPartCounter == 1) {
+                return Optional.of(new OIDCInitialResponse(userPart, tokenPart));
             }
         }
         return Optional.empty();

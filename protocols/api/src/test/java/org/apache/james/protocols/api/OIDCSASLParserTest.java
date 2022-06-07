@@ -53,7 +53,7 @@ class OIDCSASLParserTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(parseResult.isPresent()).isTrue();
             softly.assertThat(parseResult.get().getToken()).isEqualTo(TOKEN_WITHOUT_PREFIX);
-            softly.assertThat(parseResult.get().getUser()).isEqualTo(USER);
+            softly.assertThat(parseResult.get().getAssociatedUser()).isEqualTo(USER);
         });
     }
 
@@ -75,7 +75,6 @@ class OIDCSASLParserTest {
             "auth=" + BEARER_TOKEN, "", ""));
         assertThat(OIDCSASLParser.parse(input)).isPresent();
     }
-
     @Test
     void parseShouldReturnResponseWhenInputHasDanglingPart() {
         String input = buildOAuthBearerPlain(ImmutableList.of("n,user=" + USER,
@@ -85,7 +84,7 @@ class OIDCSASLParserTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(parseResult.isPresent()).isTrue();
             softly.assertThat(parseResult.get().getToken()).isEqualTo(TOKEN_WITHOUT_PREFIX);
-            softly.assertThat(parseResult.get().getUser()).isEqualTo(USER);
+            softly.assertThat(parseResult.get().getAssociatedUser()).isEqualTo(USER);
         });
     }
 
@@ -98,7 +97,7 @@ class OIDCSASLParserTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(parseResult.isPresent()).isTrue();
             softly.assertThat(parseResult.get().getToken()).isEqualTo(TOKEN_WITHOUT_PREFIX);
-            softly.assertThat(parseResult.get().getUser()).isEqualTo(USER);
+            softly.assertThat(parseResult.get().getAssociatedUser()).isEqualTo(USER);
         });
     }
 
@@ -117,7 +116,6 @@ class OIDCSASLParserTest {
             "auth=token2"));
         assertThat(OIDCSASLParser.parse(input)).isEmpty();
     }
-
     @ParameterizedTest
     @ValueSource(strings = {"namespace",
         "@#$$@%#$",

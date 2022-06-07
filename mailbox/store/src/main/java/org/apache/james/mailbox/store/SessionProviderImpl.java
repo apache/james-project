@@ -68,15 +68,20 @@ public class SessionProviderImpl implements SessionProvider {
 
     @Override
     public MailboxSession loginAsOtherUser(Username thisUserId, String passwd, Username otherUserId) throws MailboxException {
-        if (! isValidLogin(thisUserId, passwd)) {
+        if (!isValidLogin(thisUserId, passwd)) {
             throw new BadCredentialsException();
         }
-        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(thisUserId, otherUserId);
+        return loginAsOtherUser(thisUserId, otherUserId);
+    }
+
+    @Override
+    public MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException {
+        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(givenUserid, otherUserId);
         switch (authorizationState) {
             case ALLOWED:
                 return createSystemSession(otherUserId);
             case FORBIDDEN:
-                throw new ForbiddenDelegationException();
+                throw new ForbiddenDelegationException(givenUserid, otherUserId);
             case UNKNOWN_USER:
                 throw new UserDoesNotExistException(otherUserId);
             default:

@@ -17,26 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.exception;
+package org.apache.james.modules.data;
 
-import org.apache.james.core.Username;
+import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
+import org.apache.james.mailbox.Authorizator;
 
-public class ForbiddenDelegationException extends MailboxException {
+import com.google.inject.AbstractModule;
 
-    private final Username givenUser;
-    private final Username delegateUser;
+public class JPAAuthorizatorModule extends AbstractModule {
 
-    public ForbiddenDelegationException(Username givenUser, Username delegateUser) {
-        super("User " + givenUser.asString() + " is not delegated by " + delegateUser.asString());
-        this.givenUser = givenUser;
-        this.delegateUser = delegateUser;
+
+    @Override
+    protected void configure() {
+        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
     }
 
-    public Username givenUser() {
-        return givenUser;
-    }
-
-    public Username delegateUser() {
-        return delegateUser;
-    }
 }
