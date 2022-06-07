@@ -34,11 +34,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JamesWithNonCompatibleElasticSearchServerTest {
 
-    static DockerElasticSearch dockerES6 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_6);
+    static DockerElasticSearch dockerES7 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_7);
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-        .extension(new DockerElasticSearchExtension(dockerES6))
+        .extension(new DockerElasticSearchExtension(dockerES7))
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
@@ -47,7 +47,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
 
     @AfterAll
     static void afterAll() {
-        dockerES6.stop();
+        dockerES7.stop();
     }
 
     @Test
@@ -59,7 +59,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                     .containsOnly(CheckResult.builder()
                         .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
-                        .description("ES version(6.3.2) is not compatible with the recommendation(7.10.2)")
+                        .description("Error when checking ES version: co.elastic.clients.transport.TransportException: [es/info] Missing [X-Elastic-Product] header. Please check that you are connecting to an Elasticsearch instance, and that any networking filters are preserving that header.")
                         .build()));
 
         assertThat(server.isStarted())

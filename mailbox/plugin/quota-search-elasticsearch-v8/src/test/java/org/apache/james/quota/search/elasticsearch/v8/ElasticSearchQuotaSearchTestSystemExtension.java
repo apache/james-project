@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.quota.search.elasticsearch.v8;
 
 import static org.mockito.Mockito.mock;
 
@@ -25,7 +25,6 @@ import java.io.IOException;
 
 import org.apache.james.backends.es.v8.DockerElasticSearch;
 import org.apache.james.backends.es.v8.DockerElasticSearchSingleton;
-import org.apache.james.backends.es.v8.ElasticSearchConfiguration;
 import org.apache.james.backends.es.v8.ElasticSearchIndexer;
 import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
 import org.apache.james.dnsservice.api.DNSService;
@@ -34,10 +33,6 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
-import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaSearcher;
-import org.apache.james.quota.search.elasticsearch.v8.QuotaRatioElasticSearchConstants;
-import org.apache.james.quota.search.elasticsearch.v8.QuotaSearchIndexCreationUtil;
-import org.apache.james.quota.search.elasticsearch.v8.UserRoutingKeyFactory;
 import org.apache.james.quota.search.elasticsearch.v8.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -47,29 +42,25 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.junit.rules.TemporaryFolder;
 
-public class ElasticSearchQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
+public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
     private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
-    private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private ReactorElasticSearchClient client;
 
     @Override
-    public void beforeEach(ExtensionContext context) {
-        try {
-            temporaryFolder.create();
-            elasticSearch.start();
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return (parameterContext.getParameter().getType() == QuotaSearchTestSystem.class);
+    }
 
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        try {
             client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 elasticSearch.clientProvider().get(),
-                ElasticSearchConfiguration.builder()
-                    .addHost(elasticSearch.getHttpHost())
-                    .build());
+                elasticSearch.configuration());
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
-
 
             DNSService dnsService = mock(DNSService.class);
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
@@ -77,7 +68,8 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
-                new ElasticSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+                new ElasticSearchIndexer(client,
+                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
                 new QuotaRatioToElasticSearchJson(resources.getQuotaRootResolver()),
                 new UserRoutingKeyFactory(), resources.getQuotaRootResolver());
 
@@ -85,7 +77,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
 
-            QuotaSearchTestSystem quotaSearchTestSystem = new QuotaSearchTestSystem(
+            return new QuotaSearchTestSystem(
                 quotaComponents.getMaxQuotaManager(),
                 resources.getMailboxManager(),
                 quotaComponents.getQuotaManager(),
@@ -96,28 +88,19 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 domainList,
                 resources.getCurrentQuotaManager(),
                 elasticSearch::flushIndices);
-
-            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
     }
 
     @Override
+    public void beforeEach(ExtensionContext context) {
+        elasticSearch.start();
+    }
+
+    @Override
     public void afterEach(ExtensionContext context) throws IOException {
-        restQuotaSearchTestSystem.getWebAdminServer().destroy();
         client.close();
         elasticSearch.cleanUpData();
-        temporaryFolder.delete();
-    }
-
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == WebAdminQuotaSearchTestSystem.class);
-    }
-
-    @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return restQuotaSearchTestSystem;
     }
 }

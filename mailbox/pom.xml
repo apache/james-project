@@ -54,7 +54,7 @@
         <module>plugin/quota-mailing-memory</module>
 
         <module>plugin/quota-search</module>
-        <module>plugin/quota-search-elasticsearch-v7</module>
+        <module>plugin/quota-search-elasticsearch-v8</module>
         <module>plugin/quota-search-scanning</module>
 
         <module>plugin/spamassassin</module>

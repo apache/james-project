@@ -27,7 +27,7 @@ import org.apache.james.backends.es.v8.IndexName;
 import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.elasticsearch.v8.ElasticSearchMailboxConfiguration;
-import org.apache.james.quota.search.elasticsearch.v7.ElasticSearchQuotaConfiguration;
+import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -54,6 +54,6 @@ public class ElasticSearchClientModule extends AbstractModule {
                                      ElasticSearchQuotaConfiguration quotaConfiguration) {
         return ImmutableSet.of(
             mailboxConfiguration.getIndexMailboxName(),
-            new IndexName(quotaConfiguration.getIndexQuotaRatioName().getValue())); // TODO remove after quota search migration to es8
+            quotaConfiguration.getIndexQuotaRatioName());
     }
 }
