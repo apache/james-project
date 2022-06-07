@@ -46,8 +46,8 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
     val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
-    val unsupportedCapabilities = requestObject.using.toSet -- defaultCapabilities
-    val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
+    val unsupportedCapabilities = requestObject.using -- defaultCapabilities
+    val capabilities: Set[CapabilityIdentifier] = requestObject.using
 
     if (unsupportedCapabilities.nonEmpty) {
       SMono.error(UnsupportedCapabilitiesException(unsupportedCapabilities))

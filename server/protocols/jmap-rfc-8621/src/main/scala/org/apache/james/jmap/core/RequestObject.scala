@@ -37,4 +37,4 @@ final case class ServerId(value: Id)
 
 case class CreatedIds(value: Map[ClientId, ServerId])
 
-case class RequestObject(using: Seq[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)
+case class RequestObject(using: Set[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)

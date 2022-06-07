@@ -30,7 +30,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize RequestObject" should {
     "succeed when deserialize from JsString without CreatedIds" in {
       val expectedRequestObject = RequestObject(
-        using = Seq(coreIdentifier),
+        using = Set(coreIdentifier),
         methodCalls = Seq(invocation1),
         createdIds = Option.empty)
 
@@ -51,7 +51,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
 
     "succeed when deserialize from JsString with CreatedIds" in {
       val expectedRequestObject = RequestObject(
-        using = Seq(coreIdentifier),
+        using = Set(coreIdentifier),
         methodCalls = Seq(invocation1),
         createdIds = Option(createdIds))
 
@@ -73,7 +73,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
 
     "succeed with many Capability, methodCalls without CreatedIds" in {
       val expectedRequestObject = RequestObject(
-        using = Seq(coreIdentifier, mailIdentifier),
+        using = Set(coreIdentifier, mailIdentifier),
         methodCalls = Seq(invocation1, invocation2),
         createdIds = Option.empty)
 
@@ -101,7 +101,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
     "succeed when write to string without CreatedIds" in {
       val actualValue = ResponseSerializer.serialize(
         RequestObject(
-          using = Seq(coreIdentifier, mailIdentifier),
+          using = Set(coreIdentifier, mailIdentifier),
           methodCalls = Seq(invocation1),
           createdIds = Option.empty))
 
@@ -124,7 +124,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
     "succeed when write to string with CreatedIds" in {
       val actualValue = ResponseSerializer.serialize(
         RequestObject(
-          using = Seq(coreIdentifier, mailIdentifier),
+          using = Set(coreIdentifier, mailIdentifier),
           methodCalls = Seq(invocation1),
           createdIds = Option(createdIds)))
 
