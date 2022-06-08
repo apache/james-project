@@ -19,6 +19,7 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -30,6 +31,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +71,7 @@ public class SendMailHandler implements JamesMessageHook {
     public HookResult onMessage(SMTPSession session, Mail mail) {
         LOGGER.debug("sending mail");
 
-        try {
+        try (Closeable closeable = MDCBuilder.ofValue("messageId", mail.getMessage().getMessageID()).build()) {
             queue.enQueue(mail);
             LOGGER.info("Successfully spooled mail {} with messageId {} from {} on {} for {}", mail.getName(),
                 mail.getMessage().getMessageID(),
