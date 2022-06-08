@@ -28,8 +28,7 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -56,10 +55,10 @@ public class CassandraCacheSessionModule extends AbstractModule {
     @Singleton
     @Named(InjectionNames.CACHE)
     @Provides
-    Session provideSession(@Named(InjectionNames.CACHE) KeyspaceConfiguration keyspaceConfiguration,
-                           InitializedCacheCluster cluster,
-                           @Named(InjectionNames.CACHE) CassandraModule module) {
-        return new SessionWithInitializedTablesFactory(keyspaceConfiguration, cluster.cluster, module).get();
+    CqlSession provideSession(@Named(InjectionNames.CACHE) KeyspaceConfiguration keyspaceConfiguration,
+                              InitializedCacheCluster cluster,
+                              @Named(InjectionNames.CACHE) CassandraModule module) {
+        return new SessionWithInitializedTablesFactory(cluster.cluster, module).get();
     }
 
     @Named(InjectionNames.CACHE)
@@ -70,10 +69,10 @@ public class CassandraCacheSessionModule extends AbstractModule {
     }
 
     static class InitializedCacheCluster {
-        private final Cluster cluster;
+        private final CqlSession cluster;
 
         @Inject
-        private InitializedCacheCluster(Cluster cluster, ClusterConfiguration clusterConfiguration, KeyspacesConfiguration keyspacesConfiguration) {
+        private InitializedCacheCluster(CqlSession cluster, ClusterConfiguration clusterConfiguration, KeyspacesConfiguration keyspacesConfiguration) {
             this.cluster = cluster;
 
             if (clusterConfiguration.shouldCreateKeyspace()) {
