@@ -67,6 +67,9 @@ public interface ProtocolMDCContextFactory {
             InetSocketAddress address = (InetSocketAddress) remoteAddress;
             return address.getAddress().getHostAddress();
         }
+        if (remoteAddress == null) {
+            return "null";
+        }
         return remoteAddress.toString();
     }
 
@@ -75,6 +78,9 @@ public interface ProtocolMDCContextFactory {
         if (remoteAddress instanceof InetSocketAddress) {
             InetSocketAddress address = (InetSocketAddress) remoteAddress;
             return address.getHostName();
+        }
+        if (remoteAddress == null) {
+            return "null";
         }
         return remoteAddress.toString();
     }
