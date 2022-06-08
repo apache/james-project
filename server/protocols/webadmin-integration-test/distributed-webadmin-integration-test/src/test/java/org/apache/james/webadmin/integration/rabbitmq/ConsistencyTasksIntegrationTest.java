@@ -80,7 +80,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -113,7 +113,7 @@ class ConsistencyTasksIntegrationTest {
                 .addBinding()
                 .to(TestingSessionProbe.class);
 
-            bind(Session.class).to(TestingSession.class);
+            bind(CqlSession.class).to(TestingSession.class);
         }
 
         @Provides
@@ -267,7 +267,7 @@ class ConsistencyTasksIntegrationTest {
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(fail()
             .forever()
-            .whenQueryStartsWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;"));
+            .whenQueryStartsWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
@@ -277,9 +277,8 @@ class ConsistencyTasksIntegrationTest {
                 .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))).isGreaterThanOrEqualTo(1));
 
         server.getProbe(TestingSessionProbe.class)
-            .getTestingSession().registerScenario(executeNormally()
-            .forever()
-            .whenQueryStartsWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;"));
+            .getTestingSession()
+            .resetInstrumentation();
 
         String taskId = with()
             .basePath("/mailboxes")
@@ -304,7 +303,7 @@ class ConsistencyTasksIntegrationTest {
     void shouldRecomputeQuotas(GuiceJamesServer server) throws Exception {
         Barrier barrier1 = new Barrier();
         Barrier barrier2 = new Barrier();
-        String updatedQuotaQueryString = "UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;";
+        String updatedQuotaQueryString = "UPDATE currentquota SET messagecount";
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(
                 awaitOn(barrier1) // Event bus first execution
@@ -363,7 +362,7 @@ class ConsistencyTasksIntegrationTest {
         TestingSessionProbe testingProbe = server.getProbe(TestingSessionProbe.class);
         testingProbe.getTestingSession().registerScenario(fail()
             .forever()
-            .whenQueryStartsWith("UPDATE messageIdTable"));
+            .whenQueryStartsWith("UPDATE messageidtable"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
@@ -375,7 +374,7 @@ class ConsistencyTasksIntegrationTest {
         // When we run solveInconsistenciesTask
         testingProbe.getTestingSession().registerScenario(executeNormally()
             .forever()
-            .whenQueryStartsWith("UPDATE messageIdTable"));
+            .whenQueryStartsWith("UPDATE messageidtable"));
 
         String solveInconsistenciesTaskId = with()
             .queryParam("task", "SolveInconsistencies")
@@ -483,7 +482,7 @@ class ConsistencyTasksIntegrationTest {
                 awaitOn(barrier) // Event bus first execution
                     .thenExecuteNormally()
                     .times(1)
-                    .whenQueryStartsWith("UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;"));
+                    .whenQueryStartsWith("UPDATE currentquota SET messagecount"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);

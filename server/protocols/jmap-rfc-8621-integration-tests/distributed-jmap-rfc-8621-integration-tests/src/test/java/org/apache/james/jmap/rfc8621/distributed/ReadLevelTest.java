@@ -59,7 +59,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -69,7 +69,7 @@ import com.google.inject.multibindings.Multibinder;
 import io.netty.handler.codec.http.HttpHeaderNames;
 
 @Tag(CategoryTags.BASIC_FEATURE)
-public class ReadLevelTest {
+class ReadLevelTest {
     private static class TestingSessionProbe implements GuiceProbe {
         private final TestingSession testingSession;
 
@@ -90,7 +90,7 @@ public class ReadLevelTest {
                 .addBinding()
                 .to(TestingSessionProbe.class);
 
-            bind(Session.class).to(TestingSession.class);
+            bind(CqlSession.class).to(TestingSession.class);
         }
 
         @Provides
@@ -165,7 +165,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-                StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+                StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(0);
     }
 
@@ -196,7 +196,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(1);
     }
 
@@ -228,7 +228,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(1);
     }
 
@@ -262,7 +262,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(2);
     }
 
@@ -302,7 +302,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(1);
     }
 
@@ -335,7 +335,7 @@ public class ReadLevelTest {
             .post();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id;")))
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
             .hasSize(2);
     }
 

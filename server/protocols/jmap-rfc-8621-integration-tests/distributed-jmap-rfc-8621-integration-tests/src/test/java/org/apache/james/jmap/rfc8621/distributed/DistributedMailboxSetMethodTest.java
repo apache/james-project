@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract {
     @RegisterExtension
@@ -61,7 +61,7 @@ public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract
 
     @Override
     public MailboxId randomMailboxId() {
-        return CassandraId.of(UUIDs.timeBased());
+        return CassandraId.of(Uuids.timeBased());
     }
 
     @Override

@@ -144,7 +144,6 @@ public class MetaDataFixInconsistenciesServiceTest {
         imapUidDAO = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             new HashBlobId.Factory(),
-            cassandraCluster.getCassandraConsistenciesConfiguration(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         cassandraMessageDAOV3 = new CassandraMessageDAOV3(
@@ -152,8 +151,7 @@ public class MetaDataFixInconsistenciesServiceTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
-            new HashBlobId.Factory(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            new HashBlobId.Factory());
         testee = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
     }
 
