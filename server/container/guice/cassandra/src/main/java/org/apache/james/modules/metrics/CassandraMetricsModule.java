@@ -24,7 +24,8 @@ import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.codahale.metrics.MetricRegistry;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metrics.Metrics;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -37,13 +38,11 @@ public class CassandraMetricsModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation injectMetrics(MetricRegistry metricRegistry, Session session) {
+    InitializationOperation injectMetrics(MetricRegistry metricRegistry, CqlSession session) {
         return InitilizationOperationBuilder
             .forClass(CassandraMetricsInjector.class)
-            .init(() -> metricRegistry.registerAll(
-                session.getCluster()
-                    .getMetrics()
-                    .getRegistry()));
+            .init(() -> session.getMetrics().map(Metrics::getRegistry)
+                .ifPresent(metricRegistry::registerAll));
     }
 
     public static class CassandraMetricsInjector implements Startable {
