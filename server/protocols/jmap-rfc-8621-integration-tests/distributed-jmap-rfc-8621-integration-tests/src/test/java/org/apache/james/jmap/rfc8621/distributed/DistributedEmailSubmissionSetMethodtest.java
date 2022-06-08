@@ -34,7 +34,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 class DistributedEmailSubmissionSetMethodtest implements EmailSubmissionSetMethodContract {
     public static final DockerElasticSearchExtension ELASTIC_SEARCH_EXTENSION = new DockerElasticSearchExtension();
@@ -61,6 +61,6 @@ class DistributedEmailSubmissionSetMethodtest implements EmailSubmissionSetMetho
 
     @Override
     public MessageId randomMessageId() {
-        return MESSAGE_ID_FACTORY.of(UUIDs.timeBased());
+        return MESSAGE_ID_FACTORY.of(Uuids.timeBased());
     }
 }

@@ -34,7 +34,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 public class DistributedMailboxGetMethodTest implements MailboxGetMethodContract {
     @RegisterExtension
@@ -58,7 +58,7 @@ public class DistributedMailboxGetMethodTest implements MailboxGetMethodContract
 
     @Override
     public MailboxId randomMailboxId() {
-        return CassandraId.of(UUIDs.timeBased());
+        return CassandraId.of(Uuids.timeBased());
     }
 
 }

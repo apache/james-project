@@ -19,7 +19,9 @@
 
 package org.apache.james;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -29,8 +31,7 @@ import org.apache.james.modules.mailbox.CassandraCacheSessionModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.inject.Inject;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
@@ -41,17 +42,17 @@ class CacheSessionTest {
 
     static class CacheSessionTestCheck implements StartUpCheck {
         static final String NAME = "CacheSessionTest-check";
-        private final Session cacheSession;
+        private final CqlSession cacheSession;
 
         @Inject
-        CacheSessionTestCheck(@Named(InjectionNames.CACHE) Session cacheSession) {
+        CacheSessionTestCheck(@Named(InjectionNames.CACHE) CqlSession cacheSession) {
             this.cacheSession = cacheSession;
         }
 
         @Override
         public CheckResult check() {
             try {
-                cacheSession.execute(select().from(TABLE_NAME));
+                cacheSession.execute(selectFrom(TABLE_NAME).all().build());
                 return CheckResult.builder()
                     .checkName(NAME)
                     .resultType(ResultType.GOOD)
@@ -86,9 +87,9 @@ class CacheSessionTest {
             .addBinding()
             .toInstance(CassandraModule.table(TABLE_NAME)
                 .comment("Testing table")
-                .statement(statement -> statement
-                    .addPartitionKey("id", DataType.timeuuid())
-                    .addClusteringColumn("clustering", DataType.bigint()))
+                .statement(statement -> types -> statement
+                    .withPartitionKey("id", TIMEUUID)
+                    .withClusteringColumn("clustering", BIGINT))
                 .build()))
         .overrideServerModule(binder -> Multibinder.newSetBinder(binder, StartUpCheck.class)
             .addBinding()

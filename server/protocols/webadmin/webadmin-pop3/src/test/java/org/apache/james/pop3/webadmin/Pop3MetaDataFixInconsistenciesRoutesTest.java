@@ -179,7 +179,6 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
         imapUidDAO = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             new HashBlobId.Factory(),
-            cassandraCluster.getCassandraConsistenciesConfiguration(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         cassandraMessageDAOV3 = new CassandraMessageDAOV3(
@@ -187,8 +186,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
-            new HashBlobId.Factory(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            new HashBlobId.Factory());
         MetaDataFixInconsistenciesService fixInconsistenciesService = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));

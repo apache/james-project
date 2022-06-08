@@ -19,13 +19,12 @@
 
 package org.apache.james;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.init.ClusterFactory;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.core.Domain;
@@ -45,8 +44,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
@@ -116,11 +114,9 @@ public class WithCassandraPassThroughBlobStoreMutableTest implements MailsShould
         // and 3 mailbox messages with headers and body) = 6 blobs
         CassandraProbe probe = server.getProbe(CassandraProbe.class);
         ClusterConfiguration cassandraConfiguration = probe.getConfiguration();
-        try (Cluster cluster = ClusterFactory.create(cassandraConfiguration, CassandraConsistenciesConfiguration.DEFAULT)) {
-            try (Session session = cluster.connect(probe.getMainKeyspaceConfiguration().getKeyspace())) {
-                assertThat(session.execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
-                    .hasSize(6);
-            }
+        try (CqlSession session = ClusterFactory.create(cassandraConfiguration, probe.getMainKeyspaceConfiguration())) {
+            assertThat(session.execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME).all().build()))
+                .hasSize(6);
         }
     }
 }

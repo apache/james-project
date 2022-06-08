@@ -51,7 +51,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -80,10 +80,10 @@ class CassandraCacheQueryTest {
                 .addBinding()
                 .to(TestingSessionProbe.class);
 
-            bind(Session.class)
+            bind(CqlSession.class)
                 .annotatedWith(Names.named("cache"))
                 .to(TestingSession.class);
-            bind(Session.class)
+            bind(CqlSession.class)
                 .to(TestingSession.class);
             Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(CassandraBlobCacheModule.MODULE);
         }
