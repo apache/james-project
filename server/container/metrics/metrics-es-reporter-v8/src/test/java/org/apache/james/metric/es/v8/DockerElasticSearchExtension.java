@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metric.es.v7;
+package org.apache.james.metric.es.v8;
 
-import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.es.v8.DockerElasticSearch;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;

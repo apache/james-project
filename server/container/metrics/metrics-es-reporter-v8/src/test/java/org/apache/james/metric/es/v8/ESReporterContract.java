@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metric.es.v7;
+package org.apache.james.metric.es.v8;
 
 import static io.restassured.RestAssured.when;
 import static org.awaitility.Awaitility.await;
@@ -27,12 +27,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.http.HttpStatus;
-import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.es.v8.DockerElasticSearch;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
-import org.apache.james.metrics.es.v7.ESMetricReporter;
-import org.apache.james.metrics.es.v7.ESReporterConfiguration;
+import org.apache.james.metrics.es.v8.ESMetricReporter;
+import org.apache.james.metrics.es.v8.ESReporterConfiguration;
 import org.awaitility.Durations;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

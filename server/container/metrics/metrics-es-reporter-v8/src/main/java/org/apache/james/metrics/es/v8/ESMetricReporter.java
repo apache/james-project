@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.es.v7;
+package org.apache.james.metrics.es.v8;
 
 import java.io.IOException;
 import java.util.Optional;

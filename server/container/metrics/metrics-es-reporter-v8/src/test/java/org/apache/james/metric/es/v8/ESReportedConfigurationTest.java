@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metric.es.v7;
+package org.apache.james.metric.es.v8;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.metrics.es.v7.ESReporterConfiguration;
+import org.apache.james.metrics.es.v8.ESReporterConfiguration;
 import org.junit.jupiter.api.Test;
 
 class ESReportedConfigurationTest {
