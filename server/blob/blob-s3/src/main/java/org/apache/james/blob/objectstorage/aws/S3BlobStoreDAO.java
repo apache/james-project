@@ -159,7 +159,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-
         return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
@@ -169,7 +168,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(read(bucketName, blobId));
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
+        return getObject(resolvedBucketName, blobId)
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
+            .map(res -> ReactorUtils.toInputStream(res.flux));
     }
 
     private static class FluxResponse {
