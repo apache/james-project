@@ -21,7 +21,7 @@ Change list:
 
 ### Migration to Cassandra driver 4
 
-Date: 07/06/200
+Date: 07/06/2022
 
 Concerned product: Distributed James, Cassandra James Server
 
