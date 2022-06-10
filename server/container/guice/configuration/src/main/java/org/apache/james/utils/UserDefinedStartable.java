@@ -16,37 +16,8 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.utils;
 
-import java.io.FileNotFoundException;
-
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-
-public class ExtensionModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GuiceGenericLoader.class).in(Scopes.SINGLETON);
-
-        install(new UserStartables.Module());
-    }
-
-    @Provides
-    @Singleton
-    ExtensionConfiguration extensionConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("extensions");
-            return ExtensionConfiguration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            LoggerFactory.getLogger(ExtensionModule.class).info("No extensions.properties configuration found. No additional Guice module will be used for instantiating extensions.");
-            return ExtensionConfiguration.DEFAULT;
-        }
-    }
+public interface UserDefinedStartable {
+    void start();
 }

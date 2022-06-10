@@ -169,7 +169,7 @@ class GuiceMailetLoaderTest {
         GuiceGenericLoader genericLoader = new GuiceGenericLoader(
             Guice.createInjector(),
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
-            new ExtensionConfiguration(ImmutableList.of(new ClassName("org.apache.james.transport.mailets.MyExtensionModule"))));
+            new ExtensionConfiguration(ImmutableList.of(new ClassName("org.apache.james.transport.mailets.MyExtensionModule")), ImmutableList.of()));
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(genericLoader, NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
@@ -185,7 +185,7 @@ class GuiceMailetLoaderTest {
         GuiceGenericLoader genericLoader = new GuiceGenericLoader(
             Guice.createInjector(),
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
-            new ExtensionConfiguration(ImmutableList.of(new ClassName("org.apache.james.transport.mailets.MyExtensionModule"))));
+            new ExtensionConfiguration(ImmutableList.of(new ClassName("org.apache.james.transport.mailets.MyExtensionModule")), ImmutableList.of()));
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(genericLoader, NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet1 = guiceMailetLoader.getMailet(FakeMailetConfig.builder()

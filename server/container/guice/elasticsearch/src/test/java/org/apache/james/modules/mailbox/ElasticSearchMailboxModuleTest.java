@@ -41,7 +41,7 @@ class ElasticSearchMailboxModuleTest {
         GuiceGenericLoader genericLoader = new GuiceGenericLoader(
             Guice.createInjector(),
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
-            new ExtensionConfiguration(ImmutableList.of()));
+            ExtensionConfiguration.DEFAULT);
 
         Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new ElasticSearchMailboxModule()
             .provideSearchOverrides(genericLoader,

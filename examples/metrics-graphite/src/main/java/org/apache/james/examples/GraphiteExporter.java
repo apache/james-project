@@ -17,36 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.examples;
 
-import java.io.FileNotFoundException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.slf4j.LoggerFactory;
+import javax.inject.Inject;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
+import org.apache.james.utils.UserDefinedStartable;
 
-public class ExtensionModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GuiceGenericLoader.class).in(Scopes.SINGLETON);
+import com.codahale.metrics.MetricFilter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
 
-        install(new UserStartables.Module());
+public class GraphiteExporter implements UserDefinedStartable {
+    private final MetricRegistry metricRegistry;
+
+    @Inject
+    public GraphiteExporter(MetricRegistry metricRegistry) {
+        this.metricRegistry = metricRegistry;
     }
 
-    @Provides
-    @Singleton
-    ExtensionConfiguration extensionConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("extensions");
-            return ExtensionConfiguration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            LoggerFactory.getLogger(ExtensionModule.class).info("No extensions.properties configuration found. No additional Guice module will be used for instantiating extensions.");
-            return ExtensionConfiguration.DEFAULT;
-        }
+    public void start() {
+        Graphite graphite = new Graphite(new InetSocketAddress("graphite", 2003));
+        GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .filter(MetricFilter.ALL)
+            .build(graphite);
+        reporter.start(1, TimeUnit.SECONDS);
     }
 }

@@ -75,3 +75,7 @@ Of course alternative technologies can be used.
 ## Auto-configuration of Mail User Agents
 
 [This example](imap-autoconf) demonstrates how to deploy auto-configuration for various mail user agents.
+
+## Custom metric exporters
+
+[This example](metrics-graphite) demonstrates how to set up custom metric exporters and demonstrate how to do so with Graphite.
