@@ -34,14 +34,29 @@
             mbean plugins.</p>
 
             <p>
+                James come with native integration to the prometheus eco-system. Read below.
+            </p>
+
+            <p>
                 You can also export the metrics to ElasticSearch and visualize them with <a href="https://grafana.com/">Grafana</a>.
-                See <a href="config-elasticsearch.html">elaticseach.properties</a> documentation for more details on how to set this up.
+                See <a href="config-elasticsearch.html">elaticseach.properties</a> documentation for more details on how to set this up.<br/>
+                <b>WARNING:</b> Supported ElasticSearch versions for metrics differs from the James one. Only ElasticSearch version 2 to 6 are supported. This requires a distinct ElasticSearch isntalation for metrics.
+                This component is furthermore unmaintained an use is discouraged.
             </p>
 
             <p>
                 Yet another solution is to have metrics values written in logs, see  See <a href="monitor-logging.html">Monitor via Logging</a>.
             </p>
 
+        </section>
+
+        <section name="Expose metrics for Prometheus collection">
+            <p>To enable James metrics, add <code>extensions.routes</code> to <a href="https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc">webadmin.properties</a> file:</p>
+            <pre><code>extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes</code></pre>
+
+            <p>Connect to james-admin url to test the result:</p>
+
+            <pre><code>http://james-admin-url/metrics</code></pre>
         </section>
 
         <section name="Available metrics">
