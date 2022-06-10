@@ -23,28 +23,25 @@ import java.util
 import java.util.Date
 import java.util.stream.Stream
 
+import com.google.common.collect.ImmutableMap
+import javax.inject.Inject
 import javax.mail.MessagingException
 import javax.mail.internet.MimeMessage
-
-import scala.jdk.CollectionConverters.IterableHasAsJava
-
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED
 import org.apache.james.blob.api.Store.Impl
 import org.apache.james.blob.api.{BlobId, BlobPartsId, BlobStore, BlobStoreDAO, BlobType, BucketName, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
-import org.apache.james.mailrepository.api.{MailKey, MailRepository}
-import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail, PerRecipientHeaders}
-
-import com.google.common.collect.ImmutableMap
-
-import play.api.libs.json.{Format, Json}
-import reactor.core.publisher.{Flux, Mono}
-import scala.jdk.StreamConverters._
-
 import org.apache.james.core.{MailAddress, MaybeSender}
+import org.apache.james.mailrepository.api.{MailKey, MailRepository, MailRepositoryUrl}
 import org.apache.james.server.blob.deduplication.BlobStoreFactory
 import org.apache.james.server.core.MailImpl
+import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail, PerRecipientHeaders}
+import play.api.libs.json.{Format, Json}
+import reactor.core.publisher.{Flux, Mono}
+
+import scala.jdk.CollectionConverters.IterableHasAsJava
+import scala.jdk.StreamConverters._
 
 
 private[blob] object serializers {
@@ -138,12 +135,12 @@ object BlobMailRepository {
   }
 }
 
-class BlobMailRepository(val blobStore: BlobStoreDAO,
+class BlobMailRepository @Inject() (val blobStore: BlobStoreDAO,
                          val blobIdFactory: BlobId.Factory,
-                         val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId]
-                        ) extends MailRepository {
-  private val bucketName: BucketName = BucketName.of("mailMetadata")
-  private val mimeMessageBucketName: BucketName = BucketName.of("mimeMessageData")
+                         val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
+                         val url: MailRepositoryUrl) extends MailRepository {
+  private val bucketName: BucketName = BucketName.of("mailMetadata-" + url.getPath.asString())
+
   import BlobMailRepository._
 
   @throws[MessagingException]
