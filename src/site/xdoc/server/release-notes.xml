@@ -50,6 +50,10 @@
                 <li><b>CVE-2021-40525</b>: Apache James: Sieve file storage vulnerable to path traversal attacks</li>
             </ul>
         </section>
+        <section name="Version 3.7.0">
+            <p>Released March 2021</p>
+            <p><a href="https://james.apache.org/james/update/2022/03/21/james-3.7.0.html">Read the release announce</a>. </p>
+        </section>
         <section name="Version 3.6.0">
             <p>Released March 2021</p>
             <p><a href="https://james.apache.org/james/update/2021/03/16/james-3.6.0.html">Read the release announce</a>. </p>
