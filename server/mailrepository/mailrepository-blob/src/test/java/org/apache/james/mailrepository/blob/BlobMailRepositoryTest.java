@@ -29,7 +29,9 @@ import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 
 class BlobMailRepositoryTest implements MailRepositoryContract {
 
@@ -55,5 +57,16 @@ class BlobMailRepositoryTest implements MailRepositoryContract {
     @Override
     public MailRepository retrieveRepository() {
         return blobMailRepository;
+    }
+
+    @Override
+    public MailRepository retrieveRepository(MailRepositoryPath path) {
+        return blobMailRepository;
+    }
+
+    @Override
+    @Disabled
+    public void mailRepositoriesShouldBeURLIsolated() throws Exception {
+        MailRepositoryContract.super.storeRegularMailShouldNotFailWhenNullSender();
     }
 }

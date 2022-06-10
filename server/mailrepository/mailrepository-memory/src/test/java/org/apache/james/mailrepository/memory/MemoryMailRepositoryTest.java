@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.memory;
 
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.junit.jupiter.api.BeforeEach;
 
 class MemoryMailRepositoryTest implements MailRepositoryContract {
@@ -35,5 +36,10 @@ class MemoryMailRepositoryTest implements MailRepositoryContract {
     @Override
     public MailRepository retrieveRepository() {
         return memoryMailRepository;
+    }
+
+    @Override
+    public MailRepository retrieveRepository(MailRepositoryPath url) {
+        return new MemoryMailRepository();
     }
 }
