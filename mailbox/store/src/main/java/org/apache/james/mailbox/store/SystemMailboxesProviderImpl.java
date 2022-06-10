@@ -35,8 +35,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
@@ -60,7 +58,6 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session))
             .flux()
             .onErrorResume(MailboxNotFoundException.class, e -> searchMessageManagerByMailboxRole(aRole, username));
-
     }
 
     private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {
@@ -70,14 +67,13 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     }
 
     private Flux<MessageManager> searchMessageManagerByMailboxRole(Role aRole, Username username) {
-        MailboxSession session = mailboxManager.createSystemSession(username);
-        ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
+        MailboxSession session = mailboxManager.createSystemSession(username);;
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
             .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))
             .build();
         return mailboxManager.search(mailboxQuery, Minimal, session)
             .map(MailboxMetaData::getPath)
             .filter(path -> hasRole(aRole, path))
-            .map(Throwing.function(loadMailbox).sneakyThrow());
+            .concatMap(path -> mailboxManager.getMailboxReactive(path, session));
     }
 }
