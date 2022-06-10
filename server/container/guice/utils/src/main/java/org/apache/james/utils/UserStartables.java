@@ -19,34 +19,44 @@
 
 package org.apache.james.utils;
 
-import java.io.FileNotFoundException;
+import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.lifecycle.api.Startable;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class ExtensionModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GuiceGenericLoader.class).in(Scopes.SINGLETON);
-
-        install(new UserStartables.Module());
+public class UserStartables implements Startable {
+    public static class Module extends AbstractModule {
+        @ProvidesIntoSet
+        @Singleton
+        InitializationOperation initializationOperations(UserStartables startables) {
+            return InitilizationOperationBuilder
+                .forClass(UserStartables.class)
+                .init(startables::start);
+        }
     }
 
-    @Provides
-    @Singleton
-    ExtensionConfiguration extensionConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("extensions");
-            return ExtensionConfiguration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            LoggerFactory.getLogger(ExtensionModule.class).info("No extensions.properties configuration found. No additional Guice module will be used for instantiating extensions.");
-            return ExtensionConfiguration.DEFAULT;
-        }
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserStartables.class);
+
+    private final GuiceGenericLoader loader;
+    private final ExtensionConfiguration extensionConfiguration;
+
+    @Inject
+    public UserStartables(GuiceGenericLoader loader, ExtensionConfiguration extensionConfiguration) {
+        this.loader = loader;
+        this.extensionConfiguration = extensionConfiguration;
+    }
+
+    public void start() {
+        extensionConfiguration.getStartables()
+            .stream()
+            .map(Throwing.<ClassName, UserDefinedStartable>function(loader::instantiate))
+            .peek(module -> LOGGER.info("Starting {}", module.getClass().getCanonicalName()))
+            .forEach(UserDefinedStartable::start);
     }
 }

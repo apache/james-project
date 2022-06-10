@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      - graphite
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./james/keystore:/root/conf/keystore
+      - ./target/metrics-graphite-3.8.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/metrics-graphite-3.8.0-SNAPSHOT-jar-with-dependencies.jar
+      - ./james/extensions.properties:/root/conf/extensions.properties
+
+  graphite:
+    image: graphiteapp/graphite-statsd
+    container_name: graphite

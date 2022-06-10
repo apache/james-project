@@ -17,36 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james;
 
-import java.io.FileNotFoundException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.slf4j.LoggerFactory;
+import org.apache.james.utils.UserDefinedStartable;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
+public class MyStartable implements UserDefinedStartable {
+    private static final AtomicBoolean CALLED = new AtomicBoolean(false);
 
-public class ExtensionModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GuiceGenericLoader.class).in(Scopes.SINGLETON);
-
-        install(new UserStartables.Module());
+    public static boolean isCalled() {
+        return CALLED.get();
     }
 
-    @Provides
-    @Singleton
-    ExtensionConfiguration extensionConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("extensions");
-            return ExtensionConfiguration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            LoggerFactory.getLogger(ExtensionModule.class).info("No extensions.properties configuration found. No additional Guice module will be used for instantiating extensions.");
-            return ExtensionConfiguration.DEFAULT;
-        }
+    @Override
+    public void start() {
+        CALLED.getAndSet(true);
     }
 }

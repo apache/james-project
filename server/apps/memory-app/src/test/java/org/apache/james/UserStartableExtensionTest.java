@@ -17,36 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james;
 
-import java.io.FileNotFoundException;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.slf4j.LoggerFactory;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.ExtensionConfiguration;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
+class UserStartableExtensionTest {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
+        .server(MemoryJamesServerMain::createServer)
+        .overrideServerModule(binder -> binder.bind(ExtensionConfiguration.class)
+            .toInstance(new ExtensionConfiguration(ImmutableList.of(), ImmutableList.of(new ClassName(MyStartable.class.getName())))))
+        .build();
 
-public class ExtensionModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GuiceGenericLoader.class).in(Scopes.SINGLETON);
 
-        install(new UserStartables.Module());
-    }
-
-    @Provides
-    @Singleton
-    ExtensionConfiguration extensionConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("extensions");
-            return ExtensionConfiguration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            LoggerFactory.getLogger(ExtensionModule.class).info("No extensions.properties configuration found. No additional Guice module will be used for instantiating extensions.");
-            return ExtensionConfiguration.DEFAULT;
-        }
+    @Test
+    void customRoutesShouldBeBound() {
+        assertThat(MyStartable.isCalled()).isTrue();
     }
 }
