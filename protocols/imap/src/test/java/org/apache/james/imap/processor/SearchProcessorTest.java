@@ -204,7 +204,6 @@ public class SearchProcessorTest {
         session.selected(selectedMailbox).block();
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);
-        when(selectedMailbox.getPath()).thenReturn(mailboxPath);
         when(selectedMailbox.flagUpdateUids()).thenReturn(Collections.<MessageUid>emptyList());
         when(selectedMailbox.getRecent()).thenReturn(new ArrayList<>());
     }

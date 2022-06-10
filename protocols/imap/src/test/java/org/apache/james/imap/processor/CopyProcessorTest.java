@@ -101,7 +101,6 @@ class CopyProcessorTest {
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
@@ -133,7 +132,6 @@ class CopyProcessorTest {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(false));
 
@@ -156,7 +154,6 @@ class CopyProcessorTest {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.error(new MailboxException()));
 

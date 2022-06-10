@@ -239,11 +239,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public MailboxPath getPath() throws MailboxException {
-        return mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath();
-    }
-
-    @Override
     public Mono<MailboxPath> getPathReactive() {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
             .map(Throwing.function(MessageManager::getMailboxPath));
