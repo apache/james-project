@@ -73,9 +73,6 @@ Read this page for [explanations on metrics](metrics.html).
 
 Here is a list of [available metric boards](https://github.com/apache/james-project/tree/master/grafana-reporting)
 
-Configuration of [ElasticSearch metric exporting](config-elasticsearch.html) allows a direct display within 
-[Grafana](https://grafana.com/)
-
 Monitoring these graphs on a regular basis allows diagnosing early some performance issues. 
 
 If some metrics seem abnormally slow despite in depth database performance tuning, feedback is appreciated as well on 
