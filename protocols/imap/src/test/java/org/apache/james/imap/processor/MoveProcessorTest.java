@@ -114,7 +114,6 @@ public class MoveProcessorTest {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         when(selectedMailbox.getMailboxId()).thenReturn(TestId.of(234));
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
@@ -147,7 +146,6 @@ public class MoveProcessorTest {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(false));
 
@@ -169,7 +167,6 @@ public class MoveProcessorTest {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
-        when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox).block();
         when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.error(new MailboxException()));
 

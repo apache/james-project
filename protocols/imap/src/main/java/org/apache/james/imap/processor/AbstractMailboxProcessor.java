@@ -398,13 +398,6 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         return factory;
     }
 
-    protected Optional<MessageManager> getSelectedMailbox(ImapSession session) throws MailboxException {
-        return Optional.ofNullable(session.getSelected())
-            .map(Throwing.<SelectedMailbox, MessageManager>function(selectedMailbox ->
-                getMailboxManager().getMailbox(selectedMailbox.getMailboxId(), session.getMailboxSession()))
-                .sneakyThrow());
-    }
-
     protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session, Mono<MessageManager> ifEmpty) {
         return Optional.ofNullable(session.getSelected())
             .map(selectedMailbox -> Mono.from(getMailboxManager()

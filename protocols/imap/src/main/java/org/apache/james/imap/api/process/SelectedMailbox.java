@@ -28,7 +28,6 @@ import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -89,11 +88,6 @@ public interface SelectedMailbox {
      * Return the count of all existing uids
      */
     long existsCount();
-
-    /**
-     * Return the path of the selected Mailbox
-     */
-    MailboxPath getPath() throws MailboxException;
 
     Mono<MailboxPath> getPathReactive();
 
