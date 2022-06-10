@@ -37,7 +37,9 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -70,6 +72,19 @@ class CassandraMailRepositoryTest {
 
             cassandraMailRepository = new CassandraMailRepository(URL,
                 keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+        }
+
+        @Override
+        public MailRepository retrieveRepository(MailRepositoryPath url) {
+            CassandraCluster cassandra = CassandraMailRepositoryTest.cassandraCluster.getCassandraCluster();
+
+            CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
+                .passthrough();
+
+           return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -120,6 +135,19 @@ class CassandraMailRepositoryTest {
 
             cassandraMailRepository = new CassandraMailRepository(URL,
                 keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+        }
+
+        @Override
+        public MailRepository retrieveRepository(MailRepositoryPath url) {
+            CassandraCluster cassandra = CassandraMailRepositoryTest.cassandraCluster.getCassandraCluster();
+
+            CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
+                .deduplication();
+
+            return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override

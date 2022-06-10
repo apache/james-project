@@ -31,6 +31,7 @@ import org.apache.james.junit.categories.Unstable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -64,6 +65,11 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
     }
 
     @Override
+    public MailRepository retrieveRepository(MailRepositoryPath url) throws Exception {
+        return mailRepository;
+    }
+
+    @Override
     public MailRepository retrieveRepository() {
         return mailRepository;
     }
@@ -75,6 +81,12 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
         ds.setUsername("james");
         ds.setPassword("james");
         return ds;
+    }
+
+    @Override
+    @Disabled
+    public void mailRepositoriesShouldBeURLIsolated() throws Exception {
+        MailRepositoryContract.super.storeRegularMailShouldNotFailWhenNullSender();
     }
 
     @Override

@@ -38,6 +38,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.DiscreteDistribution;
@@ -49,6 +50,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -102,6 +104,8 @@ public interface MailRepositoryContract {
 
     MailRepository retrieveRepository() throws Exception;
 
+    MailRepository retrieveRepository(MailRepositoryPath path) throws Exception;
+
     @Test
     default void sizeShouldReturnZeroWhenEmpty() throws Exception {
         MailRepository testee = retrieveRepository();
@@ -116,6 +120,20 @@ public interface MailRepositoryContract {
         testee.store(createMail(MAIL_2));
 
         assertThat(testee.size()).isEqualTo(2L);
+    }
+
+    @Test
+    default void mailRepositoriesShouldBeURLIsolated() throws Exception {
+        MailRepository testeeA = retrieveRepository(MailRepositoryPath.from("var/mail/error"));
+        MailRepository testeeB = retrieveRepository(MailRepositoryPath.from("var/mail/spam"));
+
+        testeeB.store(createMail(MAIL_1));
+        testeeB.store(createMail(MAIL_2));
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(testeeA.size()).isEqualTo(0);
+            softly.assertThat(testeeB.size()).isEqualTo(2);
+        }));
     }
 
     @Test

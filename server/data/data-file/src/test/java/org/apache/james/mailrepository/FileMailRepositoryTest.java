@@ -26,6 +26,9 @@ import java.io.IOException;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,23 +37,31 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class FileMailRepositoryTest {
-
     public abstract class GenericFileMailRepositoryTest implements MailRepositoryContract {
         private FileMailRepository mailRepository;
-        private MockFileSystem filesystem;
+        protected MockFileSystem filesystem;
 
         @BeforeEach
         void init() throws Exception {
             filesystem = new MockFileSystem();
             mailRepository = new FileMailRepository();
             mailRepository.setFileSystem(filesystem);
-            mailRepository.configure(getConfiguration());
+            mailRepository.configure(getConfiguration(MailRepositoryUrl.from("file://target/var/mailRepository")));
             mailRepository.init();
         }
 
-        protected BaseHierarchicalConfiguration getConfiguration() {
+        @Override
+        public MailRepository retrieveRepository(MailRepositoryPath url) throws Exception {
+            FileMailRepository mailRepository = new FileMailRepository();
+            mailRepository.setFileSystem(filesystem);
+            mailRepository.configure(getConfiguration(MailRepositoryUrl.fromPathAndProtocol(new Protocol("file"), url)));
+            mailRepository.init();
+            return mailRepository;
+        }
+
+        protected BaseHierarchicalConfiguration getConfiguration(MailRepositoryUrl url) {
             BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-            configuration.addProperty("[@destinationURL]", "file://target/var/mailRepository");
+            configuration.addProperty("[@destinationURL]", url.asString());
             return withConfigurationOptions(configuration);
         }
 
@@ -81,7 +92,7 @@ public class FileMailRepositoryTest {
 
     @Nested
     @DisplayName("Default configuration")
-    public class AccessTest {
+    class AccessTest {
         private FileMailRepository mailRepository;
         private MockFileSystem filesystem;
 
