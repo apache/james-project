@@ -31,7 +31,6 @@ import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
-import scala.util.Try
 
 object MailboxValidation {
   private def retrieveMailboxName(mailboxPath: MailboxPath, pathDelimiter: Char): Either[MailboxNameException, MailboxName] =
@@ -174,28 +173,24 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
       MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
         case Left(error) => SMono.error(error)
         case scala.Right(mailboxValidation) =>
-          SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath))
-            .map(quotas => {
+
+          SMono.zip(array => (array(0).asInstanceOf[Option[MailboxId]],
+              array(1).asInstanceOf[Quotas]),
+              getParentId(messageManager, mailboxSession),
+              SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath)))
+            .map(tuple2 => {
               val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
               val role: Option[Role] = getRole(messageManager.getMailboxPath, mailboxSession)
               val sortOrder: SortOrder = getSortOrder(role)
               val rights: Rights = getRights(resolvedACL)
               val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
-              val parentId: Option[MailboxId] = getParentPath(messageManager.getMailboxPath, mailboxSession)
-                .flatMap(parentPath => {
-                  Try(Some(mailboxManager.getMailbox(parentPath, mailboxSession)))
-                    .recover({
-                      case _: MailboxNotFoundException => None
-                    }).get
-                })
-                .map(_.getId)
               val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
               val isSubscribed: IsSubscribed = subscriptions.isSubscribed(messageManager.getMailboxPath.getName)
 
               Mailbox(
                 id = id,
                 name = mailboxValidation.mailboxName,
-                parentId = parentId,
+                parentId = tuple2._1,
                 role = role,
                 sortOrder = sortOrder,
                 unreadEmails = mailboxValidation.unreadEmails,
@@ -205,7 +200,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
                 myRights = myRights,
                 namespace = namespace,
                 rights = rights,
-                quotas = quotas,
+                quotas = tuple2._2,
                 isSubscribed = isSubscribed)
             })
       }
@@ -213,4 +208,15 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
       case error: Exception => SMono.error(error)
     }
   }
+
+  private def getParentId(messageManager: MessageManager, mailboxSession: MailboxSession): SMono[Option[MailboxId]] =
+    getParentPath(messageManager.getMailboxPath, mailboxSession)
+      .map(parentPath => SMono(mailboxManager.getMailboxReactive(parentPath, mailboxSession))
+        .map(_.getId)
+        .map(Some(_))
+        .onErrorResume {
+          case _: MailboxNotFoundException => SMono.just(None)
+          case e => SMono.error(e)
+        })
+      .getOrElse(SMono.just(None))
 }
