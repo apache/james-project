@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.task.Task;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ public class MailboxMergingTaskRunner {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all(), Limit.unlimited())
             .map(CassandraMessageMetadata::getComposedMessageId)
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .map(messageId -> moveMessage(newMailboxId, messageId, session, context))
+            .concatMap(messageId -> Mono.fromCallable(() -> moveMessage(newMailboxId, messageId, session, context)).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
             .reduce(Task.Result.COMPLETED, Task::combine)
             .block();
     }

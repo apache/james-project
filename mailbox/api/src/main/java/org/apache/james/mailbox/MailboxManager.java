@@ -412,6 +412,8 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
 
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    Publisher<Boolean> hasChildrenReactive(MailboxPath mailboxPath, MailboxSession session);
+
     default <T> Mono<T> manageProcessing(Mono<T> toBeWrapped, MailboxSession mailboxSession) {
         return Mono.<T, Runnable>using(
             () -> {

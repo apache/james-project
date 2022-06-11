@@ -162,6 +162,8 @@ class KeyRegistrationHandler {
     private Mono<Void> registerIfNeeded(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
         if (registration.isFirstListener()) {
             return registrationBinder.bind(key)
+                // Bind is potentially blocking
+                .subscribeOn(Schedulers.boundedElastic())
                 .timeout(TOPOLOGY_CHANGES_TIMEOUT)
                 .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()));
         }

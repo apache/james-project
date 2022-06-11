@@ -87,8 +87,7 @@ class RestoreService {
             messageContent(deletedMessage),
             inputStream -> Mono.usingWhen(
                 Mono.fromCallable(() -> ByteSourceContent.of(inputStream)),
-                content -> Mono.fromCallable(() -> restoreMailboxManager.appendMessage(AppendCommand.builder()
-                        .build(content), session).getId())
+                content -> Mono.from(restoreMailboxManager.appendMessageReactive(AppendCommand.builder().build(content), session))
                     .map(any -> RESTORE_SUCCEED),
                 content -> Mono.fromRunnable(Throwing.runnable(content::close))),
             stream -> Mono.fromRunnable(Throwing.runnable(stream::close)))
