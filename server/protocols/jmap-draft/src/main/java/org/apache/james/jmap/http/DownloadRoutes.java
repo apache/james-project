@@ -48,7 +48,6 @@ import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
 import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
-import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
@@ -65,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
@@ -212,20 +212,17 @@ public class DownloadRoutes implements JMAPRoutes {
     @VisibleForTesting
     Mono<Void> download(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServerResponse response) {
         String blobId = downloadPath.getBlobId();
-        try {
-            Blob blob = blobManager.retrieve(BlobId.of(blobId), mailboxSession);
 
-            return Mono.usingWhen(
+        return Mono.from(blobManager.retrieve(ImmutableList.of(BlobId.of(blobId)), mailboxSession))
+            .flatMap(blob -> Mono.usingWhen(
                 Mono.fromCallable(blob::getStream),
                 stream -> downloadBlob(downloadPath.getName(), response, blob.getSize(), blob.getContentType(), stream),
-                stream -> Mono.fromRunnable(Throwing.runnable(stream::close).sneakyThrow())
-            );
-        } catch (BlobNotFoundException e) {
-            LOGGER.info("Attachment '{}' not found", blobId, e);
-            return response.status(NOT_FOUND).send();
-        } catch (MailboxException e) {
-            throw new InternalErrorException("Error while downloading", e);
-        }
+                stream -> Mono.fromRunnable(Throwing.runnable(stream::close).sneakyThrow())))
+            .switchIfEmpty(Mono.error(() -> new BlobNotFoundException(BlobId.of(blobId))))
+            .onErrorResume(BlobNotFoundException.class, e -> {
+                LOGGER.info("Attachment '{}' not found", blobId, e);
+                return response.status(NOT_FOUND).send();
+            }).onErrorResume(MailboxException.class, e -> Mono.error(new InternalErrorException("Error while downloading", e)));
     }
 
     private Mono<Void> downloadBlob(Optional<String> optionalName, HttpServerResponse response, long blobSize, ContentType blobContentType, InputStream stream) {

@@ -25,13 +25,10 @@ import static org.mockito.Mockito.mock;
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
-import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableList;
 
 class ClearMailRepositoryTaskTest {
 
@@ -39,10 +36,10 @@ class ClearMailRepositoryTaskTest {
 
     private static final String SERIALIZED = "{\"type\":\"clear-mail-repository\",\"mailRepositoryPath\":\"a\"}";
     private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clear-mail-repository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private static final ClearMailRepositoryTask.Factory FACTORY = new ClearMailRepositoryTask.Factory(mock(MailRepositoryStore.class));
-    private static final ImmutableList<MailRepository> MAIL_REPOSITORIES = ImmutableList.of();
+    private static final MailRepositoryStore MAIL_REPOSITORY_STORE = mock(MailRepositoryStore.class);
+    private static final ClearMailRepositoryTask.Factory FACTORY = new ClearMailRepositoryTask.Factory(MAIL_REPOSITORY_STORE);
     private static final MailRepositoryPath MAIL_REPOSITORY_PATH = MailRepositoryPath.from("a");
-    private static final ClearMailRepositoryTask TASK = new ClearMailRepositoryTask(MAIL_REPOSITORIES, MAIL_REPOSITORY_PATH);
+    private static final ClearMailRepositoryTask TASK = new ClearMailRepositoryTask(MAIL_REPOSITORY_STORE, MAIL_REPOSITORY_PATH);
     private static final long INITIAL_COUNT = 0L;
     private static final long REMAINING_COUNT = 10L;
 

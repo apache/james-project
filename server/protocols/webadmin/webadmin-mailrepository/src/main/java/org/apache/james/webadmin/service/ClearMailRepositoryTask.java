@@ -21,11 +21,9 @@ package org.apache.james.webadmin.service;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -35,7 +33,6 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 public class ClearMailRepositoryTask implements Task {
 
@@ -49,10 +46,8 @@ public class ClearMailRepositoryTask implements Task {
             this.mailRepositoryStore = mailRepositoryStore;
         }
 
-        public ClearMailRepositoryTask create(MailRepositoryPath mailRepositoryPath) throws MailRepositoryStore.MailRepositoryStoreException {
-            List<MailRepository> mailRepositories = mailRepositoryStore.getByPath(mailRepositoryPath)
-                .collect(ImmutableList.toImmutableList());
-            return new ClearMailRepositoryTask(mailRepositories, mailRepositoryPath);
+        public ClearMailRepositoryTask create(MailRepositoryPath mailRepositoryPath) {
+            return new ClearMailRepositoryTask(mailRepositoryStore, mailRepositoryPath);
         }
     }
 
@@ -101,12 +96,12 @@ public class ClearMailRepositoryTask implements Task {
         }
     }
 
-    private final List<MailRepository> mailRepositories;
+    private final MailRepositoryStore mailRepositoryStore;
     private final MailRepositoryPath mailRepositoryPath;
     private final long initialCount;
 
-    public ClearMailRepositoryTask(List<MailRepository> mailRepositories, MailRepositoryPath path) {
-        this.mailRepositories = mailRepositories;
+    public ClearMailRepositoryTask(MailRepositoryStore mailRepositoryStore, MailRepositoryPath path) {
+        this.mailRepositoryStore = mailRepositoryStore;
         this.mailRepositoryPath = path;
         this.initialCount = getRemainingSize();
     }
@@ -116,14 +111,15 @@ public class ClearMailRepositoryTask implements Task {
         try {
             removeAllInAllRepositories();
             return Result.COMPLETED;
-        } catch (MessagingException e) {
+        } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while clearing repository", e);
             return Result.PARTIAL;
         }
     }
 
-    private void removeAllInAllRepositories() throws MessagingException {
-        mailRepositories.forEach(Throwing.consumer(MailRepository::removeAll).sneakyThrow());
+    private void removeAllInAllRepositories() throws MailRepositoryStore.MailRepositoryStoreException {
+        mailRepositoryStore.getByPath(mailRepositoryPath)
+            .forEach(Throwing.consumer(MailRepository::removeAll).sneakyThrow());
     }
 
     @Override
@@ -141,10 +137,13 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     public long getRemainingSize() {
-        return mailRepositories
-            .stream()
-            .map(Throwing.function(MailRepository::size).sneakyThrow())
-            .mapToLong(Long::valueOf)
-            .sum();
+        try {
+            return mailRepositoryStore.getByPath(mailRepositoryPath)
+                .map(Throwing.function(MailRepository::size).sneakyThrow())
+                .mapToLong(Long::valueOf)
+                .sum();
+        } catch (MailRepositoryStore.MailRepositoryStoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

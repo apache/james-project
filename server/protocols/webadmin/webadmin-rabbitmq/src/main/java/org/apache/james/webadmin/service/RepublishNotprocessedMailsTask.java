@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
 import org.apache.james.task.Task;
@@ -67,22 +68,29 @@ public class RepublishNotprocessedMailsTask implements Task {
 
     public static final TaskType TYPE = TaskType.of("republish-not-processed-mails");
 
+    private final MailQueueName name;
+    private final ClearMailQueueTask.MailQueueFactory factory;
     private final Instant olderThan;
-    private final RabbitMQMailQueue mailQueue;
     private final AtomicInteger nbRequeuedMails;
 
-    public RepublishNotprocessedMailsTask(RabbitMQMailQueue mailQueue, Instant olderThan) {
+    public RepublishNotprocessedMailsTask(MailQueueName name, ClearMailQueueTask.MailQueueFactory factory, Instant olderThan) {
+        this.name = name;
+        this.factory = factory;
         this.olderThan = olderThan;
-        this.mailQueue = mailQueue;
         this.nbRequeuedMails = new AtomicInteger(0);
     }
 
     @Override
     public Result run() {
-        mailQueue.republishNotProcessedMails(olderThan)
-            .doOnNext(mailName -> nbRequeuedMails.getAndIncrement())
-            .then()
-            .block();
+        try (RabbitMQMailQueue queue = (RabbitMQMailQueue) factory.create(name)) {
+            queue.republishNotProcessedMails(olderThan)
+                .doOnNext(mailName -> nbRequeuedMails.getAndIncrement())
+                .then()
+                .block();
+        } catch (MailQueue.MailQueueException e) {
+            LOGGER.error("Error when republishing mails", e);
+            return Result.PARTIAL;
+        }
 
         return Result.COMPLETED;
     }
@@ -94,7 +102,7 @@ public class RepublishNotprocessedMailsTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(mailQueue.getName(), olderThan, nbRequeuedMails.get(), Clock.systemUTC().instant()));
+        return Optional.of(new AdditionalInformation(name, olderThan, nbRequeuedMails.get(), Clock.systemUTC().instant()));
     }
 
     public Instant getOlderThan() {
@@ -102,6 +110,6 @@ public class RepublishNotprocessedMailsTask implements Task {
     }
 
     public MailQueueName getMailQueue() {
-        return mailQueue.getName();
+        return name;
     }
 }

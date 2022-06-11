@@ -18,8 +18,6 @@
 package org.apache.james.webadmin.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +29,7 @@ import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class RepublishNotprocessedMailsTaskTest {
@@ -41,17 +40,23 @@ class RepublishNotprocessedMailsTaskTest {
     private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"republish-not-processed-mails\",\"mailQueue\":\"anyQueue\", \"olderThan\": \"" + OLDER_THAN + "\" ,\"nbRequeuedMails\":12,\"timestamp\":\"" + NOW.toString() + "\"}";
     private static final MailQueueName QUEUE_NAME = MailQueueName.of("anyQueue");
 
-    @Test
-    void taskShouldBeSerializable() throws Exception {
+    private ClearMailQueueTask.MailQueueFactory queueFactory;
+
+    @BeforeEach
+    void setUp() {
         RabbitMQMailQueueFactory mockedQueueFactory = mock(RabbitMQMailQueueFactory.class);
         RabbitMQMailQueue mockedQueue = mock(RabbitMQMailQueue.class);
 
         when(mockedQueue.getName()).thenReturn(QUEUE_NAME);
         when(mockedQueueFactory.getQueue(QUEUE_NAME)).thenReturn(Optional.of(mockedQueue));
+        queueFactory = mock(ClearMailQueueTask.MailQueueFactory.class);
+    }
 
-        RepublishNotprocessedMailsTask task = new RepublishNotprocessedMailsTask(mockedQueue, OLDER_THAN);
+    @Test
+    void taskShouldBeSerializable() throws Exception {
+        RepublishNotprocessedMailsTask task = new RepublishNotprocessedMailsTask(QUEUE_NAME, queueFactory, OLDER_THAN);
 
-        JsonSerializationVerifier.dtoModule(RepublishNotProcessedMailsTaskDTO.module(mockedQueueFactory))
+        JsonSerializationVerifier.dtoModule(RepublishNotProcessedMailsTaskDTO.module(queueFactory))
             .bean(task)
             .json(SERIALIZED)
             .verify();
@@ -59,33 +64,11 @@ class RepublishNotprocessedMailsTaskTest {
 
     @Test
     void taskShouldBeDeserializable() throws Exception {
-        RabbitMQMailQueueFactory mockedQueueFactory = mock(RabbitMQMailQueueFactory.class);
-        RabbitMQMailQueue mockedQueue = mock(RabbitMQMailQueue.class);
-
-        when(mockedQueue.getName()).thenReturn(QUEUE_NAME);
-        when(mockedQueueFactory.getQueue(QUEUE_NAME)).thenReturn(Optional.of(mockedQueue));
-
-        RepublishNotprocessedMailsTask task = new RepublishNotprocessedMailsTask(mockedQueue, OLDER_THAN);
-        JsonSerializationVerifier.dtoModule(RepublishNotProcessedMailsTaskDTO.module(mockedQueueFactory))
+        RepublishNotprocessedMailsTask task = new RepublishNotprocessedMailsTask(QUEUE_NAME, queueFactory, OLDER_THAN);
+        JsonSerializationVerifier.dtoModule(RepublishNotProcessedMailsTaskDTO.module(queueFactory))
             .bean(task)
             .json(SERIALIZED)
             .verify();
-    }
-
-    @Test
-    void taskDeserializationFromUnknownQueueNameShouldThrow() {
-        RabbitMQMailQueueFactory mockedQueueFactory = mock(RabbitMQMailQueueFactory.class);
-        RabbitMQMailQueue mockedQueue = mock(RabbitMQMailQueue.class);
-
-        when(mockedQueue.getName()).thenReturn(QUEUE_NAME);
-        when(mockedQueueFactory.getQueue(QUEUE_NAME)).thenReturn(Optional.empty());
-
-        RepublishNotprocessedMailsTask task = new RepublishNotprocessedMailsTask(mockedQueue, OLDER_THAN);
-        assertThatThrownBy(() -> JsonSerializationVerifier.dtoModule(RepublishNotProcessedMailsTaskDTO.module(mockedQueueFactory))
-            .bean(task)
-            .json(SERIALIZED)
-            .verify())
-            .isInstanceOf(RepublishNotProcessedMailsTaskDTO.UnknownMailQueueException.class);
     }
 
     @Test

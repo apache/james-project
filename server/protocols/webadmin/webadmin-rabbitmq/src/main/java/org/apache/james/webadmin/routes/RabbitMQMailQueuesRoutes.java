@@ -40,6 +40,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.RepublishNotprocessedMailsTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
@@ -91,8 +92,13 @@ public class RabbitMQMailQueuesRoutes implements Routes {
     }
 
     private Task republishNotProcessedMails(Request request) {
-        RabbitMQMailQueue mailQueue = getMailQueue(MailQueueName.of(request.params(MAIL_QUEUE_NAME)));
-        return new RepublishNotprocessedMailsTask(mailQueue, getOlderThan(request));
+        MailQueueName mailQueue = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
+        getMailQueue(mailQueue);
+        return new RepublishNotprocessedMailsTask(mailQueue,
+            name -> mailQueueFactory
+                .getQueue(name)
+                .orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(name.asString())),
+            getOlderThan(request));
     }
 
 

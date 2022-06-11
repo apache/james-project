@@ -25,11 +25,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
 import org.apache.james.jmap.draft.methods.BlobManager;
-import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -37,16 +38,17 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Test;
 
+import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerResponse;
 
 public class DownloadRoutesTest {
 
     @Test
-    public void downloadShouldFailWhenUnknownErrorOnAttachmentManager() throws Exception {
+    public void downloadShouldFailWhenUnknownErrorOnAttachmentManager() {
         MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("User"));
         BlobManager mockedBlobManager = mock(BlobManager.class);
-        when(mockedBlobManager.retrieve(any(BlobId.class), eq(mailboxSession)))
-            .thenThrow(new MailboxException());
+        when(mockedBlobManager.retrieve(any(List.class), eq(mailboxSession)))
+            .thenReturn(Mono.error(new MailboxException()));
         Authenticator mockedAuthFilter = mock(Authenticator.class);
         SimpleTokenFactory nullSimpleTokenFactory = null;
 

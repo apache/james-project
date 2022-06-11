@@ -41,6 +41,18 @@ public class RepublishNotProcessedMailsTaskDTO implements TaskDTO {
         return DTOModule
             .forDomainObject(RepublishNotprocessedMailsTask.class)
             .convertToDTO(RepublishNotProcessedMailsTaskDTO.class)
+            .toDomainObjectConverter(dto -> dto.fromDTO(name -> mailQueueFactory
+                .getQueue(name)
+                .orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(name.asString()))))
+            .toDTOConverter(RepublishNotProcessedMailsTaskDTO::toDTO)
+            .typeName(RepublishNotprocessedMailsTask.TYPE.asString())
+            .withFactory(TaskDTOModule::new);
+    }
+
+    public static TaskDTOModule<RepublishNotprocessedMailsTask, RepublishNotProcessedMailsTaskDTO> module(ClearMailQueueTask.MailQueueFactory mailQueueFactory) {
+        return DTOModule
+            .forDomainObject(RepublishNotprocessedMailsTask.class)
+            .convertToDTO(RepublishNotProcessedMailsTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
             .toDTOConverter(RepublishNotProcessedMailsTaskDTO::toDTO)
             .typeName(RepublishNotprocessedMailsTask.TYPE.asString())
@@ -61,13 +73,12 @@ public class RepublishNotProcessedMailsTaskDTO implements TaskDTO {
         this.olderThan = olderThan;
     }
 
-    public RepublishNotprocessedMailsTask fromDTO(MailQueueFactory<RabbitMQMailQueue> mailQueueFactory) {
+    public RepublishNotprocessedMailsTask fromDTO(ClearMailQueueTask.MailQueueFactory mailQueueFactory) {
         MailQueueName requestedMailQueueName = MailQueueName.of(mailQueue);
-        RabbitMQMailQueue queue = mailQueueFactory
-            .getQueue(requestedMailQueueName)
-            .orElseThrow(() -> new UnknownMailQueueException(requestedMailQueueName));
 
-        return new RepublishNotprocessedMailsTask(queue, olderThan);
+        return new RepublishNotprocessedMailsTask(requestedMailQueueName,
+            mailQueueFactory,
+            olderThan);
     }
 
     @Override

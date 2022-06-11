@@ -1015,4 +1015,11 @@ public class StoreMailboxManager implements MailboxManager {
         return block(mapper.findMailboxByPath(mailboxPath)
             .flatMap(mailbox -> mapper.hasChildren(mailbox, session.getPathDelimiter())));
     }
+
+    @Override
+    public Publisher<Boolean> hasChildrenReactive(MailboxPath mailboxPath, MailboxSession session) {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return mapper.findMailboxByPath(mailboxPath)
+            .flatMap(mailbox -> mapper.hasChildren(mailbox, session.getPathDelimiter()));
+    }
 }

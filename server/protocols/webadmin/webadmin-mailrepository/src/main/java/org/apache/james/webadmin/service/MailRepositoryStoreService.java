@@ -110,7 +110,8 @@ public class MailRepositoryStoreService {
     }
 
     public Task createClearMailRepositoryTask(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        return new ClearMailRepositoryTask(getRepositories(path).collect(ImmutableList.toImmutableList()), path);
+        getRepositories(path);
+        return new ClearMailRepositoryTask(mailRepositoryStore, path);
     }
 
     public Stream<MailRepository> getRepositories(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {
