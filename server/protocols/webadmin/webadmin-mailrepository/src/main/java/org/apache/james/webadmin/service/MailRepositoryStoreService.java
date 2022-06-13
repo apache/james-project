@@ -36,6 +36,7 @@ import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
@@ -50,6 +51,8 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 public class MailRepositoryStoreService {
     private final MailRepositoryStore mailRepositoryStore;
@@ -80,10 +83,10 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<Long> size(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {
-        return Optional.of(getRepositories(path)
-                .map(Throwing.function(MailRepository::size).sneakyThrow())
-                .mapToLong(Long::valueOf)
-                .sum());
+        return Flux.fromStream(getRepositories(path))
+            .flatMap(MailRepository::sizeReactive, ReactorUtils.DEFAULT_CONCURRENCY)
+            .reduce(0L, Long::sum)
+            .blockOptional();
     }
 
     public Optional<MailDto> retrieveMail(MailRepositoryPath path, MailKey mailKey, Set<AdditionalField> additionalAttributes) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException, InaccessibleFieldException {

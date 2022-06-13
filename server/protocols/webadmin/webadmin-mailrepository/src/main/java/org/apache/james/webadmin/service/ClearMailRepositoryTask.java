@@ -34,6 +34,7 @@ import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ClearMailRepositoryTask implements Task {
@@ -109,7 +110,7 @@ public class ClearMailRepositoryTask implements Task {
 
     @Override
     public Result run() {
-        initialCount = getRemainingSize();
+        initialCount = getRemainingSize().block();
         try {
             removeAllInAllRepositories();
             return Result.COMPLETED;
@@ -135,16 +136,15 @@ public class ClearMailRepositoryTask implements Task {
 
     @Override
     public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
-        return Mono.fromCallable(this::getRemainingSize)
+        return getRemainingSize()
             .map(remainingSize -> new AdditionalInformation(mailRepositoryPath, initialCount, remainingSize, Clock.systemUTC().instant()));
     }
 
-    public long getRemainingSize() {
+    public Mono<Long> getRemainingSize() {
         try {
-            return mailRepositoryStore.getByPath(mailRepositoryPath)
-                .map(Throwing.function(MailRepository::size).sneakyThrow())
-                .mapToLong(Long::valueOf)
-                .sum();
+            return Flux.fromStream(mailRepositoryStore.getByPath(mailRepositoryPath))
+                .flatMap(MailRepository::sizeReactive)
+                .reduce(0L, Long::sum);
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             throw new RuntimeException(e);
         }
