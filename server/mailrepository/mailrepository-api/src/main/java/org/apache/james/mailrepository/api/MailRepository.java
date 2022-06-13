@@ -25,6 +25,9 @@ import java.util.Iterator;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Interface for a Repository to store Mails.
@@ -35,6 +38,10 @@ public interface MailRepository {
      * @return Number of mails stored in that repository
      */
     long size() throws MessagingException;
+
+    default Publisher<Long> sizeReactive() {
+        return Mono.fromCallable(this::size);
+    }
 
     /**
      * Stores a message in this repository.
