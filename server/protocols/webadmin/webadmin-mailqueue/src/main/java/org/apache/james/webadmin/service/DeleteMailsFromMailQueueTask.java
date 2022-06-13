@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
@@ -31,10 +33,14 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Booleans;
+
+import reactor.core.publisher.Mono;
 
 public class DeleteMailsFromMailQueueTask implements Task {
 
@@ -177,14 +183,17 @@ public class DeleteMailsFromMailQueueTask implements Task {
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return this.lastAdditionalInformation
-            .or(() -> this.queue.map(queue ->
-                new AdditionalInformation(
-                    queueName,
-                    initialCount.get(),
-                    getRemainingSize(queue), optionalSender,
-                    optionalName, optionalRecipient, Clock.systemUTC().instant())));
+    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+        return Mono.justOrEmpty(lastAdditionalInformation)
+            .switchIfEmpty(Mono.fromCallable(() -> this.queue.map(queue ->
+                    new AdditionalInformation(
+                        queueName,
+                        initialCount.get(),
+                        getRemainingSize(queue), optionalSender,
+                        optionalName, optionalRecipient, Clock.systemUTC().instant())))
+                .handle(publishIfPresent())
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            );
     }
 
     public long getRemainingSize(ManageableMailQueue queue) {

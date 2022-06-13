@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,10 +32,14 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Mono;
 
 public class ClearMailQueueTask implements Task {
 
@@ -122,9 +128,11 @@ public class ClearMailQueueTask implements Task {
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return lastAdditionalInformation
-            .or(() -> queue.map(q -> new AdditionalInformation(queueName, initialCount.get(), getRemainingSize(q), Clock.systemUTC().instant())));
+    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+        return Mono.justOrEmpty(lastAdditionalInformation)
+            .switchIfEmpty(Mono.fromCallable(() -> queue.map(q -> new AdditionalInformation(queueName, initialCount.get(), getRemainingSize(q), Clock.systemUTC().instant())))
+                .handle(publishIfPresent())
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
     }
 
     MailQueueName getQueueName() {

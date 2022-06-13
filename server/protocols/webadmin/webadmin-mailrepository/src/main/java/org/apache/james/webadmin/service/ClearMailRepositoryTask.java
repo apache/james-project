@@ -21,7 +21,6 @@ package org.apache.james.webadmin.service;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -31,8 +30,11 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
 
 public class ClearMailRepositoryTask implements Task {
 
@@ -132,8 +134,9 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(mailRepositoryPath, initialCount, getRemainingSize(), Clock.systemUTC().instant()));
+    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+        return Mono.fromCallable(this::getRemainingSize)
+            .map(remainingSize -> new AdditionalInformation(mailRepositoryPath, initialCount, remainingSize, Clock.systemUTC().instant()));
     }
 
     public long getRemainingSize() {
