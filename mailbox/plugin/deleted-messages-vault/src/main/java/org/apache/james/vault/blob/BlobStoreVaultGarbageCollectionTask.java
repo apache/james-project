@@ -37,8 +37,6 @@ import org.apache.james.task.TaskType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import reactor.core.publisher.Flux;
-
 public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
@@ -69,10 +67,9 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     }
 
     static final TaskType TYPE = TaskType.of("deleted-messages-blob-store-based-garbage-collection");
-
-    private final Flux<BucketName> retentionOperation;
-    private final ZonedDateTime beginningOfRetentionPeriod;
     private final Collection<BucketName> deletedBuckets;
+    private final BlobStoreDeletedMessageVault deletedMessageVault;
+    private final ZonedDateTime beginningOfRetentionPeriod;
 
     public static class Factory {
         private final BlobStoreDeletedMessageVault deletedMessageVault;
@@ -89,13 +86,13 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     private BlobStoreVaultGarbageCollectionTask(BlobStoreDeletedMessageVault deletedMessageVault) {
         this.beginningOfRetentionPeriod = deletedMessageVault.getBeginningOfRetentionPeriod();
-        this.retentionOperation = deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod);
+        this.deletedMessageVault = deletedMessageVault;
         this.deletedBuckets = new ConcurrentLinkedQueue<>();
     }
 
     @Override
     public Result run() {
-        retentionOperation
+        deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod)
             .doOnNext(deletedBuckets::add)
             .then()
             .block();
