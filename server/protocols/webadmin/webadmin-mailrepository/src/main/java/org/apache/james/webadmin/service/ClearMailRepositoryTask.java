@@ -98,16 +98,16 @@ public class ClearMailRepositoryTask implements Task {
 
     private final MailRepositoryStore mailRepositoryStore;
     private final MailRepositoryPath mailRepositoryPath;
-    private final long initialCount;
+    private long initialCount = 0;
 
     public ClearMailRepositoryTask(MailRepositoryStore mailRepositoryStore, MailRepositoryPath path) {
         this.mailRepositoryStore = mailRepositoryStore;
         this.mailRepositoryPath = path;
-        this.initialCount = getRemainingSize();
     }
 
     @Override
     public Result run() {
+        initialCount = getRemainingSize();
         try {
             removeAllInAllRepositories();
             return Result.COMPLETED;
