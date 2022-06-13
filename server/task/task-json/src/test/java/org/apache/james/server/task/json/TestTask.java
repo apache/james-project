@@ -16,10 +16,7 @@
  * ***************************************************************/
 package org.apache.james.server.task.json;
 
-import java.util.Optional;
-
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 public class TestTask implements Task {
@@ -44,8 +41,4 @@ public class TestTask implements Task {
         return TaskType.of("test-task");
     }
 
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
-    }
 }

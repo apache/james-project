@@ -101,8 +101,8 @@ public class SolveMessageInconsistenciesTask implements Task {
     }
 
     private final SolveMessageInconsistenciesService service;
-    private Context context;
-    private RunningOptions runningOptions;
+    private final Context context;
+    private final RunningOptions runningOptions;
 
     public SolveMessageInconsistenciesTask(SolveMessageInconsistenciesService service, RunningOptions runningOptions) {
         this.service = service;

@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 public class SolveMailboxInconsistenciesTask implements Task {
     static final TaskType SOLVE_MAILBOX_INCONSISTENCIES = TaskType.of("solve-mailbox-inconsistencies");
     public static final Logger LOGGER = LoggerFactory.getLogger(SolveMailboxInconsistenciesTask.class);
-    private SolveMailboxInconsistenciesService.Context context;
+    private final SolveMailboxInconsistenciesService.Context context;
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final Instant instant;

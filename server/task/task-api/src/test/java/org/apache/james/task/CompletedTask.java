@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
-
 public class CompletedTask implements Task {
     public static final TaskType TYPE = TaskType.of("completed");
 
@@ -31,10 +29,5 @@ public class CompletedTask implements Task {
     @Override
     public TaskType type() {
         return TYPE;
-    }
-
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
     }
 }

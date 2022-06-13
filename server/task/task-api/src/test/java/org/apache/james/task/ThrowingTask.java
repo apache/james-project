@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
-
 public class ThrowingTask implements Task {
     public static final TaskType TYPE = TaskType.of("throwing");
 
@@ -31,11 +29,6 @@ public class ThrowingTask implements Task {
     @Override
     public TaskType type() {
         return TYPE;
-    }
-
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
     }
 }
 
