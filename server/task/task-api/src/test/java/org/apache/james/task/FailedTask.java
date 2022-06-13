@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
-
 public class FailedTask implements Task {
     public static final TaskType TYPE = TaskType.of("failed");
 
@@ -31,10 +29,5 @@ public class FailedTask implements Task {
     @Override
     public TaskType type() {
         return TYPE;
-    }
-
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
     }
 }

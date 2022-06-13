@@ -33,7 +33,7 @@ public class MessageIdReIndexingTask implements Task {
     public static final TaskType TYPE = TaskType.of("messageId-reindexing");
 
     public static class Factory {
-        private ReIndexerPerformer reIndexerPerformer;
+        private final ReIndexerPerformer reIndexerPerformer;
         private final MessageId.Factory messageIdFactory;
 
         @Inject
@@ -68,7 +68,7 @@ public class MessageIdReIndexingTask implements Task {
     }
 
 
-    private ReIndexerPerformer reIndexerPerformer;
+    private final ReIndexerPerformer reIndexerPerformer;
     private final MessageId messageId;
 
     MessageIdReIndexingTask(ReIndexerPerformer reIndexerPerformer, MessageId messageId) {

@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
-
 public class FailsDeserializationTask implements Task {
     public static final TaskType TYPE = TaskType.of("fails-deserialization");
 
@@ -33,8 +31,4 @@ public class FailsDeserializationTask implements Task {
         return TYPE;
     }
 
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
-    }
 }

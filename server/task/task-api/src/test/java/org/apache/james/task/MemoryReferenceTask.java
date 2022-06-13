@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.function.ThrowingSupplier;
 
 /**
@@ -50,10 +48,5 @@ public class MemoryReferenceTask implements Task {
     @Override
     public TaskType type() {
         return TYPE;
-    }
-
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
     }
 }
