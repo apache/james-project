@@ -187,7 +187,8 @@ public class ExpireMailboxService {
                         SearchQuery.headerDateBefore("Expires", now, DateResolution.Second)
                     )
             );
-            return Iterators.toFlux(usersRepository.list())
+            // Note: user list may be a blocking iterable, must run on a scheduler that supports this.
+            return Iterators.toFlux(usersRepository.list()).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .transform(ReactorUtils.<Username, Task.Result>throttle()
                     .elements(runningOptions.getUsersPerSecond())
                     .per(Duration.ofSeconds(1))
