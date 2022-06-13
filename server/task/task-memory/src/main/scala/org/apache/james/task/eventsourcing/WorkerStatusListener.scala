@@ -19,8 +19,6 @@
 
 package org.apache.james.task.eventsourcing
 
-import java.util.Optional
-
 import com.google.common.base.Throwables
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.task.Task.Result
@@ -29,6 +27,7 @@ import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
+import java.util.Optional
 import scala.compat.java8.OptionConverters._
 
 case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extends TaskManagerWorker.Listener {
@@ -48,8 +47,43 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
     SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala, None, None))).`then`()
 
   override def cancelled(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
-    SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.asScala ))).`then`()
+    SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.asScala))).`then`()
 
   override def updated(taskId: TaskId, additionalInformation: TaskExecutionDetails.AdditionalInformation): Publisher[Void] =
     SMono(eventSourcingSystem.dispatch(UpdateAdditionalInformation(taskId, additionalInformation))).`then`()
+
+  override def completed(taskId: TaskId, result: Result, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
+    optionAdditionalInformationPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Complete(taskId, result, additionalInformation))))
+      .`then`()
+
+  override def failed(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation], errorMessage: String, t: Throwable): Publisher[Void] =
+    optionAdditionalInformationPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation, Some(errorMessage), Some(Throwables.getStackTraceAsString(t))))))
+      .`then`()
+
+  override def failed(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation], t: Throwable): Publisher[Void] =
+    optionAdditionalInformationPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation, None, Some(Throwables.getStackTraceAsString(t))))))
+      .`then`()
+
+  override def failed(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
+    optionAdditionalInformationPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation, None, None))))
+      .`then`()
+
+  override def cancelled(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
+    optionAdditionalInformationPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation))))
+      .`then`()
+
+  override def updated(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
+    SMono.fromPublisher(additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(UpdateAdditionalInformation(taskId, additionalInformation))))
+      .`then`()
+
+  private def optionAdditionalInformationPublisher(additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): SMono[Option[TaskExecutionDetails.AdditionalInformation]] =
+    SMono.fromPublisher(additionalInformationPublisher)
+      .map(e => Option(e))
+      .switchIfEmpty(SMono.just[Option[TaskExecutionDetails.AdditionalInformation]](None))
 }

@@ -19,12 +19,17 @@
 
 package org.apache.james.task;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 public interface Task {
     Logger LOGGER = LoggerFactory.getLogger(Task.class);
@@ -96,6 +101,11 @@ public interface Task {
 
     default Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.empty();
+    }
+
+    default Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+        return Mono.fromCallable(this::details)
+            .handle(publishIfPresent());
     }
 
     String TASK_ID = "taskId";
