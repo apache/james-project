@@ -20,8 +20,6 @@
 package org.apache.james.backends.opensearch;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -29,61 +27,70 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch._types.WaitForActiveShards;
+import org.opensearch.client.opensearch._types.analysis.Analyzer;
+import org.opensearch.client.opensearch._types.analysis.CustomAnalyzer;
+import org.opensearch.client.opensearch._types.analysis.CustomNormalizer;
+import org.opensearch.client.opensearch._types.analysis.Normalizer;
+import org.opensearch.client.opensearch._types.analysis.SnowballLanguage;
+import org.opensearch.client.opensearch._types.analysis.SnowballTokenFilter;
+import org.opensearch.client.opensearch._types.analysis.TokenFilter;
+import org.opensearch.client.opensearch._types.analysis.TokenFilterDefinition;
+import org.opensearch.client.opensearch._types.analysis.Tokenizer;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
+import org.opensearch.client.opensearch.indices.ExistsAliasRequest;
+import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.IndexSettings;
+import org.opensearch.client.opensearch.indices.IndexSettingsAnalysis;
+import org.opensearch.client.opensearch.indices.UpdateAliasesRequest;
+import org.opensearch.client.opensearch.indices.update_aliases.Action;
+import org.opensearch.client.opensearch.indices.update_aliases.AddAction;
+import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.WaitForActiveShards;
-import co.elastic.clients.elasticsearch._types.analysis.Analyzer;
-import co.elastic.clients.elasticsearch._types.analysis.Normalizer;
-import co.elastic.clients.elasticsearch._types.analysis.TokenFilter;
-import co.elastic.clients.elasticsearch._types.analysis.TokenFilterDefinition;
-import co.elastic.clients.elasticsearch._types.analysis.Tokenizer;
-import co.elastic.clients.elasticsearch._types.analysis.TokenizerDefinition;
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
-import co.elastic.clients.elasticsearch.indices.ExistsAliasRequest;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.IndexSettingsAnalysis;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
-import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
-import co.elastic.clients.elasticsearch.indices.update_aliases.AddAction;
-import co.elastic.clients.transport.endpoints.BooleanResponse;
-
 public class IndexCreationFactory {
 
-    public static class IndexCreationCustomElement {
-        public static IndexCreationCustomElement from(String key, String value) {
-            try {
-                new ObjectMapper().readTree(value);
-            } catch (JsonProcessingException e) {
-                throw new IllegalArgumentException("value must be a valid json");
-            }
-            return new IndexCreationCustomElement(key, value);
-        }
-
+    public static class IndexCreationCustomAnalyzer {
         private final String key;
-        private final String payload;
+        private final Analyzer analyzer;
 
-        IndexCreationCustomElement(String key, String payload) {
+        public IndexCreationCustomAnalyzer(String key, Analyzer analyzer) {
             this.key = key;
-            this.payload = payload;
+            this.analyzer = analyzer;
         }
 
         public String getKey() {
             return key;
         }
 
-        public String getPayload() {
-            return payload;
+        public Analyzer getAnalyzer() {
+            return analyzer;
+        }
+    }
+
+    public static class IndexCreationCustomTokenizer {
+        private final String key;
+        private final Tokenizer tokenizer;
+
+        public IndexCreationCustomTokenizer(String key, Tokenizer tokenizer) {
+            this.key = key;
+            this.tokenizer = tokenizer;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public Tokenizer getTokenizer() {
+            return tokenizer;
         }
     }
 
@@ -116,8 +123,8 @@ public class IndexCreationFactory {
                 private final int waitForActiveShards;
                 private final IndexName indexName;
                 private final ImmutableList.Builder<AliasName> aliases;
-                private final ImmutableList.Builder<IndexCreationCustomElement> customAnalyzers;
-                private final ImmutableList.Builder<IndexCreationCustomElement> customTokenizers;
+                private final ImmutableList.Builder<IndexCreationCustomAnalyzer> customAnalyzers;
+                private final ImmutableList.Builder<IndexCreationCustomTokenizer> customTokenizers;
 
                 FinalStage(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
                     this.nbShards = nbShards;
@@ -139,12 +146,12 @@ public class IndexCreationFactory {
                     return this;
                 }
 
-                public FinalStage customAnalyzers(IndexCreationCustomElement... customAnalyzers) {
+                public FinalStage customAnalyzers(IndexCreationCustomAnalyzer... customAnalyzers) {
                     this.customAnalyzers.add(customAnalyzers);
                     return this;
                 }
 
-                public FinalStage customTokenizers(IndexCreationCustomElement... customTokenizers) {
+                public FinalStage customTokenizers(IndexCreationCustomTokenizer... customTokenizers) {
                     this.customTokenizers.add(customTokenizers);
                     return this;
                 }
@@ -177,12 +184,12 @@ public class IndexCreationFactory {
         private final int waitForActiveShards;
         private final IndexName indexName;
         private final ImmutableList<AliasName> aliases;
-        private final ImmutableList<IndexCreationCustomElement> customAnalyzers;
-        private final ImmutableList<IndexCreationCustomElement> customTokenizers;
+        private final ImmutableList<IndexCreationCustomAnalyzer> customAnalyzers;
+        private final ImmutableList<IndexCreationCustomTokenizer> customTokenizers;
 
         private IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName,
-                                       ImmutableList<AliasName> aliases, ImmutableList<IndexCreationCustomElement> customAnalyzers,
-                                       ImmutableList<IndexCreationCustomElement> customTokenizers) {
+                                       ImmutableList<AliasName> aliases, ImmutableList<IndexCreationCustomAnalyzer> customAnalyzers,
+                                       ImmutableList<IndexCreationCustomTokenizer> customTokenizers) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
             this.waitForActiveShards = waitForActiveShards;
@@ -221,7 +228,7 @@ public class IndexCreationFactory {
             }
         }
 
-        private boolean aliasExist(ReactorElasticSearchClient client, AliasName aliasName) {
+        private boolean aliasExist(ReactorElasticSearchClient client, AliasName aliasName) throws IOException {
             return client.aliasExists(new ExistsAliasRequest.Builder()
                     .name(aliasName.getValue())
                     .build())
@@ -242,7 +249,7 @@ public class IndexCreationFactory {
                     client.createIndex(request.build())
                         .block();
                 }
-            } catch (ElasticsearchException exception) {
+            } catch (OpenSearchException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
                     LOGGER.info("Index [{}] already exists", indexName.getValue());
                 } else {
@@ -251,7 +258,7 @@ public class IndexCreationFactory {
             }
         }
 
-        private boolean indexExists(ReactorElasticSearchClient client, IndexName indexName) {
+        private boolean indexExists(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
             return client.indexExists(new ExistsRequest.Builder()
                     .index(indexName.getValue())
                     .build())
@@ -265,35 +272,45 @@ public class IndexCreationFactory {
                 .numberOfReplicas(Integer.toString(nbReplica))
                 .analysis(new IndexSettingsAnalysis.Builder()
                     .normalizer(CASE_INSENSITIVE, new Normalizer.Builder()
-                        .withJson(generateNormalizer())
+                        .custom(generateNormalizer())
                         .build())
                     .analyzer(generateAnalyzers())
                     .tokenizer(generateTokenizers())
                     .filter(ENGLISH_SNOWBALL, new TokenFilter.Builder()
                         .definition(new TokenFilterDefinition.Builder()
-                            .withJson(generateFilter())
+                            .snowball(generateFilter())
                             .build())
                         .build())
                     .build())
                 .build();
         }
 
-        private Reader generateNormalizer() {
-            return new StringReader(
-                "{'type': 'custom', 'char_filter': [], 'filter': ['lowercase', 'asciifolding']}"
-                .replace('\'', '"'));
+        private CustomNormalizer generateNormalizer() {
+            return new CustomNormalizer.Builder()
+                .filter("lowercase", "asciifolding")
+                .build();
         }
 
-        private Reader generateFilter() {
-            return new StringReader(
-                "{'type': 'snowball', 'language': 'English'}"
-                    .replace('\'', '"'));
+        private SnowballTokenFilter generateFilter() {
+            return new SnowballTokenFilter.Builder()
+                .language(SnowballLanguage.English)
+                .build();
         }
 
         private Map<String, Analyzer> defaultAnalyzers() {
             return ImmutableMap.of(
-                KEEP_MAIL_AND_URL, generateAnalyzer("{'type': 'custom', 'tokenizer': 'uax_url_email', 'filter': ['lowercase', 'stop']}".replace('\'', '"')),
-                SNOWBALL_KEEP_MAIL_AND_URL, generateAnalyzer(("{'type': 'custom', 'tokenizer': 'uax_url_email', 'filter': ['lowercase', 'stop', '" + ENGLISH_SNOWBALL + "']}").replace('\'', '"'))
+                KEEP_MAIL_AND_URL, new Analyzer.Builder().custom(
+                    new CustomAnalyzer.Builder()
+                        .tokenizer("uax_url_email")
+                        .filter("lowercase", "stop")
+                        .build())
+                    .build(),
+                SNOWBALL_KEEP_MAIL_AND_URL, new Analyzer.Builder().custom(
+                    new CustomAnalyzer.Builder()
+                        .tokenizer("uax_url_email")
+                        .filter("lowercase", "stop", ENGLISH_SNOWBALL)
+                        .build())
+                    .build()
             );
         }
 
@@ -303,30 +320,16 @@ public class IndexCreationFactory {
             }
             return customAnalyzers.stream()
                 .collect(Collectors.toMap(
-                    IndexCreationCustomElement::getKey,
-                    analyzer -> generateAnalyzer(analyzer.getPayload())));
-        }
-
-        private Analyzer generateAnalyzer(String payload) {
-            return new Analyzer.Builder()
-                .withJson(new StringReader(payload))
-                .build();
+                    IndexCreationCustomAnalyzer::getKey,
+                    IndexCreationCustomAnalyzer::getAnalyzer));
         }
 
         private Map<String, Tokenizer> generateTokenizers() {
             return customTokenizers.stream()
                 .collect(Collectors.toMap(
-                    IndexCreationCustomElement::getKey,
-                    tokenizer -> generateTokenizer(tokenizer.getPayload())
+                    IndexCreationCustomTokenizer::getKey,
+                    IndexCreationCustomTokenizer::getTokenizer
                 ));
-        }
-
-        private Tokenizer generateTokenizer(String payload) {
-            return new Tokenizer.Builder()
-                .definition(new TokenizerDefinition.Builder()
-                    .withJson(new StringReader(payload))
-                    .build())
-                .build();
         }
     }
 

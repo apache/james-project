@@ -23,63 +23,69 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
-import org.elasticsearch.client.RestClient;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch.cluster.HealthRequest;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
+import org.opensearch.client.opensearch.core.BulkRequest;
+import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.ClearScrollRequest;
+import org.opensearch.client.opensearch.core.ClearScrollResponse;
+import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
+import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
+import org.opensearch.client.opensearch.core.DeleteRequest;
+import org.opensearch.client.opensearch.core.DeleteResponse;
+import org.opensearch.client.opensearch.core.GetRequest;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.IndexResponse;
+import org.opensearch.client.opensearch.core.InfoResponse;
+import org.opensearch.client.opensearch.core.ScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.UpdateRequest;
+import org.opensearch.client.opensearch.core.UpdateResponse;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
+import org.opensearch.client.opensearch.indices.CreateIndexResponse;
+import org.opensearch.client.opensearch.indices.ExistsAliasRequest;
+import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.UpdateAliasesRequest;
+import org.opensearch.client.opensearch.indices.UpdateAliasesResponse;
+import org.opensearch.client.transport.endpoints.BooleanResponse;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.ClearScrollRequest;
-import co.elastic.clients.elasticsearch.core.ClearScrollResponse;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.DeleteResponse;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.GetResponse;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.IndexResponse;
-import co.elastic.clients.elasticsearch.core.InfoResponse;
-import co.elastic.clients.elasticsearch.core.ScrollRequest;
-import co.elastic.clients.elasticsearch.core.ScrollResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
-import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
-import co.elastic.clients.elasticsearch.indices.ExistsAliasRequest;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesResponse;
-import co.elastic.clients.transport.endpoints.BooleanResponse;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.core.scheduler.Schedulers;
 
 public class ReactorElasticSearchClient implements AutoCloseable {
-    private final ElasticsearchAsyncClient client;
+    private final OpenSearchAsyncClient client;
     private final RestClient lowLevelRestClient;
 
-    public ReactorElasticSearchClient(ElasticsearchAsyncClient client, RestClient lowLevelRestClient) {
+    public ReactorElasticSearchClient(OpenSearchAsyncClient client, RestClient lowLevelRestClient) {
         this.client = client;
         this.lowLevelRestClient = lowLevelRestClient;
     }
 
-    public Mono<BulkResponse> bulk(BulkRequest bulkRequest) {
+    public Mono<BulkResponse> bulk(BulkRequest bulkRequest) throws IOException {
         return toReactor(client.bulk(bulkRequest));
     }
 
-    public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest) {
+    public Mono<UpdateResponse> update(UpdateRequest updateRequest) throws IOException {
+        return toReactor(client.update(updateRequest, ObjectNode.class));
+    }
+
+    public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest) throws IOException {
         return toReactor(client.clearScroll(clearScrollRequest));
     }
 
-    public Mono<DeleteResponse> delete(DeleteRequest deleteRequest) {
+    public Mono<DeleteResponse> delete(DeleteRequest deleteRequest) throws IOException {
         return toReactor(client.delete(deleteRequest));
     }
 
-    public Mono<DeleteByQueryResponse> deleteByQuery(DeleteByQueryRequest deleteRequest) {
+    public Mono<DeleteByQueryResponse> deleteByQuery(DeleteByQueryRequest deleteRequest) throws IOException {
         return toReactor(client.deleteByQuery(deleteRequest));
     }
 
@@ -87,43 +93,43 @@ public class ReactorElasticSearchClient implements AutoCloseable {
         return lowLevelRestClient;
     }
 
-    public <T> Mono<IndexResponse> index(IndexRequest<T> indexRequest) {
+    public <T> Mono<IndexResponse> index(IndexRequest<T> indexRequest) throws IOException {
         return toReactor(client.index(indexRequest));
     }
 
-    public Mono<BooleanResponse> indexExists(ExistsRequest existsRequest) {
+    public Mono<BooleanResponse> indexExists(ExistsRequest existsRequest) throws IOException {
         return toReactor(client.indices().exists(existsRequest));
     }
 
-    public Mono<BooleanResponse> aliasExists(ExistsAliasRequest existsAliasRequest) {
+    public Mono<BooleanResponse> aliasExists(ExistsAliasRequest existsAliasRequest) throws IOException {
         return toReactor(client.indices().existsAlias(existsAliasRequest));
     }
 
-    public Mono<CreateIndexResponse> createIndex(CreateIndexRequest indexRequest) {
+    public Mono<CreateIndexResponse> createIndex(CreateIndexRequest indexRequest) throws IOException {
         return toReactor(client.indices().create(indexRequest));
     }
 
-    public Mono<UpdateAliasesResponse> updateAliases(UpdateAliasesRequest updateAliasesRequest) {
+    public Mono<UpdateAliasesResponse> updateAliases(UpdateAliasesRequest updateAliasesRequest) throws IOException {
         return toReactor(client.indices().updateAliases(updateAliasesRequest));
     }
 
-    public Mono<InfoResponse> info() {
+    public Mono<InfoResponse> info() throws IOException {
         return toReactor(client.info());
     }
 
-    public Mono<ScrollResponse<ObjectNode>> scroll(ScrollRequest scrollRequest) {
+    public Mono<ScrollResponse<ObjectNode>> scroll(ScrollRequest scrollRequest) throws IOException {
         return toReactor(client.scroll(scrollRequest, ObjectNode.class));
     }
 
-    public Mono<SearchResponse<ObjectNode>> search(SearchRequest searchRequest) {
+    public Mono<SearchResponse<ObjectNode>> search(SearchRequest searchRequest) throws IOException {
         return toReactor(client.search(searchRequest, ObjectNode.class));
     }
 
-    public Mono<HealthResponse> health(HealthRequest request) {
+    public Mono<HealthResponse> health(HealthRequest request) throws IOException {
         return toReactor(client.cluster().health(request));
     }
 
-    public Mono<GetResponse<ObjectNode>> get(GetRequest getRequest) {
+    public Mono<GetResponse<ObjectNode>> get(GetRequest getRequest) throws IOException {
         return toReactor(client.get(getRequest, ObjectNode.class));
     }
 

@@ -38,12 +38,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
 
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.fasterxml.jackson.databind.util.RawValue;
 
 class ScrolledSearchTest {
     private static final Time TIMEOUT = new Time.Builder()
@@ -89,12 +90,12 @@ class ScrolledSearchTest {
     }
 
     @Test
-    void scrollIterableShouldWorkWhenOneElement() {
+    void scrollIterableShouldWorkWhenOneElement() throws IOException {
         String id = "1";
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -114,12 +115,12 @@ class ScrolledSearchTest {
     }
 
     @Test
-    void scrollIterableShouldWorkWhenSizeElement() {
+    void scrollIterableShouldWorkWhenSizeElement() throws IOException {
         String id1 = "1";
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id1)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -127,7 +128,7 @@ class ScrolledSearchTest {
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id2)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -147,12 +148,12 @@ class ScrolledSearchTest {
     }
 
     @Test
-    void scrollIterableShouldWorkWhenMoreThanSizeElement() {
+    void scrollIterableShouldWorkWhenMoreThanSizeElement() throws IOException {
         String id1 = "1";
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id1)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -160,7 +161,7 @@ class ScrolledSearchTest {
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id2)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -168,7 +169,7 @@ class ScrolledSearchTest {
         client.index(new IndexRequest.Builder<>()
                 .index(INDEX_NAME.getValue())
                 .id(id3)
-                .withJson(new StringReader(CONTENT))
+                .document(new RawValue(CONTENT))
                 .build())
             .block();
 
@@ -187,7 +188,7 @@ class ScrolledSearchTest {
             .containsOnly(id1, id2, id3);
     }
 
-    private void hasIdsInIndex(ReactorElasticSearchClient client, String... ids) {
+    private void hasIdsInIndex(ReactorElasticSearchClient client, String... ids) throws IOException {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
             .query(new MatchAllQuery.Builder().build()._toQuery())

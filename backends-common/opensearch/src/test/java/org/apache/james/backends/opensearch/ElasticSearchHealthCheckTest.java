@@ -22,12 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.HealthStatus;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
 
 import com.google.common.collect.ImmutableSet;
-
-import co.elastic.clients.elasticsearch._types.HealthStatus;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
-import co.elastic.clients.util.DateTime;
 
 class ElasticSearchHealthCheckTest {
     private static HealthResponse fakeHealthResponse(HealthStatus status) {
@@ -43,7 +41,7 @@ class ElasticSearchHealthCheckTest {
             .numberOfNodes(0)
             .numberOfPendingTasks(0)
             .relocatingShards(0)
-            .taskMaxWaitingInQueueMillis(DateTime.ofEpochMilli(System.currentTimeMillis()))
+            .taskMaxWaitingInQueueMillis(String.valueOf(System.currentTimeMillis()))
             .timedOut(false)
             .unassignedShards(0)
             .status(status)

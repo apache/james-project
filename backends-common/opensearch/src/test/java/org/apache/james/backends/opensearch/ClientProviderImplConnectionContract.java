@@ -24,11 +24,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.backends.opensearch.ElasticSearchClusterExtension.ElasticSearchCluster;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 
 interface ClientProviderImplConnectionContract {
 

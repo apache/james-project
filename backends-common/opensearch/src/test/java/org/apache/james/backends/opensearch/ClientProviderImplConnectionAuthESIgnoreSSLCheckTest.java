@@ -25,8 +25,10 @@ import java.util.Optional;
 
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.HostScheme;
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled("POC")
 class ClientProviderImplConnectionAuthESIgnoreSSLCheckTest implements ClientProviderImplConnectionContract {
 
     @RegisterExtension

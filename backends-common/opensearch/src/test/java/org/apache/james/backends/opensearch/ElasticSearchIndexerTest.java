@@ -33,15 +33,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.google.common.collect.ImmutableList;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.elasticsearch.core.GetResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 
 class ElasticSearchIndexerTest {
     public static RoutingKey useDocumentId(DocumentId documentId) {
@@ -79,7 +79,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void indexMessageShouldWork() {
+    void indexMessageShouldWork() throws IOException {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
@@ -87,7 +87,7 @@ class ElasticSearchIndexerTest {
 
         awaitForElasticSearch(new MatchQuery.Builder()
             .field("message")
-            .query("trying")
+            .query(new FieldValue.Builder().stringValue("trying").build())
             .build()
             ._toQuery(), 1L);
     }
@@ -99,48 +99,48 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
-    void updateMessages() {
+    void updateMessages() throws IOException {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
-        testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
-        awaitForElasticSearch(new MatchQuery.Builder().field("message").query("mastering").build()._toQuery(), 1L);
+        testee.fluxUpdate(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).collectList().block();
+        awaitForElasticSearch(new MatchQuery.Builder().field("message").query(new FieldValue.Builder().stringValue("mastering").build()).build()._toQuery(), 1L);
 
-        awaitForElasticSearch(new MatchQuery.Builder().field("field").query("unchanged").build()._toQuery(), 1L);
+        awaitForElasticSearch(new MatchQuery.Builder().field("field").query(new FieldValue.Builder().stringValue("unchanged").build()).build()._toQuery(), 1L);
     }
 
     @Test
     void updateMessageShouldThrowWhenJsonIsNull() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING).block())
+        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING).collectList().block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenIdIsNull() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(
-                new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING).block())
+        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
+                new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING).collectList().block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenJsonIsEmpty() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING).block())
+        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING).collectList().block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenRoutingKeyIsNull() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null).block())
+        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null).collectList().block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void deleteByQueryShouldWorkOnSingleMessage() {
+    void deleteByQueryShouldWorkOnSingleMessage() throws IOException {
         DocumentId documentId =  DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         RoutingKey routingKey = useDocumentId(documentId);
@@ -148,13 +148,13 @@ class ElasticSearchIndexerTest {
         testee.index(documentId, content, routingKey).block();
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
-        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value("1").build()._toQuery(), routingKey).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), routingKey).block();
 
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 0L);
     }
 
     @Test
-    void deleteByQueryShouldWorkWhenMultipleMessages() {
+    void deleteByQueryShouldWorkWhenMultipleMessages() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
@@ -171,13 +171,13 @@ class ElasticSearchIndexerTest {
         testee.index(documentId3, content3, ROUTING).block();
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 3L);
 
-        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value("1").build()._toQuery(), ROUTING).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), ROUTING).block();
 
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
     }
     
     @Test
-    void deleteMessage() {
+    void deleteMessage() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
@@ -190,7 +190,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void deleteShouldWorkWhenMultipleMessages() {
+    void deleteShouldWorkWhenMultipleMessages() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
         testee.index(documentId, content, ROUTING).block();
@@ -212,7 +212,7 @@ class ElasticSearchIndexerTest {
     
     @Test
     void updateMessagesShouldNotThrowWhenEmptyList() {
-        assertThatCode(() -> testee.update(ImmutableList.of(), ROUTING).block())
+        assertThatCode(() -> testee.fluxUpdate(ImmutableList.of(), ROUTING).collectList().block())
             .doesNotThrowAnyException();
     }
     
@@ -223,7 +223,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void getShouldWork() {
+    void getShouldWork() throws IOException {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\":\"trying out Elasticsearch\"}";
 

@@ -19,21 +19,22 @@
 
 package org.apache.james.backends.opensearch.search;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch.core.ClearScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.lambdas.Throwing;
 
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch.core.ClearScrollRequest;
-import co.elastic.clients.elasticsearch.core.ScrollRequest;
-import co.elastic.clients.elasticsearch.core.ScrollResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.search.Hit;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
@@ -89,18 +90,30 @@ public class ScrolledSearch {
 
     private Mono<ScrollResponse<ObjectNode>> buildRequest(Optional<String> scrollId) {
         return scrollId.map(id ->
-            client.scroll(new ScrollRequest.Builder()
-                    .scrollId(scrollId.get())
-                    .scroll(TIMEOUT)
-                    .build()))
-            .orElseGet(() -> client.search(searchRequest)
-                .map(response -> new ScrollResponse.Builder<ObjectNode>()
-                    .scrollId(response.scrollId())
-                    .hits(response.hits())
-                    .took(response.took())
-                    .timedOut(response.timedOut())
-                    .shards(response.shards())
-                    .build()));
+            {
+                try {
+                    return client.scroll(new ScrollRequest.Builder()
+                            .scrollId(scrollId.get())
+                            .scroll(TIMEOUT)
+                            .build());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .orElseGet(() -> {
+                try {
+                    return client.search(searchRequest)
+                        .map(response -> new ScrollResponse.Builder<ObjectNode>()
+                            .scrollId(response.scrollId())
+                            .hits(response.hits())
+                            .took(response.took())
+                            .timedOut(response.timedOut())
+                            .shards(response.shards())
+                            .build());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
     }
 
     public void close(AtomicReference<Optional<String>> scrollId) {

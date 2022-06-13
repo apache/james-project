@@ -19,8 +19,11 @@
 
 package org.apache.james.backends.opensearch;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import java.io.IOException;
+
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
+
 import reactor.core.publisher.Mono;
 
 public class DeleteByQueryPerformer {
@@ -40,7 +43,11 @@ public class DeleteByQueryPerformer {
             .routing(routingKey.asString())
             .build();
 
-        return client.deleteByQuery(deleteRequest)
-            .then();
+        try {
+            return client.deleteByQuery(deleteRequest)
+                .then();
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 }

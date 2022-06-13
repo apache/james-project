@@ -26,6 +26,7 @@ public interface Images {
     String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
     String ELASTICSEARCH_7 = "docker.elastic.co/elasticsearch/elasticsearch:7.10.2";
     String ELASTICSEARCH_8 = "docker.elastic.co/elasticsearch/elasticsearch:8.2.2";
+    String OPENSEARCH = "opensearchproject/opensearch:2.0.0";
     String NGINX = "nginx:1.22";
     String TIKA = "apache/tika:1.28.2";
     String SPAMASSASSIN = "instantlinux/spamassassin:3.4.6-1";

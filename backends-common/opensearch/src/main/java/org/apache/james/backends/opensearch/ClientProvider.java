@@ -49,14 +49,13 @@ import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfig
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.elasticsearch.client.RestClient;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.ElasticsearchTransport;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
@@ -189,7 +188,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     private final ElasticSearchConfiguration configuration;
     private final RestClient lowLevelRestClient;
-    private final ElasticsearchAsyncClient elasticSearchClient;
+    private final OpenSearchAsyncClient elasticSearchClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorElasticSearchClient client;
 
@@ -208,7 +207,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             .build();
     }
 
-    private ElasticsearchAsyncClient connect() {
+    private OpenSearchAsyncClient connect() {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
@@ -220,12 +219,12 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             .block();
     }
 
-    private ElasticsearchAsyncClient connectToCluster() {
+    private OpenSearchAsyncClient connectToCluster() {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        ElasticsearchTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
+        RestClientTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
 
-        return new ElasticsearchAsyncClient(transport);
+        return new OpenSearchAsyncClient(transport);
     }
 
     private HttpHost[] hostsToHttpHosts() {

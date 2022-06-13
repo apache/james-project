@@ -23,8 +23,10 @@ import java.util.Optional;
 
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled("POC")
 public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements ClientProviderImplConnectionContract {
 
     private static final String TRUST_STORE_PASSWORD = "mypass";

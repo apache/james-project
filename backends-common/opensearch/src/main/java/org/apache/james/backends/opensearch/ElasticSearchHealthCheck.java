@@ -30,11 +30,11 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
+import org.opensearch.client.opensearch.cluster.HealthRequest;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchHealthCheck implements HealthCheck {
@@ -63,10 +63,14 @@ public class ElasticSearchHealthCheck implements HealthCheck {
             .index(indices)
             .build();
 
-        return client.health(request)
-            .map(this::toHealthCheckResult)
-            .onErrorResume(IOException.class, e -> Mono.just(
-                Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
+        try {
+            return client.health(request)
+                .map(this::toHealthCheckResult)
+                .onErrorResume(IOException.class, e -> Mono.just(
+                    Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     @VisibleForTesting
