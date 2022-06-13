@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE;
+import static reactor.core.scheduler.Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,6 +34,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link MailboxPathLocker} implementation which helps to synchronize the access the
@@ -39,6 +44,11 @@ import reactor.core.publisher.Mono;
  */
 public final class JVMMailboxPathLocker implements MailboxPathLocker {
     private final ConcurrentHashMap<MailboxPath, StampedLock> paths = new ConcurrentHashMap<>();
+
+    private static final int TTL_SECONDS = 60;
+    private static final boolean DAEMON = true;
+    public static final Scheduler LOCKER_WRAPPER = Schedulers.newBoundedElastic(DEFAULT_BOUNDED_ELASTIC_SIZE, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE,
+        "jvm-path-locker", TTL_SECONDS, DAEMON);
 
     @Override
     public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType writeLock) throws MailboxException {
@@ -56,12 +66,14 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
         switch (lockType) {
             case Read:
                 return Mono.using(stampedLock::readLock,
-                    stamp -> Mono.from(execution),
-                    stampedLock::unlockRead);
+                        stamp -> Mono.from(execution),
+                        stampedLock::unlockRead)
+                    .subscribeOn(LOCKER_WRAPPER);
             case Write:
                 return Mono.using(stampedLock::writeLock,
-                    stamp -> Mono.from(execution),
-                    stampedLock::unlockWrite);
+                        stamp -> Mono.from(execution),
+                        stampedLock::unlockWrite)
+                    .subscribeOn(LOCKER_WRAPPER);
             default:
                 throw new RuntimeException("Lock type not supported");
         }
