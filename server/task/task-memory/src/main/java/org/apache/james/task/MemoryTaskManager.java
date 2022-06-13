@@ -95,6 +95,48 @@ public class MemoryTaskManager implements TaskManager {
             //The memory task manager doesn't need polling to update its additionalInformation.
             return Mono.empty();
         }
+
+        @Override
+        public Publisher<Void> completed(TaskId taskId, Task.Result result, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.from(completed(taskId, result, additionalInformation)));
+        }
+
+        @Override
+        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, String errorMessage, Throwable t) {
+            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
+        }
+
+        @Override
+        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, Throwable t) {
+            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
+        }
+
+        @Override
+        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
+        }
+
+
+        @Override
+        public Publisher<Void> cancelled(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.from(cancelled(taskId, additionalInformation)));
+        }
+
+        @Override
+        public Publisher<Void> updated(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            return Mono.empty();
+        }
+
+        private Mono<Optional<TaskExecutionDetails.AdditionalInformation>> optionalAdditionalInformationPublisher(Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            return Mono.from(additionalInformationPublisher)
+                .map(Optional::of)
+                .switchIfEmpty(Mono.just(Optional.empty()));
+        }
     }
 
     private static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofSeconds(5);
