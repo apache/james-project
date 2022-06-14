@@ -24,22 +24,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.james.backends.es.v8.AliasName;
-import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
-import org.apache.james.backends.es.v8.ReadAliasName;
-import org.apache.james.backends.es.v8.RoutingKey;
-import org.apache.james.backends.es.v8.search.ScrolledSearch;
+import org.apache.james.backends.opensearch.AliasName;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.RoutingKey;
+import org.apache.james.backends.opensearch.search.ScrolledSearch;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.opensearch.query.SortConverter;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.opensearch.client.opensearch._types.SortOptions;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.search.Hit;
 import reactor.core.publisher.Flux;
 
 public class ElasticSearchSearcher {

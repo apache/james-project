@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.opensearch.query;
 
-import static org.apache.james.backends.es.v8.IndexCreationFactory.RAW;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -37,16 +37,16 @@ import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.json.JsonData;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.ChildScoreMode;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.NestedQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 public class CriterionConverter {
 
@@ -99,7 +99,7 @@ public class CriterionConverter {
                 .path(JsonMessageConstants.HEADERS)
                 .query(new TermQuery.Builder()
                     .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
-                    .value(headerName)
+                    .value(new FieldValue.Builder().stringValue(headerName).build())
                     .build()
                     ._toQuery())
                 .scoreMode(ChildScoreMode.Avg)
@@ -121,12 +121,12 @@ public class CriterionConverter {
                 .query(new BoolQuery.Builder()
                     .must(new TermQuery.Builder()
                         .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
-                        .value(headerName)
+                        .value(new FieldValue.Builder().stringValue(headerName).build())
                         .build()
                         ._toQuery())
                     .must(new MatchQuery.Builder()
                         .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE)
-                        .query(operator.getValue())
+                        .query(new FieldValue.Builder().stringValue(operator.getValue()).build())
                         .build()
                         ._toQuery())
                     .build()
@@ -148,7 +148,7 @@ public class CriterionConverter {
     private Query convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.HAS_ATTACHMENT)
-            .value(criterion.getOperator().isSet())
+            .value(new FieldValue.Builder().booleanValue(criterion.getOperator().isSet()).build())
             .build()
             ._toQuery();
     }
@@ -156,7 +156,7 @@ public class CriterionConverter {
     private Query convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.MIME_MESSAGE_ID)
-            .value(criterion.getMessageID())
+            .value(new FieldValue.Builder().stringValue(criterion.getMessageID()).build())
             .build()
             ._toQuery();
     }
@@ -164,7 +164,7 @@ public class CriterionConverter {
     private Query convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.THREAD_ID)
-            .value(criterion.getThreadId().serialize())
+            .value(new FieldValue.Builder().stringValue(criterion.getThreadId().serialize()).build())
             .build()
             ._toQuery();
     }
@@ -172,7 +172,7 @@ public class CriterionConverter {
     private Query convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
         Query termQuery = new TermQuery.Builder()
             .field(JsonMessageConstants.USER_FLAGS)
-            .value(criterion.getFlag())
+            .value(new FieldValue.Builder().stringValue(criterion.getFlag()).build())
             .build()
             ._toQuery();
         if (criterion.getOperator().isSet()) {
@@ -191,12 +191,12 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.TEXT_BODY)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -205,17 +205,17 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.TEXT_BODY)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -224,7 +224,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -233,7 +233,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME)
-                    .query(textCriterion.getOperator().getValue())
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -290,7 +290,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_DELETED)
-                    .value(operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -300,7 +300,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_ANSWERED)
-                    .value(operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -310,7 +310,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_DRAFT)
-                    .value(operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -320,7 +320,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_UNREAD)
-                    .value(!operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(!operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -330,7 +330,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_RECENT)
-                    .value(operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -340,7 +340,7 @@ public class CriterionConverter {
             return new BoolQuery.Builder()
                 .filter(new TermQuery.Builder()
                     .field(JsonMessageConstants.IS_FLAGGED)
-                    .value(operator.isSet())
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
                     ._toQuery())
                 .build()
@@ -416,17 +416,17 @@ public class CriterionConverter {
         return new BoolQuery.Builder()
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME)
-                .query(value)
+                .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
                 ._toQuery())
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS)
-                .query(value)
+                .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
                 ._toQuery())
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW)
-                .query(value)
+                .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
                 ._toQuery())
             .build()

@@ -23,9 +23,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.james.backends.es.v8.IndexName;
-import org.apache.james.backends.es.v8.ReadAliasName;
-import org.apache.james.backends.es.v8.WriteAliasName;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 
 public class ElasticSearchMailboxConfiguration {
 

@@ -39,10 +39,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.Flags;
 
-import org.apache.james.backends.es.v8.DocumentId;
-import org.apache.james.backends.es.v8.ElasticSearchIndexer;
-import org.apache.james.backends.es.v8.RoutingKey;
-import org.apache.james.backends.es.v8.UpdatedRepresentation;
+import org.apache.james.backends.opensearch.DocumentId;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.RoutingKey;
+import org.apache.james.backends.opensearch.UpdatedRepresentation;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
@@ -61,6 +61,13 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.json.JsonpDeserializer;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,12 +79,6 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.elasticsearch.core.GetResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.json.JsonData;
-import co.elastic.clients.json.JsonpDeserializer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
@@ -198,7 +199,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
         Query query = TermQuery.of(t -> t
             .field(MAILBOX_ID)
-            .value(mailboxId.serialize()))._toQuery();
+            .value(new FieldValue.Builder().stringValue(mailboxId.serialize()).build()))._toQuery();
 
         return elasticSearchIndexer
                 .deleteAllMatchingQuery(query, routingKeyFactory.from(mailboxId));
@@ -214,7 +215,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .sneakyThrow())
             .window(FLAGS_UPDATE_PROCESSING_WINDOW_SIZE)
             .concatMap(flux -> flux.collect(toImmutableList())
-                .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey)))
+                .flatMap(updates -> elasticSearchIndexer.fluxUpdate(updates, routingKey).collectList()))
             .then();
     }
 

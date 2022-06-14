@@ -29,9 +29,9 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.apache.james.backends.es.v8.DockerElasticSearchExtension;
-import org.apache.james.backends.es.v8.ElasticSearchIndexer;
-import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -66,14 +66,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 
 class ElasticSearchSearcherTest {
 

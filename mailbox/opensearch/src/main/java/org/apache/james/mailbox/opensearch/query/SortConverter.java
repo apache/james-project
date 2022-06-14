@@ -19,13 +19,12 @@
 
 package org.apache.james.mailbox.opensearch.query;
 
-import org.apache.james.backends.es.v8.IndexCreationFactory;
+import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
-
-import co.elastic.clients.elasticsearch._types.FieldSort;
-import co.elastic.clients.elasticsearch._types.SortMode;
-import co.elastic.clients.elasticsearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.FieldSort;
+import org.opensearch.client.opensearch._types.SortMode;
+import org.opensearch.client.opensearch._types.SortOrder;
 
 public class SortConverter {
 

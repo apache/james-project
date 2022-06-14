@@ -58,15 +58,20 @@ public class ElasticSearchIndexer {
         this.aliasName = aliasName;
     }
 
-    public Mono<IndexResponse> index(DocumentId id, String content, RoutingKey routingKey) throws IOException {
+    public Mono<IndexResponse> index(DocumentId id, String content, RoutingKey routingKey) {
         checkArgument(content);
         logContent(id, content);
-        return client.index(new IndexRequest.Builder<>()
-            .index(aliasName.getValue())
-            .id(id.asString())
-            .document(new RawValue(content))
-            .routing(routingKey.asString())
-            .build());
+
+        try {
+            return client.index(new IndexRequest.Builder<>()
+                .index(aliasName.getValue())
+                .id(id.asString())
+                .document(new RawValue(content))
+                .routing(routingKey.asString())
+                .build());
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     private void logContent(DocumentId id, String content) {
@@ -118,7 +123,7 @@ public class ElasticSearchIndexer {
             });
     }
 
-    public Mono<BulkResponse> delete(List<DocumentId> ids, RoutingKey routingKey) throws IOException {
+    public Mono<BulkResponse> delete(List<DocumentId> ids, RoutingKey routingKey) {
         if (ids.isEmpty()) {
             return Mono.empty();
         }
@@ -132,7 +137,11 @@ public class ElasticSearchIndexer {
                 .routing(routingKey.asString())
             )));
 
-        return client.bulk(bulkBuilder.build());
+        try {
+            return client.bulk(bulkBuilder.build());
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     public Mono<Void> deleteAllMatchingQuery(Query query, RoutingKey routingKey) {
@@ -143,16 +152,20 @@ public class ElasticSearchIndexer {
         Preconditions.checkArgument(content != null, "content should be provided");
     }
 
-    public Mono<GetResponse<ObjectNode>> get(DocumentId id, RoutingKey routingKey) throws IOException {
-        return Mono.fromRunnable(() -> {
-                Preconditions.checkNotNull(id);
-                Preconditions.checkNotNull(routingKey);
-            })
-            .then(client.get(
-                new GetRequest.Builder()
-                    .index(aliasName.getValue())
-                    .id(id.asString())
-                    .routing(routingKey.asString())
-                    .build()));
+    public Mono<GetResponse<ObjectNode>> get(DocumentId id, RoutingKey routingKey) {
+        try {
+            return Mono.fromRunnable(() -> {
+                    Preconditions.checkNotNull(id);
+                    Preconditions.checkNotNull(routingKey);
+                })
+                .then(client.get(
+                    new GetRequest.Builder()
+                        .index(aliasName.getValue())
+                        .id(id.asString())
+                        .routing(routingKey.asString())
+                        .build()));
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 }
