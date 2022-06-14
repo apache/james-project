@@ -172,7 +172,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .onErrorResume(error -> {
                 String errorMessage = String.format("Unable to deserialize submitted Task %s", taskId.asString());
                 LOGGER.error(errorMessage, error);
-                return Mono.from(worker.fail(taskId, Optional.empty(), errorMessage, error))
+                return Mono.from(worker.fail(taskId, Mono.empty(), errorMessage, error))
                     .then(Mono.empty());
             });
     }

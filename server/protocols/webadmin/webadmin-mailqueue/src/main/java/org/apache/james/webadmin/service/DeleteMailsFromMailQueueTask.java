@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.service;
 
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
-
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
@@ -150,7 +148,8 @@ public class DeleteMailsFromMailQueueTask implements Task {
             optionalRecipient.ifPresent(Throwing.consumer(
                 (MailAddress recipient) -> queue.remove(ManageableMailQueue.Type.Recipient, recipient.asString())));
 
-            this.lastAdditionalInformation = details();
+            this.lastAdditionalInformation = Mono.from(detailsReactive())
+                .block();
 
             return Result.COMPLETED;
         } catch (IOException | MailQueue.MailQueueException e) {
@@ -183,17 +182,16 @@ public class DeleteMailsFromMailQueueTask implements Task {
     }
 
     @Override
-    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+    public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
         return Mono.justOrEmpty(lastAdditionalInformation)
+            .map(Optional::of)
             .switchIfEmpty(Mono.fromCallable(() -> this.queue.map(queue ->
-                    new AdditionalInformation(
+                    (TaskExecutionDetails.AdditionalInformation) new AdditionalInformation(
                         queueName,
                         initialCount.get(),
                         getRemainingSize(queue), optionalSender,
                         optionalName, optionalRecipient, Clock.systemUTC().instant())))
-                .handle(publishIfPresent())
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            );
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
     }
 
     public long getRemainingSize(ManageableMailQueue queue) {

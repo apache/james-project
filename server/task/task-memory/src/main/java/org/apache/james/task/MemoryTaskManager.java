@@ -63,79 +63,30 @@ public class MemoryTaskManager implements TaskManager {
         }
 
         @Override
-        public Publisher<Void> completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
-                .accept(details -> details.completed(additionalInformation)));
+        public Publisher<Void> completed(TaskId taskId, Task.Result result, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher) {
+            return Mono.from(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                    .accept(details -> details.completed(additionalInformation))));
         }
 
         @Override
-        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t) {
-            return failed(taskId, additionalInformation);
+        public Publisher<Void> failed(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, Optional<String> errorMessage, Optional<Throwable> t) {
+            return Mono.from(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                    .accept(details -> details.failed(additionalInformation))));
         }
 
         @Override
-        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
-            return failed(taskId, additionalInformation);
-         }
-
-        @Override
-        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
-                .accept(details -> details.failed(additionalInformation)));
-        }
-
-        @Override
-        public Publisher<Void> cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
-                .accept(details -> details.cancelEffectively(additionalInformation)));
-        }
-
-        @Override
-        public Publisher<Void> updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation) {
-            //The memory task manager doesn't need polling to update its additionalInformation.
-            return Mono.empty();
-        }
-
-        @Override
-        public Publisher<Void> completed(TaskId taskId, Task.Result result, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
-            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
-                .flatMap(additionalInformation -> Mono.from(completed(taskId, result, additionalInformation)));
-        }
-
-        @Override
-        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, String errorMessage, Throwable t) {
-            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
-                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
-        }
-
-        @Override
-        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, Throwable t) {
-            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
-                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
-        }
-
-        @Override
-        public Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
-            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
-                .flatMap(additionalInformation -> Mono.from(failed(taskId, additionalInformation)));
-        }
-
-
-        @Override
-        public Publisher<Void> cancelled(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
-            return optionalAdditionalInformationPublisher(additionalInformationPublisher)
-                .flatMap(additionalInformation -> Mono.from(cancelled(taskId, additionalInformation)));
+        public Publisher<Void> cancelled(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher) {
+            return Mono.from(additionalInformationPublisher)
+                .flatMap(additionalInformation -> Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                    .accept(details -> details.cancelEffectively(additionalInformation))));
         }
 
         @Override
         public Publisher<Void> updated(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
+            //The memory task manager doesn't need polling to update its additionalInformation.
             return Mono.empty();
-        }
-
-        private Mono<Optional<TaskExecutionDetails.AdditionalInformation>> optionalAdditionalInformationPublisher(Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher) {
-            return Mono.from(additionalInformationPublisher)
-                .map(Optional::of)
-                .switchIfEmpty(Mono.just(Optional.empty()));
         }
     }
 
@@ -145,14 +96,13 @@ public class MemoryTaskManager implements TaskManager {
 
     private final Hostname hostname;
     private final WorkQueue workQueue;
-    private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
 
     @Inject
     public MemoryTaskManager(Hostname hostname) {
         this.hostname = hostname;
         this.idToExecutionDetails = new ConcurrentHashMap<>();
-        this.worker = new SerialTaskManagerWorker(updater(), UPDATE_INFORMATION_POLLING_DURATION);
+        TaskManagerWorker worker = new SerialTaskManagerWorker(updater(), UPDATE_INFORMATION_POLLING_DURATION);
         workQueue = new MemoryWorkQueue(worker);
     }
 

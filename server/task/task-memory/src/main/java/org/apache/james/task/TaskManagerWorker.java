@@ -30,27 +30,19 @@ public interface TaskManagerWorker extends Closeable {
     interface Listener {
         Publisher<Void> started(TaskId taskId);
 
-        Publisher<Void> completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
+        Publisher<Void> completed(TaskId taskId, Task.Result result, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher);
 
-        Publisher<Void> completed(TaskId taskId, Task.Result result, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher);
+        Publisher<Void> failed(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, Optional<String> errorMessage, Optional<Throwable> t);
 
-        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t);
+        default Publisher<Void> failed(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, Throwable t) {
+            return failed(taskId, additionalInformationPublisher, Optional.empty(), Optional.of(t));
+        }
 
-        Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, String errorMessage, Throwable t);
+        default Publisher<Void> failed(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher) {
+            return failed(taskId, additionalInformationPublisher, Optional.empty(), Optional.empty());
+        }
 
-        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t);
-
-        Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, Throwable t);
-
-        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
-
-        Publisher<Void> failed(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher);
-
-        Publisher<Void> cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
-
-        Publisher<Void> cancelled(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher);
-
-        Publisher<Void> updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation);
+        Publisher<Void> cancelled(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher);
 
         Publisher<Void> updated(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher);
     }
@@ -59,12 +51,6 @@ public interface TaskManagerWorker extends Closeable {
 
     void cancelTask(TaskId taskId);
 
-    Publisher<Void> fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason);
+    Publisher<Void> fail(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, String errorMessage, Throwable reason);
 
-    default Publisher<Void> fail(TaskId taskId, Publisher<TaskExecutionDetails.AdditionalInformation> additionalInformationPublisher, String errorMessage, Throwable reason) {
-        return Mono.from(additionalInformationPublisher)
-            .map(Optional::of)
-            .switchIfEmpty(Mono.just(Optional.empty()))
-            .flatMap(additionalInformation -> Mono.from(fail(taskId, additionalInformation, errorMessage, reason)));
-    }
 }

@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -135,9 +136,10 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     @Override
-    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+    public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
         return getRemainingSize()
-            .map(remainingSize -> new AdditionalInformation(mailRepositoryPath, initialCount, remainingSize, Clock.systemUTC().instant()));
+            .map(remainingSize -> new AdditionalInformation(mailRepositoryPath, initialCount, remainingSize, Clock.systemUTC().instant()))
+            .map(Optional::of);
     }
 
     public Mono<Long> getRemainingSize() {

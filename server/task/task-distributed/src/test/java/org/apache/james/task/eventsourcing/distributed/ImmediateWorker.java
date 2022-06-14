@@ -51,7 +51,7 @@ class ImmediateWorker implements TaskManagerWorker {
     }
 
     @Override
-    public Publisher<Void> fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason) {
+    public Publisher<Void> fail(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, String errorMessage, Throwable reason) {
         return Mono.fromRunnable(() -> failedTasks.add(taskId))
             .then();
     }

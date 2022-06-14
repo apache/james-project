@@ -40,6 +40,8 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -74,13 +76,17 @@ class SerialTaskManagerWorkerTest {
 
     @Test
     void aSuccessfullTaskShouldCompleteSuccessfully() {
+        ArgumentCaptor<Publisher<Optional<TaskExecutionDetails.AdditionalInformation>>> additionalInformationPublisherCapture = ArgumentCaptor.forClass(Publisher.class);
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), this.successfulTask);
 
         Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.COMPLETED);
 
-        verify(listener, atLeastOnce()).completed(taskWithId.getId(), Task.Result.COMPLETED, Optional.empty());
+        verify(listener, atLeastOnce()).completed(eq(taskWithId.getId()), eq(Task.Result.COMPLETED), additionalInformationPublisherCapture.capture());
+
+        assertThat(Mono.from(additionalInformationPublisherCapture.getValue())
+            .block()).isEmpty();
     }
 
     @Test
@@ -129,22 +135,30 @@ class SerialTaskManagerWorkerTest {
 
     @Test
     void aFailedTaskShouldCompleteWithFailedStatus() {
+        ArgumentCaptor<Publisher<Optional<TaskExecutionDetails.AdditionalInformation>>> additionalInformationPublisherCapture = ArgumentCaptor.forClass(Publisher.class);
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), failedTask);
 
         Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed(taskWithId.getId(), Optional.empty());
+
+        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), additionalInformationPublisherCapture.capture());
+
+        assertThat(Mono.from(additionalInformationPublisherCapture.getValue())
+            .block()).isEmpty();
     }
 
     @Test
     void aThrowingTaskShouldCompleteWithFailedStatus() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), throwingTask);
+        ArgumentCaptor<Publisher<Optional<TaskExecutionDetails.AdditionalInformation>>> additionalInformationPublisherCapture = ArgumentCaptor.forClass(Publisher.class);
 
         Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), eq(Optional.empty()), any(RuntimeException.class));
+        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), additionalInformationPublisherCapture.capture(), any(RuntimeException.class));
+        assertThat(Mono.from(additionalInformationPublisherCapture.getValue())
+            .block()).isEmpty();
     }
 
     @Test
@@ -204,6 +218,8 @@ class SerialTaskManagerWorkerTest {
 
     @Test
     void theWorkerShouldCancelAnInProgressTask() throws InterruptedException {
+        ArgumentCaptor<Publisher<Optional<TaskExecutionDetails.AdditionalInformation>>> additionalInformationPublisherCapture = ArgumentCaptor.forClass(Publisher.class);
+
         TaskId id = TaskId.generateTaskId();
         AtomicInteger counter = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
@@ -230,8 +246,11 @@ class SerialTaskManagerWorkerTest {
         // Let a grace period for the cancellation to complete to increase test stability
         Thread.sleep(50);
 
-        verify(listener, atLeastOnce()).cancelled(id, Optional.empty());
+        verify(listener, atLeastOnce()).cancelled(eq(id), additionalInformationPublisherCapture.capture());
         verifyNoMoreInteractions(listener);
+
+        assertThat(Mono.from(additionalInformationPublisherCapture.getValue())
+            .block()).isEmpty();
     }
 
 

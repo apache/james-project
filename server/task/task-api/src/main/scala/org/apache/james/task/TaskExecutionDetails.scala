@@ -15,16 +15,17 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ * ************************************************************** */
 
 package org.apache.james.task
-
-import java.time.{Instant, ZonedDateTime}
-import java.util.{Objects, Optional}
 
 import com.google.common.base.MoreObjects
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.TaskManager.Status._
+import reactor.core.scala.publisher.SMono
+
+import java.time.{Instant, ZonedDateTime}
+import java.util.{Objects, Optional}
 
 object TaskExecutionDetails {
 
@@ -32,7 +33,8 @@ object TaskExecutionDetails {
     def timestamp: Instant
   }
 
-  def from(task: Task, id: TaskId, hostname: Hostname) = new TaskExecutionDetails(id, task.`type`, WAITING, submittedDate = ZonedDateTime.now, submittedNode = hostname, () => task.details)
+  def from(task: Task, id: TaskId, hostname: Hostname) = new TaskExecutionDetails(id, task.`type`, WAITING, submittedDate = ZonedDateTime.now, submittedNode = hostname,
+    () => SMono.fromPublisher(task.detailsReactive()).block())
 }
 
 class TaskExecutionDetails(val taskId: TaskId,
