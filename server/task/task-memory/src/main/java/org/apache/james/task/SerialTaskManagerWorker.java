@@ -69,7 +69,10 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
         if (!cancelledTasks.remove(taskWithId.getId())) {
-            Mono<Task.Result> taskMono = runWithMdc(taskWithId, listener).subscribeOn(taskExecutor);
+            Mono<Task.Result> taskMono = Mono.from(taskWithId.getTask().detailsReactive())
+                .map(taskDetails -> runWithMdc(taskWithId, listener, taskDetails))
+                .subscribeOn(taskExecutor);
+
             CompletableFuture<Task.Result> future = taskMono.toFuture();
             runningTask.set(Tuples.of(taskWithId.getId(), future));
 
@@ -97,16 +100,19 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         return Mono.from(taskWithId.getTask().detailsReactive())
             .delayElement(pollingInterval, Schedulers.parallel())
             .repeat()
-            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), information)).thenReturn(information), DEFAULT_CONCURRENCY);
+            .handle(publishIfPresent())
+            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), Mono.just(information))).thenReturn(information), DEFAULT_CONCURRENCY);
     }
 
 
-    private Mono<Task.Result> runWithMdc(TaskWithId taskWithId, Listener listener) {
-        return run(taskWithId, listener)
-            .contextWrite(ReactorUtils.context("task",
-                MDCBuilder.create()
-                    .addToContext(Task.TASK_ID, taskWithId.getId().asString())
-                    .addToContext(Task.TASK_TYPE, taskWithId.getTask().type().asString())));
+
+    private Task.Result runWithMdc(TaskWithId taskWithId, Listener listener, Optional<TaskExecutionDetails.AdditionalInformation> taskDetails) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addToContext(Task.TASK_ID, taskWithId.getId().asString())
+                .addToContext(Task.TASK_TYPE, taskWithId.getTask().type().asString())
+                .addToContext(Task.TASK_DETAILS, taskDetails.toString()),
+            () -> run(taskWithId, listener).block());
     }
 
     private Mono<Task.Result> run(TaskWithId taskWithId, Listener listener) {
@@ -154,8 +160,8 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
     @Override
-    public Publisher<Void> fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason) {
-        return listener.failed(taskId, additionalInformation, errorMessage, reason);
+    public Publisher<Void> fail(TaskId taskId, Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> additionalInformationPublisher, String errorMessage, Throwable reason) {
+        return listener.failed(taskId, additionalInformationPublisher, Optional.ofNullable(errorMessage), Optional.ofNullable(reason));
     }
 
     @Override

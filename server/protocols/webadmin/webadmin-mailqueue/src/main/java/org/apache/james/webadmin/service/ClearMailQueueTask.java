@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.service;
 
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
-
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
@@ -111,7 +109,8 @@ public class ClearMailQueueTask implements Task {
             this.initialCount = Optional.of(getRemainingSize(queue));
             this.queue = Optional.of(queue);
             queue.clear();
-            this.lastAdditionalInformation = details();
+            this.lastAdditionalInformation = Mono.from(detailsReactive())
+                .block();
         } catch (MailQueue.MailQueueException | IOException e) {
             LOGGER.error("Clear MailQueue got an exception", e);
             return Result.PARTIAL;
@@ -128,10 +127,10 @@ public class ClearMailQueueTask implements Task {
     }
 
     @Override
-    public Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
+    public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
         return Mono.justOrEmpty(lastAdditionalInformation)
-            .switchIfEmpty(Mono.fromCallable(() -> queue.map(q -> new AdditionalInformation(queueName, initialCount.get(), getRemainingSize(q), Clock.systemUTC().instant())))
-                .handle(publishIfPresent())
+            .map(Optional::of)
+            .switchIfEmpty(Mono.fromCallable(() -> queue.map(q -> (TaskExecutionDetails.AdditionalInformation) new AdditionalInformation(queueName, initialCount.get(), getRemainingSize(q), Clock.systemUTC().instant())))
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
     }
 

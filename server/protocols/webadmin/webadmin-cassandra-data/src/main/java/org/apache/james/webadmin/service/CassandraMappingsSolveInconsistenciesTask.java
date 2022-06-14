@@ -31,6 +31,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.reactivestreams.Publisher;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -86,7 +87,7 @@ public class CassandraMappingsSolveInconsistenciesTask implements Task {
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return mappingsSourcesMigration.details();
+    public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
+        return mappingsSourcesMigration.detailsReactive();
     }
 }

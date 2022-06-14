@@ -19,8 +19,6 @@
 
 package org.apache.james.task;
 
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
-
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -103,9 +101,8 @@ public interface Task {
         return Optional.empty();
     }
 
-    default Publisher<TaskExecutionDetails.AdditionalInformation> detailsReactive() {
-        return Mono.fromCallable(this::details)
-            .handle(publishIfPresent());
+    default Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
+        return Mono.fromCallable(this::details);
     }
 
     String TASK_ID = "taskId";
