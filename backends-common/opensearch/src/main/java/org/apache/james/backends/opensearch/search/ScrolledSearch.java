@@ -89,8 +89,7 @@ public class ScrolledSearch {
     }
 
     private Mono<ScrollResponse<ObjectNode>> buildRequest(Optional<String> scrollId) {
-        return scrollId.map(id ->
-            {
+        return scrollId.map(id -> {
                 try {
                     return client.scroll(new ScrollRequest.Builder()
                             .scrollId(scrollId.get())
