@@ -203,7 +203,7 @@ public class MailboxMappingFactory {
                 .keyword(new KeywordProperty.Builder().store(true).build())
                 .build())
             .put(JsonMessageConstants.MIME_MESSAGE_ID, new Property.Builder()
-                .text(new TextProperty.Builder().analyzer(STANDARD).build())
+                .keyword(new KeywordProperty.Builder().build())
                 .build())
             .put(JsonMessageConstants.TEXT_BODY, new Property.Builder()
                 .text(new TextProperty.Builder().analyzer(STANDARD).build())

@@ -429,12 +429,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     }
 
-    @Disabled("returns empty on search... I could not find the reason yet")
-    @Test
-    void searchShouldRetrieveExactlyMatchingMimeMessageID() throws Exception {
-
-    }
-
     private void awaitForElasticSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
