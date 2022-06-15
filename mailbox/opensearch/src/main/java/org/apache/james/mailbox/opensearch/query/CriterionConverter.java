@@ -32,11 +32,11 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.opensearch.json.HeaderCollection;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
+import org.apache.james.mailbox.opensearch.json.HeaderCollection;
+import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;

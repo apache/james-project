@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
