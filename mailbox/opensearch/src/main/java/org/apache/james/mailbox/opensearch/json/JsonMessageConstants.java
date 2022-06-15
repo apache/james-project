@@ -36,6 +36,7 @@ public interface JsonMessageConstants {
     String FROM = "from";
     String TO = "to";
     String CC = "cc";
+    String CC_SORT = "ccsort";
     String BCC = "bcc";
     String SUBJECT = "subject";
     String DATE = "date";

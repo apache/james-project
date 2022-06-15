@@ -295,6 +295,14 @@ public class IndexableMessage {
         return cc;
     }
 
+    @JsonProperty(JsonMessageConstants.CC_SORT)
+    public EMailers getCcSort() {
+        if (cc.getEmailers().isEmpty()) {
+            return EMailers.DEFAULT;
+        }
+        return cc;
+    }
+
     @JsonProperty(JsonMessageConstants.DATE)
     public String getDate() {
         return date;

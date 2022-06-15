@@ -423,12 +423,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId1.getUid());
     }
 
-    @Disabled("bug: can't sort on field when document of that field contains null => https://github.com/opensearch-project/opensearch-java/issues/158")
-    @Test
-    public void sortOnCcShouldWork() throws Exception {
-
-    }
-
     private void awaitForElasticSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(

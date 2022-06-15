@@ -42,7 +42,7 @@ public class SortConverter {
             case Arrival :
                 return new FieldSort.Builder().field(JsonMessageConstants.DATE);
             case MailboxCc :
-                return new FieldSort.Builder().field(JsonMessageConstants.CC + PATH_SEPARATOR
+                return new FieldSort.Builder().field(JsonMessageConstants.CC_SORT + PATH_SEPARATOR
                     + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case MailboxFrom :
                 return new FieldSort.Builder().field(JsonMessageConstants.FROM + PATH_SEPARATOR

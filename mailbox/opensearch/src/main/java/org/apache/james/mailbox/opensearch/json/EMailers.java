@@ -19,13 +19,16 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public class EMailers implements SerializableMessage {
+    public static final EMailers DEFAULT = new EMailers(ImmutableSet.of(new EMailer(Optional.empty(), "zzzzzzzzz")));
 
     public static EMailers from(Set<EMailer> emailers) {
         Preconditions.checkNotNull(emailers, "'emailers' is mandatory");
