@@ -77,4 +77,9 @@ public class FakeMailQueueView<V extends ManageableMailQueue.MailQueueItemView> 
     public long getSize() {
         return 0;
     }
+
+    @Override
+    public Mono<Long> getSizeReactive() {
+        return Mono.just(0L);
+    }
 }

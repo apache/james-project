@@ -25,6 +25,9 @@ import java.util.Optional;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mime4j.dom.Disposable;
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 /**
  * {@link MailQueue} which is manageable
@@ -42,6 +45,10 @@ public interface ManageableMailQueue extends MailQueue {
      * @throws MailQueueException
      */
     long getSize() throws MailQueueException;
+
+    default Publisher<Long> getSizeReactive() {
+        return Mono.fromCallable(this::getSize);
+    }
 
     /**
      * Flush the queue, which means it will make all message ready for dequeue

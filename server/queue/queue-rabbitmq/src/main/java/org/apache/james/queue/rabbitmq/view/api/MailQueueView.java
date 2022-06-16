@@ -50,4 +50,6 @@ public interface MailQueueView<V extends ManageableMailQueue.MailQueueItemView> 
     Flux<V> browseOlderThanReactive(Instant olderThan);
 
     long getSize();
+
+    Mono<Long> getSizeReactive();
 }
