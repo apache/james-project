@@ -31,7 +31,6 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
@@ -139,7 +138,9 @@ public class DeleteMailsFromMailQueueTask implements Task {
     @Override
     public Result run() {
         try (ManageableMailQueue queue = factory.create(queueName)) {
-            this.initialCount = Optional.of(getRemainingSize(queue));
+            this.initialCount = Mono.justOrEmpty(queue)
+                .flatMap(q -> Mono.from(q.getSizeReactive()))
+                .blockOptional();
             this.queue = Optional.of(queue);
             optionalSender.ifPresent(Throwing.consumer(
                 (MailAddress sender) -> queue.remove(ManageableMailQueue.Type.Sender, sender.asString())));
@@ -184,21 +185,19 @@ public class DeleteMailsFromMailQueueTask implements Task {
     @Override
     public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
         return Mono.justOrEmpty(lastAdditionalInformation)
+            .switchIfEmpty(getAdditionalInformation())
             .map(Optional::of)
-            .switchIfEmpty(Mono.fromCallable(() -> this.queue.map(queue ->
-                    (TaskExecutionDetails.AdditionalInformation) new AdditionalInformation(
-                        queueName,
-                        initialCount.get(),
-                        getRemainingSize(queue), optionalSender,
-                        optionalName, optionalRecipient, Clock.systemUTC().instant())))
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
+            .switchIfEmpty(Mono.just(Optional.empty()));
     }
 
-    public long getRemainingSize(ManageableMailQueue queue) {
-        try {
-            return queue.getSize();
-        } catch (MailQueue.MailQueueException e) {
-            throw new RuntimeException(e);
-        }
+    private Mono<TaskExecutionDetails.AdditionalInformation> getAdditionalInformation() {
+        return Mono.justOrEmpty(queue)
+            .flatMap(q -> Mono.from(q.getSizeReactive()))
+            .map(remainingSize -> new AdditionalInformation(
+                queueName,
+                initialCount.get(),
+                remainingSize, optionalSender,
+                optionalName, optionalRecipient,
+                Clock.systemUTC().instant()));
     }
 }
