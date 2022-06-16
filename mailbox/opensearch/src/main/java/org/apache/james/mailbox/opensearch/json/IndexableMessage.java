@@ -297,6 +297,8 @@ public class IndexableMessage {
 
     @JsonProperty(JsonMessageConstants.CC_SORT)
     public EMailers getCcSort() {
+        // workaround for ISSUE with sorts on null/empty indexed fields:
+        // https://github.com/opensearch-project/opensearch-java/issues/158
         if (cc.getEmailers().isEmpty()) {
             return EMailers.DEFAULT;
         }
