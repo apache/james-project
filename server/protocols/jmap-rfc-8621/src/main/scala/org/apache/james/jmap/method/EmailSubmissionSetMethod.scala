@@ -47,6 +47,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
+import org.apache.james.util.ReactorUtils
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
@@ -216,6 +217,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         }
       }
       .flatMap(x => x)
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def createSubmission(mailboxSession: MailboxSession,
                             emailSubmissionCreationId: EmailSubmissionCreationId,
