@@ -109,6 +109,11 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     }
 
     @Override
+    public Publisher<Long> getSizeReactive() {
+        return mailQueueView.getSizeReactive();
+    }
+
+    @Override
     public long flush() {
         LOGGER.warn("Delays are not supported by RabbitMQ. Flush is a NOOP.");
         return 0;

@@ -117,9 +117,14 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
 
     @Override
     public long getSize() {
-        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
-            .count()
+        return getSizeReactive()
             .block();
+    }
+
+    @Override
+    public Mono<Long> getSizeReactive() {
+        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
+            .count();
     }
 
     @Override
