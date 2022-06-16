@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -15,7 +15,7 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ************************************************************** */
+ ****************************************************************/
 
 package org.apache.james.mailrepository.blob
 
@@ -81,7 +81,7 @@ object BlobMailRepository {
       val mailMetadata = MailMetadata.of(mail, partsIds)
       val payload = Json.stringify(Json.toJson(mailMetadata))
       val mailKey = MailKey.forMail(mail)
-      val blobId=blobIdFactory.from(mailKey.asString())
+      val blobId = blobIdFactory.from(mailKey.asString())
       val save: Impl.ValueToSave = (bucketName, _) =>
         Mono.from(blobStoreDAO.save(bucketName, blobId, payload)).`then`(Mono.just(blobId))
 
@@ -140,10 +140,9 @@ object BlobMailRepository {
 
 class BlobMailRepository(val blobStore: BlobStoreDAO,
                          val blobIdFactory: BlobId.Factory,
-                         val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId]
+                         val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
+                         val metadataBucketName: BucketName
                         ) extends MailRepository {
-  private val bucketName: BucketName = BucketName.of("mailMetadata")
-  private val mimeMessageBucketName: BucketName = BucketName.of("mimeMessageData")
   import BlobMailRepository._
 
   @throws[MessagingException]
@@ -155,10 +154,10 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
   }
 
   @throws[MessagingException]
-  override def size: Long = Flux.from(blobStore.listBlobs(bucketName)).count().block()
+  override def size: Long = Flux.from(blobStore.listBlobs(metadataBucketName)).count().block()
 
   @throws[MessagingException]
-  override def list: util.Iterator[MailKey] = Flux.from(blobStore.listBlobs(bucketName))
+  override def list: util.Iterator[MailKey] = Flux.from(blobStore.listBlobs(metadataBucketName))
     .map[MailKey](blobId => new MailKey(blobId.asString))
     .toIterable
     .iterator
@@ -179,20 +178,20 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
 
   @throws[MessagingException]
   override def remove(key: MailKey) = {
-    Mono.from(blobStore.delete(bucketName, blobIdFactory.from(key.asString()))).block()
+    Mono.from(blobStore.delete(metadataBucketName, blobIdFactory.from(key.asString()))).block()
   }
 
   @throws[MessagingException]
   override def removeAll() = {
-    Flux.from(blobStore.listBlobs(bucketName))
-      .flatMap(blobId => blobStore.delete(bucketName, blobId))
+    Flux.from(blobStore.listBlobs(metadataBucketName))
+      .flatMap(blobId => blobStore.delete(metadataBucketName, blobId))
       .blockLast()
   }
 
   private val mailMetaDataBlobStore: BlobStore = BlobStoreFactory.builder()
     .blobStoreDAO(blobStore)
     .blobIdFactory(blobIdFactory)
-    .bucket(bucketName)
+    .bucket(metadataBucketName)
     .passthrough()
 
   val mailMetadataStore = new Store.Impl[(Mail, MimeMessagePartsId), BlobMailRepository.MailPartsId](
@@ -200,6 +199,6 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
     new BlobMailRepository.MailEncoder(blobStore, blobIdFactory),
     new BlobMailRepository.MailDecoder(blobIdFactory),
     mailMetaDataBlobStore,
-    bucketName
+    metadataBucketName
   )
 }

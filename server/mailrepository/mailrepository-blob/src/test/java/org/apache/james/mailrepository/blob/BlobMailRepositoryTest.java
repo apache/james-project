@@ -21,6 +21,8 @@ package org.apache.james.mailrepository.blob;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -30,27 +32,44 @@ import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.jetbrains.annotations.NotNull;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 
 class BlobMailRepositoryTest implements MailRepositoryContract {
 
     private BlobMailRepository blobMailRepository;
+    private HashBlobId.Factory blobIdFactory;
+    private MemoryBlobStoreDAO blobStore;
+    private MimeMessageStore.Factory mimeMessageStoreFactory;
 
     @BeforeEach
     void setup() {
-        var blobIdFactory = new HashBlobId.Factory();
-        var blobStore = new MemoryBlobStoreDAO();
+        blobIdFactory = new HashBlobId.Factory();
+        blobStore = new MemoryBlobStoreDAO();
         var mimeMessageBlobStore  = MemoryBlobStoreFactory.builder()
                 .blobIdFactory(blobIdFactory)
                 .defaultBucketName()
                 .passthrough();
-        MimeMessageStore.Factory mimeMessageStoreFactory = new MimeMessageStore.Factory(mimeMessageBlobStore);
-        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
-        blobMailRepository = new BlobMailRepository(
+        mimeMessageStoreFactory = new MimeMessageStore.Factory(mimeMessageBlobStore);
+        MailRepositoryPath path = MailRepositoryPath.from("/foo");
+
+        blobMailRepository = buildBlobMailRepository(blobIdFactory, blobStore, path, mimeMessageStoreFactory);
+    }
+
+    @NotNull
+    private BlobMailRepository buildBlobMailRepository(HashBlobId.Factory blobIdFactory,
+                                                       MemoryBlobStoreDAO blobStore,
+                                                       MailRepositoryPath path,
+                                                       MimeMessageStore.Factory mimeMessageStoreFactory) {
+        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore =
+                mimeMessageStoreFactory.mimeMessageStore(BucketName.of(path+"/mimeMessageData"));
+        return new BlobMailRepository(
                 blobStore,
                 blobIdFactory,
-                mimeMessageStore
+                mimeMessageStore,
+                BucketName.of(path + "/mailMetadata")
         );
     }
 
@@ -61,12 +80,6 @@ class BlobMailRepositoryTest implements MailRepositoryContract {
 
     @Override
     public MailRepository retrieveRepository(MailRepositoryPath path) {
-        return blobMailRepository;
-    }
-
-    @Override
-    @Disabled
-    public void mailRepositoriesShouldBeURLIsolated() throws Exception {
-        MailRepositoryContract.super.storeRegularMailShouldNotFailWhenNullSender();
+        return buildBlobMailRepository(blobIdFactory, blobStore, path, mimeMessageStoreFactory);
     }
 }
