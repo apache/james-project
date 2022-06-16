@@ -156,6 +156,7 @@
 	}
   ],
   "cc": [],
+  "ccsort": [{"address":"zzzzzzzzz","name":null}],
   "bcc": [],
   "subject": [
 	"[SECURITY] [DSA 3278-1] libapache-mod-jk security update"

@@ -5,6 +5,7 @@
       "debian"
    ],
    "cc" : [],
+   "ccsort": [{"address":"zzzzzzzzz","name":null}],
    "modSeq" : 42,
    "subject" : [
       "test"

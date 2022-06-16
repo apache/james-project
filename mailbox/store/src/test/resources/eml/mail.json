@@ -157,6 +157,7 @@
   }
  ],
  "cc": [],
+ "ccsort": [{"address":"zzzzzzzzz","name":null}],
  "bcc": [],
  "subject": [
   "[arch-general] Inkscape fails to open svg files"

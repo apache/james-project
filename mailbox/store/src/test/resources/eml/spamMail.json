@@ -111,6 +111,7 @@
 	}
   ],
   "cc": [],
+  "ccsort": [{"address":"zzzzzzzzz","name":null}],
   "bcc": [],
   "subject": [
 	"[root] UNCHECKED contents in mail FROM <quentin.h@riseup.net>"

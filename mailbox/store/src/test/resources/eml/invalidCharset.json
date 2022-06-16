@@ -4,6 +4,7 @@
   "htmlBody":null,
   "textBody":"This is an inline attachment: Cheers!",
   "cc":[],
+  "ccsort": [{"address":"zzzzzzzzz","name":null}],
   "date":"2015-06-07T00:00:00+0200",
   "from":[{"name":"Antoine DUPRAT","address":"xyz@linagora.com"}],
   "hasAttachment":false,
