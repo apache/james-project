@@ -19,6 +19,7 @@
 package org.apache.james.backends.opensearch;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,8 +30,6 @@ import org.opensearch.client.opensearch.core.GetRequest;
 import org.opensearch.client.opensearch.core.GetResponse;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.IndexResponse;
-import org.opensearch.client.opensearch.core.UpdateRequest;
-import org.opensearch.client.opensearch.core.UpdateResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
 import com.google.common.base.Preconditions;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchIndexer {
@@ -79,7 +77,7 @@ public class ElasticSearchIndexer {
         }
     }
 
-    public Mono<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) throws IOException {
+    public Mono<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) {
         Preconditions.checkNotNull(updatedDocumentParts);
         Preconditions.checkNotNull(routingKey);
 
@@ -92,34 +90,15 @@ public class ElasticSearchIndexer {
             op -> op.update(idx -> idx
                 .index(aliasName.getValue())
                 .id(updatedDocumentPart.getId().asString())
-                .document(new RawValue(updatedDocumentPart.getUpdatedDocumentPart())) // Does not work...
+                .document(Collections.singletonMap("doc", new RawValue(updatedDocumentPart.getUpdatedDocumentPart())))
                 .routing(routingKey.asString())
             )));
 
-        return client.bulk(bulkBuilder.build());
-    }
-
-    public Flux<UpdateResponse> fluxUpdate(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) {
-        Preconditions.checkNotNull(updatedDocumentParts);
-        Preconditions.checkNotNull(routingKey);
-
-        if (updatedDocumentParts.isEmpty()) {
-            return Flux.empty();
+        try {
+            return client.bulk(bulkBuilder.build());
+        } catch (IOException e) {
+            return Mono.error(e);
         }
-
-        return Flux.fromIterable(updatedDocumentParts)
-            .flatMap(updatedDocumentPart -> {
-                try {
-                    return client.update(new UpdateRequest.Builder()
-                        .index(aliasName.getValue())
-                        .id(updatedDocumentPart.getId().asString())
-                        .doc(new RawValue(updatedDocumentPart.getUpdatedDocumentPart()))
-                        .routing(routingKey.asString())
-                        .build());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
     }
 
     public Mono<BulkResponse> delete(List<DocumentId> ids, RoutingKey routingKey) {

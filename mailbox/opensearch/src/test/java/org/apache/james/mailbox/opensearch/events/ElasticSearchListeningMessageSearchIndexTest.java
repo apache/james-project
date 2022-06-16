@@ -392,13 +392,11 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        assertThatThrownBy(() -> testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block())
-            .hasMessage("Request failed: [document_missing_exception] [1:26]: document missing");
-        // It seems Opensearch throws in this case: Request failed: [document_missing_exception] [1:26]: document missing
+        testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
 
-//        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
-//        assertThat(testee.search(session, mailbox, query).toStream())
-//            .isEmpty();
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
+        assertThat(testee.search(session, mailbox, query).toStream())
+            .isEmpty();
     }
 
     @Test

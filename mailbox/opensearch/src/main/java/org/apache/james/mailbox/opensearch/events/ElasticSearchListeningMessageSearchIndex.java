@@ -215,7 +215,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .sneakyThrow())
             .window(FLAGS_UPDATE_PROCESSING_WINDOW_SIZE)
             .concatMap(flux -> flux.collect(toImmutableList())
-                .flatMap(updates -> elasticSearchIndexer.fluxUpdate(updates, routingKey).collectList()))
+                .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey)))
             .then();
     }
 

@@ -105,7 +105,7 @@ class ElasticSearchIndexerTest {
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
         awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
-        testee.fluxUpdate(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).collectList().block();
+        testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
         awaitForElasticSearch(new MatchQuery.Builder().field("message").query(new FieldValue.Builder().stringValue("mastering").build()).build()._toQuery(), 1L);
 
         awaitForElasticSearch(new MatchQuery.Builder().field("field").query(new FieldValue.Builder().stringValue("unchanged").build()).build()._toQuery(), 1L);
@@ -113,29 +113,29 @@ class ElasticSearchIndexerTest {
 
     @Test
     void updateMessageShouldThrowWhenJsonIsNull() {
-        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING).collectList().block())
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenIdIsNull() {
-        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
-                new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING).collectList().block())
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenJsonIsEmpty() {
-        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING).collectList().block())
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void updateMessageShouldThrowWhenRoutingKeyIsNull() {
-        assertThatThrownBy(() -> testee.fluxUpdate(ImmutableList.of(
-                new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null).collectList().block())
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -212,7 +212,7 @@ class ElasticSearchIndexerTest {
     
     @Test
     void updateMessagesShouldNotThrowWhenEmptyList() {
-        assertThatCode(() -> testee.fluxUpdate(ImmutableList.of(), ROUTING).collectList().block())
+        assertThatCode(() -> testee.update(ImmutableList.of(), ROUTING).block())
             .doesNotThrowAnyException();
     }
     
