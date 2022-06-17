@@ -333,14 +333,9 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private Mono<SetMessagesResponse.Builder> sendMessageWhenOutboxInTargetMailboxIds(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession) {
         if (isTargetingOutbox(outboxes, listTargetMailboxIds(updateMessagePatch))) {
             return Mono.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession))
-                .flatMap(messageToSend -> Mono.fromCallable(() -> {
-                    MailImpl mail = buildMailFromMessage(messageToSend);
-                    Optional<Username> fromUser = mail.getMaybeSender()
-                        .asOptional()
-                        .map(Username::fromMailAddress);
-                    assertUserCanSendFrom(mailboxSession.getUser(), fromUser);
-                    return Pair.of(messageToSend, mail);
-                }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+                .flatMap(messageToSend -> Mono.fromCallable(() -> buildMailFromMessage(messageToSend))
+                    .flatMap(mail -> assertUserCanSendFrom(mailboxSession.getUser(), mail.getMaybeSender().asOptional().map(Username::fromMailAddress))
+                        .then(Mono.just(Pair.of(messageToSend, mail)))))
                 .flatMap(Throwing.<Pair<MessageResult, MailImpl>, Mono<SetMessagesResponse.Builder>>function(
                     pair -> messageSender.sendMessage(messageId, pair.getRight(), mailboxSession)
                         .then(referenceUpdater.updateReferences(pair.getKey().getHeaders(), mailboxSession))
@@ -351,13 +346,13 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     @VisibleForTesting
-    void assertUserCanSendFrom(Username connectedUser, Optional<Username> fromUser) throws MailboxSendingNotAllowedException {
-        if (!fromUser.filter(from -> canSendFrom.userCanSendFrom(connectedUser, from))
-            .isPresent()) {
-            throw new MailboxSendingNotAllowedException(connectedUser, fromUser);
-        } else {
-            LOGGER.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), fromUser);
-        }
+    Mono<Void> assertUserCanSendFrom(Username connectedUser, Optional<Username> maybeFromUser) {
+        return Mono.justOrEmpty(maybeFromUser)
+            .flatMap(fromUser -> Mono.from(canSendFrom.userCanSendFromReactive(connectedUser, fromUser)))
+            .filter(Boolean::booleanValue)
+            .doOnNext(bool -> LOGGER.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), maybeFromUser))
+            .switchIfEmpty(Mono.error(() -> new MailboxSendingNotAllowedException(connectedUser, maybeFromUser)))
+            .then();
     }
 
     private void assertValidUpdate(List<ComposedMessageIdWithMetaData> messagesToBeUpdated,

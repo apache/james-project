@@ -52,6 +52,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
+import reactor.util.concurrent.Queues
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -254,7 +255,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       submissionId = EmailSubmissionId.generate
       message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
       envelope <- SMono.fromTry(resolveEnvelope(message, request.envelope))
-      _ <- SMono.fromTry(validate(mailboxSession)(message, envelope))
+      _ <- validate(mailboxSession)(message, envelope)
       mail = {
         val mailImpl = MailImpl.builder()
           .name(submissionId.value)
@@ -283,21 +284,30 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       })
   }
 
-  private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): Try[MimeMessage] = {
-    val forbiddenMailFrom: List[String] = (Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
+  private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
+    SFlux.fromIterable(Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
       .map(_.asInstanceOf[InternetAddress].getAddress)
-      .filter(addressAsString => !canSendFrom.userCanSendFrom(session.getUser, Username.fromMailAddress(new MailAddress(addressAsString))))
-
-    if (forbiddenMailFrom.nonEmpty) {
-      Failure(ForbiddenMailFromException(forbiddenMailFrom))
-    } else if (envelope.rcptTo.isEmpty) {
-      Failure(NoRecipientException())
-    } else if (!canSendFrom.userCanSendFrom(session.getUser, Username.fromMailAddress(envelope.mailFrom.email))) {
-      Failure(ForbiddenFromException(envelope.mailFrom.email.asString))
-    } else {
-      Success(mimeMessage)
-    }
-  }
+      .filterWhen(addressAsString => SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(addressAsString))))
+        .map(Boolean.unbox(_)).map(!_), Queues.SMALL_BUFFER_SIZE)
+      .collectSeq()
+      .flatMap(forbiddenMailFrom => {
+        if (forbiddenMailFrom.nonEmpty) {
+          SMono.just(Failure(ForbiddenMailFromException(forbiddenMailFrom.toList)))
+        } else if (envelope.rcptTo.isEmpty) {
+          SMono.just(Failure(NoRecipientException()))
+        } else {
+          SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(envelope.mailFrom.email)))
+            .filter(bool => bool.equals(false))
+            .map(_ => Failure(ForbiddenFromException(envelope.mailFrom.email.asString)))
+            .switchIfEmpty(SMono.just(Success(mimeMessage)))
+        }
+      })
+      .handle[MimeMessage]((aTry, sink) => {
+        aTry match {
+          case Success(mimeMessage) => sink.next(mimeMessage)
+          case Failure(ex) => sink.error(ex)
+        }
+      })
 
   private def resolveEnvelope(mimeMessage: MimeMessage, maybeEnvelope: Option[Envelope]): Try[Envelope] =
     maybeEnvelope.map(Success(_)).getOrElse(extractEnvelope(mimeMessage))

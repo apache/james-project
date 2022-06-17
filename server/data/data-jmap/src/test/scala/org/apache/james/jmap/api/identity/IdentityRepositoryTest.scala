@@ -84,14 +84,14 @@ class IdentityRepositoryTest {
 
   @Test
   def saveShouldSuccess(): Unit = {
-    when(identityFactory.userCanSendFrom(any(), any())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(true))
     assertThatCode(() => SMono.fromPublisher(testee.save(BOB, CREATION_REQUEST)).block())
       .doesNotThrowAnyException()
   }
 
   @Test
   def saveShouldFailWhenUserCanNotSendFrom(): Unit = {
-    when(identityFactory.userCanSendFrom(any(), any())).thenReturn(false)
+    when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(false))
     assertThatThrownBy(() => SMono.fromPublisher(testee.save(BOB, CREATION_REQUEST)).block())
       .isInstanceOf(classOf[ForbiddenSendFromException])
   }
@@ -153,7 +153,7 @@ class IdentityRepositoryTest {
   @Test
   def updateShouldSuccessWhenCustomExistsAndAliasExists(): Unit = {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
 
     assertThatCode(() => SMono(testee.update(BOB, customIdentity.id, UPDATE_REQUEST)).block())
@@ -163,7 +163,7 @@ class IdentityRepositoryTest {
   @Test
   def updateShouldModifiedEntry(): Unit = {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
 
@@ -177,7 +177,7 @@ class IdentityRepositoryTest {
   @Test
   def updateShouldSuccessWhenMultiUpdateServerSetId(): Unit = {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
     SMono(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST)).block()
 
     assertThatCode(() => SMono.fromPublisher(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST.copy(name = Some(IdentityNameUpdate(IdentityName("Bob (3)")))))).block())
@@ -197,7 +197,7 @@ class IdentityRepositoryTest {
   @Test
   def updateShouldSuccessWhenSecondPartialUpdateServerSetId(): Unit = {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
     SMono(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST)).block()
     val secondUpdateWithName: IdentityUpdateRequest = IdentityUpdateRequest(name = Some(IdentityNameUpdate(name = IdentityName("Bob (3)"))))
@@ -218,11 +218,11 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldFailWhenAliasNotExists(): Unit = {
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(true)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
     val identity: Identity = SMono.fromPublisher(testee.save(BOB, CREATION_REQUEST)).block()
 
-    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(false)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(false))
     when(identityFactory.listIdentities(BOB)).thenReturn(List())
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.update(BOB, identity.id, UPDATE_REQUEST)).block())
