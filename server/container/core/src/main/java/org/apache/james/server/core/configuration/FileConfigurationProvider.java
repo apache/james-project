@@ -49,6 +49,10 @@ public class FileConfigurationProvider implements ConfigurationProvider {
 
     public static final HierarchicalConfiguration<ImmutableNode> EMPTY_CONFIGURATION = new XMLConfiguration();
 
+    private static boolean failOnMissingConfiguration() {
+        return Boolean.valueOf(System.getProperty("james.fail.on.missing.configuration", "false"));
+    }
+
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
         FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
             .configure(new Parameters()
@@ -84,6 +88,9 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         if (inputStream.isPresent()) {
             return selectConfigurationPart(configPathParts,
                 getConfig(inputStream.get()));
+        }
+        if (failOnMissingConfiguration()) {
+            throw new ConfigurationException("Missing configuration: " + component);
         }
         return EMPTY_CONFIGURATION;
     }
