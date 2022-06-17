@@ -3267,6 +3267,7 @@
                         <systemPropertyVariables>
                             <!--https://issues.apache.org/jira/browse/JAMES-3724-->
                             <james.ligecycle.leak.detection.mode>testing</james.ligecycle.leak.detection.mode>
+                            <james.exit.on.startup.error>false</james.exit.on.startup.error>
                         </systemPropertyVariables>
                         <argLine>-Xms512m -Xmx1024m</argLine>
                         <reuseForks>true</reuseForks>
