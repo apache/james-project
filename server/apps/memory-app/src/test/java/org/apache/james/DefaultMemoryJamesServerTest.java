@@ -21,10 +21,12 @@ package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.utils.PropertiesProvider.MissingConfigurationFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -39,10 +41,22 @@ class DefaultMemoryJamesServerTest {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance((s, l) -> new BaseHierarchicalConfiguration())))
+        .disableAutoStart()
         .build();
 
     @Test
-    void memoryJamesServerShouldStartWithNoConfigurationFile(GuiceJamesServer server) {
+    void memoryJamesServerShouldStartWithNoConfigurationFile(GuiceJamesServer server) throws Exception {
+        server.start();
         assertThat(server.isStarted()).isTrue();
+    }
+
+    @Test
+    void shouldFailOnMissingConfigurationFilesWhenRequested(GuiceJamesServer server) {
+        System.setProperty("james.fail.on.missing.configuration", "true");
+        try {
+            assertThatThrownBy(server::start).hasCauseInstanceOf(MissingConfigurationFile.class);
+        } finally {
+            System.setProperty("james.fail.on.missing.configuration", "false");
+        }
     }
 }

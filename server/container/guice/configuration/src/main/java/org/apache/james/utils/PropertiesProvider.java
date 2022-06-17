@@ -45,9 +45,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class PropertiesProvider {
+    public static class MissingConfigurationFile extends RuntimeException {
+        public MissingConfigurationFile(String message) {
+            super(message);
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
     private static final char COMMA = ',';
+
+    private static boolean failOnMissingConfiguration() {
+        return Boolean.valueOf(System.getProperty("james.fail.on.missing.configuration", "false"));
+    }
 
     @VisibleForTesting
     public static PropertiesProvider forTesting() {
@@ -74,7 +83,7 @@ public class PropertiesProvider {
             .map(this::getConfigurationFile)
             .flatMap(Optional::stream)
             .findFirst()
-            .orElseThrow(() -> new FileNotFoundException(Joiner.on(",").join(filenames) + " not found"));
+            .orElseThrow(() -> fail(Joiner.on(",").join(filenames) + " not found"));
 
         return getConfiguration(file);
     }
@@ -83,9 +92,16 @@ public class PropertiesProvider {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(fileName));
 
         File file = getConfigurationFile(fileName)
-            .orElseThrow(() -> new FileNotFoundException(fileName));
+            .orElseThrow(() -> fail(fileName));
 
         return getConfiguration(file);
+    }
+
+    public FileNotFoundException fail(String message) {
+        if (failOnMissingConfiguration()) {
+            throw new MissingConfigurationFile(message);
+        }
+        return new FileNotFoundException(message);
     }
 
     private Configuration getConfiguration(File propertiesFile) throws ConfigurationException {
