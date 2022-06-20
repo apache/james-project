@@ -861,6 +861,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-quota-search-opensearch</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-quota-search-scanning</artifactId>
                 <version>${project.version}</version>
             </dependency>
