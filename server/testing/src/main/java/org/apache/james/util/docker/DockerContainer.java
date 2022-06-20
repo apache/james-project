@@ -131,6 +131,11 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
         return this;
     }
 
+    public DockerContainer withName(String containerName) {
+        container.withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName(containerName));
+        return this;
+    }
+
     public Container.ExecResult exec(String... command) throws IOException, InterruptedException {
        return container.execInContainer(command);
     }

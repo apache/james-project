@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.tika;
 
 import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.docker.DockerContainer;
@@ -40,7 +41,8 @@ public class TikaContainer extends ExternalResource {
         tika = DockerContainer.fromName(Images.TIKA)
                 .withExposedPorts(DEFAULT_TIKA_PORT)
                 .waitingFor(Wait.forHttp("/tika").withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
-                .withStartupTimeout(Duration.ofSeconds(30));
+                .withStartupTimeout(Duration.ofSeconds(30))
+                .withName("james-testing-tika-" + UUID.randomUUID());
     }
 
     @Override
