@@ -156,8 +156,8 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
   private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
     val alternativeBuilder: MultipartBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
-    htmlBody.foreach(text => addBodypart(alternativeBuilder, text, HTML_UTF_8, StandardCharsets.UTF_8))
     addBodypart(alternativeBuilder, textBody.getOrElse(htmlTextExtractor.toPlainText(htmlBody.getOrElse(""))), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
+    htmlBody.foreach(text => addBodypart(alternativeBuilder, text, HTML_UTF_8, StandardCharsets.UTF_8))
 
     alternativeBuilder
   }

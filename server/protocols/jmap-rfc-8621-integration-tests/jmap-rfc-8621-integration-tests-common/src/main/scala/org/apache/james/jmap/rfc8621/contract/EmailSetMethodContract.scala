@@ -1409,7 +1409,7 @@ trait EmailSetMethodContract {
            |  },
            |  "subject": "World domination",
            |  "bodyValues": {
-           |    "2": {
+           |    "3": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
@@ -1572,7 +1572,7 @@ trait EmailSetMethodContract {
            |  },
            |  "subject": "World domination",
            |  "bodyValues": {
-           |    "2": {
+           |    "3": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
@@ -2365,15 +2365,15 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "partId": "3",
-           |      "blobId": "${messageId}_3",
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
            |    }
            |  ],
            |  "bodyValues": {
-           |    "3": {
+           |    "4": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
@@ -2803,8 +2803,8 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "partId": "4",
-           |      "blobId": "${messageId}_4",
+           |      "partId": "5",
+           |      "blobId": "${messageId}_5",
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
@@ -2829,7 +2829,7 @@ trait EmailSetMethodContract {
            |    }
            |  ],
            |  "bodyValues": {
-           |    "4": {
+           |    "5": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
@@ -2971,10 +2971,10 @@ trait EmailSetMethodContract {
            |            "type": "multipart/alternative",
            |            "subParts": [
            |              {
-           |                "type": "text/html"
+           |                "type": "text/plain"
            |              },
            |              {
-           |                "type": "text/plain"
+           |                "type": "text/html"
            |              }
            |            ]
            |          },
@@ -3115,10 +3115,10 @@ trait EmailSetMethodContract {
            |        "type":"multipart/alternative",
            |        "subParts": [
            |          {
-           |            "type":"text/html"
+           |            "type":"text/plain"
            |          },
            |          {
-           |            "type":"text/plain"
+           |            "type":"text/html"
            |          }
            |        ]
            |      },
@@ -3255,10 +3255,10 @@ trait EmailSetMethodContract {
            |        "type":"multipart/alternative",
            |        "subParts": [
            |          {
-           |            "type":"text/html"
+           |            "type":"text/plain"
            |          },
            |          {
-           |            "type":"text/plain"
+           |            "type":"text/html"
            |          }
            |        ]
            |      },
@@ -3401,10 +3401,10 @@ trait EmailSetMethodContract {
            |            "type":"multipart/alternative",
            |            "subParts": [
            |              {
-           |                "type":"text/html"
+           |                "type":"text/plain"
            |              },
            |              {
-           |                "type":"text/plain"
+           |                "type":"text/html"
            |              }
            |            ]
            |          }
@@ -3515,22 +3515,22 @@ trait EmailSetMethodContract {
            |            "charset": "us-ascii",
            |            "subParts": [
            |              {
-           |                "type": "text/html",
+           |                "type": "text/plain",
            |                "charset": "UTF-8"
            |              },
            |              {
-           |                "type": "text/plain",
+           |                "type": "text/html",
            |                "charset": "UTF-8"
            |              }
            |            ]
            |          },
            |          "bodyValues": {
-           |            "2": {
+           |            "3": {
            |              "value": "$htmlBody",
            |              "isEncodingProblem": false,
            |              "isTruncated": false
            |            },
-           |            "3": {
+           |            "2": {
            |              "value": "I have the most brilliant plan. Let me tell you all about it. What we do is, we",
            |              "isEncodingProblem": false,
            |              "isTruncated": false
@@ -3677,10 +3677,10 @@ trait EmailSetMethodContract {
            |            "type": "multipart/alternative",
            |            "subParts": [
            |              {
-           |                "type": "text/html"
+           |                "type": "text/plain"
            |              },
            |              {
-           |                "type": "text/plain"
+           |                "type": "text/html"
            |              }
            |            ]
            |          },
