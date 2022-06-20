@@ -24,8 +24,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.reactivestreams.Publisher;
 
-import reactor.core.publisher.Mono;
-
 public interface CanSendFrom {
 
     /**
@@ -33,9 +31,7 @@ public interface CanSendFrom {
      */
     boolean userCanSendFrom(Username connectedUser, Username fromUser);
 
-    default Publisher<Boolean> userCanSendFromReactive(Username connectedUser, Username fromUser) {
-        return Mono.just(userCanSendFrom(connectedUser, fromUser));
-    }
+    Publisher<Boolean> userCanSendFromReactive(Username connectedUser, Username fromUser);
 
     /**
      * For a given user, return all the addresses he can use in the from clause of an email.

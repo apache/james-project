@@ -35,8 +35,12 @@ import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 public class CanSendFromImpl implements CanSendFrom {
 
@@ -67,6 +71,12 @@ public class CanSendFromImpl implements CanSendFrom {
                 connectedUser.asString());
             return false;
         }
+    }
+
+    @Override
+    public Publisher<Boolean> userCanSendFromReactive(Username connectedUser, Username fromUser) {
+        return Mono.just(userCanSendFrom(connectedUser, fromUser))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
     @Override
