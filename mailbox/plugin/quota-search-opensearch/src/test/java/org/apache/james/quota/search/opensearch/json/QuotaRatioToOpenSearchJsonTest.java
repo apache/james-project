@@ -33,16 +33,16 @@ import org.apache.james.mailbox.quota.QuotaFixture;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
-class QuotaRatioToElasticSearchJsonTest {
+class QuotaRatioToOpenSearchJsonTest {
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @Test
     void quotaRatioShouldBeWellConvertedToJson() throws IOException {
-        String user = "user@domain.org";        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
+        String user = "user@domain.org";
+        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
 
         Username username = Username.of(user);
         QuotaUsageUpdatedEvent event = EventFactory.quotaUpdated()
@@ -53,9 +53,9 @@ class QuotaRatioToElasticSearchJsonTest {
             .quotaSize(QuotaFixture.Sizes._55_PERCENT)
             .instant(Instant.now())
             .build();
-        org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson = new org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson(
+        QuotaRatioToOpenSearchJson quotaRatioToOpenSearchJson = new QuotaRatioToOpenSearchJson(
             quotaRootResolver);
-        String convertToJson = quotaRatioToElasticSearchJson.convertToJson(event);
+        String convertToJson = quotaRatioToOpenSearchJson.convertToJson(event);
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
@@ -76,8 +76,8 @@ class QuotaRatioToElasticSearchJsonTest {
             .instant(Instant.now())
             .build();
 
-        org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson = new QuotaRatioToElasticSearchJson(quotaRootResolver);
-        String convertToJson = quotaRatioToElasticSearchJson.convertToJson(event);
+        QuotaRatioToOpenSearchJson quotaRatioToOpenSearchJson = new QuotaRatioToOpenSearchJson(quotaRootResolver);
+        String convertToJson = quotaRatioToOpenSearchJson.convertToJson(event);
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)

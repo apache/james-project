@@ -18,29 +18,29 @@
  ****************************************************************/
 package org.apache.james.quota.search.opensearch;
 
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.QUOTA_RATIO;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Domain;
 import org.apache.james.quota.search.QuotaBoundary;
 import org.apache.james.quota.search.QuotaQuery;
-import org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.json.JsonData;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 class QuotaQueryConverterTest {
-    org.apache.james.quota.search.elasticsearch.v8.QuotaQueryConverter testee;
+    QuotaQueryConverter testee;
 
     @BeforeEach
     void setup() {
-        testee = new org.apache.james.quota.search.elasticsearch.v8.QuotaQueryConverter();
+        testee = new QuotaQueryConverter();
     }
 
     @Test
@@ -50,18 +50,15 @@ class QuotaQueryConverterTest {
 
         Query actual = testee.from(query);
 
-        SoftAssertions.assertSoftly(softly -> {
-            assertThat(actual._kind()).isEqualTo(expected._kind());
-            assertThat(actual._get().toString()).isEqualTo(expected._get().toString());
-        });
+        SoftAssertions.assertSoftly(softly -> assertThat(actual._kind()).isEqualTo(expected._kind()));
     }
 
     @Test
     void fromShouldReturnDomainMatchWhenOnlyDomain() {
         QuotaQuery query = QuotaQuery.builder().hasDomain(Domain.of("my.tld")).build();
         Query expected = new TermQuery.Builder()
-            .field(JsonMessageConstants.DOMAIN)
-            .value("my.tld")
+            .field(DOMAIN)
+            .value(new FieldValue.Builder().stringValue("my.tld").build())
             .build()
             ._toQuery();
 
@@ -69,7 +66,8 @@ class QuotaQueryConverterTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThat(actual._kind()).isEqualTo(expected._kind());
-            assertThat(actual._get().toString()).isEqualTo(expected._get().toString());
+            assertThat(actual.term().field()).isEqualTo(expected.term().field());
+            assertThat(actual.term().value().stringValue()).isEqualTo(expected.term().value().stringValue());
         });
     }
 
@@ -86,7 +84,8 @@ class QuotaQueryConverterTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThat(actual._kind()).isEqualTo(expected._kind());
-            assertThat(actual._get().toString()).isEqualTo(expected._get().toString());
+            assertThat(actual.range().field()).isEqualTo(expected.range().field());
+            assertThat(actual.range().lte().to(Double.class)).isEqualTo(expected.range().lte().to(Double.class));
         });
     }
 
@@ -103,7 +102,8 @@ class QuotaQueryConverterTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThat(actual._kind()).isEqualTo(expected._kind());
-            assertThat(actual._get().toString()).isEqualTo(expected._get().toString());
+            assertThat(actual.range().field()).isEqualTo(expected.range().field());
+            assertThat(actual.range().gte().to(Double.class)).isEqualTo(expected.range().gte().to(Double.class));
         });
     }
 

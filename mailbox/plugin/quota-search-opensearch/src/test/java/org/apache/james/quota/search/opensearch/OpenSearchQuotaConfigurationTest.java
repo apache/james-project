@@ -22,14 +22,12 @@ package org.apache.james.quota.search.opensearch;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.james.backends.es.v8.IndexName;
-import org.apache.james.backends.es.v8.ReadAliasName;
-import org.apache.james.backends.es.v8.WriteAliasName;
-import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration;
-import org.apache.james.quota.search.elasticsearch.v8.QuotaRatioElasticSearchConstants;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.junit.jupiter.api.Test;
 
-class ElasticSearchQuotaConfigurationTest {
+class OpenSearchQuotaConfigurationTest {
 
     @Test
     void getReadAliasQuotaRatioNameShouldReturnConfiguredValue() {
@@ -38,9 +36,9 @@ class ElasticSearchQuotaConfigurationTest {
         configuration.addProperty("elasticsearch.alias.read.quota.ratio.name", name);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchQuotaConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
+        assertThat(openSearchQuotaConfiguration.getReadAliasQuotaRatioName())
             .isEqualTo(new ReadAliasName(name));
     }
 
@@ -49,10 +47,10 @@ class ElasticSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
-            .isEqualTo(org.apache.james.quota.search.elasticsearch.v8.QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
+        assertThat(openSearchConfiguration.getReadAliasQuotaRatioName())
+            .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
     }
 
     @Test
@@ -62,9 +60,9 @@ class ElasticSearchQuotaConfigurationTest {
         configuration.addProperty("elasticsearch.alias.write.quota.ratio.name", name);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
+        assertThat(openSearchConfiguration.getWriteAliasQuotaRatioName())
             .isEqualTo(new WriteAliasName(name));
     }
 
@@ -73,10 +71,10 @@ class ElasticSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
-            .isEqualTo(org.apache.james.quota.search.elasticsearch.v8.QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS);
+        assertThat(openSearchConfiguration.getWriteAliasQuotaRatioName())
+            .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS);
     }
 
     @Test
@@ -86,9 +84,9 @@ class ElasticSearchQuotaConfigurationTest {
         configuration.addProperty("elasticsearch.index.quota.ratio.name", name);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
+        assertThat(openSearchConfiguration.getIndexQuotaRatioName())
             .isEqualTo(new IndexName(name));
     }
 
@@ -97,9 +95,9 @@ class ElasticSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration elasticSearchConfiguration = ElasticSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
-            .isEqualTo(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
+        assertThat(openSearchConfiguration.getIndexQuotaRatioName())
+            .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
     }
 }

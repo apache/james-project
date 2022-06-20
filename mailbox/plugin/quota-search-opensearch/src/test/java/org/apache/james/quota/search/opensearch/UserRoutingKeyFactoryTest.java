@@ -21,7 +21,7 @@ package org.apache.james.quota.search.opensearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.backends.es.v8.RoutingKey;
+import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 

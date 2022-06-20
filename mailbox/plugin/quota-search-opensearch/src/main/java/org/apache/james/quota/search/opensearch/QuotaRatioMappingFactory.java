@@ -19,44 +19,42 @@
 
 package org.apache.james.quota.search.opensearch;
 
-import static org.apache.james.backends.es.v8.IndexCreationFactory.DOUBLE;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.KEYWORD;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.PROPERTIES;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.REQUIRED;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.ROUTING;
-import static org.apache.james.backends.es.v8.IndexCreationFactory.TYPE;
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.DOMAIN;
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.QUOTA_RATIO;
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.USER;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.USER;
 
-import java.io.StringReader;
+import java.util.Map;
 
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch._types.mapping.DoubleNumberProperty;
+import org.opensearch.client.opensearch._types.mapping.KeywordProperty;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch._types.mapping.RoutingField;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+
+import com.google.common.collect.ImmutableMap;
 
 class QuotaRatioMappingFactory {
 
     public static TypeMapping getMappingContent() {
         return new TypeMapping.Builder()
-            .withJson(new StringReader(generateMappingContent()))
+            .routing(new RoutingField.Builder()
+                .required(true)
+                .build())
+            .properties(generateProperties())
             .build();
     }
 
-    private static String generateMappingContent() {
-        return "{" +
-            "  \"" + ROUTING + "\": {" +
-            "    \"" + REQUIRED + "\": true" +
-            "  }," +
-            "  \"" + PROPERTIES + "\": {" +
-            "    \"" + USER + "\": {" +
-            "      \"" + TYPE + "\": \"" + KEYWORD + "\"" +
-            "    }," +
-            "    \"" + DOMAIN + "\": {" +
-            "      \"" + TYPE + "\": \"" + KEYWORD + "\"" +
-            "    }," +
-            "    \"" + QUOTA_RATIO + "\": {" +
-            "      \"" + TYPE + "\": \"" + DOUBLE + "\"" +
-            "    }" +
-            "  }" +
-            "}";
+    private static Map<String, Property> generateProperties() {
+        return new ImmutableMap.Builder<String, Property>()
+            .put(USER, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(DOMAIN, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(QUOTA_RATIO, new Property.Builder()
+                .double_(new DoubleNumberProperty.Builder().build())
+                .build())
+            .build();
     }
 }

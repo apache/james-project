@@ -21,39 +21,39 @@ package org.apache.james.quota.search.opensearch.events;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.es.v8.DocumentId;
-import org.apache.james.backends.es.v8.ElasticSearchIndexer;
-import org.apache.james.backends.es.v8.RoutingKey;
+import org.apache.james.backends.opensearch.DocumentId;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.quota.search.opensearch.QuotaRatioElasticSearchConstants;
-import org.apache.james.quota.search.opensearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.QuotaRatioOpenSearchConstants;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class ElasticSearchQuotaMailboxListener implements EventListener.ReactiveGroupEventListener {
-    public static class ElasticSearchQuotaMailboxListenerGroup extends Group {
+public class OpenSearchQuotaMailboxListener implements EventListener.ReactiveGroupEventListener {
+    public static class OpenSearchQuotaMailboxListenerGroup extends Group {
 
     }
 
-    private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();
+    private static final Group GROUP = new OpenSearchQuotaMailboxListenerGroup();
 
     private final ElasticSearchIndexer indexer;
-    private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
+    private final QuotaRatioToOpenSearchJson quotaRatioToOpenSearchJson;
     private final RoutingKey.Factory<Username> routingKeyFactory;
     private final QuotaRootResolver quotaRootResolver;
 
     @Inject
-    public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
-                                             QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson,
-                                             RoutingKey.Factory<Username> routingKeyFactory, QuotaRootResolver quotaRootResolver) {
+    public OpenSearchQuotaMailboxListener(@Named(QuotaRatioOpenSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
+                                          QuotaRatioToOpenSearchJson quotaRatioToOpenSearchJson,
+                                          RoutingKey.Factory<Username> routingKeyFactory, QuotaRootResolver quotaRootResolver) {
         this.indexer = indexer;
-        this.quotaRatioToElasticSearchJson = quotaRatioToElasticSearchJson;
+        this.quotaRatioToOpenSearchJson = quotaRatioToOpenSearchJson;
         this.routingKeyFactory = routingKeyFactory;
         this.quotaRootResolver = quotaRootResolver;
     }
@@ -78,7 +78,7 @@ public class ElasticSearchQuotaMailboxListener implements EventListener.Reactive
         DocumentId id = toDocumentId(user);
         RoutingKey routingKey = routingKeyFactory.from(user);
 
-        return Mono.fromCallable(() -> quotaRatioToElasticSearchJson.convertToJson(event))
+        return Mono.fromCallable(() -> quotaRatioToOpenSearchJson.convertToJson(event))
             .flatMap(json -> indexer.index(id, json, routingKey))
             .then();
     }

@@ -19,8 +19,8 @@
 
 package org.apache.james.quota.search.opensearch;
 
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.DOMAIN;
-import static org.apache.james.quota.search.elasticsearch.v8.json.JsonMessageConstants.QUOTA_RATIO;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
 
 import java.util.List;
 import java.util.Map;
@@ -32,16 +32,16 @@ import org.apache.james.quota.search.QuotaClause.HasDomain;
 import org.apache.james.quota.search.QuotaClause.LessThan;
 import org.apache.james.quota.search.QuotaClause.MoreThan;
 import org.apache.james.quota.search.QuotaQuery;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.json.JsonData;
 
 class QuotaQueryConverter {
     private final Map<Class<? extends QuotaClause>, Function<QuotaClause, Query>> clauseConverter;
@@ -85,7 +85,7 @@ class QuotaQueryConverter {
         HasDomain hasDomain = (HasDomain) clause;
         return new TermQuery.Builder()
             .field(DOMAIN)
-            .value(hasDomain.getDomain().asString())
+            .value(new FieldValue.Builder().stringValue(hasDomain.getDomain().asString()).build())
             .build()
             ._toQuery();
     }

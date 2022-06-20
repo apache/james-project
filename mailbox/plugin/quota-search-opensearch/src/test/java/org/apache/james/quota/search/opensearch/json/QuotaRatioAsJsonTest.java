@@ -29,7 +29,6 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRatio;
-import org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -47,20 +46,20 @@ class QuotaRatioAsJsonTest {
 
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.class)
+        EqualsVerifier.forClass(QuotaRatioAsJson.class)
             .verify();
     }
 
     @Test
     void buildShouldThrownWhenUserIsNull() {
-        assertThatThrownBy(() -> org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.builder()
+        assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void buildShouldThrownWhenUserIsEmpty() {
-        assertThatThrownBy(() -> org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.builder()
+        assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .user("")
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -68,7 +67,7 @@ class QuotaRatioAsJsonTest {
 
     @Test
     void buildShouldThrownWhenQuotaRatioIsNull() {
-        assertThatThrownBy(() -> org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.builder()
+        assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .user("user")
                 .build())
             .isInstanceOf(NullPointerException.class);
@@ -76,7 +75,7 @@ class QuotaRatioAsJsonTest {
 
     @Test
     void getDomainShouldReturnEmptyWhenNone() {
-        org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson quotaRatioAsJson = org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.builder()
+        QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
             .build();
@@ -87,7 +86,7 @@ class QuotaRatioAsJsonTest {
     @Test
     void getDomainShouldReturnTheDomainWhenGiven() {
         String domain = "domain";
-        org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson quotaRatioAsJson = org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson.builder()
+        QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
             .domain(Optional.of(domain))
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
@@ -99,7 +98,7 @@ class QuotaRatioAsJsonTest {
     @Test
     void getMaxQuotaRatioShouldReturnTheMaxQuotaRatio() {
         String domain = "domain";
-        org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
+        QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
             .domain(Optional.of(domain))
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
