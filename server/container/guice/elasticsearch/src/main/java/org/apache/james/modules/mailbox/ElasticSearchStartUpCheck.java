@@ -21,13 +21,12 @@ package org.apache.james.modules.mailbox;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.es.v8.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
+import org.opensearch.client.transport.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import co.elastic.clients.transport.Version;
 
 public class ElasticSearchStartUpCheck implements StartUpCheck {
 

@@ -21,13 +21,13 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import org.apache.james.backends.es.v8.ClientProvider;
-import org.apache.james.backends.es.v8.ElasticSearchHealthCheck;
-import org.apache.james.backends.es.v8.IndexName;
-import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ClientProvider;
+import org.apache.james.backends.opensearch.ElasticSearchHealthCheck;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.mailbox.elasticsearch.v8.ElasticSearchMailboxConfiguration;
-import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration;
+import org.apache.james.mailbox.opensearch.ElasticSearchMailboxConfiguration;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -51,7 +51,7 @@ public class ElasticSearchClientModule extends AbstractModule {
     @Provides
     @Singleton
     Set<IndexName> provideIndexNames(ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                     ElasticSearchQuotaConfiguration quotaConfiguration) {
+                                     OpenSearchQuotaConfiguration quotaConfiguration) {
         return ImmutableSet.of(
             mailboxConfiguration.getIndexMailboxName(),
             quotaConfiguration.getIndexQuotaRatioName());

@@ -28,19 +28,19 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.es.v8.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v8.ElasticSearchIndexer;
-import org.apache.james.backends.es.v8.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearcher;
-import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaConfiguration;
-import org.apache.james.quota.search.elasticsearch.v8.ElasticSearchQuotaSearcher;
-import org.apache.james.quota.search.elasticsearch.v8.QuotaSearchIndexCreationUtil;
-import org.apache.james.quota.search.elasticsearch.v8.UserRoutingKeyFactory;
-import org.apache.james.quota.search.elasticsearch.v8.events.ElasticSearchQuotaMailboxListener;
-import org.apache.james.quota.search.elasticsearch.v8.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaConfiguration;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaSearcher;
+import org.apache.james.quota.search.opensearch.QuotaSearchIndexCreationUtil;
+import org.apache.james.quota.search.opensearch.UserRoutingKeyFactory;
+import org.apache.james.quota.search.opensearch.events.OpenSearchQuotaMailboxListener;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -57,12 +57,12 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     static class ElasticSearchQuotaIndexCreator implements Startable {
         private final ElasticSearchConfiguration configuration;
-        private final ElasticSearchQuotaConfiguration quotaConfiguration;
+        private final OpenSearchQuotaConfiguration quotaConfiguration;
         private final ReactorElasticSearchClient client;
 
         @Inject
         ElasticSearchQuotaIndexCreator(ElasticSearchConfiguration configuration,
-                                       ElasticSearchQuotaConfiguration quotaConfiguration,
+                                       OpenSearchQuotaConfiguration quotaConfiguration,
                                        ReactorElasticSearchClient client) {
             this.configuration = configuration;
             this.quotaConfiguration = quotaConfiguration;
@@ -84,37 +84,37 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
     protected void configure() {
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
-            .to(ElasticSearchQuotaMailboxListener.class);
+            .to(OpenSearchQuotaMailboxListener.class);
     }
 
     @Provides
     @Singleton
-    public QuotaSearcher provideSearcher(ReactorElasticSearchClient client, ElasticSearchQuotaConfiguration configuration) {
-        return new ElasticSearchQuotaSearcher(client,
+    public QuotaSearcher provideSearcher(ReactorElasticSearchClient client, OpenSearchQuotaConfiguration configuration) {
+        return new OpenSearchQuotaSearcher(client,
             configuration.getReadAliasQuotaRatioName());
     }
 
     @Provides
     @Singleton
-    private ElasticSearchQuotaConfiguration getElasticSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private OpenSearchQuotaConfiguration getElasticSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
-            return ElasticSearchQuotaConfiguration.fromProperties(configuration);
+            return OpenSearchQuotaConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchQuotaConfiguration");
-            return ElasticSearchQuotaConfiguration.DEFAULT_CONFIGURATION;
+            return OpenSearchQuotaConfiguration.DEFAULT_CONFIGURATION;
         }
     }
 
     @Provides
     @Singleton
-    public ElasticSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
-                                                             ElasticSearchQuotaConfiguration configuration,
-                                                             QuotaRootResolver quotaRootResolver) {
-        return new ElasticSearchQuotaMailboxListener(
+    public OpenSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
+                                                          OpenSearchQuotaConfiguration configuration,
+                                                          QuotaRootResolver quotaRootResolver) {
+        return new OpenSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
                 configuration.getWriteAliasQuotaRatioName()),
-                new QuotaRatioToElasticSearchJson(quotaRootResolver),
+                new QuotaRatioToOpenSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
