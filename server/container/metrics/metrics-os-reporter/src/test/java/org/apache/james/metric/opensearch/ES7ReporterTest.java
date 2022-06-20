@@ -17,38 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.metric.opensearch;
 
-import javax.inject.Singleton;
+import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.metrics.opensearch.OpenSearchReporterConfiguration;
-import org.apache.james.util.Host;
+@Disabled
+class ES7ReporterTest extends ESReporterContract {
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+    @RegisterExtension
+    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch.NoAuth());
 
-public class TestDockerESMetricReporterModule extends AbstractModule {
-
-    public static final String METRICS_INDEX = "metrics";
-
-    private final Host esHttpHost;
-
-    public TestDockerESMetricReporterModule(Host esHttpHost) {
-        this.esHttpHost = esHttpHost;
+    @Override
+    @Disabled("JAMES-3492")
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer() {
+        super.esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer();
     }
 
     @Override
-    protected void configure() {
-    }
-
-    @Provides
-    @Singleton
-    public OpenSearchReporterConfiguration provideConfiguration() {
-        return OpenSearchReporterConfiguration.builder()
-            .enabled()
-            .onHost(esHttpHost.getHostName(), esHttpHost.getPort())
-            .onIndex(METRICS_INDEX)
-            .periodInSecond(1L)
-            .build();
+    @Disabled("JAMES-3492")
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric() {
+        super.esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric();
     }
 }

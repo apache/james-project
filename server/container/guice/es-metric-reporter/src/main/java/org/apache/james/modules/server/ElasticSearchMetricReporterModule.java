@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.metrics.es.v8.ESMetricReporter;
-import org.apache.james.metrics.es.v8.ESReporterConfiguration;
+import org.apache.james.metrics.opensearch.OpenSearchMetricReporter;
+import org.apache.james.metrics.opensearch.OpenSearchReporterConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -47,12 +47,12 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ESReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    public OpenSearchReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration propertiesReader = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
 
             if (isMetricEnable(propertiesReader)) {
-                return ESReporterConfiguration.builder()
+                return OpenSearchReporterConfiguration.builder()
                     .enabled()
                     .onHost(locateHost(propertiesReader),
                         propertiesReader.getInt("elasticsearch.http.port", DEFAULT_ES_HTTP_PORT))
@@ -63,7 +63,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
         } catch (FileNotFoundException e) {
             LOGGER.info("Can not locate " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration");
         }
-        return ESReporterConfiguration.builder()
+        return OpenSearchReporterConfiguration.builder()
             .disabled()
             .build();
     }
@@ -78,9 +78,9 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation startReporter(ESMetricReporter instance) {
+    InitializationOperation startReporter(OpenSearchMetricReporter instance) {
         return InitilizationOperationBuilder
-            .forClass(ESMetricReporter.class)
+            .forClass(OpenSearchMetricReporter.class)
             .init(instance::start);
     }
 }

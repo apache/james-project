@@ -21,7 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Singleton;
 
-import org.apache.james.metrics.es.v8.ESReporterConfiguration;
+import org.apache.james.metrics.opensearch.OpenSearchReporterConfiguration;
 import org.apache.james.util.Host;
 
 import com.google.inject.AbstractModule;
@@ -43,8 +43,8 @@ public class TestDockerESMetricReporterModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ESReporterConfiguration provideConfiguration() {
-        return ESReporterConfiguration.builder()
+    public OpenSearchReporterConfiguration provideConfiguration() {
+        return OpenSearchReporterConfiguration.builder()
             .enabled()
             .onHost(esHttpHost.getHostName(), esHttpHost.getPort())
             .onIndex(METRICS_INDEX)

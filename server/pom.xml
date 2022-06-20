@@ -59,7 +59,7 @@
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
         <module>container/mailbox-jmx</module>
-        <module>container/metrics/metrics-es-reporter-v8</module>
+        <module>container/metrics/metrics-os-reporter</module>
         <module>container/spring</module>
         <module>container/util</module>
 
