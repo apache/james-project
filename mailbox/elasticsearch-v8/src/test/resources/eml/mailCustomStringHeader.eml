@@ -1,9 +1,0 @@
-Content-Type: text/plain; Charset=UTF-8
-Subject: subject
-MIME-Version: 1.0
-Message-Id: <20100916151246.2A9384BA1@lenny>
-From: a@test
-To: b@test
-Custom-header: custom header
-
-Mail content
