@@ -40,6 +40,13 @@ case object InMailboxFilter extends MailboxFilter {
   override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder =
     request.filter.flatMap {
       case filterCondition: FilterCondition => Some(filterCondition)
+      // Extract mailbox condition from simple AND
+      case filterOperator: FilterOperator if filterOperator.operator == And &&
+        filterOperator.countMailboxFilter == 1 =>
+        filterOperator.conditions.flatMap {
+          case filterCondition: FilterCondition if filterCondition.inMailbox.isDefined => Some(filterCondition)
+          case _ => None
+        }.lastOption
       case _ => None
     }.flatMap(_.inMailbox) match {
       case Some(mailboxId) => builder.inMailboxes(mailboxId)
@@ -51,6 +58,13 @@ case object NotInMailboxFilter extends MailboxFilter {
   override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder =
     request.filter.flatMap {
       case filterCondition: FilterCondition => Some(filterCondition)
+      // Extract mailbox condition from simple AND
+      case filterOperator: FilterOperator if filterOperator.operator == And &&
+        filterOperator.countMailboxFilter == 1 =>
+        filterOperator.conditions.flatMap {
+          case filterCondition: FilterCondition if filterCondition.inMailboxOtherThan.isDefined => Some(filterCondition)
+          case _ => None
+        }.lastOption
       case _ => None
     }.flatMap(_.inMailboxOtherThan) match {
       case Some(mailboxIds) => builder.notInMailboxes(mailboxIds.asJava)

@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import cats.implicits._
+import com.google.common.primitives.Booleans
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Limit.Limit
 import org.apache.james.jmap.core.Position.Position
@@ -39,6 +40,10 @@ sealed trait FilterQuery {
   def inMailboxFilterOnly: Boolean
 
   def inMailboxAndAfterFilterOnly: Boolean
+
+  def countNestedMailboxFilter: Int
+
+  def countMailboxFilter: Int
 }
 
 sealed trait Operator
@@ -51,6 +56,13 @@ case class FilterOperator(operator: Operator,
   override val inMailboxFilterOnly: Boolean = false
 
   override val inMailboxAndAfterFilterOnly: Boolean = false
+
+  override def countNestedMailboxFilter: Int = conditions.map(_.countNestedMailboxFilter).sum
+
+  override def countMailboxFilter: Int = conditions.map {
+    case condition: FilterCondition => condition.countMailboxFilter
+    case _ => 0
+  }.sum
 }
 
 case class Text(value: String) extends AnyVal
@@ -117,6 +129,10 @@ case class FilterCondition(inMailbox: Option[MailboxId],
   override val inMailboxAndAfterFilterOnly: Boolean = inMailbox.nonEmpty &&
     after.nonEmpty &&
     noOtherFiltersThanInMailboxAndAfter
+
+  override def countNestedMailboxFilter: Int = countMailboxFilter
+
+  override def countMailboxFilter: Int = Booleans.countTrue(inMailbox.isDefined, inMailboxOtherThan.isDefined)
 }
 
 case class EmailQueryRequest(accountId: AccountId,
@@ -134,7 +150,18 @@ case class EmailQueryRequest(accountId: AccountId,
 
   private def validateFilter(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] = filter match {
     case filterCondition: FilterCondition => scala.Right(Some(filterCondition))
-    case filterOperator: FilterOperator => rejectMailboxFilters(filterOperator)
+    case filterOperator: FilterOperator if filterOperator.operator == And =>
+      val nestedCount = filter.countNestedMailboxFilter
+      val topLevelCount = filter.countMailboxFilter
+
+      if (nestedCount == 1 && topLevelCount == 1)  {
+        scala.Right(Some(filter))
+      } else if (nestedCount == 0)  {
+        scala.Right(Some(filter))
+      } else {
+        rejectMailboxFilters(filterOperator)
+      }
+    case operator: FilterOperator => rejectMailboxFilters(operator)
   }
 
   private def rejectMailboxFilters(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] =
