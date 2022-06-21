@@ -19,13 +19,7 @@
 
 package org.apache.james.mailbox.opensearch.query;
 
-import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -34,25 +28,30 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.opensearch.json.HeaderCollection;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.apache.james.mailbox.opensearch.json.HeaderCollection;
+import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.ChildScoreMode;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.NestedQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 public class CriterionConverter {
 
-    private final Map<Class<?>, Function<Criterion, QueryBuilder>> criterionConverterMap;
-    private final Map<Class<?>, BiFunction<String, HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
+    private final Map<Class<?>, Function<Criterion, Query>> criterionConverterMap;
+    private final Map<Class<?>, BiFunction<String, HeaderOperator, Query>> headerOperatorConverterMap;
 
     public CriterionConverter() {
         criterionConverterMap = new HashMap<>();
@@ -71,7 +70,7 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.CustomFlagCriterion.class, this::convertCustomFlagCriterion);
         
         registerCriterionConverter(SearchQuery.AllCriterion.class,
-            criterion -> matchAllQuery());
+            criterion -> new MatchAllQuery.Builder().build()._toQuery());
         
         registerCriterionConverter(SearchQuery.ModSeqCriterion.class,
             criterion -> createNumericFilter(JsonMessageConstants.MODSEQ, criterion.getOperator()));
@@ -88,18 +87,24 @@ public class CriterionConverter {
     }
     
     @SuppressWarnings("unchecked")
-    private <T extends Criterion> void registerCriterionConverter(Class<T> type, Function<T, QueryBuilder> f) {
-        criterionConverterMap.put(type, (Function<Criterion, QueryBuilder>) f);
+    private <T extends Criterion> void registerCriterionConverter(Class<T> type, Function<T, Query> f) {
+        criterionConverterMap.put(type, (Function<Criterion, Query>) f);
     }
     
     private void registerHeaderOperatorConverters() {
 
         registerHeaderOperatorConverter(
             SearchQuery.ExistsOperator.class,
-            (headerName, operator) ->
-                nestedQuery(JsonMessageConstants.HEADERS,
-                    termQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME, headerName),
-                    ScoreMode.Avg));
+            (headerName, operator) -> new NestedQuery.Builder()
+                .path(JsonMessageConstants.HEADERS)
+                .query(new TermQuery.Builder()
+                    .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
+                    .value(new FieldValue.Builder().stringValue(headerName).build())
+                    .build()
+                    ._toQuery())
+                .scoreMode(ChildScoreMode.Avg)
+                .build()
+                ._toQuery());
         
         registerHeaderOperatorConverter(
             SearchQuery.AddressOperator.class,
@@ -111,71 +116,135 @@ public class CriterionConverter {
         
         registerHeaderOperatorConverter(
             SearchQuery.ContainsOperator.class,
-            (headerName, operator) ->
-                nestedQuery(JsonMessageConstants.HEADERS,
-                    boolQuery()
-                        .must(termQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME, headerName))
-                        .must(matchQuery(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE, operator.getValue())),
-                    ScoreMode.Avg));
+            (headerName, operator) -> new NestedQuery.Builder()
+                .path(JsonMessageConstants.HEADERS)
+                .query(new BoolQuery.Builder()
+                    .must(new TermQuery.Builder()
+                        .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
+                        .value(new FieldValue.Builder().stringValue(headerName).build())
+                        .build()
+                        ._toQuery())
+                    .must(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE)
+                        .query(new FieldValue.Builder().stringValue(operator.getValue()).build())
+                        .build()
+                        ._toQuery())
+                    .build()
+                    ._toQuery())
+                .scoreMode(ChildScoreMode.Avg)
+                .build()
+                ._toQuery());
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, QueryBuilder> f) {
-        headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, QueryBuilder>) f);
+    private <T extends HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, Query> f) {
+        headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, Query>) f);
     }
 
-    public QueryBuilder convertCriterion(Criterion criterion) {
+    public Query convertCriterion(Criterion criterion) {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 
-    private QueryBuilder convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
-        return termQuery(JsonMessageConstants.HAS_ATTACHMENT, criterion.getOperator().isSet());
+    private Query convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
+        return new TermQuery.Builder()
+            .field(JsonMessageConstants.HAS_ATTACHMENT)
+            .value(new FieldValue.Builder().booleanValue(criterion.getOperator().isSet()).build())
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
-        return termQuery(JsonMessageConstants.MIME_MESSAGE_ID, criterion.getMessageID());
+    private Query convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
+        return new TermQuery.Builder()
+            .field(JsonMessageConstants.MIME_MESSAGE_ID)
+            .value(new FieldValue.Builder().stringValue(criterion.getMessageID()).build())
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
-        return termQuery(JsonMessageConstants.THREAD_ID, criterion.getThreadId().serialize());
+    private Query convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
+        return new TermQuery.Builder()
+            .field(JsonMessageConstants.THREAD_ID)
+            .value(new FieldValue.Builder().stringValue(criterion.getThreadId().serialize()).build())
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
-        QueryBuilder termQueryBuilder = termQuery(JsonMessageConstants.USER_FLAGS, criterion.getFlag());
+    private Query convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
+        Query termQuery = new TermQuery.Builder()
+            .field(JsonMessageConstants.USER_FLAGS)
+            .value(new FieldValue.Builder().stringValue(criterion.getFlag()).build())
+            .build()
+            ._toQuery();
         if (criterion.getOperator().isSet()) {
-            return termQueryBuilder;
+            return termQuery;
         } else {
-            return boolQuery().mustNot(termQueryBuilder);
+            return new BoolQuery.Builder()
+                .mustNot(termQuery)
+                .build()
+                ._toQuery();
         }
     }
 
-    private QueryBuilder convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
+    private Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
         case BODY:
-            return boolQuery()
-                    .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()));
+            return new BoolQuery.Builder()
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.TEXT_BODY)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.HTML_BODY)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         case FULL:
-            return boolQuery()
-                    .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
-                        textCriterion.getOperator().getValue()));
+            return new BoolQuery.Builder()
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.TEXT_BODY)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.HTML_BODY)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         case ATTACHMENTS:
-            return boolQuery()
-                    .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
-                        textCriterion.getOperator().getValue()));
+            return new BoolQuery.Builder()
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         case ATTACHMENT_FILE_NAME:
-            return boolQuery()
-                .should(termQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME,
-                    textCriterion.getOperator().getValue()));
+            return new BoolQuery.Builder()
+                .should(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME)
+                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         throw new RuntimeException("Unknown SCOPE for text criterion");
     }
 
-    private QueryBuilder dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
-        return boolQuery().filter(
-            convertDateOperator(field,
+    private Query dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
+        return new BoolQuery.Builder()
+            .filter(convertDateOperator(field,
                 dateOperator.getType(),
                 DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
                     DateResolutionFormatter.computeLowerDate(
@@ -184,99 +253,184 @@ public class CriterionConverter {
                 DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
                     DateResolutionFormatter.computeUpperDate(
                         DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
-                        dateOperator.getDateResultion()))));
+                        dateOperator.getDateResultion()))))
+            .build()
+            ._toQuery();
     }
 
-    private BoolQueryBuilder convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
+    private Query convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
         return convertToBoolQuery(criterion.getCriteria().stream().map(this::convertCriterion),
             convertConjunctionType(criterion.getType()));
     }
 
-    private BiFunction<BoolQueryBuilder, QueryBuilder, BoolQueryBuilder> convertConjunctionType(SearchQuery.Conjunction type) {
+    private BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> convertConjunctionType(SearchQuery.Conjunction type) {
         switch (type) {
             case AND:
-                return BoolQueryBuilder::must;
+                return BoolQuery.Builder::must;
             case OR:
-                return BoolQueryBuilder::should;
+                return BoolQuery.Builder::should;
             case NOR:
-                return BoolQueryBuilder::mustNot;
+                return BoolQuery.Builder::mustNot;
             default:
                 throw new RuntimeException("Unexpected conjunction criteria " + type);
         }
     }
 
     @SuppressWarnings("ReturnValueIgnored")
-    private BoolQueryBuilder convertToBoolQuery(Stream<QueryBuilder> stream, BiFunction<BoolQueryBuilder, QueryBuilder, BoolQueryBuilder> addCriterionToBoolQuery) {
-        return stream.collect(Collector.of(QueryBuilders::boolQuery,
-                addCriterionToBoolQuery::apply,
-                addCriterionToBoolQuery::apply));
+    private Query convertToBoolQuery(Stream<Query> stream, BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> addCriterionToBoolQuery) {
+        BoolQuery.Builder builder = new BoolQuery.Builder();
+        stream.forEach(query -> addCriterionToBoolQuery.apply(builder, query));
+        return builder.build()._toQuery();
     }
 
-    private QueryBuilder convertFlag(SearchQuery.FlagCriterion flagCriterion) {
+    private Query convertFlag(SearchQuery.FlagCriterion flagCriterion) {
         SearchQuery.BooleanOperator operator = flagCriterion.getOperator();
         Flags.Flag flag = flagCriterion.getFlag();
         if (flag.equals(Flags.Flag.DELETED)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_DELETED, operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_DELETED)
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         if (flag.equals(Flags.Flag.ANSWERED)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_ANSWERED, operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_ANSWERED)
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         if (flag.equals(Flags.Flag.DRAFT)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_DRAFT, operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_DRAFT)
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         if (flag.equals(Flags.Flag.SEEN)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_UNREAD, !operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_UNREAD)
+                    .value(new FieldValue.Builder().booleanValue(!operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         if (flag.equals(Flags.Flag.RECENT)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_RECENT, operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_RECENT)
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         if (flag.equals(Flags.Flag.FLAGGED)) {
-            return boolQuery().filter(termQuery(JsonMessageConstants.IS_FLAGGED, operator.isSet()));
+            return new BoolQuery.Builder()
+                .filter(new TermQuery.Builder()
+                    .field(JsonMessageConstants.IS_FLAGGED)
+                    .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         }
         throw new RuntimeException("Unknown flag used in Flag search criterion");
     }
 
-    private QueryBuilder createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
+    private Query createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
         switch (operator.getType()) {
         case EQUALS:
-            return boolQuery().filter(rangeQuery(fieldName).gte(operator.getValue()).lte(operator.getValue()));
+            return new BoolQuery.Builder()
+                .filter(new RangeQuery.Builder()
+                    .field(fieldName)
+                    .gte(JsonData.of(operator.getValue()))
+                    .lte(JsonData.of(operator.getValue()))
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         case GREATER_THAN:
-            return boolQuery().filter(rangeQuery(fieldName).gt(operator.getValue()));
+            return new BoolQuery.Builder()
+                .filter(new RangeQuery.Builder()
+                    .field(fieldName)
+                    .gt(JsonData.of(operator.getValue()))
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         case LESS_THAN:
-            return boolQuery().filter(rangeQuery(fieldName).lt(operator.getValue()));
+            return new BoolQuery.Builder()
+                .filter(new RangeQuery.Builder()
+                    .field(fieldName)
+                    .lt(JsonData.of(operator.getValue()))
+                    .build()
+                    ._toQuery())
+                .build()
+                ._toQuery();
         default:
             throw new RuntimeException("A non existing numeric operator was triggered");
         }
     }
 
-    private BoolQueryBuilder convertUid(SearchQuery.UidCriterion uidCriterion) {
+    private Query convertUid(SearchQuery.UidCriterion uidCriterion) {
         if (uidCriterion.getOperator().getRange().length == 0) {
-            return boolQuery();
+            return new BoolQuery.Builder().build()._toQuery();
         }
-        return boolQuery().filter(
-            convertToBoolQuery(
+        return new BoolQuery.Builder()
+            .filter(convertToBoolQuery(
                 Arrays.stream(uidCriterion.getOperator().getRange())
-                    .map(this::uidRangeFilter), BoolQueryBuilder::should));
+                    .map(this::uidRangeFilter), BoolQuery.Builder::should))
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder uidRangeFilter(SearchQuery.UidRange numericRange) {
-        return rangeQuery(JsonMessageConstants.UID)
-                .lte(numericRange.getHighValue().asLong())
-                .gte(numericRange.getLowValue().asLong());
+    private Query uidRangeFilter(SearchQuery.UidRange numericRange) {
+        return new RangeQuery.Builder()
+            .field(JsonMessageConstants.UID)
+            .lte(JsonData.of(numericRange.getHighValue().asLong()))
+            .gte(JsonData.of(numericRange.getLowValue().asLong()))
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
+    private Query convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
         return headerOperatorConverterMap.get(headerCriterion.getOperator().getClass())
             .apply(
                 headerCriterion.getHeaderName().toLowerCase(Locale.US),
                 headerCriterion.getOperator());
     }
 
-    private QueryBuilder manageAddressFields(String headerName, String value) {
-        return boolQuery()
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value));
+    private Query manageAddressFields(String headerName, String value) {
+        return new BoolQuery.Builder()
+            .should(new MatchQuery.Builder()
+                .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .build()
+                ._toQuery())
+            .should(new MatchQuery.Builder()
+                .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .build()
+                ._toQuery())
+            .should(new MatchQuery.Builder()
+                .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .build()
+                ._toQuery())
+            .build()
+            ._toQuery();
     }
 
     private String getFieldNameFromHeaderName(String headerName) {
@@ -293,14 +447,27 @@ public class CriterionConverter {
         throw new RuntimeException("Header not recognized as Addess Header : " + headerName);
     }
 
-    private QueryBuilder convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
+    private Query convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
         switch (dateComparator) {
         case BEFORE:
-            return rangeQuery(field).lte(upDateString);
+            return new RangeQuery.Builder()
+                .field(field)
+                .lte(JsonData.of(upDateString))
+                .build()
+                ._toQuery();
         case AFTER:
-            return rangeQuery(field).gt(lowDateString);
+            return new RangeQuery.Builder()
+                .field(field)
+                .gt(JsonData.of(lowDateString))
+                .build()
+                ._toQuery();
         case ON:
-            return rangeQuery(field).lte(upDateString).gte(lowDateString);
+            return new RangeQuery.Builder()
+                .field(field)
+                .lte(JsonData.of(upDateString))
+                .gte(JsonData.of(lowDateString))
+                .build()
+                ._toQuery();
         }
         throw new RuntimeException("Unknown date operator");
     }

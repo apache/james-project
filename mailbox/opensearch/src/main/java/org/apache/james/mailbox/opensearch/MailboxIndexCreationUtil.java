@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.opensearch;
 
-import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v7.IndexCreationFactory;
-import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.WriteAliasName;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.IndexCreationFactory;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 
 public class MailboxIndexCreationUtil {
 

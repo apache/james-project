@@ -19,303 +19,225 @@
 
 package org.apache.james.mailbox.opensearch;
 
-import static org.apache.james.backends.es.v7.IndexCreationFactory.ANALYZER;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.BOOLEAN;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.CASE_INSENSITIVE;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.FIELDS;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.FORMAT;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.KEEP_MAIL_AND_URL;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.KEYWORD;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.LONG;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.NESTED;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.NORMALIZER;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.PROPERTIES;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.REQUIRED;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.ROUTING;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.SEARCH_ANALYZER;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.TYPE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.ATTACHMENTS;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.BCC;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.CC;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.DATE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.FROM;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.HAS_ATTACHMENT;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.HEADERS;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.HTML_BODY;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_ANSWERED;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_DELETED;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_DRAFT;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_FLAGGED;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_RECENT;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_UNREAD;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MAILBOX_ID;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MEDIA_TYPE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MESSAGE_ID;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MIME_MESSAGE_ID;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MODSEQ;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SENT_DATE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SIZE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SUBJECT;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SUBTYPE;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.TEXT;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.TEXT_BODY;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.THREAD_ID;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.TO;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.UID;
-import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.USER_FLAGS;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.CASE_INSENSITIVE;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.KEEP_MAIL_AND_URL;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
 
-import java.io.IOException;
+import java.util.Map;
 
-import org.apache.james.backends.es.v7.IndexCreationFactory;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants.Attachment;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants.EMailer;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants.HEADER;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
+import org.opensearch.client.opensearch._types.mapping.BooleanProperty;
+import org.opensearch.client.opensearch._types.mapping.DateProperty;
+import org.opensearch.client.opensearch._types.mapping.DynamicMapping;
+import org.opensearch.client.opensearch._types.mapping.KeywordProperty;
+import org.opensearch.client.opensearch._types.mapping.LongNumberProperty;
+import org.opensearch.client.opensearch._types.mapping.NestedProperty;
+import org.opensearch.client.opensearch._types.mapping.ObjectProperty;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch._types.mapping.RoutingField;
+import org.opensearch.client.opensearch._types.mapping.TextProperty;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+
+import com.google.common.collect.ImmutableMap;
 
 public class MailboxMappingFactory {
     private static final String STANDARD = "standard";
-    private static final String STORE = "store";
 
-    public static XContentBuilder getMappingContent() {
-        try {
-            return jsonBuilder()
-                .startObject()
+    public static TypeMapping getMappingContent() {
+        return new TypeMapping.Builder()
+            .dynamic(DynamicMapping.Strict)
+            .routing(new RoutingField.Builder()
+                .required(true)
+                .build())
+            .properties(generateProperties())
+            .build();
+    }
 
-                    .field("dynamic", "strict")
-
-                    .startObject(ROUTING)
-                        .field(REQUIRED, true)
-                    .endObject()
-
-                    .startObject(PROPERTIES)
-
-                        .startObject(MESSAGE_ID)
-                            .field(TYPE, KEYWORD)
-                            .field(STORE, true)
-                        .endObject()
-
-                        .startObject(THREAD_ID)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(UID)
-                            .field(TYPE, LONG)
-                            .field(STORE, true)
-                        .endObject()
-
-                        .startObject(MODSEQ)
-                            .field(TYPE, LONG)
-                        .endObject()
-
-                        .startObject(SIZE)
-                            .field(TYPE, LONG)
-                        .endObject()
-
-                        .startObject(IS_ANSWERED)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(IS_DELETED)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(IS_DRAFT)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(IS_FLAGGED)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(IS_RECENT)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(IS_UNREAD)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(DATE)
-                            .field(TYPE, IndexCreationFactory.DATE)
-                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
-                        .endObject()
-
-                        .startObject(SENT_DATE)
-                            .field(TYPE, IndexCreationFactory.DATE)
-                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
-                        .endObject()
-
-                        .startObject(USER_FLAGS)
-                            .field(TYPE, KEYWORD)
-                            .field(NORMALIZER, CASE_INSENSITIVE)
-                        .endObject()
-
-                        .startObject(MEDIA_TYPE)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(SUBTYPE)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(FROM)
-                            .startObject(PROPERTIES)
-                                .startObject(EMailer.NAME)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                                .startObject(EMailer.ADDRESS)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                    .startObject(FIELDS)
-                                        .startObject(RAW)
-                                            .field(TYPE, KEYWORD)
-                                            .field(NORMALIZER, CASE_INSENSITIVE)
-                                        .endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(HEADERS)
-                            .field(TYPE, NESTED)
-                            .startObject(PROPERTIES)
-                                .startObject(HEADER.NAME)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                                .startObject(HEADER.VALUE)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(SUBJECT)
-                            .field(TYPE, TEXT)
-                            .field(ANALYZER, KEEP_MAIL_AND_URL)
-                            .startObject(FIELDS)
-                                .startObject(RAW)
-                                    .field(TYPE, KEYWORD)
-                                    .field(NORMALIZER, CASE_INSENSITIVE)
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(TO)
-                            .startObject(PROPERTIES)
-                                .startObject(EMailer.NAME)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                                .startObject(EMailer.ADDRESS)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                    .startObject(FIELDS)
-                                        .startObject(RAW)
-                                            .field(TYPE, KEYWORD)
-                                            .field(NORMALIZER, CASE_INSENSITIVE)
-                                        .endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(CC)
-                            .startObject(PROPERTIES)
-                                .startObject(EMailer.NAME)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                                .startObject(EMailer.ADDRESS)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                    .startObject(FIELDS)
-                                        .startObject(RAW)
-                                            .field(TYPE, KEYWORD)
-                                            .field(NORMALIZER, CASE_INSENSITIVE)
-                                        .endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(BCC)
-                            .startObject(PROPERTIES)
-                                .startObject(EMailer.NAME)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                                .startObject(EMailer.ADDRESS)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                    .startObject(FIELDS)
-                                        .startObject(RAW)
-                                            .field(TYPE, KEYWORD)
-                                            .field(NORMALIZER, CASE_INSENSITIVE)
-                                        .endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject(MAILBOX_ID)
-                            .field(TYPE, KEYWORD)
-                            .field(STORE, true)
-                        .endObject()
-
-                        .startObject(MIME_MESSAGE_ID)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(TEXT_BODY)
-                            .field(TYPE, TEXT)
-                            .field(ANALYZER, STANDARD)
-                        .endObject()
-
-                        .startObject(HTML_BODY)
-                            .field(TYPE, TEXT)
-                            .field(ANALYZER, STANDARD)
-                        .endObject()
-
-                        .startObject(HAS_ATTACHMENT)
-                            .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(ATTACHMENTS)
-                            .startObject(PROPERTIES)
-                                .startObject(Attachment.FILENAME)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                .endObject()
-                                .startObject(Attachment.TEXT_CONTENT)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                .endObject()
-                                .startObject(Attachment.MEDIA_TYPE)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                                .startObject(Attachment.SUBTYPE)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                                .startObject(Attachment.FILE_EXTENSION)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                                .startObject(Attachment.CONTENT_DISPOSITION)
-                                    .field(TYPE, KEYWORD)
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                    .endObject()
-                .endObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static Map<String, Property> generateProperties() {
+        return new ImmutableMap.Builder<String, Property>()
+            .put(JsonMessageConstants.MESSAGE_ID, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().store(true).build())
+                .build())
+            .put(JsonMessageConstants.THREAD_ID, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.UID, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().store(true).build())
+                .build())
+            .put(JsonMessageConstants.MODSEQ, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.SIZE, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_ANSWERED, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_DELETED, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_DRAFT, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_FLAGGED, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_RECENT, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.IS_UNREAD, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.DATE, new Property.Builder()
+                .date(new DateProperty.Builder()
+                    .format("uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
+                    .build())
+                .build())
+            .put(JsonMessageConstants.SENT_DATE, new Property.Builder()
+                .date(new DateProperty.Builder()
+                    .format("uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
+                    .build())
+                .build())
+            .put(JsonMessageConstants.USER_FLAGS, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                .build())
+            .put(JsonMessageConstants.MEDIA_TYPE, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.SUBTYPE, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.FROM, new Property.Builder()
+                .object(new ObjectProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.EMailer.NAME, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .build(),
+                        JsonMessageConstants.EMailer.ADDRESS, new Property.Builder()
+                            .text(new TextProperty.Builder()
+                                .analyzer(STANDARD)
+                                .searchAnalyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .put(JsonMessageConstants.HEADERS, new Property.Builder()
+                .nested(new NestedProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.HEADER.NAME, new Property.Builder()
+                            .keyword(new KeywordProperty.Builder().build())
+                            .build(),
+                        JsonMessageConstants.HEADER.VALUE, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .put(JsonMessageConstants.SUBJECT, new Property.Builder()
+                .text(new TextProperty.Builder()
+                    .analyzer(KEEP_MAIL_AND_URL)
+                    .fields(RAW, new Property.Builder()
+                        .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                        .build())
+                    .build())
+                .build())
+            .put(JsonMessageConstants.TO, new Property.Builder()
+                .object(new ObjectProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.EMailer.NAME, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .build(),
+                        JsonMessageConstants.EMailer.ADDRESS, new Property.Builder()
+                            .text(new TextProperty.Builder()
+                                .analyzer(STANDARD)
+                                .searchAnalyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .put(JsonMessageConstants.CC, new Property.Builder()
+                .object(new ObjectProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.EMailer.NAME, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .build(),
+                        JsonMessageConstants.EMailer.ADDRESS, new Property.Builder()
+                            .text(new TextProperty.Builder()
+                                .analyzer(STANDARD)
+                                .searchAnalyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .put(JsonMessageConstants.BCC, new Property.Builder()
+                .object(new ObjectProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.EMailer.NAME, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .build(),
+                        JsonMessageConstants.EMailer.ADDRESS, new Property.Builder()
+                            .text(new TextProperty.Builder()
+                                .analyzer(STANDARD)
+                                .searchAnalyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .put(JsonMessageConstants.MAILBOX_ID, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().store(true).build())
+                .build())
+            .put(JsonMessageConstants.MIME_MESSAGE_ID, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.TEXT_BODY, new Property.Builder()
+                .text(new TextProperty.Builder().analyzer(STANDARD).build())
+                .build())
+            .put(JsonMessageConstants.HTML_BODY, new Property.Builder()
+                .text(new TextProperty.Builder().analyzer(STANDARD).build())
+                .build())
+            .put(JsonMessageConstants.HAS_ATTACHMENT, new Property.Builder()
+                .boolean_(new BooleanProperty.Builder().build())
+                .build())
+            .put(JsonMessageConstants.ATTACHMENTS, new Property.Builder()
+                .object(new ObjectProperty.Builder()
+                    .properties(ImmutableMap.of(
+                        JsonMessageConstants.Attachment.FILENAME, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(STANDARD).build())
+                            .build(),
+                        JsonMessageConstants.Attachment.TEXT_CONTENT, new Property.Builder()
+                            .text(new TextProperty.Builder().analyzer(STANDARD).build())
+                            .build(),
+                        JsonMessageConstants.Attachment.MEDIA_TYPE, new Property.Builder()
+                            .keyword(new KeywordProperty.Builder().build())
+                            .build(),
+                        JsonMessageConstants.Attachment.SUBTYPE, new Property.Builder()
+                            .keyword(new KeywordProperty.Builder().build())
+                            .build(),
+                        JsonMessageConstants.Attachment.FILE_EXTENSION, new Property.Builder()
+                            .keyword(new KeywordProperty.Builder().build())
+                            .build(),
+                        JsonMessageConstants.Attachment.CONTENT_DISPOSITION, new Property.Builder()
+                            .keyword(new KeywordProperty.Builder().build())
+                            .build()
+                    ))
+                    .build())
+                .build())
+            .build();
     }
 }

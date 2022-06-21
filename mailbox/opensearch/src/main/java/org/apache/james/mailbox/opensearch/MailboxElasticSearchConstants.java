@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.opensearch;
 
-import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.WriteAliasName;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 
 public interface MailboxElasticSearchConstants {
 

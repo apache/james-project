@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.opensearch;
 
-import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxIdRoutingKeyFactory implements RoutingKey.Factory<MailboxId> {

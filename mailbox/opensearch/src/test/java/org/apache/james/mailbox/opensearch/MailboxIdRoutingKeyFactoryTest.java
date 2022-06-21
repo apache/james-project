@@ -21,7 +21,7 @@ package org.apache.james.mailbox.opensearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 

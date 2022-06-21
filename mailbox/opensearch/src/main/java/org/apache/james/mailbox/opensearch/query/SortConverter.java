@@ -19,47 +19,47 @@
 
 package org.apache.james.mailbox.opensearch.query;
 
-import org.apache.james.backends.es.v7.IndexCreationFactory;
-import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
+import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortMode;
-import org.elasticsearch.search.sort.SortOrder;
+import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
+import org.opensearch.client.opensearch._types.FieldSort;
+import org.opensearch.client.opensearch._types.SortMode;
+import org.opensearch.client.opensearch._types.SortOrder;
 
 public class SortConverter {
 
     private static final String PATH_SEPARATOR = ".";
 
-    public static FieldSortBuilder convertSort(SearchQuery.Sort sort) {
+    public static FieldSort convertSort(SearchQuery.Sort sort) {
         return getSortClause(sort.getSortClause())
             .order(getOrder(sort))
-            .sortMode(SortMode.MIN);
+            .mode(SortMode.Min)
+            .build();
     }
 
-    private static FieldSortBuilder getSortClause(SearchQuery.Sort.SortClause clause) {
+    private static FieldSort.Builder getSortClause(SearchQuery.Sort.SortClause clause) {
         switch (clause) {
             case Arrival :
-                return SortBuilders.fieldSort(JsonMessageConstants.DATE);
+                return new FieldSort.Builder().field(JsonMessageConstants.DATE);
             case MailboxCc :
-                return SortBuilders.fieldSort(JsonMessageConstants.CC + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return new FieldSort.Builder().field(JsonMessageConstants.CC + PATH_SEPARATOR
+                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case MailboxFrom :
-                return SortBuilders.fieldSort(JsonMessageConstants.FROM + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return new FieldSort.Builder().field(JsonMessageConstants.FROM + PATH_SEPARATOR
+                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case MailboxTo :
-                return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return new FieldSort.Builder().field(JsonMessageConstants.TO + PATH_SEPARATOR
+                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case BaseSubject :
-                return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return new FieldSort.Builder().field(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case Size :
-                return SortBuilders.fieldSort(JsonMessageConstants.SIZE);
+                return new FieldSort.Builder().field(JsonMessageConstants.SIZE);
             case SentDate :
-                return SortBuilders.fieldSort(JsonMessageConstants.SENT_DATE);
+                return new FieldSort.Builder().field(JsonMessageConstants.SENT_DATE);
             case Uid :
-                return SortBuilders.fieldSort(JsonMessageConstants.UID);
+                return new FieldSort.Builder().field(JsonMessageConstants.UID);
             case Id:
-                return SortBuilders.fieldSort(JsonMessageConstants.MESSAGE_ID);
+                return new FieldSort.Builder().field(JsonMessageConstants.MESSAGE_ID);
             default:
                 throw new RuntimeException("Sort is not implemented");
         }
@@ -67,9 +67,9 @@ public class SortConverter {
 
     private static SortOrder getOrder(SearchQuery.Sort sort) {
         if (sort.isReverse()) {
-            return SortOrder.DESC;
+            return SortOrder.Desc;
         } else {
-            return SortOrder.ASC;
+            return SortOrder.Asc;
         }
     }
 }

@@ -22,26 +22,29 @@ package org.apache.james.mailbox.opensearch.search;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.apache.james.backends.es.v7.AliasName;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.RoutingKey;
-import org.apache.james.backends.es.v7.search.ScrolledSearch;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.query.SortConverter;
+import org.apache.james.backends.opensearch.AliasName;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.RoutingKey;
+import org.apache.james.backends.opensearch.search.ScrolledSearch;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
+import org.apache.james.mailbox.opensearch.query.SortConverter;
+import org.opensearch.client.opensearch._types.SortOptions;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import reactor.core.publisher.Flux;
 
 public class ElasticSearchSearcher {
     public static final int DEFAULT_SEARCH_SIZE = 100;
-    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
+    private static final Time TIMEOUT = new Time.Builder().time("1m").build();
     private static final int MAX_ROUTING_KEY = 5;
 
     private final ReactorElasticSearchClient client;
@@ -59,39 +62,40 @@ public class ElasticSearchSearcher {
         this.routingKeyFactory = routingKeyFactory;
     }
 
-    public Flux<SearchHit> search(Collection<MailboxId> mailboxIds, SearchQuery query,
-                                                        Optional<Integer> limit, List<String> fields) {
+    public Flux<Hit<ObjectNode>> search(Collection<MailboxId> mailboxIds, SearchQuery query,
+                                        Optional<Integer> limit, List<String> fields) {
         SearchRequest searchRequest = prepareSearch(mailboxIds, query, limit, fields);
         return new ScrolledSearch(client, searchRequest)
             .searchHits();
     }
 
     private SearchRequest prepareSearch(Collection<MailboxId> mailboxIds, SearchQuery query, Optional<Integer> limit, List<String> fields) {
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
-            .query(queryConverter.from(mailboxIds, query))
-            .size(computeRequiredSize(limit))
-            .storedFields(fields);
-
-        query.getSorts()
+        List<SortOptions> sorts = query.getSorts()
             .stream()
             .map(SortConverter::convertSort)
-            .forEach(searchSourceBuilder::sort);
+            .map(fieldSort -> new SortOptions.Builder().field(fieldSort).build())
+            .collect(Collectors.toList());
 
-        SearchRequest request = new SearchRequest(aliasName.getValue())
+        SearchRequest.Builder request = new SearchRequest.Builder()
+            .index(aliasName.getValue())
             .scroll(TIMEOUT)
-            .source(searchSourceBuilder);
+            .query(queryConverter.from(mailboxIds, query))
+            .size(computeRequiredSize(limit))
+            .storedFields(fields)
+            .sort(sorts);
 
         return toRoutingKey(mailboxIds)
             .map(request::routing)
-            .orElse(request);
+            .orElse(request)
+            .build();
     }
 
-    private Optional<String[]> toRoutingKey(Collection<MailboxId> mailboxIds) {
+    private Optional<String> toRoutingKey(Collection<MailboxId> mailboxIds) {
         if (mailboxIds.size() < MAX_ROUTING_KEY) {
             return Optional.of(mailboxIds.stream()
                 .map(routingKeyFactory::from)
                 .map(RoutingKey::asString)
-                .toArray(String[]::new));
+                .collect(Collectors.joining(",")));
         }
         return Optional.empty();
     }

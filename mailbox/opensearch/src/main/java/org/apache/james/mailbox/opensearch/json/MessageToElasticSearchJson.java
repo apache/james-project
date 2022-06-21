@@ -25,8 +25,8 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
