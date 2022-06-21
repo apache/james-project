@@ -19,18 +19,14 @@
 
 package org.apache.james.backends.opensearch;
 
-import java.time.Duration;
-
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
@@ -57,20 +53,20 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
         }
 
         @Override
-        public void clean(DockerOpenSearch elasticSearch) {
+        public void clean(DockerOpenSearch openSearch) {
             Awaitility.await()
                 .until(() -> {
-                    elasticSearch.flushIndices();
-                    ReactorOpenSearchClient client = elasticSearch.clientProvider().get();
+                    openSearch.flushIndices();
+                    ReactorOpenSearchClient client = openSearch.clientProvider().get();
                     new DeleteByQueryPerformer(client, aliasName)
-                        .perform(QueryBuilders.matchAllQuery())
+                        .perform(new MatchAllQuery.Builder().build()._toQuery())
                         .block();
-                    SearchRequest searchRequest = new SearchRequest();
-                    searchRequest.source(new SearchSourceBuilder()
-                        .query(QueryBuilders.matchAllQuery()));
-                    elasticSearch.flushIndices();
-                    boolean result = client.search(new SearchRequest(searchRequest), RequestOptions.DEFAULT)
-                        .map(searchResponse -> searchResponse.getHits().getHits().length)
+                    SearchRequest searchRequest = new SearchRequest.Builder()
+                        .query(new MatchAllQuery.Builder().build()._toQuery())
+                        .build();
+                    openSearch.flushIndices();
+                    boolean result = client.search(searchRequest)
+                        .map(searchResponse -> searchResponse.hits().hits().size())
                         .block() == 0;
 
                     try {
@@ -83,7 +79,7 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
         }
     }
 
-    private final DockerOpenSearch elasticSearch = DockerOpenSearchSingleton.INSTANCE;
+    private final DockerOpenSearch openSearch = DockerOpenSearchSingleton.INSTANCE;
     private final CleanupStrategy cleanupStrategy;
 
     public DockerOpenSearchExtension() {
@@ -96,13 +92,13 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cleanupStrategy.clean(elasticSearch);
+        cleanupStrategy.clean(openSearch);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        if (!elasticSearch.isRunning()) {
-            elasticSearch.unpause();
+        if (!openSearch.isRunning()) {
+            openSearch.unpause();
         }
         awaitForOpenSearch();
     }
@@ -114,14 +110,14 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return elasticSearch;
+        return openSearch;
     }
 
     public void awaitForOpenSearch() {
-        elasticSearch.flushIndices();
+        openSearch.flushIndices();
     }
 
     public DockerOpenSearch getDockerOpenSearch() {
-        return elasticSearch;
+        return openSearch;
     }
 }
