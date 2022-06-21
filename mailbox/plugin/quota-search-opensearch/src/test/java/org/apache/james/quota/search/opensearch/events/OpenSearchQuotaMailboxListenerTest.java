@@ -53,10 +53,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 class OpenSearchQuotaMailboxListenerTest {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -117,10 +115,11 @@ class OpenSearchQuotaMailboxListenerTest {
 
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT)
+                new SearchRequest.Builder()
+                    .index(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(1));
+                .hits().total().value()).isEqualTo(1));
     }
 }

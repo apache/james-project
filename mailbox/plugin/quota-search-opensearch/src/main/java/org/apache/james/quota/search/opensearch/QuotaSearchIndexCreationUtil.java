@@ -19,8 +19,6 @@
 
 package org.apache.james.quota.search.opensearch;
 
-import java.io.IOException;
-
 import org.apache.james.backends.opensearch.AliasName;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.backends.opensearch.IndexName;
@@ -41,7 +39,7 @@ public class QuotaSearchIndexCreationUtil {
             .createIndexAndAliases(client, QuotaRatioMappingFactory.getMappingContent());
     }
 
-    public static ReactorOpenSearchClient prepareDefaultClient(ReactorOpenSearchClient client, OpenSearchConfiguration configuration) throws IOException {
+    public static ReactorOpenSearchClient prepareDefaultClient(ReactorOpenSearchClient client, OpenSearchConfiguration configuration) {
         return prepareClient(client,
             QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
             QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
