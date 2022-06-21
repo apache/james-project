@@ -1,0 +1,50 @@
+To: Laura ROYET <laura.ro@linagora.com>
+From: Laura Royet <laura.ro@linagora.com>
+Subject: test
+Message-ID: <cb415bdb-b27d-fc25-b91f-aae6b4774b71@linagora.com>
+Date: Wed, 11 Jan 2017 11:52:35 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.6.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------36566F1E9D791340FFB75FF8"
+
+This is a multi-part message in MIME format.
+--------------36566F1E9D791340FFB75FF8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+
+-- 
+Laura Royet
+
+
+--------------36566F1E9D791340FFB75FF8
+Content-Type: application/vnd.oasis.opendocument.text;
+ name="attachment1.odt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="attachment1.odt"
+
+UEsDBBQAAAgAAGJVK0pexjIMJwAAACcAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlvbi92bmQu
+dC54bWxQSwUGAAAAABEAEQBwBAAAjyUAAAAA
+--------------36566F1E9D791340FFB75FF8
+Content-Type: application/vnd.oasis.opendocument.text;
+ name="attachment2-nonIndexableAttachment.html"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="attachment2-nonIndexableAttachment.odt"
+
+PCFET0NUWVBFIGh0bWw+CjxodG1sIGNsYXNzPSJtb3ppbGxhIiBsYW5nPSJlbiI+PGhlYWQ+
+CI+PC9kaXY+PC9kaXY+PC9ib2R5PjwvaHRtbD4=
+--------------36566F1E9D791340FFB75FF8
+Content-Type: application/vnd.oasis.opendocument.text;
+ name="attachment3.odt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="attachment3.odt"
+
+UEsDBBQAAAgAAG9VK0pexjIMJwAAACcAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlvbi92bmQu
+AAAAEgkAABNRVRBLUlORi9tYW5pZmVzdC54bWxQSwUGAAAAABEAEQBwBAAApyUAAAAA
+--------------36566F1E9D791340FFB75FF8--

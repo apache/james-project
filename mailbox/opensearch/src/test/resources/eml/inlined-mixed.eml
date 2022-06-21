@@ -1,0 +1,41 @@
+Date: Wed, 26 Jan 2022 12:21:37 +0100
+From: Bob <bob@domain.tld>
+To: Alice <alice@domain.tld>
+Subject: My subject
+Message-ID: <20220126112137.wookj26xellphlam@W0248292>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="7f4cfz6rtfqdbqxn"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+--7f4cfz6rtfqdbqxn
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Main test message...
+
+--7f4cfz6rtfqdbqxn
+Content-Type: application/json; charset=us-ascii
+Content-Disposition: attachment; filename="yyy.txt"
+Content-Transfer-Encoding: quoted-printable
+
+[
+    {
+        "Id": "2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+]
+
+--7f4cfz6rtfqdbqxn
+Content-Type: application/json; charset=us-ascii
+Content-Disposition: attachment; filename="xxx.txt"
+Content-Transfer-Encoding: quoted-printable
+
+[
+    {
+        "Id": "3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+]
+
+--7f4cfz6rtfqdbqxn--
+
+

@@ -39,6 +39,7 @@
         <module>backup</module>
         <module>cassandra</module>
         <module>elasticsearch-v7</module>
+        <module>opensearch</module>
 
         <module>event/json</module>
 
