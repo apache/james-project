@@ -24,10 +24,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.backends.opensearch.OpenSearchClusterExtension.OpenSearchCluster;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +74,9 @@ interface ClientProviderImplConnectionContract {
     default boolean isConnected(ClientProvider clientProvider) {
         try (ReactorOpenSearchClient client = clientProvider.get()) {
             client.search(
-                new SearchRequest()
-                    .source(new SearchSourceBuilder().query(QueryBuilders.existsQuery("any"))),
-                RequestOptions.DEFAULT).block();
+                new SearchRequest.Builder()
+                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .build()).block();
             return true;
         } catch (Exception e) {
             LOGGER.info("Caught exception while trying to connect", e);

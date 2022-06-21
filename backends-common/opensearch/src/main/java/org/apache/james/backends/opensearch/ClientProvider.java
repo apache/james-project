@@ -46,7 +46,9 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.opensearch.client.RestClient;
-import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,7 +183,8 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final OpenSearchConfiguration configuration;
-    private final RestHighLevelClient openSearchRestHighLevelClient;
+    private final RestClient lowLevelRestClient;
+    private final OpenSearchAsyncClient openSearchClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorOpenSearchClient client;
 
@@ -189,28 +192,35 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
     public ClientProvider(OpenSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.openSearchRestHighLevelClient = connect(configuration);
-        this.client = new ReactorOpenSearchClient(this.openSearchRestHighLevelClient);
+        this.lowLevelRestClient = buildRestClient();
+        this.openSearchClient = connect();
+        this.client = new ReactorOpenSearchClient(this.openSearchClient, lowLevelRestClient);
     }
 
-    private RestHighLevelClient connect(OpenSearchConfiguration configuration) {
+    private RestClient buildRestClient() {
+        return RestClient.builder(hostsToHttpHosts())
+            .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure)
+            .build();
+    }
+
+    private OpenSearchAsyncClient connect() {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
         return Mono.fromCallable(this::connectToCluster)
             .doOnError(e -> LOGGER.warn("Error establishing OpenSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
-            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.boundedElastic()))
+            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.elastic()))
+            .publishOn(Schedulers.elastic())
             .block();
     }
 
-    private RestHighLevelClient connectToCluster() {
+    private OpenSearchAsyncClient connectToCluster() {
         LOGGER.info("Trying to connect to OpenSearch service at {}", LocalDateTime.now());
 
-        return new RestHighLevelClient(
-            RestClient
-                .builder(hostsToHttpHosts())
-                .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure));
+        RestClientTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
+
+        return new OpenSearchAsyncClient(transport);
     }
 
     private HttpHost[] hostsToHttpHosts() {
@@ -226,6 +236,6 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
 
     @PreDestroy
     public void close() throws IOException {
-        openSearchRestHighLevelClient.close();
+        lowLevelRestClient.close();
     }
 }
