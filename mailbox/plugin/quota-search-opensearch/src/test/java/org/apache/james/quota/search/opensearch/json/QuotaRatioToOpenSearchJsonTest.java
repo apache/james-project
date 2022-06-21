@@ -41,7 +41,8 @@ class QuotaRatioToOpenSearchJsonTest {
 
     @Test
     void quotaRatioShouldBeWellConvertedToJson() throws IOException {
-        String user = "user@domain.org";        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
+        String user = "user@domain.org";
+        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
 
         Username username = Username.of(user);
         QuotaUsageUpdatedEvent event = EventFactory.quotaUpdated()

@@ -36,9 +36,9 @@ class OpenSearchQuotaConfigurationTest {
         configuration.addProperty("opensearch.alias.read.quota.ratio.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchQuotaConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
+        assertThat(openSearchQuotaConfiguration.getReadAliasQuotaRatioName())
             .isEqualTo(new ReadAliasName(name));
     }
 
@@ -47,9 +47,9 @@ class OpenSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
+        assertThat(openSearchConfiguration.getReadAliasQuotaRatioName())
             .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
     }
 
@@ -60,9 +60,9 @@ class OpenSearchQuotaConfigurationTest {
         configuration.addProperty("opensearch.alias.write.quota.ratio.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
+        assertThat(openSearchConfiguration.getWriteAliasQuotaRatioName())
             .isEqualTo(new WriteAliasName(name));
     }
 
@@ -71,9 +71,9 @@ class OpenSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
+        assertThat(openSearchConfiguration.getWriteAliasQuotaRatioName())
             .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS);
     }
 
@@ -84,9 +84,9 @@ class OpenSearchQuotaConfigurationTest {
         configuration.addProperty("opensearch.index.quota.ratio.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
+        assertThat(openSearchConfiguration.getIndexQuotaRatioName())
             .isEqualTo(new IndexName(name));
     }
 
@@ -95,9 +95,9 @@ class OpenSearchQuotaConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
+        OpenSearchQuotaConfiguration openSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
+        assertThat(openSearchConfiguration.getIndexQuotaRatioName())
             .isEqualTo(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
     }
 }
