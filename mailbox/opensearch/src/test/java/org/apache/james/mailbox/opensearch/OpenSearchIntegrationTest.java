@@ -63,11 +63,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -172,7 +170,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0à2345678é", 3200), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -193,11 +191,12 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT)
+                    new SearchRequest.Builder()
+                        .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                        .query(QueryBuilders.matchAll().build()._toQuery())
+                        .build())
                 .block()
-                .getHits().getTotalHits().value).isGreaterThanOrEqualTo(14));
+                .hits().total().value()).isEqualTo(14));
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -216,7 +215,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("0123456789")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -235,7 +234,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000) + " matchMe", StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("matchMe")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -277,7 +276,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.headerExists("Custom-header")), session)).toStream())
             .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
@@ -330,7 +329,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session)).toStream())
             .containsOnly(messageId2.getUid());
@@ -361,11 +360,17 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
         Thread.sleep(500);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "other")), session)).toStream())
             .containsOnly(messageId2.getUid());
+    }
+
+    @Disabled("JAMES-3771 Waiting for a fix on opensearch client to be merged: https://github.com/opensearch-project/opensearch-java/pull/169")
+    @Test
+    public void sortOnCcShouldWork() throws Exception {
+
     }
 
     @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce OpenSearch disk space usage")
@@ -470,13 +475,14 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId1.getUid());
     }
 
-    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
-                        new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
-                                .source(new SearchSourceBuilder().query(query)),
-                        RequestOptions.DEFAULT)
+                        new SearchRequest.Builder()
+                            .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                            .query(query)
+                            .build())
                         .block()
-                        .getHits().getTotalHits().value).isEqualTo(totalHits));
+                        .hits().total().value()).isEqualTo(totalHits));
     }
 }

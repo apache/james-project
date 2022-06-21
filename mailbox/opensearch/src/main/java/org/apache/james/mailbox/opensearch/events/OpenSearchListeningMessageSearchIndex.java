@@ -28,12 +28,10 @@ import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_U
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MAILBOX_ID;
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MESSAGE_ID;
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.UID;
-import static org.opensearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -63,14 +61,20 @@ import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.opensearch.action.get.GetResponse;
-import org.opensearch.common.document.DocumentField;
-import org.opensearch.index.query.TermQueryBuilder;
-import org.opensearch.search.SearchHit;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.json.JsonpDeserializer;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -193,12 +197,12 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
 
     @Override
     public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
-        TermQueryBuilder queryBuilder = termQuery(
-            MAILBOX_ID,
-            mailboxId.serialize());
+        Query query = TermQuery.of(t -> t
+            .field(MAILBOX_ID)
+            .value(new FieldValue.Builder().stringValue(mailboxId.serialize()).build()))._toQuery();
 
         return openSearchIndexer
-                .deleteAllMatchingQuery(queryBuilder, routingKeyFactory.from(mailboxId));
+                .deleteAllMatchingQuery(query, routingKeyFactory.from(mailboxId));
     }
 
     @Override
@@ -237,12 +241,12 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
 
         return openSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
-            .filter(GetResponse::isExists)
-            .map(GetResponse::getSourceAsMap)
+            .filter(GetResponse::found)
+            .map(GetResponse::source)
             .map(this::extractFlags);
     }
 
-    private Flags extractFlags(Map<String, Object> source) {
+    private Flags extractFlags(ObjectNode source) {
         FlagsBuilder flagsBuilder = FlagsBuilder.builder()
             .isAnswered(extractFlag(source, IS_ANSWERED))
             .isDeleted(extractFlag(source, IS_DELETED))
@@ -251,37 +255,38 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             .isRecent(extractFlag(source, IS_RECENT))
             .isSeen(!extractFlag(source, IS_UNREAD));
 
-        for (String userFlag : extractUserFlags(source)) {
-            flagsBuilder.add(userFlag);
+        for (JsonNode userFlag : extractUserFlags(source)) {
+            flagsBuilder.add(userFlag.textValue());
         }
 
         return flagsBuilder.build();
     }
 
-    private boolean extractFlag(Map<String, Object> source, String flag) {
-        return (Boolean) source.get(flag);
+    private boolean extractFlag(ObjectNode source, String flag) {
+        return source.get(flag).asBoolean();
     }
 
-    private List<String> extractUserFlags(Map<String, Object> source) {
-        return (List<String>) source.get("userFlags");
+    private ArrayNode extractUserFlags(ObjectNode source) {
+        return source.withArray("userFlags");
     }
 
-    private void extractMessageIdFromHit(SearchHit hit, SynchronousSink<MessageId> sink) {
-        DocumentField messageId = hit.field(MESSAGE_ID);
+    private void extractMessageIdFromHit(Hit<ObjectNode> hit, SynchronousSink<MessageId> sink) {
+        JsonData messageId = hit.fields().get(MESSAGE_ID);
         if (messageId != null) {
-            sink.next(messageIdFactory.fromString(messageId.getValue()));
+            List<String> extractMessageId = messageId.deserialize(JsonpDeserializer.arrayDeserializer(JsonpDeserializer.stringDeserializer()));
+            sink.next(messageIdFactory.fromString(extractMessageId.get(0)));
         } else {
-            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.id());
         }
     }
 
-    private void extractUidFromHit(SearchHit hit, SynchronousSink<MessageUid> sink) {
-        DocumentField uid = hit.field(UID);
+    private void extractUidFromHit(Hit<ObjectNode> hit, SynchronousSink<MessageUid> sink) {
+        JsonData uid = hit.fields().get(UID);
         if (uid != null) {
-            Number uidAsNumber = uid.getValue();
-            sink.next(MessageUid.of(uidAsNumber.longValue()));
+            List<Number> uidAsNumber = uid.deserialize(JsonpDeserializer.arrayDeserializer(JsonpDeserializer.numberDeserializer()));
+            sink.next(MessageUid.of(uidAsNumber.get(0).longValue()));
         } else {
-            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.id());
         }
     }
 }

@@ -67,11 +67,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -157,7 +155,7 @@ class OpenSearchSearcherTest {
             .map(Throwing.<MailboxPath, ComposedMessageId>function(mailboxPath -> addMessage(session, mailboxPath)).sneakyThrow())
             .collect(ImmutableList.toImmutableList());
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), composedMessageIds.size());
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), composedMessageIds.size());
 
         MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
             .from(SearchQuery.of(SearchQuery.all()))
@@ -184,13 +182,14 @@ class OpenSearchSearcherTest {
             .getId();
     }
 
-    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
-                    .source(new SearchSourceBuilder().query(query)),
-                RequestOptions.DEFAULT)
+                    new SearchRequest.Builder()
+                        .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                        .query(query)
+                        .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(totalHits));
+                .hits().total().value()).isEqualTo(totalHits));
     }
 }
