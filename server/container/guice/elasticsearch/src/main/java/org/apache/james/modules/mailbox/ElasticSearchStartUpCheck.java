@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class ElasticSearchStartUpCheck implements StartUpCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchConfiguration.class);
-    private static final Version RECOMMENDED_ES_VERSION = Version.parse("8.0.0");
+    private static final Version RECOMMENDED_OS_VERSION = Version.parse("2.0.0");
     private static final String VERSION_CHECKING_ERROR_MESSAGE = "Error when checking ES version";
 
     public static final String CHECK_NAME = "ElasticSearchStartUpCheck";
@@ -58,7 +58,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
             String esVersionCompatibilityWarn = String.format(
                 "ES version(%s) is not compatible with the recommendation(%s)",
                 esVersion.toString(),
-                RECOMMENDED_ES_VERSION.toString());
+                RECOMMENDED_OS_VERSION.toString());
             LOGGER.warn(esVersionCompatibilityWarn);
 
             return CheckResult.builder()
@@ -82,7 +82,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     }
 
     private boolean isCompatible(Version usedVersion) {
-        return usedVersion.major() > RECOMMENDED_ES_VERSION.major()
-            || usedVersion.major() == RECOMMENDED_ES_VERSION.major() && usedVersion.minor() >= RECOMMENDED_ES_VERSION.minor();
+        return usedVersion.major() > RECOMMENDED_OS_VERSION.major()
+            || usedVersion.major() == RECOMMENDED_OS_VERSION.major() && usedVersion.minor() >= RECOMMENDED_OS_VERSION.minor();
     }
 }
