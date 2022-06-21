@@ -18,19 +18,22 @@
  ****************************************************************/
 package org.apache.james.quota.search.opensearch;
 
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import org.apache.james.core.Domain;
 import org.apache.james.quota.search.QuotaBoundary;
 import org.apache.james.quota.search.QuotaQuery;
-import org.apache.james.quota.search.opensearch.json.JsonMessageConstants;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 class QuotaQueryConverterTest {
     QuotaQueryConverter testee;
@@ -43,41 +46,65 @@ class QuotaQueryConverterTest {
     @Test
     void fromShouldReturnMatchAllWhenEmptyClauses() {
         QuotaQuery query = QuotaQuery.builder().build();
-        QueryBuilder expected = matchAllQuery();
+        Query expected = new MatchAllQuery.Builder().build()._toQuery();
 
-        QueryBuilder actual = testee.from(query);
+        Query actual = testee.from(query);
 
-        assertThat(actual).isEqualToComparingFieldByField(expected);
+        SoftAssertions.assertSoftly(softly -> assertThat(actual._kind()).isEqualTo(expected._kind()));
     }
 
     @Test
     void fromShouldReturnDomainMatchWhenOnlyDomain() {
         QuotaQuery query = QuotaQuery.builder().hasDomain(Domain.of("my.tld")).build();
-        QueryBuilder expected = termQuery(JsonMessageConstants.DOMAIN, "my.tld");
+        Query expected = new TermQuery.Builder()
+            .field(DOMAIN)
+            .value(new FieldValue.Builder().stringValue("my.tld").build())
+            .build()
+            ._toQuery();
 
-        QueryBuilder actual = testee.from(query);
+        Query actual = testee.from(query);
 
-        assertThat(actual).isEqualToComparingFieldByField(expected);
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(actual._kind()).isEqualTo(expected._kind());
+            assertThat(actual.term().field()).isEqualTo(expected.term().field());
+            assertThat(actual.term().value().stringValue()).isEqualTo(expected.term().value().stringValue());
+        });
     }
 
     @Test
     void fromShouldReturnQuotaRatioMatchWhenLessThan() {
         QuotaQuery query = QuotaQuery.builder().lessThan(new QuotaBoundary(0.1)).build();
-        QueryBuilder expected = rangeQuery(QUOTA_RATIO).lte(0.1);
+        Query expected = new RangeQuery.Builder()
+            .field(QUOTA_RATIO)
+            .lte(JsonData.of(0.1))
+            .build()
+            ._toQuery();
 
-        QueryBuilder actual = testee.from(query);
+        Query actual = testee.from(query);
 
-        assertThat(actual).isEqualToComparingFieldByField(expected);
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(actual._kind()).isEqualTo(expected._kind());
+            assertThat(actual.range().field()).isEqualTo(expected.range().field());
+            assertThat(actual.range().lte().to(Double.class)).isEqualTo(expected.range().lte().to(Double.class));
+        });
     }
 
     @Test
     void fromShouldReturnQuotaRatioMatchWhenMoreThan() {
         QuotaQuery query = QuotaQuery.builder().moreThan(new QuotaBoundary(0.1)).build();
-        QueryBuilder expected = rangeQuery(QUOTA_RATIO).gte(0.1);
+        Query expected = new RangeQuery.Builder()
+            .field(QUOTA_RATIO)
+            .gte(JsonData.of(0.1))
+            .build()
+            ._toQuery();
 
-        QueryBuilder actual = testee.from(query);
+        Query actual = testee.from(query);
 
-        assertThat(actual).isEqualToComparingFieldByField(expected);
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(actual._kind()).isEqualTo(expected._kind());
+            assertThat(actual.range().field()).isEqualTo(expected.range().field());
+            assertThat(actual.range().gte().to(Double.class)).isEqualTo(expected.range().gte().to(Double.class));
+        });
     }
 
 }

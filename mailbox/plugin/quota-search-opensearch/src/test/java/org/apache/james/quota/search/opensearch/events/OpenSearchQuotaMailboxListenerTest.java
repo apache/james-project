@@ -28,10 +28,10 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
-import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v7.ElasticSearchIndexer;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.events.Event;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.SessionProvider;
@@ -40,23 +40,21 @@ import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.quota.search.opensearch.QuotaRatioElasticSearchConstants;
+import org.apache.james.quota.search.opensearch.QuotaRatioOpenSearchConstants;
 import org.apache.james.quota.search.opensearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.opensearch.UserRoutingKeyFactory;
-import org.apache.james.quota.search.opensearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
-class ElasticSearchQuotaMailboxListenerTest {
+class OpenSearchQuotaMailboxListenerTest {
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -65,25 +63,25 @@ class ElasticSearchQuotaMailboxListenerTest {
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @RegisterExtension
-    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    DockerElasticSearchExtension openSearch = new DockerElasticSearchExtension();
 
-    ElasticSearchQuotaMailboxListener quotaMailboxListener;
+    OpenSearchQuotaMailboxListener quotaMailboxListener;
     ReactorElasticSearchClient client;
     private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @BeforeEach
-    void setUp() throws IOException {
-        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
+    void setUp() {
+        client = openSearch.getDockerElasticSearch().clientProvider().get();
 
         QuotaSearchIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
-            .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
+            .addHost(openSearch.getDockerElasticSearch().getHttpHost())
             .build());
 
         quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
-        quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
+        quotaMailboxListener = new OpenSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
-                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-            new QuotaRatioToElasticSearchJson(quotaRootResolver),
+                QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+            new QuotaRatioToOpenSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
@@ -93,9 +91,9 @@ class ElasticSearchQuotaMailboxListenerTest {
     }
 
     @Test
-    void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.quota.search.opensearch.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
-            .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
+    void deserializeOpenSearchQuotaMailboxListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.quota.search.opensearch.events.OpenSearchQuotaMailboxListener$OpenSearchQuotaMailboxListenerGroup"))
+            .isEqualTo(new OpenSearchQuotaMailboxListener.OpenSearchQuotaMailboxListenerGroup());
     }
 
     @Test
@@ -111,10 +109,11 @@ class ElasticSearchQuotaMailboxListenerTest {
 
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT)
+                new SearchRequest.Builder()
+                    .index(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(1));
+                .hits().total().value()).isEqualTo(1));
     }
 }

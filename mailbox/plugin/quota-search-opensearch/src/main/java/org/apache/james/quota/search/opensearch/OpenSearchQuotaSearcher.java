@@ -21,35 +21,36 @@ package org.apache.james.quota.search.opensearch;
 
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.USER;
 
+import java.io.IOException;
 import java.util.List;
 
-import org.apache.james.backends.es.v7.AliasName;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.search.ScrolledSearch;
+import org.apache.james.backends.opensearch.AliasName;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.search.ScrolledSearch;
 import org.apache.james.core.Username;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.client.opensearch._types.FieldSort;
+import org.opensearch.client.opensearch._types.SortOptions;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
-public class ElasticSearchQuotaSearcher implements QuotaSearcher {
-    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
+public class OpenSearchQuotaSearcher implements QuotaSearcher {
+    private static final Time TIMEOUT = new Time.Builder().time("1m").build();
 
     private final ReactorElasticSearchClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
 
-    public ElasticSearchQuotaSearcher(ReactorElasticSearchClient client, ReadAliasName readAlias) {
+    public OpenSearchQuotaSearcher(ReactorElasticSearchClient client, ReadAliasName readAlias) {
         this.client = client;
         this.readAlias = readAlias;
         this.quotaQueryConverter = new QuotaQueryConverter();
@@ -59,7 +60,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     public List<Username> search(QuotaQuery query) {
         try {
             return searchHits(query)
-                .map(SearchHit::getId)
+                .map(Hit::id)
                 .map(Username::of)
                 .collect(ImmutableList.toImmutableList())
                 .block();
@@ -68,7 +69,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
         }
     }
 
-    private Flux<SearchHit> searchHits(QuotaQuery query) {
+    private Flux<Hit<ObjectNode>> searchHits(QuotaQuery query) throws IOException {
         if (query.getLimit().isLimited()) {
             return executeSingleSearch(query);
         } else {
@@ -76,31 +77,36 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
         }
     }
 
-    private Flux<SearchHit> executeSingleSearch(QuotaQuery query) {
-        SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(query)
+    private Flux<Hit<ObjectNode>> executeSingleSearch(QuotaQuery query) throws IOException {
+        SearchRequest.Builder searchRequest = searchRequestBuilder(query)
+            .index(readAlias.getValue())
             .from(query.getOffset().getValue());
+
         query.getLimit().getValue()
-            .ifPresent(searchSourceBuilder::size);
+            .ifPresent(searchRequest::size);
 
-        SearchRequest searchRequest = new SearchRequest(readAlias.getValue())
-            .source(searchSourceBuilder);
-
-        return client.search(searchRequest, RequestOptions.DEFAULT)
-            .flatMapIterable(searchResponse -> ImmutableList.copyOf(searchResponse.getHits().getHits()));
+        return client.search(searchRequest.build())
+            .flatMapIterable(searchResponse -> ImmutableList.copyOf(searchResponse.hits().hits()));
     }
 
-    private Flux<SearchHit> executeScrolledSearch(QuotaQuery query) {
+    private Flux<Hit<ObjectNode>> executeScrolledSearch(QuotaQuery query) {
         return new ScrolledSearch(client,
-            new SearchRequest(readAlias.getValue())
-                .source(searchSourceBuilder(query))
-                .scroll(TIMEOUT))
+            searchRequestBuilder(query)
+                .index(readAlias.getValue())
+                .scroll(TIMEOUT)
+                .build())
             .searchHits()
             .skip(query.getOffset().getValue());
     }
 
-    private SearchSourceBuilder searchSourceBuilder(QuotaQuery query) {
-        return new SearchSourceBuilder()
+    private SearchRequest.Builder searchRequestBuilder(QuotaQuery query) {
+        return new SearchRequest.Builder()
             .query(quotaQueryConverter.from(query))
-            .sort(SortBuilders.fieldSort(USER).order(SortOrder.ASC));
+            .sort(new SortOptions.Builder()
+                .field(new FieldSort.Builder()
+                    .field(USER)
+                    .order(SortOrder.Asc)
+                    .build())
+                .build());
     }
 }

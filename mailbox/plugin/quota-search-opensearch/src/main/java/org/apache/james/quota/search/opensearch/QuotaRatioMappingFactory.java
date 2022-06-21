@@ -19,48 +19,42 @@
 
 package org.apache.james.quota.search.opensearch;
 
-import static org.apache.james.backends.es.v7.IndexCreationFactory.DOUBLE;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.KEYWORD;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.PROPERTIES;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.REQUIRED;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.ROUTING;
-import static org.apache.james.backends.es.v7.IndexCreationFactory.TYPE;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.USER;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import java.io.IOException;
+import java.util.Map;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.opensearch.client.opensearch._types.mapping.DoubleNumberProperty;
+import org.opensearch.client.opensearch._types.mapping.KeywordProperty;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch._types.mapping.RoutingField;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+
+import com.google.common.collect.ImmutableMap;
 
 class QuotaRatioMappingFactory {
 
-    public static XContentBuilder getMappingContent() {
-        try {
-            return jsonBuilder()
-                .startObject()
-                    .startObject(ROUTING)
-                        .field(REQUIRED, true)
-                    .endObject()
+    public static TypeMapping getMappingContent() {
+        return new TypeMapping.Builder()
+            .routing(new RoutingField.Builder()
+                .required(true)
+                .build())
+            .properties(generateProperties())
+            .build();
+    }
 
-                    .startObject(PROPERTIES)
-
-                        .startObject(USER)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(DOMAIN)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(QUOTA_RATIO)
-                            .field(TYPE, DOUBLE)
-                        .endObject()
-                    .endObject()
-                .endObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static Map<String, Property> generateProperties() {
+        return new ImmutableMap.Builder<String, Property>()
+            .put(USER, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(DOMAIN, new Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build())
+            .put(QUOTA_RATIO, new Property.Builder()
+                .double_(new DoubleNumberProperty.Builder().build())
+                .build())
+            .build();
     }
 }

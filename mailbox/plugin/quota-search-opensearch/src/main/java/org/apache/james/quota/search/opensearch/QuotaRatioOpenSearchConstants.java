@@ -19,11 +19,11 @@
 
 package org.apache.james.quota.search.opensearch;
 
-import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.WriteAliasName;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 
-public interface QuotaRatioElasticSearchConstants {
+public interface QuotaRatioOpenSearchConstants {
 
     interface InjectionNames {
         String QUOTA_RATIO = "quotaRatio";

@@ -21,9 +21,6 @@ package org.apache.james.quota.search.opensearch;
 
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.List;
 import java.util.Map;
@@ -35,19 +32,22 @@ import org.apache.james.quota.search.QuotaClause.HasDomain;
 import org.apache.james.quota.search.QuotaClause.LessThan;
 import org.apache.james.quota.search.QuotaClause.MoreThan;
 import org.apache.james.quota.search.QuotaQuery;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 class QuotaQueryConverter {
-    private final Map<Class<? extends QuotaClause>, Function<QuotaClause, QueryBuilder>> clauseConverter;
+    private final Map<Class<? extends QuotaClause>, Function<QuotaClause, Query>> clauseConverter;
 
     QuotaQueryConverter() {
-        Builder<Class<? extends QuotaClause>, Function<QuotaClause, QueryBuilder>> builder = ImmutableMap.builder();
+        Builder<Class<? extends QuotaClause>, Function<QuotaClause, Query>> builder = ImmutableMap.builder();
         
         builder.put(HasDomain.class, this::convertHasDomain);
         builder.put(And.class, this::disableNestedAnd);
@@ -57,10 +57,10 @@ class QuotaQueryConverter {
         clauseConverter = builder.build();
     }
 
-    QueryBuilder from(QuotaQuery query) {
+    Query from(QuotaQuery query) {
         List<QuotaClause> clauses = query.getClause().getClauses();
         if (clauses.isEmpty()) {
-            return matchAllQuery();
+            return new MatchAllQuery.Builder().build()._toQuery();
         }
         if (clauses.size() == 1) {
             return singleClauseAsESQuery(clauses.get(0));
@@ -69,34 +69,46 @@ class QuotaQueryConverter {
         return clausesAsAndESQuery(clauses);
     }
 
-    private BoolQueryBuilder clausesAsAndESQuery(List<QuotaClause> clauses) {
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+    private Query clausesAsAndESQuery(List<QuotaClause> clauses) {
+        BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
         clauses.stream()
             .map(this::singleClauseAsESQuery)
             .forEach(boolQueryBuilder::must);
-        return boolQueryBuilder;
+        return boolQueryBuilder.build()._toQuery();
     }
 
-    private QueryBuilder disableNestedAnd(QuotaClause clause) {
+    private Query disableNestedAnd(QuotaClause clause) {
         throw new IllegalArgumentException("Nested \"And\" clauses are not supported");
     }
 
-    private TermQueryBuilder convertHasDomain(QuotaClause clause) {
+    private Query convertHasDomain(QuotaClause clause) {
         HasDomain hasDomain = (HasDomain) clause;
-        return termQuery(DOMAIN, hasDomain.getDomain().asString());
+        return new TermQuery.Builder()
+            .field(DOMAIN)
+            .value(new FieldValue.Builder().stringValue(hasDomain.getDomain().asString()).build())
+            .build()
+            ._toQuery();
     }
 
-    private RangeQueryBuilder convertMoreThan(QuotaClause clause) {
+    private Query convertMoreThan(QuotaClause clause) {
         MoreThan moreThan = (MoreThan) clause;
-        return rangeQuery(QUOTA_RATIO).gte(moreThan.getQuotaBoundary().getRatio());
+        return new RangeQuery.Builder()
+            .field(QUOTA_RATIO)
+            .gte(JsonData.of(moreThan.getQuotaBoundary().getRatio()))
+            .build()
+            ._toQuery();
     }
 
-    private RangeQueryBuilder convertLessThan(QuotaClause clause) {
+    private Query convertLessThan(QuotaClause clause) {
         LessThan lessThan = (LessThan) clause;
-        return rangeQuery(QUOTA_RATIO).lte(lessThan.getQuotaBoundary().getRatio());
+        return new RangeQuery.Builder()
+            .field(QUOTA_RATIO)
+            .lte(JsonData.of(lessThan.getQuotaBoundary().getRatio()))
+            .build()
+            ._toQuery();
     }
 
-    private QueryBuilder singleClauseAsESQuery(QuotaClause clause) {
+    private Query singleClauseAsESQuery(QuotaClause clause) {
         return clauseConverter.get(clause.getClass()).apply(clause);
     }
 

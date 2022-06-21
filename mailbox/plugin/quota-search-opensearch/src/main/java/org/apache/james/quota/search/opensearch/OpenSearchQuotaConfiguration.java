@@ -23,11 +23,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.ReadAliasName;
-import org.apache.james.backends.es.v7.WriteAliasName;
+import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.ReadAliasName;
+import org.apache.james.backends.opensearch.WriteAliasName;
 
-public class ElasticSearchQuotaConfiguration {
+public class OpenSearchQuotaConfiguration {
 
     public static class Builder {
 
@@ -69,11 +69,11 @@ public class ElasticSearchQuotaConfiguration {
         }
 
 
-        public ElasticSearchQuotaConfiguration build() {
-            return new ElasticSearchQuotaConfiguration(
-                indexQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX),
-                readAliasQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
-                writeAliasQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS));
+        public OpenSearchQuotaConfiguration build() {
+            return new OpenSearchQuotaConfiguration(
+                indexQuotaRatioName.orElse(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_INDEX),
+                readAliasQuotaRatioName.orElse(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
+                writeAliasQuotaRatioName.orElse(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS));
         }
     }
 
@@ -85,9 +85,9 @@ public class ElasticSearchQuotaConfiguration {
     public static final String ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME = "elasticsearch.alias.read.quota.ratio.name";
     public static final String ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME = "elasticsearch.alias.write.quota.ratio.name";
 
-    public static final ElasticSearchQuotaConfiguration DEFAULT_CONFIGURATION = builder().build();
+    public static final OpenSearchQuotaConfiguration DEFAULT_CONFIGURATION = builder().build();
 
-    public static ElasticSearchQuotaConfiguration fromProperties(Configuration configuration) {
+    public static OpenSearchQuotaConfiguration fromProperties(Configuration configuration) {
         return builder()
             .indexQuotaRatioName(computeQuotaSearchIndexName(configuration))
             .readAliasQuotaRatioName(computeQuotaSearchReadAlias(configuration))
@@ -114,7 +114,7 @@ public class ElasticSearchQuotaConfiguration {
     private final ReadAliasName readAliasQuotaRatioName;
     private final WriteAliasName writeAliasQuotaRatioName;
 
-    private ElasticSearchQuotaConfiguration(IndexName indexQuotaRatioName, ReadAliasName readAliasQuotaRatioName, WriteAliasName writeAliasQuotaRatioName) {
+    private OpenSearchQuotaConfiguration(IndexName indexQuotaRatioName, ReadAliasName readAliasQuotaRatioName, WriteAliasName writeAliasQuotaRatioName) {
         this.indexQuotaRatioName = indexQuotaRatioName;
         this.readAliasQuotaRatioName = readAliasQuotaRatioName;
         this.writeAliasQuotaRatioName = writeAliasQuotaRatioName;
@@ -134,8 +134,8 @@ public class ElasticSearchQuotaConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ElasticSearchQuotaConfiguration) {
-            ElasticSearchQuotaConfiguration that = (ElasticSearchQuotaConfiguration) o;
+        if (o instanceof OpenSearchQuotaConfiguration) {
+            OpenSearchQuotaConfiguration that = (OpenSearchQuotaConfiguration) o;
 
             return Objects.equals(this.indexQuotaRatioName, that.indexQuotaRatioName)
                 && Objects.equals(this.readAliasQuotaRatioName, that.readAliasQuotaRatioName)
