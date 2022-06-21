@@ -35,13 +35,13 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
     interface CleanupStrategy {
         CleanupStrategy NONE = any -> {};
 
-        void clean(DockerOpenSearch elasticSearch);
+        void clean(DockerOpenSearch openSearch);
     }
 
     public static class DefaultCleanupStrategy implements CleanupStrategy {
         @Override
-        public void clean(DockerOpenSearch elasticSearch) {
-            elasticSearch.cleanUpData();
+        public void clean(DockerOpenSearch openSearch) {
+            openSearch.cleanUpData();
         }
     }
 
@@ -55,6 +55,7 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
         @Override
         public void clean(DockerOpenSearch openSearch) {
             Awaitility.await()
+                .ignoreExceptions()
                 .until(() -> {
                     openSearch.flushIndices();
                     ReactorOpenSearchClient client = openSearch.clientProvider().get();
