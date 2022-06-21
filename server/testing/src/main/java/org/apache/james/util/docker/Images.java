@@ -25,6 +25,7 @@ public interface Images {
     String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
     String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
     String ELASTICSEARCH_7 = "docker.elastic.co/elasticsearch/elasticsearch:7.10.2";
+    String OPENSEARCH = "opensearchproject/opensearch:2.0.0";
     String TIKA = "apache/tika:1.28.2";
     String SPAMASSASSIN = "instantlinux/spamassassin:3.4.6-1";
     String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.4";

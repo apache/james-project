@@ -21,9 +21,8 @@ package org.apache.james.backends.opensearch;
 
 import java.util.Objects;
 
-import org.elasticsearch.common.Strings;
-
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class RoutingKey {
     public interface Factory<T> {

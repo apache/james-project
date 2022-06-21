@@ -20,10 +20,9 @@ package org.apache.james.backends.opensearch;
 
 import java.util.Objects;
 
-import org.elasticsearch.common.Strings;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class UpdatedRepresentation {
     private final DocumentId id;

@@ -20,19 +20,34 @@ package org.apache.james.backends.opensearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.cluster.ClusterName;
-import org.elasticsearch.cluster.ClusterState;
-import org.elasticsearch.cluster.block.ClusterBlocks;
-import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.node.DiscoveryNodes;
-import org.elasticsearch.cluster.routing.RoutingTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.HealthStatus;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
 
 import com.google.common.collect.ImmutableSet;
 
 class ElasticSearchHealthCheckTest {
+    private static HealthResponse fakeHealthResponse(HealthStatus status) {
+        return new HealthResponse.Builder()
+            .clusterName("fake-cluster")
+            .activePrimaryShards(0)
+            .activeShards(0)
+            .activeShardsPercentAsNumber("0")
+            .delayedUnassignedShards(0)
+            .initializingShards(0)
+            .numberOfDataNodes(0)
+            .numberOfInFlightFetch(0)
+            .numberOfNodes(0)
+            .numberOfPendingTasks(0)
+            .relocatingShards(0)
+            .taskMaxWaitingInQueueMillis(String.valueOf(System.currentTimeMillis()))
+            .timedOut(false)
+            .unassignedShards(0)
+            .status(status)
+            .build();
+    }
+
     private ElasticSearchHealthCheck healthCheck;
 
     @BeforeEach
@@ -42,39 +57,22 @@ class ElasticSearchHealthCheckTest {
 
     @Test
     void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsGreen() {
-        FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.GREEN);
+        HealthResponse response = fakeHealthResponse(HealthStatus.Green);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();
     }
 
     @Test
     void checkShouldReturnUnHealthyWhenElasticSearchClusterHealthStatusIsRed() {
-        FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.RED);
+        HealthResponse response = fakeHealthResponse(HealthStatus.Red);
 
         assertThat(healthCheck.toHealthCheckResult(response).isUnHealthy()).isTrue();
     }
 
     @Test
     void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsYellow() {
-        FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.YELLOW);
+        HealthResponse response = fakeHealthResponse(HealthStatus.Yellow);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();
-    }
-
-    private static class FakeClusterHealthResponse extends ClusterHealthResponse {
-        private final ClusterHealthStatus status;
-
-        private FakeClusterHealthResponse(ClusterHealthStatus clusterHealthStatus) {
-            super("fake-cluster", new String[0],
-                new ClusterState(new ClusterName("fake-cluster"), 0, null, null, RoutingTable.builder().build(),
-                    DiscoveryNodes.builder().build(),
-                    ClusterBlocks.builder().build(), null, 0, false));
-            this.status = clusterHealthStatus;
-        }
-
-        @Override
-        public ClusterHealthStatus getStatus() {
-            return this.status;
-        }
     }
 }

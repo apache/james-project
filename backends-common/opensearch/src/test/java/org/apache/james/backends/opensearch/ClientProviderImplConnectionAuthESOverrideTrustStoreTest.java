@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements ClientProviderImplConnectionContract {

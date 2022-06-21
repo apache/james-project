@@ -122,7 +122,7 @@ public interface DockerElasticSearch {
 
     interface Fixture {
         int ES_HTTP_PORT = 9200;
-        int ES_MEMORY = 620;
+        int ES_MEMORY = 512;
     }
 
     class NoAuth implements DockerElasticSearch {
@@ -132,6 +132,8 @@ public interface DockerElasticSearch {
                 .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
                 .withExposedPorts(Fixture.ES_HTTP_PORT)
                 .withEnv("discovery.type", "single-node")
+                .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
+                .withEnv("DISABLE_SECURITY_PLUGIN", "true")
                 .withEnv("ES_JAVA_OPTS", "-Xms" + Fixture.ES_MEMORY + "m -Xmx" + Fixture.ES_MEMORY + "m")
                 .withAffinityToContainer()
                 .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
@@ -140,7 +142,7 @@ public interface DockerElasticSearch {
         private final DockerContainer eSContainer;
 
         public NoAuth() {
-            this(Images.ELASTICSEARCH_7);
+            this(Images.OPENSEARCH);
         }
 
         public NoAuth(String imageName) {
@@ -201,7 +203,7 @@ public interface DockerElasticSearch {
         private final Network network;
 
         public WithAuth() {
-            this(Images.ELASTICSEARCH_7);
+            this(Images.OPENSEARCH);
         }
 
         WithAuth(String imageName) {

@@ -20,7 +20,9 @@
 package org.apache.james.backends.opensearch;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -28,9 +30,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.Requests;
+import org.opensearch.client.opensearch.cluster.HealthRequest;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -55,25 +56,31 @@ public class ElasticSearchHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        String[] indices = indexNames.stream()
+        List<String> indices = indexNames.stream()
             .map(IndexName::getValue)
-            .toArray(String[]::new);
-        ClusterHealthRequest request = Requests.clusterHealthRequest(indices);
+            .collect(Collectors.toList());
+        HealthRequest request = new HealthRequest.Builder()
+            .index(indices)
+            .build();
 
-        return client.health(request)
-            .map(this::toHealthCheckResult)
-            .onErrorResume(IOException.class, e -> Mono.just(
-                Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
+        try {
+            return client.health(request)
+                .map(this::toHealthCheckResult)
+                .onErrorResume(IOException.class, e -> Mono.just(
+                    Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     @VisibleForTesting
-    Result toHealthCheckResult(ClusterHealthResponse response) {
-        switch (response.getStatus()) {
-            case GREEN:
-            case YELLOW:
+    Result toHealthCheckResult(HealthResponse response) {
+        switch (response.status()) {
+            case Green:
+            case Yellow:
                 return Result.healthy(COMPONENT_NAME);
-            case RED:
-                return Result.unhealthy(COMPONENT_NAME, response.getClusterName() + " status is RED");
+            case Red:
+                return Result.unhealthy(COMPONENT_NAME, response.clusterName() + " status is RED");
             default:
                 throw new NotImplementedException("Un-handled ElasticSearch cluster status");
         }

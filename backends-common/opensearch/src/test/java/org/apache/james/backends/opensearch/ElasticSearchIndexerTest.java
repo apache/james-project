@@ -23,23 +23,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.IOException;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.google.common.collect.ImmutableList;
 
@@ -79,32 +79,36 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void indexMessageShouldWork() {
+    void indexMessageShouldWork() throws IOException {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
         testee.index(documentId, content, useDocumentId(documentId)).block();
 
-        awaitForElasticSearch(QueryBuilders.matchQuery("message", "trying"), 1L);
+        awaitForElasticSearch(new MatchQuery.Builder()
+            .field("message")
+            .query(new FieldValue.Builder().stringValue("trying").build())
+            .build()
+            ._toQuery(), 1L);
     }
     
     @Test
     void indexMessageShouldThrowWhenJsonIsNull() {
-        assertThatThrownBy(() -> testee.index(DOCUMENT_ID, null, ROUTING))
+        assertThatThrownBy(() -> testee.index(DOCUMENT_ID, null, ROUTING).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    void updateMessages() {
+    void updateMessages() throws IOException {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
         testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
-        awaitForElasticSearch(QueryBuilders.matchQuery("message", "mastering"), 1L);
+        awaitForElasticSearch(new MatchQuery.Builder().field("message").query(new FieldValue.Builder().stringValue("mastering").build()).build()._toQuery(), 1L);
 
-        awaitForElasticSearch(QueryBuilders.matchQuery("field", "unchanged"), 1L);
+        awaitForElasticSearch(new MatchQuery.Builder().field("field").query(new FieldValue.Builder().stringValue("unchanged").build()).build()._toQuery(), 1L);
     }
 
     @Test
@@ -136,21 +140,21 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void deleteByQueryShouldWorkOnSingleMessage() {
+    void deleteByQueryShouldWorkOnSingleMessage() throws IOException {
         DocumentId documentId =  DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         RoutingKey routingKey = useDocumentId(documentId);
 
         testee.index(documentId, content, routingKey).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), routingKey).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 0L);
     }
 
     @Test
-    void deleteByQueryShouldWorkWhenMultipleMessages() {
+    void deleteByQueryShouldWorkWhenMultipleMessages() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
@@ -165,28 +169,28 @@ class ElasticSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.index(documentId3, content3, ROUTING).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 3L);
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
     }
     
     @Test
-    void deleteMessage() {
+    void deleteMessage() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
         testee.delete(ImmutableList.of(documentId), useDocumentId(documentId)).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 0L);
     }
 
     @Test
-    void deleteShouldWorkWhenMultipleMessages() {
+    void deleteShouldWorkWhenMultipleMessages() throws IOException {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
         testee.index(documentId, content, ROUTING).block();
@@ -199,11 +203,11 @@ class ElasticSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
         testee.index(documentId3, content3, ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 3L);
 
         testee.delete(ImmutableList.of(documentId, documentId3), ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
     }
     
     @Test
@@ -219,16 +223,16 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    void getShouldWork() {
+    void getShouldWork() throws IOException {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\":\"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForElasticSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
 
         GetResponse getResponse = testee.get(documentId, useDocumentId(documentId)).block();
 
-        assertThat(getResponse.getSourceAsString()).isEqualTo(content);
+        assertThat(getResponse.source().toString()).isEqualTo(content);
     }
 
     @Test
@@ -243,13 +247,13 @@ class ElasticSearchIndexerTest {
             .isInstanceOf(NullPointerException.class);
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForElasticSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(query)),
-                RequestOptions.DEFAULT)
+                new SearchRequest.Builder()
+                    .query(query)
+                    .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(totalHits));
+                .hits().total().value()).isEqualTo(totalHits));
     }
 }

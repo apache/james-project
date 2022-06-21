@@ -19,58 +19,78 @@
 
 package org.apache.james.backends.opensearch;
 
-import static org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch._types.WaitForActiveShards;
+import org.opensearch.client.opensearch._types.analysis.Analyzer;
+import org.opensearch.client.opensearch._types.analysis.CustomAnalyzer;
+import org.opensearch.client.opensearch._types.analysis.CustomNormalizer;
+import org.opensearch.client.opensearch._types.analysis.Normalizer;
+import org.opensearch.client.opensearch._types.analysis.SnowballLanguage;
+import org.opensearch.client.opensearch._types.analysis.SnowballTokenFilter;
+import org.opensearch.client.opensearch._types.analysis.TokenFilter;
+import org.opensearch.client.opensearch._types.analysis.TokenFilterDefinition;
+import org.opensearch.client.opensearch._types.analysis.Tokenizer;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
+import org.opensearch.client.opensearch.indices.ExistsAliasRequest;
+import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.IndexSettings;
+import org.opensearch.client.opensearch.indices.IndexSettingsAnalysis;
+import org.opensearch.client.opensearch.indices.UpdateAliasesRequest;
+import org.opensearch.client.opensearch.indices.update_aliases.Action;
+import org.opensearch.client.opensearch.indices.update_aliases.AddAction;
+import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class IndexCreationFactory {
 
-    public static class IndexCreationCustomElement {
-        public static IndexCreationCustomElement EMPTY = from("{}");
+    public static class IndexCreationCustomAnalyzer {
+        private final String key;
+        private final Analyzer analyzer;
 
-        public static IndexCreationCustomElement from(String value) {
-            try {
-                new ObjectMapper().readTree(value);
-            } catch (JsonProcessingException e) {
-                throw new IllegalArgumentException("value must be a valid json");
-            }
-            return new IndexCreationCustomElement(value);
+        public IndexCreationCustomAnalyzer(String key, Analyzer analyzer) {
+            this.key = key;
+            this.analyzer = analyzer;
         }
 
-        private final String payload;
-
-        IndexCreationCustomElement(String payload) {
-            this.payload = payload;
+        public String getKey() {
+            return key;
         }
 
-        public String getPayload() {
-            return payload;
+        public Analyzer getAnalyzer() {
+            return analyzer;
+        }
+    }
+
+    public static class IndexCreationCustomTokenizer {
+        private final String key;
+        private final Tokenizer tokenizer;
+
+        public IndexCreationCustomTokenizer(String key, Tokenizer tokenizer) {
+            this.key = key;
+            this.tokenizer = tokenizer;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public Tokenizer getTokenizer() {
+            return tokenizer;
         }
     }
 
@@ -103,17 +123,17 @@ public class IndexCreationFactory {
                 private final int waitForActiveShards;
                 private final IndexName indexName;
                 private final ImmutableList.Builder<AliasName> aliases;
-                private Optional<IndexCreationCustomElement> customAnalyzers;
-                private Optional<IndexCreationCustomElement> customTokenizers;
+                private final ImmutableList.Builder<IndexCreationCustomAnalyzer> customAnalyzers;
+                private final ImmutableList.Builder<IndexCreationCustomTokenizer> customTokenizers;
 
                 FinalStage(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
                     this.nbShards = nbShards;
                     this.nbReplica = nbReplica;
                     this.waitForActiveShards = waitForActiveShards;
                     this.indexName = indexName;
-                    this.aliases = ImmutableList.builder();;
-                    this.customAnalyzers = Optional.empty();
-                    this.customTokenizers = Optional.empty();
+                    this.aliases = ImmutableList.builder();
+                    this.customAnalyzers = ImmutableList.builder();
+                    this.customTokenizers = ImmutableList.builder();
                 }
 
                 public FinalStage addAlias(AliasName... aliases) {
@@ -126,29 +146,29 @@ public class IndexCreationFactory {
                     return this;
                 }
 
-                public FinalStage customAnalyzers(IndexCreationCustomElement customAnalyzers) {
-                    this.customAnalyzers = Optional.of(customAnalyzers);
+                public FinalStage customAnalyzers(IndexCreationCustomAnalyzer... customAnalyzers) {
+                    this.customAnalyzers.add(customAnalyzers);
                     return this;
                 }
 
-                public FinalStage customTokenizers(IndexCreationCustomElement customTokenizers) {
-                    this.customTokenizers = Optional.of(customTokenizers);
+                public FinalStage customTokenizers(IndexCreationCustomTokenizer... customTokenizers) {
+                    this.customTokenizers.add(customTokenizers);
                     return this;
                 }
 
                 public IndexCreationPerformer build() {
-                    return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build(), customAnalyzers, customTokenizers);
+                    return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build(), customAnalyzers.build(), customTokenizers.build());
                 }
 
                 public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
                     return build().createIndexAndAliases(client, Optional.empty(), Optional.empty());
                 }
 
-                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, TypeMapping mappingContent) {
                     return build().createIndexAndAliases(client, Optional.empty(), Optional.of(mappingContent));
                 }
 
-                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings, Optional<XContentBuilder> mappingContent) {
+                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<IndexSettings> indexSettings, Optional<TypeMapping> mappingContent) {
                     return build().createIndexAndAliases(client, indexSettings, mappingContent);
                 }
             }
@@ -164,11 +184,12 @@ public class IndexCreationFactory {
         private final int waitForActiveShards;
         private final IndexName indexName;
         private final ImmutableList<AliasName> aliases;
-        private final Optional<IndexCreationCustomElement> customAnalyzers;
-        private final Optional<IndexCreationCustomElement> customTokenizers;
+        private final ImmutableList<IndexCreationCustomAnalyzer> customAnalyzers;
+        private final ImmutableList<IndexCreationCustomTokenizer> customTokenizers;
 
-        private IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases,
-                                      Optional<IndexCreationCustomElement> customAnalyzers, Optional<IndexCreationCustomElement> customTokenizers) {
+        private IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName,
+                                       ImmutableList<AliasName> aliases, ImmutableList<IndexCreationCustomAnalyzer> customAnalyzers,
+                                       ImmutableList<IndexCreationCustomTokenizer> customTokenizers) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
             this.waitForActiveShards = waitForActiveShards;
@@ -178,8 +199,9 @@ public class IndexCreationFactory {
             this.customTokenizers = customTokenizers;
         }
 
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings,
-                                                                Optional<XContentBuilder> mappingContent) {
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client,
+                                                                Optional<IndexSettings> indexSettings,
+                                                                Optional<TypeMapping> mappingContent) {
             Preconditions.checkNotNull(indexName);
             try {
                 createIndexIfNeeded(client, indexName, indexSettings.orElse(generateSetting()), mappingContent);
@@ -193,31 +215,41 @@ public class IndexCreationFactory {
 
         private void createAliasIfNeeded(ReactorElasticSearchClient client, IndexName indexName, AliasName aliasName) throws IOException {
             if (!aliasExist(client, aliasName)) {
-                client.indices()
-                    .updateAliases(
-                        new IndicesAliasesRequest().addAliasAction(
-                            new AliasActions(AliasActions.Type.ADD)
+                client.updateAliases(
+                    new UpdateAliasesRequest.Builder()
+                        .actions(new Action.Builder()
+                            .add(new AddAction.Builder()
                                 .index(indexName.getValue())
-                                .alias(aliasName.getValue())),
-                        RequestOptions.DEFAULT);
+                                .alias(aliasName.getValue())
+                                .build())
+                            .build())
+                        .build())
+                    .block();
             }
         }
 
         private boolean aliasExist(ReactorElasticSearchClient client, AliasName aliasName) throws IOException {
-            return client.indices()
-                .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()), RequestOptions.DEFAULT);
+            return client.aliasExists(new ExistsAliasRequest.Builder()
+                    .name(aliasName.getValue())
+                    .build())
+                .map(BooleanResponse::value)
+                .block();
         }
 
-        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings, Optional<XContentBuilder> mappingContent) throws IOException {
+        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, IndexSettings settings, Optional<TypeMapping> mappingContent) throws IOException {
             try {
                 if (!indexExists(client, indexName)) {
-                    CreateIndexRequest request = new CreateIndexRequest(indexName.getValue()).source(settings);
-                    mappingContent.ifPresent(request::mapping);
-                    client.indices().create(
-                        request,
-                        RequestOptions.DEFAULT);
+                    CreateIndexRequest.Builder request = new CreateIndexRequest.Builder()
+                        .index(indexName.getValue())
+                        .waitForActiveShards(new WaitForActiveShards.Builder()
+                            .count(waitForActiveShards)
+                            .build())
+                        .settings(settings);
+                    mappingContent.ifPresent(request::mappings);
+                    client.createIndex(request.build())
+                        .block();
                 }
-            } catch (ElasticsearchStatusException exception) {
+            } catch (OpenSearchException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
                     LOGGER.info("Index [{}] already exists", indexName.getValue());
                 } else {
@@ -227,75 +259,77 @@ public class IndexCreationFactory {
         }
 
         private boolean indexExists(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
-            return client.indices().exists(new GetIndexRequest(indexName.getValue()), RequestOptions.DEFAULT);
+            return client.indexExists(new ExistsRequest.Builder()
+                    .index(indexName.getValue())
+                    .build())
+                .map(BooleanResponse::value)
+                .block();
         }
 
-        private XContentBuilder generateSetting() throws IOException {
-            return jsonBuilder()
-                .startObject()
-                    .startObject("settings")
-                        .field("number_of_shards", nbShards)
-                        .field("number_of_replicas", nbReplica)
-                        .field("index.write.wait_for_active_shards", waitForActiveShards)
-                        .startObject("analysis")
-                            .startObject("normalizer")
-                                .startObject(CASE_INSENSITIVE)
-                                    .field("type", "custom")
-                                    .startArray("char_filter")
-                                    .endArray()
-                                    .startArray("filter")
-                                        .value("lowercase")
-                                        .value("asciifolding")
-                                    .endArray()
-                                .endObject()
-                            .endObject()
-                            .rawField(ANALYZER, generateAnalyzers(), XContentType.JSON)
-                            .rawField(TOKENIZER, generateTokenizer(), XContentType.JSON)
-                            .startObject("filter")
-                                .startObject(ENGLISH_SNOWBALL)
-                                    .field("type", "snowball")
-                                    .field("language", "English")
-                                .endObject()
-                            .endObject()
-                        .endObject()
-                    .endObject()
-                .endObject();
+        private IndexSettings generateSetting() {
+            return new IndexSettings.Builder()
+                .numberOfShards(Integer.toString(nbShards))
+                .numberOfReplicas(Integer.toString(nbReplica))
+                .analysis(new IndexSettingsAnalysis.Builder()
+                    .normalizer(CASE_INSENSITIVE, new Normalizer.Builder()
+                        .custom(generateNormalizer())
+                        .build())
+                    .analyzer(generateAnalyzers())
+                    .tokenizer(generateTokenizers())
+                    .filter(ENGLISH_SNOWBALL, new TokenFilter.Builder()
+                        .definition(new TokenFilterDefinition.Builder()
+                            .snowball(generateFilter())
+                            .build())
+                        .build())
+                    .build())
+                .build();
         }
 
-        private String analyzerDefault() throws IOException {
-            XContentBuilder analyzerBuilder = jsonBuilder()
-                .startObject()
-                    .startObject(KEEP_MAIL_AND_URL)
-                        .field("tokenizer", "uax_url_email")
-                        .startArray("filter")
-                            .value("lowercase")
-                            .value("stop")
-                        .endArray()
-                    .endObject()
-
-                    .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
-                        .field("tokenizer", "uax_url_email")
-                        .startArray("filter")
-                            .value("lowercase")
-                            .value("stop")
-                            .value(ENGLISH_SNOWBALL)
-                        .endArray()
-                    .endObject()
-                .endObject();
-
-            return Strings.toString(analyzerBuilder);
+        private CustomNormalizer generateNormalizer() {
+            return new CustomNormalizer.Builder()
+                .filter("lowercase", "asciifolding")
+                .build();
         }
 
-        private InputStream generateAnalyzers() {
-            return new ByteArrayInputStream(customAnalyzers.orElseGet(Throwing.supplier(() -> IndexCreationCustomElement.from(analyzerDefault())).sneakyThrow())
-                .getPayload()
-                .getBytes(StandardCharsets.UTF_8));
+        private SnowballTokenFilter generateFilter() {
+            return new SnowballTokenFilter.Builder()
+                .language(SnowballLanguage.English)
+                .build();
         }
 
-        private InputStream generateTokenizer() {
-            return new ByteArrayInputStream(customTokenizers.orElse(IndexCreationCustomElement.EMPTY)
-                .getPayload()
-                .getBytes(StandardCharsets.UTF_8));
+        private Map<String, Analyzer> defaultAnalyzers() {
+            return ImmutableMap.of(
+                KEEP_MAIL_AND_URL, new Analyzer.Builder().custom(
+                    new CustomAnalyzer.Builder()
+                        .tokenizer("uax_url_email")
+                        .filter("lowercase", "stop")
+                        .build())
+                    .build(),
+                SNOWBALL_KEEP_MAIL_AND_URL, new Analyzer.Builder().custom(
+                    new CustomAnalyzer.Builder()
+                        .tokenizer("uax_url_email")
+                        .filter("lowercase", "stop", ENGLISH_SNOWBALL)
+                        .build())
+                    .build()
+            );
+        }
+
+        private Map<String, Analyzer> generateAnalyzers() {
+            if (customAnalyzers.isEmpty()) {
+                return defaultAnalyzers();
+            }
+            return customAnalyzers.stream()
+                .collect(Collectors.toMap(
+                    IndexCreationCustomAnalyzer::getKey,
+                    IndexCreationCustomAnalyzer::getAnalyzer));
+        }
+
+        private Map<String, Tokenizer> generateTokenizers() {
+            return customTokenizers.stream()
+                .collect(Collectors.toMap(
+                    IndexCreationCustomTokenizer::getKey,
+                    IndexCreationCustomTokenizer::getTokenizer
+                ));
         }
     }
 

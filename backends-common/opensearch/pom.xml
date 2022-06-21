@@ -31,14 +31,10 @@
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- Prevents https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-28491 -->
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-cbor</artifactId>
-            <version>2.13.1</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>throwing-lambdas</artifactId>
@@ -69,15 +65,14 @@
             <artifactId>awaitility</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>7.10.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-java</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-rest-client</artifactId>
+            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

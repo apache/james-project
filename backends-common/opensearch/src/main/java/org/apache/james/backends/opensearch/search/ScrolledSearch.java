@@ -19,19 +19,20 @@
 
 package org.apache.james.backends.opensearch.search;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
-import org.elasticsearch.action.search.ClearScrollRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.search.SearchHit;
+import org.opensearch.client.opensearch._types.Time;
+import org.opensearch.client.opensearch.core.ClearScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Hit;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
@@ -39,8 +40,9 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 public class ScrolledSearch {
-
-    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
+    private static final Time TIMEOUT = new Time.Builder()
+        .time("1m")
+        .build();
 
     private final ReactorElasticSearchClient client;
     private final SearchRequest searchRequest;
@@ -50,12 +52,12 @@ public class ScrolledSearch {
         this.searchRequest = searchRequest;
     }
 
-    public Flux<SearchHit> searchHits() {
+    public Flux<Hit<ObjectNode>> searchHits() {
         return searchResponses()
-            .concatMap(searchResponse -> Flux.just(searchResponse.getHits().getHits()));
+            .concatMap(searchResponse -> Flux.fromIterable(searchResponse.hits().hits()));
     }
 
-    public Flux<SearchResponse> searchResponses() {
+    private Flux<ScrollResponse<ObjectNode>> searchResponses() {
         return Flux.push(sink -> {
             AtomicReference<Optional<String>> scrollId = new AtomicReference<>(Optional.empty());
             sink.onRequest(numberOfRequestedElements -> next(sink, scrollId, numberOfRequestedElements));
@@ -64,17 +66,16 @@ public class ScrolledSearch {
         });
     }
 
-    private void next(FluxSink<SearchResponse> sink, AtomicReference<Optional<String>> scrollId, long numberOfRequestedElements) {
+    private void next(FluxSink<ScrollResponse<ObjectNode>> sink, AtomicReference<Optional<String>> scrollId, long numberOfRequestedElements) {
         if (numberOfRequestedElements <= 0) {
             return;
         }
 
-        Consumer<SearchResponse> onResponse = searchResponse -> {
-            scrollId.set(Optional.of(searchResponse.getScrollId()));
+        Consumer<ScrollResponse<ObjectNode>> onResponse = searchResponse -> {
+            scrollId.set(Optional.of(searchResponse.scrollId()));
             sink.next(searchResponse);
 
-            boolean noHitsLeft = searchResponse.getHits().getHits().length == 0;
-            if (noHitsLeft) {
+            if (searchResponse.hits().hits().isEmpty()) {
                 sink.complete();
             } else {
                 next(sink, scrollId, numberOfRequestedElements - 1);
@@ -87,22 +88,33 @@ public class ScrolledSearch {
             .subscribe(onResponse, onFailure);
     }
 
-    private Mono<SearchResponse> buildRequest(Optional<String> scrollId) {
-        return scrollId.map(id ->
-            client.scroll(
-                new SearchScrollRequest()
-                    .scrollId(scrollId.get())
-                    .scroll(TIMEOUT),
-                RequestOptions.DEFAULT))
-            .orElseGet(() -> client.search(searchRequest, RequestOptions.DEFAULT));
+    private Mono<ScrollResponse<ObjectNode>> buildRequest(Optional<String> scrollId) {
+        return scrollId.map(Throwing.function(id -> client.scroll(new ScrollRequest.Builder()
+                            .scrollId(scrollId.get())
+                            .scroll(TIMEOUT)
+                            .build())).sneakyThrow())
+            .orElseGet(() -> {
+                try {
+                    return client.search(searchRequest)
+                        .map(response -> new ScrollResponse.Builder<ObjectNode>()
+                            .scrollId(response.scrollId())
+                            .hits(response.hits())
+                            .took(response.took())
+                            .timedOut(response.timedOut())
+                            .shards(response.shards())
+                            .build());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
     }
 
     public void close(AtomicReference<Optional<String>> scrollId) {
-        scrollId.get().map(id -> {
-                ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-                clearScrollRequest.addScrollId(id);
-                return clearScrollRequest;
-            }).ifPresent(Throwing.<ClearScrollRequest>consumer(clearScrollRequest -> client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT).subscribe()).sneakyThrow());
+        scrollId.get().map(id -> new ClearScrollRequest.Builder()
+                .scrollId(id)
+                .build())
+            .ifPresent(Throwing.<ClearScrollRequest>consumer(clearScrollRequest ->
+                client.clearScroll(clearScrollRequest).subscribe()).sneakyThrow());
     }
 
 }

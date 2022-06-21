@@ -49,8 +49,10 @@ import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfig
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,7 +187,8 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final ElasticSearchConfiguration configuration;
-    private final RestHighLevelClient elasticSearchRestHighLevelClient;
+    private final RestClient lowLevelRestClient;
+    private final OpenSearchAsyncClient elasticSearchClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorElasticSearchClient client;
 
@@ -193,28 +196,35 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     public ClientProvider(ElasticSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.elasticSearchRestHighLevelClient = connect(configuration);
-        this.client = new ReactorElasticSearchClient(this.elasticSearchRestHighLevelClient);
+        this.lowLevelRestClient = buildRestClient();
+        this.elasticSearchClient = connect();
+        this.client = new ReactorElasticSearchClient(this.elasticSearchClient, lowLevelRestClient);
     }
 
-    private RestHighLevelClient connect(ElasticSearchConfiguration configuration) {
+    private RestClient buildRestClient() {
+        return RestClient.builder(hostsToHttpHosts())
+            .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure)
+            .build();
+    }
+
+    private OpenSearchAsyncClient connect() {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
-        return Mono.fromCallable(() -> connectToCluster(configuration))
+        return Mono.fromCallable(this::connectToCluster)
             .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
-            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.boundedElastic()))
+            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.elastic()))
+            .publishOn(Schedulers.elastic())
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) {
+    private OpenSearchAsyncClient connectToCluster() {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        return new RestHighLevelClient(
-            RestClient
-                .builder(hostsToHttpHosts())
-                .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure));
+        RestClientTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
+
+        return new OpenSearchAsyncClient(transport);
     }
 
     private HttpHost[] hostsToHttpHosts() {
@@ -230,6 +240,6 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     @PreDestroy
     public void close() throws IOException {
-        elasticSearchRestHighLevelClient.close();
+        lowLevelRestClient.close();
     }
 }

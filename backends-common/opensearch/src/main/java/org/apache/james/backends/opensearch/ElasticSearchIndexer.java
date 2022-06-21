@@ -18,24 +18,23 @@
  ****************************************************************/
 package org.apache.james.backends.opensearch;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.common.ValidationException;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.BulkRequest;
+import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.GetRequest;
+import org.opensearch.client.opensearch.core.GetResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.IndexResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.RawValue;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
@@ -59,11 +58,17 @@ public class ElasticSearchIndexer {
     public Mono<IndexResponse> index(DocumentId id, String content, RoutingKey routingKey) {
         checkArgument(content);
         logContent(id, content);
-        return client.index(new IndexRequest(aliasName.getValue())
+
+        try {
+            return client.index(new IndexRequest.Builder<>()
+                .index(aliasName.getValue())
                 .id(id.asString())
-                .source(content, XContentType.JSON)
-                .routing(routingKey.asString()),
-            RequestOptions.DEFAULT);
+                .document(new RawValue(content))
+                .routing(routingKey.asString())
+                .build());
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     private void logContent(DocumentId id, String content) {
@@ -75,50 +80,70 @@ public class ElasticSearchIndexer {
     public Mono<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts, RoutingKey routingKey) {
         Preconditions.checkNotNull(updatedDocumentParts);
         Preconditions.checkNotNull(routingKey);
-        BulkRequest request = new BulkRequest();
-        updatedDocumentParts.forEach(updatedDocumentPart -> request.add(
-            new UpdateRequest(aliasName.getValue(),
-                updatedDocumentPart.getId().asString())
-                .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)
-                .routing(routingKey.asString())));
 
-        return client.bulk(request, RequestOptions.DEFAULT)
-            .onErrorResume(ValidationException.class, exception -> {
-                LOGGER.warn("Error while updating index", exception);
-                return Mono.empty();
-            });
+        if (updatedDocumentParts.isEmpty()) {
+            return Mono.empty();
+        }
+
+        BulkRequest.Builder bulkBuilder = new BulkRequest.Builder();
+        updatedDocumentParts.forEach(updatedDocumentPart -> bulkBuilder.operations(
+            op -> op.update(idx -> idx
+                .index(aliasName.getValue())
+                .id(updatedDocumentPart.getId().asString())
+                .document(Collections.singletonMap("doc", new RawValue(updatedDocumentPart.getUpdatedDocumentPart())))
+                .routing(routingKey.asString())
+            )));
+
+        try {
+            return client.bulk(bulkBuilder.build());
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
     public Mono<BulkResponse> delete(List<DocumentId> ids, RoutingKey routingKey) {
-        BulkRequest request = new BulkRequest();
-        ids.forEach(id -> request.add(
-            new DeleteRequest(aliasName.getValue())
-                .id(id.asString())
-                .routing(routingKey.asString())));
+        if (ids.isEmpty()) {
+            return Mono.empty();
+        }
 
-        return client.bulk(request, RequestOptions.DEFAULT)
-            .onErrorResume(ValidationException.class, exception -> {
-                LOGGER.warn("Error while deleting index", exception);
-                return Mono.empty();
-            });
+        BulkRequest.Builder bulkBuilder = new BulkRequest.Builder();
+
+        ids.forEach(id -> bulkBuilder.operations(
+            op -> op.delete(idx -> idx
+                .index(aliasName.getValue())
+                .id(id.asString())
+                .routing(routingKey.asString())
+            )));
+
+        try {
+            return client.bulk(bulkBuilder.build());
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 
-    public Mono<Void> deleteAllMatchingQuery(QueryBuilder queryBuilder, RoutingKey routingKey) {
-        return deleteByQueryPerformer.perform(queryBuilder, routingKey);
+    public Mono<Void> deleteAllMatchingQuery(Query query, RoutingKey routingKey) {
+        return deleteByQueryPerformer.perform(query, routingKey);
     }
 
     private void checkArgument(String content) {
         Preconditions.checkArgument(content != null, "content should be provided");
     }
 
-    public Mono<GetResponse> get(DocumentId id, RoutingKey routingKey) {
-        return Mono.fromRunnable(() -> {
-                Preconditions.checkNotNull(id);
-                Preconditions.checkNotNull(routingKey);
-            })
-            .then(client.get(new GetRequest(aliasName.getValue())
-                    .id(id.asString())
-                    .routing(routingKey.asString()),
-                RequestOptions.DEFAULT));
+    public Mono<GetResponse<ObjectNode>> get(DocumentId id, RoutingKey routingKey) {
+        try {
+            return Mono.fromRunnable(() -> {
+                    Preconditions.checkNotNull(id);
+                    Preconditions.checkNotNull(routingKey);
+                })
+                .then(client.get(
+                    new GetRequest.Builder()
+                        .index(aliasName.getValue())
+                        .id(id.asString())
+                        .routing(routingKey.asString())
+                        .build()));
+        } catch (IOException e) {
+            return Mono.error(e);
+        }
     }
 }

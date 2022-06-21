@@ -23,11 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.opensearch.ElasticSearchClusterExtension.ElasticSearchCluster;
 import org.awaitility.Awaitility;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +74,9 @@ interface ClientProviderImplConnectionContract {
     default boolean isConnected(ClientProvider clientProvider) {
         try (ReactorElasticSearchClient client = clientProvider.get()) {
             client.search(
-                new SearchRequest()
-                    .source(new SearchSourceBuilder().query(QueryBuilders.existsQuery("any"))),
-                RequestOptions.DEFAULT).block();
+                new SearchRequest.Builder()
+                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .build()).block();
             return true;
         } catch (Exception e) {
             LOGGER.info("Caught exception while trying to connect", e);
