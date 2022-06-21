@@ -60,16 +60,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es-v8</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es-v8</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-pulsar</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
