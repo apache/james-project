@@ -27,6 +27,7 @@ import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -137,6 +138,7 @@ public interface DockerElasticSearch {
                 .withEnv("discovery.type", "single-node")
                 .withEnv("ES_JAVA_OPTS", "-Xms" + ES_MEMORY + "m -Xmx" + ES_MEMORY + "m")
                 .withAffinityToContainer()
+                .withName("james-testing-elasticsearch-" + UUID.randomUUID())
                 .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
         }
 
@@ -225,7 +227,8 @@ public interface DockerElasticSearch {
                         .withFileFromClasspath("Dockerfile", "auth-es/NginxDockerfile")))
                 .withExposedPorts(ES_HTTP_PORT)
                 .withLogConsumer(frame -> LOGGER.debug("[NGINX] " + frame.getUtf8String()))
-                .withNetwork(network);
+                .withNetwork(network)
+                .withName("james-testing-nginx-" + UUID.randomUUID());
         }
 
 

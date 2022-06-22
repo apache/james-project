@@ -29,6 +29,7 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.util.UUID;
 
 import javax.mail.MessagingException;
 
@@ -63,7 +64,9 @@ class SpamAssassinIntegrationTest {
     public static DockerContainer spamAssassinContainer = DockerContainer.fromName(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
+        .withName("james-testing-spamassassin-" + UUID.randomUUID());
+
     @RegisterExtension
     public TestIMAPClient messageReader = new TestIMAPClient();
     @RegisterExtension

@@ -25,6 +25,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.apache.james.util.docker.DockerContainer;
@@ -77,8 +78,8 @@ public class FakeSmtp implements TestRule, BeforeAllCallback, AfterAllCallback, 
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
                 .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
-                .withStartupTimeout(Duration.ofMinutes(1))
-            );
+                .withStartupTimeout(Duration.ofMinutes(1)))
+            .withName("james-testing-fake-smtp" + UUID.randomUUID());
     }
 
     private static final int SMTP_PORT = 25;

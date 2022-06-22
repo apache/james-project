@@ -19,6 +19,8 @@
 
 package org.apache.james.mock.smtp.server.testing;
 
+import java.util.UUID;
+
 import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
@@ -46,7 +48,8 @@ public class MockSmtpServerExtension implements AfterEachCallback, BeforeAllCall
             mockSmtpServer = DockerContainer.fromName(Images.MOCK_SMTP_SERVER)
                 .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: " + outputFrame.getUtf8String()))
                 .withExposedPorts(25, 8000)
-                .waitingFor(Wait.forLogMessage(".*Mock SMTP server started.*", 1));
+                .waitingFor(Wait.forLogMessage(".*Mock SMTP server started.*", 1))
+                .withName("james-testing-mock-smtp-server-" + UUID.randomUUID());
         }
 
         void start() {
