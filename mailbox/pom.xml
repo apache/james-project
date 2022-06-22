@@ -39,13 +39,14 @@
         <module>backup</module>
         <module>cassandra</module>
         <module>elasticsearch-v7</module>
-        <module>opensearch</module>
 
         <module>event/json</module>
 
         <module>jpa</module>
         <module>lucene</module>
         <module>memory</module>
+
+        <module>opensearch</module>
 
         <module>plugin/deleted-messages-vault</module>
         <module>plugin/deleted-messages-vault-cassandra</module>

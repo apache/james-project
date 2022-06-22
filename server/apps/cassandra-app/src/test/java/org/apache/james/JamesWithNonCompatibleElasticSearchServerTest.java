@@ -22,7 +22,7 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -34,11 +34,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JamesWithNonCompatibleElasticSearchServerTest {
 
-    static DockerElasticSearch dockerES6 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_6);
+    static DockerElasticSearch dockerES7 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_7);
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-        .extension(new DockerElasticSearchExtension(dockerES6))
+        .extension(new DockerElasticSearchExtension(dockerES7))
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
@@ -47,7 +47,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
 
     @AfterAll
     static void afterAll() {
-        dockerES6.stop();
+        dockerES7.stop();
     }
 
     @Test
@@ -59,7 +59,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                     .containsOnly(CheckResult.builder()
                         .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
-                        .description("ES version(6.3.2) is not compatible with the recommendation(7.10.2)")
+                        .description("Error when checking ES version: Missing required property 'OpenSearchVersionInfo.distribution'")
                         .build()));
 
         assertThat(server.isStarted())

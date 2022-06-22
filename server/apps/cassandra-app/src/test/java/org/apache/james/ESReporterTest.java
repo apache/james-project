@@ -28,13 +28,12 @@ import static org.awaitility.Durations.TEN_MINUTES;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -42,15 +41,13 @@ import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,15 +149,15 @@ class ESReporterTest {
 
     private boolean checkMetricRecordedInElasticSearch() {
         try (ReactorElasticSearchClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
-            SearchRequest searchRequest = new SearchRequest()
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery()));
-            return !Arrays.stream(client
-                    .search(searchRequest, RequestOptions.DEFAULT)
-                    .block()
-                    .getHits()
-                    .getHits())
-                .filter(searchHit -> searchHit.getIndex().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))
+            SearchRequest searchRequest = new SearchRequest.Builder()
+                .query(new MatchAllQuery.Builder().build()._toQuery())
+                .build();
+            return !client.search(searchRequest)
+                .block()
+                .hits()
+                .hits()
+                .stream()
+                .filter(searchHit -> searchHit.index().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))
                 .collect(Collectors.toList())
                 .isEmpty();
         } catch (Exception e) {

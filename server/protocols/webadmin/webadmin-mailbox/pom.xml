@@ -35,7 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es-v7</artifactId>
+            <artifactId>apache-james-backends-opensearch</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -47,11 +47,6 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -71,6 +66,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-opensearch</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-quota-search</artifactId>
         </dependency>
         <dependency>
@@ -81,8 +81,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
-            <scope>test</scope>
+            <artifactId>apache-james-mailbox-quota-search-opensearch</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
