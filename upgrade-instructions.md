@@ -18,6 +18,25 @@ Change list:
 
 - [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
 - [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
+- [Migration to OpenSearch](#migration-to-opensearch)
+
+### Migration to OpenSearch
+
+Date: 09/06/2022
+
+Concerned products: Distributed James, Cassandra James
+
+ElasticSearch v7 being EOL and upper versions being moved to a non-OSI compliant license (java clients included),
+it's been decided to migrate to OpenSearch that is a fork of ElasticSearch 7.10 and using Apache v2 license.
+
+You should migrate your ElasticSearch servers from version 7 to OpenSearch 2.0 before upgrading James.
+
+Users can either perform a migration of their data from version 7 to OpenSearch (documentation
+[here](https://opensearch.org/docs/latest/upgrade-to/upgrade-to/)) or might start from an empty
+Opensearch v2.0 cluster and [reindex data](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#reindexing-all-mails).
+
+Keep in mind as well that the group listeners related to ElasticSearch changed names.
+You would need to manually delete the bindings from the event queues in RabbitMQ before restarting James.
 
 ### Migration to Cassandra driver 4
 
