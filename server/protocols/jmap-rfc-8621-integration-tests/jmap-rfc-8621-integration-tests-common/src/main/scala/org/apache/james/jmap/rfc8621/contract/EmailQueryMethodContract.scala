@@ -6346,19 +6346,28 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
+  def inMailboxShouldResolveSimpleFilter(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
-    server.getProbe(classOf[MailboxProbeImpl])
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
-    server.getProbe(classOf[MailboxProbeImpl])
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -6374,6 +6383,75 @@ trait EmailQueryMethodContract {
          |        "operator": "AND",
          |        "conditions": [
          |          { "inMailbox": "${mailboxId.serialize()}" }, { "hasKeyword": "another_custom" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+  }
+
+  @Test
+  def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "operator": "AND",
+         |        "conditions": [
+         |          { "inMailbox": "${mailboxId.serialize()}" },
+         |           {
+         |             "operator": "OR",
+         |             "conditions": [
+         |                 { "inMailbox": "${mailboxId2.serialize()}" }, { "hasKeyword": "another_custom" }
+         |             ]
+         |           },
+         |           { "hasKeyword": "another_custom" }
          |        ]
          |      }
          |    },
@@ -6412,16 +6490,25 @@ trait EmailQueryMethodContract {
   def inMailboxOtherThanShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
-    server.getProbe(classOf[MailboxProbeImpl])
+     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    val messageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -6446,9 +6533,71 @@ trait EmailQueryMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-    .when
+      .when
       .post
-    .`then`
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId.serialize}"]""")
+  }
+
+  @Test
+  def inMailboxOtherThanShouldBeRejectedWhenOrOperator(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .getMessageId
+
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "operator": "OR",
+         |        "conditions": [
+         |          { "inMailboxOtherThan": ["${mailboxId.serialize()}"] }, { "hasKeyword": "another_custom" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
