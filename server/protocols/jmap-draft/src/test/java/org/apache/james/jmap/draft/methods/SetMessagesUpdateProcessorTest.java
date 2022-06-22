@@ -272,7 +272,7 @@ public class SetMessagesUpdateProcessorTest {
 
         recipientRewriteTable.addAliasMapping(MappingSource.fromUser("alias", "example.com"), USER.asString());
 
-        assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+        assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)).block())
             .doesNotThrowAnyException();
     }
 
@@ -282,8 +282,8 @@ public class SetMessagesUpdateProcessorTest {
 
         recipientRewriteTable.addAliasMapping(MappingSource.fromUser("alias", "example.com"), OTHER_USER.asString());
 
-        assertThatThrownBy(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
-            .isInstanceOf(MailboxSendingNotAllowedException.class);
+        assertThatThrownBy(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)).block())
+            .hasCause(new MailboxSendingNotAllowedException(USER, Optional.of(sender)));
     }
 
 }

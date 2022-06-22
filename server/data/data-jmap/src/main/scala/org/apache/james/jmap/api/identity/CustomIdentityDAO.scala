@@ -113,8 +113,9 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepositor
           htmlSignature = HtmlSignature.DEFAULT,
           mayDelete = MayDeleteIdentity(false))))
 
-  def userCanSendFrom(username: Username, mailAddress: MailAddress): Boolean =
-    canSendFrom.userCanSendFrom(username, usersRepository.getUsername(mailAddress))
+  def userCanSendFrom(username: Username, mailAddress: MailAddress): SMono[Boolean] =
+    SMono.fromPublisher(canSendFrom.userCanSendFromReactive(username, usersRepository.getUsername(mailAddress)))
+      .map(boolean2Boolean(_))
 
   def isServerSetIdentity(username: Username, id: IdentityId): Boolean =
     listIdentities(username).map(_.id).contains(id)
@@ -130,11 +131,10 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepositor
 // Using the custom identities we can stores deltas of the default (server-set) identities allowing to modify them.
 class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identityFactory: DefaultIdentitySupplier) {
   def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
-    if (identityFactory.userCanSendFrom(user, creationRequest.email)) {
-      customIdentityDao.save(user, creationRequest)
-    } else {
-      SMono.error(ForbiddenSendFromException(creationRequest.email))
-    }
+    identityFactory.userCanSendFrom(user, creationRequest.email)
+      .filter(bool => bool)
+      .flatMap(_ => SMono(customIdentityDao.save(user, creationRequest)))
+      .switchIfEmpty(SMono.error(ForbiddenSendFromException(creationRequest.email)))
 
   def list(user: Username): Publisher[Identity] =
     listServerSetIdentity(user)
@@ -171,11 +171,10 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
         case (Some(_), Some(customIdentity)) => customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
         case (Some(serverSetIdentity), None) => SMono(customIdentityDao.save(user, identityId, identityUpdateRequest.asCreationRequest(serverSetIdentity.email)))
         case (None, Some(customIdentity)) =>
-          if (identityFactory.userCanSendFrom(user, customIdentity.email)) {
-            customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
-          } else {
-            SMono.error(IdentityNotFoundException(identityId))
-          }
+          identityFactory.userCanSendFrom(user, customIdentity.email)
+            .filter(bool => bool)
+            .flatMap(_ => SMono(customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))))
+            .switchIfEmpty(SMono.error(IdentityNotFoundException(identityId)))
       }
       .`then`()
   }

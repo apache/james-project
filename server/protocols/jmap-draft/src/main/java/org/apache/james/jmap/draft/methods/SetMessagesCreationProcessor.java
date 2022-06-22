@@ -62,7 +62,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.Envelope;
-import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -289,24 +288,19 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     @VisibleForTesting
     Mono<Void> assertUserCanSendFrom(Username connectedUser, Optional<DraftEmailer> from) {
-        return Mono.fromRunnable(Throwing.runnable(() -> {
-            Optional<Username> maybeFromUser = from.flatMap(DraftEmailer::getEmail)
-                .map(Username::of);
+        Optional<Username> maybeFromUser = from.flatMap(DraftEmailer::getEmail)
+            .map(Username::of);
 
-            if (!canSendMailUsingIdentity(connectedUser, maybeFromUser)) {
-                String allowedSender = connectedUser.asString();
-                throw new MailboxSendingNotAllowedException(connectedUser, maybeFromUser);
-            } else {
-                LOG.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), from);
-            }
-        }).sneakyThrow()).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+        return Mono.from(canSendMailUsingIdentity(connectedUser, maybeFromUser))
+            .filter(Boolean::booleanValue)
+            .doOnNext(bool -> LOG.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), from))
+            .switchIfEmpty(Mono.error(() -> new MailboxSendingNotAllowedException(connectedUser, maybeFromUser)))
             .then();
     }
 
-    private boolean canSendMailUsingIdentity(Username connectedUser, Optional<Username> maybeFromUser) {
-        return maybeFromUser
-                .filter(fromUser -> canSendFrom.userCanSendFrom(connectedUser, fromUser))
-                .isPresent();
+    private Mono<Boolean> canSendMailUsingIdentity(Username connectedUser, Optional<Username> maybeFromUser) {
+        return Mono.justOrEmpty(maybeFromUser)
+            .flatMap(fromUser -> Mono.from(canSendFrom.userCanSendFromReactive(connectedUser, fromUser)));
     }
 
     private Mono<MessageWithId> handleDraftMessages(CreationMessageEntry entry, MailboxSession session) {

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.reactivestreams.Publisher;
 
 public interface CanSendFrom {
 
@@ -29,6 +30,8 @@ public interface CanSendFrom {
      * Indicate if the connectedUser can send a mail using the fromUser in the from clause.
      */
     boolean userCanSendFrom(Username connectedUser, Username fromUser);
+
+    Publisher<Boolean> userCanSendFromReactive(Username connectedUser, Username fromUser);
 
     /**
      * For a given user, return all the addresses he can use in the from clause of an email.
