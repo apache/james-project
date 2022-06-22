@@ -19,21 +19,18 @@
 
 package org.apache.james.modules.mailbox;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.opensearch.Version;
-import org.opensearch.client.RequestOptions;
+import org.opensearch.client.transport.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OpenSearchStartUpCheck implements StartUpCheck {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchStartUpCheck.class);
 
-    private static final Version RECOMMENDED_ES_VERSION = Version.V_2_0_0;
+    private static final Version RECOMMENDED_OS_VERSION = Version.parse("2.0.0");
     private static final String VERSION_CHECKING_ERROR_MESSAGE = "Error when checking ES version";
 
     public static final String CHECK_NAME = "OpenSearchStartUpCheck";
@@ -48,10 +45,9 @@ public class OpenSearchStartUpCheck implements StartUpCheck {
     @Override
     public CheckResult check() {
         try {
+            Version esVersion = Version.parse(client.info().block().version().number());
 
-            Version esVersion = Version.fromString(client.info(RequestOptions.DEFAULT).getVersion().getNumber());
-
-            if (esVersion.isCompatible(RECOMMENDED_ES_VERSION)) {
+            if (isCompatible(esVersion)) {
                 return CheckResult.builder()
                     .checkName(checkName())
                     .resultType(ResultType.GOOD)
@@ -61,7 +57,7 @@ public class OpenSearchStartUpCheck implements StartUpCheck {
             String esVersionCompatibilityWarn = String.format(
                 "ES version(%s) is not compatible with the recommendation(%s)",
                 esVersion.toString(),
-                RECOMMENDED_ES_VERSION.toString());
+                RECOMMENDED_OS_VERSION.toString());
             LOGGER.warn(esVersionCompatibilityWarn);
 
             return CheckResult.builder()
@@ -69,7 +65,7 @@ public class OpenSearchStartUpCheck implements StartUpCheck {
                 .resultType(ResultType.BAD)
                 .description(esVersionCompatibilityWarn)
                 .build();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error(VERSION_CHECKING_ERROR_MESSAGE, e);
             return CheckResult.builder()
                 .checkName(checkName())
@@ -82,5 +78,10 @@ public class OpenSearchStartUpCheck implements StartUpCheck {
     @Override
     public String checkName() {
         return CHECK_NAME;
+    }
+
+    private boolean isCompatible(Version usedVersion) {
+        return usedVersion.major() > RECOMMENDED_OS_VERSION.major()
+            || usedVersion.major() == RECOMMENDED_OS_VERSION.major() && usedVersion.minor() >= RECOMMENDED_OS_VERSION.minor();
     }
 }
