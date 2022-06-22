@@ -59,7 +59,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                     .containsOnly(CheckResult.builder()
                         .checkName(OpenSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
-                        .description("ES version(6.3.2) is not compatible with the recommendation(2.0.0)")
+                        .description("Error when checking ES version: Missing required property 'OpenSearchVersionInfo.distribution'")
                         .build()));
 
         assertThat(server.isStarted())

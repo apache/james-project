@@ -49,10 +49,8 @@ import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -103,13 +101,14 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
             openSearch.getDockerOpenSearch().configuration());
     }
 
-    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
-                    .source(new SearchSourceBuilder().query(query)),
-                RequestOptions.DEFAULT)
+                new SearchRequest.Builder()
+                    .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                    .query(query)
+                    .build())
                 .block()
-                .getHits().getTotalHits().value).isEqualTo(totalHits));
+                .hits().total().value()).isEqualTo(totalHits));
     }
 }
