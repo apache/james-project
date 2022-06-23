@@ -19,9 +19,9 @@
 
 package org.apache.james.modules;
 
-import static org.apache.james.mailrepository.api.MailRepositoryEmptyHealthCheck.ErrorMailRepositoryEmptyHealthCheck;
-
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
+import org.apache.james.mailrepository.api.EmptyErrorMailRepositoryHealthCheck;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 
 import com.google.inject.AbstractModule;
@@ -33,13 +33,13 @@ public class ErrorMailRepositoryEmptyHealthCheckModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ErrorMailRepositoryEmptyHealthCheck.class);
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(EmptyErrorMailRepositoryHealthCheck.class);
     }
 
     @Singleton
     @Provides
-    ErrorMailRepositoryEmptyHealthCheck provideErrorMailRepositoryEmptyHealthCheck(MailRepositoryStore mailRepositoryStore) {
-        return new ErrorMailRepositoryEmptyHealthCheck(mailRepositoryStore);
+    EmptyErrorMailRepositoryHealthCheck provideErrorMailRepositoryEmptyHealthCheck(MailRepositoryStore mailRepositoryStore, JamesMailSpooler.Configuration mailSpoolerConfiguration) {
+        return new EmptyErrorMailRepositoryHealthCheck(mailSpoolerConfiguration.getErrorRepositoryURL().getPath(), mailRepositoryStore);
     }
 
 }

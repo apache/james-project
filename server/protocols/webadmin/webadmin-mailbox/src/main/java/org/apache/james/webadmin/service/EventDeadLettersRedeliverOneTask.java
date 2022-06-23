@@ -50,7 +50,7 @@ public class EventDeadLettersRedeliverOneTask implements Task {
 
     @Override
     public Result run() {
-        return service.redeliverEvents(eventRetriever)
+        return service.redeliverEvents(eventRetriever, EventDeadLettersRedeliverService.RunningOptions.DEFAULT)
             .map(this::updateCounters)
             .reduce(Result.COMPLETED, Task::combine)
             .block();

@@ -68,12 +68,12 @@ public class EventDeadLettersService {
         deadLetters.remove(group, insertionId).block();
     }
 
-    public Task redeliverAllEvents() {
-        return new EventDeadLettersRedeliverAllTask(redeliverService);
+    public Task redeliverAllEvents(EventDeadLettersRedeliverService.RunningOptions runningOptions) {
+        return new EventDeadLettersRedeliverAllTask(redeliverService, runningOptions);
     }
 
-    public Task redeliverGroupEvents(Group group) {
-        return new EventDeadLettersRedeliverGroupTask(redeliverService, group);
+    public Task redeliverGroupEvents(Group group, EventDeadLettersRedeliverService.RunningOptions runningOptions) {
+        return new EventDeadLettersRedeliverGroupTask(redeliverService, group, runningOptions);
     }
 
     public Task redeliverSingleEvent(Group group, EventDeadLetters.InsertionId insertionId) {
