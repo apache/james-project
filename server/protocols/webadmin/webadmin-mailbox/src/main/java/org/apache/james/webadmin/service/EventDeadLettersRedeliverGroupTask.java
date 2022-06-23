@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
 import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,18 +39,20 @@ public class EventDeadLettersRedeliverGroupTask implements Task {
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
     private final Group group;
+    private final RunningOptions runningOptions;
 
-    EventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service, Group group) {
+    EventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service, Group group, RunningOptions runningOptions) {
         this.service = service;
         this.group = group;
         this.eventRetriever = EventRetriever.groupEvents(group);
+        this.runningOptions = runningOptions;
         this.successfulRedeliveriesCount = new AtomicLong(0L);
         this.failedRedeliveriesCount = new AtomicLong(0L);
     }
 
     @Override
     public Result run() {
-        return service.redeliverEvents(eventRetriever)
+        return service.redeliverEvents(eventRetriever, runningOptions)
             .map(this::updateCounters)
             .reduce(Result.COMPLETED, Task::combine)
             .block();
@@ -82,11 +86,16 @@ public class EventDeadLettersRedeliverGroupTask implements Task {
         return group;
     }
 
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
+    }
+
     private EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
             eventRetriever.forGroup(),
-            Clock.systemUTC().instant());
+            Clock.systemUTC().instant(),
+            getRunningOptions());
     }
 }

@@ -330,7 +330,8 @@ public class MailRepositoriesRoutes implements Routes {
     private ReprocessingService.Configuration extractConfiguration(Request request) {
         return new ReprocessingService.Configuration(parseTargetQueue(request),
             parseTargetProcessor(request),
-            parseConsume(request).orElse(true));
+            parseConsume(request).orElse(true),
+            parseLimit(request));
     }
 
     public void defineReprocessOne() {
@@ -374,5 +375,9 @@ public class MailRepositoriesRoutes implements Routes {
 
     private MailRepositoryPath decodedRepositoryPath(Request request) throws UnsupportedEncodingException {
         return MailRepositoryPath.fromEncoded(request.params("encodedPath"));
+    }
+
+    private Limit parseLimit(Request request) {
+        return Limit.from(ParametersExtractor.extractPositiveInteger(request, "limit"));
     }
 }

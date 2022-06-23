@@ -27,6 +27,7 @@ import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
+import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -84,7 +85,8 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
             new ReprocessingService.Configuration(
                 MailQueueName.of(targetQueue),
                 targetProcessor,
-                consume),
+                consume,
+                Limit.unlimited()),
             new MailKey(mailKey),
             clock);
     }

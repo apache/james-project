@@ -54,6 +54,7 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -1159,6 +1160,7 @@ class MailRepositoriesRoutesTest {
             .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .param("consume", false)
+            .param("limit", 100)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
@@ -1177,6 +1179,7 @@ class MailRepositoriesRoutesTest {
             .body("additionalInformation.targetProcessor", is(transport))
             .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE.asString()))
             .body("additionalInformation.consume", is(false))
+            .body("additionalInformation.limit", is(100))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1244,6 +1247,59 @@ class MailRepositoriesRoutesTest {
         assertThat(mailRepository.list())
             .toIterable()
             .isEmpty();
+    }
+
+    @Test
+    void reprocessingAllTaskShouldClearMailInLimitedWhenProvideLimitParameter() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("limit", 1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+        .get(taskId + "/await")
+            .then()
+            .body("status", is("completed"))
+            .body("taskId", is(notNullValue()))
+            .body("type", is(ReprocessingAllMailsTask.TYPE.asString()))
+            .body("additionalInformation.initialCount", is(2))
+            .body("additionalInformation.remainingCount", is(1))
+            .body("additionalInformation.limit", is(1));
+
+        assertThat(mailRepository.list())
+            .toIterable()
+            .hasSize(1);
+    }
+
+    @Test
+    void reprocessingAllTaskShouldFailWhenInvalidLimitParameter() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        with()
+            .param("action", "reprocess")
+            .param("limit", "invalid")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Can not parse limit"));
     }
 
     @Test

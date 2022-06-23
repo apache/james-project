@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -30,20 +34,27 @@ public class EventDeadLettersRedeliverAllTaskDTO implements TaskDTO {
         return DTOModule
             .forDomainObject(EventDeadLettersRedeliverAllTask.class)
             .convertToDTO(EventDeadLettersRedeliverAllTaskDTO.class)
-            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverAllTask(service))
-            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverAllTaskDTO(typeName))
+            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverAllTask(service, dto.getRunningOptions()))
+            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverAllTaskDTO(typeName, domainObject.getRunningOptions()))
             .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
 
     private final String type;
+    private final RunningOptions runningOptions;
 
-    public EventDeadLettersRedeliverAllTaskDTO(@JsonProperty("type") String type) {
+    public EventDeadLettersRedeliverAllTaskDTO(@JsonProperty("type") String type,
+                                               @JsonProperty("runningOptions") RunningOptions runningOptions) {
         this.type = type;
+        this.runningOptions = Optional.ofNullable(runningOptions).orElse(RunningOptions.DEFAULT);
     }
 
     @Override
     public String getType() {
         return type;
+    }
+
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
     }
 }
