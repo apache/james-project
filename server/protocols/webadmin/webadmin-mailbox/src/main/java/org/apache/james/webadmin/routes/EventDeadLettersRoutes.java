@@ -19,18 +19,22 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
 import javax.inject.Inject;
 
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.Group;
 import org.apache.james.task.TaskManager;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -40,6 +44,7 @@ import spark.Route;
 import spark.Service;
 
 public class EventDeadLettersRoutes implements Routes {
+
     public static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
     private static final String INSERTION_ID_PARAMETER = ":insertionId";
@@ -76,7 +81,7 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     public Route performActionOnAllEvents() {
-        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents(parseRunningOptions(request)))
             .asRoute(taskManager);
     }
 
@@ -90,7 +95,7 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     public Route performActionOnGroupEvents() {
-        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request), parseRunningOptions(request)))
             .asRoute(taskManager);
     }
 
@@ -143,5 +148,11 @@ public class EventDeadLettersRoutes implements Routes {
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();
         }
+    }
+
+    private RunningOptions parseRunningOptions(Request request) {
+        return ParametersExtractor.extractPositiveInteger(request, "limit")
+            .map(limit -> new RunningOptions(Limit.from(limit)))
+            .orElse(RunningOptions.DEFAULT);
     }
 }

@@ -36,12 +36,17 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
+import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.util.streams.Limit;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class ReprocessingService {
 
@@ -57,11 +62,13 @@ public class ReprocessingService {
         private final MailQueueName mailQueueName;
         private final Optional<String> targetProcessor;
         private final boolean consume;
+        private final Limit limit;
 
-        public Configuration(MailQueueName mailQueueName, Optional<String> targetProcessor, boolean consume) {
+        public Configuration(MailQueueName mailQueueName, Optional<String> targetProcessor, boolean consume, Limit limit) {
             this.mailQueueName = mailQueueName;
             this.targetProcessor = targetProcessor;
             this.consume = consume;
+            this.limit = limit;
         }
 
         public MailQueueName getMailQueueName() {
@@ -74,6 +81,10 @@ public class ReprocessingService {
 
         public boolean isConsume() {
             return consume;
+        }
+
+        public Limit getLimit() {
+            return limit;
         }
     }
 
@@ -120,19 +131,29 @@ public class ReprocessingService {
         this.mailRepositoryStoreService = mailRepositoryStoreService;
     }
 
-    public void reprocessAll(MailRepositoryPath path, Configuration configuration, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        try (Reprocessor reprocessor = new Reprocessor(getMailQueue(configuration.getMailQueueName()), configuration)) {
-            mailRepositoryStoreService
-                .getRepositories(path)
-                .forEach(Throwing.consumer((MailRepository repository) ->
-                    Iterators.toStream(repository.list())
-                        .peek(keyListener)
-                        .forEach(Throwing.consumer(key ->
-                                Optional.ofNullable(repository.retrieve(key))
-                                        .ifPresent(mail -> reprocessor.reprocess(repository, mail, key))
-                        ))
-                ));
-        }
+    public Mono<Task.Result> reprocessAll(MailRepositoryPath path, Configuration configuration, Consumer<MailKey> keyListener) {
+        return Mono.using(() -> new Reprocessor(getMailQueue(configuration.getMailQueueName()), configuration),
+            reprocessor -> reprocessAll(reprocessor, path, configuration, keyListener),
+            Reprocessor::close);
+    }
+
+    private Mono<Task.Result> reprocessAll(Reprocessor reprocessor, MailRepositoryPath path, Configuration configuration, Consumer<MailKey> keyListener) {
+        return configuration.limit.applyOnFlux(Flux.fromStream(Throwing.supplier(() -> mailRepositoryStoreService.getRepositories(path)))
+                .flatMap(Throwing.function((MailRepository repository) -> Iterators.toFlux(repository.list())
+                    .doOnNext(keyListener)
+                    .map(mailKey -> Pair.of(repository, mailKey)))))
+            .flatMap(pair -> reprocess(pair.getRight(), pair.getLeft(), reprocessor))
+            .reduce(Task.Result.COMPLETED, Task::combine);
+    }
+
+    private Mono<Task.Result> reprocess(MailKey key, MailRepository repository, Reprocessor reprocessor) {
+        return Mono.fromCallable(() -> repository.retrieve(key))
+            .doOnNext(mail -> reprocessor.reprocess(repository, mail, key))
+            .thenReturn(Task.Result.COMPLETED)
+            .onErrorResume(error -> {
+                LOGGER.warn("Failed when reprocess mail {}", key.asString(), error);
+                return Mono.just(Task.Result.PARTIAL);
+            });
     }
 
     public void reprocess(MailRepositoryPath path, MailKey key, Configuration configuration) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {

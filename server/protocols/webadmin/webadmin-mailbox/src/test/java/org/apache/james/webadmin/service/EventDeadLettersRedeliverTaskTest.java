@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
@@ -28,6 +29,9 @@ import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.GenericGroup;
+import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.apache.james.util.streams.Limit;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne;
@@ -36,15 +40,9 @@ import org.junit.jupiter.api.Test;
 
 class EventDeadLettersRedeliverTaskTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
-    private static final String SERIALIZED_ALL = "{\"type\":\"event-dead-letters-redeliver-all\"}";
-    private static final String SERIALIZED_GROUP = "{\"type\":\"event-dead-letters-redeliver-group\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\"}";
-    private static final String SERIALIZED_ONE = "{\"type\":\"event-dead-letters-redeliver-one\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\",\"insertionId\":\"fcbc3c92-e9a0-4ece-94ed-6e6b45045258\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ALL = "{\"type\":\"event-dead-letters-redeliver-all\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_GROUP = "{\"type\":\"event-dead-letters-redeliver-group\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ONE = "{\"type\":\"event-dead-letters-redeliver-one\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\",\"insertionId\":\"53db3dd9-80eb-476f-b25a-722ad364905a\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private static final EventDeadLettersRedeliverService SERVICE = mock(EventDeadLettersRedeliverService.class);
-    private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE);
-    private static final EventDeadLettersRedeliverGroupTask TASK_GROUP = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"));
+    private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE, EventDeadLettersRedeliverService.RunningOptions.DEFAULT);
+    private static final EventDeadLettersRedeliverGroupTask TASK_GROUP = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), EventDeadLettersRedeliverService.RunningOptions.DEFAULT);
     private static final EventDeadLettersRedeliverOneTask TASK_ONE = new EventDeadLettersRedeliverOneTask(SERVICE, new GenericGroup("abc"), EventDeadLetters.InsertionId.of("fcbc3c92-e9a0-4ece-94ed-6e6b45045258"));
 
     private static final long SUCCESSFUL_REDELIVERY_COUNT = 10L;
@@ -62,39 +60,154 @@ class EventDeadLettersRedeliverTaskTest {
     void redeliverAllTaskShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE))
             .bean(TASK_ALL)
-            .json(SERIALIZED_ALL)
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-all\"," +
+                "    \"runningOptions\": {}" +
+                "}")
             .verify();
+
+        EventDeadLettersRedeliverAllTask taskAllWithLimit = new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10)));
+
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE))
+            .bean(taskAllWithLimit)
+            .json("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{\"limit\": 10}}")
+            .verify();
+    }
+
+    @Test
+    void redeliverAllTaskShouldDeserializationSuccess() throws Exception {
+        JsonTaskSerializer serializer = JsonTaskSerializer.of(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE));
+
+        assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{\"limit\": 10}}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10))));
+
+        assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{}}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited())));
+
+        assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\"}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited())));
     }
 
     @Test
     void redeliverGroupTaskShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverGroupTaskDTO.module(SERVICE))
             .bean(TASK_GROUP)
-            .json(SERIALIZED_GROUP)
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-group\"," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"," +
+                "    \"runningOptions\": {}" +
+                "}")
             .verify();
+
+        EventDeadLettersRedeliverGroupTask taskGroupWithLimit = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), new RunningOptions(Limit.limit(10)));
+
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverGroupTaskDTO.module(SERVICE))
+            .bean(taskGroupWithLimit)
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-group\"," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"," +
+                "    \"runningOptions\": {" +
+                "        \"limit\": 10" +
+                "    }" +
+                "}")
+            .verify();
+    }
+
+    @Test
+    void redeliverGroupTaskShouldDeserializationSuccess() throws Exception {
+        JsonTaskSerializer serializer = JsonTaskSerializer.of(EventDeadLettersRedeliverGroupTaskDTO.module(SERVICE));
+
+        assertThat(serializer.deserialize("{" +
+            "    \"type\": \"event-dead-letters-redeliver-group\"," +
+            "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"," +
+            "    \"runningOptions\": {" +
+            "        \"limit\": 10" +
+            "    }" +
+            "}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), new RunningOptions(Limit.limit(10))));
+
+        assertThat(serializer.deserialize("{" +
+            "    \"type\": \"event-dead-letters-redeliver-group\"," +
+            "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"," +
+            "    \"runningOptions\": {}" +
+            "}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), new RunningOptions(Limit.unlimited())));
+
+
+        assertThat(serializer.deserialize("{" +
+            "    \"type\": \"event-dead-letters-redeliver-group\"," +
+            "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"" +
+            "}"))
+            .usingRecursiveComparison()
+            .isEqualTo(new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), new RunningOptions(Limit.unlimited())));
     }
 
     @Test
     void redeliverOneTaskShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverOneTaskDTO.module(SERVICE))
             .bean(TASK_ONE)
-            .json(SERIALIZED_ONE)
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-one\"," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-abc\"," +
+                "    \"insertionId\": \"fcbc3c92-e9a0-4ece-94ed-6e6b45045258\"" +
+                "}")
             .verify();
     }
 
     @Test
     void redeliverAllAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.module())
-            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, TIMESTAMP))
-            .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_ALL)
+            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, TIMESTAMP, RunningOptions.DEFAULT))
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-all\"," +
+                "    \"successfulRedeliveriesCount\": 10," +
+                "    \"failedRedeliveriesCount\": 4," +
+                "    \"timestamp\": \"2018-11-13T12:00:55Z\"," +
+                "    \"runningOptions\":{}" +
+                "}")
+            .verify();
+
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.module())
+            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, TIMESTAMP, new RunningOptions(Limit.limit(10))))
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-all\"," +
+                "    \"successfulRedeliveriesCount\": 10," +
+                "    \"failedRedeliveriesCount\": 4," +
+                "    \"timestamp\": \"2018-11-13T12:00:55Z\"," +
+                "    \"runningOptions\":{ \"limit\": 10}" +
+                "}")
             .verify();
     }
 
     @Test
     void redeliverGroupAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.module())
-            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, TIMESTAMP))
-            .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_GROUP)
+            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, TIMESTAMP, RunningOptions.DEFAULT))
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-group\"," +
+                "    \"successfulRedeliveriesCount\": 10," +
+                "    \"failedRedeliveriesCount\": 4," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-foo\"," +
+                "    \"timestamp\": \"2018-11-13T12:00:55Z\"," +
+                "    \"runningOptions\": {}" +
+                "}")
+            .verify();
+
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.module())
+            .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, TIMESTAMP, new RunningOptions(Limit.limit(10))))
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-group\"," +
+                "    \"successfulRedeliveriesCount\": 10," +
+                "    \"failedRedeliveriesCount\": 4," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-foo\"," +
+                "    \"timestamp\": \"2018-11-13T12:00:55Z\"," +
+                "    \"runningOptions\": {\"limit\": 10}" +
+                "}")
             .verify();
     }
 
@@ -102,7 +215,14 @@ class EventDeadLettersRedeliverTaskTest {
     void redeliverOneAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.module())
             .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForOne(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, SOME_INSERTION_ID, TIMESTAMP))
-            .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_ONE)
+            .json("{" +
+                "    \"type\": \"event-dead-letters-redeliver-one\"," +
+                "    \"successfulRedeliveriesCount\": 10," +
+                "    \"failedRedeliveriesCount\": 4," +
+                "    \"group\": \"org.apache.james.mailbox.events.GenericGroup-foo\"," +
+                "    \"insertionId\": \"53db3dd9-80eb-476f-b25a-722ad364905a\"," +
+                "    \"timestamp\": \"2018-11-13T12:00:55Z\"" +
+                "}")
             .verify();
     }
 }

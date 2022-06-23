@@ -18,9 +18,12 @@
  ****************************************************************/
 package org.apache.james.webadmin.utils;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
 import org.eclipse.jetty.http.HttpStatus;
@@ -49,6 +52,12 @@ public class ParametersExtractor {
 
     public static Optional<Integer> extractPositiveInteger(Request request, String parameterName) {
         return extractPositiveNumber(request, parameterName, Integer::valueOf);
+    }
+
+    public static Optional<Duration> extractDuration(Request request, String parameterName) {
+        return Optional.ofNullable(request.queryParams(parameterName))
+            .filter(s -> !s.isEmpty())
+            .map(raw -> DurationParser.parse(raw, ChronoUnit.SECONDS));
     }
 
     private static <T extends Number> Optional<T> extractPositiveNumber(Request request, String parameterName, Function<String, T> toNumber) {
