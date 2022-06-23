@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
 import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,17 +37,19 @@ public class EventDeadLettersRedeliverAllTask implements Task {
     private final EventRetriever eventRetriever;
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
+    private final RunningOptions runningOptions;
 
-    EventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service) {
+    EventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service, RunningOptions runningOptions) {
         this.service = service;
         this.eventRetriever = EventRetriever.allEvents();
         this.successfulRedeliveriesCount = new AtomicLong(0L);
         this.failedRedeliveriesCount = new AtomicLong(0L);
+        this.runningOptions = runningOptions;
     }
 
     @Override
     public Result run() {
-        return service.redeliverEvents(eventRetriever)
+        return service.redeliverEvents(eventRetriever, runningOptions)
             .map(this::updateCounters)
             .reduce(Result.COMPLETED, Task::combine)
             .block();
@@ -70,6 +74,10 @@ public class EventDeadLettersRedeliverAllTask implements Task {
         return TYPE;
     }
 
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
+    }
+
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(createAdditionalInformation());
@@ -79,6 +87,7 @@ public class EventDeadLettersRedeliverAllTask implements Task {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
-            Clock.systemUTC().instant());
+            Clock.systemUTC().instant(),
+            getRunningOptions());
     }
 }

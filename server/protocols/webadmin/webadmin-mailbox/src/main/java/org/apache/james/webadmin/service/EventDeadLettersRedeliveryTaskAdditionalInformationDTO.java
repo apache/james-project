@@ -1,5 +1,7 @@
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
 import java.time.Instant;
 import java.util.Optional;
 
@@ -16,13 +18,22 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
     public static class EventDeadLettersRedeliveryTaskAdditionalInformationForAll extends EventDeadLettersRedeliveryTaskAdditionalInformation {
 
         public static class DTO extends EventDeadLettersRedeliveryTaskAdditionalInformationDTO {
+
+            private final RunningOptions runningOptions;
+
             public DTO(@JsonProperty("type") String type,
                        @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
                        @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
                        @JsonProperty("group") Optional<String> group,
                        @JsonProperty("insertionId") Optional<String> insertionId,
-                       @JsonProperty("timestamp") Instant timestamp) {
-                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+                       @JsonProperty("timestamp") Instant timestamp,
+                       @JsonProperty("runningOptions") RunningOptions runningOptions) {
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId, timestamp);
+                this.runningOptions = runningOptions;
+            }
+
+            public RunningOptions getRunningOptions() {
+                return runningOptions;
             }
         }
 
@@ -36,27 +47,42 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                     domainObject.getFailedRedeliveriesCount(),
                     domainObject.getGroup(),
                     domainObject.getInsertionId(),
-                    domainObject.timestamp()))
+                    domainObject.timestamp(),
+                    domainObject.getRunningOptions()))
                 .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
+        private final RunningOptions runningOptions;
 
-        EventDeadLettersRedeliveryTaskAdditionalInformationForAll(long successfulRedeliveriesCount, long failedRedeliveriesCount, Instant timestamp) {
+        EventDeadLettersRedeliveryTaskAdditionalInformationForAll(long successfulRedeliveriesCount, long failedRedeliveriesCount, Instant timestamp, RunningOptions runningOptions) {
             super(successfulRedeliveriesCount, failedRedeliveriesCount, Optional.empty(), Optional.empty(), timestamp);
+            this.runningOptions = runningOptions;
+        }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
         }
     }
 
     public static class EventDeadLettersRedeliveryTaskAdditionalInformationForGroup extends EventDeadLettersRedeliveryTaskAdditionalInformation {
 
         public static class DTO extends EventDeadLettersRedeliveryTaskAdditionalInformationDTO {
+            private final RunningOptions runningOptions;
+
             public DTO(@JsonProperty("type") String type,
                        @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
                        @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
                        @JsonProperty("group") Optional<String> group,
                        @JsonProperty("insertionId") Optional<String> insertionId,
-                       @JsonProperty("timestamp") Instant timestamp) {
-                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+                       @JsonProperty("timestamp") Instant timestamp,
+                       @JsonProperty("runningOptions") RunningOptions runningOptions) {
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId, timestamp);
+                this.runningOptions = runningOptions;
+            }
+
+            public RunningOptions getRunningOptions() {
+                return runningOptions;
             }
         }
 
@@ -69,14 +95,21 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                     domainObject.getFailedRedeliveriesCount(),
                     domainObject.getGroup(),
                     domainObject.getInsertionId(),
-                    domainObject.timestamp()))
+                    domainObject.timestamp(),
+                    domainObject.getRunningOptions()))
                 .typeName(EventDeadLettersRedeliverGroupTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
+        private final RunningOptions runningOptions;
 
-        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group, Instant timestamp) {
+        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group, Instant timestamp, RunningOptions runningOptions) {
             super(successfulRedeliveriesCount, failedRedeliveriesCount, group, Optional.empty(), timestamp);
+            this.runningOptions = runningOptions;
+        }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
         }
     }
 
@@ -88,7 +121,7 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                        @JsonProperty("group") Optional<String> group,
                        @JsonProperty("insertionId") Optional<String> insertionId,
                        @JsonProperty("timestamp") Instant timestamp) {
-                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId, timestamp);
             }
         }
 
@@ -117,19 +150,21 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
         }
     }
 
-    private static EventDeadLettersRedeliveryTaskAdditionalInformationForAll fromAll(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {
+    private static EventDeadLettersRedeliveryTaskAdditionalInformationForAll fromAll(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.DTO dto) {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(
-            dto.successfulRedeliveriesCount,
-            dto.failedRedeliveriesCount,
-            dto.timestamp);
+            dto.getSuccessfulRedeliveriesCount(),
+            dto.getFailedRedeliveriesCount(),
+            dto.getTimestamp(),
+            dto.runningOptions);
     }
 
-    private static EventDeadLettersRedeliveryTaskAdditionalInformationForGroup fromGroup(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {
+    private static EventDeadLettersRedeliveryTaskAdditionalInformationForGroup fromGroup(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.DTO dto) {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
-            dto.successfulRedeliveriesCount,
-            dto.failedRedeliveriesCount,
-            dto.group.map(Throwing.function(Group::deserialize).sneakyThrow()),
-            dto.timestamp);
+            dto.getSuccessfulRedeliveriesCount(),
+            dto.getFailedRedeliveriesCount(),
+            dto.getGroup().map(Throwing.function(Group::deserialize).sneakyThrow()),
+            dto.getTimestamp(),
+            dto.runningOptions);
     }
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationForOne fromOne(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {

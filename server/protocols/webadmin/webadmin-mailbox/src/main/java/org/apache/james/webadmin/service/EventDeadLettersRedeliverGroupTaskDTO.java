@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
+
+import java.util.Optional;
+
 import org.apache.james.events.Group;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -32,22 +36,26 @@ public class EventDeadLettersRedeliverGroupTaskDTO implements TaskDTO {
             .forDomainObject(EventDeadLettersRedeliverGroupTask.class)
             .convertToDTO(EventDeadLettersRedeliverGroupTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.toDomainObject(service))
-            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverGroupTaskDTO(typeName, domainObject.getGroup().asString()))
+            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverGroupTaskDTO(typeName, domainObject.getGroup().asString(), domainObject.getRunningOptions()))
             .typeName(EventDeadLettersRedeliverGroupTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
 
     private final String type;
     private final String group;
+    private final RunningOptions runningOptions;
 
-    public EventDeadLettersRedeliverGroupTaskDTO(@JsonProperty("type") String type, @JsonProperty("group") String group) {
+    public EventDeadLettersRedeliverGroupTaskDTO(@JsonProperty("type") String type,
+                                                 @JsonProperty("group") String group,
+                                                 @JsonProperty("runningOptions") RunningOptions runningOptions) {
         this.type = type;
         this.group = group;
+        this.runningOptions = Optional.ofNullable(runningOptions).orElse(RunningOptions.DEFAULT);
     }
 
     EventDeadLettersRedeliverGroupTask toDomainObject(EventDeadLettersRedeliverService service) {
         try {
-            return new EventDeadLettersRedeliverGroupTask(service, Group.deserialize(getGroup()));
+            return new EventDeadLettersRedeliverGroupTask(service, Group.deserialize(getGroup()), runningOptions);
         } catch (Group.GroupDeserializationException e) {
             throw new RuntimeException(e);
         }
@@ -60,5 +68,9 @@ public class EventDeadLettersRedeliverGroupTaskDTO implements TaskDTO {
 
     public String getGroup() {
         return group;
+    }
+
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
     }
 }

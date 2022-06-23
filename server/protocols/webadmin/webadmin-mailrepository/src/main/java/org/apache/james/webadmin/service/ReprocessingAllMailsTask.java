@@ -24,11 +24,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -109,13 +106,8 @@ public class ReprocessingAllMailsTask implements Task {
 
     @Override
     public Result run() {
-        try {
-            reprocessingService.reprocessAll(repositoryPath, configuration, this::notifyProgress);
-            return Result.COMPLETED;
-        } catch (MessagingException | MailRepositoryStore.MailRepositoryStoreException e) {
-            LOGGER.error("Encountered error while reprocessing repository", e);
-            return Result.PARTIAL;
-        }
+        return reprocessingService.reprocessAll(repositoryPath, configuration, this::notifyProgress)
+            .block();
     }
 
     MailRepositoryPath getRepositoryPath() {

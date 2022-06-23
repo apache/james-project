@@ -25,6 +25,7 @@ import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
+import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -48,7 +49,8 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 domainObject.getRepositoryPath().urlEncoded(),
                 domainObject.getConfiguration().getMailQueueName().asString(),
                 Optional.of(domainObject.getConfiguration().isConsume()),
-                domainObject.getConfiguration().getTargetProcessor());
+                domainObject.getConfiguration().getTargetProcessor(),
+                domainObject.getConfiguration().getLimit().getLimit());
         } catch (Exception e) {
             throw new ReprocessingAllMailsTask.UrlEncodingFailureSerializationException(domainObject.getRepositoryPath());
         }
@@ -61,18 +63,22 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
     private final boolean consume;
     private final Optional<String> targetProcessor;
 
+    private final Optional<Integer> limit;
+
     public ReprocessingAllMailsTaskDTO(@JsonProperty("type") String type,
                                        @JsonProperty("repositorySize") long repositorySize,
                                        @JsonProperty("repositoryPath") String repositoryPath,
                                        @JsonProperty("targetQueue") String targetQueue,
                                        @JsonProperty("consume") Optional<Boolean> consume,
-                                       @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
+                                       @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                       @JsonProperty("limit") Optional<Integer> limit) {
         this.type = type;
         this.repositorySize = repositorySize;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.consume = consume.orElse(true);
         this.targetProcessor = targetProcessor;
+        this.limit = limit;
     }
 
     private ReprocessingAllMailsTask fromDTO(ReprocessingService reprocessingService) {
@@ -84,7 +90,8 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 new ReprocessingService.Configuration(
                     MailQueueName.of(targetQueue),
                     targetProcessor,
-                    consume));
+                    consume,
+                    Limit.from(limit)));
         } catch (Exception e) {
             throw new ReprocessingAllMailsTask.InvalidMailRepositoryPathDeserializationException(repositoryPath);
         }
@@ -113,5 +120,9 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
 
     public Optional<String> getTargetProcessor() {
         return targetProcessor;
+    }
+
+    public Optional<Integer> getLimit() {
+        return limit;
     }
 }

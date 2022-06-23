@@ -43,6 +43,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.service.ReprocessingService.Configuration;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,7 +109,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocess(PATH, KEY_2, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME));
+        reprocessingService.reprocess(PATH, KEY_2, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME, Limit.unlimited()));
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
@@ -123,7 +124,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocess(PATH, KEY_2, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME));
+        reprocessingService.reprocess(PATH, KEY_2, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME, Limit.unlimited()));
 
         assertThat(repository.list()).toIterable()
             .containsOnly(KEY_1, KEY_3);
@@ -136,7 +137,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME), NOOP_CONSUMER);
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(repository.list()).toIterable()
             .isEmpty();
@@ -149,7 +150,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME), NOOP_CONSUMER);
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
@@ -180,7 +181,7 @@ class ReprocessingServiceTest {
             }
         });
 
-        reprocessingService.reprocessAll(PATH, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME), concurrentRemoveConsumer);
+        reprocessingService.reprocessAll(PATH, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, CONSUME, Limit.unlimited()), concurrentRemoveConsumer).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
