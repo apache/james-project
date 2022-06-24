@@ -86,9 +86,9 @@ class JamesServerWithRetryConnectionTest {
 
     @Test
     void serverShouldRetryToConnectToOpenSearchWhenStartService(GuiceJamesServer server) throws Exception {
-        dockerOpenSearch.getDockerES().pause();
+        dockerOpenSearch.getDockerOS().pause();
 
-        waitToStartContainer(WAITING_TIME, dockerOpenSearch.getDockerES()::unpause);
+        waitToStartContainer(WAITING_TIME, dockerOpenSearch.getDockerOS()::unpause);
 
         assertThatServerStartCorrectly(server);
     }

@@ -50,19 +50,20 @@ public class DockerOpenSearchExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        getDockerES().start();
+        getDockerOS().start();
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        if (!getDockerES().isRunning()) {
-            getDockerES().unpause();
+        if (!getDockerOS().isRunning()) {
+            getDockerOS().unpause();
         }
         await();
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
+        getDockerOS().cleanUpData();
     }
 
     @Override
@@ -73,17 +74,17 @@ public class DockerOpenSearchExtension implements GuiceModuleTestExtension {
 
     @Override
     public void await() {
-        getDockerES().flushIndices();
+        getDockerOS().flushIndices();
     }
 
     private OpenSearchConfiguration getOpenSearchConfigurationForDocker() {
         return OpenSearchConfiguration.builder()
-            .addHost(getDockerES().getHttpHost())
+            .addHost(getDockerOS().getHttpHost())
             .requestTimeout(requestTimeout)
             .build();
     }
 
-    public DockerOpenSearch getDockerES() {
+    public DockerOpenSearch getDockerOS() {
         return dockerOpenSearch;
     }
 }
