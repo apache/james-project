@@ -63,6 +63,7 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
+        dockerElasticSearch.cleanUpData();
     }
 
     @Override
