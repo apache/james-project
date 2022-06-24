@@ -125,7 +125,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
 
         aliceAccessToken = authenticateJamesUser(LocalHostURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
 
-        dockerOpenSearch.getDockerES().pause();
+        dockerOpenSearch.getDockerOS().pause();
         Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
     }
 
@@ -153,7 +153,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     }
 
     private void unpauseOpenSearch() throws Exception {
-        dockerOpenSearch.getDockerES().unpause();
+        dockerOpenSearch.getDockerOS().unpause();
         Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker unpause is asynchronous and we found no way to poll for it
     }
 
