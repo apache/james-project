@@ -62,7 +62,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.github.fge.lambdas.Throwing;
 
-public class RequeueThrottlingIntegrationTest {
+class RequeueThrottlingIntegrationTest {
     private static final String SENDER = "sender1@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT1 = "recipient1@" + DEFAULT_DOMAIN;
     private TemporaryJamesServer jamesServer;
@@ -88,6 +88,7 @@ public class RequeueThrottlingIntegrationTest {
                     .matcher(All.class)
                     .mailet(PerSenderRateLimit.class)
                     .addProperty("duration", "3s")
+                    .addProperty("precision", "1s")
                     .addProperty("count", "1")
                     .addProperty("exceededProcessor", "tooMuchEmails")
                     .build())
@@ -159,8 +160,10 @@ public class RequeueThrottlingIntegrationTest {
         MessageResult firstMessage = messageIdProbe.getMessages(messageIds.get(0), recipient).get(0);
         MessageResult secondMessage = messageIdProbe.getMessages(messageIds.get(1), recipient).get(0);
 
-        assertThat(Duration.between(firstMessage.getInternalDate().toInstant(), secondMessage.getInternalDate().toInstant()).abs().toSeconds())
-            .isGreaterThan(3);
+        assertThat(Duration.between(
+            firstMessage.getInternalDate().toInstant(),
+            secondMessage.getInternalDate().toInstant()).abs())
+            .isGreaterThan(Duration.ofSeconds(3));
     }
 
     @Test
