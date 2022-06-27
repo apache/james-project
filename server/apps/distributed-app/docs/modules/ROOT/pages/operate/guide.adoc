@@ -40,6 +40,10 @@ all mails in a mail repository] or
 xref:operate/webadmin.adoc#_reprocessing_a_specific_mail_from_a_mail_repository[reprocessing
 a single mail in a mail repository].
 
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 reprocessed per minute
+Note that it only support the reprocessing all mails.
+
 Also, one can decide to
 xref:operate/webadmin.adoc#_removing_all_mails_from_a_mail_repository[delete
 all the mails of a mail repository] or
@@ -113,6 +117,9 @@ An easy way to solve this is just to trigger then the
 xref:operate/webadmin.adoc#_redeliver_all_events[redeliver all events]
 task. It will start reprocessing all the failed events registered in
 event dead letters.
+
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 redelivery per minute
 
 If for some other reason you don’t need to redeliver all events, you
 have more fine-grained operations allowing you to
