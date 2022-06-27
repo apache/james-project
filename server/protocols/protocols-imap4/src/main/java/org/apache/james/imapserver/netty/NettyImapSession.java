@@ -46,10 +46,6 @@ import io.netty.handler.codec.compression.ZlibWrapper;
 import reactor.core.publisher.Mono;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
-    private static final int BUFFER_SIZE = 2048;
-
-    private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
-    private SelectedMailbox selectedMailbox;
     private final Map<String, Object> attributesByKey = new HashMap<>();
     private final Encryption secure;
     private final boolean compress;
@@ -57,10 +53,13 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final boolean requiredSSL;
     private final boolean plainAuthEnabled;
     private final SessionId sessionId;
-    private boolean needsCommandInjectionDetection;
-    private Optional<OidcSASLConfiguration> oidcSASLConfiguration;
-    private boolean supportsOAuth;
-    private MailboxSession mailboxSession = null;
+    private final boolean supportsOAuth;
+    private final Optional<OidcSASLConfiguration> oidcSASLConfiguration;
+
+    private volatile ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
+    private volatile SelectedMailbox selectedMailbox;
+    private volatile boolean needsCommandInjectionDetection;
+    private volatile MailboxSession mailboxSession = null;
 
     public NettyImapSession(Channel channel, Encryption secure, boolean compress, boolean requiredSSL, boolean plainAuthEnabled, SessionId sessionId,
                             Optional<OidcSASLConfiguration> oidcSASLConfiguration) {
