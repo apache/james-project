@@ -145,6 +145,10 @@ WebAdmin exposes all utilities for
 or 
 [reprocessing a single mail in a mail repository](manage-webadmin.html#Reprocessing_a_specific_mail_from_a_mail_repository).
 
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 reprocessed per minute
+Note that it only support the reprocessing all mails.
+
 Also, one can decide to 
 [delete all the mails of a mail repository](manage-webadmin.html#Removing_all_mails_from_a_mail_repository) 
 or [delete a single mail of a mail repository](manage-webadmin.html#Removing_a_mail_from_a_mail_repository).
@@ -205,6 +209,9 @@ If you get failed events IDs back, you can as well [check their details](manage-
 An easy way to solve this is just to trigger then the
 [redeliver all events](manage-webadmin.html#Redeliver_all_events) task. It will start 
 reprocessing all the failed events registered in event dead letters.
+
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 redelivery per minute
 
 If for some other reason you don't need to redeliver all events, you have more fine-grained operations allowing you to
 [redeliver group events](manage-webadmin.html#Redeliver_group_events) or even just
