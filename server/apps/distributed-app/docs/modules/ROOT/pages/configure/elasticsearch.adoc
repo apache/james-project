@@ -236,3 +236,90 @@ EG:
 ----
 elasticsearch.search.overrides=org.apache.james.mailbox.cassandra.search.AllSearchOverride,org.apache.james.mailbox.cassandra.search.DeletedSearchOverride, org.apache.james.mailbox.cassandra.search.DeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.NotDeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.UidSearchOverride,org.apache.james.mailbox.cassandra.search.UnseenSearchOverride
 ----
+
+== Configure dedicated language analyzers for mailbox index
+
+Elasticsearch supports various language analyzers out of the box: https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html.
+
+James could utilize this to improve the user searching experience upon his language.
+
+While one could modify mailbox index mapping programmatically to customize this behavior, here we should just document a manual way to archive this without breaking our common index' mapping code.
+
+The idea is modifying mailbox index mappings with the target language analyzer as a JSON file, then submit it directly
+to ElasticSearch via cURL command to create the mailbox index before James start. Let's adapt dedicated language analyzers
+where appropriate for the following fields:
+
+.Language analyzers propose change
+|===
+| Field | Analyzer change
+
+| from.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| subject
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| to.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| cc.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| bcc.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| textBody
+| `standard` analyzer -> `language_a` analyzer
+
+| htmlBody
+| `standard` analyzer -> `language_a` analyzer
+
+| attachments.fileName
+| `standard` analyzer -> `language_a` analyzer
+
+| attachments.textContent
+| `standard` analyzer -> `language_a` analyzer
+
+|===
+
+In there:
+
+  - `keep_mail_and_url` and `standard` are our current analyzers for mailbox index.
+  - `language_a` analyzer: the built-in analyzer of Elasticsearch. EG: `french`
+  - `keep_mail_and_url_language_a` analyzer: a custom of `keep_mail_and_url` analyzer with some language filters.Every language has
+their own filters so please have a look at filters which your language need to add. EG which need to be added for French:
+----
+"filter": {
+	"french_elision": {
+		"type": "elision",
+		"articles_case": true,
+		"articles": [
+			"l", "m", "t", "qu", "n", "s",
+			"j", "d", "c", "jusqu", "quoiqu",
+			"lorsqu", "puisqu"
+		]
+	},
+	"french_stop": {
+		"type": "stop",
+		"stopwords": "_french_"
+	},
+	"french_stemmer": {
+		"type": "stemmer",
+		"language": "light_french"
+	}
+}
+----
+
+After modifying above proposed change, you should have a JSON file that contains new setting and mapping of mailbox index. Here
+we provide https://github.com/apache/james-project/blob/master/mailbox/opensearch/example_french_index.json[a sample JSON for French language].
+If you want to customize that JSON file for your own language need, please make these modifications:
+
+  - Replace the `french` analyzer with your built-in language (have a look at https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html[built-in language analyzers])
+  - Modify `keep_mail_and_url_french` analyzer' filters with your language filters, and customize the analyzer' name.
+
+Please change also `number_of_shards`, `number_of_replicas` and `index.write.wait_for_active_shards` values in the sample file according to your need.
+
+Run this cURL command with above JSON file to create `mailbox_v1` (Mailbox index' default name) index before James start:
+----
+curl -X PUT ES_IP:ES_PORT/mailbox_v1 -H "Content-Type: application/json" -d @example_french_index.json
+----
