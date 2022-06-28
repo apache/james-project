@@ -135,9 +135,10 @@ public class DockerCassandra {
         this("cassandra_3_11_10-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
     }
 
-    private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
+    private DockerCassandra(String containerName, AdditionalDockerFileStep additionalSteps) {
         client = DockerClientFactory.instance().client();
-        EventsCmd eventsCmd = client.eventsCmd().withEventTypeFilter(EventType.IMAGE).withImageFilter(imageName);
+        EventsCmd eventsCmd = client.eventsCmd().withEventTypeFilter(EventType.IMAGE)
+            .withContainerFilter(containerName);
         eventsCmd.exec(new ResultCallback<Event>() {
             @Override
             public void onStart(Closeable closeable) {
@@ -164,7 +165,7 @@ public class DockerCassandra {
         });
         boolean doNotDeleteImageAfterUsage = false;
         cassandraContainer = new GenericContainer<>(
-            new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
+            new ImageFromDockerfile("james-testing-cassandra", doNotDeleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
                         .from("cassandra:3.11.10")
@@ -177,6 +178,7 @@ public class DockerCassandra {
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName(containerName))
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
             .waitingFor(new CassandraWaitStrategy(cassandraContainer));

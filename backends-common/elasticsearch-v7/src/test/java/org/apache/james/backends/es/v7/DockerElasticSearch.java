@@ -220,7 +220,7 @@ public interface DockerElasticSearch {
 
             this.nginx = new DockerContainer(
                     new GenericContainer<>(
-                        new ImageFromDockerfile()
+                        new ImageFromDockerfile("james-testing-nginx")
                         .withFileFromClasspath("conf/nginx-conf/", "auth-es/nginx-conf/")
                         .withFileFromClasspath("conf/default.crt", "auth-es/default.crt")
                         .withFileFromClasspath("conf/default.key", "auth-es/default.key")

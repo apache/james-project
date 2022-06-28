@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.apache.james.util.Host;
 import org.testcontainers.containers.GenericContainer;
@@ -48,6 +49,7 @@ public class DockerAwsS3Container {
             .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
             .withEnv("LOG_LEVEL", "trace")
             .withEnv("REMOTE_MANAGEMENT_DISABLE", "1")
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-testing-s3-" + UUID.randomUUID()))
             .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
     }
 

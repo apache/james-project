@@ -131,7 +131,7 @@ public class Linshare {
     @SuppressWarnings("resource")
     private GenericContainer<?> createDockerBackend() {
         return new GenericContainer<>(
-            new ImageFromDockerfile("linshare-backend-"+ UUID.randomUUID().toString())
+            new ImageFromDockerfile("james-testing-linshare-backend")
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
                 .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
                 .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa.pri")
@@ -151,6 +151,7 @@ public class Linshare {
             .withExposedPorts(LINSHARE_BACKEND_PORT)
             .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1)
                 .withStartupTimeout(Duration.ofMinutes(10)))
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-testing-linshare-backend-" + UUID.randomUUID()))
             .withNetwork(network);
     }
 

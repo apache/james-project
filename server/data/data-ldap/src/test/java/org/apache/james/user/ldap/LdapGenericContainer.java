@@ -68,7 +68,7 @@ public class LdapGenericContainer extends ExternalResource {
 
         private DockerContainer createContainer() {
             return DockerContainer.fromDockerfile(
-                new ImageFromDockerfile("openldap_" + UUID.randomUUID())
+                new ImageFromDockerfile("james-testing-openldap")
                     .withFileFromClasspath("populate.ldif", dockerFilePrefix.orElse("") + "ldif-files/populate.ldif")
                     .withFileFromClasspath("Dockerfile", dockerFilePrefix.orElse("") + "ldif-files/Dockerfile"))
                 .withAffinityToContainer()
