@@ -111,7 +111,7 @@ public class IndexCreationFactory {
                     this.nbReplica = nbReplica;
                     this.waitForActiveShards = waitForActiveShards;
                     this.indexName = indexName;
-                    this.aliases = ImmutableList.builder();;
+                    this.aliases = ImmutableList.builder();
                     this.customAnalyzers = Optional.empty();
                     this.customTokenizers = Optional.empty();
                 }
@@ -251,12 +251,6 @@ public class IndexCreationFactory {
                             .endObject()
                             .rawField(ANALYZER, generateAnalyzers(), XContentType.JSON)
                             .rawField(TOKENIZER, generateTokenizer(), XContentType.JSON)
-                            .startObject("filter")
-                                .startObject(ENGLISH_SNOWBALL)
-                                    .field("type", "snowball")
-                                    .field("language", "English")
-                                .endObject()
-                            .endObject()
                         .endObject()
                     .endObject()
                 .endObject();
@@ -270,15 +264,6 @@ public class IndexCreationFactory {
                         .startArray("filter")
                             .value("lowercase")
                             .value("stop")
-                        .endArray()
-                    .endObject()
-
-                    .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
-                        .field("tokenizer", "uax_url_email")
-                        .startArray("filter")
-                            .value("lowercase")
-                            .value("stop")
-                            .value(ENGLISH_SNOWBALL)
                         .endArray()
                     .endObject()
                 .endObject();
@@ -308,8 +293,6 @@ public class IndexCreationFactory {
 
     public static final String CASE_INSENSITIVE = "case_insensitive";
     public static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
-    public static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
-    public static final String ENGLISH_SNOWBALL = "english_snowball";
     public static final String BOOLEAN = "boolean";
     public static final String TYPE = "type";
     public static final String LONG = "long";
