@@ -46,9 +46,9 @@ public class EmptyErrorMailRepositoryHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        // TODO: use .sizeReactive of https://github.com/apache/james-project/pull/1049/
         return Flux.fromStream(Throwing.supplier(() -> repositoryStore.getByPath(errorRepositoryPath)))
-            .any(Throwing.predicate(repository -> repository.size() > 0))
+            .flatMap(MailRepository::sizeReactive)
+            .any(repositorySize -> repositorySize > 0)
             .filter(FunctionalUtils.identityPredicate())
             .map(hasSize -> Result.degraded(COMPONENT_NAME, "MailRepository is not empty"))
             .switchIfEmpty(Mono.just(Result.healthy(COMPONENT_NAME)));
