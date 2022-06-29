@@ -213,7 +213,7 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))
-                .isEqualTo(2));
+                .isGreaterThanOrEqualTo(2));
     }
 
     @Test
@@ -230,6 +230,6 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))
-                .isEqualTo(2));
+                .isGreaterThanOrEqualTo(2));
     }
 }
