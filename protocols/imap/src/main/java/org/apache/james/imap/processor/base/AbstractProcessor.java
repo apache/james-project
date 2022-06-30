@@ -43,6 +43,10 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
     @SuppressWarnings("unchecked")
     public Mono<Void> processReactive(ImapMessage message, Responder responder, ImapSession session) {
         M acceptableMessage = (M) message;
+        if (LOGGER.isDebugEnabled()) {
+            return doProcess(acceptableMessage, responder, session)
+                .contextWrite(ReactorUtils.context("imap-processor", mdc(acceptableMessage)));
+        }
         return initialLog(message)
             .then(doProcess(acceptableMessage, responder, session))
             .contextWrite(ReactorUtils.context("imap-processor", mdc(acceptableMessage)));
