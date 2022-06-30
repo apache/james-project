@@ -93,7 +93,7 @@ class CacheDomainListTest {
 
         assertThat(statementRecorder.listExecutedStatements(
             StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain")))
-            .hasSize(2);
+            .hasSizeBetween(2, 3);
     }
 
     @Test
