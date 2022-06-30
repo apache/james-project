@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +59,8 @@ class CassandraTypeProviderTest {
 
     @Test
     void initializeTypesShouldCreateTheTypes() {
-        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME).build());
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(cassandra.getConf())));
 
         assertThat(new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes())
             .isEqualByComparingTo(CassandraType.InitializationStatus.FULL);
