@@ -76,10 +76,9 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             .doOnNext(enabledCaps -> responder.respond(new EnableResponse(enabledCaps)))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .doOnEach(ReactorUtils.logOnError(EnableException.class, e -> LOGGER.info("Unable to enable extension", e)))
             .onErrorResume(EnableException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.FAILED);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.info("Unable to enable extension", e));
             }).then();
     }
    

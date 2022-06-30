@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import static org.apache.james.util.ReactorUtils.logOnError;
-
 import java.util.Objects;
 
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -40,6 +38,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +79,15 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                             .then(Mono.fromRunnable(() -> okComplete(request, code, responder))));
                 }
             })
-            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
-                getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e)))
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
             })
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
-                getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause())))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause()));
             }).then();
     }
 

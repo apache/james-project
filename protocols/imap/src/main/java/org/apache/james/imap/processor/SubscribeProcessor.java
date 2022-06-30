@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import static org.apache.james.util.ReactorUtils.logOnError;
-
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -31,6 +29,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +51,11 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
         return Mono.from(getSubscriptionManager().subscribeReactive(mailboxName, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .doOnEach(logOnError(SubscriptionException.class, e -> LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e)))
-            .onErrorResume(SubscriptionException.class, e ->
-                unsolicitedResponses(session, responder, false)
-                .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)))).then();
+            .onErrorResume(SubscriptionException.class, e -> {
+                no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
+                return ReactorUtils.logAsMono(() -> LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e));
+            })
+            .then();
     }
 
     @Override

@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import static org.apache.james.util.ReactorUtils.logOnError;
-
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -32,6 +30,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +60,9 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 }
                 return Mono.empty();
             }))
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e));
             }).then();
     }
 

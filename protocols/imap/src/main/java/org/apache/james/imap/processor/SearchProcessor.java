@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
-import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -110,7 +109,6 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     session.setAttribute(SEARCH_MODSEQ, null);
                 }))
                 .then()
-                .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e)))
                 .onErrorResume(MessageRangeException.class, e -> {
                     no(request, responder, HumanReadableText.SEARCH_FAILED);
 
@@ -120,7 +118,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                         // See RFC5182 2.1.Normative Description of the SEARCHRES Extension
                         SearchResUtil.resetSavedSequenceSet(session);
                     }
-                    return Mono.empty();
+                    return ReactorUtils.logAsMono(() -> LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e));
                 });
         } catch (MessageRangeException e) {
             return ReactorUtils.logAsMono(() -> LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e))
