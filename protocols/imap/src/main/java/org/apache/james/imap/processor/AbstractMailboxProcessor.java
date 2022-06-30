@@ -100,10 +100,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
                             return Mono.empty();
                         })
-                        .doOnEach(ReactorUtils.logOnError(e -> LOGGER.error("Unexpected error during IMAP processing", e)))
                         .onErrorResume(e -> {
                             no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                            return Mono.empty();
+                            return ReactorUtils.logAsMono(() -> LOGGER.error("Unexpected error during IMAP processing", e));
                         }), mailboxSession)));
         } else {
             ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
@@ -170,7 +169,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             }
         })
             .then(addFlagsResponses(session, selected, responder, useUid))
-            .doFinally(type -> selected.resetEvents());
+            .then(Mono.fromRunnable(selected::resetEvents));
     }
 
     private void addExpungedResponses(SelectedMailbox selected, Collection<MessageUid> expungedUids, ImapProcessor.Responder responder) {

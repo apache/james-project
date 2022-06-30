@@ -105,9 +105,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                             responder.respond(response);
                         }))
                     .then(unsolicitedResponses(session, responder, omitExpunged, useUids))))
-                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+                .then(Mono.fromRunnable(() -> {
+                    okComplete(request, responder);
+                    session.setAttribute(SEARCH_MODSEQ, null);
+                }))
                 .then()
-                .doFinally(type -> session.setAttribute(SEARCH_MODSEQ, null))
                 .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e)))
                 .onErrorResume(MessageRangeException.class, e -> {
                     no(request, responder, HumanReadableText.SEARCH_FAILED);
