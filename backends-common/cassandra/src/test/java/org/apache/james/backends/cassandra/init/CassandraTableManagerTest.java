@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,8 +66,10 @@ class CassandraTableManagerTest {
 
     @Test
     void initializeTableShouldCreateAllTheTables() {
-        cassandra.getConf().execute(SchemaBuilder.dropTable(TABLE_NAME).build());
-        cassandra.getConf().execute(SchemaBuilder.dropTable(CassandraSchemaVersionTable.TABLE_NAME).build());
+        cassandra.getConf().execute(SchemaBuilder.dropTable(TABLE_NAME).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(cassandra.getConf())));
+        cassandra.getConf().execute(SchemaBuilder.dropTable(CassandraSchemaVersionTable.TABLE_NAME).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(cassandra.getConf())));
 
         assertThat(new CassandraTableManager(MODULE, cassandra.getConf()).initializeTables(new CassandraTypesProvider(cassandra.getConf())))
                 .isEqualByComparingTo(CassandraTable.InitializationStatus.FULL);
@@ -76,7 +79,8 @@ class CassandraTableManagerTest {
 
     @Test
     void initializeTableShouldCreateAllTheMissingTable() {
-        cassandra.getConf().execute(SchemaBuilder.dropTable(TABLE_NAME).build());
+        cassandra.getConf().execute(SchemaBuilder.dropTable(TABLE_NAME).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(cassandra.getConf())));
 
         assertThat(new CassandraTableManager(MODULE, cassandra.getConf()).initializeTables(new CassandraTypesProvider(cassandra.getConf())))
                 .isEqualByComparingTo(CassandraTable.InitializationStatus.PARTIAL);
@@ -98,7 +102,8 @@ class CassandraTableManagerTest {
     }
 
     private void ensureTableExistence(String tableName) {
-        assertThatCode(() -> cassandra.getConf().execute(QueryBuilder.selectFrom(tableName).all().limit(1).build()))
+        assertThatCode(() -> cassandra.getConf().execute(QueryBuilder.selectFrom(tableName).all().limit(1).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(cassandra.getConf()))))
             .doesNotThrowAnyException();
     }
 }
