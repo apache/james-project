@@ -206,18 +206,14 @@ public class RemoteDelivery extends GenericMailet {
         mail.setState(Mail.GHOST);
     }
 
-    private void serviceWithGateway(Mail mail) {
+    private void serviceWithGateway(Mail mail) throws MailQueueException {
         if (configuration.isDebug()) {
             LOGGER.debug("Sending mail to {} via {}", mail.getRecipients(), configuration.getGatewayServer());
         }
-        try {
-            queue.enQueue(mail);
-        } catch (MailQueueException e) {
-            LOGGER.error("Unable to queue mail {} for recipients {}", mail.getName(), mail.getRecipients(), e);
-        }
+        queue.enQueue(mail);
     }
 
-    private void serviceNoGateway(Mail mail) {
+    private void serviceNoGateway(Mail mail) throws MailQueueException {
         String mailName = mail.getName();
         Map<Domain, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
         for (Map.Entry<Domain, Collection<MailAddress>> entry : targets.entrySet()) {
@@ -225,17 +221,14 @@ public class RemoteDelivery extends GenericMailet {
         }
     }
 
-    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<Domain, Collection<MailAddress>> entry) {
+    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<Domain, Collection<MailAddress>> entry) throws MailQueueException {
         if (configuration.isDebug()) {
             LOGGER.debug("Sending mail to {} on host {}", entry.getValue(), entry.getKey());
         }
         mail.setRecipients(entry.getValue());
         mail.setName(originalName + NAME_JUNCTION + entry.getKey().name());
-        try {
-            queue.enQueue(mail);
-        } catch (MailQueueException e) {
-            LOGGER.error("Unable to queue mail {} for recipients {}", mail.getName(), mail.getRecipients(), e);
-        }
+
+        queue.enQueue(mail);
     }
 
     private Map<Domain, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
