@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
-import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.List;
 
@@ -44,6 +43,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,15 +77,13 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                         .flatMap(Throwing.function(expunged -> respondOk(request, session, responder, mailbox, mailboxSession, expunged)));
                 }
             }))
-            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Expunge failed", e)))
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.debug("Expunge failed", e));
             })
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e));
             });
     }
 

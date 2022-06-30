@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
-import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,10 +79,9 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e));
             })
             .then();
     }

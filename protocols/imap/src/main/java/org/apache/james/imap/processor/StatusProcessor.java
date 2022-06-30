@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
-import static org.apache.james.util.ReactorUtils.logOnError;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
@@ -76,10 +75,9 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             })
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.STATUS_FAILED);
-                return Mono.empty();
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e));
             })
             .then();
     }
