@@ -20,15 +20,12 @@
 package org.apache.james.jmap.memory.upload;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -42,6 +39,7 @@ import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.CountingInputStream;
 
 import reactor.core.publisher.Mono;
 
@@ -64,13 +62,14 @@ public class InMemoryUploadRepository implements UploadRepository {
         Preconditions.checkNotNull(contentType);
         Preconditions.checkNotNull(user);
 
-        byte[] dataAsByte = toByteArray(data);
-        return Mono.from(blobStore.save(bucketName, dataAsByte, BlobStore.StoragePolicy.LOW_COST))
-            .map(blobId -> {
-                UploadId uploadId = UploadId.random();
-                uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.length, blobId)));
-                return UploadMetaData.from(uploadId, contentType, dataAsByte.length, blobId);
-            });
+        return Mono.fromCallable(() -> new CountingInputStream(data))
+            .flatMap(dataAsByte -> Mono.from(blobStore.save(bucketName, dataAsByte, BlobStore.StoragePolicy.LOW_COST))
+                .map(blobId -> {
+                    UploadId uploadId = UploadId.random();
+                    uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId)));
+                    return UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId);
+                })
+            );
     }
 
     @Override
@@ -87,13 +86,5 @@ public class InMemoryUploadRepository implements UploadRepository {
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
         return Mono.from(blobStore.readBytes(bucketName, uploadMetaData.blobId()))
             .map(content -> Upload.from(uploadMetaData, () -> new ByteArrayInputStream(content)));
-    }
-
-    private byte[] toByteArray(InputStream inputStream) {
-        try {
-            return IOUtils.toByteArray(inputStream);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }
