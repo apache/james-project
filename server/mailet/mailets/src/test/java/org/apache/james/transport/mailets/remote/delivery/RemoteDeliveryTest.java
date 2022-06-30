@@ -23,7 +23,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +42,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
-import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
@@ -97,12 +102,14 @@ class RemoteDeliveryTest {
     public static final String MAIL_NAME = "mail_name";
 
     private RemoteDelivery remoteDelivery;
-    private ManageableMailQueue mailQueue;
+    private MemoryMailQueueFactory.MemoryCacheableMailQueue mailQueue;
 
     @BeforeEach
     public void setUp() throws ConfigurationException {
-        MailQueueFactory<? extends ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
-        mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME);
+        MemoryMailQueueFactory queueFactory = spy(new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory()));
+        mailQueue = spy(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME));
+        when(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME))
+            .thenReturn(mailQueue);
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
         domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
@@ -131,6 +138,25 @@ class RemoteDeliveryTest {
                     .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
                     .recipient(MailAddressFixture.ANY_AT_JAMES)
                     .build()));
+    }
+
+    @Test
+    void remoteDeliveryShouldPropagateFailures() throws Exception {
+        remoteDelivery.init(FakeMailetConfig.builder()
+            .build());
+
+        doThrow(new MailQueue.MailQueueException("Injected failure"))
+            .when(mailQueue)
+            .enQueue(any(), any());
+
+        Mail mail = FakeMail.builder()
+            .name(MAIL_NAME)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
+
+        assertThatThrownBy(() -> remoteDelivery.service(mail))
+            .isInstanceOf(MailQueue.MailQueueException.class);
     }
 
     @Test
