@@ -138,6 +138,11 @@
           <dt><strong>event.bus.notification.durability.enabled</strong></dt>
           <dd>Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.</dd>
 
+          <dt><strong>vhost</strong></dt>
+          <dd>Optional string.
+              The virtual host used by James to create queues and exchanges on Rabbitmq.
+              If omitted, it will use the default Rabbitmq one "/".
+          </dd>
       </dl>
   </section>
 

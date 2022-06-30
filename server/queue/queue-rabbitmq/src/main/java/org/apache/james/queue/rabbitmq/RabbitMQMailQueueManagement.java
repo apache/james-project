@@ -32,19 +32,23 @@ import com.google.common.annotations.VisibleForTesting;
 public class RabbitMQMailQueueManagement {
 
     private final RabbitMQManagementAPI api;
+    private final Optional<String> vhost;
 
     @Inject
     RabbitMQMailQueueManagement(RabbitMQConfiguration configuration) {
-        api = RabbitMQManagementAPI.from(configuration);
+        this.api = RabbitMQManagementAPI.from(configuration);
+        this.vhost = configuration.getVhost();
     }
 
     @VisibleForTesting
     RabbitMQMailQueueManagement(RabbitMQManagementAPI api) {
         this.api = api;
+        this.vhost = Optional.empty();
     }
 
     Stream<MailQueueName> listCreatedMailQueueNames() {
-        return api.listQueues()
+        return vhost.map(api::listVhostQueues)
+            .orElse(api.listQueues())
             .stream()
             .map(RabbitMQManagementAPI.MessageQueue::getName)
             .map(MailQueueName::fromRabbitWorkQueueName)
@@ -52,6 +56,7 @@ public class RabbitMQMailQueueManagement {
             .distinct();
     }
 
+    @VisibleForTesting
     public void deleteAllQueues() {
         api.listQueues()
             .forEach(queue -> api.deleteQueue("/", queue.getName()));

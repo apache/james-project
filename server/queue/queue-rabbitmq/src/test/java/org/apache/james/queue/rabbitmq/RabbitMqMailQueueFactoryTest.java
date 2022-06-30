@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
@@ -48,6 +50,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.rabbitmq.QueueSpecification;
 
 class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQMailQueue> {
+    private static final String VHOST = "vhost1";
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @RegisterExtension
@@ -109,4 +112,14 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             .doesNotThrowAnyException();
     }
 
+    @Test
+    void getQueuesShouldBeEmptyWhenListingOtherVhost() throws Exception {
+        RabbitMQManagementAPI api = rabbitMQExtension.managementAPI();
+        api.addVhost(VHOST);
+
+        mailQueueFactory.createQueue(NAME_1);
+        mailQueueFactory.createQueue(NAME_2);
+
+        assertThat(api.listVhostQueues(VHOST)).isEmpty();
+    }
 }
