@@ -211,8 +211,10 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
                 .orElse(Mono.empty())
-                .doFinally(signal -> imapConnectionsMetric.decrement())
-                .doFinally(Throwing.consumer(signal -> super.channelInactive(ctx)))
+                .doFinally(Throwing.consumer(signal -> {
+                    imapConnectionsMetric.decrement();
+                    super.channelInactive(ctx);
+                }))
                 .subscribe(any -> {
 
                 }, ctx::fireExceptionCaught);
@@ -251,14 +253,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 Optional.ofNullable(imapSession)
                     .map(ImapSession::logout)
                     .orElse(Mono.empty())
-                    .doFinally(signal -> {
+                    .doFinally(Throwing.consumer(signal -> {
                         // Make sure we close the channel after all the buffers were flushed out
                         Channel channel = ctx.channel();
                         if (channel.isActive()) {
                             channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
                         }
-                    })
-                    .doFinally(Throwing.consumer(signal -> super.channelInactive(ctx)))
+                        super.channelInactive(ctx);
+                    }))
                     .subscribe(any -> {
 
                     }, e -> {
@@ -282,7 +284,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
         processor.processReactive(message, responseEncoder, session)
-            .doOnSuccess(type -> {
+            .doOnEach(Throwing.consumer(signal -> {
                 if (session.getState() == ImapSessionState.LOGOUT) {
                     // Make sure we close the channel after all the buffers were flushed out
                     Channel channel = ctx.channel();
@@ -290,8 +292,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                         channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
                     }
                 }
-            })
-            .doOnEach(signal -> {
                 if (signal.isOnComplete()) {
                     IOException failure = responseEncoder.getFailure();
                     if (failure != null) {
@@ -305,17 +305,17 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                         ctx.fireExceptionCaught(failure);
                     }
                 }
-            })
-            .doOnEach(Throwing.consumer(signal -> {
                 if (signal.isOnComplete() || signal.isOnError()) {
                     afterIDLEUponProcessing(ctx);
                     if (message instanceof Closeable) {
                         ((Closeable) message).close();
                     }
                 }
+                if (signal.hasError()) {
+                    ctx.fireExceptionCaught(signal.getThrowable());
+                }
+                ctx.fireChannelReadComplete();
             }))
-            .doOnError(ctx::fireExceptionCaught)
-            .doFinally(type -> ctx.fireChannelReadComplete())
             .contextWrite(ReactorUtils.context("imap", mdc(ctx)))
             .subscribe();
     }
