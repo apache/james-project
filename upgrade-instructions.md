@@ -18,26 +18,6 @@ Change list:
 
 - [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
 - [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
-- [Adding vhost option to Rabbitmq configuration](#adding-vhost-option-to-rabbitmq-configuration)
-
-### Adding vhost option to Rabbitmq configuration
-
-Date: 30/06/2022
-
-Concerned product: Distributed James
-
-It is possible now to specify a virtual host to be able to create exchanges and queues on a different one
-than the default "/". You just need to add in `rabbitmq.properties` file:
-
-```
-vhost=[VHOST]
-```
-
-Also don't forget to add it to the uri, like that:
-
-```
-amqp://[USERNAME]:[PASSWORD]@[HOST]:[PORT]/[VHOST]
-```
 
 ### Migration to Cassandra driver 4
 
