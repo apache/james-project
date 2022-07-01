@@ -61,7 +61,7 @@ public class EventDeadLettersRedeliverService {
         return eventBuses.stream()
             .filter(eventBus -> eventBus.listRegisteredGroups().contains(group))
             .findFirst()
-            .map(eventBus -> eventBus. reDeliver(group, event)
+            .map(eventBus -> eventBus.reDeliver(group, event)
                 .then(deadLetters.remove(group, insertionId))
                 .thenReturn(Task.Result.COMPLETED)
                 .onErrorResume(e -> {
