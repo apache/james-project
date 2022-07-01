@@ -122,7 +122,7 @@ public interface DockerElasticSearch {
 
     interface Fixture {
         int ES_HTTP_PORT = 9200;
-        int ES_MEMORY = 512;
+        int ES_MEMORY = 768;
     }
 
     class NoAuth implements DockerElasticSearch {
