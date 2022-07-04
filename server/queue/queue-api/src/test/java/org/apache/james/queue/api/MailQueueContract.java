@@ -63,6 +63,7 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public interface MailQueueContract {
@@ -573,18 +574,20 @@ public interface MailQueueContract {
 
         ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
 
+        Scheduler newBoundedElastic = Schedulers.newBoundedElastic(10 * Runtime.getRuntime().availableProcessors(), 10, "MailQueueTest");
+
         Flux.from(testee.deQueue())
             .flatMap(item -> Mono.defer(() -> {
                     dequeuedMails.add(item.getMail());
                     try {
-                        Thread.sleep(100);
                         item.done(true);
                         return Mono.empty();
-                    } catch (MailQueue.MailQueueException | InterruptedException e) {
+                    } catch (MailQueue.MailQueueException e) {
                         return Mono.error(e);
                     }
-                }).subscribeOn(Schedulers.elastic()), 1000
-            )
+                })
+                .delayElement(Duration.ofMillis(10))
+                .subscribeOn(newBoundedElastic), 1000)
             .subscribeOn(Schedulers.newSingle("foo"))
             .subscribe();
 
