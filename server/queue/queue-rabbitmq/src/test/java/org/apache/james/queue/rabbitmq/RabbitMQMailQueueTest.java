@@ -655,7 +655,7 @@ class RabbitMQMailQueueTest {
                 .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
                     mailQueueItem.done(true);
                     return mailQueueItem;
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(Schedulers.newBoundedElastic(2, 20, "DeQueueSchedulerTest")))
                 .blockLast();
         }
 
