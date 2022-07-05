@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Set;
 
-import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.util.Host;
 import org.apache.james.utils.ExtendedClassLoader;

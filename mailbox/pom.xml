@@ -38,13 +38,14 @@
         <module>api</module>
         <module>backup</module>
         <module>cassandra</module>
-        <module>elasticsearch-v7</module>
 
         <module>event/json</module>
 
         <module>jpa</module>
         <module>lucene</module>
         <module>memory</module>
+
+        <module>opensearch</module>
 
         <module>plugin/deleted-messages-vault</module>
         <module>plugin/deleted-messages-vault-cassandra</module>
@@ -54,7 +55,7 @@
         <module>plugin/quota-mailing-memory</module>
 
         <module>plugin/quota-search</module>
-        <module>plugin/quota-search-elasticsearch-v7</module>
+        <module>plugin/quota-search-opensearch</module>
         <module>plugin/quota-search-scanning</module>
 
         <module>plugin/spamassassin</module>
