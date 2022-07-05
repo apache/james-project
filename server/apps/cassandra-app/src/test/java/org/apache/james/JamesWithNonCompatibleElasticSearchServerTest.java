@@ -22,7 +22,7 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -59,7 +59,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                     .containsOnly(CheckResult.builder()
                         .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
-                        .description("ES version(6.3.2) is not compatible with the recommendation(7.10.2)")
+                        .description("ES version(6.3.2) is not compatible with the recommendation(2.0.0)")
                         .build()));
 
         assertThat(server.isStarted())

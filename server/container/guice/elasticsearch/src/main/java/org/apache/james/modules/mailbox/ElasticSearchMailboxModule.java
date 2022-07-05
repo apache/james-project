@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
+import static org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
 import java.util.Set;
@@ -30,22 +30,22 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
-import org.apache.james.backends.es.v7.ElasticSearchIndexer;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.mailbox.elasticsearch.v7.ElasticSearchMailboxConfiguration;
-import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxIdRoutingKeyFactory;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.elasticsearch.v7.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
-import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.opensearch.ElasticSearchMailboxConfiguration;
+import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
+import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
+import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex.SearchOverride;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;

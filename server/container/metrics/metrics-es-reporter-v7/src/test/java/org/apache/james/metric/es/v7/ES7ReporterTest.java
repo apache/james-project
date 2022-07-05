@@ -19,7 +19,7 @@
 
 package org.apache.james.metric.es.v7;
 
-import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 

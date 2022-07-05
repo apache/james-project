@@ -32,12 +32,12 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
-import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.v7.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
-import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
+import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -47,10 +47,10 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -64,7 +64,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private ReactorElasticSearchClient client;
 
     @RegisterExtension
-    org.apache.james.backends.es.v7.DockerElasticSearchExtension elasticSearch = new org.apache.james.backends.es.v7.DockerElasticSearchExtension();
+    org.apache.james.backends.opensearch.DockerElasticSearchExtension elasticSearch = new org.apache.james.backends.opensearch.DockerElasticSearchExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
