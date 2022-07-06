@@ -212,7 +212,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
      * Test for JAMES-1154
      */
     @Test
-    public void testMessageStreamWithUpatedHeaders() throws MessagingException, IOException {
+    public void testMessageStreamWithUpdatedHeaders() throws MessagingException, IOException {
         mw.addHeader("X-Test", "X-Value");
 
         assertThat(mw.getHeader("X-Test")[0]).isEqualTo("X-Value");
@@ -264,17 +264,23 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void getSizeShouldReturnZeroWhenSingleChar() throws Exception {
-        assertThat(getMessageFromSources("a").getSize()).isEqualTo(0);
+        TestableMimeMessageWrapper message = getMessageFromSources("a");
+        assertThat(message.getSize()).isEqualTo(0);
+        LifecycleUtil.dispose(message);
     }
 
     @Test
     public void getSizeShouldReturnZeroWhenSingleCharBody() throws Exception {
-        assertThat(getMessageFromSources("a: b\r\n\r\na").getSize()).isEqualTo(1);
+        TestableMimeMessageWrapper message = getMessageFromSources("a: b\r\n\r\na");
+        assertThat(message.getSize()).isEqualTo(1);
+        LifecycleUtil.dispose(message);
     }
 
     @Test
     public void getSizeShouldReturnZeroWhenEmptyString() throws Exception {
-        assertThat(getMessageFromSources("").getSize()).isEqualTo(0);
+        TestableMimeMessageWrapper message = getMessageFromSources("");
+        assertThat(message.getSize()).isEqualTo(0);
+        LifecycleUtil.dispose(message);
     }
 
     @Test
@@ -291,12 +297,16 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void getMessageSizeShouldReturnExpectedValueWhenSingleChar() throws Exception {
-        assertThat(getMessageFromSources("a").getMessageSize()).isEqualTo(1);
+        TestableMimeMessageWrapper message = getMessageFromSources("a");
+        assertThat(message.getMessageSize()).isEqualTo(1);
+        LifecycleUtil.dispose(message);
     }
 
     @Test
     public void getMessageSizeShouldReturnExpectedValueWhenEmptyString() throws Exception {
-        assertThat(getMessageFromSources("").getMessageSize()).isEqualTo(0);
+        TestableMimeMessageWrapper message = getMessageFromSources("");
+        assertThat(message.getMessageSize()).isEqualTo(0);
+        LifecycleUtil.dispose(message);
     }
 
     @Test
@@ -328,6 +338,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         MimeMessage message = new MimeMessage(session, stream);
         MimeMessageWrapper wrapper = new MimeMessageWrapper(message);
         assertThat(wrapper.getEncoding()).isEqualTo("\"base64\"");
+        LifecycleUtil.dispose(wrapper);
     }
 
     @Test
@@ -344,6 +355,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
         assertThat(mimeMessageWrapper.getMessageID())
             .isEqualTo(messageId);
+        LifecycleUtil.dispose(mimeMessageWrapper);
     }
 
     @Test
@@ -354,6 +366,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
         assertThat(wrapper.getMessageSize()).isEqualTo(
             IOUtils.consume(wrapper.getMessageInputStream()));
+        LifecycleUtil.dispose(wrapper);
     }
 
     @Test
@@ -364,5 +377,6 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
         assertThat(wrapper.getMessageSize()).isEqualTo(
             IOUtils.consume(wrapper.getMessageInputStream()));
+        LifecycleUtil.dispose(wrapper);
     }
 }
