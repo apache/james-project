@@ -69,10 +69,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
         if (!cancelledTasks.remove(taskWithId.getId())) {
-            Mono<Task.Result> taskMono = Mono.from(taskWithId.getTask().detailsReactive())
-                .map(taskDetails -> runWithMdc(taskWithId, listener, taskDetails))
-                .subscribeOn(taskExecutor);
-
+            Mono<Task.Result> taskMono = runWithMdc(taskWithId, listener).subscribeOn(taskExecutor);
             CompletableFuture<Task.Result> future = taskMono.toFuture();
             runningTask.set(Tuples.of(taskWithId.getId(), future));
 
@@ -80,7 +77,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                 () -> pollAdditionalInformation(taskWithId).subscribe(),
                 ignored -> Mono.fromFuture(future)
                     .onErrorResume(exception -> Mono.from(handleExecutionError(taskWithId, listener, exception))
-                            .thenReturn(Task.Result.PARTIAL)),
+                        .thenReturn(Task.Result.PARTIAL)),
                 Disposable::dispose);
         } else {
             return Mono.from(listener.cancelled(taskWithId.getId(), taskWithId.getTask().detailsReactive()))
@@ -105,14 +102,12 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
 
-
-    private Task.Result runWithMdc(TaskWithId taskWithId, Listener listener, Optional<TaskExecutionDetails.AdditionalInformation> taskDetails) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addToContext(Task.TASK_ID, taskWithId.getId().asString())
-                .addToContext(Task.TASK_TYPE, taskWithId.getTask().type().asString())
-                .addToContext(Task.TASK_DETAILS, taskDetails.toString()),
-            () -> run(taskWithId, listener).block());
+    private Mono<Task.Result> runWithMdc(TaskWithId taskWithId, Listener listener) {
+        return run(taskWithId, listener)
+            .contextWrite(ReactorUtils.context("task",
+                MDCBuilder.create()
+                    .addToContext(Task.TASK_ID, taskWithId.getId().asString())
+                    .addToContext(Task.TASK_TYPE, taskWithId.getTask().type().asString())));
     }
 
     private Mono<Task.Result> run(TaskWithId taskWithId, Listener listener) {
