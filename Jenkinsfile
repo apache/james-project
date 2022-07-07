@@ -69,6 +69,13 @@ pipeline {
             }
         }
 
+        stage('Echo m2 folder info') {
+            steps {
+                echo 'Echo m2 folder info...'
+                sh 'ls -l /home/jenkins/.m2/repository'
+            }
+        }
+
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up the workspace'
@@ -92,49 +99,7 @@ pipeline {
             }
         }
 
-        stage('Stable Tests') {
-            steps {
-                echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test'
-            }
-            post {
-                always {
-                    junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
-                    junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                }
-                failure {
-                    archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
-                    archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
-                }
-            }
-        }
 
-        stage('Unstable Tests') {
-            steps {
-                echo 'Running unstable tests'
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test'
-                }
-            }
-            post {
-                always {
-                    junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
-                    junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                }
-                failure {
-                    archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
-                    archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
-                }
-            }
-        }
-
-        stage('Deploy') {
-            when { branch 'master' }
-            steps {
-                echo 'Deploying'
-                sh 'mvn -B -e deploy -Pdeploy -DskipTests -T1C'
-            }
-        }
    }
 // Do any post build stuff ... such as sending emails depending on the overall build result.
     post {
