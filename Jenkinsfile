@@ -95,7 +95,7 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test -T 0.5C'
             }
             post {
                 always {
@@ -113,7 +113,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test -T 0.5C'
                 }
             }
             post {
