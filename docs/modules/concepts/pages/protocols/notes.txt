@@ -1,0 +1,245 @@
+My first questions are about SMTP.
+
+* How does James model SMTP?
+* Where can I find SMTP related concepts in the code?
+* What are the related modules?
+* How would I build my own SMTP server?
+* What other information is relevant to SMTP that I may want to include?
+
+
+Actually IMAP is independent.
+
+LMTP is based on SMTP implementation.
+
+A current limitation of LMTP is that it do not apply the mailet
+processing pipeline.
+
+POP3, SMTP and ManageSieve relies on the common protocols-api.
+
+
+
+I believe each protocol is independent and should build to an
+independent server (SMTP, IMAP, POP3, JMAP) .
+
+That statement is more questionable IMO.
+
+An IMAP server without an SMTP server will not be able to receive mails.
+
+While I agree on differentiating servers on the role they play (Mail
+Exchange, Mail Transfer, Mail Delivery, etc...) I believe fully
+splitting protocols into independent servers is not desirable.
+
+Today JAMES implementations makes sens to implement a Mail Transfer
+agent, and mail processing (achievable with s/jpa-smtp/Mail Processing
+server/) and for Mail Delivery (all other flavors). I believe we are not
+mature enough for mail exchange.
+
+Maybe the intended role in the mail architecture could be added to the
+Antora documentation?
+
+
+From what I recall, business class exposed by the API are pretty well
+defined: it exposes some hooks one could implement.
+
+The big issue here is more that the protocols-smtp project does mix
+together the "port" (as in hexagonal architecture) and the
+implementation / wiring of it.
+
+I believe, from a documentation perspective much can be achieved by
+extracting a 'protocols-smtp-api' exposing the classes I can implement
+as a protocols-smtp user, and having the actual smtp protocol
+implementation in a separated project.
+
+I believe Gradle will also make this "API extraction" easier.
+
+As part of your documentation effort, I can provide a listing of such
+classes; while waiting for the module extraction.
+
+
+I believe you make the assumption that people use and want to use the
+full plethora of protocols we have in James.
+
+Sort of "All or nothing" approach.
+
+Why do you think it is so?
+
+I would argue that we should make little assumptions about how people
+deploy their infrastructure.
+
+Maybe I have an existing infrastructure that I know and trust for SMTP
+and I just want to use the IMAP server from James.
+
+Examples:
+
+1. I use Amazon Simple Email Service (or Sendgrid or Mailgun) for
+sending emails and I just want to be able to customize the IMAP/JMAP
+experience and control how I store emails.
+
+2. I could use James SMTP as a Gateway for my existing IMAP / Webmail setup.
+
+3. I could use James SMTP as a Relay for my marketing SaaS platform.
+
+But that is not the main argument for having them separate.
+
+The main argument IMO is that the protocols are quite complex and having
+the ability to work on just one protocol at a time has significant
+advantages:
+
+* Lower cognitive effort - I only need to care about this specific
+protocol and it's implementation details, not the other protocols.
+
+  This is one huge benefit.
+
+* Faster development feedback cycle - If I work on IMAP or SMTP I should
+get away with running the tests only for that part.
+
+* Less risk - If I work and break SMTP - the other parts should work.
+With the current project structure - it can be hard to say.
+
+* Easier to adopt by new people - If people care only about SMTP, LMTP
+or IMAP - they can contribute only to that. The entry barrier will be
+smoother than what we have now.
+
+* Easier to compose and adapt for new and interesting projects - If we
+package them independently and together in a single product (Advanced
+Server) we have a showcase of how you can do that. It will be clear that
+they are meant to be used in both ways.
+
+Having them as separate projects may have the downside of integrating
+them together as integrating them requires some form of glue.
+
+The good side is that we already pay for this integration effort now :).
+
+We will have to do the effort of splitting them apart while also keeping
+the full version.
+
+This is doable and while it will take time it's not a hard problem IMO.
+
+Our way of using James is not the only way.
+
+
+
+We should of course have an SMTP only server to address these use cases.
+
+https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp
+achieve it.
+
+
+Regarding Mail Delivery servers, you end up supporting IMAP/JMAP + SMTP.
+
+I believe we should be doing a better job at making things optional and
+packaged separately.
+
+I would love to see for instance POP3, ManagedSieve and many other
+things as extensions, bundled in separated JARs, opt-in.
+
+Shipping a small set of servers, with very limited features, each one
+with their set of extensions.
+
+I believe it achieves most of what you describes but without requiring
+complex integration.
+
+
+I don't think people are interested by an API allowing them to implement
+SMTP themselves. (That is quite some work!)
+
+I believe people are interested by a working SMTP implementation where
+they can "plug" there behaviors or add the commands they miss.
+
+
+
+We should at least extract the API of what todays works well:
+ - Extra commands
+- Hooks (additional behaviors)
+
+And extract an API achieving these goals from the protocol-smtp package.
+
+
+
+http://james.apache.org/server/dev-provided-smtp-hooks.html defines hook
+you can rely in for the default implementation.
+
+https://github.com/apache/james-project/blob/master/src/site/xdoc/server/dev-extend-smtp-hook.xml
+might be helpful too.
+
+Which is not much for "hooks" already. Given the part of the quote you
+chose, that might not be what you are looking for...
+
+Regarding writing your own commands, there is even less.
+
+http://james.apache.org/protocols/index.html is too generic
+
+http://james.apache.org/protocols/smtp.html is blank
+
+
+
+In my opinions we should document "How to write hooks with the
+protocols/smtp library", "How to plug such hooks into a running James
+server"
+
+Then "How to write commands for the protocols/smtp library" (and how to
+plug them in James)
+
+Using protocols-smtp without the server/protocols/protocols-netty super
+layer would be so far a non-goal to me, and I would likely not be able
+to help you do this.
+
+
+
+I would state `james-project/protocols/protocols-smtp` is a transport
+agnostic implementation of (some of) the SMTP specifications. It is
+customizable (hooks) and extensible (additional commands).
+
+`james-project/server/protocols/protocols-smtp` adapts
+`james-project/protocols/protocols-smtp` in the James context, providing
+hooks interacting with James server components. It also provides a TCP
+transport layer, effectively providing a SMTP server.
+
+
+JMX
+It's old, not clean, mostly unmaintained, and likely to be removed in
+the (not that far) future - for security reasons because JMX. Don't
+hesitate if you want details on this statement (maybe a separate thread?)
+
+To 'operate' James we should prefer webadmin. That will mean providing
+CLI tool on top of it for the less technical of our users.
+
+What do you try to achieve? (I don't see the link making you go from
+SMTP to JMX to be honnest)
+
+
+
+(I forgot to mention
+https://github.com/chibenwa/james-blacklist/blob/master/blacklist-smtp/src/main/java/com/linagora/james/blacklist/smtp/NotInBlackListHook.java
+is an example of how to define a Rcpt hook, and the rest of the project
+shows how to load it in a guice james server)
+
+
+
+There is even a list of hooks on this page:
+
+—> https://james.apache.org/server/dev-provided-smtp-hooks.html
+
+However… Can you provide more examples to help me better understand why I should care about these hooks, and why I would want to consider using a hook instead of a Mailet? Wouldn’t it be simpler just to have a single extension mechanism? What is the value of having two different extension mechanisms?
+
+
+That is a VERY nice question that needs to be clearly highlighted in the
+documentation "given my use case, which extension mechanism should I use".
+
+There's somehow an overlap between hooks and mailets but:
+
+ - Mailet is *asynchronous*. SMTP clients will not be affected by
+potentially long processing. Hooks are on the other hand synchronous,
+the SMTP client needs to wait for them to happen.
+ - Hooks are very cheap. The mail is not stored yet. This makes it
+really useful to get rid of spam via IP filtering, MX hosts checks and
+so on. Another use case would be DOS prevention.
+ - Hook allow configuration of extra additional behaviors at the SMTP
+layer like "Sender needs to be valid, etc...".
+
+I believe however that this extension mechanism is less useful than
+mailet / matchers.
+
+
+
+
