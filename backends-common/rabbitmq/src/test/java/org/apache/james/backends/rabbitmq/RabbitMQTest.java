@@ -23,6 +23,7 @@ import static org.apache.james.backends.rabbitmq.Constants.AUTO_ACK;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.MULTIPLE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_LOCAL;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,6 +53,7 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -68,6 +71,16 @@ import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Delivery;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.rabbitmq.BindingSpecification;
+import reactor.rabbitmq.ConsumeOptions;
+import reactor.rabbitmq.ExchangeSpecification;
+import reactor.rabbitmq.OutboundMessage;
+import reactor.rabbitmq.QueueSpecification;
+import reactor.rabbitmq.Receiver;
+import reactor.rabbitmq.Sender;
 
 class RabbitMQTest {
 
@@ -586,6 +599,103 @@ class RabbitMQTest {
         }
 
     }
+
+    @Nested
+    class ConcurrencyTest {
+        private static final String QUEUE_NAME_1 = "TEST1";
+        private static final String EXCHANGE_NAME_1 = "EXCHANGE1";
+
+        @BeforeEach
+        void setup() {
+            Sender sender = rabbitMQExtension.getSender();
+
+            Flux.concat(
+                    sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME_1)
+                        .durable(true)
+                        .type("direct")),
+                    sender.declareQueue(QueueSpecification.queue(QUEUE_NAME_1)
+                        .durable(DURABLE)
+                        .exclusive(!EXCLUSIVE)
+                        .autoDelete(!AUTO_DELETE)),
+                    sender.bind(BindingSpecification.binding()
+                        .exchange(EXCHANGE_NAME_1)
+                        .queue(QUEUE_NAME_1)
+                        .routingKey(EMPTY_ROUTING_KEY)))
+                .then()
+                .block();
+
+            IntStream.rangeClosed(1, 5)
+                .forEach(i -> sender.send(Mono.just(new OutboundMessage(EXCHANGE_NAME_1, "", String.format("Message + %s", UUID.randomUUID()).getBytes(StandardCharsets.UTF_8))))
+                    .block());
+        }
+
+        @Test
+        void consumingShouldSuccessWhenAckConcurrent() throws Exception {
+            ReceiverProvider receiverProvider = rabbitMQExtension.getReceiverProvider();
+            CountDownLatch countDownLatch = new CountDownLatch(5);
+
+            Flux.using(receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME_1, new ConsumeOptions()),
+                    Receiver::close)
+                .filter(getResponse -> getResponse.getBody() != null)
+                .concatMap(acknowledgableDelivery -> Mono.fromCallable(() -> {
+                    acknowledgableDelivery.ack(true);
+                    countDownLatch.countDown();
+                    return acknowledgableDelivery;
+                }).subscribeOn(Schedulers.elastic()))
+                .subscribe();
+
+            assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
+        }
+
+        @Test
+        @Disabled("Now, it fail, Because using Flux.take and concatMap")
+        void consumingShouldSuccessWhenAckConcurrentWithFluxTake() throws Exception {
+            ReceiverProvider receiverProvider = rabbitMQExtension.getReceiverProvider();
+            int counter = 5;
+            CountDownLatch countDownLatch = new CountDownLatch(counter);
+
+            Flux.using(receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME_1, new ConsumeOptions()),
+                    Receiver::close)
+                .filter(getResponse -> getResponse.getBody() != null)
+                .take(counter)
+                .concatMap(acknowledgableDelivery -> Mono.fromCallable(() -> {
+                    acknowledgableDelivery.ack(true);
+                    countDownLatch.countDown();
+                    System.out.println(Thread.currentThread().getName() + ": " + countDownLatch.getCount());
+                    return acknowledgableDelivery;
+                }).subscribeOn(Schedulers.elastic()))
+                .subscribe();
+
+            assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
+        }
+
+
+        @Test
+        @Disabled("Now, sometimes pass, sometimes fail. Because using Flux.take and flatMap, It can be re-produce it by try 'Repeat until failure' of Intellij")
+        void consumingShouldSuccessWhenAckConcurrentWithFluxTakeAndFlatMap() throws Exception {
+            ReceiverProvider receiverProvider = rabbitMQExtension.getReceiverProvider();
+            int counter = 5;
+            CountDownLatch countDownLatch = new CountDownLatch(counter);
+
+            Flux.using(receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME_1, new ConsumeOptions()),
+                    Receiver::close)
+                .filter(getResponse -> getResponse.getBody() != null)
+                .take(counter)
+                .flatMap(acknowledgableDelivery -> Mono.fromCallable(() -> {
+                    acknowledgableDelivery.ack(true);
+                    countDownLatch.countDown();
+                    System.out.println(Thread.currentThread().getName() + ": " + countDownLatch.getCount());
+                    return acknowledgableDelivery;
+                }).subscribeOn(Schedulers.elastic()))
+                .subscribe();
+
+            assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
 
     private void closeQuietly(AutoCloseable... closeables) {
         Arrays.stream(closeables).forEach(this::closeQuietly);
