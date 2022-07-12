@@ -103,6 +103,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
+        @Disabled("Temporarily disable because of instability in new parallel build")
         void filterShouldFilterOutNonMatchingEntries() throws Exception {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty("[@filter]", "(sn=nomatch)");
