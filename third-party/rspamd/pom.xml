@@ -30,7 +30,7 @@
 
     <artifactId>apache-james-rspamd</artifactId>
     <name>Apache James :: Third Party :: RSpamD</name>
-    <description>RSpamD Java and HTTP client and testing utilities</description>
+    <description>RSpamD Java client (HTTP) and testing utilities</description>
 
     <dependencies>
         <dependency>
