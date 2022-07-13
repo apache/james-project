@@ -95,7 +95,7 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -X -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test -T 0.5C'
+                sh 'mvn -X -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test -T 8'
             }
             post {
                 always {
