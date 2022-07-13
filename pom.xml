@@ -3728,7 +3728,7 @@
                                     <include>org.apache.james.backends.cassandra.init.CassandraTableManagerTest</include>
                                     <include>org.apache.james.backends.cassandra.init.ResilientClusterProviderTest</include>
                                     <include>org.apache.james.backends.es.v7.ClientProviderImplConnectionAuthESOverrideTrustStoreTest</include>
-                                    <include>org.apache.james.user.ldap.*</include>
+<!--                                    <include>org.apache.james.user.ldap.*</include>-->
                                     <include>org.apache.james.smtpserver.SMTPSaslTest</include>
                                     <include>org.apache.james.blob.objectstorage.aws.*</include>
                                     <include>org.apache.james.backends.cassandra.utils.CassandraHealthCheckTest</include>
