@@ -443,7 +443,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             insertMessage.setString(7, mc.getRemoteHost());
             insertMessage.setString(8, mc.getRemoteAddr());
             if (mc.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
-                insertMessage.setObject(9, null);
+                insertMessage.setBinaryStream(9, null);
             } else {
                 byte[] bytes = SerializationUtils.serialize(mc.getPerRecipientSpecificHeaders());
                 insertMessage.setBinaryStream(9, new ByteArrayInputStream(bytes), bytes.length);
