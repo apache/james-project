@@ -29,7 +29,9 @@ import static org.mockito.Mockito.mock;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
+@Category(Unstable.class)
 class ReadOnlyUsersLDAPRepositoryEmptyListTest {
     static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
         .domain(DOMAIN)

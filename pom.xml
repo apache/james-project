@@ -3282,9 +3282,7 @@
                             <exclude>org.apache.james.backends.cassandra.init.CassandraTableManagerTest</exclude>
                             <exclude>org.apache.james.backends.cassandra.init.ResilientClusterProviderTest</exclude>
                             <exclude>org.apache.james.backends.es.v7.ClientProviderImplConnectionAuthESOverrideTrustStoreTest</exclude>
-                            <exclude>org.apache.james.user.ldap.*</exclude>
                             <exclude>org.apache.james.smtpserver.SMTPSaslTest</exclude>
-                            <exclude>org.apache.james.blob.objectstorage.aws.*</exclude>
                             <exclude>org.apache.james.backends.cassandra.utils.CassandraHealthCheckTest</exclude>
                         </excludes>
                     </configuration>
@@ -3728,9 +3726,7 @@
                                     <include>org.apache.james.backends.cassandra.init.CassandraTableManagerTest</include>
                                     <include>org.apache.james.backends.cassandra.init.ResilientClusterProviderTest</include>
                                     <include>org.apache.james.backends.es.v7.ClientProviderImplConnectionAuthESOverrideTrustStoreTest</include>
-<!--                                    <include>org.apache.james.user.ldap.*</include>-->
                                     <include>org.apache.james.smtpserver.SMTPSaslTest</include>
-                                    <include>org.apache.james.blob.objectstorage.aws.*</include>
                                     <include>org.apache.james.backends.cassandra.utils.CassandraHealthCheckTest</include>
                                 </includes>
                                 <threadCount>1</threadCount>

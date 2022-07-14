@@ -37,9 +37,11 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.unboundid.ldap.sdk.LDAPException;
 
+@Category(Unstable.class)
 class ReadOnlyUsersLDAPRepositoryTest {
 
     static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
