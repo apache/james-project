@@ -177,6 +177,7 @@ public class DockerCassandra {
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
+            .withStartupAttempts(3)
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
             .waitingFor(new CassandraWaitStrategy(cassandraContainer));
