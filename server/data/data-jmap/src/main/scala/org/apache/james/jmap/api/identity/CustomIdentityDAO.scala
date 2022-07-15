@@ -173,8 +173,8 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
         case (None, Some(customIdentity)) =>
           identityFactory.userCanSendFrom(user, customIdentity.email)
             .filter(bool => bool)
-            .flatMap(_ => SMono(customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))))
             .switchIfEmpty(SMono.error(IdentityNotFoundException(identityId)))
+            .flatMap(_ => SMono(customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))))
       }
       .`then`()
   }
