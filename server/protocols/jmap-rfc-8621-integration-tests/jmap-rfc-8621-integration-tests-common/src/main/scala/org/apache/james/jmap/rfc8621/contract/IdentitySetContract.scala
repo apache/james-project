@@ -927,6 +927,103 @@ trait IdentitySetContract {
   }
 
   @Test
+  def updateShouldModifyIdentityEntryWhenBccNameIsNull(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "bcc": [
+           |                            {
+           |                                "name": null,
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
+                    |    "methodResponses": [
+                    |        [
+                    |            "Identity/set",
+                    |            {
+                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                    |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "updated": {
+                    |                    "$identityId": { }
+                    |                }
+                    |            },
+                    |            "c1"
+                    |        ],
+                    |        [
+                    |            "Identity/get",
+                    |            {
+                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                    |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "list": [
+                    |                    {
+                    |                        "name": "Bob",
+                    |                        "htmlSignature": "<p>Some html signature</p>",
+                    |                        "id": "$identityId",
+                    |                        "bcc": [
+                    |                            {
+                    |                                "email": "david2@domain.tld"
+                    |                            }
+                    |                        ],
+                    |                        "textSignature": "Some text signature",
+                    |                        "mayDelete": true,
+                    |                        "email": "bob@domain.tld",
+                    |                        "replyTo": [
+                    |                            {
+                    |                                "name": "Alice",
+                    |                                "email": "alice@domain.tld"
+                    |                            }
+                    |                        ]
+                    |                    }
+                    |                ]
+                    |            },
+                    |            "c2"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldNotUpdatedWhenIdNotfound(): Unit = {
     val notfoundIdentityId: String = UUID.randomUUID().toString
     val response: String = `given`
