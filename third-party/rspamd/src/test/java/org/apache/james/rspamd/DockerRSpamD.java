@@ -17,55 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter;
+package org.apache.james.rspamd;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.rate.limiter.DockerRedis;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.utility.DockerImageName;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.sync.RedisCommands;
+public class DockerRSpamD {
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("a16bitsysop/rspamd");
+    private static final String DEFAULT_TAG = "3.2-r2-alpine3.16.0-r0";
+    private static final int DEFAULT_PORT = 11334;
 
-public class DockerRedis {
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis");
-    private static final String DEFAULT_TAG = "6.2.6";
-    private static final int DEFAULT_PORT = 6379;
-
+    private final DockerRedis dockerRedis;
     private final GenericContainer<?> container;
+    private Network network;
 
-    public DockerRedis() {
-        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
-            .withExposedPorts(DEFAULT_PORT);
+    public DockerRSpamD() {
+        this.network = Network.newNetwork();
+        this.dockerRedis = new DockerRedis(network);
+        this.container = createRspamD();
     }
 
-    public DockerRedis(Network network) {
-        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
+    private GenericContainer<?> createRspamD() {
+        return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
-            .withNetwork(network)
-            .withNetworkAliases("redis");
+            .withEnv("REDIS", "redis")
+            .withNetwork(network);
     }
 
     public Integer getPort() {
         return container.getMappedPort(DEFAULT_PORT);
     }
 
-    public URI redisURI() {
-        try {
-            return new URIBuilder()
-                .setScheme("redis")
-                .setHost(container.getHost())
-                .setPort(getPort())
-                .build();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Error when build redis uri. ", e);
-        }
-    }
-
     public void start() {
+        dockerRedis.start();
         if (!container.isRunning()) {
             container.start();
         }
@@ -73,14 +59,10 @@ public class DockerRedis {
 
     public void stop() {
         container.stop();
-    }
-
-    public RedisCommands<String, String> createClient() {
-        return RedisClient.create(redisURI().toString())
-            .connect().sync();
+        dockerRedis.stop();
     }
 
     public void flushAll() {
-        createClient().flushall();
+        dockerRedis.flushAll();
     }
 }
