@@ -19,6 +19,9 @@
 
 package org.apache.james.rspamd;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.apache.james.GuiceModuleTestExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -54,5 +57,9 @@ public class DockerRSpamDExtension implements GuiceModuleTestExtension {
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return dockerRSpamD();
+    }
+
+    public URL getBaseUrl() throws MalformedURLException {
+        return new URL("http://127.0.0.1:" + dockerRSpamD().getPort());
     }
 }

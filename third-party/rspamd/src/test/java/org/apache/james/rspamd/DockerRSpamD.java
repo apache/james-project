@@ -23,15 +23,17 @@ import org.apache.james.rate.limiter.DockerRedis;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 public class DockerRSpamD {
+    public static final String PASSWORD = "admin";
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("a16bitsysop/rspamd");
     private static final String DEFAULT_TAG = "3.2-r2-alpine3.16.0-r0";
     private static final int DEFAULT_PORT = 11334;
 
     private final DockerRedis dockerRedis;
     private final GenericContainer<?> container;
-    private Network network;
+    private final Network network;
 
     public DockerRSpamD() {
         this.network = Network.newNetwork();
@@ -43,6 +45,8 @@ public class DockerRSpamD {
         return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
             .withEnv("REDIS", "redis")
+            .withEnv("PASSWORD", PASSWORD)
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
             .withNetwork(network);
     }
 
