@@ -19,14 +19,19 @@
 
 package org.apache.james.rspamd;
 
+import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.core.Is.is;
 
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
 public class DockerRSpamDExtensionTest {
@@ -47,5 +52,70 @@ public class DockerRSpamDExtensionTest {
             .trim();
 
         assertThat(response).isEqualTo("pong");
+    }
+
+    @Test
+    void checkSpamEmailWithExactPasswordHeaderShouldWork() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/spam/spam8.eml"))
+            .post("checkv2")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("action", is("reject"));
+    }
+
+    @Test
+    void checkHamEmailWithExactPasswordHeaderShouldWork() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/ham/ham1.eml"))
+            .post("checkv2")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("action", is("no action"));
+    }
+
+    @Test
+    void learnSpamEmailWithExactPasswordHeaderShouldWork() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/spam/spam8.eml"))
+        .post("learnspam")
+            .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("success", is(true));
+    }
+
+    @Test
+    void learnHamEmailWithExactPasswordHeaderShouldWork() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/ham/ham1.eml"))
+            .post("learnham")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("success", is(true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"checkv2", "learnspam", "learnham"})
+    void endpointsWithWrongPasswordHeaderShouldReturnUnauthorized(String endpoint) {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", "wrongPassword"))
+            .body("dummy")
+            .post(endpoint)
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN_403)
+            .body("error", is("Unauthorized"));
     }
 }
