@@ -106,8 +106,9 @@ public class MailDelivrerToHost {
     public ExecutionResult tryDeliveryToHost(Mail mail, Collection<InternetAddress> addr, HostAddress outgoingMailServer) throws MessagingException {
         Session session = selectSession(outgoingMailServer);
         Properties props = getPropertiesForMail(mail, session);
-        LOGGER.debug("Attempting delivery of {} to host {} at {} from {}",
-            mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")));
+        LOGGER.debug("Attempting delivery of {} with messageId {} to host {} at {} from {}",
+            mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
+            outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")));
 
         // Many of these properties are only in later JavaMail versions
         // "mail.smtp.ehlo"           //default true
@@ -125,13 +126,23 @@ public class MailDelivrerToHost {
             } else {
                 transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
-            LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
+            LOGGER.info("Mail ({}) with messageId {} sent successfully to {} at {} from {} for {}",
+                mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
                 outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
             releaseSession(outgoingMailServer, session);
         }
         return ExecutionResult.success();
+    }
+
+    private String getMessageId(Mail mail) {
+        try {
+            return mail.getMessage().getMessageID();
+        } catch (MessagingException e) {
+            LOGGER.debug("failed to extract messageId from message {}", mail.getName(), e);
+            return null;
+        }
     }
 
     private Session selectSession(HostAddress host) throws MessagingException {
