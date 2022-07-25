@@ -100,12 +100,21 @@ public class SimpleMailStore implements MailStore {
             return Mono.from(mailboxAppender.append(mail.getMessage(), username, locatedFolder))
                 .doOnSuccess(ids -> {
                     metric.increment();
-                    LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
-                        mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, ids);
+                    LOGGER.info("Local delivered mail {} with messageId {} successfully from {} to {} in folder {} with composedMessageId {}",
+                        mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, ids);
                 })
                 .then();
         } catch (MessagingException e) {
             throw new RuntimeException("Could not retrieve mail message content", e);
+        }
+    }
+    
+    private String getMessageId(Mail mail) {
+        try {
+            return mail.getMessage().getMessageID();
+        } catch (MessagingException e) {
+            LOGGER.debug("failed to extract messageId from message {}", mail.getName(), e);
+            return null;
         }
     }
 
