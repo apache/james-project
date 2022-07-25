@@ -159,7 +159,7 @@ public class MailDelivrerToHost {
     }
 
     private String inContext(Session session, String name) {
-        if (session.getProperties().containsKey("mail.smtps.ssl.enable")) {
+        if ("true".equals(session.getProperties().getProperty("mail.smtps.ssl.enable"))) {
             return name.replace("smtp", "smtps");
         } else {
             return name;
