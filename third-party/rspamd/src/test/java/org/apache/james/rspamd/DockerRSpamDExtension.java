@@ -59,7 +59,11 @@ public class DockerRSpamDExtension implements GuiceModuleTestExtension {
         return dockerRSpamD();
     }
 
-    public URL getBaseUrl() throws MalformedURLException {
-        return new URL("http://127.0.0.1:" + dockerRSpamD().getPort());
+    public URL getBaseUrl() {
+        try {
+            return new URL("http://127.0.0.1:" + dockerRSpamD().getPort());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
