@@ -55,6 +55,8 @@ pipeline {
                 logRotator(artifactNumToKeepStr: '10', numToKeepStr: '30')
         )
         disableConcurrentBuilds()
+        // This is better if you want to clean before build
+        skipDefaultCheckout(true)
     }
 
     triggers {
@@ -72,9 +74,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up the workspace'
-                deleteDir()
-                echo 'Cleaning up James maven repo dependencies'
-                sh 'rm -rf /home/jenkins/.m2/repository/org/apache/james'
+                cleanWs()
             }
         }
 
@@ -183,9 +183,6 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
 
         // Send an email, if the last build was not successful and this one is.
         success {
-            // Cleanup the build directory if the build was successful
-            // (in this cae we probably don't have to do any post-build analysis)
-            deleteDir()
             script {
                 if (env.BRANCH_NAME == "master" && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
                     emailext(
