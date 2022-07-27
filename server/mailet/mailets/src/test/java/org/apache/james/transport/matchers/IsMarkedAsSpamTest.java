@@ -168,10 +168,10 @@ class IsMarkedAsSpamTest {
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
                     .name("custom.package")
-                    .value("Yes, hits=6.8 required=5.0")
+                    .value("Yes, actions=reject score=14.225 requiredScore=14.0 desiredRewriteSubject=")
                     .build(),
                 new MailAddress("to@james.org"))
-            .attribute(Attribute.convertToAttribute("custom.package", "Yes, hits=6.8 required=5.0"))
+            .attribute(Attribute.convertToAttribute("custom.package", "Yes, actions=reject score=14.225 requiredScore=14.0 desiredRewriteSubject="))
             .build();
 
         Collection<MailAddress> matches = matcher.match(mail);
