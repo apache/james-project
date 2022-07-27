@@ -48,6 +48,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventSourcingSystem;
@@ -196,6 +197,8 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     @BeforeEach
     void setUp(EventStore eventStore) {
+        memoryReferenceTaskStore = new MemoryReferenceTaskStore();
+        memoryReferenceWithCounterTaskStore = new MemoryReferenceWithCounterTaskStore();
         CassandraCluster cassandra = CASSANDRA_CLUSTER.getCassandraCluster();
         CassandraTaskExecutionDetailsProjectionDAO projectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
         this.executionDetailsProjection = new CassandraTaskExecutionDetailsProjection(projectionDAO);
@@ -210,9 +213,12 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         terminationSubscribers.forEach(RabbitMQTerminationSubscriber::close);
         workQueueSupplier.stopWorkQueues();
+        RabbitMQManagementAPI managementAPI = rabbitMQExtension.managementAPI();
+        managementAPI.listQueues()
+            .forEach(queue -> managementAPI.deleteQueue("/", queue.getName()));
     }
 
     public EventSourcingTaskManager taskManager() {

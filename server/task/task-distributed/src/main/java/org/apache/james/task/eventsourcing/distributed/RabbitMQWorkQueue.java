@@ -153,8 +153,11 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private Mono<Task.Result> executeTask(AcknowledgableDelivery delivery) {
-        return Mono.fromCallable(() -> TaskId.fromString(delivery.getProperties().getHeaders().get(TASK_ID).toString()))
-            .flatMap(taskId -> deserialize(new String(delivery.getBody(), StandardCharsets.UTF_8), taskId)
+        return Mono.fromCallable(() -> delivery.getProperties().getHeaders())
+            .map(headers -> headers.get(TASK_ID))
+            .map(taskIdValue -> TaskId.fromString(taskIdValue.toString()))
+            .flatMap(taskId -> Mono.fromCallable(() -> new String(delivery.getBody(), StandardCharsets.UTF_8))
+                .flatMap(bodyValue -> deserialize(bodyValue, taskId))
                 .doOnNext(task -> delivery.ack())
                 .flatMap(task -> executeOnWorker(taskId, task)))
             .onErrorResume(error -> {
