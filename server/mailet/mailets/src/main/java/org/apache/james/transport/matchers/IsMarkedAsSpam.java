@@ -21,6 +21,9 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Optional;
+
+import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.spamassassin.SpamAssassinResult;
@@ -51,9 +54,18 @@ public class IsMarkedAsSpam extends GenericMatcher {
 
     private static final String YES = "yes";
 
+    private String spamStatusHeader = SpamAssassinResult.STATUS_MAIL.asString();
+
     @Override
     public String getMatcherInfo() {
-        return "Has org.apache.james.spamassassin.status per recipient header with a Yes value";
+        return "Has " + spamStatusHeader + " per recipient header with a Yes value";
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        spamStatusHeader = Optional.ofNullable(getCondition())
+            .filter(s -> !s.isEmpty())
+            .orElse(SpamAssassinResult.STATUS_MAIL.asString());
     }
 
     @Override
@@ -67,7 +79,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
     public boolean isMarkedAsSpam(Mail mail, MailAddress recipient) {
         return mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient)
             .stream()
-            .filter(header -> header.getName().equals(SpamAssassinResult.STATUS_MAIL.asString()))
+            .filter(header -> header.getName().equals(spamStatusHeader))
             .anyMatch(header -> header.getValue().toLowerCase(Locale.US).startsWith(YES));
     }
 

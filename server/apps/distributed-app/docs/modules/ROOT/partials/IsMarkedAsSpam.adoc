@@ -15,3 +15,14 @@ As an example, here is a part of a mailet pipeline which can be used in your Loc
     </mailet>
 <!-- End of SpamAssassing mailets pipeline -->
 ....
+
+In order to use this with `rspamd`, we need to declare a condition for the matcher.
+Eg: With the recipient header for RSpamD being *org.apache.james.rspamd.status*,
+then the configuration would be:
+
+....
+<!-- SpamAssassing mailets pipeline -->
+    <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+....
