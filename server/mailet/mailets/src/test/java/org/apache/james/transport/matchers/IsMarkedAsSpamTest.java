@@ -26,6 +26,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -146,6 +147,31 @@ class IsMarkedAsSpamTest {
                     .value("YES, hits=6.8 required=5.0")
                     .build(),
                 new MailAddress("to@james.org"))
+            .build();
+
+        Collection<MailAddress> matches = matcher.match(mail);
+        assertThat(matches).contains(new MailAddress("to@james.org"));
+    }
+
+    @Test
+    void isMarkedAsSpamShouldAcceptDynamicSpamStatusPackageHeader() throws Exception {
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("IsMarkedAsSpam")
+            .condition("custom.package")
+            .build();
+
+        matcher.init(matcherConfig);
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender("sender@james.org")
+            .recipient("to@james.org")
+            .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
+                    .name("custom.package")
+                    .value("Yes, hits=6.8 required=5.0")
+                    .build(),
+                new MailAddress("to@james.org"))
+            .attribute(Attribute.convertToAttribute("custom.package", "Yes, hits=6.8 required=5.0"))
             .build();
 
         Collection<MailAddress> matches = matcher.match(mail);
