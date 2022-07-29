@@ -101,7 +101,12 @@
                     <reuseForks>true</reuseForks>
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
-                    <groups combine.self="override">BasicFeature&amp;!unstable</groups>
+                    <!-- Junit 5 move from Category to Tag, and it needs tag's name as parameter -->
+                    <groups combine.self="override">BasicFeature</groups>
+                    <excludedGroups>unstable</excludedGroups>
+                    <properties>
+                        <includeTags>junit5</includeTags>
+                    </properties>
                 </configuration>
             </plugin>
         </plugins>
@@ -118,7 +123,7 @@
                             <version>2.22.2</version>
                             <configuration>
                                 <excludedGroups />
-                                <groups combine.self="override">BasicFeature&amp;unstable</groups>
+                                <groups>unstable</groups>
                             </configuration>
                         </plugin>
                     </plugins>
