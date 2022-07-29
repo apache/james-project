@@ -20,6 +20,7 @@
 package org.apache.james.rspamd.module;
 
 import org.apache.james.rspamd.route.FeedMessageRoute;
+import org.apache.james.rspamd.task.FeedHamToRSpamDTaskAdditionalInformationDTO;
 import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskAdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -48,5 +49,16 @@ public class RSpamDModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminFeedSpamAdditionalInformation() {
         return FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> feedHamAdditionalInformation() {
+        return FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminFeedHamAdditionalInformation() {
+        return FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

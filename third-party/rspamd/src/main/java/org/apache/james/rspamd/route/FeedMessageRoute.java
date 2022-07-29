@@ -19,9 +19,6 @@
 
 package org.apache.james.rspamd.route;
 
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
-
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -33,6 +30,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.task.FeedHamToRSpamDTask;
 import org.apache.james.rspamd.task.FeedSpamToRSpamDTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
@@ -49,6 +47,8 @@ import spark.Service;
 
 public class FeedMessageRoute implements Routes {
     public static final String BASE_PATH = "/rspamd";
+    private static final String REPORT_SPAM_PARAM = "reportSpam";
+    private static final String REPORT_HAM_PARAM = "reportHam";
 
     private final TaskManager taskManager;
     private final MailboxManager mailboxManager;
@@ -85,19 +85,27 @@ public class FeedMessageRoute implements Routes {
 
     public Task feedMessageTaskFromRequest(Request request) {
         Preconditions.checkArgument(Optional.ofNullable(request.queryParams("action"))
-                .filter(action -> action.equals("reportSpam") || action.equals("reportHam"))
-                .isPresent(),
-            "'action' is missing or must be 'reportSpam' or 'reportHam'");
+                .filter(action -> action.equals(REPORT_SPAM_PARAM) || action.equals(REPORT_HAM_PARAM))
+                .isPresent(), String.format("'action' is missing or must be '%s' or '%s'", REPORT_SPAM_PARAM, REPORT_HAM_PARAM));
 
-        return new FeedSpamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rSpamDHttpClient,
-            getFeedSpamTaskRunningOptions(request), clock);
+        return Optional.ofNullable(request.queryParams("action"))
+            .filter(action -> action.equals(REPORT_SPAM_PARAM))
+            .map(any -> (Task) new FeedSpamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rSpamDHttpClient, getFeedSpamTaskRunningOptions(request), clock))
+            .orElse(new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rSpamDHttpClient, getFeedHamTaskRunningOptions(request), clock));
     }
 
     private FeedSpamToRSpamDTask.RunningOptions getFeedSpamTaskRunningOptions(Request request) {
         Optional<Long> periodInSecond = getPeriod(request);
-        int messagesPerSecond = getMessagesPerSecond(request).orElse(DEFAULT_MESSAGES_PER_SECOND);
-        double samplingProbability = getSamplingProbability(request).orElse(DEFAULT_SAMPLING_PROBABILITY);
+        int messagesPerSecond = getMessagesPerSecond(request).orElse(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
+        double samplingProbability = getSamplingProbability(request).orElse(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
         return new FeedSpamToRSpamDTask.RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
+    }
+
+    private FeedHamToRSpamDTask.RunningOptions getFeedHamTaskRunningOptions(Request request) {
+        Optional<Long> periodInSecond = getPeriod(request);
+        int messagesPerSecond = getMessagesPerSecond(request).orElse(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
+        double samplingProbability = getSamplingProbability(request).orElse(FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
+        return new FeedHamToRSpamDTask.RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
     }
 
     private Optional<Long> getPeriod(Request req) {

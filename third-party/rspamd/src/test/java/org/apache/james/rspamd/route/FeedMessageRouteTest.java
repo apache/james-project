@@ -23,8 +23,8 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
 import static org.apache.james.rspamd.route.FeedMessageRoute.BASE_PATH;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
+import static org.apache.james.rspamd.task.FeedHamToRSpamDTaskTest.ALICE_INBOX_MAILBOX;
+import static org.apache.james.rspamd.task.FeedHamToRSpamDTaskTest.BOB_INBOX_MAILBOX;
 import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.ALICE;
 import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.ALICE_SPAM_MAILBOX;
 import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.BOB;
@@ -65,6 +65,8 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.rspamd.DockerRSpamDExtension;
 import org.apache.james.rspamd.client.RSpamDClientConfiguration;
 import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.task.FeedHamToRSpamDTask;
+import org.apache.james.rspamd.task.FeedHamToRSpamDTaskAdditionalInformationDTO;
 import org.apache.james.rspamd.task.FeedSpamToRSpamDTask;
 import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskAdditionalInformationDTO;
 import org.apache.james.task.Hostname;
@@ -111,7 +113,10 @@ public class FeedMessageRouteTest {
         usersRepository.addUser(BOB, "anyPassword");
         usersRepository.addUser(ALICE, "anyPassword");
         mailboxManager.createMailbox(BOB_SPAM_MAILBOX, mailboxManager.createSystemSession(BOB));
+        mailboxManager.createMailbox(BOB_INBOX_MAILBOX, mailboxManager.createSystemSession(BOB));
         mailboxManager.createMailbox(ALICE_SPAM_MAILBOX, mailboxManager.createSystemSession(ALICE));
+        mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE));
+
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         UpdatableTickingClock clock = new UpdatableTickingClock(NOW);
         JsonTransformer jsonTransformer = new JsonTransformer();
@@ -119,7 +124,8 @@ public class FeedMessageRouteTest {
         MessageIdManager messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         MailboxSessionMapperFactory mapperFactory = mailboxManager.getMapperFactory();
 
-        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
+        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+            FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
         FeedMessageRoute feedMessageRoute = new FeedMessageRoute(taskManager, mailboxManager, usersRepository, client, jsonTransformer, clock,
             messageIdManager, mapperFactory);
 
@@ -136,7 +142,7 @@ public class FeedMessageRouteTest {
         taskManager.stop();
     }
 
-    private void appendSpamMessage(MailboxPath mailboxPath, Date internalDate) throws MailboxException {
+    private void appendMessage(MailboxPath mailboxPath, Date internalDate) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());
         mailboxManager.getMailbox(mailboxPath, session)
             .appendMessage(new ByteArrayInputStream(String.format("random content %4.3f", Math.random()).getBytes()),
@@ -150,8 +156,8 @@ public class FeedMessageRouteTest {
     class FeedSpam {
         @Test
         void taskShouldReportAllSpamMessagesOfAllUsersByDefault() throws MailboxException {
-            appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW));
-            appendSpamMessage(ALICE_SPAM_MAILBOX, Date.from(NOW));
+            appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW));
+            appendMessage(ALICE_SPAM_MAILBOX, Date.from(NOW));
 
             String taskId = given()
                 .queryParam("action", "reportSpam")
@@ -169,15 +175,15 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
         void taskShouldReportOnlyMailInPeriod() throws MailboxException {
-            appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
-            appendSpamMessage(ALICE_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
+            appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+            appendMessage(ALICE_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
 
             String taskId = given()
                 .queryParam("action", "reportSpam")
@@ -196,15 +202,15 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(1))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(172800))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
         void taskWithAverageSamplingProbabilityShouldNotReportAllSpamMessages() {
             IntStream.range(0, 10)
-                .forEach(Throwing.intConsumer(any -> appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
+                .forEach(Throwing.intConsumer(any -> appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
 
             String taskId = given()
                 .queryParam("action", "reportSpam")
@@ -223,7 +229,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(10))
                 .body("additionalInformation.reportedSpamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
         }
@@ -289,9 +295,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(0))
                 .body("additionalInformation.reportedSpamMessageCount", is(0))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @ParameterizedTest
@@ -382,6 +388,254 @@ public class FeedMessageRouteTest {
         void feedSpamShouldReturnErrorWhenSamplingProbabilityInvalid(double samplingProbability) {
             given()
                 .queryParam("action", "reportSpam")
+                .queryParam("samplingProbability", samplingProbability)
+                .post()
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .body("statusCode", is(BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", containsString("samplingProbability"));
+        }
+    }
+
+    @Nested
+    class FeedHam {
+        @Test
+        void taskShouldReportAllHamMessagesOfAllUsersByDefault() throws MailboxException {
+            appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW));
+            appendMessage(ALICE_INBOX_MAILBOX, Date.from(NOW));
+
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.hamMessageCount", is(2))
+                .body("additionalInformation.reportedHamMessageCount", is(2))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+        }
+
+        @Test
+        void taskShouldReportOnlyMailInPeriod() throws MailboxException {
+            appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+            appendMessage(ALICE_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
+
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("period", TWO_DAYS_IN_SECOND)
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.hamMessageCount", is(2))
+                .body("additionalInformation.reportedHamMessageCount", is(1))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(172800))
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+        }
+
+        @Test
+        void taskWithAverageSamplingProbabilityShouldNotReportAllHamMessages() {
+            IntStream.range(0, 10)
+                .forEach(Throwing.intConsumer(any -> appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
+
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("samplingProbability", 0.5)
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.hamMessageCount", is(10))
+                .body("additionalInformation.reportedHamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+                .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
+        }
+
+        @Test
+        void feedMessageShouldReturnErrorWhenInvalidAction() {
+            given()
+                .queryParam("action", "invalid")
+                .post()
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .body("statusCode", is(BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'action' is missing or must be 'reportSpam' or 'reportHam'"));
+        }
+
+        @Test
+        void feedMessageTaskShouldReturnErrorWhenMissingAction() {
+            given()
+                .post()
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .body("statusCode", is(BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'action' is missing or must be 'reportSpam' or 'reportHam'"));
+        }
+
+        @Test
+        void feedHamShouldReturnTaskId() {
+            given()
+                .queryParam("action", "reportHam")
+                .post()
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", notNullValue());
+        }
+
+        @Test
+        void feedHamShouldReturnDetail() {
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("taskId", is(notNullValue()))
+                .body("type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("startedDate", is(notNullValue()))
+                .body("submitDate", is(notNullValue()))
+                .body("completedDate", is(notNullValue()))
+                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.timestamp", is(notNullValue()))
+                .body("additionalInformation.hamMessageCount", is(0))
+                .body("additionalInformation.reportedHamMessageCount", is(0))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"3600", "3600 seconds", "1d", "1day"})
+        void feedHamShouldAcceptPeriodParam(String period) {
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("period", period)
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("additionalInformation.runningOptions.periodInSecond", is((int) DurationParser.parse(period, ChronoUnit.SECONDS).toSeconds()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "0", "1 t"})
+        void feedHamShouldReturnErrorWhenPeriodInvalid(String period) {
+            given()
+                .queryParam("action", "reportHam")
+                .queryParam("period", period)
+                .post()
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .body("statusCode", is(BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid arguments supplied in the user request"));
+        }
+
+        @Test
+        void feedHamShouldAcceptMessagesPerSecondParam() {
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("messagesPerSecond", 20)
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+                .then()
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(20));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1, -0.1, 1.1})
+        void feedHamShouldReturnErrorWhenMessagesPerSecondInvalid(double messagesPerSecond) {
+            given()
+                .queryParam("action", "reportHam")
+                .queryParam("messagesPerSecond", messagesPerSecond)
+                .post()
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .body("statusCode", is(BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", containsString("messagesPerSecond"));
+        }
+
+        @Test
+        void feedHamShouldAcceptSamplingProbabilityParam() {
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("samplingProbability", 0.8)
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("additionalInformation.runningOptions.samplingProbability", is(0.8F));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-1, -0.1, 1.1})
+        void feedHamShouldReturnErrorWhenSamplingProbabilityInvalid(double samplingProbability) {
+            given()
+                .queryParam("action", "reportHam")
                 .queryParam("samplingProbability", samplingProbability)
                 .post()
             .then()
