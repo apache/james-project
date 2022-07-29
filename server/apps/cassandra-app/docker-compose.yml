@@ -7,7 +7,6 @@ services:
       - elasticsearch
       - cassandra
       - tika
-    entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
     image: apache/james:cassandra-latest
     container_name: james
     hostname: james.local
