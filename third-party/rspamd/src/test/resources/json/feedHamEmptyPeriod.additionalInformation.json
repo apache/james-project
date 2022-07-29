@@ -1,0 +1,11 @@
+{
+  "errorCount": 1,
+  "reportedHamMessageCount": 2,
+  "runningOptions": {
+    "messagesPerSecond": 10,
+    "samplingProbability": 1.0
+  },
+  "hamMessageCount": 4,
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "FeedHamToRSpamDTask"
+}

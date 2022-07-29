@@ -19,6 +19,8 @@
 
 package org.apache.james.rspamd.task;
 
+import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.SPAM_MAILBOX_NAME;
+
 import java.util.Date;
 import java.util.Optional;
 
@@ -46,6 +48,7 @@ import reactor.core.publisher.Mono;
 
 public class GetMailboxMessagesService {
     private static final int UNLIMITED = -1;
+    private static final String TRASH_MAILBOX_NAME = "Trash";
 
     private final MailboxManager mailboxManager;
     private final UsersRepository userRepository;
@@ -65,6 +68,14 @@ public class GetMailboxMessagesService {
             .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, samplingProbability, context), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
+    public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, double samplingProbability,
+                                                       FeedHamToRSpamDTask.Context context) throws UsersRepositoryException {
+        return Iterators.toFlux(userRepository.list())
+            .flatMap(Throwing.function(username -> Flux.fromIterable(mailboxManager.list(mailboxManager.createSystemSession(username)))
+                .filter(this::hamMailboxesPredicate)
+                .flatMap(mailboxPath -> getMailboxMessagesOfAUser(username, mailboxPath, afterDate, samplingProbability, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
+    }
+
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,
                                                           double samplingProbability, FeedSpamToRSpamDTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
@@ -80,10 +91,29 @@ public class GetMailboxMessagesService {
             .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession));
     }
 
+    private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, MailboxPath mailboxPath, Optional<Date> afterDate,
+                                                          double samplingProbability, FeedHamToRSpamDTask.Context context) {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .map(Throwing.function(MessageManager::getMailboxEntity))
+            .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
+            .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
+            .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
+            .filter(message -> randomBooleanWithProbability(samplingProbability))
+            .map(Message::getMessageId)
+            .collectList()
+            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession));
+    }
+
     public static boolean randomBooleanWithProbability(double probability) {
         if (probability == 1.0) {
             return true;
         }
         return Math.random() < probability;
+    }
+
+    private boolean hamMailboxesPredicate(MailboxPath mailboxPath) {
+        return !mailboxPath.getName().equals(SPAM_MAILBOX_NAME) && !mailboxPath.getName().equals(TRASH_MAILBOX_NAME);
     }
 }
