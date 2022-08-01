@@ -92,6 +92,7 @@ import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -649,14 +650,26 @@ class RabbitMQMailQueueTest {
         }
 
         private void dequeueMails(int times) {
-            Flux.from(getManageableMailQueue()
+            AtomicInteger counter = new AtomicInteger(0);
+
+            Disposable disposable = Flux.from(getManageableMailQueue()
                 .deQueue())
-                .take(times)
-                .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
-                    mailQueueItem.done(true);
-                    return mailQueueItem;
+                .concatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                    if (counter.getAndIncrement() < times) {
+                        mailQueueItem.done(true);
+                        return mailQueueItem;
+                    } else {
+                        mailQueueItem.done(false);
+                        return null;
+                    }
                 }).subscribeOn(Schedulers.elastic()))
-                .blockLast();
+                .subscribe();
+
+            try {
+                Awaitility.await().untilAsserted(() -> assertThat(counter.get()).isGreaterThanOrEqualTo(times));
+            } finally {
+                disposable.dispose();
+            }
         }
 
         @Test
