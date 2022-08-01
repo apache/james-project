@@ -20,23 +20,20 @@
 package org.apache.james.rspamd.client;
 
 import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
-import static org.apache.james.rspamd.client.CombinedHeaderAndContentInputStreamHelper.getInputStreamOfMessageHeaders;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Optional;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.rspamd.DockerRSpamDExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
-import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.eclipse.jetty.http.HttpStatus;
@@ -47,58 +44,58 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
-public class RSpamDHttpClientTest {
+class RSpamDHttpClientTest {
     private final static String SPAM_MESSAGE_PATH = "mail/spam/spam8.eml";
     private final static String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
 
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
 
-    private MimeMessage spamMessage;
-    private MimeMessage hamMessage;
+    private byte[] spamMessage;
+    private byte[] hamMessage;
 
     @BeforeEach
-    void setup() throws MessagingException {
-        spamMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream(SPAM_MESSAGE_PATH));
-        hamMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream(HAM_MESSAGE_PATH));
+    void setup() {
+        spamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(SPAM_MESSAGE_PATH);
+        hamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(HAM_MESSAGE_PATH);
     }
 
     @Test
-    void checkMailWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws IOException {
+    void checkMailWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        assertThatThrownBy(() -> client.checkV2(spamMessage).block())
+        assertThatThrownBy(() -> client.checkV2(new ByteArrayInputStream(spamMessage)).block())
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
-    void learnSpamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws IOException {
+    void learnSpamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        assertThatThrownBy(() -> reportAsSpam(client, spamMessage))
+        assertThatThrownBy(() -> reportAsSpam(client, new ByteArrayInputStream(spamMessage)))
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
-    void learnHamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws IOException {
+    void learnHamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        assertThatThrownBy(() -> reportAsHam(client, hamMessage))
+        assertThatThrownBy(() -> reportAsHam(client, new ByteArrayInputStream(spamMessage)))
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
-    void checkSpamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws IOException, MessagingException {
+    void checkSpamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(spamMessage).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(spamMessage)).block();
         assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
@@ -114,11 +111,11 @@ public class RSpamDHttpClientTest {
     }
 
     @Test
-    void checkHamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws IOException, MessagingException {
+    void checkHamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(hamMessage).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(hamMessage)).block();
         assertThat(analysisResult).isEqualTo(AnalysisResult.builder()
             .action(AnalysisResult.Action.NO_ACTION)
             .score(0.99F)
@@ -139,29 +136,29 @@ public class RSpamDHttpClientTest {
     }
 
     @Test
-    void learnSpamMailUsingRSpamDClientWithExactPasswordShouldWork() throws IOException {
+    void learnSpamMailUsingRSpamDClientWithExactPasswordShouldWork() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsSpam(getInputStreamOfMessageHeaders(spamMessage), spamMessage.getInputStream()).block())
+        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
             .doesNotThrowAnyException();
     }
 
     @Test
-    void learnHamMailUsingRSpamDClientWithExactPasswordShouldWork() throws IOException {
+    void learnHamMailUsingRSpamDClientWithExactPasswordShouldWork() throws Exception {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsHam(getInputStreamOfMessageHeaders(hamMessage), hamMessage.getInputStream()).block())
+        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
             .doesNotThrowAnyException();
     }
 
-    private void reportAsSpam(RSpamDHttpClient client, MimeMessage mimeMessage) throws MessagingException, IOException {
-        client.reportAsSpam(getInputStreamOfMessageHeaders(mimeMessage), mimeMessage.getInputStream()).block();
+    private void reportAsSpam(RSpamDHttpClient client, InputStream inputStream) {
+        client.reportAsSpam(inputStream).block();
     }
 
-    private void reportAsHam(RSpamDHttpClient client, MimeMessage mimeMessage) throws MessagingException, IOException {
-        client.reportAsHam(getInputStreamOfMessageHeaders(mimeMessage), mimeMessage.getInputStream()).block();
+    private void reportAsHam(RSpamDHttpClient client, InputStream inputStream) {
+        client.reportAsHam(inputStream).block();
     }
 
 }
