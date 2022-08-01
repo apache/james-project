@@ -650,6 +650,7 @@ class RabbitMQTest {
 
         @Test
         @Disabled("Now, it fail, Because using Flux.take and concatMap")
+        // See https://github.com/reactor/reactor-rabbitmq/issues/176
         void consumingShouldSuccessWhenAckConcurrentWithFluxTake() throws Exception {
             ReceiverProvider receiverProvider = rabbitMQExtension.getReceiverProvider();
             int counter = 5;
@@ -674,6 +675,7 @@ class RabbitMQTest {
 
         @Test
         @Disabled("Now, sometimes pass, sometimes fail. Because using Flux.take and flatMap, It can be re-produce it by try 'Repeat until failure' of Intellij")
+        // See https://github.com/reactor/reactor-rabbitmq/issues/176
         void consumingShouldSuccessWhenAckConcurrentWithFluxTakeAndFlatMap() throws Exception {
             ReceiverProvider receiverProvider = rabbitMQExtension.getReceiverProvider();
             int counter = 5;
