@@ -19,17 +19,11 @@
 
 package org.apache.james.rspamd.client;
 
-import static org.apache.james.rspamd.client.CombinedHeaderAndContentInputStreamHelper.getInputStreamOfMessageHeaders;
-import static org.apache.james.rspamd.client.CombinedHeaderAndContentInputStreamHelper.mergeHeaderAndContentInputStream;
 import static org.apache.james.rspamd.client.RSpamDClientConfiguration.DEFAULT_TIMEOUT_IN_SECONDS;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.rspamd.exception.RSpamDUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
@@ -42,7 +36,6 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
 
 import io.netty.buffer.Unpooled;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClient;
@@ -64,23 +57,21 @@ public class RSpamDHttpClient {
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
     }
 
-    public Mono<AnalysisResult> checkV2(MimeMessage mimeMessage) throws MessagingException, IOException {
-        return Flux.just(getInputStreamOfMessageHeaders(mimeMessage), mimeMessage.getInputStream())
-            .reduce(CombinedHeaderAndContentInputStreamHelper::mergeHeaderAndContentInputStream)
-            .flatMap(inputStream -> httpClient.post()
-                .uri(CHECK_V2_ENDPOINT)
-                .send(ReactorUtils.toChunks(inputStream, BUFFER_SIZE)
-                    .map(Unpooled::wrappedBuffer))
-                .responseSingle(this::checkMailHttpResponseHandler))
+    public Mono<AnalysisResult> checkV2(InputStream mimeMessage) {
+        return httpClient.post()
+            .uri(CHECK_V2_ENDPOINT)
+            .send(ReactorUtils.toChunks(mimeMessage, BUFFER_SIZE)
+                .map(Unpooled::wrappedBuffer))
+            .responseSingle(this::checkMailHttpResponseHandler)
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
-    public Mono<Void> reportAsSpam(InputStream headerInputStream, InputStream contentInputStream) {
-        return reportMail(headerInputStream, contentInputStream, LEARN_SPAM_ENDPOINT);
+    public Mono<Void> reportAsSpam(InputStream content) {
+        return reportMail(content, LEARN_SPAM_ENDPOINT);
     }
 
-    public Mono<Void> reportAsHam(InputStream headerInputStream, InputStream contentInputStream) {
-        return reportMail(headerInputStream, contentInputStream, LEARN_HAM_ENDPOINT);
+    public Mono<Void> reportAsHam(InputStream content) {
+        return reportMail(content, LEARN_HAM_ENDPOINT);
     }
 
     private HttpClient buildReactorNettyHttpClient(RSpamDClientConfiguration configuration) {
@@ -91,10 +82,10 @@ public class RSpamDHttpClient {
             .headers(headers -> headers.add("Password", configuration.getPassword()));
     }
 
-    private Mono<Void> reportMail(InputStream headerInputStream, InputStream contentInputStream, String endpoint) {
+    private Mono<Void> reportMail(InputStream content, String endpoint) {
         return httpClient.post()
             .uri(endpoint)
-            .send(ReactorUtils.toChunks(mergeHeaderAndContentInputStream(headerInputStream, contentInputStream), BUFFER_SIZE)
+            .send(ReactorUtils.toChunks(content, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer)
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
             .responseSingle(this::reportMailHttpResponseHandler);
