@@ -25,10 +25,14 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -50,6 +54,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.github.fge.lambdas.Throwing;
 
 class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -105,6 +112,46 @@ class GatewayRemoteDeliveryIntegrationTest {
 
         awaitAtMostOneMinute
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
+    }
+
+    @Test
+    void mailFromShouldBePreservedUponConcurrency(@TempDir File temporaryFolder) throws Exception {
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
+
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0")
+                .build())
+            .build(temporaryFolder);
+        jamesServer.start();
+
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(FROM, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
+
+        int mailCount = 100;
+        IntStream.range(0, mailCount)
+            .forEach(Throwing.intConsumer(i -> messageSender
+                .sendMessageWithHeaders("from" + i + "@" + DEFAULT_DOMAIN, ImmutableList.of(RECIPIENT),
+                    "Subject: " + i + "\r\n\r\nBODY")));
+
+        awaitAtMostOneMinute
+            .untilAsserted(() ->
+                fakeSmtp.assertEmailReceived(response -> response
+                    .body("", hasSize(100))));
+
+        fakeSmtp.assertEmailReceived(response -> {
+            List<Map<String, Object>> receivedMails = response.extract().body().jsonPath().getList("");
+
+            receivedMails.stream()
+                .forEach(map -> assertThat(map.get("from"))
+                    .isEqualTo("from" + map.get("subject") + "@" + DEFAULT_DOMAIN));
+        });
     }
 
     @Test
