@@ -40,7 +40,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
@@ -566,32 +565,25 @@ public interface MailQueueContract {
     default void dequeueShouldBeConcurrent() {
         MailQueue testee = getMailQueue();
         int nbMails = 1000;
-        IntStream.range(0, nbMails)
-            .forEach(Throwing.intConsumer(i -> testee.enQueue(defaultMail()
+        Flux.range(0, nbMails)
+            .flatMap(Throwing.function(i -> testee.enqueueReactive(defaultMail()
                 .name("name" + i)
-                .build())));
+                .build())))
+            .blockLast();
 
         ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
 
         Flux.from(testee.deQueue())
-            .flatMap(item -> Mono.defer(() -> {
-                    dequeuedMails.add(item.getMail());
-                    try {
-                        Thread.sleep(100);
-                        item.done(true);
-                        return Mono.empty();
-                    } catch (MailQueue.MailQueueException | InterruptedException e) {
-                        return Mono.error(e);
-                    }
-                }).subscribeOn(Schedulers.elastic()), 1000
-            )
+            .flatMap(item -> Mono.fromRunnable(() -> dequeuedMails.add(item.getMail()))
+                .delayElement(Duration.ofMillis(100))
+                .then(Mono.fromRunnable(Throwing.runnable(() -> item.done(true))))
+                .subscribeOn(Schedulers.elastic()), 1000)
             .subscribeOn(Schedulers.newSingle("foo"))
             .subscribe();
 
         Awaitility.await()
             .atMost(ONE_MINUTE)
             .until(() -> dequeuedMails.size() >= nbMails);
-
     }
 
     class SerializableAttribute implements Serializable {
