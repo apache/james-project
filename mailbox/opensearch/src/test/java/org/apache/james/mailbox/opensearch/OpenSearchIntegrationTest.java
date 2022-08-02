@@ -367,12 +367,6 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("JAMES-3771 Waiting for a fix on opensearch client to be merged: https://github.com/opensearch-project/opensearch-java/pull/169")
-    @Test
-    public void sortOnCcShouldWork() throws Exception {
-
-    }
-
     @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce OpenSearch disk space usage")
     @Test
     public void textShouldNotMatchOtherAddressesOfTheSameDomain() {
