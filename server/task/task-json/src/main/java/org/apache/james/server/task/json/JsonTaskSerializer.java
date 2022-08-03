@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -55,7 +56,7 @@ public class JsonTaskSerializer {
 
     @Inject
     @VisibleForTesting
-    public JsonTaskSerializer(Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> modules) {
+    public JsonTaskSerializer(@Named(TaskModuleInjectionKeys.TASK_DTO) Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> modules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 

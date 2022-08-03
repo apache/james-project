@@ -83,7 +83,7 @@ However, to inject an interface into your extension, you will need additional in
 
 To to so:
 
- * 1. Given an interface defined in a additional JAR:
+ * 1. Given an interface defined in an additional JAR:
 
 ....
 public interface MyService {}

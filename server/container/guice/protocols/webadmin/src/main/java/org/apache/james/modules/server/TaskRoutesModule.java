@@ -29,6 +29,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.routes.TasksRoutes;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -48,9 +49,11 @@ public class TaskRoutesModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @Provides
     @Singleton
-    public DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter(
-            @Named(DTOModuleInjections.WEBADMIN_DTO) Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> modules) {
-
-        return new DTOConverter<>(modules);
+    public DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter(@Named(DTOModuleInjections.WEBADMIN_DTO) Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> modules,
+                                                                                                                                @Named(DTOModuleInjections.CUSTOM_WEBADMIN_DTO) Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> customModules) {
+        return new DTOConverter<>(ImmutableSet.<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>>builder()
+            .addAll(modules)
+            .addAll(customModules)
+            .build());
     }
 }
