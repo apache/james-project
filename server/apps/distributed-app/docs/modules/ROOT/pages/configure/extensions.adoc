@@ -1,11 +1,11 @@
 = Distributed James Server &mdash; extensions.properties
 :navtitle: extensions.properties
 
-This files enables an operator to define additional bindings used to instanciate others extensions
+This files enables an operator to define additional bindings used to instantiate others extensions
 
-*guice.extension.module*:  come separated list of fully qualified class name. These classes needs to implement Guice modules.
+*guice.extension.module*:  come separated list of fully qualified class name. These classes need to implement Guice modules.
 
-Here is an exemple of such a class :
+Here is an example of such a class :
 
 ....
 public class MyServiceModule extends AbstractModule {
@@ -24,5 +24,38 @@ guice.extension.module=com.project.MyServiceModule
 ....
 
 Enables to inject MyService into your extensions.
+
+
+*guice.extension.tasks*: come separated list of fully qualified class name.
+
+The extension can rely on the Task manager to supervise long-running task execution (progress, await, cancellation, scheduling...).
+These extensions need to implement Task extension modules.
+
+Here is an example of such a class :
+
+....
+public class RSpamDTaskExtensionModule implements TaskExtensionModule {
+
+    @Inject
+    public RSpamDTaskExtensionModule() {
+    }
+
+    @Override
+    public Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules() {
+        return Set.of(...);
+    }
+
+    @Override
+    public Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> taskAdditionalInformationDTOModules() {
+        return Set.of(...);
+    }
+}
+....
+
+Recording it in extensions.properties :
+
+....
+guice.extension.tasks=com.project.RSpamDTaskExtensionModule
+....
 
 Read xref:extending/index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.

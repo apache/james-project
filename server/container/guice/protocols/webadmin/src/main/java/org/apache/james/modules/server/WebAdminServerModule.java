@@ -23,9 +23,11 @@ import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURA
 
 import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Named;
 
@@ -34,7 +36,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.apache.james.server.task.json.TaskExtensionModule;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
+import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.utils.ClassName;
+import org.apache.james.utils.ExtensionConfiguration;
 import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
@@ -52,6 +59,7 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
@@ -115,6 +123,18 @@ public class WebAdminServerModule extends AbstractModule {
             .addAll(routesList)
             .addAll(customRoutes)
             .build();
+    }
+
+    @Provides
+    @Singleton
+    @Named(DTOModuleInjections.CUSTOM_WEBADMIN_DTO)
+    public Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> provideAdditionalDTOs(GuiceGenericLoader loader, ExtensionConfiguration extensionConfiguration) {
+        return extensionConfiguration.getTaskExtensions()
+            .stream()
+            .map(Throwing.function(loader.<TaskExtensionModule>withNamingSheme(NamingScheme.IDENTITY)::instantiate))
+            .map(TaskExtensionModule::taskAdditionalInformationDTOModules)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
     }
 
     @Provides

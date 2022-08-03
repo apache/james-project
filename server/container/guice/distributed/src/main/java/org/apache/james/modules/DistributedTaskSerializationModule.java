@@ -30,6 +30,7 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.mailbox.ReIndexingTaskSerializationModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.apache.james.server.task.json.TaskModuleInjectionKeys;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -100,8 +101,8 @@ public class DistributedTaskSerializationModule extends AbstractModule {
 
     @Named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME)
     @Provides
-    public Set<DTOModule<?, ? extends org.apache.james.json.DTO>> eventNestedTypes(Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO>> additionalInformationDTOModules,
-                                                                                   Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules) {
+    public Set<DTOModule<?, ? extends org.apache.james.json.DTO>> eventNestedTypes(@Named(TaskModuleInjectionKeys.ADDITIONAL_INFORMATION_DTO) Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> additionalInformationDTOModules,
+                                                                                   @Named(TaskModuleInjectionKeys.TASK_DTO) Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules) {
         return Sets.union(additionalInformationDTOModules, taskDTOModules);
     }
 }

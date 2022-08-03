@@ -17,9 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.server.task.json;
 
-public interface DTOModuleInjections {
-    String WEBADMIN_DTO = "webadmin-dto";
-    String CUSTOM_WEBADMIN_DTO = "custom-webadmin-dto";
+public interface TaskModuleInjectionKeys {
+
+    String ADDITIONAL_INFORMATION_DTO = "additional_information_dto";
+
+    String TASK_DTO = "task_dto";
+
 }
