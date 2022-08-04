@@ -122,10 +122,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailbox-plugin-spamassassin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-managedsieve</artifactId>
         </dependency>
         <dependency>
