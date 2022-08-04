@@ -73,7 +73,6 @@ import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
@@ -155,8 +154,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new CassandraMailboxModule(),
         new CassandraDeletedMessageVaultModule(),
         new MailboxModule(),
-        new TikaMailboxModule(),
-        new SpamAssassinListenerModule());
+        new TikaMailboxModule());
 
     public static final Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
         CASSANDRA_SERVER_CORE_MODULE,

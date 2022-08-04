@@ -57,7 +57,6 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -97,8 +96,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new ManageSieveServerModule(),
         new POP3ServerModule(),
         new ProtocolHandlerModule(),
-        new SMTPServerModule(),
-        new SpamAssassinListenerModule());
+        new SMTPServerModule());
 
     public static final Module JMAP = Modules.combine(
         new JmapEventBusModule(),

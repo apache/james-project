@@ -51,7 +51,6 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -91,8 +90,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new SieveJPARepositoryModules(),
         new DefaultEventModule(),
         new TaskManagerModule(),
-        new MemoryDeadLetterModule(),
-        new SpamAssassinListenerModule());
+        new MemoryDeadLetterModule());
 
     private static final Module JPA_MODULE_AGGREGATE = Modules.combine(
         new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);

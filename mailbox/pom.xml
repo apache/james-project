@@ -58,8 +58,6 @@
         <module>plugin/quota-search-opensearch</module>
         <module>plugin/quota-search-scanning</module>
 
-        <module>plugin/spamassassin</module>
-
         <module>scanning-search</module>
         <module>spring</module>
         <module>store</module>
