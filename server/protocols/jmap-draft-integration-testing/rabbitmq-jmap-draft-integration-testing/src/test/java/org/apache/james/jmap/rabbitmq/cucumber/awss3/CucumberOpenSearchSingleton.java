@@ -20,7 +20,7 @@ package org.apache.james.jmap.rabbitmq.cucumber.awss3;
 
 import org.apache.james.DockerElasticSearchRule;
 
-class CucumberElasticSearchSingleton {
+class CucumberOpenSearchSingleton {
 
     static final DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
 
