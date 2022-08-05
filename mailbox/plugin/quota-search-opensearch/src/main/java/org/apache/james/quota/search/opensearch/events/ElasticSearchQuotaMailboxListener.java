@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.opensearch.DocumentId;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
@@ -43,13 +43,13 @@ public class ElasticSearchQuotaMailboxListener implements EventListener.Reactive
 
     private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();
 
-    private final ElasticSearchIndexer indexer;
+    private final OpenSearchIndexer indexer;
     private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
     private final RoutingKey.Factory<Username> routingKeyFactory;
     private final QuotaRootResolver quotaRootResolver;
 
     @Inject
-    public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
+    public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) OpenSearchIndexer indexer,
                                              QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson,
                                              RoutingKey.Factory<Username> routingKeyFactory, QuotaRootResolver quotaRootResolver) {
         this.indexer = indexer;

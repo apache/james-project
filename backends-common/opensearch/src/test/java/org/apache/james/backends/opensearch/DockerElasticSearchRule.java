@@ -23,27 +23,27 @@ import org.junit.rules.ExternalResource;
 
 public class DockerElasticSearchRule extends ExternalResource {
 
-    private final DockerElasticSearch dockerElasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private final DockerOpenSearch dockerOpenSearch = DockerElasticSearchSingleton.INSTANCE;
 
     @Override
     protected void before() {
-        dockerElasticSearch.start();
+        dockerOpenSearch.start();
     }
 
     @Override
     protected void after() {
-        dockerElasticSearch.cleanUpData();
+        dockerOpenSearch.cleanUpData();
     }
 
     public ClientProvider clientProvider() {
-        return dockerElasticSearch.clientProvider();
+        return dockerOpenSearch.clientProvider();
     }
 
     public void awaitForElasticSearch() {
-        dockerElasticSearch.flushIndices();
+        dockerOpenSearch.flushIndices();
     }
 
-    public DockerElasticSearch getDockerElasticSearch() {
-        return dockerElasticSearch;
+    public DockerOpenSearch getDockerElasticSearch() {
+        return dockerOpenSearch;
     }
 }

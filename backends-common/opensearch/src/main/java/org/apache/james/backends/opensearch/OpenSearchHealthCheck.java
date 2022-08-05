@@ -36,14 +36,14 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
-public class ElasticSearchHealthCheck implements HealthCheck {
+public class OpenSearchHealthCheck implements HealthCheck {
     private static final ComponentName COMPONENT_NAME = new ComponentName("ElasticSearch Backend");
 
     private final Set<IndexName> indexNames;
     private final ReactorElasticSearchClient client;
 
     @Inject
-    ElasticSearchHealthCheck(ReactorElasticSearchClient client, Set<IndexName> indexNames) {
+    OpenSearchHealthCheck(ReactorElasticSearchClient client, Set<IndexName> indexNames) {
         this.client = client;
         this.indexNames = indexNames;
     }

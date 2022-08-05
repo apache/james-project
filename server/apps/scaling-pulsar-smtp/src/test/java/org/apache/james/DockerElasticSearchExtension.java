@@ -22,16 +22,16 @@ package org.apache.james;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
 
 public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
 
-    private final DockerElasticSearch dockerElasticSearch;
+    private final DockerOpenSearch dockerOpenSearch;
     private Optional<Duration> requestTimeout;
 
     public DockerElasticSearchExtension() {
@@ -43,8 +43,8 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
         return this;
     }
 
-    public DockerElasticSearchExtension(DockerElasticSearch dockerElasticSearch) {
-        this.dockerElasticSearch = dockerElasticSearch;
+    public DockerElasticSearchExtension(DockerOpenSearch dockerOpenSearch) {
+        this.dockerOpenSearch = dockerOpenSearch;
         requestTimeout = Optional.empty();
     }
 
@@ -67,7 +67,7 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
 
     @Override
     public Module getModule() {
-        return binder -> binder.bind(ElasticSearchConfiguration.class)
+        return binder -> binder.bind(OpenSearchConfiguration.class)
             .toInstance(getElasticSearchConfigurationForDocker());
     }
 
@@ -76,14 +76,14 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
         getDockerES().flushIndices();
     }
 
-    private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-        return ElasticSearchConfiguration.builder()
+    private OpenSearchConfiguration getElasticSearchConfigurationForDocker() {
+        return OpenSearchConfiguration.builder()
             .addHost(getDockerES().getHttpHost())
             .requestTimeout(requestTimeout)
             .build();
     }
 
-    public DockerElasticSearch getDockerES() {
-        return dockerElasticSearch;
+    public DockerOpenSearch getDockerES() {
+        return dockerOpenSearch;
     }
 }

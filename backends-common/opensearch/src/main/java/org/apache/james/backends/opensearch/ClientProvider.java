@@ -61,9 +61,9 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         private static final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
         private static final HostnameVerifier ACCEPT_ANY_HOSTNAME = (hostname, sslSession) -> true;
 
-        private final ElasticSearchConfiguration configuration;
+        private final OpenSearchConfiguration configuration;
 
-        private HttpAsyncClientConfigurer(ElasticSearchConfiguration configuration) {
+        private HttpAsyncClientConfigurer(OpenSearchConfiguration configuration) {
             this.configuration = configuration;
         }
 
@@ -81,7 +81,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         }
 
         private void configureHostScheme(HttpAsyncClientBuilder builder) {
-            ElasticSearchConfiguration.HostScheme scheme = configuration.getHostScheme();
+            OpenSearchConfiguration.HostScheme scheme = configuration.getHostScheme();
 
             switch (scheme) {
                 case HTTP:
@@ -114,7 +114,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
             SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 
-            ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy strategy = configuration.getSslConfiguration()
+            OpenSearchConfiguration.SSLConfiguration.SSLValidationStrategy strategy = configuration.getSslConfiguration()
                 .getStrategy();
 
             switch (strategy) {
@@ -133,7 +133,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         }
 
         private HostnameVerifier hostnameVerifier() {
-            ElasticSearchConfiguration.SSLConfiguration.HostNameVerifier hostnameVerifier = configuration.getSslConfiguration()
+            OpenSearchConfiguration.SSLConfiguration.HostNameVerifier hostnameVerifier = configuration.getSslConfiguration()
                 .getHostNameVerifier();
 
             switch (hostnameVerifier) {
@@ -158,7 +158,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         private SSLContextBuilder applyTrustStore(SSLContextBuilder sslContextBuilder) throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException {
 
-            ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore trustStore = configuration.getSslConfiguration()
+            OpenSearchConfiguration.SSLConfiguration.SSLTrustStore trustStore = configuration.getSslConfiguration()
                 .getTrustStore()
                 .orElseThrow(() -> new IllegalStateException("SSLTrustStore cannot to be empty"));
 
@@ -180,20 +180,20 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
-    private final ElasticSearchConfiguration configuration;
+    private final OpenSearchConfiguration configuration;
     private final RestHighLevelClient elasticSearchRestHighLevelClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorElasticSearchClient client;
 
     @Inject
-    public ClientProvider(ElasticSearchConfiguration configuration) {
+    public ClientProvider(OpenSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
         this.elasticSearchRestHighLevelClient = connect(configuration);
         this.client = new ReactorElasticSearchClient(this.elasticSearchRestHighLevelClient);
     }
 
-    private RestHighLevelClient connect(ElasticSearchConfiguration configuration) {
+    private RestHighLevelClient connect(OpenSearchConfiguration configuration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
@@ -204,7 +204,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) {
+    private RestHighLevelClient connectToCluster(OpenSearchConfiguration configuration) {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
         return new RestHighLevelClient(

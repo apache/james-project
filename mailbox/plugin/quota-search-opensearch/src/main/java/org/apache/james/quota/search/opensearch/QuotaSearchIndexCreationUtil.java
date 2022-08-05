@@ -22,9 +22,9 @@ package org.apache.james.quota.search.opensearch;
 import java.io.IOException;
 
 import org.apache.james.backends.opensearch.AliasName;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 
 public class QuotaSearchIndexCreationUtil {
@@ -33,7 +33,7 @@ public class QuotaSearchIndexCreationUtil {
                                        AliasName readAlias,
                                        AliasName writeAlias,
                                        IndexName indexName,
-                                       ElasticSearchConfiguration configuration) {
+                                       OpenSearchConfiguration configuration) {
         return new IndexCreationFactory(configuration)
             .useIndex(indexName)
             .addAlias(readAlias)
@@ -41,7 +41,7 @@ public class QuotaSearchIndexCreationUtil {
             .createIndexAndAliases(client, QuotaRatioMappingFactory.getMappingContent());
     }
 
-    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) throws IOException {
+    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, OpenSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,

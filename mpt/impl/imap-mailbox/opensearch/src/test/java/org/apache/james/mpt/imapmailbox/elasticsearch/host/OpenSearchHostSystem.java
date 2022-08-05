@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.time.ZoneId;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -62,29 +62,29 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-    private DockerElasticSearch dockerElasticSearch;
+    private DockerOpenSearch dockerOpenSearch;
     private StoreMailboxManager mailboxManager;
     private ReactorElasticSearchClient client;
 
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.dockerElasticSearch = DockerElasticSearchSingleton.INSTANCE;
-        dockerElasticSearch.start();
+        this.dockerOpenSearch = DockerElasticSearchSingleton.INSTANCE;
+        dockerOpenSearch.start();
         initFields();
     }
 
     @Override
     public void afterTest() throws IOException {
         client.close();
-        dockerElasticSearch.cleanUpData();
+        dockerOpenSearch.cleanUpData();
     }
 
     private void initFields() throws Exception {
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            dockerElasticSearch.clientProvider().get(),
-            ElasticSearchConfiguration.builder()
-                .addHost(dockerElasticSearch.getHttpHost())
+            dockerOpenSearch.clientProvider().get(),
+            OpenSearchConfiguration.builder()
+                .addHost(dockerOpenSearch.getHttpHost())
                 .build());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
@@ -99,7 +99,7 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
-                new ElasticSearchIndexer(client,
+                new OpenSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
@@ -140,6 +140,6 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     protected void await() {
-        dockerElasticSearch.flushIndices();
+        dockerOpenSearch.flushIndices();
     }
 }

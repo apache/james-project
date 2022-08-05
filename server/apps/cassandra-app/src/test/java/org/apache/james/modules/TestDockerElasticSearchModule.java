@@ -20,8 +20,8 @@
 package org.apache.james.modules;
 
 import org.apache.james.CleanupTasksPerformer;
-import org.apache.james.backends.opensearch.DockerElasticSearch;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -30,9 +30,9 @@ public class TestDockerElasticSearchModule extends AbstractModule {
 
     private static class ESContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
 
-        private final DockerElasticSearch elasticSearch;
+        private final DockerOpenSearch elasticSearch;
 
-        private ESContainerCleanUp(DockerElasticSearch elasticSearch) {
+        private ESContainerCleanUp(DockerOpenSearch elasticSearch) {
             this.elasticSearch = elasticSearch;
         }
 
@@ -44,15 +44,15 @@ public class TestDockerElasticSearchModule extends AbstractModule {
         }
     }
 
-    private final DockerElasticSearch elasticSearch;
+    private final DockerOpenSearch elasticSearch;
 
-    public TestDockerElasticSearchModule(DockerElasticSearch elasticSearch) {
+    public TestDockerElasticSearchModule(DockerOpenSearch elasticSearch) {
         this.elasticSearch = elasticSearch;
     }
 
     @Override
     protected void configure() {
-        bind(ElasticSearchConfiguration.class).toInstance(elasticSearch.configuration());
+        bind(OpenSearchConfiguration.class).toInstance(elasticSearch.configuration());
         Multibinder.newSetBinder(binder(), CleanupTasksPerformer.CleanupTask.class)
             .addBinding()
             .toInstance(new ESContainerCleanUp(elasticSearch));

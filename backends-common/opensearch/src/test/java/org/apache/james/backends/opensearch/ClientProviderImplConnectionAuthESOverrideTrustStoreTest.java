@@ -21,8 +21,8 @@ package org.apache.james.backends.opensearch;
 
 import java.util.Optional;
 
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements ClientProviderImplConnectionContract {
@@ -31,15 +31,15 @@ public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements
     private static final String TRUST_STORE_FILE_PATH = "src/test/resources/auth-es/server.jks";
 
     @RegisterExtension
-    static ElasticSearchClusterExtension extension = new ElasticSearchClusterExtension(new ElasticSearchClusterExtension.ElasticSearchCluster(
+    static OpenSearchClusterExtension extension = new OpenSearchClusterExtension(new OpenSearchClusterExtension.OpenSearchCluster(
         DockerAuthElasticSearchSingleton.INSTANCE,
-        new DockerElasticSearch.WithAuth()));
+        new DockerOpenSearch.WithAuth()));
 
     @Override
-    public ElasticSearchConfiguration.Builder configurationBuilder() {
-        return ElasticSearchConfiguration.builder()
-            .credential(Optional.of(DockerElasticSearch.WithAuth.DEFAULT_CREDENTIAL))
-            .hostScheme(Optional.of(ElasticSearchConfiguration.HostScheme.HTTPS))
+    public OpenSearchConfiguration.Builder configurationBuilder() {
+        return OpenSearchConfiguration.builder()
+            .credential(Optional.of(DockerOpenSearch.WithAuth.DEFAULT_CREDENTIAL))
+            .hostScheme(Optional.of(OpenSearchConfiguration.HostScheme.HTTPS))
             .sslTrustConfiguration(SSLConfiguration.builder()
                 .strategyOverride(SSLTrustStore.of(TRUST_STORE_FILE_PATH, TRUST_STORE_PASSWORD))
                 .acceptAnyHostNameVerifier()

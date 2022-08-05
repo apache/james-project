@@ -42,7 +42,7 @@ import javax.inject.Named;
 import javax.mail.Flags;
 
 import org.apache.james.backends.opensearch.DocumentId;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.backends.opensearch.UpdatedRepresentation;
 import org.apache.james.events.Group;
@@ -93,7 +93,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private static final ImmutableList<String> MESSAGE_ID_FIELD = ImmutableList.of(MESSAGE_ID);
     private static final ImmutableList<String> UID_FIELD = ImmutableList.of(UID);
 
-    private final ElasticSearchIndexer elasticSearchIndexer;
+    private final OpenSearchIndexer openSearchIndexer;
     private final ElasticSearchSearcher searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
     private final RoutingKey.Factory<MailboxId> routingKeyFactory;
@@ -102,11 +102,11 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     @Inject
     public ElasticSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
                                                     Set<SearchOverride> searchOverrides,
-                                                    @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX) ElasticSearchIndexer indexer,
+                                                    @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX) OpenSearchIndexer indexer,
                                                     ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson,
                                                     SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory) {
         super(factory, searchOverrides, sessionProvider);
-        this.elasticSearchIndexer = indexer;
+        this.openSearchIndexer = indexer;
         this.messageToElasticSearchJson = messageToElasticSearchJson;
         this.searcher = searcher;
         this.routingKeyFactory = routingKeyFactory;
@@ -164,7 +164,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         DocumentId id = indexIdFor(mailbox.getMailboxId(), message.getUid());
 
         return generateIndexedJson(mailbox, message, session)
-            .flatMap(jsonContent -> elasticSearchIndexer.index(id, jsonContent, from))
+            .flatMap(jsonContent -> openSearchIndexer.index(id, jsonContent, from))
             .then();
     }
 
@@ -183,7 +183,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public Mono<Void> delete(MailboxSession session, MailboxId mailboxId, Collection<MessageUid> expungedUids) {
-        return elasticSearchIndexer
+        return openSearchIndexer
             .delete(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailboxId, uid))
                 .collect(toImmutableList()),
@@ -197,7 +197,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             MAILBOX_ID,
             mailboxId.serialize());
 
-        return elasticSearchIndexer
+        return openSearchIndexer
                 .deleteAllMatchingQuery(queryBuilder, routingKeyFactory.from(mailboxId));
     }
 
@@ -211,7 +211,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .sneakyThrow())
             .window(FLAGS_UPDATE_PROCESSING_WINDOW_SIZE)
             .concatMap(flux -> flux.collect(toImmutableList())
-                .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey)))
+                .flatMap(updates -> openSearchIndexer.update(updates, routingKey)))
             .then();
     }
 
@@ -236,7 +236,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
         RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
 
-        return elasticSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
+        return openSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
             .filter(GetResponse::isExists)
             .map(GetResponse::getSourceAsMap)
             .map(this::extractFlags);

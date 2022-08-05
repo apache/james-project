@@ -23,10 +23,10 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -51,7 +51,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
-    private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private final DockerOpenSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private ReactorElasticSearchClient client;
@@ -64,7 +64,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
 
             client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 elasticSearch.clientProvider().get(),
-                ElasticSearchConfiguration.builder()
+                OpenSearchConfiguration.builder()
                     .addHost(elasticSearch.getHttpHost())
                     .build());
 
@@ -77,7 +77,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
-                new ElasticSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+                new OpenSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
                 new QuotaRatioToElasticSearchJson(resources.getQuotaRootResolver()),
                 new UserRoutingKeyFactory(), resources.getQuotaRootResolver());
 

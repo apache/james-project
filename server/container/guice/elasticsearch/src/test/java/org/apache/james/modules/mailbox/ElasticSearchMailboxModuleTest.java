@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Set;
 
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.util.Host;
 import org.apache.james.utils.ExtendedClassLoader;
@@ -45,7 +45,7 @@ class ElasticSearchMailboxModuleTest {
 
         Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new ElasticSearchMailboxModule()
             .provideSearchOverrides(genericLoader,
-            ElasticSearchConfiguration.builder()
+            OpenSearchConfiguration.builder()
                 .addHost(Host.parseConfString("127.0.0.1", 9200))
                 .withSearchOverrides(ImmutableList.of(
                     "org.apache.james.modules.mailbox.SearchOverrideA",

@@ -40,17 +40,17 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
-public class ElasticSearchIndexer {
+public class OpenSearchIndexer {
     private static final int DEBUG_MAX_LENGTH_CONTENT = 1000;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchIndexer.class);
 
     private final ReactorElasticSearchClient client;
     private final AliasName aliasName;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
 
-    public ElasticSearchIndexer(ReactorElasticSearchClient client,
-                                WriteAliasName aliasName) {
+    public OpenSearchIndexer(ReactorElasticSearchClient client,
+                             WriteAliasName aliasName) {
         this.client = client;
         this.deleteByQueryPerformer = new DeleteByQueryPerformer(client, aliasName);
         this.aliasName = aliasName;

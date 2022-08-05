@@ -19,8 +19,8 @@
 
 package org.apache.james.backends.opensearch;
 
-import static org.apache.james.backends.opensearch.DockerElasticSearch.Fixture.ES_HTTP_PORT;
-import static org.apache.james.backends.opensearch.DockerElasticSearch.Fixture.ES_MEMORY;
+import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.ES_HTTP_PORT;
+import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.ES_MEMORY;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -37,8 +37,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.HttpStatus;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.Credential;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.HostScheme;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.Credential;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.HostScheme;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
@@ -59,9 +59,9 @@ import feign.Response;
 import feign.auth.BasicAuthRequestInterceptor;
 import feign.slf4j.Slf4jLogger;
 
-public interface DockerElasticSearch {
+public interface DockerOpenSearch {
 
-    interface ElasticSearchAPI {
+    interface OpenSearchAPI {
 
         class Builder {
             private static final HostnameVerifier ACCEPT_ANY_HOST = (hostname, sslSession) -> true;
@@ -86,7 +86,7 @@ public interface DockerElasticSearch {
             public Builder(URL esURL) {
                 this.esURL = esURL;
                 this.requestBuilder = Feign.builder()
-                    .logger(new Slf4jLogger(ElasticSearchAPI.class))
+                    .logger(new Slf4jLogger(OpenSearchAPI.class))
                     .logLevel(Logger.Level.FULL);
             }
 
@@ -108,8 +108,8 @@ public interface DockerElasticSearch {
                 return this;
             }
 
-            public ElasticSearchAPI build() {
-                return requestBuilder.target(ElasticSearchAPI.class, esURL.toString());
+            public OpenSearchAPI build() {
+                return requestBuilder.target(OpenSearchAPI.class, esURL.toString());
             }
         }
 
@@ -129,7 +129,7 @@ public interface DockerElasticSearch {
         int ES_MEMORY = 620;
     }
 
-    class NoAuth implements DockerElasticSearch {
+    class NoAuth implements DockerOpenSearch {
 
         static DockerContainer defaultContainer(String imageName) {
             return DockerContainer.fromName(imageName)
@@ -194,7 +194,7 @@ public interface DockerElasticSearch {
         }
     }
 
-    class WithAuth implements DockerElasticSearch {
+    class WithAuth implements DockerOpenSearch {
 
         private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(WithAuth.class);
 
@@ -203,7 +203,7 @@ public interface DockerElasticSearch {
         public static final Credential DEFAULT_CREDENTIAL =
             Credential.of(DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
-        private final DockerElasticSearch.NoAuth elasticSearch;
+        private final DockerOpenSearch.NoAuth elasticSearch;
         private final DockerContainer nginx;
         private final Network network;
 
@@ -213,8 +213,8 @@ public interface DockerElasticSearch {
 
         WithAuth(String imageName) {
             this.network = Network.newNetwork();
-            this.elasticSearch = new DockerElasticSearch.NoAuth(
-                DockerElasticSearch.NoAuth
+            this.elasticSearch = new DockerOpenSearch.NoAuth(
+                DockerOpenSearch.NoAuth
                     .defaultContainer(imageName)
                     .withLogConsumer(frame -> LOGGER.debug("[ElasticSearch] " + frame.getUtf8String()))
                     .withNetwork(network)
@@ -253,9 +253,9 @@ public interface DockerElasticSearch {
         }
 
         @Override
-        public ElasticSearchAPI esAPI() {
+        public OpenSearchAPI esAPI() {
             try {
-                return ElasticSearchAPI.builder(getUrl())
+                return OpenSearchAPI.builder(getUrl())
                     .credential(DEFAULT_CREDENTIAL)
                     .disableSSLValidation()
                     .build();
@@ -274,7 +274,7 @@ public interface DockerElasticSearch {
         }
 
         @Override
-        public ElasticSearchConfiguration configuration(Optional<Duration> requestTimeout) {
+        public OpenSearchConfiguration configuration(Optional<Duration> requestTimeout) {
             return configurationBuilder(requestTimeout)
                 .hostScheme(Optional.of(HostScheme.HTTPS))
                 .build();
@@ -334,18 +334,18 @@ public interface DockerElasticSearch {
         }
     }
 
-    default ElasticSearchConfiguration configuration(Optional<Duration> requestTimeout) {
+    default OpenSearchConfiguration configuration(Optional<Duration> requestTimeout) {
         return configurationBuilder(requestTimeout)
             .build();
     }
 
-    default ElasticSearchConfiguration.Builder configurationBuilder(Optional<Duration> requestTimeout) {
-        return ElasticSearchConfiguration.builder()
+    default OpenSearchConfiguration.Builder configurationBuilder(Optional<Duration> requestTimeout) {
+        return OpenSearchConfiguration.builder()
             .addHost(getHttpHost())
             .requestTimeout(requestTimeout);
     }
 
-    default ElasticSearchConfiguration configuration() {
+    default OpenSearchConfiguration configuration() {
         return configuration(Optional.empty());
     }
 
@@ -357,8 +357,8 @@ public interface DockerElasticSearch {
         return new ClientProvider(configuration(Optional.of(requestTimeout)));
     }
 
-    default ElasticSearchAPI esAPI() {
-        return ElasticSearchAPI.builder(getUrl())
+    default OpenSearchAPI esAPI() {
+        return OpenSearchAPI.builder(getUrl())
             .build();
     }
 }

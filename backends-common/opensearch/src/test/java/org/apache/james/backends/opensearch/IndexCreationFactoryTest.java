@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.james.backends.opensearch.IndexCreationFactory.IndexCreationCustomElement;
-import org.opensearch.OpenSearchStatusException;
-import org.opensearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.OpenSearchStatusException;
+import org.opensearch.common.xcontent.XContentBuilder;
 
 class IndexCreationFactoryTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
@@ -109,12 +109,12 @@ class IndexCreationFactoryTest {
 
     @Test
     void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);
 
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);
@@ -123,14 +123,14 @@ class IndexCreationFactoryTest {
     @Test
     void useIndexShouldThrowWhenNull() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void customAnalyzerShouldNotThrowWhenValidAnalyzer() {
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .customAnalyzers(IndexCreationCustomElement.from("{" +
@@ -152,7 +152,7 @@ class IndexCreationFactoryTest {
     @Test
     void customAnalyzerShouldThrowWhenInValidAnalyzer() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
                 .customAnalyzers(IndexCreationCustomElement.from("{" +
@@ -167,7 +167,7 @@ class IndexCreationFactoryTest {
 
     @Test
     void customTokenizersShouldNotThrowWhenValidTokenizers() {
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .customTokenizers(IndexCreationCustomElement.from("{" +
@@ -182,7 +182,7 @@ class IndexCreationFactoryTest {
     @Test
     void customTokenizersShouldThrowWhenInValidTokenizers() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
                 .customTokenizers(IndexCreationCustomElement.from("{" +
@@ -197,7 +197,7 @@ class IndexCreationFactoryTest {
 
     @Test
     void createIndexShouldNotThrowWhenProvidedValidCustomAnalyzerAndTokenizer() {
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .customAnalyzers(IndexCreationCustomElement.from("{" +
@@ -219,7 +219,7 @@ class IndexCreationFactoryTest {
 
     @Test
     void customIndexSettingShouldNotThrowWhenValidSetting() throws IOException {
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client, Optional.of(getValidIndexSetting()), Optional.empty());
@@ -228,7 +228,7 @@ class IndexCreationFactoryTest {
     @Test
     void customIndexSettingShouldThrowWhenInvalidSetting() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+            new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)
                 .addAlias(ALIAS_NAME)
                 .createIndexAndAliases(client, Optional.of(getInvalidIndexSetting()), Optional.empty()))

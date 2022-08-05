@@ -28,8 +28,8 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
@@ -56,12 +56,12 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     static class ElasticSearchQuotaIndexCreator implements Startable {
-        private final ElasticSearchConfiguration configuration;
+        private final OpenSearchConfiguration configuration;
         private final ElasticSearchQuotaConfiguration quotaConfiguration;
         private final ReactorElasticSearchClient client;
 
         @Inject
-        ElasticSearchQuotaIndexCreator(ElasticSearchConfiguration configuration,
+        ElasticSearchQuotaIndexCreator(OpenSearchConfiguration configuration,
                                        ElasticSearchQuotaConfiguration quotaConfiguration,
                                        ReactorElasticSearchClient client) {
             this.configuration = configuration;
@@ -112,7 +112,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
                                                              ElasticSearchQuotaConfiguration configuration,
                                                              QuotaRootResolver quotaRootResolver) {
         return new ElasticSearchQuotaMailboxListener(
-            new ElasticSearchIndexer(client,
+            new OpenSearchIndexer(client,
                 configuration.getWriteAliasQuotaRatioName()),
                 new QuotaRatioToElasticSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);

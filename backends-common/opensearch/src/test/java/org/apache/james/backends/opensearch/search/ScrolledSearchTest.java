@@ -25,13 +25,17 @@ import static org.awaitility.Awaitility.await;
 import java.io.IOException;
 
 import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.RequestOptions;
@@ -39,10 +43,6 @@ import org.opensearch.common.unit.TimeValue;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ScrolledSearchTest {
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
@@ -60,7 +60,7 @@ class ScrolledSearchTest {
     @BeforeEach
     void setUp() {
         client = elasticSearch.getDockerElasticSearch().clientProvider().get();
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);

@@ -23,9 +23,9 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
 import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
-    private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private final DockerOpenSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
     private ReactorElasticSearchClient client;
 
     @Override
@@ -68,7 +68,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
-                new ElasticSearchIndexer(client,
+                new OpenSearchIndexer(client,
                     QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
                 new QuotaRatioToElasticSearchJson(resources.getQuotaRootResolver()),
                 new UserRoutingKeyFactory(), resources.getQuotaRootResolver());
