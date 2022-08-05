@@ -23,6 +23,8 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.queue.activemq.ActiveMQHealthCheck;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
 import org.apache.james.queue.activemq.EmbeddedActiveMQ;
 import org.apache.james.queue.api.MailQueue;
@@ -33,6 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class ActiveMQQueueModule extends AbstractModule {
 
@@ -42,6 +45,8 @@ public class ActiveMQQueueModule extends AbstractModule {
         bind(KahaDBPersistenceAdapter.class).in(Scopes.SINGLETON);
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
         bind(ActiveMQMailQueueFactory.class).in(Scopes.SINGLETON);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ActiveMQHealthCheck.class);
     }
     
     @Provides
