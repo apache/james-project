@@ -79,7 +79,7 @@ class OpenSearchConfigurationTest {
         @Test
         void getSSLConfigurationShouldReturnDefaultValueWhenEmpty() throws Exception {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
-            configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+            configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
             assertThat(OpenSearchConfiguration.fromProperties(configuration)
                     .getSslConfiguration())
@@ -89,15 +89,15 @@ class OpenSearchConfigurationTest {
         @Test
         void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
-            configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+            configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
             String trustStorePath = "src/test/resources/auth-es/server.jks";
             String trustStorePassword = "secret";
 
-            configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
-            configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", trustStorePath);
-            configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
-            configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
+            configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
+            configuration.addProperty("opensearch.hostScheme.https.trustStorePath", trustStorePath);
+            configuration.addProperty("opensearch.hostScheme.https.trustStorePassword", trustStorePassword);
+            configuration.addProperty("opensearch.hostScheme.https.hostNameVerifier", "default");
 
             assertThat(OpenSearchConfiguration.fromProperties(configuration)
                     .getSslConfiguration())
@@ -113,9 +113,9 @@ class OpenSearchConfigurationTest {
             @Test
             void getSSLConfigurationShouldAcceptCaseInsensitiveStrategy() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "DEfault");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "DEfault");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -125,9 +125,9 @@ class OpenSearchConfigurationTest {
             @Test
             void fromPropertiesShouldThrowWhenInvalidStrategy() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "invalid");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "invalid");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -141,9 +141,9 @@ class OpenSearchConfigurationTest {
             @Test
             void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "DEFAULT");
+                configuration.addProperty("opensearch.hostScheme.https.hostNameVerifier", "DEFAULT");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -156,9 +156,9 @@ class OpenSearchConfigurationTest {
             @Test
             void getSSLConfigurationShouldAcceptCaseInsensitiveVerifier() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "Accept_Any_Hostname");
+                configuration.addProperty("opensearch.hostScheme.https.hostNameVerifier", "Accept_Any_Hostname");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -171,9 +171,9 @@ class OpenSearchConfigurationTest {
             @Test
             void fromPropertiesShouldThrowWhenInvalidVerifier() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "invalid");
+                configuration.addProperty("opensearch.hostScheme.https.hostNameVerifier", "invalid");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -187,9 +187,9 @@ class OpenSearchConfigurationTest {
             @Test
             void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "default");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "default");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -203,9 +203,9 @@ class OpenSearchConfigurationTest {
             @Test
             void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "ignore");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "ignore");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -222,35 +222,35 @@ class OpenSearchConfigurationTest {
             @Test
             void fromPropertiesShouldThrowWhenOnlyTrustStorePathProvided() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("elasticsearch.hostScheme.https.trustStorePassword cannot be null when elasticsearch.hostScheme.https.trustStorePath is specified");
+                    .hasMessage("opensearch.hostScheme.https.trustStorePassword cannot be null when opensearch.hostScheme.https.trustStorePath is specified");
             }
 
             @Test
             void fromPropertiesShouldThrowWhenOnlyTrustStorePasswordProvided() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "secret");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePassword", "secret");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("elasticsearch.hostScheme.https.trustStorePath cannot be null when elasticsearch.hostScheme.https.trustStorePassword is specified");
+                    .hasMessage("opensearch.hostScheme.https.trustStorePath cannot be null when opensearch.hostScheme.https.trustStorePassword is specified");
             }
 
             @Test
             void fromPropertiesShouldThrowWhenTrustStoreIsNotProvided() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -260,29 +260,29 @@ class OpenSearchConfigurationTest {
             @Test
             void fromPropertiesShouldThrowWhenTrustStorePathDoesntExist() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "password");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePassword", "password");
 
                 assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("the file '/home/james/ServerTrustStore.jks' from property 'elasticsearch.hostScheme.https.trustStorePath' doesn't exist");
+                    .hasMessage("the file '/home/james/ServerTrustStore.jks' from property 'opensearch.hostScheme.https.trustStorePath' doesn't exist");
             }
 
             @Test
             void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+                configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
                 String trustStorePath = "src/test/resources/auth-es/server.jks";
                 String trustStorePassword = "secret";
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", trustStorePath);
-                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
-                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
+                configuration.addProperty("opensearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePath", trustStorePath);
+                configuration.addProperty("opensearch.hostScheme.https.trustStorePassword", trustStorePassword);
+                configuration.addProperty("opensearch.hostScheme.https.hostNameVerifier", "default");
 
                 assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
@@ -304,8 +304,8 @@ class OpenSearchConfigurationTest {
     void getNbReplicaShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
-        configuration.addProperty("elasticsearch.nb.replica", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.nb.replica", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration elasticSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -316,7 +316,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getNbReplicaShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -328,8 +328,8 @@ class OpenSearchConfigurationTest {
     void getWaitForActiveShardsShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
-        configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.waitForActiveShards", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -341,8 +341,8 @@ class OpenSearchConfigurationTest {
     void getWaitForActiveShardsShouldReturnConfiguredValueWhenZero() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 0;
-        configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.waitForActiveShards", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -353,7 +353,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getWaitForActiveShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         int expectedValue = 1;
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
@@ -366,8 +366,8 @@ class OpenSearchConfigurationTest {
     void getNbShardsShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
-        configuration.addProperty("elasticsearch.nb.shards", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.nb.shards", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -378,7 +378,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getNbShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -390,8 +390,8 @@ class OpenSearchConfigurationTest {
     void getMaxRetriesShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
-        configuration.addProperty("elasticsearch.retryConnection.maxRetries", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.retryConnection.maxRetries", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -402,7 +402,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getMaxRetriesShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -414,8 +414,8 @@ class OpenSearchConfigurationTest {
     void getMinDelayShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
-        configuration.addProperty("elasticsearch.retryConnection.minDelay", value);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.retryConnection.minDelay", value);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -426,7 +426,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getMinDelayShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -438,7 +438,7 @@ class OpenSearchConfigurationTest {
     void getHostsShouldReturnConfiguredHostsWhenNoPort() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
-        configuration.addProperty("elasticsearch.hosts", hostname);
+        configuration.addProperty("opensearch.hosts", hostname);
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -453,7 +453,7 @@ class OpenSearchConfigurationTest {
         int port = 2154;
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
-        configuration.addProperty("elasticsearch.hosts", hostname + "," + hostname2 + ":" + port);
+        configuration.addProperty("opensearch.hosts", hostname + "," + hostname2 + ":" + port);
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -467,7 +467,7 @@ class OpenSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         int port = 2154;
-        configuration.addProperty("elasticsearch.hosts", hostname + ":" + port);
+        configuration.addProperty("opensearch.hosts", hostname + ":" + port);
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -479,9 +479,9 @@ class OpenSearchConfigurationTest {
     void getHostsShouldReturnConfiguredMasterHost() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
-        configuration.addProperty("elasticsearch.masterHost", hostname);
+        configuration.addProperty("opensearch.masterHost", hostname);
         int port = 9200;
-        configuration.addProperty("elasticsearch.port", port);
+        configuration.addProperty("opensearch.port", port);
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -497,9 +497,9 @@ class OpenSearchConfigurationTest {
                 Optional.empty(),
                 ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage("You should specify either (" + OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
-                " and " + OpenSearchConfiguration.ELASTICSEARCH_PORT +
-                ") or " + OpenSearchConfiguration.ELASTICSEARCH_HOSTS);
+            .hasMessage("You should specify either (" + OpenSearchConfiguration.OPENSEARCH_MASTER_HOST +
+                " and " + OpenSearchConfiguration.OPENSEARCH_PORT +
+                ") or " + OpenSearchConfiguration.OPENSEARCH_HOSTS);
     }
 
     @Test
@@ -510,7 +510,7 @@ class OpenSearchConfigurationTest {
                 Optional.of(9200),
                 ImmutableList.of("localhost:9200")))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage("You should choose between mono host set up and " + OpenSearchConfiguration.ELASTICSEARCH_HOSTS);
+            .hasMessage("You should choose between mono host set up and " + OpenSearchConfiguration.OPENSEARCH_HOSTS);
     }
 
     @Test
@@ -521,8 +521,8 @@ class OpenSearchConfigurationTest {
                 Optional.empty(),
                 ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage(OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
-                " and " + OpenSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
+            .hasMessage(OpenSearchConfiguration.OPENSEARCH_MASTER_HOST +
+                " and " + OpenSearchConfiguration.OPENSEARCH_PORT + " should be specified together");
     }
 
     @Test
@@ -533,8 +533,8 @@ class OpenSearchConfigurationTest {
             Optional.of(9200),
             ImmutableList.of()))
         .isInstanceOf(ConfigurationException.class)
-        .hasMessage(OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST + " and " +
-            OpenSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
+        .hasMessage(OpenSearchConfiguration.OPENSEARCH_MASTER_HOST + " and " +
+            OpenSearchConfiguration.OPENSEARCH_PORT + " should be specified together");
     }
 
     @Test
@@ -588,12 +588,12 @@ class OpenSearchConfigurationTest {
     @Test
     void getCredentialShouldReturnConfiguredValue() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         String user = "johndoe";
         String password = "secret";
-        configuration.addProperty("elasticsearch.user", user);
-        configuration.addProperty("elasticsearch.password", password);
+        configuration.addProperty("opensearch.user", user);
+        configuration.addProperty("opensearch.password", password);
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -604,7 +604,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getCredentialShouldReturnEmptyWhenNotConfigured() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -615,9 +615,9 @@ class OpenSearchConfigurationTest {
     @Test
     void fromPropertiesShouldThrowWhenOnlyUsername() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        configuration.addProperty("elasticsearch.user", "username");
+        configuration.addProperty("opensearch.user", "username");
 
         assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(NullPointerException.class)
@@ -627,9 +627,9 @@ class OpenSearchConfigurationTest {
     @Test
     void fromPropertiesShouldThrowWhenOnlyPassword() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        configuration.addProperty("elasticsearch.password", "password");
+        configuration.addProperty("opensearch.password", "password");
 
         assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(NullPointerException.class)
@@ -639,9 +639,9 @@ class OpenSearchConfigurationTest {
     @Test
     void getHostSchemeShouldReturnConfiguredValue() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        configuration.addProperty("elasticsearch.hostScheme", "https");
+        configuration.addProperty("opensearch.hostScheme", "https");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -652,9 +652,9 @@ class OpenSearchConfigurationTest {
     @Test
     void getHostSchemeShouldBeCaseInsensitive() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        configuration.addProperty("elasticsearch.hostScheme", "HTTPs");
+        configuration.addProperty("opensearch.hostScheme", "HTTPs");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -665,7 +665,7 @@ class OpenSearchConfigurationTest {
     @Test
     void getHostSchemeShouldReturnHttpWhenNotConfigured() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
@@ -676,9 +676,9 @@ class OpenSearchConfigurationTest {
     @Test
     void fromPropertiesShouldThrowWhenInvalidValue() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        configuration.addProperty("elasticsearch.hostScheme", "invalid-protocol");
+        configuration.addProperty("opensearch.hostScheme", "invalid-protocol");
 
         assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(IllegalArgumentException.class)
