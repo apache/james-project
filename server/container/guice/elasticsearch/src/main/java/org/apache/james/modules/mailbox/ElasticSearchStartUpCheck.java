@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.opensearch.Version;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 public class ElasticSearchStartUpCheck implements StartUpCheck {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchConfiguration.class);
 
     private static final Version RECOMMENDED_ES_VERSION = Version.V_2_0_0;
     private static final String VERSION_CHECKING_ERROR_MESSAGE = "Error when checking ES version";

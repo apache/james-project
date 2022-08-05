@@ -42,7 +42,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
@@ -50,15 +50,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
-import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -73,6 +64,15 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
+import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
+import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -144,7 +144,7 @@ class MailboxesRoutesTest {
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
-                new ElasticSearchIndexer(client,
+                new OpenSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),

@@ -22,8 +22,8 @@ package org.apache.james.modules.mailbox;
 import java.util.Set;
 
 import org.apache.james.backends.opensearch.ClientProvider;
-import org.apache.james.backends.opensearch.ElasticSearchHealthCheck;
 import org.apache.james.backends.opensearch.IndexName;
+import org.apache.james.backends.opensearch.OpenSearchHealthCheck;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.opensearch.ElasticSearchMailboxConfiguration;
@@ -45,7 +45,7 @@ public class ElasticSearchClientModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()
-            .to(ElasticSearchHealthCheck.class);
+            .to(OpenSearchHealthCheck.class);
     }
 
     @Provides

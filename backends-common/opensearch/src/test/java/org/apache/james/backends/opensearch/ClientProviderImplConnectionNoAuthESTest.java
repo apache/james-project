@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ClientProviderImplConnectionNoAuthESTest implements ClientProviderImplConnectionContract {
 
     @RegisterExtension
-    static ElasticSearchClusterExtension extension = new ElasticSearchClusterExtension(new ElasticSearchClusterExtension.ElasticSearchCluster(
+    static OpenSearchClusterExtension extension = new OpenSearchClusterExtension(new OpenSearchClusterExtension.OpenSearchCluster(
         DockerElasticSearchSingleton.INSTANCE,
-        new DockerElasticSearch.NoAuth()));
+        new DockerOpenSearch.NoAuth()));
 }

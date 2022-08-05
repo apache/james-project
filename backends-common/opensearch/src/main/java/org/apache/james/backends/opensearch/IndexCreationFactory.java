@@ -312,7 +312,7 @@ public class IndexCreationFactory {
     public static final String SEARCH_ANALYZER = "search_analyzer";
 
     @Inject
-    public IndexCreationFactory(ElasticSearchConfiguration configuration) {
+    public IndexCreationFactory(OpenSearchConfiguration configuration) {
         this.nbShards = configuration.getNbShards();
         this.nbReplica = configuration.getNbReplica();
         this.waitForActiveShards = configuration.getWaitForActiveShards();

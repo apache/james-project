@@ -30,20 +30,20 @@ import java.io.IOException;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.action.get.GetResponse;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-class ElasticSearchIndexerTest {
+class OpenSearchIndexerTest {
     public static RoutingKey useDocumentId(DocumentId documentId) {
         return RoutingKey.fromString(documentId.asString());
     }
@@ -60,17 +60,17 @@ class ElasticSearchIndexerTest {
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
-    private ElasticSearchIndexer testee;
+    private OpenSearchIndexer testee;
     private ReactorElasticSearchClient client;
 
     @BeforeEach
     void setup() {
         client = elasticSearch.getDockerElasticSearch().clientProvider().get();
-        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+        new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);
-        testee = new ElasticSearchIndexer(client, ALIAS_NAME);
+        testee = new OpenSearchIndexer(client, ALIAS_NAME);
     }
 
     @AfterEach

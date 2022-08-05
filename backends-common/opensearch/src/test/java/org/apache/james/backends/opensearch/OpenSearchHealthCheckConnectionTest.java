@@ -28,23 +28,23 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableSet;
 
-class ElasticSearchHealthCheckConnectionTest {
+class OpenSearchHealthCheckConnectionTest {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
-    private ElasticSearchHealthCheck elasticSearchHealthCheck;
+    private OpenSearchHealthCheck openSearchHealthCheck;
 
     @BeforeEach
     void setUp() {
         ReactorElasticSearchClient client = elasticSearch.getDockerElasticSearch().clientProvider(REQUEST_TIMEOUT).get();
 
-        elasticSearchHealthCheck = new ElasticSearchHealthCheck(client, ImmutableSet.of());
+        openSearchHealthCheck = new OpenSearchHealthCheck(client, ImmutableSet.of());
     }
 
     @Test
     void checkShouldSucceedWhenElasticSearchIsRunning() {
-        assertThat(elasticSearchHealthCheck.check().block().isHealthy()).isTrue();
+        assertThat(openSearchHealthCheck.check().block().isHealthy()).isTrue();
     }
 
     @Test
@@ -53,7 +53,7 @@ class ElasticSearchHealthCheckConnectionTest {
         elasticSearch.getDockerElasticSearch().pause();
 
         try {
-            assertThat(elasticSearchHealthCheck.check().block().isUnHealthy()).isTrue();
+            assertThat(openSearchHealthCheck.check().block().isUnHealthy()).isTrue();
         } finally {
             elasticSearch.getDockerElasticSearch().unpause();
         }

@@ -21,21 +21,21 @@ package org.apache.james.backends.opensearch;
 
 import java.util.Optional;
 
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.HostScheme;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.HostScheme;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ClientProviderImplConnectionAuthESIgnoreSSLCheckTest implements ClientProviderImplConnectionContract {
 
     @RegisterExtension
-    static ElasticSearchClusterExtension extension = new ElasticSearchClusterExtension(new ElasticSearchClusterExtension.ElasticSearchCluster(
+    static OpenSearchClusterExtension extension = new OpenSearchClusterExtension(new OpenSearchClusterExtension.OpenSearchCluster(
         DockerAuthElasticSearchSingleton.INSTANCE,
-        new DockerElasticSearch.WithAuth()));
+        new DockerOpenSearch.WithAuth()));
 
     @Override
-    public ElasticSearchConfiguration.Builder configurationBuilder() {
-        return ElasticSearchConfiguration.builder()
-            .credential(Optional.of(DockerElasticSearch.WithAuth.DEFAULT_CREDENTIAL))
+    public OpenSearchConfiguration.Builder configurationBuilder() {
+        return OpenSearchConfiguration.builder()
+            .credential(Optional.of(DockerOpenSearch.WithAuth.DEFAULT_CREDENTIAL))
             .hostScheme(Optional.of(HostScheme.HTTPS))
             .sslTrustConfiguration(SSLConfiguration.builder()
                 .strategyIgnore()

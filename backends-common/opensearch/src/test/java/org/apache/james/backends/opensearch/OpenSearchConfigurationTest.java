@@ -27,10 +27,10 @@ import java.util.Optional;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.Credential;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.HostScheme;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.Credential;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.HostScheme;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class ElasticSearchConfigurationTest {
+class OpenSearchConfigurationTest {
 
     @Nested
     class HostSchemeTest {
@@ -81,7 +81,7 @@ class ElasticSearchConfigurationTest {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
             configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-            assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+            assertThat(OpenSearchConfiguration.fromProperties(configuration)
                     .getSslConfiguration())
                 .isEqualTo(SSLConfiguration.defaultBehavior());
         }
@@ -99,7 +99,7 @@ class ElasticSearchConfigurationTest {
             configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
             configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
 
-            assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+            assertThat(OpenSearchConfiguration.fromProperties(configuration)
                     .getSslConfiguration())
                 .isEqualTo(SSLConfiguration.builder()
                     .strategyOverride(SSLTrustStore.of(trustStorePath, trustStorePassword))
@@ -117,7 +117,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "DEfault");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.defaultBehavior());
             }
@@ -129,7 +129,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "invalid");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("invalid strategy 'invalid'");
             }
@@ -145,7 +145,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "DEFAULT");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.builder()
                         .strategyDefault()
@@ -160,7 +160,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "Accept_Any_Hostname");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.builder()
                         .strategyDefault()
@@ -175,7 +175,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "invalid");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("invalid HostNameVerifier 'invalid'");
             }
@@ -191,7 +191,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "default");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.defaultBehavior());
             }
@@ -207,7 +207,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "ignore");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.builder()
                         .strategyIgnore()
@@ -227,7 +227,7 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("elasticsearch.hostScheme.https.trustStorePassword cannot be null when elasticsearch.hostScheme.https.trustStorePath is specified");
             }
@@ -240,7 +240,7 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "secret");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("elasticsearch.hostScheme.https.trustStorePath cannot be null when elasticsearch.hostScheme.https.trustStorePassword is specified");
             }
@@ -252,7 +252,7 @@ class ElasticSearchConfigurationTest {
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("OVERRIDE strategy requires trustStore to be present");
             }
@@ -266,7 +266,7 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "password");
 
-                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("the file '/home/james/ServerTrustStore.jks' from property 'elasticsearch.hostScheme.https.trustStorePath' doesn't exist");
             }
@@ -284,7 +284,7 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
                 configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
 
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                assertThat(OpenSearchConfiguration.fromProperties(configuration)
                         .getSslConfiguration())
                     .isEqualTo(SSLConfiguration.builder()
                         .strategyOverride(SSLTrustStore.of(trustStorePath, trustStorePassword))
@@ -296,7 +296,7 @@ class ElasticSearchConfigurationTest {
 
     @Test
     void elasticSearchConfigurationShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ElasticSearchConfiguration.class)
+        EqualsVerifier.forClass(OpenSearchConfiguration.class)
             .verify();
     }
 
@@ -307,7 +307,7 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.nb.replica", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration elasticSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getNbReplica())
             .isEqualTo(value);
@@ -318,10 +318,10 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getNbReplica())
-            .isEqualTo(ElasticSearchConfiguration.DEFAULT_NB_REPLICA);
+        assertThat(openSearchConfiguration.getNbReplica())
+            .isEqualTo(OpenSearchConfiguration.DEFAULT_NB_REPLICA);
     }
 
     @Test
@@ -331,9 +331,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+        assertThat(openSearchConfiguration.getWaitForActiveShards())
             .isEqualTo(value);
     }
 
@@ -344,9 +344,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+        assertThat(openSearchConfiguration.getWaitForActiveShards())
             .isEqualTo(value);
     }
 
@@ -356,9 +356,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
         int expectedValue = 1;
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+        assertThat(openSearchConfiguration.getWaitForActiveShards())
             .isEqualTo(expectedValue);
     }
 
@@ -369,9 +369,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.nb.shards", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getNbShards())
+        assertThat(openSearchConfiguration.getNbShards())
             .isEqualTo(value);
     }
 
@@ -380,10 +380,10 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getNbShards())
-            .isEqualTo(ElasticSearchConfiguration.DEFAULT_NB_SHARDS);
+        assertThat(openSearchConfiguration.getNbShards())
+            .isEqualTo(OpenSearchConfiguration.DEFAULT_NB_SHARDS);
     }
 
     @Test
@@ -393,9 +393,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.retryConnection.maxRetries", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getMaxRetries())
+        assertThat(openSearchConfiguration.getMaxRetries())
             .isEqualTo(value);
     }
 
@@ -404,10 +404,10 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getMaxRetries())
-            .isEqualTo(ElasticSearchConfiguration.DEFAULT_CONNECTION_MAX_RETRIES);
+        assertThat(openSearchConfiguration.getMaxRetries())
+            .isEqualTo(OpenSearchConfiguration.DEFAULT_CONNECTION_MAX_RETRIES);
     }
 
     @Test
@@ -417,9 +417,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.retryConnection.minDelay", value);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getMinDelay())
+        assertThat(openSearchConfiguration.getMinDelay())
             .isEqualTo(value);
     }
 
@@ -428,10 +428,10 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getMinDelay())
-            .isEqualTo(ElasticSearchConfiguration.DEFAULT_CONNECTION_MIN_DELAY);
+        assertThat(openSearchConfiguration.getMinDelay())
+            .isEqualTo(OpenSearchConfiguration.DEFAULT_CONNECTION_MIN_DELAY);
     }
 
     @Test
@@ -440,10 +440,10 @@ class ElasticSearchConfigurationTest {
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.hosts", hostname);
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHosts())
-            .containsOnly(Host.from(hostname, ElasticSearchConfiguration.DEFAULT_PORT));
+        assertThat(openSearchConfiguration.getHosts())
+            .containsOnly(Host.from(hostname, OpenSearchConfiguration.DEFAULT_PORT));
     }
 
     @Test
@@ -455,10 +455,10 @@ class ElasticSearchConfigurationTest {
         configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
         configuration.addProperty("elasticsearch.hosts", hostname + "," + hostname2 + ":" + port);
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHosts())
-            .containsOnly(Host.from(hostname, ElasticSearchConfiguration.DEFAULT_PORT),
+        assertThat(openSearchConfiguration.getHosts())
+            .containsOnly(Host.from(hostname, OpenSearchConfiguration.DEFAULT_PORT),
                 Host.from(hostname2, port));
     }
 
@@ -469,9 +469,9 @@ class ElasticSearchConfigurationTest {
         int port = 2154;
         configuration.addProperty("elasticsearch.hosts", hostname + ":" + port);
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHosts())
+        assertThat(openSearchConfiguration.getHosts())
             .containsOnly(Host.from(hostname, port));
     }
 
@@ -483,63 +483,63 @@ class ElasticSearchConfigurationTest {
         int port = 9200;
         configuration.addProperty("elasticsearch.port", port);
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHosts())
+        assertThat(openSearchConfiguration.getHosts())
             .containsOnly(Host.from(hostname, port));
     }
 
     @Test
     void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() {
         assertThatThrownBy(() ->
-            ElasticSearchConfiguration.validateHostsConfigurationOptions(
+            OpenSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage("You should specify either (" + ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
-                " and " + ElasticSearchConfiguration.ELASTICSEARCH_PORT +
-                ") or " + ElasticSearchConfiguration.ELASTICSEARCH_HOSTS);
+            .hasMessage("You should specify either (" + OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
+                " and " + OpenSearchConfiguration.ELASTICSEARCH_PORT +
+                ") or " + OpenSearchConfiguration.ELASTICSEARCH_HOSTS);
     }
 
     @Test
     void validateHostsConfigurationOptionsShouldThrowWhenMonoAndMultiHostSpecified() {
         assertThatThrownBy(() ->
-            ElasticSearchConfiguration.validateHostsConfigurationOptions(
+            OpenSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
                 Optional.of(9200),
                 ImmutableList.of("localhost:9200")))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage("You should choose between mono host set up and " + ElasticSearchConfiguration.ELASTICSEARCH_HOSTS);
+            .hasMessage("You should choose between mono host set up and " + OpenSearchConfiguration.ELASTICSEARCH_HOSTS);
     }
 
     @Test
     void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutPort() {
         assertThatThrownBy(() ->
-            ElasticSearchConfiguration.validateHostsConfigurationOptions(
+            OpenSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
                 Optional.empty(),
                 ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessage(ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
-                " and " + ElasticSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
+            .hasMessage(OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
+                " and " + OpenSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
     }
 
     @Test
     void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutAddress() {
         assertThatThrownBy(() ->
-        ElasticSearchConfiguration.validateHostsConfigurationOptions(
+        OpenSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
             Optional.of(9200),
             ImmutableList.of()))
         .isInstanceOf(ConfigurationException.class)
-        .hasMessage(ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST + " and " +
-            ElasticSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
+        .hasMessage(OpenSearchConfiguration.ELASTICSEARCH_MASTER_HOST + " and " +
+            OpenSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
     }
 
     @Test
     void validateHostsConfigurationOptionsShouldAcceptMonoHostConfiguration() throws Exception {
-        ElasticSearchConfiguration.validateHostsConfigurationOptions(
+        OpenSearchConfiguration.validateHostsConfigurationOptions(
             Optional.of("localhost"),
             Optional.of(9200),
             ImmutableList.of());
@@ -547,7 +547,7 @@ class ElasticSearchConfigurationTest {
 
     @Test
     void validateHostsConfigurationOptionsShouldAcceptMultiHostConfiguration() throws Exception {
-        ElasticSearchConfiguration.validateHostsConfigurationOptions(
+        OpenSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
             Optional.empty(),
             ImmutableList.of("localhost:9200"));
@@ -556,7 +556,7 @@ class ElasticSearchConfigurationTest {
     @Test
     void nbReplicaShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
-                ElasticSearchConfiguration.builder()
+                OpenSearchConfiguration.builder()
                         .nbReplica(-1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -564,7 +564,7 @@ class ElasticSearchConfigurationTest {
     @Test
     void waitForActiveShardsShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
-            ElasticSearchConfiguration.builder()
+            OpenSearchConfiguration.builder()
                 .waitForActiveShards(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -572,7 +572,7 @@ class ElasticSearchConfigurationTest {
     @Test
     void nbShardsShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
-                ElasticSearchConfiguration.builder()
+                OpenSearchConfiguration.builder()
                         .nbShards(-1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -580,7 +580,7 @@ class ElasticSearchConfigurationTest {
     @Test
     void nbShardsShouldThrowWhenZero() {
         assertThatThrownBy(() ->
-                ElasticSearchConfiguration.builder()
+                OpenSearchConfiguration.builder()
                         .nbShards(0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -595,9 +595,9 @@ class ElasticSearchConfigurationTest {
         configuration.addProperty("elasticsearch.user", user);
         configuration.addProperty("elasticsearch.password", password);
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getCredential())
+        assertThat(openSearchConfiguration.getCredential())
             .contains(Credential.of(user, password));
     }
 
@@ -606,9 +606,9 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getCredential())
+        assertThat(openSearchConfiguration.getCredential())
             .isEmpty();
     }
 
@@ -619,7 +619,7 @@ class ElasticSearchConfigurationTest {
 
         configuration.addProperty("elasticsearch.user", "username");
 
-        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+        assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("password cannot be null when username is specified");
     }
@@ -631,7 +631,7 @@ class ElasticSearchConfigurationTest {
 
         configuration.addProperty("elasticsearch.password", "password");
 
-        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+        assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("username cannot be null when password is specified");
     }
@@ -643,9 +643,9 @@ class ElasticSearchConfigurationTest {
 
         configuration.addProperty("elasticsearch.hostScheme", "https");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHostScheme())
+        assertThat(openSearchConfiguration.getHostScheme())
             .isEqualTo(HostScheme.HTTPS);
     }
 
@@ -656,9 +656,9 @@ class ElasticSearchConfigurationTest {
 
         configuration.addProperty("elasticsearch.hostScheme", "HTTPs");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHostScheme())
+        assertThat(openSearchConfiguration.getHostScheme())
             .isEqualTo(HostScheme.HTTPS);
     }
 
@@ -667,9 +667,9 @@ class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+        OpenSearchConfiguration openSearchConfiguration = OpenSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getHostScheme())
+        assertThat(openSearchConfiguration.getHostScheme())
             .isEqualTo(HostScheme.HTTP);
     }
 
@@ -680,7 +680,7 @@ class ElasticSearchConfigurationTest {
 
         configuration.addProperty("elasticsearch.hostScheme", "invalid-protocol");
 
-        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+        assertThatThrownBy(() -> OpenSearchConfiguration.fromProperties(configuration))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Unknown HostScheme 'invalid-protocol'");
     }

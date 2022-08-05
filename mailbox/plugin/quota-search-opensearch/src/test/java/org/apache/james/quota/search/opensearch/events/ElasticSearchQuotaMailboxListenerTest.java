@@ -29,8 +29,8 @@ import static org.mockito.Mockito.mock;
 import java.io.IOException;
 
 import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.events.Event;
 import org.apache.james.events.Group;
@@ -75,13 +75,13 @@ class ElasticSearchQuotaMailboxListenerTest {
     void setUp() throws IOException {
         client = elasticSearch.getDockerElasticSearch().clientProvider().get();
 
-        QuotaSearchIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
+        QuotaSearchIndexCreationUtil.prepareDefaultClient(client, OpenSearchConfiguration.builder()
             .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
             .build());
 
         quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
-            new ElasticSearchIndexer(client,
+            new OpenSearchIndexer(client,
                 QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
             new QuotaRatioToElasticSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);

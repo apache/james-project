@@ -28,16 +28,11 @@ import java.time.ZoneId;
 import java.util.List;
 
 import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -45,6 +40,11 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
+import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaExtension;
@@ -57,15 +57,15 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +126,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
-                new ElasticSearchIndexer(client,
+                new OpenSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),

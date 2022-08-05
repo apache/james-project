@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.opensearch;
 
-import static org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy.OVERRIDE;
+import static org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLValidationStrategy.OVERRIDE;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -35,16 +35,16 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.HostNameVerifier;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
-import org.apache.james.backends.opensearch.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.HostNameVerifier;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.Host;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class ElasticSearchConfiguration {
+public class OpenSearchConfiguration {
 
     public enum HostScheme {
         HTTP("http"),
@@ -405,10 +405,10 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
-        public ElasticSearchConfiguration build() {
+        public OpenSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
             Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
-            return new ElasticSearchConfiguration(
+            return new OpenSearchConfiguration(
                 hosts,
                 nbShards.orElse(DEFAULT_NB_SHARDS),
                 nbReplica.orElse(DEFAULT_NB_REPLICA),
@@ -460,11 +460,11 @@ public class ElasticSearchConfiguration {
     public static final HostScheme DEFAULT_SCHEME = HostScheme.HTTP;
     public static final SSLConfiguration DEFAULT_SSL_TRUST_CONFIGURATION = SSLConfiguration.defaultBehavior();
 
-    public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = builder()
+    public static final OpenSearchConfiguration DEFAULT_CONFIGURATION = builder()
         .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
         .build();
 
-    public static ElasticSearchConfiguration fromProperties(Configuration configuration) throws ConfigurationException {
+    public static OpenSearchConfiguration fromProperties(Configuration configuration) throws ConfigurationException {
         return builder()
             .addHosts(getHosts(configuration))
             .hostScheme(getHostScheme(configuration))
@@ -574,8 +574,8 @@ public class ElasticSearchConfiguration {
     private final Optional<Integer> maxConnectionsPerHost;
     private final List<String> searchOverrides;
 
-    private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
-                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration, Optional<Integer> maxConnections, Optional<Integer> maxConnectionsPerHost, List<String> searchOverrides) {
+    private OpenSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
+                                    HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration, Optional<Integer> maxConnections, Optional<Integer> maxConnectionsPerHost, List<String> searchOverrides) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -645,8 +645,8 @@ public class ElasticSearchConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ElasticSearchConfiguration) {
-            ElasticSearchConfiguration that = (ElasticSearchConfiguration) o;
+        if (o instanceof OpenSearchConfiguration) {
+            OpenSearchConfiguration that = (OpenSearchConfiguration) o;
 
             return Objects.equals(this.nbShards, that.nbShards)
                 && Objects.equals(this.nbReplica, that.nbReplica)

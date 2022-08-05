@@ -21,13 +21,13 @@ package org.apache.james.backends.opensearch;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.backends.opensearch.ElasticSearchClusterExtension.ElasticSearchCluster;
+import org.apache.james.backends.opensearch.OpenSearchClusterExtension.OpenSearchCluster;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Test;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +36,8 @@ interface ClientProviderImplConnectionContract {
     Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionContract.class);
 
     @Test
-    default void connectingASingleServerShouldWork(ElasticSearchCluster esCluster) {
-        ElasticSearchConfiguration configuration = configurationBuilder()
+    default void connectingASingleServerShouldWork(OpenSearchCluster esCluster) {
+        OpenSearchConfiguration configuration = configurationBuilder()
             .addHost(esCluster.es1.getHttpHost())
             .build();
 
@@ -48,8 +48,8 @@ interface ClientProviderImplConnectionContract {
     }
 
     @Test
-    default void connectingAClusterShouldWork(ElasticSearchCluster esCluster) {
-        ElasticSearchConfiguration configuration = configurationBuilder()
+    default void connectingAClusterShouldWork(OpenSearchCluster esCluster) {
+        OpenSearchConfiguration configuration = configurationBuilder()
             .addHosts(esCluster.getHosts())
             .build();
 
@@ -60,8 +60,8 @@ interface ClientProviderImplConnectionContract {
     }
 
     @Test
-    default void connectingAClusterWithAFailedNodeShouldWork(ElasticSearchCluster esCluster) {
-        ElasticSearchConfiguration configuration = configurationBuilder()
+    default void connectingAClusterWithAFailedNodeShouldWork(OpenSearchCluster esCluster) {
+        OpenSearchConfiguration configuration = configurationBuilder()
             .addHosts(esCluster.getHosts())
             .build();
 
@@ -86,8 +86,8 @@ interface ClientProviderImplConnectionContract {
         }
     }
 
-    default ElasticSearchConfiguration.Builder configurationBuilder() {
-        return ElasticSearchConfiguration.builder();
+    default OpenSearchConfiguration.Builder configurationBuilder() {
+        return OpenSearchConfiguration.builder();
     }
 }
 

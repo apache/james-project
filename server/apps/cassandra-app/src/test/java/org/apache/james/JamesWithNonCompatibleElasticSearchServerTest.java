@@ -22,7 +22,7 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JamesWithNonCompatibleElasticSearchServerTest {
 
-    static DockerElasticSearch dockerES6 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_6);
+    static DockerOpenSearch dockerES6 = new DockerOpenSearch.NoAuth(Images.ELASTICSEARCH_6);
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())

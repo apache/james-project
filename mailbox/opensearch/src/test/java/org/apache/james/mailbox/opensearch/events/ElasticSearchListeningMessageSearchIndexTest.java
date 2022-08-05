@@ -32,7 +32,7 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
-import org.apache.james.backends.opensearch.ElasticSearchIndexer;
+import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
@@ -163,7 +163,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     MailboxSession session;
     Mailbox mailbox;
     MailboxSessionMapperFactory mapperFactory;
-    ElasticSearchIndexer elasticSearchIndexer;
+    OpenSearchIndexer openSearchIndexer;
     ElasticSearchSearcher elasticSearchSearcher;
     SessionProviderImpl sessionProvider;
 
@@ -196,10 +196,10 @@ class ElasticSearchListeningMessageSearchIndexTest {
         Authorizator authorizator = FakeAuthorizator.defaultReject();
         sessionProvider = new SessionProviderImpl(fakeAuthenticator, authorizator);
 
-        elasticSearchIndexer = new ElasticSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
+        openSearchIndexer = new OpenSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
-            ImmutableSet.of(), elasticSearchIndexer, elasticSearchSearcher,
+            ImmutableSet.of(), openSearchIndexer, elasticSearchSearcher,
             messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), messageIdFactory);
         session = sessionProvider.createSystemSession(USERNAME);
 
@@ -264,7 +264,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             IndexAttachments.YES);
 
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
-            ImmutableSet.of(), elasticSearchIndexer, elasticSearchSearcher,
+            ImmutableSet.of(), openSearchIndexer, elasticSearchSearcher,
             messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), new InMemoryMessageId.Factory());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();

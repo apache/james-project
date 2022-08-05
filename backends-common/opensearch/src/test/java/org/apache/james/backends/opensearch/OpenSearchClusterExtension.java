@@ -38,13 +38,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-class ElasticSearchClusterExtension implements AfterAllCallback, BeforeAllCallback, AfterEachCallback, ParameterResolver {
+class OpenSearchClusterExtension implements AfterAllCallback, BeforeAllCallback, AfterEachCallback, ParameterResolver {
 
-    static class ElasticSearchCluster {
-        DockerElasticSearch es1;
-        DockerElasticSearch es2;
+    static class OpenSearchCluster {
+        DockerOpenSearch es1;
+        DockerOpenSearch es2;
 
-        ElasticSearchCluster(DockerElasticSearch es1, DockerElasticSearch es2) {
+        OpenSearchCluster(DockerOpenSearch es1, DockerOpenSearch es2) {
             this.es1 = es1;
             this.es2 = es2;
         }
@@ -85,9 +85,9 @@ class ElasticSearchClusterExtension implements AfterAllCallback, BeforeAllCallba
         }
     }
     
-    private final ElasticSearchCluster esCluster;
+    private final OpenSearchCluster esCluster;
 
-    ElasticSearchClusterExtension(ElasticSearchCluster esCluster) {
+    OpenSearchClusterExtension(OpenSearchCluster esCluster) {
         this.esCluster = esCluster;
     }
 
@@ -108,7 +108,7 @@ class ElasticSearchClusterExtension implements AfterAllCallback, BeforeAllCallba
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType() == ElasticSearchCluster.class;
+        return parameterContext.getParameter().getType() == OpenSearchCluster.class;
     }
 
     @Override

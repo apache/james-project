@@ -20,6 +20,8 @@ package org.apache.james.backends.opensearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.opensearch.cluster.ClusterName;
 import org.opensearch.cluster.ClusterState;
@@ -27,17 +29,15 @@ import org.opensearch.cluster.block.ClusterBlocks;
 import org.opensearch.cluster.health.ClusterHealthStatus;
 import org.opensearch.cluster.node.DiscoveryNodes;
 import org.opensearch.cluster.routing.RoutingTable;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-class ElasticSearchHealthCheckTest {
-    private ElasticSearchHealthCheck healthCheck;
+class OpenSearchHealthCheckTest {
+    private OpenSearchHealthCheck healthCheck;
 
     @BeforeEach
     void setup() {
-        healthCheck = new ElasticSearchHealthCheck(null, ImmutableSet.of());
+        healthCheck = new OpenSearchHealthCheck(null, ImmutableSet.of());
     }
 
     @Test
