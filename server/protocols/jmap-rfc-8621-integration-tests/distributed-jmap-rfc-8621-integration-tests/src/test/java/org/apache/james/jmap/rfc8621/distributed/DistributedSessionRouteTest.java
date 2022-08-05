@@ -43,7 +43,7 @@ public class DistributedSessionRouteTest implements SessionRoutesContract {
                 .disableCache()
                 .passthrough()
                 .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())

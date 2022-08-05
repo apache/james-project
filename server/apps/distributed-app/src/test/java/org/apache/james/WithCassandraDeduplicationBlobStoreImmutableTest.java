@@ -34,7 +34,7 @@ public class WithCassandraDeduplicationBlobStoreImmutableTest implements JmapJam
             .blobStore(BlobStoreConfiguration.cassandra()
                 .deduplication()
                 .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))

@@ -45,7 +45,7 @@ class RabbitMQQuotaSearchIntegrationTest extends QuotaSearchIntegrationTest {
                     .disableCache()
                     .deduplication()
                     .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(ELASTIC_SEARCH_EXTENSION)
         .extension(new CassandraExtension())

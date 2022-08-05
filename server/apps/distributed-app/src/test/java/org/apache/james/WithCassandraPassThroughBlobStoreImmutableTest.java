@@ -34,7 +34,7 @@ public class WithCassandraPassThroughBlobStoreImmutableTest implements JmapJames
                 .blobStore(BlobStoreConfiguration.cassandra()
                     .passthrough()
                     .noCryptoConfig())
-        .searchConfiguration(SearchConfiguration.elasticSearch())
+        .searchConfiguration(SearchConfiguration.openSearch())
         .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
         .overrideWith(new TestJMAPServerModule()))

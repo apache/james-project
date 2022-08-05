@@ -36,7 +36,7 @@ class JamesCapabilitiesServerTest {
     private static final MailboxManager mailboxManager = mock(MailboxManager.class);
 
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

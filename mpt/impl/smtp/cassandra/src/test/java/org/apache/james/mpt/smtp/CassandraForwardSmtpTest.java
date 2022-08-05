@@ -44,7 +44,7 @@ public class CassandraForwardSmtpTest implements ForwardSmtpTest {
     }
     @Order(1)
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(cassandraExtension)
             .extension(new InMemoryDnsExtension())

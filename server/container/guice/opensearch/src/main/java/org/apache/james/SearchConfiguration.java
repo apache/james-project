@@ -32,7 +32,7 @@ public class SearchConfiguration {
 
     public enum Implementation {
         Scanning,
-        ElasticSearch
+        OpenSearch
     }
 
     public static SearchConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
@@ -40,22 +40,22 @@ public class SearchConfiguration {
             Configuration configuration = propertiesProvider.getConfiguration(SEARCH_CONFIGURATION_NAME);
             return SearchConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.debug("Could not find {} configuration file, enabling elasticsearch by default", SEARCH_CONFIGURATION_NAME);
-            return elasticSearch();
+            LOGGER.debug("Could not find {} configuration file, enabling opensearch by default", SEARCH_CONFIGURATION_NAME);
+            return openSearch();
         }
     }
 
     static SearchConfiguration from(Configuration configuration) throws ConfigurationException {
-        String searchOption = configuration.getString("implementation", Implementation.ElasticSearch.name());
-        if (searchOption.equalsIgnoreCase(Implementation.ElasticSearch.name())) {
-            return elasticSearch();
+        String searchOption = configuration.getString("implementation", Implementation.OpenSearch.name());
+        if (searchOption.equalsIgnoreCase(Implementation.OpenSearch.name())) {
+            return openSearch();
         }
         if (searchOption.equalsIgnoreCase(Implementation.Scanning.name())) {
             return scanning();
         }
         throw new ConfigurationException(String.format("'implementation' parameter in '%s.properties' should have '%s' or '%s' value",
                 SEARCH_CONFIGURATION_NAME,
-                Implementation.ElasticSearch.name(),
+                Implementation.OpenSearch.name(),
                 Implementation.Scanning.name()));
     }
 
@@ -63,8 +63,8 @@ public class SearchConfiguration {
         return new SearchConfiguration(Implementation.Scanning);
     }
 
-    public static SearchConfiguration elasticSearch() {
-        return new SearchConfiguration(Implementation.ElasticSearch);
+    public static SearchConfiguration openSearch() {
+        return new SearchConfiguration(Implementation.OpenSearch);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchConfiguration.class);

@@ -38,7 +38,7 @@ public class WithEncryptedBlobStoreMutableTest implements MailsShouldBeWellRecei
                     // Hex.encode("salty".getBytes(StandardCharsets.UTF_8))
                     .salt("73616c7479")
                     .build()))
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))

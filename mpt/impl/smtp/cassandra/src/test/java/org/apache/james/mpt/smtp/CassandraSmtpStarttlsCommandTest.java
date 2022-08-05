@@ -39,7 +39,7 @@ public class CassandraSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
 
     @Order(1)
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(cassandraExtension)
             .extension(new InMemoryDnsExtension())

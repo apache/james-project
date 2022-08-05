@@ -30,7 +30,7 @@ class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContract, Ja
         .build();
 
     static JamesServerBuilder<CassandraJamesServerConfiguration> baseExtensionBuilder() {
-        return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+        return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
