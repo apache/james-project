@@ -20,18 +20,21 @@
 package org.apache.james.mpt.imapmailbox.elasticsearch;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.elasticsearch.host.ElasticSearchHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.UidSearchOnIndex;
+import org.apache.james.mpt.imapmailbox.elasticsearch.host.OpenSearchHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.Recent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 
-public class ElasticSearchUidSearchOnIndexTest extends UidSearchOnIndex {
+@Disabled("MAILBOX-398 OpenSearch backend do not take into account session recent messages")
+public class OpenSearchRecentTest extends Recent {
+
     private ImapHostSystem system;
 
     @Override
     @BeforeEach
     public void setUp() throws Exception {
-        system = new ElasticSearchHostSystem();
+        system = new OpenSearchHostSystem();
         system.beforeTest();
         super.setUp();
     }
@@ -45,4 +48,5 @@ public class ElasticSearchUidSearchOnIndexTest extends UidSearchOnIndex {
     public void tearDown() throws Exception {
         system.afterTest();
     }
+    
 }

@@ -36,11 +36,11 @@
         <module>cassandra</module>
         <module>core</module>
         <module>cyrus</module>
-        <module>elasticsearch</module>
         <module>external-james</module>
         <module>inmemory</module>
         <module>jpa</module>
         <module>lucenesearch</module>
+        <module>opensearch</module>
         <module>rabbitmq</module>
     </modules>
 
