@@ -173,7 +173,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-elasticsearch</artifactId>
+            <artifactId>james-server-guice-opensearch</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

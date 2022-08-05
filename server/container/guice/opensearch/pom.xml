@@ -28,11 +28,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-guice-elasticsearch</artifactId>
+    <artifactId>james-server-guice-opensearch</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: ElasticSearch - guice modules</name>
-    <description>Guice injections for the ElasticSearch search engine</description>
+    <name>Apache James :: Server :: OpenSearch - guice modules</name>
+    <description>Guice injections for the OpenSearch search engine</description>
 
     <properties>
         <cassandra.includes>empty</cassandra.includes>
