@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.modules.mailbox.OpenSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME;
+import static org.apache.james.modules.mailbox.OpenSearchMailboxModule.OPENSEARCH_CONFIGURATION_NAME;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
     @Singleton
     private OpenSearchQuotaConfiguration getOpenSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(OPENSEARCH_CONFIGURATION_NAME);
             return OpenSearchQuotaConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + OPENSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default OpenSearchQuotaConfiguration");

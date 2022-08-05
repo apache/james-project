@@ -95,7 +95,7 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchMailboxModule.class);
 
-    public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
+    public static final String OPENSEARCH_CONFIGURATION_NAME = "opensearch";
 
     @Override
     protected void configure() {
@@ -129,7 +129,7 @@ public class OpenSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(MailboxOpenSearchConstants.InjectionNames.MAILBOX)
-    private OpenSearchIndexer createMailboxElasticSearchIndexer(ReactorOpenSearchClient client,
+    private OpenSearchIndexer createMailboxOpenSearchIndexer(ReactorOpenSearchClient client,
                                                                 OpenSearchMailboxConfiguration configuration) {
         return new OpenSearchIndexer(
             client,
@@ -138,7 +138,7 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private OpenSearchSearcher createMailboxElasticSearchSearcher(ReactorOpenSearchClient client,
+    private OpenSearchSearcher createMailboxOpenSearchSearcher(ReactorOpenSearchClient client,
                                                                   QueryConverter queryConverter,
                                                                   OpenSearchMailboxConfiguration configuration,
                                                                   RoutingKey.Factory<MailboxId> routingKeyFactory) {
@@ -151,12 +151,12 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private OpenSearchConfiguration getElasticSearchConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private OpenSearchConfiguration getOpenSearchConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(OPENSEARCH_CONFIGURATION_NAME);
             return OpenSearchConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using {}:{} as contact point",
+            LOGGER.warn("Could not find " + OPENSEARCH_CONFIGURATION_NAME + " configuration file. Using {}:{} as contact point",
                 OpenSearchConfiguration.LOCALHOST, OpenSearchConfiguration.DEFAULT_PORT);
             return OpenSearchConfiguration.DEFAULT_CONFIGURATION;
         }
@@ -164,12 +164,12 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private OpenSearchMailboxConfiguration getElasticSearchMailboxConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private OpenSearchMailboxConfiguration getOpenSearchMailboxConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(OPENSEARCH_CONFIGURATION_NAME);
             return OpenSearchMailboxConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchMailboxConfiguration");
+            LOGGER.warn("Could not find " + OPENSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default OPENSearchMailboxConfiguration");
             return OpenSearchMailboxConfiguration.DEFAULT_CONFIGURATION;
         }
     }

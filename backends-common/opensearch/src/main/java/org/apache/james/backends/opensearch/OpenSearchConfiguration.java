@@ -154,12 +154,12 @@ public class OpenSearchConfiguration {
 
             private SSLTrustStore(String filePath, String password) {
                 Preconditions.checkNotNull(filePath, "%s cannot be null when %s is specified",
-                    ELASTICSEARCH_HTTPS_TRUST_STORE_PATH, ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD);
+                    OPENSEARCH_HTTPS_TRUST_STORE_PATH, OPENSEARCH_HTTPS_TRUST_STORE_PASSWORD);
                 Preconditions.checkNotNull(password,
                      "%s cannot be null when %s is specified",
-                    ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
+                    OPENSEARCH_HTTPS_TRUST_STORE_PASSWORD, OPENSEARCH_HTTPS_TRUST_STORE_PATH);
                 Preconditions.checkArgument(Files.exists(Paths.get(filePath)),
-                    "the file '%s' from property '%s' doesn't exist", filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
+                    "the file '%s' from property '%s' doesn't exist", filePath, OPENSEARCH_HTTPS_TRUST_STORE_PATH);
 
                 this.file = new File(filePath);
                 this.password = password.toCharArray();
@@ -407,7 +407,7 @@ public class OpenSearchConfiguration {
 
         public OpenSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
-            Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
+            Preconditions.checkState(!hosts.isEmpty(), "You need to specify OpenSearch host");
             return new OpenSearchConfiguration(
                 hosts,
                 nbShards.orElse(DEFAULT_NB_SHARDS),
@@ -429,24 +429,24 @@ public class OpenSearchConfiguration {
         return new Builder();
     }
 
-    public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
-    public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
-    public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
-    public static final String ELASTICSEARCH_HOST_SCHEME = "elasticsearch.hostScheme";
-    public static final String ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY = "elasticsearch.hostScheme.https.sslValidationStrategy";
-    public static final String ELASTICSEARCH_HTTPS_HOSTNAME_VERIFIER = "elasticsearch.hostScheme.https.hostNameVerifier";
-    public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PATH = "elasticsearch.hostScheme.https.trustStorePath";
-    public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD = "elasticsearch.hostScheme.https.trustStorePassword";
-    public static final String ELASTICSEARCH_USER = "elasticsearch.user";
-    public static final String ELASTICSEARCH_PASSWORD = "elasticsearch.password";
-    public static final String ELASTICSEARCH_NB_REPLICA = "elasticsearch.nb.replica";
-    public static final String WAIT_FOR_ACTIVE_SHARDS = "elasticsearch.index.waitForActiveShards";
-    public static final String ELASTICSEARCH_NB_SHARDS = "elasticsearch.nb.shards";
-    public static final String ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY = "elasticsearch.retryConnection.minDelay";
-    public static final String ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES = "elasticsearch.retryConnection.maxRetries";
-    public static final String ELASTICSEARCH_MAX_CONNECTIONS = "elasticsearch.max.connections";
-    public static final String ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS = "elasticsearch.max.connections.per.hosts";
-    public static final String ELASTICSEARCH_SEARCH_OVERRIDES = "elasticsearch.search.overrides";
+    public static final String OPENSEARCH_HOSTS = "opensearch.hosts";
+    public static final String OPENSEARCH_MASTER_HOST = "opensearch.masterHost";
+    public static final String OPENSEARCH_PORT = "opensearch.port";
+    public static final String OPENSEARCH_HOST_SCHEME = "opensearch.hostScheme";
+    public static final String OPENSEARCH_HTTPS_SSL_VALIDATION_STRATEGY = "opensearch.hostScheme.https.sslValidationStrategy";
+    public static final String OPENSEARCH_HTTPS_HOSTNAME_VERIFIER = "opensearch.hostScheme.https.hostNameVerifier";
+    public static final String OPENSEARCH_HTTPS_TRUST_STORE_PATH = "opensearch.hostScheme.https.trustStorePath";
+    public static final String OPENSEARCH_HTTPS_TRUST_STORE_PASSWORD = "opensearch.hostScheme.https.trustStorePassword";
+    public static final String OPENSEARCH_USER = "opensearch.user";
+    public static final String OPENSEARCH_PASSWORD = "opensearch.password";
+    public static final String OPENSEARCH_NB_REPLICA = "opensearch.nb.replica";
+    public static final String WAIT_FOR_ACTIVE_SHARDS = "opensearch.index.waitForActiveShards";
+    public static final String OPENSEARCH_NB_SHARDS = "opensearch.nb.shards";
+    public static final String OPENSEARCH_RETRY_CONNECTION_MIN_DELAY = "opensearch.retryConnection.minDelay";
+    public static final String OPENSEARCH_RETRY_CONNECTION_MAX_RETRIES = "opensearch.retryConnection.maxRetries";
+    public static final String OPENSEARCH_MAX_CONNECTIONS = "opensearch.max.connections";
+    public static final String OPENSEARCH_MAX_CONNECTIONS_PER_HOSTS = "opensearch.max.connections.per.hosts";
+    public static final String OPENSEARCH_SEARCH_OVERRIDES = "opensearch.search.overrides";
 
     public static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     public static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
@@ -470,25 +470,25 @@ public class OpenSearchConfiguration {
             .hostScheme(getHostScheme(configuration))
             .credential(getCredential(configuration))
             .sslTrustConfiguration(sslTrustConfiguration(configuration))
-            .nbShards(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
-            .nbReplica(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
+            .nbShards(configuration.getInteger(OPENSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
+            .nbReplica(configuration.getInteger(OPENSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
             .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
-            .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
-            .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
-            .maxConnections(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS, null)))
-            .maxConnectionsPerHost(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_MAX_CONNECTIONS_PER_HOSTS, null)))
-            .withSearchOverrides(Optional.ofNullable(configuration.getStringArray(ELASTICSEARCH_SEARCH_OVERRIDES)).map(ImmutableList::copyOf).orElse(ImmutableList.of()))
+            .minDelay(Optional.ofNullable(configuration.getInteger(OPENSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
+            .maxRetries(Optional.ofNullable(configuration.getInteger(OPENSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
+            .maxConnections(Optional.ofNullable(configuration.getInteger(OPENSEARCH_MAX_CONNECTIONS, null)))
+            .maxConnectionsPerHost(Optional.ofNullable(configuration.getInteger(OPENSEARCH_MAX_CONNECTIONS_PER_HOSTS, null)))
+            .withSearchOverrides(Optional.ofNullable(configuration.getStringArray(OPENSEARCH_SEARCH_OVERRIDES)).map(ImmutableList::copyOf).orElse(ImmutableList.of()))
             .build();
     }
 
     private static SSLConfiguration sslTrustConfiguration(Configuration configuration) {
         SSLValidationStrategy sslStrategy = Optional
-            .ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY))
+            .ofNullable(configuration.getString(OPENSEARCH_HTTPS_SSL_VALIDATION_STRATEGY))
             .map(SSLValidationStrategy::from)
             .orElse(SSLValidationStrategy.DEFAULT);
 
         HostNameVerifier hostNameVerifier = Optional
-            .ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_HOSTNAME_VERIFIER))
+            .ofNullable(configuration.getString(OPENSEARCH_HTTPS_HOSTNAME_VERIFIER))
             .map(HostNameVerifier::from)
             .orElse(HostNameVerifier.DEFAULT);
 
@@ -499,8 +499,8 @@ public class OpenSearchConfiguration {
     }
 
     private static Optional<SSLTrustStore> getSSLTrustStore(Configuration configuration) {
-        String trustStorePath = configuration.getString(ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
-        String trustStorePassword = configuration.getString(ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD);
+        String trustStorePath = configuration.getString(OPENSEARCH_HTTPS_TRUST_STORE_PATH);
+        String trustStorePassword = configuration.getString(OPENSEARCH_HTTPS_TRUST_STORE_PASSWORD);
 
         if (trustStorePath == null && trustStorePassword == null) {
             return Optional.empty();
@@ -510,13 +510,13 @@ public class OpenSearchConfiguration {
     }
 
     private static Optional<HostScheme> getHostScheme(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_HOST_SCHEME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_HOST_SCHEME))
             .map(HostScheme::of);
     }
 
     private static Optional<Credential> getCredential(Configuration configuration) {
-        String username = configuration.getString(ELASTICSEARCH_USER);
-        String password = configuration.getString(ELASTICSEARCH_PASSWORD);
+        String username = configuration.getString(OPENSEARCH_USER);
+        String password = configuration.getString(OPENSEARCH_PASSWORD);
 
         if (username == null && password == null) {
             return Optional.empty();
@@ -527,10 +527,10 @@ public class OpenSearchConfiguration {
 
     private static ImmutableList<Host> getHosts(Configuration propertiesReader) throws ConfigurationException {
         Optional<String> masterHost = Optional.ofNullable(
-            propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
+            propertiesReader.getString(OPENSEARCH_MASTER_HOST, null));
         Optional<Integer> masterPort = Optional.ofNullable(
-            propertiesReader.getInteger(ELASTICSEARCH_PORT, null));
-        List<String> multiHosts = Arrays.asList(propertiesReader.getStringArray(ELASTICSEARCH_HOSTS));
+            propertiesReader.getInteger(OPENSEARCH_PORT, null));
+        List<String> multiHosts = Arrays.asList(propertiesReader.getStringArray(OPENSEARCH_HOSTS));
 
         validateHostsConfigurationOptions(masterHost, masterPort, multiHosts);
 
@@ -550,13 +550,13 @@ public class OpenSearchConfiguration {
                                                   Optional<Integer> masterPort,
                                                   List<String> multiHosts) throws ConfigurationException {
         if (masterHost.isPresent() != masterPort.isPresent()) {
-            throw new ConfigurationException(ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + " should be specified together");
+            throw new ConfigurationException(OPENSEARCH_MASTER_HOST + " and " + OPENSEARCH_PORT + " should be specified together");
         }
         if (!multiHosts.isEmpty() && masterHost.isPresent()) {
-            throw new ConfigurationException("You should choose between mono host set up and " + ELASTICSEARCH_HOSTS);
+            throw new ConfigurationException("You should choose between mono host set up and " + OPENSEARCH_HOSTS);
         }
         if (multiHosts.isEmpty() && !masterHost.isPresent()) {
-            throw new ConfigurationException("You should specify either (" + ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + ") or " + ELASTICSEARCH_HOSTS);
+            throw new ConfigurationException("You should specify either (" + OPENSEARCH_MASTER_HOST + " and " + OPENSEARCH_PORT + ") or " + OPENSEARCH_HOSTS);
         }
     }
 
