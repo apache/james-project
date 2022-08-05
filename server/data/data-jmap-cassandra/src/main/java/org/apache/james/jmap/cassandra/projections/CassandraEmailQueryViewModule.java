@@ -36,7 +36,7 @@ import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraEmailQueryViewModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME_SENT_AT)
-        .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on ElasticSearch for basic Email/query (sorts sentAt).")
+        .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on OpenSearch for basic Email/query (sorts sentAt).")
         .options(options -> options
             .withClusteringOrder(SENT_AT, DESC)
             .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
@@ -46,7 +46,7 @@ public interface CassandraEmailQueryViewModule {
             .withClusteringColumn(MESSAGE_ID, DataTypes.UUID))
 
         .table(TABLE_NAME_RECEIVED_AT)
-        .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on ElasticSearch for basic Email/query (sorts and filter on receivedAt).")
+        .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on OpenSearch for basic Email/query (sorts and filter on receivedAt).")
         .options(options -> options
             .withClusteringOrder(RECEIVED_AT, DESC)
             .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
