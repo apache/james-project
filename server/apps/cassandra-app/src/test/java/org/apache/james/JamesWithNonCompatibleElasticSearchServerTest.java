@@ -38,7 +38,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-        .extension(new DockerElasticSearchExtension(dockerES6))
+        .extension(new DockerOpenSearchExtension(dockerES6))
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))

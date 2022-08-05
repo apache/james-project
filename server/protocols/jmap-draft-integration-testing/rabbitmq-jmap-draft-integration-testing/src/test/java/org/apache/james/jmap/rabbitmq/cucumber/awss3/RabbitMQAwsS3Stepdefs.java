@@ -27,7 +27,7 @@ import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
-import org.apache.james.DockerElasticSearchRule;
+import org.apache.james.DockerOpenSearchRule;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
@@ -54,7 +54,7 @@ public class RabbitMQAwsS3Stepdefs {
     private final ImapStepdefs imapStepdefs;
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
-    private final DockerElasticSearchRule elasticSearch = CucumberOpenSearchSingleton.elasticSearch;
+    private final DockerOpenSearchRule elasticSearch = CucumberOpenSearchSingleton.elasticSearch;
     private final DockerRabbitMQRule rabbitMQServer = CucumberRabbitMQSingleton.rabbitMQServer;
     private final DockerAwsS3TestRule awsS3Server = CucumberAwsS3Singleton.awsS3Server;
 

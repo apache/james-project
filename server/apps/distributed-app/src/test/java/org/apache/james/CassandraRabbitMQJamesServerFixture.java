@@ -40,7 +40,7 @@ public class CassandraRabbitMQJamesServerFixture {
                     .noCryptoConfig())
                 .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .extension(rabbitMQExtension)
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)

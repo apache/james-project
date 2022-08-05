@@ -27,7 +27,7 @@ class CassandraWithTikaTest implements JamesServerContract {
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new CassandraExtension())
         .extension(new  TikaExtension())
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

@@ -43,7 +43,7 @@ class CassandraNodeConfTest {
 
     private static JamesServerBuilder extensionBuilder() {
         return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))

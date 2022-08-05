@@ -43,7 +43,7 @@ public class WithEncryptedBlobStoreImmutableTest implements JmapJamesServerContr
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

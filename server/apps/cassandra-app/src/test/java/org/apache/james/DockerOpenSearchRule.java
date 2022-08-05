@@ -21,16 +21,14 @@ package org.apache.james;
 
 import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
-import org.apache.james.modules.TestDockerElasticSearchModule;
+import org.apache.james.modules.TestDockerOpenSearchModule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
-
-public class DockerElasticSearchRule implements GuiceModuleTestRule {
-
-    private final DockerOpenSearch elasticSearch = DockerOpenSearchSingleton.INSTANCE;
+public class DockerOpenSearchRule implements GuiceModuleTestRule {
+    private final DockerOpenSearch openSearch = DockerOpenSearchSingleton.INSTANCE;
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -39,19 +37,19 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     @Override
     public void await() {
-        elasticSearch.flushIndices();
+        openSearch.flushIndices();
     }
 
     @Override
     public Module getModule() {
-        return new TestDockerElasticSearchModule(elasticSearch);
+        return new TestDockerOpenSearchModule(openSearch);
     }
 
     public DockerOpenSearch getDockerEs() {
-        return elasticSearch;
+        return openSearch;
     }
 
     public void start() {
-        elasticSearch.start();
+        openSearch.start();
     }
 }

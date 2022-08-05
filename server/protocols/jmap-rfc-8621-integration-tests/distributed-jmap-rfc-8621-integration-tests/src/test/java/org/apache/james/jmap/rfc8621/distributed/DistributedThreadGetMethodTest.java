@@ -28,11 +28,10 @@ import java.util.List;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
-import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
 import org.apache.james.mailbox.model.MailboxId;
@@ -65,7 +64,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private ReactorOpenSearchClient client;
 
     @RegisterExtension
-    DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
+    org.apache.james.backends.opensearch.DockerOpenSearchExtension elasticSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -79,7 +78,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())

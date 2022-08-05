@@ -26,7 +26,7 @@ import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-public class TestDockerElasticSearchModule extends AbstractModule {
+public class TestDockerOpenSearchModule extends AbstractModule {
 
     private static class ESContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
 
@@ -46,7 +46,7 @@ public class TestDockerElasticSearchModule extends AbstractModule {
 
     private final DockerOpenSearch elasticSearch;
 
-    public TestDockerElasticSearchModule(DockerOpenSearch elasticSearch) {
+    public TestDockerOpenSearchModule(DockerOpenSearch elasticSearch) {
         this.elasticSearch = elasticSearch;
     }
 

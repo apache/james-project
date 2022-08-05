@@ -45,7 +45,7 @@ class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerCont
                         .noCryptoConfig())
                 .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new AwsS3BlobStoreExtension())

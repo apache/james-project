@@ -60,7 +60,7 @@ import io.restassured.http.ContentType;
 
 class ESReporterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
-    static final DockerElasticSearchExtension elasticSearchExtension = new DockerElasticSearchExtension();
+    static final DockerOpenSearchExtension elasticSearchExtension = new DockerOpenSearchExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
