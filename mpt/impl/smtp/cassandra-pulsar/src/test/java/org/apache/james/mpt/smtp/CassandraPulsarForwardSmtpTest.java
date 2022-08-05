@@ -22,7 +22,7 @@ package org.apache.james.mpt.smtp;
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.Main;
 import org.apache.james.PulsarExtension;
@@ -35,7 +35,7 @@ public class CassandraPulsarForwardSmtpTest implements ForwardSmtpTest {
     @Order(1)
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .extension(new PulsarExtension())
             .extension(new InMemoryDnsExtension())

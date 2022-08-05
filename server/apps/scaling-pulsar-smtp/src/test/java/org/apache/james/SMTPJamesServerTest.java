@@ -36,7 +36,7 @@ class SMTPJamesServerTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new PulsarExtension())
         .server(Main::createServer)
