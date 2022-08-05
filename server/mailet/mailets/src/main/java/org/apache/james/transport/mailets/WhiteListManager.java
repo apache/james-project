@@ -28,7 +28,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -693,7 +693,7 @@ public class WhiteListManager extends GenericMailet {
 
             // Set additional headers
             if (reply.getHeader(RFC2822Headers.DATE) == null) {
-                reply.setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(LocalDateTime.now()));
+                reply.setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(ZonedDateTime.now()));
             }
             String subject = message.getSubject();
             if (subject == null) {

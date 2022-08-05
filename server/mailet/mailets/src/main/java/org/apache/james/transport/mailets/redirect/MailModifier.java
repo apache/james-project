@@ -19,7 +19,7 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -219,7 +219,7 @@ public class MailModifier {
 
     public void initializeDateIfNotPresent() throws MessagingException {
         if (mail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
-            mail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(LocalDateTime.now()));
+            mail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(ZonedDateTime.now()));
         }
     }
 
