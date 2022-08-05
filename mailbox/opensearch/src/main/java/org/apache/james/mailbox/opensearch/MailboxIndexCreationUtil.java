@@ -22,17 +22,17 @@ package org.apache.james.mailbox.opensearch;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 
 public class MailboxIndexCreationUtil {
 
-    public static ReactorElasticSearchClient prepareClient(ReactorElasticSearchClient client,
-                                                           ReadAliasName readAlias,
-                                                           WriteAliasName writeAlias,
-                                                           IndexName indexName,
-                                                           OpenSearchConfiguration configuration) {
+    public static ReactorOpenSearchClient prepareClient(ReactorOpenSearchClient client,
+                                                        ReadAliasName readAlias,
+                                                        WriteAliasName writeAlias,
+                                                        IndexName indexName,
+                                                        OpenSearchConfiguration configuration) {
             return new IndexCreationFactory(configuration)
                 .useIndex(indexName)
                 .addAlias(readAlias)
@@ -40,7 +40,7 @@ public class MailboxIndexCreationUtil {
                 .createIndexAndAliases(client, MailboxMappingFactory.getMappingContent());
     }
 
-    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, OpenSearchConfiguration configuration) {
+    public static ReactorOpenSearchClient prepareDefaultClient(ReactorOpenSearchClient client, OpenSearchConfiguration configuration) {
         return prepareClient(client,
             MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,

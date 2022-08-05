@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.time.ZoneId;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
 import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -64,12 +64,12 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
 
     private DockerOpenSearch dockerOpenSearch;
     private StoreMailboxManager mailboxManager;
-    private ReactorElasticSearchClient client;
+    private ReactorOpenSearchClient client;
 
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.dockerOpenSearch = DockerElasticSearchSingleton.INSTANCE;
+        this.dockerOpenSearch = DockerOpenSearchSingleton.INSTANCE;
         dockerOpenSearch.start();
         initFields();
     }

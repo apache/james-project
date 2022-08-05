@@ -61,11 +61,11 @@ class OpenSearchIndexerTest {
     @RegisterExtension
     public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private OpenSearchIndexer testee;
-    private ReactorElasticSearchClient client;
+    private ReactorOpenSearchClient client;
 
     @BeforeEach
     void setup() {
-        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
+        client = elasticSearch.getDockerOpenSearch().clientProvider().get();
         new IndexCreationFactory(OpenSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
@@ -85,7 +85,7 @@ class OpenSearchIndexerTest {
         
         testee.index(documentId, content, useDocumentId(documentId)).block();
 
-        awaitForElasticSearch(QueryBuilders.matchQuery("message", "trying"), 1L);
+        awaitForOpenSearch(QueryBuilders.matchQuery("message", "trying"), 1L);
     }
     
     @Test
@@ -99,12 +99,12 @@ class OpenSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
 
         testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
-        awaitForElasticSearch(QueryBuilders.matchQuery("message", "mastering"), 1L);
+        awaitForOpenSearch(QueryBuilders.matchQuery("message", "mastering"), 1L);
 
-        awaitForElasticSearch(QueryBuilders.matchQuery("field", "unchanged"), 1L);
+        awaitForOpenSearch(QueryBuilders.matchQuery("field", "unchanged"), 1L);
     }
 
     @Test
@@ -142,11 +142,11 @@ class OpenSearchIndexerTest {
         RoutingKey routingKey = useDocumentId(documentId);
 
         testee.index(documentId, content, routingKey).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
 
         testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 0L);
     }
 
     @Test
@@ -165,11 +165,11 @@ class OpenSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.index(documentId3, content3, ROUTING).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 3L);
 
         testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
     }
     
     @Test
@@ -178,11 +178,11 @@ class OpenSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
 
         testee.delete(ImmutableList.of(documentId), useDocumentId(documentId)).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 0L);
     }
 
     @Test
@@ -199,11 +199,11 @@ class OpenSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
         testee.index(documentId3, content3, ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 3L);
 
         testee.delete(ImmutableList.of(documentId, documentId3), ROUTING).block();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
     }
     
     @Test
@@ -224,7 +224,7 @@ class OpenSearchIndexerTest {
         String content = "{\"message\":\"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 1L);
 
         GetResponse getResponse = testee.get(documentId, useDocumentId(documentId)).block();
 
@@ -243,7 +243,7 @@ class OpenSearchIndexerTest {
             .isInstanceOf(NullPointerException.class);
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
                 new SearchRequest(INDEX_NAME.getValue())

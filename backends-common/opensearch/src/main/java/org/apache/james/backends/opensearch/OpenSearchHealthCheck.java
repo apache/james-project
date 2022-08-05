@@ -37,13 +37,13 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Mono;
 
 public class OpenSearchHealthCheck implements HealthCheck {
-    private static final ComponentName COMPONENT_NAME = new ComponentName("ElasticSearch Backend");
+    private static final ComponentName COMPONENT_NAME = new ComponentName("OpenSearch Backend");
 
     private final Set<IndexName> indexNames;
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
 
     @Inject
-    OpenSearchHealthCheck(ReactorElasticSearchClient client, Set<IndexName> indexNames) {
+    OpenSearchHealthCheck(ReactorOpenSearchClient client, Set<IndexName> indexNames) {
         this.client = client;
         this.indexNames = indexNames;
     }
@@ -75,7 +75,7 @@ public class OpenSearchHealthCheck implements HealthCheck {
             case RED:
                 return Result.unhealthy(COMPONENT_NAME, response.getClusterName() + " status is RED");
             default:
-                throw new NotImplementedException("Un-handled ElasticSearch cluster status");
+                throw new NotImplementedException("Un-handled OpenSearch cluster status");
         }
     }
 }

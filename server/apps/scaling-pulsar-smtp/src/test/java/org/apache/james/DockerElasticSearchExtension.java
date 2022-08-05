@@ -22,8 +22,8 @@ package org.apache.james;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
 import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -34,8 +34,8 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
     private final DockerOpenSearch dockerOpenSearch;
     private Optional<Duration> requestTimeout;
 
-    public DockerElasticSearchExtension() {
-        this(DockerElasticSearchSingleton.INSTANCE);
+    public DockerOpenSearchExtension() {
+        this(DockerOpenSearchSingleton.INSTANCE);
     }
 
     public DockerElasticSearchExtension withRequestTimeout(Duration requestTimeout) {

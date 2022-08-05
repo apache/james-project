@@ -203,7 +203,7 @@ public interface DockerOpenSearch {
         public static final Credential DEFAULT_CREDENTIAL =
             Credential.of(DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
-        private final DockerOpenSearch.NoAuth elasticSearch;
+        private final DockerOpenSearch.NoAuth openSearch;
         private final DockerContainer nginx;
         private final Network network;
 
@@ -213,10 +213,10 @@ public interface DockerOpenSearch {
 
         WithAuth(String imageName) {
             this.network = Network.newNetwork();
-            this.elasticSearch = new DockerOpenSearch.NoAuth(
+            this.openSearch = new DockerOpenSearch.NoAuth(
                 DockerOpenSearch.NoAuth
                     .defaultContainer(imageName)
-                    .withLogConsumer(frame -> LOGGER.debug("[ElasticSearch] " + frame.getUtf8String()))
+                    .withLogConsumer(frame -> LOGGER.debug("[OpenSearch] " + frame.getUtf8String()))
                     .withNetwork(network)
                     .withNetworkAliases("elasticsearch"));
 
@@ -235,13 +235,13 @@ public interface DockerOpenSearch {
 
 
         public void start() {
-            elasticSearch.start();
+            openSearch.start();
             nginx.start();
         }
 
         public void stop() {
             nginx.stop();
-            elasticSearch.stop();
+            openSearch.stop();
         }
 
         public int getHttpPort() {
@@ -282,17 +282,17 @@ public interface DockerOpenSearch {
 
         public void pause() {
             nginx.pause();
-            elasticSearch.pause();
+            openSearch.pause();
         }
 
         public void unpause() {
-            elasticSearch.unpause();
+            openSearch.unpause();
             nginx.unpause();
         }
 
         @Override
         public boolean isRunning() {
-            return nginx.isRunning() && elasticSearch.isRunning();
+            return nginx.isRunning() && openSearch.isRunning();
         }
     }
 
@@ -324,13 +324,13 @@ public interface DockerOpenSearch {
 
     default void cleanUpData() {
         if (esAPI().deleteAllIndexes().status() != HttpStatus.SC_OK) {
-            throw new IllegalStateException("Failed to delete all data from ElasticSearch");
+            throw new IllegalStateException("Failed to delete all data from OpenSearch");
         }
     }
 
     default void flushIndices() {
         if (esAPI().flush().status() != HttpStatus.SC_OK) {
-            throw new IllegalStateException("Failed to flush ElasticSearch");
+            throw new IllegalStateException("Failed to flush OpenSearch");
         }
     }
 

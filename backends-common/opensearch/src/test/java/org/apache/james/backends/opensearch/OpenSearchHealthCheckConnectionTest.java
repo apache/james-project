@@ -32,30 +32,30 @@ class OpenSearchHealthCheckConnectionTest {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
 
     @RegisterExtension
-    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
+    public DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
     private OpenSearchHealthCheck openSearchHealthCheck;
 
     @BeforeEach
     void setUp() {
-        ReactorElasticSearchClient client = elasticSearch.getDockerElasticSearch().clientProvider(REQUEST_TIMEOUT).get();
+        ReactorOpenSearchClient client = openSearch.getDockerOpenSearch().clientProvider(REQUEST_TIMEOUT).get();
 
         openSearchHealthCheck = new OpenSearchHealthCheck(client, ImmutableSet.of());
     }
 
     @Test
-    void checkShouldSucceedWhenElasticSearchIsRunning() {
+    void checkShouldSucceedWhenOpenSearchIsRunning() {
         assertThat(openSearchHealthCheck.check().block().isHealthy()).isTrue();
     }
 
     @Test
-    void checkShouldFailWhenElasticSearchIsPaused() {
+    void checkShouldFailWhenOpenSearchIsPaused() {
 
-        elasticSearch.getDockerElasticSearch().pause();
+        openSearch.getDockerOpenSearch().pause();
 
         try {
             assertThat(openSearchHealthCheck.check().block().isUnHealthy()).isTrue();
         } finally {
-            elasticSearch.getDockerElasticSearch().unpause();
+            openSearch.getDockerOpenSearch().unpause();
         }
     }
 }

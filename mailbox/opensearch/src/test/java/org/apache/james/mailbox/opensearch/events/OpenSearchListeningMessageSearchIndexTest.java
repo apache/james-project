@@ -33,7 +33,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.Authorizator;
@@ -158,7 +158,7 @@ class OpenSearchListeningMessageSearchIndexTest {
         }
     }
 
-    ReactorElasticSearchClient client;
+    ReactorOpenSearchClient client;
     OpenSearchListeningMessageSearchIndex testee;
     MailboxSession session;
     Mailbox mailbox;

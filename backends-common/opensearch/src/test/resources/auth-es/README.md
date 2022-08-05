@@ -3,8 +3,11 @@
 ### nginx-conf
 
 Contains nginx configuration files:
- - reverse_elasticsearch.conf: allow nginx to be the proxy connecting to ElasticSearch
+ - reverse_elasticsearch.conf: allow nginx to be the proxy connecting to OpenSearch
  - passwd: Nginx credentials file store, each record follows the format: `username:encrypted-password`
+
+TODO This set up is inherited from ElasticSearch where the security plugin was proprietary and this was our only way to 
+test things like SSL, auth. Now that we use OpenSearch we could instead rely on OpenSearch native features.
 
 ### default.crt & default.key
 

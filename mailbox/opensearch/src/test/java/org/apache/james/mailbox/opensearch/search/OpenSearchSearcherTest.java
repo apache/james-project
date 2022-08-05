@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -92,7 +92,7 @@ class OpenSearchSearcherTest {
     DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     TikaTextExtractor textExtractor;
-    ReactorElasticSearchClient client;
+    ReactorOpenSearchClient client;
     private InMemoryMailboxManager storeMailboxManager;
 
     @BeforeEach
@@ -105,8 +105,8 @@ class OpenSearchSearcherTest {
                 .build()));
 
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            openSearch.getDockerElasticSearch().clientProvider().get(),
-            openSearch.getDockerElasticSearch().configuration());
+            openSearch.getDockerOpenSearch().clientProvider().get(),
+            openSearch.getDockerOpenSearch().configuration());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();

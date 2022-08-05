@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.opensearch.AliasName;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.backends.opensearch.search.ScrolledSearch;
@@ -44,13 +44,13 @@ public class OpenSearchSearcher {
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final int MAX_ROUTING_KEY = 5;
 
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
     private final QueryConverter queryConverter;
     private final int size;
     private final AliasName aliasName;
     private final RoutingKey.Factory<MailboxId> routingKeyFactory;
 
-    public OpenSearchSearcher(ReactorElasticSearchClient client, QueryConverter queryConverter, int size,
+    public OpenSearchSearcher(ReactorOpenSearchClient client, QueryConverter queryConverter, int size,
                               ReadAliasName aliasName, RoutingKey.Factory<MailboxId> routingKeyFactory) {
         this.client = client;
         this.queryConverter = queryConverter;

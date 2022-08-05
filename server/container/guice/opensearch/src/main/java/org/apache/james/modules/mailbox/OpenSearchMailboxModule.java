@@ -32,7 +32,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -73,12 +73,12 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
         private final OpenSearchConfiguration configuration;
         private final OpenSearchMailboxConfiguration mailboxConfiguration;
-        private final ReactorElasticSearchClient client;
+        private final ReactorOpenSearchClient client;
 
         @Inject
         MailboxIndexCreator(OpenSearchConfiguration configuration,
                             OpenSearchMailboxConfiguration mailboxConfiguration,
-                            ReactorElasticSearchClient client) {
+                            ReactorOpenSearchClient client) {
             this.configuration = configuration;
             this.mailboxConfiguration = mailboxConfiguration;
             this.client = client;
@@ -138,7 +138,7 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private OpenSearchSearcher createMailboxElasticSearchSearcher(ReactorElasticSearchClient client,
+    private OpenSearchSearcher createMailboxElasticSearchSearcher(ReactorOpenSearchClient client,
                                                                   QueryConverter queryConverter,
                                                                   OpenSearchMailboxConfiguration configuration,
                                                                   RoutingKey.Factory<MailboxId> routingKeyFactory) {

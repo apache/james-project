@@ -38,10 +38,10 @@ public class OpenSearchStartUpCheck implements StartUpCheck {
 
     public static final String CHECK_NAME = "OpenSearchStartUpCheck";
 
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
 
     @Inject
-    private OpenSearchStartUpCheck(ReactorElasticSearchClient client) {
+    private OpenSearchStartUpCheck(ReactorOpenSearchClient client) {
         this.client = client;
     }
 

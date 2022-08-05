@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.james.backends.opensearch.ClientProvider;
 import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.OpenSearchHealthCheck;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.quota.search.opensearch.OpenSearchQuotaConfiguration;
@@ -41,7 +41,7 @@ public class OpenSearchClientModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(ClientProvider.class).in(Scopes.SINGLETON);
-        bind(ReactorElasticSearchClient.class).toProvider(ClientProvider.class);
+        bind(ReactorOpenSearchClient.class).toProvider(ClientProvider.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()

@@ -32,7 +32,7 @@ public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements
 
     @RegisterExtension
     static OpenSearchClusterExtension extension = new OpenSearchClusterExtension(new OpenSearchClusterExtension.OpenSearchCluster(
-        DockerAuthElasticSearchSingleton.INSTANCE,
+        DockerAuthOpenSearchSingleton.INSTANCE,
         new DockerOpenSearch.WithAuth()));
 
     @Override
