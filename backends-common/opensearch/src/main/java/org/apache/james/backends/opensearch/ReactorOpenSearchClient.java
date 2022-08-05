@@ -66,10 +66,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.core.scheduler.Schedulers;
 
-public class ReactorElasticSearchClient implements AutoCloseable {
+public class ReactorOpenSearchClient implements AutoCloseable {
     private final RestHighLevelClient client;
 
-    public ReactorElasticSearchClient(RestHighLevelClient client) {
+    public ReactorOpenSearchClient(RestHighLevelClient client) {
         this.client = client;
     }
 

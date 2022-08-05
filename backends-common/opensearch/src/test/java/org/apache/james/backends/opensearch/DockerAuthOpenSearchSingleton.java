@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.opensearch;
 
-public class DockerAuthElasticSearchSingleton {
+public class DockerAuthOpenSearchSingleton {
     public static DockerOpenSearch INSTANCE = new DockerOpenSearch.WithAuth();
 
     static {

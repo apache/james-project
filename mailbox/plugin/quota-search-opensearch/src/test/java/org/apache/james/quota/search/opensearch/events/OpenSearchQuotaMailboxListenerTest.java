@@ -31,7 +31,7 @@ import java.io.IOException;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.events.Event;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.SessionProvider;
@@ -68,7 +68,7 @@ class OpenSearchQuotaMailboxListenerTest {
     DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     OpenSearchQuotaMailboxListener quotaMailboxListener;
-    ReactorElasticSearchClient client;
+    ReactorOpenSearchClient client;
     private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @BeforeEach

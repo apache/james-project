@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
 import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.modules.TestDockerElasticSearchModule;
 import org.junit.runner.Description;

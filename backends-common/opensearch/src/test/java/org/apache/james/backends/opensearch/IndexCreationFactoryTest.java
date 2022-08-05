@@ -95,11 +95,11 @@ class IndexCreationFactoryTest {
 
     @RegisterExtension
     public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
-    private ReactorElasticSearchClient client;
+    private ReactorOpenSearchClient client;
 
     @BeforeEach
     void setUp() {
-        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
+        client = elasticSearch.getDockerOpenSearch().clientProvider().get();
     }
 
     @AfterEach

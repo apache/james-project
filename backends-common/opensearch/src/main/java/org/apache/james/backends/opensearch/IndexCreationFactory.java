@@ -140,15 +140,15 @@ public class IndexCreationFactory {
                     return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build(), customAnalyzers, customTokenizers);
                 }
 
-                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
+                public ReactorOpenSearchClient createIndexAndAliases(ReactorOpenSearchClient client) {
                     return build().createIndexAndAliases(client, Optional.empty(), Optional.empty());
                 }
 
-                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
+                public ReactorOpenSearchClient createIndexAndAliases(ReactorOpenSearchClient client, XContentBuilder mappingContent) {
                     return build().createIndexAndAliases(client, Optional.empty(), Optional.of(mappingContent));
                 }
 
-                public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings, Optional<XContentBuilder> mappingContent) {
+                public ReactorOpenSearchClient createIndexAndAliases(ReactorOpenSearchClient client, Optional<XContentBuilder> indexSettings, Optional<XContentBuilder> mappingContent) {
                     return build().createIndexAndAliases(client, indexSettings, mappingContent);
                 }
             }
@@ -178,8 +178,8 @@ public class IndexCreationFactory {
             this.customTokenizers = customTokenizers;
         }
 
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> indexSettings,
-                                                                Optional<XContentBuilder> mappingContent) {
+        public ReactorOpenSearchClient createIndexAndAliases(ReactorOpenSearchClient client, Optional<XContentBuilder> indexSettings,
+                                                             Optional<XContentBuilder> mappingContent) {
             Preconditions.checkNotNull(indexName);
             try {
                 createIndexIfNeeded(client, indexName, indexSettings.orElse(generateSetting()), mappingContent);
@@ -191,7 +191,7 @@ public class IndexCreationFactory {
             return client;
         }
 
-        private void createAliasIfNeeded(ReactorElasticSearchClient client, IndexName indexName, AliasName aliasName) throws IOException {
+        private void createAliasIfNeeded(ReactorOpenSearchClient client, IndexName indexName, AliasName aliasName) throws IOException {
             if (!aliasExist(client, aliasName)) {
                 client.indices()
                     .updateAliases(
@@ -203,12 +203,12 @@ public class IndexCreationFactory {
             }
         }
 
-        private boolean aliasExist(ReactorElasticSearchClient client, AliasName aliasName) throws IOException {
+        private boolean aliasExist(ReactorOpenSearchClient client, AliasName aliasName) throws IOException {
             return client.indices()
                 .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()), RequestOptions.DEFAULT);
         }
 
-        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings, Optional<XContentBuilder> mappingContent) throws IOException {
+        private void createIndexIfNeeded(ReactorOpenSearchClient client, IndexName indexName, XContentBuilder settings, Optional<XContentBuilder> mappingContent) throws IOException {
             try {
                 if (!indexExists(client, indexName)) {
                     CreateIndexRequest request = new CreateIndexRequest(indexName.getValue()).source(settings);
@@ -226,7 +226,7 @@ public class IndexCreationFactory {
             }
         }
 
-        private boolean indexExists(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
+        private boolean indexExists(ReactorOpenSearchClient client, IndexName indexName) throws IOException {
             return client.indices().exists(new GetIndexRequest(indexName.getValue()), RequestOptions.DEFAULT);
         }
 

@@ -34,7 +34,7 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -42,15 +42,15 @@ import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +151,7 @@ class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (ReactorElasticSearchClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
+        try (ReactorOpenSearchClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
             SearchRequest searchRequest = new SearchRequest()
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery()));

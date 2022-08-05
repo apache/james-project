@@ -45,11 +45,11 @@ public class OpenSearchIndexer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchIndexer.class);
 
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
     private final AliasName aliasName;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
 
-    public OpenSearchIndexer(ReactorElasticSearchClient client,
+    public OpenSearchIndexer(ReactorOpenSearchClient client,
                              WriteAliasName aliasName) {
         this.client = client;
         this.deleteByQueryPerformer = new DeleteByQueryPerformer(client, aliasName);

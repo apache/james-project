@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
-    private final DockerOpenSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private final DockerOpenSearch elasticSearch = DockerOpenSearchSingleton.INSTANCE;
 
     @Override
     public void afterEach(ExtensionContext context) {
@@ -40,7 +40,7 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
         if (!elasticSearch.isRunning()) {
             elasticSearch.unpause();
         }
-        awaitForElasticSearch();
+        awaitForOpenSearch();
     }
 
     @Override
@@ -53,11 +53,11 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
         return elasticSearch;
     }
 
-    public void awaitForElasticSearch() {
+    public void awaitForOpenSearch() {
         elasticSearch.flushIndices();
     }
 
-    public DockerOpenSearch getDockerElasticSearch() {
+    public DockerOpenSearch getDockerOpenSearch() {
         return elasticSearch;
     }
 }

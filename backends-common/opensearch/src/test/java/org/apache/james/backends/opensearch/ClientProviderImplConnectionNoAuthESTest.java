@@ -25,6 +25,6 @@ class ClientProviderImplConnectionNoAuthESTest implements ClientProviderImplConn
 
     @RegisterExtension
     static OpenSearchClusterExtension extension = new OpenSearchClusterExtension(new OpenSearchClusterExtension.OpenSearchCluster(
-        DockerElasticSearchSingleton.INSTANCE,
+        DockerOpenSearchSingleton.INSTANCE,
         new DockerOpenSearch.NoAuth()));
 }

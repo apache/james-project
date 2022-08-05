@@ -43,7 +43,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
@@ -124,13 +124,13 @@ class MailboxesRoutesTest {
     InMemoryMailboxManager mailboxManager;
     MessageIdManager messageIdManager;
     MemoryTaskManager taskManager;
-    ReactorElasticSearchClient client;
+    ReactorOpenSearchClient client;
 
     @BeforeEach
     void beforeEach() throws Exception {
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerElasticSearch().clientProvider().get(),
-            elasticSearch.getDockerElasticSearch().configuration());
+            elasticSearch.getDockerOpenSearch().clientProvider().get(),
+            elasticSearch.getDockerOpenSearch().configuration());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();

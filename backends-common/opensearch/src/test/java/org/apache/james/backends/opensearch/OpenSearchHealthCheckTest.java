@@ -41,21 +41,21 @@ class OpenSearchHealthCheckTest {
     }
 
     @Test
-    void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsGreen() {
+    void checkShouldReturnHealthyWhenOpenSearchClusterHealthStatusIsGreen() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.GREEN);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();
     }
 
     @Test
-    void checkShouldReturnUnHealthyWhenElasticSearchClusterHealthStatusIsRed() {
+    void checkShouldReturnUnHealthyWhenOpenSearchClusterHealthStatusIsRed() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.RED);
 
         assertThat(healthCheck.toHealthCheckResult(response).isUnHealthy()).isTrue();
     }
 
     @Test
-    void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsYellow() {
+    void checkShouldReturnHealthyWhenOpenSearchClusterHealthStatusIsYellow() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.YELLOW);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();

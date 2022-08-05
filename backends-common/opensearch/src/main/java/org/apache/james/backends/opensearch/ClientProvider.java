@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
-public class ClientProvider implements Provider<ReactorElasticSearchClient> {
+public class ClientProvider implements Provider<ReactorOpenSearchClient> {
 
     private static class HttpAsyncClientConfigurer {
 
@@ -75,7 +75,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             configuration.getMaxConnections().ifPresent(builder::setMaxConnTotal);
             configuration.getMaxConnectionsPerHost().ifPresent(builder::setMaxConnPerRoute);
 
-            builder.setThreadFactory(NamedThreadFactory.withName("ElasticSearch-driver"));
+            builder.setThreadFactory(NamedThreadFactory.withName("OpenSearch-driver"));
 
             return builder;
         }
@@ -181,31 +181,31 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final OpenSearchConfiguration configuration;
-    private final RestHighLevelClient elasticSearchRestHighLevelClient;
+    private final RestHighLevelClient openSearchRestHighLevelClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
 
     @Inject
     public ClientProvider(OpenSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.elasticSearchRestHighLevelClient = connect(configuration);
-        this.client = new ReactorElasticSearchClient(this.elasticSearchRestHighLevelClient);
+        this.openSearchRestHighLevelClient = connect(configuration);
+        this.client = new ReactorOpenSearchClient(this.openSearchRestHighLevelClient);
     }
 
     private RestHighLevelClient connect(OpenSearchConfiguration configuration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
-        return Mono.fromCallable(() -> connectToCluster(configuration))
-            .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
+        return Mono.fromCallable(this::connectToCluster)
+            .doOnError(e -> LOGGER.warn("Error establishing OpenSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
             .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.boundedElastic()))
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(OpenSearchConfiguration configuration) {
-        LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
+    private RestHighLevelClient connectToCluster() {
+        LOGGER.info("Trying to connect to OpenSearch service at {}", LocalDateTime.now());
 
         return new RestHighLevelClient(
             RestClient
@@ -220,12 +220,12 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     }
 
     @Override
-    public ReactorElasticSearchClient get() {
+    public ReactorOpenSearchClient get() {
         return client;
     }
 
     @PreDestroy
     public void close() throws IOException {
-        elasticSearchRestHighLevelClient.close();
+        openSearchRestHighLevelClient.close();
     }
 }

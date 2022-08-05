@@ -23,11 +23,11 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchSingleton;
 import org.apache.james.backends.opensearch.DockerOpenSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -51,10 +51,10 @@ import org.junit.rules.TemporaryFolder;
 
 public class OpenSearchQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
-    private final DockerOpenSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private final DockerOpenSearch elasticSearch = DockerOpenSearchSingleton.INSTANCE;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private ReactorElasticSearchClient client;
+    private ReactorOpenSearchClient client;
 
     @Override
     public void beforeEach(ExtensionContext context) {

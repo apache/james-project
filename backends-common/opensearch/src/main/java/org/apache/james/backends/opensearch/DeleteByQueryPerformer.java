@@ -27,10 +27,10 @@ import reactor.core.publisher.Mono;
 
 public class DeleteByQueryPerformer {
 
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
     private final WriteAliasName aliasName;
 
-    DeleteByQueryPerformer(ReactorElasticSearchClient client, WriteAliasName aliasName) {
+    DeleteByQueryPerformer(ReactorOpenSearchClient client, WriteAliasName aliasName) {
         this.client = client;
         this.aliasName = aliasName;
     }

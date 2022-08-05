@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -89,7 +89,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     TikaTextExtractor textExtractor;
-    ReactorElasticSearchClient client;
+    ReactorOpenSearchClient client;
 
     @AfterEach
     void tearDown() throws IOException {

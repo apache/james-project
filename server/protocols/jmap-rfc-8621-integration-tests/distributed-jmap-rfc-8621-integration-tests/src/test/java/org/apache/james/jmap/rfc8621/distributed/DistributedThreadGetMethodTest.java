@@ -33,7 +33,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -62,7 +62,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
         .await();
 
     private final QueryConverter queryConverter = new QueryConverter(new CriterionConverter());
-    private ReactorElasticSearchClient client;
+    private ReactorOpenSearchClient client;
 
     @RegisterExtension
     DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
@@ -100,8 +100,8 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     @Override
     public void initElasticSearchClient() {
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerElasticSearch().clientProvider().get(),
-            elasticSearch.getDockerElasticSearch().configuration());
+            elasticSearch.getDockerOpenSearch().clientProvider().get(),
+            elasticSearch.getDockerOpenSearch().configuration());
     }
 
     private void awaitForElasticSearch(QueryBuilder query, long totalHits) {

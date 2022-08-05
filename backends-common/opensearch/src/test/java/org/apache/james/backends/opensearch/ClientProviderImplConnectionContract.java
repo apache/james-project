@@ -74,7 +74,7 @@ interface ClientProviderImplConnectionContract {
     }
 
     default boolean isConnected(ClientProvider clientProvider) {
-        try (ReactorElasticSearchClient client = clientProvider.get()) {
+        try (ReactorOpenSearchClient client = clientProvider.get()) {
             client.search(
                 new SearchRequest()
                     .source(new SearchSourceBuilder().query(QueryBuilders.existsQuery("any"))),

@@ -22,7 +22,7 @@ package org.apache.james.quota.search.opensearch;
 import java.util.List;
 
 import org.apache.james.backends.opensearch.AliasName;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.search.ScrolledSearch;
 import org.apache.james.core.Username;
@@ -44,11 +44,11 @@ import reactor.core.publisher.Flux;
 public class OpenSearchQuotaSearcher implements QuotaSearcher {
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
-    private final ReactorElasticSearchClient client;
+    private final ReactorOpenSearchClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
 
-    public OpenSearchQuotaSearcher(ReactorElasticSearchClient client, ReadAliasName readAlias) {
+    public OpenSearchQuotaSearcher(ReactorOpenSearchClient client, ReadAliasName readAlias) {
         this.client = client;
         this.readAlias = readAlias;
         this.quotaQueryConverter = new QuotaQueryConverter();

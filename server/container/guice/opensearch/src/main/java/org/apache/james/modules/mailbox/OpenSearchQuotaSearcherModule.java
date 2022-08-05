@@ -30,7 +30,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
+import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -58,7 +58,7 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
     static class OpenSearchQuotaIndexCreator implements Startable {
         private final OpenSearchConfiguration configuration;
         private final OpenSearchQuotaConfiguration quotaConfiguration;
-        private final ReactorElasticSearchClient client;
+        private final ReactorOpenSearchClient client;
 
         @Inject
         OpenSearchQuotaIndexCreator(OpenSearchConfiguration configuration,
@@ -89,7 +89,7 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public QuotaSearcher provideSearcher(ReactorElasticSearchClient client, OpenSearchQuotaConfiguration configuration) {
+    public QuotaSearcher provideSearcher(ReactorOpenSearchClient client, OpenSearchQuotaConfiguration configuration) {
         return new OpenSearchQuotaSearcher(client,
             configuration.getReadAliasQuotaRatioName());
     }
@@ -108,7 +108,7 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public OpenSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
+    public OpenSearchQuotaMailboxListener provideListener(ReactorOpenSearchClient client,
                                                           OpenSearchQuotaConfiguration configuration,
                                                           QuotaRootResolver quotaRootResolver) {
         return new OpenSearchQuotaMailboxListener(
