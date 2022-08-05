@@ -39,7 +39,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 
 import reactor.core.publisher.Flux;
 
-public class ElasticSearchSearcher {
+public class OpenSearchSearcher {
     public static final int DEFAULT_SEARCH_SIZE = 100;
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final int MAX_ROUTING_KEY = 5;
@@ -50,8 +50,8 @@ public class ElasticSearchSearcher {
     private final AliasName aliasName;
     private final RoutingKey.Factory<MailboxId> routingKeyFactory;
 
-    public ElasticSearchSearcher(ReactorElasticSearchClient client, QueryConverter queryConverter, int size,
-                                 ReadAliasName aliasName, RoutingKey.Factory<MailboxId> routingKeyFactory) {
+    public OpenSearchSearcher(ReactorElasticSearchClient client, QueryConverter queryConverter, int size,
+                              ReadAliasName aliasName, RoutingKey.Factory<MailboxId> routingKeyFactory) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;

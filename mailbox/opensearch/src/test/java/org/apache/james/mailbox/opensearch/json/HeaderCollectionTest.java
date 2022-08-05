@@ -278,12 +278,12 @@ class HeaderCollectionTest {
 
     @Test
     void subjectsShouldBeWellRetrieved() {
-        String subject = "A fantastic ElasticSearch module will be available soon for JAMES";
+        String subject = "A fantastic OpenSearch module will be available soon for JAMES";
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Subject", subject))
             .build();
 
-        assertThat(headerCollection.getSubjectSet()).containsOnly("A fantastic ElasticSearch module will be available soon for JAMES");
+        assertThat(headerCollection.getSubjectSet()).containsOnly("A fantastic OpenSearch module will be available soon for JAMES");
     }
 
     @Test

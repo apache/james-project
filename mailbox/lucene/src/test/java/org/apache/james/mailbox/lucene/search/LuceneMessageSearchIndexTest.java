@@ -73,62 +73,62 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
         return InMemoryMessageId.of(1000);
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void uidShouldreturnEveryThing() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void sortOnCcShouldWork() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void sortOnFromShouldWork() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void orShouldReturnResultsMatchinganyRequests() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void internalDateAfterShouldReturnMessagesAfterAGivenDate() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void andShouldReturnResultsMatchingBothRequests() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
     }
@@ -139,12 +139,12 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     public void textShouldMatchEmailAddressDomainPart() throws Exception {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() {
     }

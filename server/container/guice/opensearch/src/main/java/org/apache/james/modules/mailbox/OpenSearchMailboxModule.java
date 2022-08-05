@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
+import static org.apache.james.mailbox.opensearch.search.OpenSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
 import java.util.Set;
@@ -38,14 +38,14 @@ import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.opensearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
+import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex.SearchOverride;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -72,12 +72,12 @@ public class OpenSearchMailboxModule extends AbstractModule {
     static class MailboxIndexCreator implements Startable {
 
         private final OpenSearchConfiguration configuration;
-        private final ElasticSearchMailboxConfiguration mailboxConfiguration;
+        private final OpenSearchMailboxConfiguration mailboxConfiguration;
         private final ReactorElasticSearchClient client;
 
         @Inject
         MailboxIndexCreator(OpenSearchConfiguration configuration,
-                            ElasticSearchMailboxConfiguration mailboxConfiguration,
+                            OpenSearchMailboxConfiguration mailboxConfiguration,
                             ReactorElasticSearchClient client) {
             this.configuration = configuration;
             this.mailboxConfiguration = mailboxConfiguration;
@@ -101,15 +101,15 @@ public class OpenSearchMailboxModule extends AbstractModule {
     protected void configure() {
         install(new OpenSearchQuotaSearcherModule());
 
-        bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
-        bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
-        bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
+        bind(OpenSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
+        bind(MessageSearchIndex.class).to(OpenSearchListeningMessageSearchIndex.class);
+        bind(ListeningMessageSearchIndex.class).to(OpenSearchListeningMessageSearchIndex.class);
 
         bind(new TypeLiteral<RoutingKey.Factory<MailboxId>>() {}).to(MailboxIdRoutingKeyFactory.class);
 
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
-            .to(ElasticSearchListeningMessageSearchIndex.class);
+            .to(OpenSearchListeningMessageSearchIndex.class);
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding()
@@ -128,9 +128,9 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX)
-    private OpenSearchIndexer createMailboxElasticSearchIndexer(ReactorElasticSearchClient client,
-                                                                ElasticSearchMailboxConfiguration configuration) {
+    @Named(MailboxOpenSearchConstants.InjectionNames.MAILBOX)
+    private OpenSearchIndexer createMailboxElasticSearchIndexer(ReactorOpenSearchClient client,
+                                                                OpenSearchMailboxConfiguration configuration) {
         return new OpenSearchIndexer(
             client,
             configuration.getWriteAliasMailboxName());
@@ -138,11 +138,11 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ElasticSearchSearcher createMailboxElasticSearchSearcher(ReactorElasticSearchClient client,
-                                                                     QueryConverter queryConverter,
-                                                                     ElasticSearchMailboxConfiguration configuration,
-                                                                     RoutingKey.Factory<MailboxId> routingKeyFactory) {
-        return new ElasticSearchSearcher(
+    private OpenSearchSearcher createMailboxElasticSearchSearcher(ReactorElasticSearchClient client,
+                                                                  QueryConverter queryConverter,
+                                                                  OpenSearchMailboxConfiguration configuration,
+                                                                  RoutingKey.Factory<MailboxId> routingKeyFactory) {
+        return new OpenSearchSearcher(
             client,
             queryConverter,
             DEFAULT_SEARCH_SIZE,
@@ -164,19 +164,19 @@ public class OpenSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ElasticSearchMailboxConfiguration getElasticSearchMailboxConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private OpenSearchMailboxConfiguration getElasticSearchMailboxConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
-            return ElasticSearchMailboxConfiguration.fromProperties(configuration);
+            return OpenSearchMailboxConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchMailboxConfiguration");
-            return ElasticSearchMailboxConfiguration.DEFAULT_CONFIGURATION;
+            return OpenSearchMailboxConfiguration.DEFAULT_CONFIGURATION;
         }
     }
 
     @Provides
     @Singleton
-    public IndexAttachments provideIndexAttachments(ElasticSearchMailboxConfiguration configuration) {
+    public IndexAttachments provideIndexAttachments(OpenSearchMailboxConfiguration configuration) {
         return configuration.getIndexAttachment();
     }
 

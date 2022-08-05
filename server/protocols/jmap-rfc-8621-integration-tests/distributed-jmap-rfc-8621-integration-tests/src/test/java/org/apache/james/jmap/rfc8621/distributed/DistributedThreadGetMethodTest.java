@@ -32,14 +32,15 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -47,12 +48,12 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -64,7 +65,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private ReactorElasticSearchClient client;
 
     @RegisterExtension
-    org.apache.james.backends.opensearch.DockerElasticSearchExtension elasticSearch = new org.apache.james.backends.opensearch.DockerElasticSearchExtension();
+    DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -106,7 +107,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
                     .source(new SearchSourceBuilder().query(query)),
                 RequestOptions.DEFAULT)
                 .block()

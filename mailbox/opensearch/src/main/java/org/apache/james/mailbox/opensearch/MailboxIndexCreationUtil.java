@@ -42,9 +42,9 @@ public class MailboxIndexCreationUtil {
 
     public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, OpenSearchConfiguration configuration) {
         return prepareClient(client,
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
+            MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+            MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+            MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX,
             configuration);
     }
 }

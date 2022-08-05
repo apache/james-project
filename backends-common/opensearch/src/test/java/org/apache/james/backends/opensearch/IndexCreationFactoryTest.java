@@ -94,7 +94,7 @@ class IndexCreationFactoryTest {
     }
 
     @RegisterExtension
-    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private ReactorElasticSearchClient client;
 
     @BeforeEach

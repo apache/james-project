@@ -28,7 +28,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;

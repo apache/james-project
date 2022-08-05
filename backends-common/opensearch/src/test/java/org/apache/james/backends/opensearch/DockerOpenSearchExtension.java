@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class DockerElasticSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
+public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
     private final DockerOpenSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
 

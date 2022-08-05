@@ -57,9 +57,9 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
+import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -79,35 +79,35 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
-public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
+public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final int FLAGS_UPDATE_PROCESSING_WINDOW_SIZE = 32;
 
-    public static class ElasticSearchListeningMessageSearchIndexGroup extends Group {
+    public static class OpenSearchListeningMessageSearchIndexGroup extends Group {
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchListeningMessageSearchIndex.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchListeningMessageSearchIndex.class);
     private static final String ID_SEPARATOR = ":";
-    private static final Group GROUP = new ElasticSearchListeningMessageSearchIndexGroup();
+    private static final Group GROUP = new OpenSearchListeningMessageSearchIndexGroup();
 
     private static final ImmutableList<String> MESSAGE_ID_FIELD = ImmutableList.of(MESSAGE_ID);
     private static final ImmutableList<String> UID_FIELD = ImmutableList.of(UID);
 
     private final OpenSearchIndexer openSearchIndexer;
-    private final ElasticSearchSearcher searcher;
-    private final MessageToElasticSearchJson messageToElasticSearchJson;
+    private final OpenSearchSearcher searcher;
+    private final MessageToOpenSearchJson messageToOpenSearchJson;
     private final RoutingKey.Factory<MailboxId> routingKeyFactory;
     private final MessageId.Factory messageIdFactory;
 
     @Inject
-    public ElasticSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
-                                                    Set<SearchOverride> searchOverrides,
-                                                    @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX) OpenSearchIndexer indexer,
-                                                    ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson,
-                                                    SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory) {
+    public OpenSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
+                                                 Set<SearchOverride> searchOverrides,
+                                                 @Named(MailboxOpenSearchConstants.InjectionNames.MAILBOX) OpenSearchIndexer indexer,
+                                                 OpenSearchSearcher searcher, MessageToOpenSearchJson messageToOpenSearchJson,
+                                                 SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory) {
         super(factory, searchOverrides, sessionProvider);
         this.openSearchIndexer = indexer;
-        this.messageToElasticSearchJson = messageToElasticSearchJson;
+        this.messageToOpenSearchJson = messageToOpenSearchJson;
         this.searcher = searcher;
         this.routingKeyFactory = routingKeyFactory;
         this.messageIdFactory = messageIdFactory;
@@ -169,7 +169,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     private Mono<String> generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) {
-        return messageToElasticSearchJson.convertToJson(message)
+        return messageToOpenSearchJson.convertToJson(message)
             .onErrorResume(e -> {
                 LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
                     mailbox.getName(),
@@ -177,7 +177,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                     session.getUser().asString(),
                     message.getUid(),
                     e);
-                return messageToElasticSearchJson.convertToJsonWithoutAttachment(message);
+                return messageToOpenSearchJson.convertToJsonWithoutAttachment(message);
             });
     }
 
@@ -218,7 +218,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(MailboxId mailboxId, UpdatedFlags updatedFlags) throws JsonProcessingException {
         return new UpdatedRepresentation(
             indexIdFor(mailboxId, updatedFlags.getUid()),
-            messageToElasticSearchJson
+            messageToOpenSearchJson
                 .getUpdatedJsonMessagePart(updatedFlags.getNewFlags(), updatedFlags.getModSeq()));
     }
 

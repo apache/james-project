@@ -32,7 +32,7 @@ class OpenSearchHealthCheckConnectionTest {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
 
     @RegisterExtension
-    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private OpenSearchHealthCheck openSearchHealthCheck;
 
     @BeforeEach

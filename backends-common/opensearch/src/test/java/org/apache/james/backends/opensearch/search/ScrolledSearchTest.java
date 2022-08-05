@@ -24,7 +24,7 @@ import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
@@ -54,7 +54,7 @@ class ScrolledSearchTest {
     private static final ConditionFactory WAIT_CONDITION = await().timeout(Durations.FIVE_SECONDS);
 
     @RegisterExtension
-    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private ReactorElasticSearchClient client;
 
     @BeforeEach
