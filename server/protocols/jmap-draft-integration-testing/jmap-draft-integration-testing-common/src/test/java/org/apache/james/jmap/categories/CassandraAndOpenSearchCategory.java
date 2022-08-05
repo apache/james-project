@@ -23,5 +23,5 @@ package org.apache.james.jmap.categories;
  * Category marker for Junit 4 conditional execution
  * Marks tests that should be run only on Cassandra & ElasticSearch implementation
  */
-public interface CassandraAndElasticSearchCategory {
+public interface CassandraAndOpenSearchCategory {
 }

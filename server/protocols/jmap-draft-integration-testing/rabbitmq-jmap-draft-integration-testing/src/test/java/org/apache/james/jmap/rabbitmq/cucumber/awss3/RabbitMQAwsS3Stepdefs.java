@@ -54,7 +54,7 @@ public class RabbitMQAwsS3Stepdefs {
     private final ImapStepdefs imapStepdefs;
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
-    private final DockerElasticSearchRule elasticSearch = CucumberElasticSearchSingleton.elasticSearch;
+    private final DockerElasticSearchRule elasticSearch = CucumberOpenSearchSingleton.elasticSearch;
     private final DockerRabbitMQRule rabbitMQServer = CucumberRabbitMQSingleton.rabbitMQServer;
     private final DockerAwsS3TestRule awsS3Server = CucumberAwsS3Singleton.awsS3Server;
 

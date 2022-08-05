@@ -63,7 +63,7 @@ import javax.mail.Flags;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.categories.CassandraAndElasticSearchCategory;
+import org.apache.james.jmap.categories.CassandraAndOpenSearchCategory;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.junit.categories.BasicFeature;
@@ -1219,7 +1219,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    @Category(CassandraAndElasticSearchCategory.class)
+    @Category(CassandraAndOpenSearchCategory.class)
     public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBodyWithStemming() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
@@ -1391,7 +1391,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    @Category(CassandraAndElasticSearchCategory.class)
+    @Category(CassandraAndOpenSearchCategory.class)
     public void getMessageListShouldExcludeMessagesWhenAttachmentFilterDoesntMatch() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
@@ -1420,7 +1420,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    @Category(CassandraAndElasticSearchCategory.class)
+    @Category(CassandraAndOpenSearchCategory.class)
     public void getMessageListShouldIncludeMessagesWhenAttachmentFilterMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
