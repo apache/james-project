@@ -56,7 +56,7 @@ public class CassandraJmapTestRule implements TestRule {
         CassandraJamesServerConfiguration configuration = CassandraJamesServerConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build();
 
         return CassandraJamesServerMain.createServer(configuration)

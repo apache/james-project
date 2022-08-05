@@ -60,7 +60,7 @@ public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShou
             .blobStore(BlobStoreConfiguration.cassandra()
                 .deduplication()
                 .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))

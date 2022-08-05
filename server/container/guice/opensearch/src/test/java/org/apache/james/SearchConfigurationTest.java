@@ -36,25 +36,25 @@ class SearchConfigurationTest {
     }
 
     @Test
-    void searchImplementationShouldReturnElasticSearchByDefault() throws Exception {
+    void searchImplementationShouldReturnOpenSearchByDefault() throws Exception {
         assertThat(SearchConfiguration.from(new PropertiesConfiguration()).getImplementation())
-            .isEqualTo(SearchConfiguration.Implementation.ElasticSearch);
+            .isEqualTo(SearchConfiguration.Implementation.OpenSearch);
     }
 
     @Test
-    void searchImplementationShouldReturnElasticSearchWhenSetToElasticSearch() throws Exception {
+    void searchImplementationShouldReturnOpenSearchWhenSetToOpenSearch() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", "ElasticSearch");
+        configuration.addProperty("implementation", "OpenSearch");
         assertThat(SearchConfiguration.from(configuration).getImplementation())
-                .isEqualTo(SearchConfiguration.Implementation.ElasticSearch);
+                .isEqualTo(SearchConfiguration.Implementation.OpenSearch);
     }
 
     @Test
-    void searchImplementationShouldReturnElasticSearchWhenSetToElasticSearchWithAlternativeCase() throws Exception {
+    void searchImplementationShouldReturnOpenSearchWhenSetToOpenSearchWithAlternativeCase() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", "elasticsearch");
+        configuration.addProperty("implementation", "opensearch");
         assertThat(SearchConfiguration.from(configuration).getImplementation())
-                .isEqualTo(SearchConfiguration.Implementation.ElasticSearch);
+                .isEqualTo(SearchConfiguration.Implementation.OpenSearch);
     }
 
     @Test

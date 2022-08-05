@@ -63,7 +63,7 @@ class CassandraSchemaVersionStartUpCheckTest {
         CassandraJamesServerConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())

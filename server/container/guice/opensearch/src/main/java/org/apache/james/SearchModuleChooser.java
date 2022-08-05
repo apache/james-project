@@ -133,7 +133,7 @@ public class SearchModuleChooser {
 
     public static List<Module> chooseModules(SearchConfiguration searchConfiguration) {
         switch (searchConfiguration.getImplementation()) {
-            case ElasticSearch:
+            case OpenSearch:
                 return ImmutableList.of(
                     new OpenSearchClientModule(),
                     new OpenSearchMailboxModule(),

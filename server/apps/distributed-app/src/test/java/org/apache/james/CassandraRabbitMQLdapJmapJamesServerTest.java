@@ -85,7 +85,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(blobStoreConfiguration)
-                .searchConfiguration(SearchConfiguration.elasticSearch())
+                .searchConfiguration(SearchConfiguration.openSearch())
                 .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP)
                 .build())
             .extension(new DockerOpenSearchExtension())

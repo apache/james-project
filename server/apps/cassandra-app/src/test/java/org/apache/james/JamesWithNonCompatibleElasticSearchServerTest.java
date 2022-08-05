@@ -37,7 +37,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
     static DockerOpenSearch dockerES6 = new DockerOpenSearch.NoAuth(Images.ELASTICSEARCH_6);
 
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
         .extension(new DockerOpenSearchExtension(dockerES6))
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

@@ -89,7 +89,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
                     .disableCache()
                     .deduplication()
                     .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(dockerElasticSearch)
         .extension(new CassandraExtension())

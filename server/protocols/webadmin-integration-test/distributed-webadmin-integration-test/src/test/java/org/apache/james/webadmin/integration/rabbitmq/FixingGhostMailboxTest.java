@@ -120,7 +120,7 @@ class FixingGhostMailboxTest {
                 .disableCache()
                 .deduplication()
                 .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())

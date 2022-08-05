@@ -66,7 +66,7 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
                     .disableCache()
                     .deduplication()
                     .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)

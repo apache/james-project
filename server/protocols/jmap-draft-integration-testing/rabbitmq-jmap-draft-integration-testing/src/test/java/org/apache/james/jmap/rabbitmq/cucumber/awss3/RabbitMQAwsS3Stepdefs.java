@@ -81,7 +81,7 @@ public class RabbitMQAwsS3Stepdefs {
                     .disableCache()
                     .deduplication()
                     .noCryptoConfig())
-            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build();
 
         mainStepdefs.jmapServer = CassandraRabbitMQJamesServerMain.createServer(configuration)

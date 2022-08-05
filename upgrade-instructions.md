@@ -41,6 +41,9 @@ You would need to manually delete the bindings from the event queues in RabbitMQ
 Configuration file was relocated to `opensearch.properties` and properties are now prefixed by `opensearch.` rather than
 `elasticsearch.`.
 
+Furthermore, implementation name that could be specified explicitly in `search.properties` has changed from `elasticsearch`
+to `opensearch`.
+
 ### Migration to Cassandra driver 4
 
 Date: 07/06/2022

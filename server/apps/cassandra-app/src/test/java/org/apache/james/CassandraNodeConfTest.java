@@ -42,7 +42,7 @@ class CassandraNodeConfTest {
     private static final int CASSANDRA_PORT = 9042;
 
     private static JamesServerBuilder extensionBuilder() {
-        return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+        return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
