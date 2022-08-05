@@ -41,14 +41,14 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
-public class ElasticSearchQuotaSearcher implements QuotaSearcher {
+public class OpenSearchQuotaSearcher implements QuotaSearcher {
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private final ReactorElasticSearchClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
 
-    public ElasticSearchQuotaSearcher(ReactorElasticSearchClient client, ReadAliasName readAlias) {
+    public OpenSearchQuotaSearcher(ReactorElasticSearchClient client, ReadAliasName readAlias) {
         this.client = client;
         this.readAlias = readAlias;
         this.quotaQueryConverter = new QuotaQueryConverter();

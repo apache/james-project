@@ -35,12 +35,12 @@ import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearcher;
-import org.apache.james.quota.search.opensearch.ElasticSearchQuotaConfiguration;
-import org.apache.james.quota.search.opensearch.ElasticSearchQuotaSearcher;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaConfiguration;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaSearcher;
 import org.apache.james.quota.search.opensearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.opensearch.UserRoutingKeyFactory;
-import org.apache.james.quota.search.opensearch.events.ElasticSearchQuotaMailboxListener;
-import org.apache.james.quota.search.opensearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.events.OpenSearchQuotaMailboxListener;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -55,15 +55,15 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class OpenSearchQuotaSearcherModule extends AbstractModule {
 
-    static class ElasticSearchQuotaIndexCreator implements Startable {
+    static class OpenSearchQuotaIndexCreator implements Startable {
         private final OpenSearchConfiguration configuration;
-        private final ElasticSearchQuotaConfiguration quotaConfiguration;
+        private final OpenSearchQuotaConfiguration quotaConfiguration;
         private final ReactorElasticSearchClient client;
 
         @Inject
-        ElasticSearchQuotaIndexCreator(OpenSearchConfiguration configuration,
-                                       ElasticSearchQuotaConfiguration quotaConfiguration,
-                                       ReactorElasticSearchClient client) {
+        OpenSearchQuotaIndexCreator(OpenSearchConfiguration configuration,
+                                    OpenSearchQuotaConfiguration quotaConfiguration,
+                                    ReactorOpenSearchClient client) {
             this.configuration = configuration;
             this.quotaConfiguration = quotaConfiguration;
             this.client = client;
@@ -84,13 +84,13 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
     protected void configure() {
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
-            .to(ElasticSearchQuotaMailboxListener.class);
+            .to(OpenSearchQuotaMailboxListener.class);
     }
 
     @Provides
     @Singleton
-    public QuotaSearcher provideSearcher(ReactorElasticSearchClient client, ElasticSearchQuotaConfiguration configuration) {
-        return new ElasticSearchQuotaSearcher(client,
+    public QuotaSearcher provideSearcher(ReactorElasticSearchClient client, OpenSearchQuotaConfiguration configuration) {
+        return new OpenSearchQuotaSearcher(client,
             configuration.getReadAliasQuotaRatioName());
     }
 
@@ -99,7 +99,7 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
     private OpenSearchQuotaConfiguration getOpenSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
-            return ElasticSearchQuotaConfiguration.fromProperties(configuration);
+            return OpenSearchQuotaConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + OPENSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default OpenSearchQuotaConfiguration");
             return OpenSearchQuotaConfiguration.DEFAULT_CONFIGURATION;
@@ -108,20 +108,20 @@ public class OpenSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ElasticSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
-                                                             ElasticSearchQuotaConfiguration configuration,
-                                                             QuotaRootResolver quotaRootResolver) {
-        return new ElasticSearchQuotaMailboxListener(
+    public OpenSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
+                                                          OpenSearchQuotaConfiguration configuration,
+                                                          QuotaRootResolver quotaRootResolver) {
+        return new OpenSearchQuotaMailboxListener(
             new OpenSearchIndexer(client,
                 configuration.getWriteAliasQuotaRatioName()),
-                new QuotaRatioToElasticSearchJson(quotaRootResolver),
+                new QuotaRatioToOpenSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
     @ProvidesIntoSet
-    InitializationOperation createIndex(ElasticSearchQuotaIndexCreator instance) {
+    InitializationOperation createIndex(OpenSearchQuotaIndexCreator instance) {
         return InitilizationOperationBuilder
-            .forClass(ElasticSearchQuotaIndexCreator.class)
+            .forClass(OpenSearchQuotaIndexCreator.class)
             .init(instance::createIndex);
     }
 }

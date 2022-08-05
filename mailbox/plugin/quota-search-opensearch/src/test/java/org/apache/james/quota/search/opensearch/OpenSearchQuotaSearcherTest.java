@@ -34,10 +34,10 @@ import org.apache.james.quota.search.QuotaSearcherContract;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(ElasticSearchQuotaSearchTestSystemExtension.class)
-class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
+@ExtendWith(OpenSearchQuotaSearchTestSystemExtension.class)
+class OpenSearchQuotaSearcherTest implements QuotaSearcherContract {
     @Test
-    void searchShouldNotBeLimitedByElasticSearchDefaultSearchLimit(QuotaSearchTestSystem testSystem) throws Exception {
+    void searchShouldNotBeLimitedByOpenSearchDefaultSearchLimit(QuotaSearchTestSystem testSystem) throws Exception {
         int userCount = 11;
         testSystem.getDomainList().addDomain(SIMPSON_COM);
         testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
@@ -58,7 +58,7 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
     }
 
     @Test
-    void searchShouldNotBeLimitedByElasticSearchDefaultSearchLimitWhenUsingOffset(QuotaSearchTestSystem testSystem) throws Exception {
+    void searchShouldNotBeLimitedByOpenSearchDefaultSearchLimitWhenUsingOffset(QuotaSearchTestSystem testSystem) throws Exception {
         int userCount = 12;
         testSystem.getDomainList().addDomain(SIMPSON_COM);
         testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));

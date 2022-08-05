@@ -40,10 +40,10 @@ import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.quota.search.opensearch.QuotaRatioElasticSearchConstants;
+import org.apache.james.quota.search.opensearch.QuotaRatioOpenSearchConstants;
 import org.apache.james.quota.search.opensearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.opensearch.UserRoutingKeyFactory;
-import org.apache.james.quota.search.opensearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
@@ -56,7 +56,7 @@ import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
-class ElasticSearchQuotaMailboxListenerTest {
+class OpenSearchQuotaMailboxListenerTest {
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -65,25 +65,25 @@ class ElasticSearchQuotaMailboxListenerTest {
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @RegisterExtension
-    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
-    ElasticSearchQuotaMailboxListener quotaMailboxListener;
+    OpenSearchQuotaMailboxListener quotaMailboxListener;
     ReactorElasticSearchClient client;
     private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @BeforeEach
     void setUp() throws IOException {
-        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
+        client = openSearch.getDockerOpenSearch().clientProvider().get();
 
         QuotaSearchIndexCreationUtil.prepareDefaultClient(client, OpenSearchConfiguration.builder()
-            .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
+            .addHost(openSearch.getDockerOpenSearch().getHttpHost())
             .build());
 
         quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
-        quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
+        quotaMailboxListener = new OpenSearchQuotaMailboxListener(
             new OpenSearchIndexer(client,
-                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-            new QuotaRatioToElasticSearchJson(quotaRootResolver),
+                QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+            new QuotaRatioToOpenSearchJson(quotaRootResolver),
             new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
@@ -93,9 +93,9 @@ class ElasticSearchQuotaMailboxListenerTest {
     }
 
     @Test
-    void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.quota.search.opensearch.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
-            .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
+    void deserializeOpenSearchQuotaMailboxListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.quota.search.opensearch.events.OpenSearchQuotaMailboxListener$OpenSearchQuotaMailboxListenerGroup"))
+            .isEqualTo(new OpenSearchQuotaMailboxListener.OpenSearchQuotaMailboxListenerGroup());
     }
 
     @Test
@@ -111,7 +111,7 @@ class ElasticSearchQuotaMailboxListenerTest {
 
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+                new SearchRequest(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                 RequestOptions.DEFAULT)
                 .block()

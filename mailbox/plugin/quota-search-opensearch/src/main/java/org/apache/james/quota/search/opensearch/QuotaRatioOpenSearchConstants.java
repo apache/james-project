@@ -23,7 +23,7 @@ import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 
-public interface QuotaRatioElasticSearchConstants {
+public interface QuotaRatioOpenSearchConstants {
 
     interface InjectionNames {
         String QUOTA_RATIO = "quotaRatio";
