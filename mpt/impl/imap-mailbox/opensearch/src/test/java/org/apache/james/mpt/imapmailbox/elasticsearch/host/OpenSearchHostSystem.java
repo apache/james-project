@@ -38,14 +38,14 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -96,14 +96,14 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), OpenSearchSearcher.DEFAULT_SEARCH_SIZE,
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()

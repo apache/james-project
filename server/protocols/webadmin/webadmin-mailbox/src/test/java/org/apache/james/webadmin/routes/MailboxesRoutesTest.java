@@ -41,7 +41,7 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
@@ -65,14 +65,14 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -117,7 +117,7 @@ class MailboxesRoutesTest {
     static final int SEARCH_SIZE = 1;
 
     @RegisterExtension
-    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
 
     WebAdminServer webAdminServer;
     ListeningMessageSearchIndex searchIndex;
@@ -141,14 +141,14 @@ class MailboxesRoutesTest {
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()

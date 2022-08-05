@@ -29,7 +29,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
@@ -46,11 +46,11 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -76,7 +76,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-class ElasticSearchSearcherTest {
+class OpenSearchSearcherTest {
 
     static final int SEARCH_SIZE = 1;
     private static final Username USERNAME = Username.of("user");
@@ -89,7 +89,7 @@ class ElasticSearchSearcherTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     TikaTextExtractor textExtractor;
     ReactorElasticSearchClient client;
@@ -105,8 +105,8 @@ class ElasticSearchSearcherTest {
                 .build()));
 
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerElasticSearch().clientProvider().get(),
-            elasticSearch.getDockerElasticSearch().configuration());
+            openSearch.getDockerElasticSearch().clientProvider().get(),
+            openSearch.getDockerElasticSearch().configuration());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
@@ -117,14 +117,14 @@ class ElasticSearchSearcherTest {
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()
@@ -155,7 +155,7 @@ class ElasticSearchSearcherTest {
             .map(Throwing.<MailboxPath, ComposedMessageId>function(mailboxPath -> addMessage(session, mailboxPath)).sneakyThrow())
             .collect(ImmutableList.toImmutableList());
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), composedMessageIds.size());
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), composedMessageIds.size());
 
         MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
             .from(SearchQuery.of(SearchQuery.all()))
@@ -182,10 +182,10 @@ class ElasticSearchSearcherTest {
             .getId();
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
-                new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
                     .source(new SearchSourceBuilder().query(query)),
                 RequestOptions.DEFAULT)
                 .block()

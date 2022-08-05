@@ -27,7 +27,7 @@ import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 
-public class ElasticSearchMailboxConfiguration {
+public class OpenSearchMailboxConfiguration {
 
     public static class Builder {
         private Optional<IndexName> indexMailboxName;
@@ -65,11 +65,11 @@ public class ElasticSearchMailboxConfiguration {
 
 
 
-        public ElasticSearchMailboxConfiguration build() {
-            return new ElasticSearchMailboxConfiguration(
-                indexMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX),
-                readAliasMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
-                writeAliasMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+        public OpenSearchMailboxConfiguration build() {
+            return new OpenSearchMailboxConfiguration(
+                indexMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX),
+                readAliasMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
+                writeAliasMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 indexAttachment.orElse(IndexAttachments.YES));
         }
     }
@@ -87,9 +87,9 @@ public class ElasticSearchMailboxConfiguration {
     private static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "elasticsearch.indexAttachments";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
 
-    public static final ElasticSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
+    public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
 
-    public static ElasticSearchMailboxConfiguration fromProperties(Configuration configuration) {
+    public static OpenSearchMailboxConfiguration fromProperties(Configuration configuration) {
         return builder()
             .indexMailboxName(computeMailboxIndexName(configuration))
             .readAliasMailboxName(computeMailboxReadAlias(configuration))
@@ -133,8 +133,8 @@ public class ElasticSearchMailboxConfiguration {
     private final WriteAliasName writeAliasMailboxName;
     private final IndexAttachments indexAttachment;
 
-    private ElasticSearchMailboxConfiguration(IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
-                                              WriteAliasName writeAliasMailboxName, IndexAttachments indexAttachment) {
+    private OpenSearchMailboxConfiguration(IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
+                                           WriteAliasName writeAliasMailboxName, IndexAttachments indexAttachment) {
         this.indexMailboxName = indexMailboxName;
         this.readAliasMailboxName = readAliasMailboxName;
         this.writeAliasMailboxName = writeAliasMailboxName;
@@ -160,8 +160,8 @@ public class ElasticSearchMailboxConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ElasticSearchMailboxConfiguration) {
-            ElasticSearchMailboxConfiguration that = (ElasticSearchMailboxConfiguration) o;
+        if (o instanceof OpenSearchMailboxConfiguration) {
+            OpenSearchMailboxConfiguration that = (OpenSearchMailboxConfiguration) o;
 
             return Objects.equals(this.indexAttachment, that.indexAttachment)
                 && Objects.equals(this.indexMailboxName, that.indexMailboxName)

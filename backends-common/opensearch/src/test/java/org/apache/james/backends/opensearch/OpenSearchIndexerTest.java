@@ -59,7 +59,7 @@ class OpenSearchIndexerTest {
     private static final DocumentId DOCUMENT_ID = DocumentId.fromString("1");
 
     @RegisterExtension
-    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private OpenSearchIndexer testee;
     private ReactorElasticSearchClient client;
 

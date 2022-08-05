@@ -38,14 +38,14 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
-public class MessageToElasticSearchJson {
+public class MessageToOpenSearchJson {
 
     private final ObjectMapper mapper;
     private final TextExtractor textExtractor;
     private final ZoneId zoneId;
     private final IndexAttachments indexAttachments;
 
-    public MessageToElasticSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments) {
+    public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
         this.indexAttachments = indexAttachments;
@@ -55,7 +55,7 @@ public class MessageToElasticSearchJson {
     }
 
     @Inject
-    public MessageToElasticSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments) {
+    public MessageToOpenSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments) {
         this(textExtractor, ZoneId.systemDefault(), indexAttachments);
     }
 

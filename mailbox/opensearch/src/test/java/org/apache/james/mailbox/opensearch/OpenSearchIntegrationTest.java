@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.List;
 
-import org.apache.james.backends.opensearch.DockerElasticSearchExtension;
+import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,11 +40,11 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaExtension;
@@ -73,7 +73,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 
-class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
+class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
             .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -86,7 +86,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
+    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     TikaTextExtractor textExtractor;
     ReactorElasticSearchClient client;
@@ -98,7 +98,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     @Override
     protected void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
-        awaitForElasticSearch(queryConverter.from(mailboxIds, query), messageCount);
+        awaitForOpenSearch(queryConverter.from(mailboxIds, query), messageCount);
     }
 
     @Override
@@ -112,8 +112,8 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build()));
 
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerElasticSearch().clientProvider().get(),
-            elasticSearch.getDockerElasticSearch().configuration());
+            openSearch.getDockerOpenSearch().clientProvider().get(),
+            openSearch.getDockerOpenSearch().configuration());
 
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
@@ -123,14 +123,14 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()
@@ -153,7 +153,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-    void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
+    void termsBetweenOpenSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
@@ -165,7 +165,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0à2345678é", 3200), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -184,7 +184,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789", 3300), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -203,7 +203,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("0123456789")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -222,7 +222,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000) + " matchMe", StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("matchMe")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -264,7 +264,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.headerExists("Custom-header")), session)).toStream())
             .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
@@ -286,7 +286,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        openSearch.awaitForOpenSearch();
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), session)).toStream())
             .contains(customStringHeaderMessageId.getUid());
@@ -317,13 +317,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session)).toStream())
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage")
+    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce OpenSearch disk space usage")
     @Test
     public void textShouldNotMatchOtherAddressesOfTheSameDomain() {
 
@@ -355,7 +355,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        openSearch.awaitForOpenSearch();
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "alice-test")), session)).toStream())
             .containsOnly(messageId2.getUid());
@@ -387,7 +387,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        openSearch.awaitForOpenSearch();
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "alice-test@domain.tld")), session)).toStream())
             .containsOnly(messageId1.getUid());
@@ -419,16 +419,16 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        openSearch.awaitForOpenSearch();
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "domain-test.tld")), session)).toStream())
             .containsOnly(messageId1.getUid());
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
-                        new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                        new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
                                 .source(new SearchSourceBuilder().query(query)),
                         RequestOptions.DEFAULT)
                         .block()

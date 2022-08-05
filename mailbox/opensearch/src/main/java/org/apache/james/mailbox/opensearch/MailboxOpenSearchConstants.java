@@ -23,7 +23,7 @@ import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 
-public interface MailboxElasticSearchConstants {
+public interface MailboxOpenSearchConstants {
 
     interface InjectionNames {
         String MAILBOX = "mailbox";
