@@ -64,7 +64,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     private ReactorOpenSearchClient client;
 
     @RegisterExtension
-    org.apache.james.backends.opensearch.DockerOpenSearchExtension elasticSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
+    org.apache.james.backends.opensearch.DockerOpenSearchExtension openSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -93,17 +93,17 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
 
     @Override
     public void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
-        awaitForElasticSearch(queryConverter.from(mailboxIds, query), messageCount);
+        awaitForOpenSearch(queryConverter.from(mailboxIds, query), messageCount);
     }
 
     @Override
-    public void initElasticSearchClient() {
+    public void initOpenSearchClient() {
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerOpenSearch().clientProvider().get(),
-            elasticSearch.getDockerOpenSearch().configuration());
+            openSearch.getDockerOpenSearch().clientProvider().get(),
+            openSearch.getDockerOpenSearch().configuration());
     }
 
-    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+    private void awaitForOpenSearch(QueryBuilder query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
                 new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
