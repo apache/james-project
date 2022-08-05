@@ -43,9 +43,9 @@ public class QuotaSearchIndexCreationUtil {
 
     public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, OpenSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
-            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
-            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
+            QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
+            QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
+            QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
             configuration);
     }
 }

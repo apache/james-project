@@ -27,7 +27,7 @@ import org.apache.james.backends.opensearch.OpenSearchHealthCheck;
 import org.apache.james.backends.opensearch.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.opensearch.ElasticSearchMailboxConfiguration;
-import org.apache.james.quota.search.opensearch.ElasticSearchQuotaConfiguration;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -51,7 +51,7 @@ public class OpenSearchClientModule extends AbstractModule {
     @Provides
     @Singleton
     Set<IndexName> provideIndexNames(ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                     ElasticSearchQuotaConfiguration quotaConfiguration) {
+                                     OpenSearchQuotaConfiguration quotaConfiguration) {
         return ImmutableSet.of(
             mailboxConfiguration.getIndexMailboxName(),
             quotaConfiguration.getIndexQuotaRatioName());

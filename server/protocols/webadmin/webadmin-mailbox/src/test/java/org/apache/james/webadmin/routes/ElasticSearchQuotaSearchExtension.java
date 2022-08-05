@@ -34,12 +34,12 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
-import org.apache.james.quota.search.opensearch.ElasticSearchQuotaSearcher;
-import org.apache.james.quota.search.opensearch.QuotaRatioElasticSearchConstants;
+import org.apache.james.quota.search.opensearch.OpenSearchQuotaSearcher;
+import org.apache.james.quota.search.opensearch.QuotaRatioOpenSearchConstants;
 import org.apache.james.quota.search.opensearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.opensearch.UserRoutingKeyFactory;
-import org.apache.james.quota.search.opensearch.events.ElasticSearchQuotaMailboxListener;
-import org.apache.james.quota.search.opensearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.opensearch.events.OpenSearchQuotaMailboxListener;
+import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -76,9 +76,9 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
             domainList.configure(DomainListConfiguration.DEFAULT);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
-            ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
-                new OpenSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-                new QuotaRatioToElasticSearchJson(resources.getQuotaRootResolver()),
+            OpenSearchQuotaMailboxListener listener = new OpenSearchQuotaMailboxListener(
+                new OpenSearchIndexer(client, QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+                new QuotaRatioToOpenSearchJson(resources.getQuotaRootResolver()),
                 new UserRoutingKeyFactory(), resources.getQuotaRootResolver());
 
             resources.getMailboxManager().getEventBus().register(listener);
@@ -90,8 +90,8 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 resources.getMailboxManager(),
                 quotaComponents.getQuotaManager(),
                 resources.getDefaultUserQuotaRootResolver(),
-                new ElasticSearchQuotaSearcher(client,
-                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
+                new OpenSearchQuotaSearcher(client,
+                    QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
