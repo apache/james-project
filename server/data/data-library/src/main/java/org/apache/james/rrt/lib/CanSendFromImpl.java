@@ -75,7 +75,7 @@ public class CanSendFromImpl implements CanSendFrom {
 
     @Override
     public Publisher<Boolean> userCanSendFromReactive(Username connectedUser, Username fromUser) {
-        return Mono.just(userCanSendFrom(connectedUser, fromUser))
+        return Mono.fromCallable(() -> userCanSendFrom(connectedUser, fromUser))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
