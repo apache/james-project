@@ -67,7 +67,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class ElasticSearchMailboxModule extends AbstractModule {
+public class OpenSearchMailboxModule extends AbstractModule {
 
     static class MailboxIndexCreator implements Startable {
 
@@ -93,13 +93,13 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchMailboxModule.class);
 
     public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
 
     @Override
     protected void configure() {
-        install(new ElasticSearchQuotaSearcherModule());
+        install(new OpenSearchQuotaSearcherModule());
 
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
@@ -113,7 +113,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding()
-            .to(ElasticSearchStartUpCheck.class);
+            .to(OpenSearchStartUpCheck.class);
     }
 
     @Provides

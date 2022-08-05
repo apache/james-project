@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 
-class ElasticSearchMailboxModuleTest {
+class OpenSearchMailboxModuleTest {
     @Test
     void test() {
         GuiceGenericLoader genericLoader = new GuiceGenericLoader(
@@ -43,7 +43,7 @@ class ElasticSearchMailboxModuleTest {
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
             ExtensionConfiguration.DEFAULT);
 
-        Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new ElasticSearchMailboxModule()
+        Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new OpenSearchMailboxModule()
             .provideSearchOverrides(genericLoader,
             OpenSearchConfiguration.builder()
                 .addHost(Host.parseConfString("127.0.0.1", 9200))

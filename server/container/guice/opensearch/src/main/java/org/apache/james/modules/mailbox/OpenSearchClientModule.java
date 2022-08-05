@@ -36,7 +36,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
-public class ElasticSearchClientModule extends AbstractModule {
+public class OpenSearchClientModule extends AbstractModule {
 
     @Override
     protected void configure() {

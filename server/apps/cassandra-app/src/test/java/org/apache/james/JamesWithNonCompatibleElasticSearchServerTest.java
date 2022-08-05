@@ -26,7 +26,7 @@ import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.mailbox.ElasticSearchStartUpCheck;
+import org.apache.james.modules.mailbox.OpenSearchStartUpCheck;
 import org.apache.james.util.docker.Images;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                 StartUpChecksPerformer.StartUpChecksException.class,
                 ex -> assertThat(ex.getBadChecks())
                     .containsOnly(CheckResult.builder()
-                        .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
+                        .checkName(OpenSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
                         .description("ES version(6.3.2) is not compatible with the recommendation(2.0.0)")
                         .build()));

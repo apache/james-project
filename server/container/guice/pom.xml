@@ -44,7 +44,6 @@
         <module>data-cassandra</module>
         <module>data-ldap</module>
         <module>distributed</module>
-        <module>elasticsearch</module>
         <module>es-metric-reporter</module>
         <module>jmx</module>
         <module>jpa-common</module>
@@ -55,6 +54,7 @@
         <module>mailrepository-cassandra</module>
         <module>memory</module>
         <module>onami</module>
+        <module>opensearch</module>
         <module>protocols/imap</module>
         <module>protocols/jmap</module>
         <module>protocols/lmtp</module>
@@ -120,11 +120,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-elasticsearch</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-es-resporter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -172,6 +167,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-opensearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME;
+import static org.apache.james.modules.mailbox.OpenSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -53,7 +53,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class ElasticSearchQuotaSearcherModule extends AbstractModule {
+public class OpenSearchQuotaSearcherModule extends AbstractModule {
 
     static class ElasticSearchQuotaIndexCreator implements Startable {
         private final OpenSearchConfiguration configuration;
@@ -78,7 +78,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchQuotaSearcherModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchQuotaSearcherModule.class);
 
     @Override
     protected void configure() {
@@ -96,13 +96,13 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ElasticSearchQuotaConfiguration getElasticSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private OpenSearchQuotaConfiguration getOpenSearchQuotaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
             return ElasticSearchQuotaConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchQuotaConfiguration");
-            return ElasticSearchQuotaConfiguration.DEFAULT_CONFIGURATION;
+            LOGGER.warn("Could not find " + OPENSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default OpenSearchQuotaConfiguration");
+            return OpenSearchQuotaConfiguration.DEFAULT_CONFIGURATION;
         }
     }
 

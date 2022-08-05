@@ -40,8 +40,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
-import org.apache.james.modules.mailbox.ElasticSearchClientModule;
-import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
+import org.apache.james.modules.mailbox.OpenSearchClientModule;
+import org.apache.james.modules.mailbox.OpenSearchMailboxModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
@@ -135,8 +135,8 @@ public class SearchModuleChooser {
         switch (searchConfiguration.getImplementation()) {
             case ElasticSearch:
                 return ImmutableList.of(
-                    new ElasticSearchClientModule(),
-                    new ElasticSearchMailboxModule(),
+                    new OpenSearchClientModule(),
+                    new OpenSearchMailboxModule(),
                     new ReIndexingModule());
             case Scanning:
                 return ImmutableList.of(
