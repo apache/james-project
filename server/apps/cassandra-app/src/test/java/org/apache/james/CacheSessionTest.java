@@ -79,7 +79,7 @@ class CacheSessionTest {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .combineWith(new CassandraCacheSessionModule()))

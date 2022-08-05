@@ -26,36 +26,36 @@ import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-public class TestDockerElasticSearchModule extends AbstractModule {
+public class TestDockerOpenSearchModule extends AbstractModule {
 
     private static class ESContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
 
-        private final DockerOpenSearch elasticSearch;
+        private final DockerOpenSearch openSearch;
 
-        private ESContainerCleanUp(DockerOpenSearch elasticSearch) {
-            this.elasticSearch = elasticSearch;
+        private ESContainerCleanUp(DockerOpenSearch openSearch) {
+            this.openSearch = openSearch;
         }
 
         @Override
         public Result run() {
-            elasticSearch.cleanUpData();
+            openSearch.cleanUpData();
 
             return Result.COMPLETED;
         }
     }
 
-    private final DockerOpenSearch elasticSearch;
+    private final DockerOpenSearch openSearch;
 
-    public TestDockerElasticSearchModule(DockerOpenSearch elasticSearch) {
-        this.elasticSearch = elasticSearch;
+    public TestDockerOpenSearchModule(DockerOpenSearch openSearch) {
+        this.openSearch = openSearch;
     }
 
     @Override
     protected void configure() {
-        bind(OpenSearchConfiguration.class).toInstance(elasticSearch.configuration());
+        bind(OpenSearchConfiguration.class).toInstance(openSearch.configuration());
         Multibinder.newSetBinder(binder(), CleanupTasksPerformer.CleanupTask.class)
             .addBinding()
-            .toInstance(new ESContainerCleanUp(elasticSearch));
+            .toInstance(new ESContainerCleanUp(openSearch));
     }
 
 }

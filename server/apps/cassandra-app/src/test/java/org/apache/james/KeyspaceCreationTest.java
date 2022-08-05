@@ -34,7 +34,7 @@ class KeyspaceCreationTest {
     class CreateWhenKeyspaceExists {
         @RegisterExtension
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
@@ -55,7 +55,7 @@ class KeyspaceCreationTest {
     class CreateWhenDoesNotExistAndHasRights {
         @RegisterExtension
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(KeyspacesConfiguration.class).toInstance(KeyspacesConfiguration.builder()
@@ -82,7 +82,7 @@ class KeyspaceCreationTest {
     class CreateWhenDoesNotExistAndDoNotHaveRights {
         @RegisterExtension
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
@@ -109,7 +109,7 @@ class KeyspaceCreationTest {
     class StartWhenKeyspaceDoesNotExist {
         @RegisterExtension
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)

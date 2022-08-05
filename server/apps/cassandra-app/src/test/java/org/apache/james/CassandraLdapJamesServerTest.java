@@ -63,7 +63,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
         .forConfiguration(configuration -> configuration
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP))
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(ldap)
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

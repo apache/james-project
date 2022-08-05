@@ -22,7 +22,7 @@ package org.apache.james.webadmin.integration.rabbitmq.vault;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -41,7 +41,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
 
-    private static final DockerElasticSearchExtension ES_EXTENSION = new DockerElasticSearchExtension();
+    private static final DockerOpenSearchExtension ES_EXTENSION = new DockerOpenSearchExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->

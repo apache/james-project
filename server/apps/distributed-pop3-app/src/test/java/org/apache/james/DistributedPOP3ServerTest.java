@@ -42,7 +42,7 @@ public class DistributedPOP3ServerTest implements Pop3ServerContract  {
                     .noCryptoConfig())
                 .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .extension(rabbitMQExtension)
             .server(configuration -> DistributedPOP3JamesServerMain.createServer(configuration)

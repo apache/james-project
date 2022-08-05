@@ -35,7 +35,7 @@ import java.util.List;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -76,8 +76,8 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .atMost(Duration.ofMinutes(5))
         .await();
 
-    private static final DockerElasticSearchExtension dockerElasticSearch =
-        new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(5));
+    private static final DockerOpenSearchExtension dockerElasticSearch =
+        new DockerOpenSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(5));
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->

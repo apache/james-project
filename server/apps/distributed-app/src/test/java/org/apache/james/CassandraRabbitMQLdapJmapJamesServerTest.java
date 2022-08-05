@@ -88,7 +88,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .searchConfiguration(SearchConfiguration.elasticSearch())
                 .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP)
                 .build())
-            .extension(new DockerElasticSearchExtension())
+            .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new LdapTestExtension())

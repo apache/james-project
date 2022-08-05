@@ -21,6 +21,8 @@ package org.apache.james;
 
 import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.modules.TestDockerElasticSearchModule;
+import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
+import org.apache.james.modules.TestDockerOpenSearchModule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -43,7 +45,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return new TestDockerElasticSearchModule(elasticSearch);
+        return new TestDockerOpenSearchModule(elasticSearch);
     }
 
     public DockerOpenSearch getDockerEs() {

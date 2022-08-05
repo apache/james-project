@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
 
-public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
+public class DockerOpenSearchExtension implements GuiceModuleTestExtension {
 
     private final DockerOpenSearch dockerOpenSearch;
     private Optional<Duration> requestTimeout;
@@ -38,12 +38,12 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
         this(DockerOpenSearchSingleton.INSTANCE);
     }
 
-    public DockerElasticSearchExtension withRequestTimeout(Duration requestTimeout) {
+    public DockerOpenSearchExtension withRequestTimeout(Duration requestTimeout) {
         this.requestTimeout = Optional.of(requestTimeout);
         return this;
     }
 
-    public DockerElasticSearchExtension(DockerOpenSearch dockerOpenSearch) {
+    public DockerOpenSearchExtension(DockerOpenSearch dockerOpenSearch) {
         this.dockerOpenSearch = dockerOpenSearch;
         requestTimeout = Optional.empty();
     }
@@ -68,7 +68,7 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
     @Override
     public Module getModule() {
         return binder -> binder.bind(OpenSearchConfiguration.class)
-            .toInstance(getElasticSearchConfigurationForDocker());
+            .toInstance(getOpenSearchConfigurationForDocker());
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
         getDockerES().flushIndices();
     }
 
-    private OpenSearchConfiguration getElasticSearchConfigurationForDocker() {
+    private OpenSearchConfiguration getOpenSearchConfigurationForDocker() {
         return OpenSearchConfiguration.builder()
             .addHost(getDockerES().getHttpHost())
             .requestTimeout(requestTimeout)

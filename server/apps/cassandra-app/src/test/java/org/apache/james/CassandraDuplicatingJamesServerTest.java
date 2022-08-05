@@ -34,7 +34,7 @@ class CassandraDuplicatingJamesServerTest implements JamesServerContract, JmapJa
             .configurationFromClasspath()
             .blobStore(new BlobStoreConfiguration(StorageStrategy.PASSTHROUGH, Optional.empty()))
             .build())
-        .extension(new DockerElasticSearchExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
