@@ -44,11 +44,11 @@ trait ThreadGetContract {
 
   protected def awaitMessageCount(mailboxIds: util.List[MailboxId], query: SearchQuery, messageCount: Long): Unit
 
-  protected def initElasticSearchClient(): Unit
+  protected def initOpenSearchClient(): Unit
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
-    initElasticSearchClient()
+    initOpenSearchClient()
 
     server.getProbe(classOf[DataProbeImpl])
       .fluent

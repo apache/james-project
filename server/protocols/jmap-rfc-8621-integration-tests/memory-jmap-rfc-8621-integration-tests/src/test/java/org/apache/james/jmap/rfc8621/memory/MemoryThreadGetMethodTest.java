@@ -51,7 +51,7 @@ public class MemoryThreadGetMethodTest implements ThreadGetContract {
     }
 
     @Override
-    public void initElasticSearchClient() {
+    public void initOpenSearchClient() {
 
     }
 

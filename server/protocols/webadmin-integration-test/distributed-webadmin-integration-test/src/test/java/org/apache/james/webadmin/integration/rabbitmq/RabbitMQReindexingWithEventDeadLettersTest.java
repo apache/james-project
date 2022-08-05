@@ -68,7 +68,7 @@ import io.restassured.specification.RequestSpecification;
 @Tag(BasicFeature.TAG)
 class RabbitMQReindexingWithEventDeadLettersTest {
 
-    private static final String ELASTICSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup";
+    private static final String OPENSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex$OpenSearchListeningMessageSearchIndexGroup";
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(Duration.ofMillis(100))
@@ -76,7 +76,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .atMost(Duration.ofMinutes(5))
         .await();
 
-    private static final DockerOpenSearchExtension dockerElasticSearch =
+    private static final DockerOpenSearchExtension dockerOpenSearch =
         new DockerOpenSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(5));
 
     @RegisterExtension
@@ -91,7 +91,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
                     .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
-        .extension(dockerElasticSearch)
+        .extension(dockerOpenSearch)
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
@@ -125,35 +125,35 @@ class RabbitMQReindexingWithEventDeadLettersTest {
 
         aliceAccessToken = authenticateJamesUser(LocalHostURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
 
-        dockerElasticSearch.getDockerES().pause();
+        dockerOpenSearch.getDockerES().pause();
         Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
     }
 
     @Disabled("JAMES-3011 It's already fails for a long time, but CI didn't detect this when it's not marked as BasicFeature")
     @Test
-    void indexationShouldBeFailingWhenElasticSearchContainerIsPaused() throws Exception {
+    void indexationShouldBeFailingWhenOpenSearchContainerIsPaused() throws Exception {
         aliceSavesADraft();
 
-        CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
+        CALMLY_AWAIT.until(() -> listOpenSearchFailedEvents().size() == 1);
 
-        unpauseElasticSearch();
+        unpauseOpenSearch();
         assertThat(listMessageIdsForAccount(aliceAccessToken)).isEmpty();
     }
 
     @Test
     void redeliverShouldReIndexFailedMessagesAndCleanEventDeadLetter() throws Exception {
         aliceSavesADraft();
-        CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
+        CALMLY_AWAIT.until(() -> listOpenSearchFailedEvents().size() == 1);
 
-        unpauseElasticSearch();
+        unpauseOpenSearch();
         redeliverAllFailedEvents();
 
         CALMLY_AWAIT.until(() -> listMessageIdsForAccount(aliceAccessToken).size() == 1);
-        assertThat(listElasticSearchFailedEvents()).isEmpty();
+        assertThat(listOpenSearchFailedEvents()).isEmpty();
     }
 
-    private void unpauseElasticSearch() throws Exception {
-        dockerElasticSearch.getDockerES().unpause();
+    private void unpauseOpenSearch() throws Exception {
+        dockerOpenSearch.getDockerES().unpause();
         Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker unpause is asynchronous and we found no way to poll for it
     }
 
@@ -181,9 +181,9 @@ class RabbitMQReindexingWithEventDeadLettersTest {
             .post("/jmap");
     }
 
-    private List<String> listElasticSearchFailedEvents() {
+    private List<String> listOpenSearchFailedEvents() {
         return webAdminApi.with()
-            .get("/events/deadLetter/groups/" + ELASTICSEARCH_LISTENER_GROUP)
+            .get("/events/deadLetter/groups/" + OPENSEARCH_LISTENER_GROUP)
         .andReturn()
             .body()
             .jsonPath()
