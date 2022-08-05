@@ -27,8 +27,8 @@
         <version>3.8.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
-    <name>Apache James :: MPT :: Imap Mailbox :: ElasticSearch</name>
+    <artifactId>apache-james-mpt-imapmailbox-opensearch</artifactId>
+    <name>Apache James :: MPT :: Imap Mailbox :: OpenSearch</name>
 
     <dependencies>
         <dependency>

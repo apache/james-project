@@ -35,6 +35,8 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
@@ -44,8 +46,6 @@ import org.apache.james.mailbox.opensearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.opensearch.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -57,7 +57,7 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 
 import com.google.common.collect.ImmutableSet;
 
-public class ElasticSearchHostSystem extends JamesImapHostSystem {
+public class OpenSearchHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
