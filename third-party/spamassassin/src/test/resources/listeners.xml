@@ -20,9 +20,6 @@
 
 <listeners>
   <listener>
-    <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
-  </listener>
-  <listener>
     <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
     <group>QuotaThresholdCrossingListener-lower-threshold</group>
     <configuration>
@@ -45,6 +42,9 @@
       </thresholds>
       <name>second</name>
     </configuration>
+  </listener>
+  <listener>
+    <class>org.apache.james.spamassassin.SpamAssassinListener</class>
   </listener>
   <listener>
     <class>org.apache.james.jmap.event.PopulateEmailQueryViewListener</class>

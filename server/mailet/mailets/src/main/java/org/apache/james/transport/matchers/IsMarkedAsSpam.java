@@ -26,7 +26,6 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -54,7 +53,9 @@ public class IsMarkedAsSpam extends GenericMatcher {
 
     private static final String YES = "yes";
 
-    private String spamStatusHeader = SpamAssassinResult.STATUS_MAIL.asString();
+    public static final String STATUS_MAIL_PACKAGE_DEFAULT = "org.apache.james.spamassassin.status";
+
+    private String spamStatusHeader = STATUS_MAIL_PACKAGE_DEFAULT;
 
     @Override
     public String getMatcherInfo() {
@@ -65,7 +66,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
     public void init() throws MessagingException {
         spamStatusHeader = Optional.ofNullable(getCondition())
             .filter(s -> !s.isEmpty())
-            .orElse(SpamAssassinResult.STATUS_MAIL.asString());
+            .orElse(STATUS_MAIL_PACKAGE_DEFAULT);
     }
 
     @Override

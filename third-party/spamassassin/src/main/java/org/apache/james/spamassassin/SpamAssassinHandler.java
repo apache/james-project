@@ -17,14 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.smtpserver.fastfail;
+package org.apache.james.spamassassin;
+
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -33,8 +33,6 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.JamesMessageHook;
-import org.apache.james.spamassassin.SpamAssassinInvoker;
-import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +57,6 @@ import org.slf4j.LoggerFactory;
  * 
  * <pre>
  * &lt;handler class="org.apache.james.smtpserver.SpamAssassinHandler"&gt;
- *   &lt;spamdHost&gt;localhost&lt;/spamdHost&gt;
- *   &lt;spamdPort&gt;783&lt;/spamdPort&gt; <br>
  *   &lt;spamdRejectionHits&gt;15.0&lt;/spamdRejectionHits&gt;
  *   &lt;checkAuthNetworks&gt;false&lt;/checkAuthNetworks&gt;
  * &lt;/handler&gt;
@@ -72,46 +68,24 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinHandler.class);
 
     private final MetricFactory metricFactory;
+    private final SpamAssassinConfiguration spamAssassinConfiguration;
 
-    /** The port spamd is listen on */
-    private int spamdPort = 783;
-
-    /** The host spamd is running on */
-    private String spamdHost = "localhost";
-
-    /** The hits on which the message get rejected */
+    /**
+     * The hits on which the message get rejected
+     */
     private double spamdRejectionHits = 0.0;
 
     @Inject
-    public SpamAssassinHandler(MetricFactory metricFactory) {
+    public SpamAssassinHandler(MetricFactory metricFactory, SpamAssassinConfiguration spamAssassinConfiguration) {
         this.metricFactory = metricFactory;
+        this.spamAssassinConfiguration = spamAssassinConfiguration;
     }
 
-    /**
-     * Set the host the spamd daemon is running at
-     * 
-     * @param spamdHost
-     *            The spamdHost
-     */
-    public void setSpamdHost(String spamdHost) {
-        this.spamdHost = spamdHost;
-    }
-
-    /**
-     * Set the port the spamd daemon is listen on
-     * 
-     * @param spamdPort
-     *            the spamdPort
-     */
-    public void setSpamdPort(int spamdPort) {
-        this.spamdPort = spamdPort;
-    }
 
     /**
      * Set the hits on which the message will be rejected.
-     * 
-     * @param spamdRejectionHits
-     *            The hits
+     *
+     * @param spamdRejectionHits The hits
      */
     public void setSpamdRejectionHits(double spamdRejectionHits) {
         this.spamdRejectionHits = spamdRejectionHits;
@@ -120,10 +94,9 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
-
         try {
             MimeMessage message = mail.getMessage();
-            SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamdHost, spamdPort);
+            SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamAssassinConfiguration.getHost().getHostName(), spamAssassinConfiguration.getHost().getPort());
             SpamAssassinResult result = sa.scanMail(message);
 
             // Add the headers
@@ -158,9 +131,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
     }
 
     @Override
-    public void init(Configuration config) throws ConfigurationException {
-        setSpamdHost(config.getString("spamdHost", "localhost"));
-        setSpamdPort(config.getInt("spamdPort", 783));
-        setSpamdRejectionHits(config.getDouble("spamdRejectionHits", 0.0));        
+    public void init(Configuration config) {
+        setSpamdRejectionHits(config.getDouble("spamdRejectionHits", 0.0));
     }
 }

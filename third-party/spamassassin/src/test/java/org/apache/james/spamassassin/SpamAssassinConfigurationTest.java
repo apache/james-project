@@ -17,15 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.docker;
+package org.apache.james.spamassassin;
 
-public interface Images {
-    String FAKE_SMTP = "weave/rest-smtp-sink:latest";
-    String RABBITMQ = "rabbitmq:3.9.18-management";
-    String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
-    String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
-    String ELASTICSEARCH_7 = "docker.elastic.co/elasticsearch/elasticsearch:7.10.2";
-    String OPENSEARCH = "opensearchproject/opensearch:2.1.0";
-    String TIKA = "apache/tika:1.28.2";
-    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.4";
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import org.apache.james.util.Host;
+import org.junit.jupiter.api.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class SpamAssassinConfigurationTest {
+
+    @Test
+    void spamAssassinConfigurationShouldRespectBeanContract() {
+        EqualsVerifier.forClass(SpamAssassinConfiguration.class)
+            .verify();
+    }
+
+
+    @Test
+    void isEnableShouldReturnTrueWhenConfigured() {
+        assertThatCode(() -> new SpamAssassinConfiguration(Host.from("hostname", 1)))
+            .doesNotThrowAnyException();
+    }
 }

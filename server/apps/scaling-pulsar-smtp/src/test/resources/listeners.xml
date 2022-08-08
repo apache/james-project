@@ -20,9 +20,6 @@
 
 <listeners>
   <listener>
-    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
-  </listener>
-  <listener>
     <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
   </listener>
 </listeners>
