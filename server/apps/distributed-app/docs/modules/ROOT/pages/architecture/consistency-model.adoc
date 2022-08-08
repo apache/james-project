@@ -61,14 +61,14 @@ link:https://github.com/apache/james-project/tree/master/server/apps/distributed
 JMAP support could be added, but requires followup developments as some components critically depends on UIDs
 (for instance the search).
 
-=== ElasticSearch consistency model
+=== OpenSearch consistency model
 
-ElasticSearch relies on link:https://www.elastic.co/blog/a-new-era-for-cluster-coordination-in-elasticsearch[strong consistency]
+OpenSearch relies on link:https://www.elastic.co/blog/a-new-era-for-cluster-coordination-in-elasticsearch[strong consistency]
 with home grown algorithm.
 
 The 6.x release line, that the distributed server is using is known to be slow to recover from failures.
 
-Be aware that data is asynchronously indexed in ElasticSearch, changes will be eventually visible.
+Be aware that data is asynchronously indexed in OpenSearch, changes will be eventually visible.
 
 === RabbitMQ consistency model
 
@@ -100,7 +100,7 @@ when implemented for a given denormalization, enables auto-healing. When an inco
 The Distributed Server leverages several data stores:
 
  - Cassandra is used for metadata storage
- - ElasticSearch for search
+ - OpenSearch for search
  - Object Storage for large object storage
 
 Thus the Distributed Server also offers mechanisms to enforce consistency across data stores.
@@ -115,14 +115,14 @@ the object store payload first, then write the corresponding metadata in Cassand
 Such a procedure avoids metadata pointing to unexisting blobs, however might lead to some unreferenced
 blobs.
 
-=== Cassandra <=> ElasticSearch
+=== Cassandra <=> OpenSearch
 
 After being written to the primary stores (namely Cassandra & Object Storage), email content is
-asynchronously indexed into ElasticSearch.
+asynchronously indexed into OpenSearch.
 
 This process, called the EventBus, which retries temporary errors, and stores transient errors for
 later admin-triggered retries is described further xref:operate/guide.adoc#_mailbox_event_bus[here].
 His role is to spread load and limit inconsistencies.
 
 Furthermore, some xref:operate/guide.adoc#_usual_troubleshooting_procedures[re-indexing tasks]
-enables to re-synchronise ElasticSearch content with the primary data stores
+enables to re-synchronise OpenSearch content with the primary data stores

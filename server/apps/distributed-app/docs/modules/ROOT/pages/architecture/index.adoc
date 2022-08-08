@@ -14,8 +14,8 @@ a known pattern.
  * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
  email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or S3 compatible *Object Storage*
 (S3 or Swift).
- * *ElasticSearch* component empowers full text search on emails. It also enables querying data with unplanned access
-patterns. ElasticSearch throughtput do not however match the one of Cassandra thus its use is avoided upon regular workloads.
+ * *OpenSearch* component empowers full text search on emails. It also enables querying data with unplanned access
+patterns. OpenSearch throughtput do not however match the one of Cassandra thus its use is avoided upon regular workloads.
  * *RabbitMQ* enables James nodes of a same cluster to collaborate together. It is used to implement connected protocols,
 notification patterns as well as distributed resilient work queues and mail queue.
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
@@ -163,12 +163,12 @@ within the xref:#_blobstore[BlobStore].
 
 ==== Search index
 
-Emails are indexed asynchronously in ElasticSearch via the xref:#_event_bus[EventBus]
+Emails are indexed asynchronously in OpenSearch via the xref:#_event_bus[EventBus]
 in order to enpower advanced and fast email full text search.
 
 Text extraction can be set up using link:https://tika.apache.org/[Tika], allowing
 to extract the text from attachment, allowing to search your emails based on the attachment
-textual content. In such case, the ElasticSearch indexer will call a Tika server prior
+textual content. In such case, the OpenSearch indexer will call a Tika server prior
 indexing.
 
 ==== Quotas
@@ -204,7 +204,7 @@ called when an event is fired, allowing to do different kind of extra
 operations on the system, like:
 
 * Current quota calculation
-* Message indexation with ElasticSearch
+* Message indexation with OpenSearch
 * Mailbox annotations cleanup
 * Ham/spam reporting to Spam filtering system
 * …

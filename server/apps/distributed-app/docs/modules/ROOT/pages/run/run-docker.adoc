@@ -7,7 +7,7 @@
 Requirements: docker & docker-compose installed.
 
 When you try James this way, you will use the most current state of James.
-It will be configured to run with Cassandra & ElasticSearch.
+It will be configured to run with Cassandra & OpenSearch.
 All those three components will be started with a single command.
 
 You can retrieve the docker-compose file : ( docker-compose file and james image name should be changed) 
@@ -63,15 +63,15 @@ You need a running *Zenko Cloudserver* objectstorage in docker which connects to
 
     $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
 
-You need a running *ElasticSearch* in docker which connects to *james* network. To achieve this run:
+You need a running *OpenSearch* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.1.0
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika container which connects to *james* network:
 
     $ docker run -d --network james --name=tika apache/tika:1.28.2
 
-You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
+You can find more explanation on the need of Tika in this xref:configure/tika.adoc[page].
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -112,7 +112,7 @@ Or by mapping the 4000 port to the IP of the desired network interface, for exam
 
 === Handling attachment indexing
 
-You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
+You can handle attachment text extraction before indexing in OpenSearch. This makes attachments searchable. To enable this:
 
 Run tika connect to *james* network:
 

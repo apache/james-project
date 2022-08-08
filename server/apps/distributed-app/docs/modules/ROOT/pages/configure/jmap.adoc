@@ -45,7 +45,7 @@ Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
 Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | view.email.query.enabled
-| Optional boolean. Defaults to false. Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
+| Optional boolean. Defaults to false. Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against OpenSearch?
 This enables a higher resilience, but the projection needs to be correctly populated.
 
 | user.provisioning.enabled
