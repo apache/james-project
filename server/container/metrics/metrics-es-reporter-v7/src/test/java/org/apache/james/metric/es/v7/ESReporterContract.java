@@ -27,7 +27,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.http.HttpStatus;
-import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
@@ -53,7 +53,7 @@ abstract class ESReporterContract {
     private Timer timer;
 
     @BeforeEach
-    void setUp(DockerElasticSearch elasticSearch) {
+    void setUp(DockerOpenSearch elasticSearch) {
         RestAssured.baseURI = String.format("http://%s:%d",
             elasticSearch.getHttpHost().getHostName(), elasticSearch.getHttpHost().getPort());
         await().atMost(Durations.ONE_MINUTE)

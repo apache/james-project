@@ -19,7 +19,7 @@
 
 package org.apache.james.metric.es.v7;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ES7ReporterTest extends ESReporterContract {
 
     @RegisterExtension
-    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch.NoAuth());
+    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerOpenSearch.NoAuth());
 
     @Override
     @Disabled("JAMES-3492")

@@ -19,7 +19,7 @@
 
 package org.apache.james.metric.es.v7;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -32,9 +32,9 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 public class DockerElasticSearchExtension implements AfterAllCallback, BeforeAllCallback, BeforeEachCallback, AfterEachCallback,
     ParameterResolver {
 
-    private final DockerElasticSearch elasticSearch;
+    private final DockerOpenSearch elasticSearch;
 
-    DockerElasticSearchExtension(DockerElasticSearch elasticSearch) {
+    DockerElasticSearchExtension(DockerOpenSearch elasticSearch) {
         this.elasticSearch = elasticSearch;
     }
 
@@ -63,7 +63,7 @@ public class DockerElasticSearchExtension implements AfterAllCallback, BeforeAll
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == DockerElasticSearch.class);
+        return (parameterContext.getParameter().getType() == DockerOpenSearch.class);
     }
 
     @Override

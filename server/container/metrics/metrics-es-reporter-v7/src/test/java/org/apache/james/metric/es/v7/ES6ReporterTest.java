@@ -19,7 +19,7 @@
 
 package org.apache.james.metric.es.v7;
 
-import org.apache.james.backends.opensearch.DockerElasticSearch;
+import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.util.docker.Images;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,5 +27,5 @@ class ES6ReporterTest extends ESReporterContract {
 
     @RegisterExtension
     static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(
-            new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_6));
+            new DockerOpenSearch.NoAuth(Images.ELASTICSEARCH_6));
 }
