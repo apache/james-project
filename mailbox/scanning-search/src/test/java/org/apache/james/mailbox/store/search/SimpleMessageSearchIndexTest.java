@@ -26,7 +26,11 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
@@ -221,5 +225,28 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     @Disabled("JAMES-2241: memory does not handle header with dots indexation (intended for ES)")
     @Override
     public void headerWithDotsShouldBeIndexed() {
+    }
+    
+    @Test
+    public void canCompareFetchTypes() {
+        assertThat(FetchType.values()).containsExactly(FetchType.METADATA, FetchType.HEADERS, FetchType.BODY, FetchType.FULL);
+        
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.METADATA)).isEqualTo(FetchType.METADATA);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.HEADERS)).isEqualTo(FetchType.HEADERS);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.BODY)).isEqualTo(FetchType.BODY);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.FULL)).isEqualTo(FetchType.FULL);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.HEADERS, FetchType.HEADERS)).isEqualTo(FetchType.HEADERS);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.HEADERS, FetchType.BODY)).isEqualTo(FetchType.BODY);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.HEADERS, FetchType.FULL)).isEqualTo(FetchType.FULL);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.BODY, FetchType.BODY)).isEqualTo(FetchType.BODY);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.BODY, FetchType.FULL)).isEqualTo(FetchType.FULL);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.FULL, FetchType.FULL)).isEqualTo(FetchType.FULL);
+
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.HEADERS, FetchType.METADATA)).isEqualTo(FetchType.HEADERS);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.BODY, FetchType.METADATA)).isEqualTo(FetchType.BODY);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.FULL, FetchType.METADATA)).isEqualTo(FetchType.FULL);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.BODY, FetchType.HEADERS)).isEqualTo(FetchType.BODY);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.FULL, FetchType.HEADERS)).isEqualTo(FetchType.FULL);
+        assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.FULL, FetchType.BODY)).isEqualTo(FetchType.FULL);
     }
 }

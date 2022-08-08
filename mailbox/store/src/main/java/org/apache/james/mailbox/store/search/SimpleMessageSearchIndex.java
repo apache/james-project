@@ -57,6 +57,7 @@ import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -113,6 +114,65 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return null;
     }
     
+    /**
+     * Walks down the query tree's conjunctions to find the highest necessary mail fetch type.
+     * @param crits - list of Criterion to search from
+     * @return required fetch type - metadata, headers, or full
+     */
+    private static FetchType getFetchTypeForCriteria(List<Criterion> crits) {
+        return crits.stream()
+            .map(SimpleMessageSearchIndex::getFetchTypeForCriterion)
+            .reduce(SimpleMessageSearchIndex::maxFetchType)
+            .orElse(FetchType.METADATA);
+    }
+
+    private static FetchType getFetchTypeForCriterion(Criterion crit) {
+        if (crit instanceof ConjunctionCriterion) {
+            return getFetchTypeForCriteria(((ConjunctionCriterion) crit).getCriteria());
+        }
+        if (crit instanceof SearchQuery.AllCriterion || crit instanceof SearchQuery.TextCriterion) {
+            return FetchType.FULL;
+        }
+        if (crit instanceof SearchQuery.HeaderCriterion || crit instanceof SearchQuery.MimeMessageIDCriterion) {
+            return FetchType.HEADERS;
+        }
+        return FetchType.METADATA;
+    }
+    
+    /**
+     * Searches a list of query sort options for the highest necessary mail fetch type.
+     * @param sorts - list of Sort to search
+     * @return required fetch type - metadata or headers
+     */
+    private static FetchType getFetchTypeForSorts(List<SearchQuery.Sort> sorts) {
+        return sorts.stream()
+            .map(SimpleMessageSearchIndex::getFetchTypeForSort)
+            .reduce(FetchType.METADATA, SimpleMessageSearchIndex::maxFetchType);
+    }
+
+    private static FetchType getFetchTypeForSort(SearchQuery.Sort sort) {
+        switch (sort.getSortClause()) {
+            case Arrival:
+            case Size:
+            case Uid:
+            case Id:
+                return FetchType.METADATA;
+            case MailboxCc:
+            case MailboxFrom:
+            case MailboxTo:
+            case BaseSubject:
+            case SentDate:
+                return FetchType.HEADERS;
+            default:
+                throw new IllegalArgumentException("cannot determine fetch type for sort option " + sort.getSortClause());
+        }
+    }
+
+    @VisibleForTesting
+    static FetchType maxFetchType(FetchType a, FetchType b) {
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+
     @Override
     public Flux<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
@@ -130,16 +190,18 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         if (uidCrit != null) {
             // if there is a conjugated uid range criterion in the query tree we can optimize by
             // only fetching this uid range
+            FetchType fetchType = maxFetchType(FetchType.METADATA, getFetchTypeForSorts(query.getSorts()));
             UidRange[] ranges = uidCrit.getOperator().getRange();
             for (UidRange r : ranges) {
-                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.METADATA, UNLIMITED);
+                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), fetchType, UNLIMITED);
                 while (it.hasNext()) {
                     hitSet.add(it.next());
                 }
             }
         } else {
-            // we have to fetch all messages
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.FULL, UNLIMITED);
+            // we have to fetch all messages; try to limit their memory requirements
+            FetchType fetchType = maxFetchType(getFetchTypeForCriteria(query.getCriteria()), getFetchTypeForSorts(query.getSorts()));
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), fetchType, UNLIMITED);
             while (messages.hasNext()) {
                 MailboxMessage m = messages.next();
                 hitSet.add(m);
