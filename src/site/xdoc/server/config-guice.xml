@@ -73,7 +73,7 @@
       </tr>
       <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties">elasticsearch.properties</a></td>
-        <td><a href="config-elasticsearch.html">ElasticSearch Configuration</a></td>
+        <td><a href="config-opensearch.html">OpenSearch Configuration</a></td>
         <td></td>
       </tr>
       <tr>

@@ -40,9 +40,9 @@
                 <li><a href="https://github.com/apache/james-project/tree/master/server/app">Spring</a>: Allows you to
                     choose across various available implementations for each component. Requires more configuration effort.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-guice">
-                    Cassandra-guice</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch targeting single server deployment. Optional support for LDAP authentication.</li>
+                    Cassandra-guice</a>: Ships a James server storing emails in Cassandra and index them in OpenSearch targeting single server deployment. Optional support for LDAP authentication.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-rabbitmq-guice">
-                    Distributed: cassandra-rabbitmq-guice</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch targeting multi node deployments. S3 is used to store blobs. RabbitMQ is used for inter-node messaging. Optional support for LDAP authentication.</li>
+                    Distributed: cassandra-rabbitmq-guice</a>: Ships a James server storing emails in Cassandra and index them in OpenSearch targeting multi node deployments. S3 is used to store blobs. RabbitMQ is used for inter-node messaging. Optional support for LDAP authentication.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice">
                     Jpa-Guice</a>: Ships a James server storing emails in a SQL database (derby by default) accessed with JPA and Lucene to index emails and targets single node deployment.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp">
@@ -164,8 +164,8 @@
                     <tr>
                         <td>Indexer implementation</td>
                         <td>Lucene/None</td>
-                        <td>ElasticSearch</td>
-                        <td>ElasticSearch</td>
+                        <td>OpenSearch</td>
+                        <td>OpenSearch</td>
                         <td>Lucene</td>
                         <td>None</td>
                     </tr>
@@ -235,7 +235,7 @@
                         <td>Cassandra</td>
                         <td>S3 or Cassandra</td>
                         <td>RabbitMQ</td>
-                        <td>ElasticSearch</td>
+                        <td>OpenSearch</td>
                         <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                     <tr>
@@ -271,7 +271,7 @@
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>In VM</td>
-                        <td>ElasticSearch</td>
+                        <td>OpenSearch</td>
                         <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                 </table>

@@ -56,7 +56,7 @@
           
         <p>Apache James Server 3.7.0 and following versions require Java 1.11. A migration guide for
            users willing to upgrade from 2.3 to 3.7.0 is <a href="upgrade-2.3.html">available</a>. If relying on Guice
-           wiring, you can use some additional components (Cassandra, ElasticSearch, ...).</p>
+           wiring, you can use some additional components (Cassandra, OpenSearch, ...).</p>
     
 
 

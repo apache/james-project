@@ -44,7 +44,7 @@
 
       <img src="images/performances/gatling_2.png"/>
 
-      <p>Load testing was conducted both on top of JPA and Cassandra + ElasticSearch implementations. We succeeded to support
+      <p>Load testing was conducted both on top of JPA and Cassandra + OpenSearch implementations. We succeeded to support
         1.000 Thunderbird like users on top of both backends.</p>
 
       <p>The following results were obtained on a server with an Intel Xeon CPU (E3–1231 3.40GHz 4 cores 8 threads) with 32
@@ -54,7 +54,7 @@
 
     <subsection name="Metric collection">
       <p> Additionally, we added metrics a bit everywhere in James using the brand new metrics API. We collect and export
-        everything in ElasticSearch using <a href="http://metrics.dropwizard.io/3.2.1/">Dropwizard metrics</a>. Then we
+        everything in OpenSearch using <a href="http://metrics.dropwizard.io/3.2.1/">Dropwizard metrics</a>. Then we
         graph it all using <a href="http://grafana.com/">Grafana</a>. This allows us to collect all statistics and percentiles.
         Boards can be downloaded <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">here</a>.</p>
 
@@ -67,7 +67,7 @@
       </ul>
 
       <ul>All these solutions allow us to identify the components that need improvement. Here are some example of classical
-        metrics James can reach with a mono server Guice + Cassandra + ElasticSearch installation:
+        metrics James can reach with a mono server Guice + Cassandra + OpenSearch installation:
          <li>About 100 users</li>
          <li>So far a number of 1.500.000 e-mails, that we imported using IMAP-sync scripts</li>
          <li>Around 15.000 incoming e-mails a day</li>
