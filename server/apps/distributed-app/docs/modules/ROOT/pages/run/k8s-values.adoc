@@ -47,7 +47,7 @@ James data
 the Cassandra cache
 
 |jamesEsMailboxIndex |mailbox_v1 |The index used for mailbox in
-Elasticsearch. The default value should be enough, but in case you had
+OpenSearch. The default value should be enough, but in case you had
 issues and needed to create a new index, this will allow you to point
 James to it
 
@@ -61,7 +61,7 @@ the system), `+ignore+` (Ignore SSL Validation check (not recommended)),
 `+override+` (override the SSL Context to use a custom TrustStore
 containing ES server’s certificate)
 
-|jamesEsHostNameVerifier |default |Configure Elasticsearch rest client
+|jamesEsHostNameVerifier |default |Configure OpenSearch rest client
 to use host name verifier during SSL handshake: `+default+` (using the
 default hostname verifier provided by apache http client),
 `+accept_any_hostname+` (accept any host (not recommended))
@@ -136,33 +136,33 @@ their IP addresses. Parameters for this mode are:
 |ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of Cassandra IP nodes.
 |===
 
-=== Elasticsearch values
+=== OpenSearch values
 
-There is two ways to deploy Elasticsearch in our Helm packages, defined
+There is two ways to deploy OpenSearch in our Helm packages, defined
 by the `+deploy+` field.
 
 ==== as-pod
 
-Elasticsearch has been deployed as pods in the cluster. Parameters for
+OpenSearch has been deployed as pods in the cluster. Parameters for
 this mode are:
 
 [cols="<,<,<",options="header",]
 |===
 |Field |Default value |Description
-|replicaCount |1 |The number of ElasticSearch pods
+|replicaCount |1 |The number of OpenSearch pods
 
-|namespace | change-me | Namespace of ElasticSearch deployment
+|namespace | change-me | Namespace of OpenSearch deployment
 |===
 
-NOTE: Pod name must match template format: `elasticsearch-01.namespace:9200,elasticsearch-02.namespace:9200`
+NOTE: Pod name must match template format: `opensearch-01.namespace:9200,opensearch-02.namespace:9200`
 
 ==== as-ref
 
-ElasticSearch has been deployed in VMs and the nodes can be accessed
+OpenSearch has been deployed in VMs and the nodes can be accessed
 through their IP addresses. Parameters for this mode are:
 
 [cols="<,<,<",options="header",]
 |===
 |Field |Default value |Description
-|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of ElasticSearch IP nodes.
+|ips |1.2.3.4, 5.6.7.8, 9.10.11.12 |The list of OpenSearch IP nodes.
 |===

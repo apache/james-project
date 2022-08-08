@@ -127,13 +127,13 @@ xref:operate/webadmin.adoc#_redeliver_group_events[redeliver group events]
 or even just
 xref:operate/webadmin.adoc#_redeliver_a_single_event[redeliver a single event].
 
-== ElasticSearch Indexing
+== OpenSearch Indexing
 
-A projection of messages is maintained in ElasticSearch via a listener
+A projection of messages is maintained in OpenSearch via a listener
 plugged into the mailbox event bus in order to enable search features.
 
-You can find more information about ElasticSearch configuration
-link:config-elasticsearch.html[here].
+You can find more information about OpenSearch configuration
+link:config-opensearch.html[here].
 
 === Usual troubleshooting procedures
 
@@ -144,7 +144,7 @@ Currently, an administrator can monitor indexation failures through
 `ERROR` log review. You can as well
 xref:operate/webadmin.adoc#_listing_failed_events[list failed events] by
 looking with the group called
-`org.apache.james.mailbox.opensearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
+`org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex$OpenSearchListeningMessageSearchIndexGroup`.
 A first on-the-fly solution could be to just
 link:#_mailbox_event_bus[redeliver those group events with event dead letter].
 
@@ -161,7 +161,7 @@ When checking the result of a reIndexing task, you might have failed
 reprocessed mails. You can still use the task ID to
 xref:operate/webadmin.adoc#_fixing_previously_failed_reindexing[reprocess previously failed reIndexing mails].
 
-=== On the fly ElasticSearch Index setting update
+=== On the fly OpenSearch Index setting update
 
 Sometimes you might need to update index settings. Cases when an
 administrator might want to update index settings include:
@@ -189,8 +189,8 @@ field being present)
 https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-delete-index.html[drop
 the old index]
 * You might want as well modify the James configuration file
-https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties[elasticsearch.properties]
-by setting the parameter `elasticsearch.index.mailbox.name` to the name
+https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/opensearch.properties[elasticsearch.properties]
+by setting the parameter `opensearch.index.mailbox.name` to the name
 of your new index. This is to avoid that James re-creates index upon
 restart
 

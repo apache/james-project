@@ -9,7 +9,7 @@ Build your own Apache James Distributed artifacts and start xref:run/run-java.ad
 
 == Run with Docker
 
-We have prepared a docker-compose for Apache James to run with Cassandra & ElasticSearch. 
+We have prepared a docker-compose for Apache James to run with Cassandra & OpenSearch.
 
 You can start xref:run/run-docker.adoc[Running James with few simple Docker commands].
 

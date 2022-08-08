@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; tika.properties
 :navtitle: tika.properties
 
-When using ElasticSearch, you can configure an external Tika server for extracting and indexing text from attachments.
+When using OpenSearch, you can configure an external Tika server for extracting and indexing text from attachments.
 Thus you can significantly improve user experience upon text searches.
 
 Note: You can launch a tika server using this command line:
@@ -12,7 +12,7 @@ docker run --name tika linagora/docker-tikaserver:1.24
 
 Here are the different properties:
 
-.elasticsearch.properties content
+.tika.properties content
 |===
 | Property name | explanation
 
