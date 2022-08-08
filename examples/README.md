@@ -22,7 +22,7 @@ components to achieve basic logic. But what if our goals are more complex? What 
 Mailbox Listener is a component in James Mailbox System. Each time an action is applied on a mailbox(adding, deleting),
  or on an email(adding, deleting, updating flags...), then an event representing that action is generated and delivered 
  to all the Listeners that had been registered before. After receiving events, listeners retrieve information from the 
- events then execute their business (Indexing emails in ElasticSearch, updating quota of users, detecting spam emails...)
+ events then execute their business (Indexing emails in OpenSearch, updating quota of users, detecting spam emails...)
  
 **Mailbox Listeners** allow customizing the behaviour of James used as a Mail Delivery Agent (MDA). 
 
