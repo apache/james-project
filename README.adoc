@@ -23,7 +23,7 @@ of Control mail platform offered and  go further customizing filtering and routi
 Supported protocols are: IMAP, SMTP, link:https://jmap.io[JMAP], POP3 and more...
 
 The link:https://james.staged.apache.org/james-project/3.7.0/servers/distributed.html[*Distributed server*] focuses on delivering an easy-to-operate scalable mail server based on modern technologies
-(Cassandra, S3, ElasticSearch and RabbitMQ).
+(Cassandra, S3, OpenSearch and RabbitMQ).
 
 Read more on https://james.apache.org/[our website].
 
@@ -96,8 +96,8 @@ Useful options includes:
 ====
 We maintain docker distribution for our link:https://github.com/google/guice[Guice] based applications:
 
- * link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/README.adoc[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch (distributed)]
- * link:https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/README.adoc[Guice + Cassandra + ElasticSearch]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/README.adoc[Guice + Cassandra + RabbitMQ + S3 + OpenSearch (distributed)]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/README.adoc[Guice + Cassandra + OpenSearch]
  * link:https://github.com/apache/james-project/blob/master/server/apps/jpa-app/README.adoc[Guice + JPA + Lucene]
  * link:https://github.com/apache/james-project/blob/master/server/apps/memory-app/README.md[Guice + Memory (testing)]
 ====
