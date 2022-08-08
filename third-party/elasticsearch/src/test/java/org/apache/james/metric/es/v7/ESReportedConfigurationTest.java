@@ -65,7 +65,7 @@ class ESReportedConfigurationTest {
             .disabled()
             .build();
 
-        assertThatThrownBy(() -> configuration.getHostWithPort())
+        assertThatThrownBy(configuration::getHostWithPort)
             .isInstanceOf(IllegalStateException.class);
     }
 

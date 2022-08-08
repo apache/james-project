@@ -44,7 +44,6 @@
         <module>data-cassandra</module>
         <module>data-ldap</module>
         <module>distributed</module>
-        <module>es-metric-reporter</module>
         <module>jmx</module>
         <module>jpa-common</module>
         <module>mailbox</module>

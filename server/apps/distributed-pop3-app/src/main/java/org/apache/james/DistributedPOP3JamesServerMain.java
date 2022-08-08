@@ -70,7 +70,6 @@ import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DataRoutesModules;
-import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -141,7 +140,6 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
         new CassandraVacationModule(),
-        new ElasticSearchMetricReporterModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 

@@ -37,7 +37,6 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
-import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
@@ -95,7 +94,6 @@ public class Main implements JamesServerMain {
             new CassandraUsersRepositoryModule(),
             new CassandraMailRepositoryModule(),
             new CassandraMetricsModule(),
-            new ElasticSearchMetricReporterModule(),
             new TaskManagerModule()
     );
 

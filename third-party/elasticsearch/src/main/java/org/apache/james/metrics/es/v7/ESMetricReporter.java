@@ -26,14 +26,13 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.utils.UserDefinedStartable;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.linagora.elasticsearch.metrics.ElasticsearchReporter;
 
-public class ESMetricReporter implements Startable {
-
+public class ESMetricReporter implements UserDefinedStartable {
     private final Optional<ElasticsearchReporter> reporter;
     private final ESReporterConfiguration esReporterConfiguration;
 
@@ -57,6 +56,7 @@ public class ESMetricReporter implements Startable {
         return Optional.empty();
     }
 
+    @Override
     public void start() {
         reporter.ifPresent(elasticsearchReporter ->
             elasticsearchReporter.start(esReporterConfiguration.getPeriodInSecond(), TimeUnit.SECONDS));
