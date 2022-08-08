@@ -99,7 +99,7 @@ Will return a list of healthChecks execution result, with an aggregated result:
 Supported health checks include:
 
  - **Cassandra backend**: Cassandra storage. Included in Cassandra Guice based products.
- - **ElasticSearch Backend**: ElasticSearch storage. Included in Cassandra Guice based products.
+ - **OpenSearch Backend**: OpenSearch storage. Included in Cassandra Guice based products.
  - **EventDeadLettersHealthCheck**: Included in all Guice products.
  - **Guice application lifecycle**: included in all Guice products.
  - **JPA Backend**: JPA storage. Included in JPA Guice based products.

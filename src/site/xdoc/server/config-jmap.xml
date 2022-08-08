@@ -76,7 +76,7 @@
 
                     <dt><strong>view.email.query.enabled</strong></dt>
                     <dd>Optional boolean. Defaults to false.</dd>
-                    <dd>Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
+                    <dd>Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against OpenSearch?
                         This enables a higher resilience, but the projection needs to be correctly populated.</dd>
 
                     <dt><strong>user.provisioning.enabled</strong></dt>

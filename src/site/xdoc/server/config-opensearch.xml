@@ -20,45 +20,45 @@
 <document>
 
  <properties>
-  <title>Apache James Server 3 - ElasticSearch Configuration</title>
+  <title>Apache James Server 3 - OpenSearch Configuration</title>
  </properties>
 
 <body>
 
-  <section name="ElasticSearch Configuration">
+  <section name="OpenSearch Configuration">
 
       This configuration applies only to Guice wiring.
 
-    <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties">elasticsearch.properties</a> to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/opensearch.properties">opensearch.properties</a> to get some examples and hints.</p>
 
       Connection to a cluster :
 
       <dl>
-          <dt><strong>elasticsearch.masterHost</strong></dt>
-          <dd>Is the IP (or host) of the ElasticSearch master</dd>
-          <dt><strong>elasticsearch.port</strong></dt>
-          <dd>Is the port of ElasticSearch master</dd>
+          <dt><strong>opensearch.masterHost</strong></dt>
+          <dd>Is the IP (or host) of the OpenSearch master</dd>
+          <dt><strong>opensearch.port</strong></dt>
+          <dd>Is the port of OpenSearch master</dd>
 
-          <dt><strong>elasticsearch.hostScheme</strong></dt>
+          <dt><strong>opensearch.hostScheme</strong></dt>
           <dd>
               Optional. Only http or https are accepted, default is http. In case of <strong>https</strong>,
               and you want to override the default SSL Validation behavior of the client,
               consult the section <strong>SSL Trusting Configuration</strong> for more details.
           </dd>
 
-          <dt><strong>elasticsearch.user</strong></dt>
+          <dt><strong>opensearch.user</strong></dt>
           <dd>
               Optional.
-              Basic auth username to access elasticsearch.
-              Ignore elasticsearch.user and elasticsearch.password to not be using authentication (default behaviour).
+              Basic auth username to access OpenSearch.
+              Ignore opensearch.user and opensearch.password to not be using authentication (default behaviour).
               Otherwise, you need to specify both properties.
           </dd>
 
-          <dt><strong>elasticsearch.password</strong></dt>
+          <dt><strong>opensearch.password</strong></dt>
           <dd>
               Optional.
-              Basic auth password to access elasticsearch.
-              Ignore elasticsearch.user and elasticsearch.password to not be using authentication (default behaviour).
+              Basic auth password to access opensearch.
+              Ignore opensearch.user and opensearch.password to not be using authentication (default behaviour).
               Otherwise, you need to specify both properties.
           </dd>
       </dl>
@@ -66,105 +66,81 @@
       Or you can connect a cluster by :
 
       <dl>
-          <dt><strong>elasticsearch.hosts</strong></dt>
-          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9200,host2:9200</dd>
+          <dt><strong>opensearch.hosts</strong></dt>
+          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : opensearch.hosts=host1:9200,host2:9200</dd>
       </dl>
 
       Other options includes :
 
       <dl>
-          <dt><strong>elasticsearch.clusterName</strong></dt>
+          <dt><strong>opensearch.clusterName</strong></dt>
           <dd>Is the name of the cluster used by James.</dd>
-          <dt><strong>elasticsearch.nb.shards</strong></dt>
+          <dt><strong>opensearch.nb.shards</strong></dt>
           <dd>Number of shards for index provisionned by James</dd>
-          <dt><strong>elasticsearch.nb.replica</strong></dt>
+          <dt><strong>opensearch.nb.replica</strong></dt>
           <dd>Number of replica for index provisionned by James (default: 0)</dd>
-          <dt><strong>elasticsearch.index.waitForActiveShards (default: 1)</strong></dt>
+          <dt><strong>opensearch.index.waitForActiveShards (default: 1)</strong></dt>
           <dd>Wait for a certain number of active shard copies before proceeding with the operation.</dd>
           <dd>You may consult the <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-index_.html#active-shards">documentation</a> for more information.</dd>
-          <dt><strong>elasticsearch.index.mailbox.name</strong></dt>
+          <dt><strong>opensearch.index.mailbox.name</strong></dt>
           <dd>Name of the mailbox index backed by the alias. It will be created if missing.</dd>
-          <dt><strong>elasticsearch.index.name</strong></dt>
-          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.index.mailbox.name</strong> instead. <br/>
+          <dt><strong>opensearch.index.name</strong></dt>
+          <dd><strong>Deprecated</strong> Use <strong>opensearch.index.mailbox.name</strong> instead. <br/>
               Name of the mailbox index backed by the alias. It will be created if missing.</dd>
-          <dt><strong>elasticsearch.max.connections</strong></dt>
-          <dd>Maximum count of HTTP connections allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+          <dt><strong>opensearch.max.connections</strong></dt>
+          <dd>Maximum count of HTTP connections allowed for the OpenSearch driver. Optional integer, if unspecified driver defaults
               applies (30 connections).</dd>
-          <dt><strong>elasticsearch.max.connections.per.hosts</strong></dt>
-          <dd>Maximum count of HTTP connections per host allowed for the ElasticSearch driver. Optional integer, if unspecified driver defaults
+          <dt><strong>opensearch.max.connections.per.hosts</strong></dt>
+          <dd>Maximum count of HTTP connections per host allowed for the OpenSearch driver. Optional integer, if unspecified driver defaults
               applies (10 connections).</dd>
-          <dt><strong>elasticsearch.alias.read.mailbox.name</strong></dt>
+          <dt><strong>opensearch.alias.read.mailbox.name</strong></dt>
           <dd>Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
-          <dt><strong>elasticsearch.alias.read.name</strong></dt>
-          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.read.mailbox.name</strong> instead. <br/>
+          <dt><strong>opensearch.alias.read.name</strong></dt>
+          <dd><strong>Deprecated</strong> Use <strong>opensearch.alias.read.mailbox.name</strong> instead. <br/>
               Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
-          <dt><strong>elasticsearch.alias.write.mailbox.name</strong></dt>
+          <dt><strong>opensearch.alias.write.mailbox.name</strong></dt>
           <dd>Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
-          <dt><strong>elasticsearch.alias.write.name</strong></dt>
-          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.write.mailbox.name</strong> instead. <br/>
+          <dt><strong>opensearch.alias.write.name</strong></dt>
+          <dd><strong>Deprecated</strong> Use <strong>opensearch.alias.write.mailbox.name</strong> instead. <br/>
               Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
-          <dt><strong>elasticsearch.retryConnection.maxRetries</strong></dt>
+          <dt><strong>opensearch.retryConnection.maxRetries</strong></dt>
           <dd>Number of retries when connecting the cluster</dd>
-          <dt><strong>elasticsearch.retryConnection.minDelay</strong></dt>
+          <dt><strong>opensearch.retryConnection.minDelay</strong></dt>
           <dd>Minimum delay between connection attempts</dd>
-          <dt><strong>elasticsearch.indexAttachments</strong></dt>
+          <dt><strong>opensearch.indexAttachments</strong></dt>
           <dd>Indicates if you wish to index attachments or not (default: true).</dd>
-          <dt><strong>elasticsearch.index.quota.ratio.name</strong></dt>
-          <dd>Specify the ElasticSearch alias name used for quotas</dd>
-          <dt><strong>elasticsearch.alias.read.quota.ratio.name</strong></dt>
-          <dd>Specify the ElasticSearch alias name used for reading quotas</dd>
-          <dt><strong>elasticsearch.alias.write.quota.ratio.name</strong></dt>
-          <dd>Specify the ElasticSearch alias name used for writing quotas</dd>
+          <dt><strong>opensearch.index.quota.ratio.name</strong></dt>
+          <dd>Specify the OpenSearch alias name used for quotas</dd>
+          <dt><strong>opensearch.alias.read.quota.ratio.name</strong></dt>
+          <dd>Specify the OpenSearch alias name used for reading quotas</dd>
+          <dt><strong>opensearch.alias.write.quota.ratio.name</strong></dt>
+          <dd>Specify the OpenSearch alias name used for writing quotas</dd>
       </dl>
 
       <p>
-          ElasticSearch component can be disabled but consider it would make search feature to not work. In particular it will break JMAP protocol and SEARCH IMAP comment in an nondeterministic way.
+          OpenSearch component can be disabled but consider it would make search feature to not work. In particular it will break JMAP protocol and SEARCH IMAP comment in an nondeterministic way.
           This is controlled in the <code>search.properties</code> file via the <code>implementation</code> property (defaults
-          to <code>ElasticSearch</code>). Setting this configuration parameter to <code>scanning</code> will effectively disable ElasticSearch, no
+          to <code>OpenSearch</code>). Setting this configuration parameter to <code>scanning</code> will effectively disable OpenSearch, no
           further indexation will be done however searches will rely on the scrolling search, leading to expensive and longer
-          searches. Disabling ElasticSearch requires no extra action, however
+          searches. Disabling OpenSearch requires no extra action, however
           <a href="https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#reindexing-all-mails">
-              a full re-indexing</a> needs to be carried out when enabling ElasticSearch.
+              a full re-indexing</a> needs to be carried out when enabling OpenSearch.
       </p>
 
-      For configuring the metric reporting on ElasticSearch :
-
-      <p>
-          In server version 3.6.0 james moved from Elasticsearch 6 to 7 and the metric reporting on Elasticsearch is deprecated.
-          You can still use metric reporting on Elasticsearch but that requires you to run a separate Elasticsearch 6 instance and use that in your Elasticsearch metric reporting configuration.
-      </p>
-
-      <dl>
-          <dt><strong>elasticsearch.http.host</strong></dt>
-          <dd>Host to report metrics on. Defaults to master host. Compatible with 6.x hosts</dd>
-
-          <dt><strong>elasticsearch.http.port</strong></dt>
-          <dd>Http port to use for publishing metrics</dd>
-
-          <dt><strong>elasticsearch.metrics.reports.enabled</strong></dt>
-          <dd>Boolean value. Enables metrics reporting.</dd>
-
-          <dt><strong>elasticsearch.metrics.reports.period</strong></dt>
-          <dd>Seconds between metric reports</dd>
-
-          <dt><strong>elasticsearch.metrics.reports.index</strong></dt>
-          <dd>Index to publish metrics on</dd>
-      </dl>
-
-<p>If you want more explanation about ElasticSearch configuration, you should visit the dedicated <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">documentation</a>.</p>
+<p>If you want more explanation about OpenSearch configuration, you should visit the dedicated <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">documentation</a>.</p>
 
   </section>
 
     <section name="Tika Configuration">
 
-        <p>When using ElasticSearch, you can configure an external Tika server for extracting and indexing text from attachments.
+        <p>When using OpenSearch, you can configure an external Tika server for extracting and indexing text from attachments.
             Thus you can significantly improve user experience upon text searches.</p>
 
-        <p>Note that to use this feature you need Guice, built with ElasticSearch</p>
+        <p>Note that to use this feature you need Guice, built with OpenSearch</p>
 
         <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/tika.properties">tika.properties</a> to get some examples and hints.</p>
 
@@ -219,7 +195,7 @@
         </p>
 
         <dl>
-            <dt><strong>elasticsearch.hostScheme.https.sslValidationStrategy</strong></dt>
+            <dt><strong>opensearch.hostScheme.https.sslValidationStrategy</strong></dt>
             <dd>
               Optional. Accept only <strong>default</strong>, <strong>ignore</strong>, <strong>override</strong>. Default is <strong>default</strong>
             </dd>
@@ -259,17 +235,17 @@
         </p>
 
         <dl>
-            <dt><strong>elasticsearch.hostScheme.https.trustStorePath</strong></dt>
+            <dt><strong>opensearch.hostScheme.https.trustStorePath</strong></dt>
             <dd>
-              Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
-              Configure Elasticsearch rest client to use this trustStore file to recognize nginx's ssl certificate.
+              Optional. Use it when https is configured in opensearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
+              Configure OpenSearch rest client to use this trustStore file to recognize nginx's ssl certificate.
               Once you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
             </dd>
 
-            <dt><strong>elasticsearch.hostScheme.https.trustStorePassword</strong></dt>
+            <dt><strong>opensearch.hostScheme.https.trustStorePassword</strong></dt>
             <dd>
-              Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
-              Configure Elasticsearch rest client to use this trustStore file with the specified password.
+              Optional. Use it when https is configured in opensearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
+              Configure OpenSearch rest client to use this trustStore file with the specified password.
               Once you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
             </dd>
         </dl>
@@ -279,7 +255,7 @@
             You can configure to use which HostNameVerifier in the client.
         </p>
         <dl>
-            <dt><strong>elasticsearch.hostScheme.https.hostNameVerifier</strong></dt>
+            <dt><strong>opensearch.hostScheme.https.hostNameVerifier</strong></dt>
             <dd>
               Optional. Default is <strong>default</strong>.
             </dd>
@@ -292,7 +268,7 @@
     <section name="Search overrides">
 
         <p><b>Search overrides</b> allow resolution of predefined search queries against alternative sources of data
-            and allow bypassing ElasticSearch. This is useful to handle most resynchronisation queries that
+            and allow bypassing OpenSearch. This is useful to handle most resynchronisation queries that
             are simple enough to be resolved against Cassandra.</p>
 
         <ul>Possible values are:<br/>
@@ -310,13 +286,13 @@
         </ul>
 
         <p>
-            Please note that custom overrides can be defined here. <pre>elasticsearch.search.overrides</pre> allow specifying search overrides and is a
+            Please note that custom overrides can be defined here. <pre>opensearch.search.overrides</pre> allow specifying search overrides and is a
             coma separated list of search override FQDNs. Default to none.
         </p>
 
         <p>EG:</p>
 
-        <pre><code>elasticsearch.search.overrides=org.apache.james.mailbox.cassandra.search.AllSearchOverride,org.apache.james.mailbox.cassandra.search.DeletedSearchOverride, org.apache.james.mailbox.cassandra.search.DeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.NotDeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.UidSearchOverride,org.apache.james.mailbox.cassandra.search.UnseenSearchOverride</code></pre>
+        <pre><code>opensearch.search.overrides=org.apache.james.mailbox.cassandra.search.AllSearchOverride,org.apache.james.mailbox.cassandra.search.DeletedSearchOverride, org.apache.james.mailbox.cassandra.search.DeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.NotDeletedWithRangeSearchOverride,org.apache.james.mailbox.cassandra.search.UidSearchOverride,org.apache.james.mailbox.cassandra.search.UnseenSearchOverride</code></pre>
     </section>
 </body>
 
