@@ -81,9 +81,9 @@ Are there any examples anywhere?
 
  @mbaechler
 mbaechler on Jun 16 Member
-If you look at example of users in the code, the quota-search feature is a good example : https://github.com/apache/james-project/blob/master/mailbox/plugin/quota-search-elasticsearch/src/main/java/org/apache/james/quota/search/elasticsearch/events/ElasticSearchQuotaMailboxListener.java
+If you look at example of users in the code, the quota-search feature is a good example : https://github.com/apache/james-project/blob/master/mailbox/plugin/quota-search-opensearch/src/main/java/org/apache/james/quota/search/opensearch/events/OpenSearchQuotaMailboxListener.java
 
-It allows to index quota usage per user into ElasticSearch
+It allows to index quota usage per user into OpenSearch
 ----
 * managesieveserver.xml -> https://issues.apache.org/jira/browse/JAMES-3245
   ** Status: 
