@@ -19,7 +19,4 @@
  -->
 
 <listeners>
-  <listener>
-    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
-  </listener>
 </listeners>

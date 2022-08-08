@@ -277,17 +277,7 @@
             </handler>
              -->
              
-            <!-- This MessageHandler could be used to check message against spamd before -->
-            <!-- accept the email. So its possible to reject a message on smtplevel if a -->
-            <!-- configured hits amount is reached. -->
-            <!--
-            <handler class="org.apache.james.smtpserver.fastfail.SpamAssassinHandler">
-                <spamdHost>127.0.0.1</spamdHost>
-                <spamdPort>783</spamdPort>
-                <spamdRejectionHits>10</spamdRejectionHits>
-            </handler>
-             -->
-     
+
             <!-- This MessageHandler could be used to extract domain out of the message and check -->
             <!-- this domains against uriRbllists. See http://www.surbl.org for more information. -->
             <!-- The message get rejected if a domain matched . -->

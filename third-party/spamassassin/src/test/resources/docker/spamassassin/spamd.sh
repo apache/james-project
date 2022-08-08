@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 echo "Run Postgres"
 /usr/local/bin/docker-entrypoint.sh postgres &

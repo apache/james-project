@@ -17,15 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.docker;
+package org.apache.james.spamassassin;
 
-public interface Images {
-    String FAKE_SMTP = "weave/rest-smtp-sink:latest";
-    String RABBITMQ = "rabbitmq:3.9.18-management";
-    String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
-    String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
-    String ELASTICSEARCH_7 = "docker.elastic.co/elasticsearch/elasticsearch:7.10.2";
-    String OPENSEARCH = "opensearchproject/opensearch:2.1.0";
-    String TIKA = "apache/tika:1.28.2";
-    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.4";
+
+import java.util.Objects;
+
+import org.apache.james.util.Host;
+
+import com.google.common.base.MoreObjects;
+
+public class SpamAssassinConfiguration {
+
+    private final Host host;
+
+    public SpamAssassinConfiguration(Host host) {
+        this.host = host;
+    }
+
+
+    public Host getHost() {
+        return host;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SpamAssassinConfiguration) {
+            SpamAssassinConfiguration that = (SpamAssassinConfiguration) o;
+
+            return Objects.equals(this.host, that.host);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(host);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("host", host)
+            .toString();
+    }
 }
