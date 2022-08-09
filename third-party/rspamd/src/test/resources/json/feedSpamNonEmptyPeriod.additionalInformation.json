@@ -1,0 +1,12 @@
+{
+  "errorCount": 1,
+  "reportedSpamMessageCount": 2,
+  "runningOptions": {
+    "messagesPerSecond": 10,
+    "periodInSecond": 3600,
+    "samplingProbability": 1.0
+  },
+  "spamMessageCount": 4,
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "FeedSpamToRSpamDTask"
+}

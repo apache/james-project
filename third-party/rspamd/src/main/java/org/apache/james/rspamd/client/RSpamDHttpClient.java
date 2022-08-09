@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import javax.inject.Inject;
+
 import org.apache.james.rspamd.exception.RSpamDUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
@@ -52,6 +54,7 @@ public class RSpamDHttpClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    @Inject
     public RSpamDHttpClient(RSpamDClientConfiguration configuration) {
         httpClient = buildReactorNettyHttpClient(configuration);
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
