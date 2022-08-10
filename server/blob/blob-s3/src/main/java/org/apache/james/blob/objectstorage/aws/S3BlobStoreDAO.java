@@ -202,7 +202,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                         response.flux = Flux.from(publisher);
                         response.supportingCompletableFuture.complete(response);
                     }
-                }));
+                }))
+            .switchIfEmpty(Mono.error(() -> new ObjectStoreIOException("Request was unexpectedly canceled, no GetObjectResponse")));
     }
 
 
