@@ -36,6 +36,7 @@ import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,7 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void checkMailWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
+    void checkMailWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
@@ -71,7 +72,7 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void learnSpamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
+    void learnSpamWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
@@ -81,7 +82,7 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void learnHamWithWrongPasswordShouldThrowUnauthorizedExceptionException() throws Exception {
+    void learnHamWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
@@ -91,7 +92,7 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void checkSpamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
+    void checkSpamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
@@ -111,16 +112,16 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void checkHamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
+    void checkHamMailUsingRSpamDClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(hamMessage)).block();
-        assertThat(analysisResult).isEqualTo(AnalysisResult.builder()
-            .action(AnalysisResult.Action.NO_ACTION)
-            .score(0.99F)
-            .requiredScore(14.0F)
-            .build());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
+            softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
+            softly.assertThat(analysisResult.getDesiredRewriteSubject()).isEqualTo(Optional.empty());
+        });
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
         rspamdApi
@@ -130,13 +131,12 @@ class RSpamDHttpClientTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("action", is(analysisResult.getAction().getDescription()))
-            .body("score", is(analysisResult.getScore()))
             .body("required_score", is(analysisResult.getRequiredScore()))
             .body("subject", is(nullValue()));
     }
 
     @Test
-    void learnSpamMailUsingRSpamDClientWithExactPasswordShouldWork() throws Exception {
+    void learnSpamMailUsingRSpamDClientWithExactPasswordShouldWork() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
@@ -145,7 +145,7 @@ class RSpamDHttpClientTest {
     }
 
     @Test
-    void learnHamMailUsingRSpamDClientWithExactPasswordShouldWork() throws Exception {
+    void learnHamMailUsingRSpamDClientWithExactPasswordShouldWork() {
         RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
