@@ -19,46 +19,28 @@
 
 package org.apache.james.rspamd.module;
 
-import org.apache.james.rspamd.route.FeedMessageRoute;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTaskAdditionalInformationDTO;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskAdditionalInformationDTO;
-import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
-import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
-import org.apache.james.task.TaskExecutionDetails;
-import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.dto.DTOModuleInjections;
+import java.io.FileNotFoundException;
+
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.rspamd.client.RSpamDClientConfiguration;
+import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.multibindings.ProvidesIntoSet;
-import com.google.inject.name.Named;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class RSpamDModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        Multibinder<Routes> routesMultiBinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultiBinder.addBinding().to(FeedMessageRoute.class);
+
+    @Provides
+    @Singleton
+    public RSpamDClientConfiguration rSpamDClientConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
+        return RSpamDClientConfiguration.from(propertiesProvider.getConfiguration("rspamd"));
     }
 
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> feedSpamAdditionalInformation() {
-        return FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
-    }
-
-    @Named(DTOModuleInjections.WEBADMIN_DTO)
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminFeedSpamAdditionalInformation() {
-        return FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
-    }
-
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> feedHamAdditionalInformation() {
-        return FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
-    }
-
-    @Named(DTOModuleInjections.WEBADMIN_DTO)
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminFeedHamAdditionalInformation() {
-        return FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    @Provides
+    @Singleton
+    public RSpamDHttpClient rSpamDHttpClient(RSpamDClientConfiguration rSpamDClientConfiguration) {
+        return new RSpamDHttpClient(rSpamDClientConfiguration);
     }
 }

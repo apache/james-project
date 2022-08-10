@@ -380,4 +380,8 @@ public class FeedSpamToRSpamDTask implements Task {
     public Context.Snapshot snapshot() {
         return context.snapshot();
     }
+
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
+    }
 }

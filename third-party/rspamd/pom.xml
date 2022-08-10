@@ -32,6 +32,10 @@
     <name>Apache James :: Third Party :: RSpamD</name>
     <description>RSpamD Java client (HTTP) and testing utilities</description>
 
+    <properties>
+        <james.baseVersion>${project.version}</james.baseVersion>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -92,6 +96,11 @@
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-configuration</artifactId>
+            <version>${james.baseVersion}</version>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -161,4 +170,25 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>compile</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
