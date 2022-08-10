@@ -4,11 +4,6 @@ This module is for developing and delivering extensions to James for the [RSpamD
 
 ## How to run
 
-- Compile this module
-
-```
-mvn clean install -DskipTests
-```
 - The RSpamD extension requires an extra configuration file `rspamd.properties` to configure RSpamd connection
 Configuration parameters:
     - `rSpamDUrl` : URL defining the RSpamD's server. Eg: http://rspamd:11334
@@ -47,3 +42,9 @@ How to use admin endpoint, see more at [Additional webadmin endpoints](README.md
 
 - Docker compose file example: [docker-compose.yml](docker-compose.yml) or [docker-compose-distributed.yml](docker-compose-distributed.yml)
 - The sample-configuration: [sample-configuration](sample-configuration)
+- For running docker-compose, first compile this project 
+
+```
+mvn clean install -DskipTests
+```
+then run it: `docker-compose up`
