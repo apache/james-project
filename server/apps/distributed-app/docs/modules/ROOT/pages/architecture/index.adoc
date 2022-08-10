@@ -19,7 +19,7 @@ patterns. ElasticSearch throughtput do not however match the one of Cassandra th
  * *RabbitMQ* enables James nodes of a same cluster to collaborate together. It is used to implement connected protocols,
 notification patterns as well as distributed resilient work queues and mail queue.
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
- * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
+ * *link:https://spamassassin.apache.org/[SpamAssassin] or link:https://rspamd.com/[RSpamD]* (optional) can be used for Spam detection and user feedback is supported.
 
 xref:architecture/consistency-model.adoc[This page] further details Distributed James consistency model.
 
@@ -206,7 +206,7 @@ operations on the system, like:
 * Current quota calculation
 * Message indexation with ElasticSearch
 * Mailbox annotations cleanup
-* Ham/spam reporting to SpamAssassin
+* Ham/spam reporting to Spam filtering system
 * …
 
 ==== Deleted Messages Vault
