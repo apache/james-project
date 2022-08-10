@@ -9,23 +9,27 @@ Anti-Spam system can be configured via two main different mechanisms:
 == AntiSpam SMTP Hooks
 
 "FastFail" SMTP Hooks acts to reject before spooling
-on the SMTP level. SpamAssasin hook can be used as a fastfail hook, therefore
-SpamAssassin must run as a server on the same machine as the Apache James Server.
+on the SMTP level. The Spam detector hook can be used as a fastfail hook, therefore
+Spam filtering system must run as a server on the same machine as the Apache James Server.
 
 SMTP Hooks for non-existent users, DSN filter, domains with invalid MX record,
 can also be configured.
 
 *SpamAssassinHandler* (experimental) also enables to classify the messages as spam or not
-with an configurable score threshold (`0.0`, non configurable). Only a global database is supported. Per user spam
+with a configurable score threshold (`0.0`, non-configurable). Only a global database is supported. Per user spam
 detection is not supported by this hook.
 
 == AntiSpam Mailets
 
-* *SpamAssassin* Mailet is designed to classify the messages as spam or not
-with an configurable score threshold. Usually a message will only be
+James' repository provide two AntiSpam mailets: SpamAssassin and RSpamDScanner.
+We can select one in them for filtering spam mail.
+
+* *SpamAssassin and RSpamDScanner* Mailet is designed to classify the messages as spam or not
+with a configurable score threshold. Usually a message will only be
 considered as spam if it matches multiple criteria; matching just a single test
 will not usually be enough to reach the threshold. Note that this mailet is executed on a per-user basis.
 
+=== SpamAssassin
 Here is an example of mailet pipeline conducting out SpamAssassin execution:
 
 ....
@@ -55,7 +59,7 @@ the table. Also, the correct approach is to send the original spam or non-spam
 as an attachment to another message sent to the feeder in order to avoid bias from the
 current sender's email header.
 
-== Feedback for SpamAssassin
+=== Feedback for SpamAssassin
 
 If enabled, the `SpamAssassinListener` will asynchronously report users mails moved to the `Spam` mailbox as Spam,
 and other mails as `Ham`, effectively populating the user database for per user spam detection. This enables a per-user
@@ -88,3 +92,45 @@ Example:
   </listener>
 </listeners>
 ....
+
+== RSpamD
+
+The RSpamD extension (optional) requires an extra configuration file `rspamd.properties` to configure RSpamd connection
+
+.rspamd.properties content
+|===
+| Property name | explanation
+
+| rSpamDUrl
+| URL defining the RSpamD's server. Eg: http://rspamd:11334
+
+| rSpamDPassword
+| Password for pass authentication when request to RSpamD's server. Eg: admin
+|===
+
+
+Here is an example of mailet pipeline conducting out RSpamDScanner execution:
+
+....
+<mailet match="All" class="org.apache.james.rspamd.RSpamDScanner">
+</mailet>
+<mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
+    <targetFolderName>Spam</targetFolderName>
+</mailet>
+....
+
+=== Feedback for RSpamD
+If enabled, the `RSpamDListener` will base on the Mailbox event to detect the message is a spam or not, then James will send report `spam` or `ham` to RSpamD
+The RSpamD listener needs to explicitly be registered with xref:configure/listeners.adoc[listeners.xml].
+
+Example:
+
+....
+<listeners>
+    <listener>
+        <class>org.apache.james.rspamd.RSpamDListener</class>
+    </listener>
+</listeners>
+....
+
+For more detail about how to use RSpamD's extension: `third-party/rspamd/index.md`

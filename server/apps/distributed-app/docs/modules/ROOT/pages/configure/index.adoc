@@ -60,7 +60,7 @@ By omitting these files, no extra behaviour is added.
 ** xref:configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/listeners.xml[example]
 ** xref:configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/extensions.properties[example]
 ** xref:configure/jvm.adoc[*jvm.properties*] lets you specify additional system properties without cluttering your command line
-** xref:configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin.
+** xref:configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin, RSpamD.
 ** xref:configure/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.
 ** xref:configure/collecting-contacts.adoc[This page] documents contact collection
 ** xref:configure/collecting-events.adoc[This page] documents event collection
