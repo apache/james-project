@@ -59,7 +59,7 @@ For connect to RSpamD, we use http protocol with reactor http client.
 
 ## Alternatives
 
-- Rspamd can act as a [milter](https://en.wikipedia.org/wiki/Milter), we can use it to replace HTTP call, but more complicated
+- Rspamd can act as a [milter](https://en.wikipedia.org/wiki/Milter), we can use it to replace HTTP call, implementing a milter client in James is harder to implement.
 
 ## References
 
