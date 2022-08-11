@@ -10,7 +10,7 @@ Implemented.
 
 ## Context
 
-In order to anti-spam, James provide 3 mechanism: 
+In order to detect spam, James provide 3 mechanism: 
 
 - SMTP Hook: decide to reject or not before spooling on the SMTP level
 - Mailet: custom the mailet pipeline for changing the mail processing when detect spam mail.
