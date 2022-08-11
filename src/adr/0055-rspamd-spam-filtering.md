@@ -18,7 +18,7 @@ In order to detect spam, James provide 3 mechanism:
 
 For basic, we can base on username, DSN filter, domains, IP... for configuring black or grey list.
 If we want to analysis deeper in each message content more, we need a more complex system.
-The current, James supports the [SpamAssassin](https://spamassassin.apache.org/) for this problem.
+Currently, James is integrated with [SpamAssassin](https://spamassassin.apache.org/) to tackle this problem.
 
 For more selection, James's repository provides the RSpamD extension, which provides the same way as SpamAssassin but another system - [RSpamD](https://github.com/rspamd/rspamd)
 
