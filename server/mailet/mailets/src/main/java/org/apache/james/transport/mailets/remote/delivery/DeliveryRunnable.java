@@ -68,7 +68,8 @@ public class DeliveryRunnable implements Disposable {
     private final Supplier<Date> dateSupplier;
     private final MailetContext mailetContext;
     private Disposable disposable;
-    private Scheduler remoteDeliveryScheduler;
+    private Scheduler remoteDeliveryProcessScheduler;
+    private Scheduler remoteDeliveryDequeueScheduler;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
                             MailetContext mailetContext, Bouncer bouncer) {
@@ -91,11 +92,12 @@ public class DeliveryRunnable implements Disposable {
     }
 
     public void start() {
-        remoteDeliveryScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery");
+        remoteDeliveryProcessScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery-Process-" + queue.getName().asString());
+        remoteDeliveryDequeueScheduler = Schedulers.newSingle("RemoteDelivery-Dequeue-" + queue.getName().asString());
         disposable = Flux.from(queue.deQueue())
-            .flatMap(queueItem -> runStep(queueItem).subscribeOn(remoteDeliveryScheduler), Queues.SMALL_BUFFER_SIZE)
+            .flatMap(queueItem -> runStep(queueItem).subscribeOn(remoteDeliveryProcessScheduler), Queues.SMALL_BUFFER_SIZE)
             .onErrorContinue(((throwable, nothing) -> LOGGER.error("Exception caught in RemoteDelivery", throwable)))
-            .subscribeOn(remoteDeliveryScheduler)
+            .subscribeOn(remoteDeliveryDequeueScheduler)
             .subscribe();
     }
 
@@ -202,6 +204,7 @@ public class DeliveryRunnable implements Disposable {
     @Override
     public void dispose() {
         disposable.dispose();
-        remoteDeliveryScheduler.dispose();
+        remoteDeliveryProcessScheduler.dispose();
+        remoteDeliveryDequeueScheduler.dispose();
     }
 }
