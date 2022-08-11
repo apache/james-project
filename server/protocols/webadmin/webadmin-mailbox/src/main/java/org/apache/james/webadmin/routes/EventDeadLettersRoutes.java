@@ -77,6 +77,7 @@ public class EventDeadLettersRoutes implements Routes {
         service.post(BASE_PATH + "/groups/" + GROUP_PARAM, performActionOnGroupEvents(), jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::getEventDetails);
         service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::deleteEvent);
+        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM, this::deleteEventsOfAGroup);
         service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, performActionOnSingleEvent(), jsonTransformer);
     }
 
@@ -113,6 +114,13 @@ public class EventDeadLettersRoutes implements Routes {
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
 
         eventDeadLettersService.deleteEvent(group, insertionId);
+        return Responses.returnNoContent(response);
+    }
+
+    private String deleteEventsOfAGroup(Request request, Response response) {
+        Group group = parseGroup(request);
+
+        eventDeadLettersService.deleteEvents(group);
         return Responses.returnNoContent(response);
     }
 
