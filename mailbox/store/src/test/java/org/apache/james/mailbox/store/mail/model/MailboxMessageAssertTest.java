@@ -79,7 +79,7 @@ class MailboxMessageAssertTest {
     }
 
     @Test
-    void messageAssertShouldFailWhenBodyMismatchInFetchBodyMode() {
+    void messageAssertShouldFailWhenBodyMismatchInFetchFullMode() {
         String headerString = "name: headerName\n\n";
         String bodyString = "body\n.\n";
         Date date = new Date();
@@ -93,7 +93,7 @@ class MailboxMessageAssertTest {
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
-        assertThatThrownBy(() -> MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.BODY))
+        assertThatThrownBy(() -> MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.FULL))
             .isInstanceOf(AssertionError.class);
     }
 

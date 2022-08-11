@@ -105,7 +105,6 @@ public class CassandraSessionModule extends AbstractModule {
             BatchSizes batchSizes = BatchSizes.builder()
                 .fetchMetadata(configuration.getInt("fetch.metadata", BatchSizes.DEFAULT_BATCH_SIZE))
                 .fetchHeaders(configuration.getInt("fetch.headers", BatchSizes.DEFAULT_BATCH_SIZE))
-                .fetchBody(configuration.getInt("fetch.body", BatchSizes.DEFAULT_BATCH_SIZE))
                 .fetchFull(configuration.getInt("fetch.full", BatchSizes.DEFAULT_BATCH_SIZE))
                 .copyBatchSize(configuration.getInt("copy", BatchSizes.DEFAULT_BATCH_SIZE))
                 .moveBatchSize(configuration.getInt("move", BatchSizes.DEFAULT_BATCH_SIZE))

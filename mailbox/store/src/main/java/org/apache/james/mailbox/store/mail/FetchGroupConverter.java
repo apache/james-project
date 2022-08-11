@@ -54,19 +54,12 @@ public class FetchGroupConverter {
     public static MessageMapper.FetchType reduce(Collection<MessageMapper.FetchType> fetchTypes) {
         boolean full = fetchTypes.contains(MessageMapper.FetchType.FULL);
         boolean headers = fetchTypes.contains(MessageMapper.FetchType.HEADERS);
-        boolean body = fetchTypes.contains(MessageMapper.FetchType.BODY);
 
         if (full) {
             return MessageMapper.FetchType.FULL;
         }
-        if (headers && body) {
-            return MessageMapper.FetchType.FULL;
-        }
         if (headers) {
             return MessageMapper.FetchType.HEADERS;
-        }
-        if (body) {
-            return MessageMapper.FetchType.BODY;
         }
         return MessageMapper.FetchType.METADATA;
     }
@@ -76,7 +69,6 @@ public class FetchGroupConverter {
             case HEADERS:
                 return MessageMapper.FetchType.HEADERS;
             case BODY_CONTENT:
-                return MessageMapper.FetchType.BODY;
             case FULL_CONTENT:
             case MIME_CONTENT:
             case MIME_HEADERS:

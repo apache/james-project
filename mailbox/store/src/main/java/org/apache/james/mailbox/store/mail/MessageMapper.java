@@ -306,14 +306,6 @@ public interface MessageMapper extends Mapper {
          * </p>
          */
         HEADERS,
-        /**
-         * Fetch the {@link #METADATA} and the Body for the {@link MailboxMessage}. This includes:
-         * 
-         * <p>
-         *  {@link MailboxMessage#getBodyContent()}
-         * </p>
-         */
-        BODY,
         
         /**
          * Fetch the complete {@link MailboxMessage}
