@@ -54,6 +54,7 @@ import javax.mail.Flags;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -80,6 +81,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -90,6 +92,7 @@ import com.github.fge.lambdas.Throwing;
 
 import io.restassured.RestAssured;
 
+@Tag(Unstable.TAG)
 public class FeedMessageRouteTest {
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();

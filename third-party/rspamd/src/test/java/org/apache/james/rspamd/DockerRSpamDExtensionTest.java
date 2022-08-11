@@ -23,9 +23,11 @@ import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +36,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
+@Tag(Unstable.TAG)
 public class DockerRSpamDExtensionTest {
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
