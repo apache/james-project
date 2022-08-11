@@ -43,6 +43,7 @@ public class CassandraEventDeadLettersDAO {
     private final EventSerializer eventSerializer;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
+    private final PreparedStatement deleteAllEventsOfAGroupStatement;
     private final PreparedStatement selectEventStatement;
     private final PreparedStatement selectEventIdsWithGroupStatement;
     private final PreparedStatement containEventsStatement;
@@ -53,6 +54,7 @@ public class CassandraEventDeadLettersDAO {
         this.eventSerializer = eventSerializer;
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
+        this.deleteAllEventsOfAGroupStatement = prepareDeleteAllEventsOfAGroupStatement(session);
         this.selectEventStatement = prepareSelectEventStatement(session);
         this.selectEventIdsWithGroupStatement = prepareSelectInsertionIdsWithGroupStatement(session);
         this.containEventsStatement = prepareContainEventStatement(session);
@@ -70,6 +72,12 @@ public class CassandraEventDeadLettersDAO {
         return session.prepare(deleteFrom(TABLE_NAME)
             .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
             .whereColumn(INSERTION_ID).isEqualTo(bindMarker(INSERTION_ID))
+            .build());
+    }
+
+    private PreparedStatement prepareDeleteAllEventsOfAGroupStatement(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
             .build());
     }
 
@@ -106,6 +114,11 @@ public class CassandraEventDeadLettersDAO {
         return executor.executeVoid(deleteStatement.bind()
                 .setString(GROUP, group.asString())
                 .setUuid(INSERTION_ID, failedInsertionId.getId()));
+    }
+
+    Mono<Void> removeEvents(Group group) {
+        return executor.executeVoid(deleteAllEventsOfAGroupStatement.bind()
+            .setString(GROUP, group.asString()));
     }
 
     Mono<Event> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {

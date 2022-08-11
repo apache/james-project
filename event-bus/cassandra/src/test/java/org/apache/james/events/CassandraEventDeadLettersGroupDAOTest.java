@@ -57,4 +57,15 @@ class CassandraEventDeadLettersGroupDAOTest {
                 .collectList().block())
             .containsOnly(GROUP_A, GROUP_B);
     }
+
+    @Test
+    void deleteGroupShouldOnlyDeleteMatchedGroup() {
+        GROUP_DAO.storeGroup(GROUP_A).block();
+        GROUP_DAO.storeGroup(GROUP_B).block();
+
+        GROUP_DAO.deleteGroup(GROUP_A).block();
+
+        assertThat(GROUP_DAO.retrieveAllGroups().collectList().block())
+            .containsOnly(GROUP_B);
+    }
 }

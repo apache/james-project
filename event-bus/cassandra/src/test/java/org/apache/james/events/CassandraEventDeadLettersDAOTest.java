@@ -60,6 +60,20 @@ class CassandraEventDeadLettersDAOTest {
     }
 
     @Test
+    void removeAllEventsOfAGroupShouldWork() {
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_3).block();
+
+        cassandraEventDeadLettersDAO.removeEvents(GROUP_A).block();
+
+        assertThat(cassandraEventDeadLettersDAO
+            .retrieveInsertionIdsWithGroup(GROUP_A)
+            .collectList().block())
+            .isEmpty();
+    }
+
+    @Test
     void retrieveFailedEventShouldReturnEmptyWhenDefault() {
         assertThat(cassandraEventDeadLettersDAO
                 .retrieveFailedEvent(GROUP_A, INSERTION_ID_1)

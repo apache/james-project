@@ -198,6 +198,14 @@ interface EventDeadLettersContract {
         }
 
         @Test
+        default void removeAllEventsOfAGroupShouldThrowWhenGroupIsNull() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            assertThatThrownBy(() -> eventDeadLetters.remove(NULL_GROUP))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         default void removeShouldThrowWhenInsertionIdIsNull() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
@@ -227,6 +235,43 @@ interface EventDeadLettersContract {
         }
 
         @Test
+        default void removeAllEventsOfAGroupShouldAllEventsOfThatGroup() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_2).block();
+
+            eventDeadLetters.remove(GROUP_A).block();
+
+            assertThat(eventDeadLetters.failedIds(GROUP_A).collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        default void removeAllEventsOfGroupAShouldRemoveThatGroup() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_2).block();
+
+            eventDeadLetters.remove(GROUP_A).block();
+
+            assertThat(eventDeadLetters.groupsWithFailedEvents().collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        default void removeAllEventsOfGroupAShouldNotRemoveGroupB() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            eventDeadLetters.store(GROUP_B, EVENT_2).block();
+
+            eventDeadLetters.remove(GROUP_A).block();
+
+            assertThat(eventDeadLetters.groupsWithFailedEvents().collectList().block())
+                .containsOnly(GROUP_B);
+        }
+
+        @Test
         default void removeShouldKeepNonMatched() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
@@ -238,6 +283,20 @@ interface EventDeadLettersContract {
 
             assertThat(eventDeadLetters.failedIds(GROUP_A).toStream())
                 .containsOnly(insertionId2, insertionId3);
+        }
+
+        @Test
+        default void removeAllEventsOfAGroupShouldKeepNonMatched() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_2).block();
+            InsertionId insertionId3 = eventDeadLetters.store(GROUP_B, EVENT_3).block();
+
+            eventDeadLetters.remove(GROUP_A).block();
+
+            assertThat(eventDeadLetters.failedIds(GROUP_B).toStream())
+                .containsOnly(insertionId3);
         }
 
         @Test
@@ -257,6 +316,16 @@ interface EventDeadLettersContract {
             eventDeadLetters.store(GROUP_A, EVENT_1).block();
 
             assertThatCode(() -> eventDeadLetters.remove(GROUP_B, INSERTION_ID_1).block())
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        default void removeAllEventsOfAGroupShouldNotThrowWhenNoGroupMatched() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
+
+            assertThatCode(() -> eventDeadLetters.remove(GROUP_B).block())
                 .doesNotThrowAnyException();
         }
 
@@ -284,6 +353,31 @@ interface EventDeadLettersContract {
                     eventDeadLetters.remove(groups.get(threadNumber), storedInsertionIds.get(operationIndex))
                         .block();
                 })
+                .threadCount(THREAD_COUNT)
+                .operationCount(OPERATION_COUNT)
+                .runSuccessfullyWithin(RUN_SUCCESSFULLY_IN);
+
+            assertThat(allInsertionIds())
+                .isEmpty();
+        }
+
+        @Test
+        default void removeAllEventsOfAGroupShouldKeepConsistencyWhenConcurrentRemove() throws Exception {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            ImmutableMap<Integer, Group> groups = concurrentGroups();
+
+            ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> {
+                    Event.EventId eventId = Event.EventId.random();
+                    eventDeadLetters.store(groups.get(threadNumber), event(eventId)).block();
+                })
+                .threadCount(THREAD_COUNT)
+                .operationCount(OPERATION_COUNT)
+                .runSuccessfullyWithin(RUN_SUCCESSFULLY_IN);
+
+            ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> eventDeadLetters.remove(groups.get(threadNumber)).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(RUN_SUCCESSFULLY_IN);

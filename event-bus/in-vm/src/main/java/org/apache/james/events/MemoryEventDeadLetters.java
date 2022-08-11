@@ -59,6 +59,16 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
     }
 
     @Override
+    public Mono<Void> remove(Group registeredGroup) {
+        Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
+
+        synchronized (deadLetters) {
+            deadLetters.row(registeredGroup).clear();
+            return Mono.empty();
+        }
+    }
+
+    @Override
     public Mono<Event> failedEvent(Group registeredGroup, InsertionId failDeliveredInsertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
