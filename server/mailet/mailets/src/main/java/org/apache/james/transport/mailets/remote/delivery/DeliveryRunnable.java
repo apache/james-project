@@ -92,8 +92,8 @@ public class DeliveryRunnable implements Disposable {
     }
 
     public void start() {
-        remoteDeliveryProcessScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery-Process-" + queue.getName().asString());
-        remoteDeliveryDequeueScheduler = Schedulers.newSingle("RemoteDelivery-Dequeue-" + queue.getName().asString());
+        remoteDeliveryProcessScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery-Process");
+        remoteDeliveryDequeueScheduler = Schedulers.newSingle("RemoteDelivery-Dequeue");
         disposable = Flux.from(queue.deQueue())
             .flatMap(queueItem -> runStep(queueItem).subscribeOn(remoteDeliveryProcessScheduler), Queues.SMALL_BUFFER_SIZE)
             .onErrorContinue(((throwable, nothing) -> LOGGER.error("Exception caught in RemoteDelivery", throwable)))
