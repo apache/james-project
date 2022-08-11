@@ -3810,6 +3810,19 @@ Response codes:
 * 204: Success
 * 400: Invalid group name or `insertionId`
 
+=== Deleting all events of a group
+
+....
+curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+....
+
+Will delete all events of this group.
+
+Response codes:
+
+* 204: Success
+* 400: Invalid group name
+
 === Redeliver all events
 
 ....
