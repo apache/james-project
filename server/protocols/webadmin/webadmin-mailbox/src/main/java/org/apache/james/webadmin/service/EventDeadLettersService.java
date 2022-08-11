@@ -68,6 +68,10 @@ public class EventDeadLettersService {
         deadLetters.remove(group, insertionId).block();
     }
 
+    public void deleteEvents(Group group) {
+        deadLetters.remove(group).block();
+    }
+
     public Task redeliverAllEvents(EventDeadLettersRedeliverService.RunningOptions runningOptions) {
         return new EventDeadLettersRedeliverAllTask(redeliverService, runningOptions);
     }

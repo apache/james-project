@@ -384,6 +384,66 @@ class EventDeadLettersRoutesTest {
     }
 
     @Nested
+    class DeleteAllEventsOfAGroup {
+        @Test
+        void deleteShouldReturnNoContent() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
+
+            when()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldReturnNoContentWhenGroupNotFound() {
+            when()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldFailWhenInvalidGroup() {
+            when()
+                .delete("/events/deadLetter/groups/invalid")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied group: invalid"));
+        }
+
+        @Test
+        void deleteShouldRemoveAllEventsOfAGroup() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
+
+            with()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A);
+
+            assertThat(deadLetters.failedIds(new EventBusTestFixture.GroupA()).collectList().block()).isEmpty();
+        }
+
+        @Test
+        void mixedCaseShouldOnlyRemoveMatchedOne() {
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            InsertionId insertionId2 = deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
+
+            assertThat(insertionId).isNotNull();
+            assertThat(insertionId2).isNotNull();
+
+            with()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A);
+
+            assertThat(deadLetters.failedIds(new EventBusTestFixture.GroupA()).collectList().block()).isEmpty();
+            assertThat(deadLetters.failedIds(new EventBusTestFixture.GroupB()).collectList().block()).containsExactly(insertionId2);
+        }
+    }
+
+    @Nested
     class RedeliverAllEvents {
         private Group groupA;
         private Group groupB;
