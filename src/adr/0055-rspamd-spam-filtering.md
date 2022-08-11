@@ -19,6 +19,7 @@ In order to detect spam, James provide 3 mechanism:
 For basic, we can base on username, DSN filter, domains, IP... for configuring black or grey list.
 If we want to analysis deeper in each message content more, we need a more complex system.
 Currently, James is integrated with [SpamAssassin](https://spamassassin.apache.org/) to tackle this problem.
+We found it hard to operate SpamAssassin, and we had a performance issue.
 
 For more selection, James's repository provides the RSpamD extension, which provides the same way as SpamAssassin but another system - [RSpamD](https://github.com/rspamd/rspamd)
 
@@ -55,7 +56,7 @@ For connect to RSpamD, we use http protocol with reactor http client.
 
 - For higher performance, lower latency, the RSpamD should run in same network with James.
 - The query to RSpamD will get different score for same message. 
-
+- A distributed mode for RSpamD is allowed by the use of Redis.
 
 ## Alternatives
 
