@@ -20,6 +20,7 @@
 package org.apache.james.events;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.events.tables.CassandraEventDeadLettersGroupTable.GROUP;
@@ -40,12 +41,14 @@ public class CassandraEventDeadLettersGroupDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectAllStatement;
+    private final PreparedStatement deleteStatement;
 
     @Inject
     CassandraEventDeadLettersGroupDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.insertStatement = prepareInsertStatement(session);
         this.selectAllStatement = prepareSelectStatement(session);
+        this.deleteStatement = prepareDeleteStatement(session);
     }
 
     private PreparedStatement prepareInsertStatement(CqlSession session) {
@@ -60,6 +63,12 @@ public class CassandraEventDeadLettersGroupDAO {
             .build());
     }
 
+    private PreparedStatement prepareDeleteStatement(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
+            .build());
+    }
+
     Mono<Void> storeGroup(Group group) {
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString()));
@@ -68,5 +77,10 @@ public class CassandraEventDeadLettersGroupDAO {
     Flux<Group> retrieveAllGroups() {
         return executor.executeRows(selectAllStatement.bind())
             .map(Throwing.function(row -> Group.deserialize(row.getString(GROUP))));
+    }
+
+    Mono<Void> deleteGroup(Group group) {
+        return executor.executeVoid(deleteStatement.bind()
+            .setString(GROUP, group.asString()));
     }
 }
