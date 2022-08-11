@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.client.RSpamDClientConfiguration;
 import org.apache.james.rspamd.client.RSpamDHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
@@ -42,6 +43,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -49,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
+@Tag(Unstable.TAG)
 class RSpamDScannerTest {
 
     @RegisterExtension

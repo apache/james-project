@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRSpamDExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
@@ -39,12 +40,14 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
+@Tag(Unstable.TAG)
 class RSpamDHttpClientTest {
     private final static String SPAM_MESSAGE_PATH = "mail/spam/spam8.eml";
     private final static String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
