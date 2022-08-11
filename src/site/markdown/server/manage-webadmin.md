@@ -3674,6 +3674,7 @@ failing, then the event will be stored in the "Event Dead Letter". This API allo
  - [Listing failed events](#Listing_failed_events)
  - [Getting event details](#Getting_event_details)
  - [Deleting an event](#Deleting_an_event)
+ - [Deleting all events of a group](#Deleting_all_events_of_a_group)
  - [Redeliver all events](#Redeliver_all_events)
  - [Redeliver group events](#Redeliver_group_events)
  - [Redeliver a single event](#Redeliver_a_single_event)
@@ -3742,6 +3743,19 @@ Response codes:
 
  - 204: Success
  - 400: Invalid group name or `insertionId`
+
+### Deleting all events of a group
+
+```
+curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+```
+
+Will delete all events of this group.
+
+Response codes:
+
+- 204: Success
+- 400: Invalid group name
 
 ### Redeliver all events
 
