@@ -111,7 +111,7 @@ public class FakeSmtp implements TestRule, BeforeAllCallback, AfterAllCallback, 
     }
 
     public void assertEmailReceived(Consumer<ValidatableResponse> expectations) {
-        Awaitility.await().atMost(Duration.ofSeconds(15))
+        Awaitility.await().atMost(Duration.ofMinutes(2))
             .untilAsserted(() -> expectations.accept(
                 given(requestSpecification(), RESPONSE_SPECIFICATION)
                     .get("/api/email")
