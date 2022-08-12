@@ -23,8 +23,7 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.util.FunctionalUtils;
-
-import com.github.fge.lambdas.Throwing;
+import org.apache.james.util.ReactorUtils;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,11 +45,13 @@ public class EmptyErrorMailRepositoryHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return Flux.fromStream(Throwing.supplier(() -> repositoryStore.getByPath(errorRepositoryPath)))
+        return Mono.fromCallable(() -> repositoryStore.getByPath(errorRepositoryPath))
+            .flatMapMany(Flux::fromStream)
             .flatMap(MailRepository::sizeReactive)
             .any(repositorySize -> repositorySize > 0)
             .filter(FunctionalUtils.identityPredicate())
             .map(hasSize -> Result.degraded(COMPONENT_NAME, "MailRepository is not empty"))
-            .switchIfEmpty(Mono.just(Result.healthy(COMPONENT_NAME)));
+            .switchIfEmpty(Mono.just(Result.healthy(COMPONENT_NAME)))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 }
