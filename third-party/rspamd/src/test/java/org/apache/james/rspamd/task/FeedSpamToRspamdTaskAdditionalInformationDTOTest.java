@@ -19,9 +19,9 @@
 
 package org.apache.james.rspamd.task;
 
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_PERIOD;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_PERIOD;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -30,11 +30,11 @@ import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
-class FeedHamToRSpamDTaskAdditionalInformationDTOTest {
+class FeedSpamToRspamdTaskAdditionalInformationDTOTest {
     @Test
     void shouldMatchJsonSerializationContractWhenEmptyPeriod() throws Exception {
-        JsonSerializationVerifier.dtoModule(FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
-            .bean(new FeedHamToRSpamDTask.AdditionalInformation(
+        JsonSerializationVerifier.dtoModule(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(new FeedSpamToRspamdTask.AdditionalInformation(
                 Instant.parse("2007-12-03T10:15:30.00Z"),
                 4,
                 2,
@@ -42,14 +42,14 @@ class FeedHamToRSpamDTaskAdditionalInformationDTOTest {
                 DEFAULT_MESSAGES_PER_SECOND,
                 DEFAULT_PERIOD,
                 DEFAULT_SAMPLING_PROBABILITY))
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/feedHamEmptyPeriod.additionalInformation.json"))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/feedSpamEmptyPeriod.additionalInformation.json"))
             .verify();
     }
 
     @Test
     void shouldMatchJsonSerializationContractWhenNonEmptyPeriod() throws Exception {
-        JsonSerializationVerifier.dtoModule(FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
-            .bean(new FeedHamToRSpamDTask.AdditionalInformation(
+        JsonSerializationVerifier.dtoModule(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(new FeedSpamToRspamdTask.AdditionalInformation(
                 Instant.parse("2007-12-03T10:15:30.00Z"),
                 4,
                 2,
@@ -57,7 +57,7 @@ class FeedHamToRSpamDTaskAdditionalInformationDTOTest {
                 DEFAULT_MESSAGES_PER_SECOND,
                 Optional.of(3600L),
                 DEFAULT_SAMPLING_PROBABILITY))
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/feedHamNonEmptyPeriod.additionalInformation.json"))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/feedSpamNonEmptyPeriod.additionalInformation.json"))
             .verify();
     }
 }

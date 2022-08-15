@@ -7,5 +7,5 @@
   },
   "spamMessageCount": 4,
   "timestamp": "2007-12-03T10:15:30Z",
-  "type": "FeedSpamToRSpamDTask"
+  "type": "FeedSpamToRspamdTask"
 }

@@ -1,38 +1,38 @@
-# James' extensions for RSpamD
+# James' extensions for Rspamd
 
-This module is for developing and delivering extensions to James for the [RSpamD](https://rspamd.com/) (the spam filtering system)
+This module is for developing and delivering extensions to James for the [Rspamd](https://rspamd.com/) (the spam filtering system)
 and [ClamAV](https://www.clamav.net/) (the antivirus engine).
 
 ## How to run
 
-- The RSpamD extension requires an extra configuration file `rspamd.properties` to configure RSpamd connection
+- The Rspamd extension requires an extra configuration file `rspamd.properties` to configure Rspamd connection
 Configuration parameters:
-    - `rSpamDUrl` : URL defining the RSpamD's server. Eg: http://rspamd:11334
-    - `rSpamDPassword` : Password for pass authentication when request to RSpamD's server. Eg: admin
+    - `rSpamdUrl` : URL defining the Rspamd's server. Eg: http://rspamd:11334
+    - `rSpamdPassword` : Password for pass authentication when request to Rspamd's server. Eg: admin
   
 - Declare the `extensions.properties` for this module.
 
 ```
-guice.extension.module=org.apache.james.rspamd.module.RSpamDModule
-guice.extension.task=org.apache.james.rspamd.module.RSpamDTaskExtensionModule
+guice.extension.module=org.apache.james.rspamd.module.RspamdModule
+guice.extension.task=org.apache.james.rspamd.module.RspamdTaskExtensionModule
 ```
 
-- Declare the RSpamD mailbox listeners in `listeners.xml`. Eg:
+- Declare the Rspamd mailbox listeners in `listeners.xml`. Eg:
 
 ```
 <listener>
-    <class>org.apache.james.rspamd.RSpamDListener</class>
+    <class>org.apache.james.rspamd.RspamdListener</class>
 </listener>
 ```
 
-- Declare the RSpamD mailet for custom mail processing. 
+- Declare the Rspamd mailet for custom mail processing. 
 
   You can specify the `virusProcessor` if you want to enable virus scanning for mail. Upon configurable `virusProcessor`
 you can specify how James process mail virus. We provide a sample Rspamd mailet and `virusProcessor` configuration:
 
 ```xml
 <processor state="local-delivery" enableJmx="true">
-    <mailet match="All" class="org.apache.james.rspamd.RSpamDScanner">
+    <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
         <rewriteSubject>true</rewriteSubject>
         <virusProcessor>virus</virusProcessor>
     </mailet>
@@ -60,7 +60,7 @@ you can specify how James process mail virus. We provide a sample Rspamd mailet 
 </processor>
 ```
 
-- Declare the webadmin for RSpamD in `webadmin.properties`
+- Declare the webadmin for Rspamd in `webadmin.properties`
 
 ```
 extensions.routes=org.apache.james.rspamd.route.FeedMessageRoute
@@ -80,8 +80,8 @@ then run it: `docker-compose up`
 
 ## Additional webadmin endpoints
 
-### Report spam messages to RSpamD
-One can use this route to schedule a task that reports spam messages to RSpamD for its spam classify learning.
+### Report spam messages to Rspamd
+One can use this route to schedule a task that reports spam messages to Rspamd for its spam classify learning.
 
 ```bash
 curl -XPOST 'http://ip:port/rspamd?action=reportSpam
@@ -89,11 +89,11 @@ curl -XPOST 'http://ip:port/rspamd?action=reportSpam
 
 This endpoint has the following param:
 - `action` (required): need to be `reportSpam`
-- `messagesPerSecond` (optional): Concurrent learns performed for RSpamD, default to 10
+- `messagesPerSecond` (optional): Concurrent learns performed for Rspamd, default to 10
 - `period` (optional): duration (support many time units, default in seconds), only messages between `now` and `now - duration` are reported. By default, 
 all messages are reported. 
    These inputs represent the same duration: `1d`, `1day`, `86400 seconds`, `86400`...
-- `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to RSpamD. 
+- `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to Rspamd. 
 By default, all messages are reported.
 
 Will return the task id. E.g:
@@ -109,7 +109,7 @@ Response codes:
 
 [More details about endpoints returning a task](https://james.apache.org/server/manage-webadmin.html#Endpoints_returning_a_task).
 
-The scheduled task will have the following type `FeedSpamToRSpamDTask` and the following additionalInformation:
+The scheduled task will have the following type `FeedSpamToRspamdTask` and the following additionalInformation:
 
 ```json
 {
@@ -122,12 +122,12 @@ The scheduled task will have the following type `FeedSpamToRSpamDTask` and the f
   },
   "spamMessageCount": 4,
   "timestamp": "2007-12-03T10:15:30Z",
-  "type": "FeedSpamToRSpamDTask"
+  "type": "FeedSpamToRspamdTask"
 }
 ```
 
-### Report ham messages to RSpamD
-One can use this route to schedule a task that reports ham messages to RSpamD for its spam classify learning.
+### Report ham messages to Rspamd
+One can use this route to schedule a task that reports ham messages to Rspamd for its spam classify learning.
 
 ```bash
 curl -XPOST 'http://ip:port/rspamd?action=reportHam
@@ -135,11 +135,11 @@ curl -XPOST 'http://ip:port/rspamd?action=reportHam
 
 This endpoint has the following param:
 - `action` (required): need to be `reportHam`
-- `messagesPerSecond` (optional): Concurrent learns performed for RSpamD, default to 10
+- `messagesPerSecond` (optional): Concurrent learns performed for Rspamd, default to 10
 - `period` (optional): duration (support many time units, default in seconds), only messages between `now` and `now - duration` are reported. By default,
   all messages are reported.
   These inputs represent the same duration: `1d`, `1day`, `86400 seconds`, `86400`...
-- `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to RSpamD.
+- `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to Rspamd.
   By default, all messages are reported.
 
 Will return the task id. E.g:
@@ -155,7 +155,7 @@ Response codes:
 
 [More details about endpoints returning a task](https://james.apache.org/server/manage-webadmin.html#Endpoints_returning_a_task).
 
-The scheduled task will have the following type `FeedHamToRSpamDTask` and the following additionalInformation:
+The scheduled task will have the following type `FeedHamToRspamdTask` and the following additionalInformation:
 
 ```json
 {
@@ -168,6 +168,6 @@ The scheduled task will have the following type `FeedHamToRSpamDTask` and the fo
   },
   "hamMessageCount": 4,
   "timestamp": "2007-12-03T10:15:30Z",
-  "type": "FeedHamToRSpamDTask"
+  "type": "FeedHamToRspamdTask"
 }
 ```

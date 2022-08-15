@@ -22,25 +22,25 @@ package org.apache.james.rspamd.module;
 import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.rspamd.client.RSpamDClientConfiguration;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class RSpamDModule extends AbstractModule {
+public class RspamdModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public RSpamDClientConfiguration rSpamDClientConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
-        return RSpamDClientConfiguration.from(propertiesProvider.getConfiguration("rspamd"));
+    public RspamdClientConfiguration rspamdClientConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
+        return RspamdClientConfiguration.from(propertiesProvider.getConfiguration("rspamd"));
     }
 
     @Provides
     @Singleton
-    public RSpamDHttpClient rSpamDHttpClient(RSpamDClientConfiguration rSpamDClientConfiguration) {
-        return new RSpamDHttpClient(rSpamDClientConfiguration);
+    public RspamdHttpClient rspamdHttpClient(RspamdClientConfiguration rspamdClientConfiguration) {
+        return new RspamdHttpClient(rspamdClientConfiguration);
     }
 }

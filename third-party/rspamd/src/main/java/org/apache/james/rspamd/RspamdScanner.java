@@ -27,7 +27,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Attribute;
@@ -42,18 +42,18 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-public class RSpamDScanner extends GenericMailet {
+public class RspamdScanner extends GenericMailet {
     public static final AttributeName FLAG_MAIL = AttributeName.of("org.apache.james.rspamd.flag");
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
-    private static final Logger LOGGER = LoggerFactory.getLogger(RSpamDScanner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RspamdScanner.class);
 
-    private final RSpamDHttpClient rSpamDHttpClient;
+    private final RspamdHttpClient rspamdHttpClient;
     private boolean rewriteSubject;
     private Optional<String> virusProcessor;
 
     @Inject
-    public RSpamDScanner(RSpamDHttpClient rSpamDHttpClient) {
-        this.rSpamDHttpClient = rSpamDHttpClient;
+    public RspamdScanner(RspamdHttpClient rspamdHttpClient) {
+        this.rspamdHttpClient = rspamdHttpClient;
     }
 
     @Override
@@ -64,17 +64,17 @@ public class RSpamDScanner extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        AnalysisResult rSpamDResult = rSpamDHttpClient.checkV2(new MimeMessageInputStream(mail.getMessage())).block();
+        AnalysisResult rspamdResult = rspamdHttpClient.checkV2(new MimeMessageInputStream(mail.getMessage())).block();
 
         mail.getRecipients()
-            .forEach(recipient -> appendRSpamDResultHeader(mail, recipient, rSpamDResult));
+            .forEach(recipient -> appendRspamdResultHeader(mail, recipient, rspamdResult));
 
         if (rewriteSubject) {
-            rSpamDResult.getDesiredRewriteSubject()
+            rspamdResult.getDesiredRewriteSubject()
                 .ifPresent(Throwing.consumer(desiredRewriteSubject -> mail.getMessage().setSubject(desiredRewriteSubject)));
         }
 
-        if (rSpamDResult.hasVirus()) {
+        if (rspamdResult.hasVirus()) {
             virusProcessor.ifPresent(state -> {
                 LOGGER.info("Detected a mail containing virus. Sending mail {} to {}", mail, virusProcessor);
                 mail.setState(state);
@@ -82,8 +82,8 @@ public class RSpamDScanner extends GenericMailet {
         }
     }
 
-    private void appendRSpamDResultHeader(Mail mail, MailAddress recipient, AnalysisResult rSpamDResult) {
-        for (Attribute attribute : getHeadersAsAttributes(rSpamDResult)) {
+    private void appendRspamdResultHeader(Mail mail, MailAddress recipient, AnalysisResult rspamdResult) {
+        for (Attribute attribute : getHeadersAsAttributes(rspamdResult)) {
             mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
                 .name(attribute.getName().asString())
                 .value((String) attribute.getValue().value())
@@ -91,18 +91,18 @@ public class RSpamDScanner extends GenericMailet {
         }
     }
 
-    private List<Attribute> getHeadersAsAttributes(AnalysisResult rSpamDResult) {
+    private List<Attribute> getHeadersAsAttributes(AnalysisResult rspamdResult) {
         String defaultFlagMailAttributeValue = "NO";
         String defaultStatusMailAttributeValue = "No";
-        if (rSpamDResult.getAction().equals(AnalysisResult.Action.REJECT)) {
+        if (rspamdResult.getAction().equals(AnalysisResult.Action.REJECT)) {
             defaultFlagMailAttributeValue = "YES";
             defaultStatusMailAttributeValue = "Yes";
         }
 
         return ImmutableList.of(new Attribute(FLAG_MAIL, AttributeValue.of(defaultFlagMailAttributeValue)),
             new Attribute(STATUS_MAIL, AttributeValue.of(defaultStatusMailAttributeValue + ","
-                + " actions=" + rSpamDResult.getAction().getDescription()
-                + " score=" + rSpamDResult.getScore()
-                + " requiredScore=" + rSpamDResult.getRequiredScore())));
+                + " actions=" + rspamdResult.getAction().getDescription()
+                + " score=" + rspamdResult.getScore()
+                + " requiredScore=" + rspamdResult.getRequiredScore())));
     }
 }

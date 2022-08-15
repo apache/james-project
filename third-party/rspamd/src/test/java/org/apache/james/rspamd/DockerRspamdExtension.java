@@ -27,8 +27,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 
-public class DockerRSpamDExtension implements GuiceModuleTestExtension {
-    private static final DockerRSpamD DOCKER_RSPAMD_SINGLETON = new DockerRSpamD();
+public class DockerRspamdExtension implements GuiceModuleTestExtension {
+    private static final DockerRspamd DOCKER_RSPAMD_SINGLETON = new DockerRspamd();
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
@@ -42,23 +42,23 @@ public class DockerRSpamDExtension implements GuiceModuleTestExtension {
         DOCKER_RSPAMD_SINGLETON.flushAll();
     }
 
-    public DockerRSpamD dockerRSpamD() {
+    public DockerRspamd dockerRspamd() {
         return DOCKER_RSPAMD_SINGLETON;
     }
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType() == DockerRSpamD.class;
+        return parameterContext.getParameter().getType() == DockerRspamd.class;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return dockerRSpamD();
+        return dockerRspamd();
     }
 
     public URL getBaseUrl() {
         try {
-            return new URL("http://127.0.0.1:" + dockerRSpamD().getPort());
+            return new URL("http://127.0.0.1:" + dockerRspamd().getPort());
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

@@ -26,49 +26,50 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.user.api.UsersRepository;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FeedHamToRSpamDTaskDTO implements TaskDTO {
-    public static TaskDTOModule<FeedHamToRSpamDTask, FeedHamToRSpamDTaskDTO> module(MailboxManager mailboxManager,
-                                                                                    UsersRepository usersRepository,
-                                                                                    MessageIdManager messageIdManager,
-                                                                                    MailboxSessionMapperFactory mapperFactory,
-                                                                                    RSpamDHttpClient rSpamDHttpClient,
-                                                                                    Clock clock) {
-        return DTOModule.forDomainObject(FeedHamToRSpamDTask.class)
-            .convertToDTO(FeedHamToRSpamDTaskDTO.class)
-            .toDomainObjectConverter(dto -> new FeedHamToRSpamDTask(mailboxManager,
+public class FeedSpamToRspamdTaskDTO implements TaskDTO {
+    public static TaskDTOModule<FeedSpamToRspamdTask, FeedSpamToRspamdTaskDTO> module(MailboxManager mailboxManager,
+                                                                                      UsersRepository usersRepository,
+                                                                                      MessageIdManager messageIdManager,
+                                                                                      MailboxSessionMapperFactory mapperFactory,
+                                                                                      RspamdHttpClient rspamdHttpClient,
+                                                                                      Clock clock) {
+        return DTOModule.forDomainObject(FeedSpamToRspamdTask.class)
+            .convertToDTO(FeedSpamToRspamdTaskDTO.class)
+            .toDomainObjectConverter(dto -> new FeedSpamToRspamdTask(mailboxManager,
                 usersRepository,
                 messageIdManager,
                 mapperFactory,
-                rSpamDHttpClient,
-                new FeedHamToRSpamDTask.RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
+                rspamdHttpClient,
+                new FeedSpamToRspamdTask.RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
                     dto.getMessagesPerSecond(),
                     dto.getSamplingProbability()),
                 clock))
-            .toDTOConverter((domain, type) -> new FeedHamToRSpamDTaskDTO(type,
+            .toDTOConverter((domain, type) -> new FeedSpamToRspamdTaskDTO(
+                type,
                 domain.getRunningOptions().getPeriodInSecond().orElse(null),
                 domain.getRunningOptions().getMessagesPerSecond(),
                 domain.getRunningOptions().getSamplingProbability()))
-            .typeName(FeedHamToRSpamDTask.TASK_TYPE.asString())
+            .typeName(FeedSpamToRspamdTask.TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
-
 
     private final String type;
     private final Long periodInSecond;
     private final int messagesPerSecond;
     private final double samplingProbability;
 
-    public FeedHamToRSpamDTaskDTO(@JsonProperty("type") String type,
-                                  @JsonProperty("periodInSecond") Long periodInSecond,
-                                  @JsonProperty("messagesPerSecond") int messagesPerSecond,
-                                  @JsonProperty("samplingProbability") double samplingProbability) {
+
+    public FeedSpamToRspamdTaskDTO(@JsonProperty("type") String type,
+                                   @JsonProperty("periodInSecond") Long periodInSecond,
+                                   @JsonProperty("messagesPerSecond") int messagesPerSecond,
+                                   @JsonProperty("samplingProbability") double samplingProbability) {
         this.type = type;
         this.periodInSecond = periodInSecond;
         this.messagesPerSecond = messagesPerSecond;

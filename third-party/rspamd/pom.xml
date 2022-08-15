@@ -29,8 +29,8 @@
     </parent>
 
     <artifactId>apache-james-rspamd</artifactId>
-    <name>Apache James :: Third Party :: RSpamD</name>
-    <description>RSpamD Java client (HTTP) and testing utilities</description>
+    <name>Apache James :: Third Party :: Rspamd</name>
+    <description>Rspamd Java client (HTTP) and testing utilities</description>
 
     <properties>
         <james.baseVersion>${project.version}</james.baseVersion>

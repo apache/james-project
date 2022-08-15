@@ -87,7 +87,7 @@
         </processor>
 
         <processor state="local-delivery" enableJmx="true">
-            <mailet match="All" class="org.apache.james.rspamd.RSpamDScanner">
+            <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
                 <rewriteSubject>true</rewriteSubject>
                 <virusProcessor>virus</virusProcessor>
             </mailet>

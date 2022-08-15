@@ -21,18 +21,18 @@ package org.apache.james.rspamd.route;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
+import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
 import static org.apache.james.rspamd.route.FeedMessageRoute.BASE_PATH;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTaskTest.ALICE_INBOX_MAILBOX;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTaskTest.BOB_INBOX_MAILBOX;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.ALICE;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.ALICE_SPAM_MAILBOX;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.BOB;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.BOB_SPAM_MAILBOX;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.NOW;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.ONE_DAY_IN_SECOND;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.THREE_DAYS_IN_SECOND;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.TWO_DAYS_IN_SECOND;
+import static org.apache.james.rspamd.task.FeedHamToRspamdTaskTest.ALICE_INBOX_MAILBOX;
+import static org.apache.james.rspamd.task.FeedHamToRspamdTaskTest.BOB_INBOX_MAILBOX;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.ALICE;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.ALICE_SPAM_MAILBOX;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.BOB;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.BOB_SPAM_MAILBOX;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.NOW;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.ONE_DAY_IN_SECOND;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.THREE_DAYS_IN_SECOND;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.TWO_DAYS_IN_SECOND;
 import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
@@ -62,13 +62,13 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.DockerRSpamDExtension;
-import org.apache.james.rspamd.client.RSpamDClientConfiguration;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTask;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTaskAdditionalInformationDTO;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTask;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskAdditionalInformationDTO;
+import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
+import org.apache.james.rspamd.client.RspamdHttpClient;
+import org.apache.james.rspamd.task.FeedHamToRspamdTask;
+import org.apache.james.rspamd.task.FeedHamToRspamdTaskAdditionalInformationDTO;
+import org.apache.james.rspamd.task.FeedSpamToRspamdTask;
+import org.apache.james.rspamd.task.FeedSpamToRspamdTaskAdditionalInformationDTO;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
@@ -97,7 +97,7 @@ import io.restassured.RestAssured;
 @Tag(Unstable.TAG)
 public class FeedMessageRouteTest {
     @RegisterExtension
-    static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
+    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
 
     private InMemoryMailboxManager mailboxManager;
     private WebAdminServer webAdminServer;
@@ -120,12 +120,12 @@ public class FeedMessageRouteTest {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         UpdatableTickingClock clock = new UpdatableTickingClock(NOW);
         JsonTransformer jsonTransformer = new JsonTransformer();
-        RSpamDHttpClient client = new RSpamDHttpClient(new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        RspamdHttpClient client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
         MessageIdManager messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         MailboxSessionMapperFactory mapperFactory = mailboxManager.getMapperFactory();
 
-        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
-            FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
+        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+            FeedHamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
         FeedMessageRoute feedMessageRoute = new FeedMessageRoute(taskManager, mailboxManager, usersRepository, client, jsonTransformer, clock,
             messageIdManager, mapperFactory);
 
@@ -171,13 +171,13 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedSpamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -198,13 +198,13 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedSpamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(1))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(172800))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -225,11 +225,11 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedSpamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.spamMessageCount", is(10))
                 .body("additionalInformation.reportedSpamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
         }
@@ -286,18 +286,18 @@ public class FeedMessageRouteTest {
             .then()
                 .body("status", is("completed"))
                 .body("taskId", is(notNullValue()))
-                .body("type", is(FeedSpamToRSpamDTask.TASK_TYPE.asString()))
+                .body("type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()))
-                .body("additionalInformation.type", is(FeedSpamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.timestamp", is(notNullValue()))
                 .body("additionalInformation.spamMessageCount", is(0))
                 .body("additionalInformation.reportedSpamMessageCount", is(0))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @ParameterizedTest
@@ -419,13 +419,13 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -446,13 +446,13 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(1))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(172800))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -473,11 +473,11 @@ public class FeedMessageRouteTest {
                 .get(taskId + "/await")
             .then()
                 .body("status", is("completed"))
-                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.hamMessageCount", is(10))
                 .body("additionalInformation.reportedHamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
         }
@@ -534,18 +534,18 @@ public class FeedMessageRouteTest {
             .then()
                 .body("status", is("completed"))
                 .body("taskId", is(notNullValue()))
-                .body("type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()))
-                .body("additionalInformation.type", is(FeedHamToRSpamDTask.TASK_TYPE.asString()))
+                .body("additionalInformation.type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
                 .body("additionalInformation.timestamp", is(notNullValue()))
                 .body("additionalInformation.hamMessageCount", is(0))
                 .body("additionalInformation.reportedHamMessageCount", is(0))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @ParameterizedTest

@@ -34,10 +34,10 @@ These extensions need to implement Task extension modules.
 Here is an example of such a class :
 
 ....
-public class RSpamDTaskExtensionModule implements TaskExtensionModule {
+public class RspamdTaskExtensionModule implements TaskExtensionModule {
 
     @Inject
-    public RSpamDTaskExtensionModule() {
+    public RspamdTaskExtensionModule() {
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RSpamDTaskExtensionModule implements TaskExtensionModule {
 Recording it in extensions.properties :
 
 ....
-guice.extension.tasks=com.project.RSpamDTaskExtensionModule
+guice.extension.tasks=com.project.RspamdTaskExtensionModule
 ....
 
 Read xref:extending/index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.

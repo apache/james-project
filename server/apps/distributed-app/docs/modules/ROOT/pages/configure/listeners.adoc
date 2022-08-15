@@ -52,9 +52,9 @@ Example:
 Please note that a `spamassassin.properties` file is needed. Read also
 xref:configure/spam.adoc[this page] for extra configuration required to support this feature.
 
-=== RSpamDListener
+=== RspamdListener
 
-Provides HAM/SPAM feedback to a RSpamD server depending on user actions.
+Provides HAM/SPAM feedback to a Rspamd server depending on user actions.
 
 This MailboxListener is supported.
 
@@ -64,7 +64,7 @@ Example:
 <listeners>
   <!-- ... -->
   <listener>
-    <class>org.apache.james.rspamd.RSpamDListener</class>
+    <class>org.apache.james.rspamd.RspamdListener</class>
   </listener>
 </listeners>
 ....

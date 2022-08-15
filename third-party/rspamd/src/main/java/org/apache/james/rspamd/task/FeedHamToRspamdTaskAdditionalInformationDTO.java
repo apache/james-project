@@ -27,17 +27,17 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FeedHamToRSpamDTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<FeedHamToRSpamDTask.AdditionalInformation, FeedHamToRSpamDTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(FeedHamToRSpamDTask.AdditionalInformation.class)
-            .convertToDTO(FeedHamToRSpamDTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(FeedHamToRSpamDTaskAdditionalInformationDTO::toDomainObject)
-            .toDTOConverter(FeedHamToRSpamDTaskAdditionalInformationDTO::toDto)
-            .typeName(FeedHamToRSpamDTask.TASK_TYPE.asString())
+public class FeedHamToRspamdTaskAdditionalInformationDTO implements AdditionalInformationDTO {
+    public static final AdditionalInformationDTOModule<FeedHamToRspamdTask.AdditionalInformation, FeedHamToRspamdTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+        DTOModule.forDomainObject(FeedHamToRspamdTask.AdditionalInformation.class)
+            .convertToDTO(FeedHamToRspamdTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(FeedHamToRspamdTaskAdditionalInformationDTO::toDomainObject)
+            .toDTOConverter(FeedHamToRspamdTaskAdditionalInformationDTO::toDto)
+            .typeName(FeedHamToRspamdTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
-    private static FeedHamToRSpamDTask.AdditionalInformation toDomainObject(FeedHamToRSpamDTaskAdditionalInformationDTO dto) {
-        return new FeedHamToRSpamDTask.AdditionalInformation(
+    private static FeedHamToRspamdTask.AdditionalInformation toDomainObject(FeedHamToRspamdTaskAdditionalInformationDTO dto) {
+        return new FeedHamToRspamdTask.AdditionalInformation(
             dto.timestamp,
             dto.hamMessageCount,
             dto.reportedHamMessageCount,
@@ -47,14 +47,14 @@ public class FeedHamToRSpamDTaskAdditionalInformationDTO implements AdditionalIn
             dto.runningOptions.getSamplingProbability());
     }
 
-    private static FeedHamToRSpamDTaskAdditionalInformationDTO toDto(FeedHamToRSpamDTask.AdditionalInformation domainObject, String type) {
-        return new FeedHamToRSpamDTaskAdditionalInformationDTO(
+    private static FeedHamToRspamdTaskAdditionalInformationDTO toDto(FeedHamToRspamdTask.AdditionalInformation domainObject, String type) {
+        return new FeedHamToRspamdTaskAdditionalInformationDTO(
             type,
             domainObject.timestamp(),
             domainObject.getHamMessageCount(),
             domainObject.getReportedHamMessageCount(),
             domainObject.getErrorCount(),
-            new FeedHamToRSpamDTask.RunningOptions(domainObject.getPeriod(), domainObject.getMessagesPerSecond(), domainObject.getSamplingProbability()));
+            new FeedHamToRspamdTask.RunningOptions(domainObject.getPeriod(), domainObject.getMessagesPerSecond(), domainObject.getSamplingProbability()));
     }
 
     private final String type;
@@ -62,14 +62,14 @@ public class FeedHamToRSpamDTaskAdditionalInformationDTO implements AdditionalIn
     private final long hamMessageCount;
     private final long reportedHamMessageCount;
     private final long errorCount;
-    private final FeedHamToRSpamDTask.RunningOptions runningOptions;
+    private final FeedHamToRspamdTask.RunningOptions runningOptions;
 
-    public FeedHamToRSpamDTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+    public FeedHamToRspamdTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                        @JsonProperty("timestamp") Instant timestamp,
                                                        @JsonProperty("hamMessageCount") long hamMessageCount,
                                                        @JsonProperty("reportedHamMessageCount") long reportedHamMessageCount,
                                                        @JsonProperty("errorCount") long errorCount,
-                                                       @JsonProperty("runningOptions") FeedHamToRSpamDTask.RunningOptions runningOptions) {
+                                                       @JsonProperty("runningOptions") FeedHamToRspamdTask.RunningOptions runningOptions) {
         this.type = type;
         this.timestamp = timestamp;
         this.hamMessageCount = hamMessageCount;
@@ -100,7 +100,7 @@ public class FeedHamToRSpamDTaskAdditionalInformationDTO implements AdditionalIn
         return errorCount;
     }
 
-    public FeedHamToRSpamDTask.RunningOptions getRunningOptions() {
+    public FeedHamToRspamdTask.RunningOptions getRunningOptions() {
         return runningOptions;
     }
 }

@@ -19,7 +19,7 @@
 
 package org.apache.james.rspamd.task;
 
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTask.SPAM_MAILBOX_NAME;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
 
 import java.util.Date;
 import java.util.Optional;
@@ -63,13 +63,13 @@ public class GetMailboxMessagesService {
     }
 
     public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, double samplingProbability,
-                                                           FeedSpamToRSpamDTask.Context context) throws UsersRepositoryException {
+                                                           FeedSpamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
             .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, samplingProbability, context), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, double samplingProbability,
-                                                       FeedHamToRSpamDTask.Context context) throws UsersRepositoryException {
+                                                       FeedHamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
             .flatMap(Throwing.function(username -> Flux.fromIterable(mailboxManager.list(mailboxManager.createSystemSession(username)))
                 .filter(this::hamMailboxesPredicate)
@@ -77,7 +77,7 @@ public class GetMailboxMessagesService {
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,
-                                                          double samplingProbability, FeedSpamToRSpamDTask.Context context) {
+                                                          double samplingProbability, FeedSpamToRspamdTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
         return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName), mailboxSession))
@@ -92,7 +92,7 @@ public class GetMailboxMessagesService {
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, MailboxPath mailboxPath, Optional<Date> afterDate,
-                                                          double samplingProbability, FeedHamToRSpamDTask.Context context) {
+                                                          double samplingProbability, FeedHamToRspamdTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))

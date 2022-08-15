@@ -27,17 +27,17 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FeedSpamToRSpamDTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<FeedSpamToRSpamDTask.AdditionalInformation, FeedSpamToRSpamDTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(FeedSpamToRSpamDTask.AdditionalInformation.class)
-            .convertToDTO(FeedSpamToRSpamDTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(FeedSpamToRSpamDTaskAdditionalInformationDTO::toDomainObject)
-            .toDTOConverter(FeedSpamToRSpamDTaskAdditionalInformationDTO::toDto)
-            .typeName(FeedSpamToRSpamDTask.TASK_TYPE.asString())
+public class FeedSpamToRspamdTaskAdditionalInformationDTO implements AdditionalInformationDTO {
+    public static final AdditionalInformationDTOModule<FeedSpamToRspamdTask.AdditionalInformation, FeedSpamToRspamdTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+        DTOModule.forDomainObject(FeedSpamToRspamdTask.AdditionalInformation.class)
+            .convertToDTO(FeedSpamToRspamdTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(FeedSpamToRspamdTaskAdditionalInformationDTO::toDomainObject)
+            .toDTOConverter(FeedSpamToRspamdTaskAdditionalInformationDTO::toDto)
+            .typeName(FeedSpamToRspamdTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
-    private static FeedSpamToRSpamDTask.AdditionalInformation toDomainObject(FeedSpamToRSpamDTaskAdditionalInformationDTO dto) {
-        return new FeedSpamToRSpamDTask.AdditionalInformation(
+    private static FeedSpamToRspamdTask.AdditionalInformation toDomainObject(FeedSpamToRspamdTaskAdditionalInformationDTO dto) {
+        return new FeedSpamToRspamdTask.AdditionalInformation(
             dto.timestamp,
             dto.spamMessageCount,
             dto.reportedSpamMessageCount,
@@ -47,14 +47,14 @@ public class FeedSpamToRSpamDTaskAdditionalInformationDTO implements AdditionalI
             dto.runningOptions.getSamplingProbability());
     }
 
-    private static FeedSpamToRSpamDTaskAdditionalInformationDTO toDto(FeedSpamToRSpamDTask.AdditionalInformation domainObject, String type) {
-        return new FeedSpamToRSpamDTaskAdditionalInformationDTO(
+    private static FeedSpamToRspamdTaskAdditionalInformationDTO toDto(FeedSpamToRspamdTask.AdditionalInformation domainObject, String type) {
+        return new FeedSpamToRspamdTaskAdditionalInformationDTO(
             type,
             domainObject.timestamp(),
             domainObject.getSpamMessageCount(),
             domainObject.getReportedSpamMessageCount(),
             domainObject.getErrorCount(),
-            new FeedSpamToRSpamDTask.RunningOptions(domainObject.getPeriod(), domainObject.getMessagesPerSecond(), domainObject.getSamplingProbability()));
+            new FeedSpamToRspamdTask.RunningOptions(domainObject.getPeriod(), domainObject.getMessagesPerSecond(), domainObject.getSamplingProbability()));
     }
 
     private final String type;
@@ -62,14 +62,14 @@ public class FeedSpamToRSpamDTaskAdditionalInformationDTO implements AdditionalI
     private final long spamMessageCount;
     private final long reportedSpamMessageCount;
     private final long errorCount;
-    private final FeedSpamToRSpamDTask.RunningOptions runningOptions;
+    private final FeedSpamToRspamdTask.RunningOptions runningOptions;
 
-    public FeedSpamToRSpamDTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+    public FeedSpamToRspamdTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                         @JsonProperty("timestamp") Instant timestamp,
                                                         @JsonProperty("spamMessageCount") long spamMessageCount,
                                                         @JsonProperty("reportedSpamMessageCount") long reportedSpamMessageCount,
                                                         @JsonProperty("errorCount") long errorCount,
-                                                        @JsonProperty("runningOptions") FeedSpamToRSpamDTask.RunningOptions runningOptions) {
+                                                        @JsonProperty("runningOptions") FeedSpamToRspamdTask.RunningOptions runningOptions) {
         this.type = type;
         this.timestamp = timestamp;
         this.spamMessageCount = spamMessageCount;
@@ -100,7 +100,7 @@ public class FeedSpamToRSpamDTaskAdditionalInformationDTO implements AdditionalI
         return errorCount;
     }
 
-    public FeedSpamToRSpamDTask.RunningOptions getRunningOptions() {
+    public FeedSpamToRspamdTask.RunningOptions getRunningOptions() {
         return runningOptions;
     }
 }

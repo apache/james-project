@@ -19,7 +19,7 @@
 
 package org.apache.james.rspamd.client;
 
-import static org.apache.james.rspamd.client.RSpamDClientConfiguration.DEFAULT_TIMEOUT_IN_SECONDS;
+import static org.apache.james.rspamd.client.RspamdClientConfiguration.DEFAULT_TIMEOUT_IN_SECONDS;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +27,7 @@ import java.time.Duration;
 
 import javax.inject.Inject;
 
-import org.apache.james.rspamd.exception.RSpamDUnexpectedException;
+import org.apache.james.rspamd.exception.RspamdUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.ReactorUtils;
@@ -43,7 +43,7 @@ import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 
-public class RSpamDHttpClient {
+public class RspamdHttpClient {
     public static final String CHECK_V2_ENDPOINT = "/checkV2";
     public static final String LEARN_SPAM_ENDPOINT = "/learnspam";
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
@@ -55,7 +55,7 @@ public class RSpamDHttpClient {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public RSpamDHttpClient(RSpamDClientConfiguration configuration) {
+    public RspamdHttpClient(RspamdClientConfiguration configuration) {
         httpClient = buildReactorNettyHttpClient(configuration);
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
     }
@@ -77,7 +77,7 @@ public class RSpamDHttpClient {
         return reportMail(content, LEARN_HAM_ENDPOINT);
     }
 
-    private HttpClient buildReactorNettyHttpClient(RSpamDClientConfiguration configuration) {
+    private HttpClient buildReactorNettyHttpClient(RspamdClientConfiguration configuration) {
         return HttpClient.create()
             .disableRetry(true)
             .responseTimeout(Duration.ofSeconds(configuration.getTimeout().orElse(DEFAULT_TIMEOUT_IN_SECONDS)))
@@ -104,7 +104,7 @@ public class RSpamDHttpClient {
                     .flatMap(responseBody -> Mono.error(() -> new UnauthorizedException(responseBody)));
             default:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
-                    .flatMap(responseBody -> Mono.error(() -> new RSpamDUnexpectedException(responseBody)));
+                    .flatMap(responseBody -> Mono.error(() -> new RspamdUnexpectedException(responseBody)));
         }
     }
 
@@ -117,7 +117,7 @@ public class RSpamDHttpClient {
                     .flatMap(responseBody -> Mono.error(() -> new UnauthorizedException(responseBody)));
             default:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
-                    .flatMap(responseBody -> Mono.error(() -> new RSpamDUnexpectedException(responseBody)));
+                    .flatMap(responseBody -> Mono.error(() -> new RspamdUnexpectedException(responseBody)));
         }
     }
 
