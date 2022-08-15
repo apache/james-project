@@ -59,6 +59,7 @@ import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueFactory.MemoryCacheableMailQueue> {
@@ -95,14 +96,16 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
         private final MailQueueName name;
         private final Flux<MailQueueItem> flux;
+        private final Scheduler scheduler;
 
         public MemoryCacheableMailQueue(MailQueueName name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
+            this.scheduler = Schedulers.newSingle("memory-mail-queue");
             this.flux = Mono.fromCallable(mailItems::take)
                 .repeat()
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(scheduler)
                 .flatMap(item ->
                     Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item), DEFAULT_CONCURRENCY)
                 .map(item -> mailQueueItemDecoratorFactory.decorate(item, name));
@@ -110,7 +113,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
 
         @Override
         public void close() {
-            //There's no resource to free
+            this.scheduler.dispose();
         }
 
         @Override
