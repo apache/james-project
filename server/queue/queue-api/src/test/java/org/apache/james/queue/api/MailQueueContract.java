@@ -34,7 +34,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -425,9 +424,11 @@ public interface MailQueueContract {
         enQueue(defaultMail()
             .name("name1")
             .build());
+        Thread.sleep(1);
         enQueue(defaultMail()
             .name("name2")
             .build());
+        Thread.sleep(1);
         enQueue(defaultMail()
             .name("name3")
             .build());
@@ -439,9 +440,11 @@ public interface MailQueueContract {
         mailQueueItem1.done(false);
         MailQueue.MailQueueItem mailQueueItem1bis = items.next();
         MailQueue.MailQueueItem mailQueueItem3 = items.next();
+
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name1");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name2");
-        assertThat(List.of(mailQueueItem1bis, mailQueueItem3).stream().map(item -> item.getMail().getName())).containsOnly("name1", "name3");
+        assertThat(Stream.of(mailQueueItem1bis, mailQueueItem3).map(item -> item.getMail().getName()))
+            .containsOnly("name1", "name3");
     }
 
     @Test
