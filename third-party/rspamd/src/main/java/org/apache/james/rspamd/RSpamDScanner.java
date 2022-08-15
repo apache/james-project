@@ -21,6 +21,7 @@ package org.apache.james.rspamd;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -35,6 +36,8 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -42,9 +45,11 @@ import com.google.common.collect.ImmutableList;
 public class RSpamDScanner extends GenericMailet {
     public static final AttributeName FLAG_MAIL = AttributeName.of("org.apache.james.rspamd.flag");
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
+    private static final Logger LOGGER = LoggerFactory.getLogger(RSpamDScanner.class);
 
     private final RSpamDHttpClient rSpamDHttpClient;
     private boolean rewriteSubject;
+    private Optional<String> spamProcessor;
 
     @Inject
     public RSpamDScanner(RSpamDHttpClient rSpamDHttpClient) {
@@ -54,6 +59,7 @@ public class RSpamDScanner extends GenericMailet {
     @Override
     public void init() {
         rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
+        spamProcessor = getInitParameterAsOptional("spamProcessor");
     }
 
     @Override
@@ -66,6 +72,13 @@ public class RSpamDScanner extends GenericMailet {
         if (rewriteSubject) {
             rSpamDResult.getDesiredRewriteSubject()
                 .ifPresent(Throwing.consumer(desiredRewriteSubject -> mail.getMessage().setSubject(desiredRewriteSubject)));
+        }
+
+        if (rSpamDResult.getHasVirus()) {
+            if (isDebug()) {
+                LOGGER.debug("Detected a mail containing virus. Sending mail {} to {}", mail, spamProcessor);
+            }
+            spamProcessor.ifPresent(mail::setState);
         }
     }
 
@@ -91,5 +104,9 @@ public class RSpamDScanner extends GenericMailet {
                 + " actions=" + rSpamDResult.getAction().getDescription()
                 + " score=" + rSpamDResult.getScore()
                 + " requiredScore=" + rSpamDResult.getRequiredScore())));
+    }
+
+    private boolean isDebug() {
+        return getInitParameter("debug", false);
     }
 }
