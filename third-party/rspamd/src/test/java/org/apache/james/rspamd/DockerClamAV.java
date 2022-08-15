@@ -19,39 +19,22 @@
 
 package org.apache.james.rspamd;
 
-import org.apache.james.rate.limiter.DockerRedis;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
 
-public class DockerRSpamD {
-    public static final String PASSWORD = "admin";
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("a16bitsysop/rspamd");
-    private static final String DEFAULT_TAG = "3.2-r2-alpine3.16.0-r0";
-    private static final int DEFAULT_PORT = 11334;
+public class DockerClamAV {
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav");
+    private static final String DEFAULT_TAG = "0.105";
+    private static final int DEFAULT_PORT = 3310;
 
-    private final DockerRedis dockerRedis;
-    private final DockerClamAV dockerClamAV;
     private final GenericContainer<?> container;
-    private final Network network;
 
-    public DockerRSpamD() {
-        this.network = Network.newNetwork();
-        this.dockerRedis = new DockerRedis(network);
-        this.dockerClamAV = new DockerClamAV(network);
-        this.container = createRspamD();
-    }
-
-    private GenericContainer<?> createRspamD() {
-        return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
+    public DockerClamAV(Network network) {
+        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
-            .withEnv("REDIS", "redis")
-            .withEnv("CLAMAV", "clamav")
-            .withEnv("PASSWORD", PASSWORD)
-            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
-            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
-            .withNetwork(network);
+            .withNetwork(network)
+            .withNetworkAliases("clamav");
     }
 
     public Integer getPort() {
@@ -59,8 +42,6 @@ public class DockerRSpamD {
     }
 
     public void start() {
-        dockerClamAV.start();
-        dockerRedis.start();
         if (!container.isRunning()) {
             container.start();
         }
@@ -68,11 +49,5 @@ public class DockerRSpamD {
 
     public void stop() {
         container.stop();
-        dockerRedis.stop();
-        dockerClamAV.stop();
-    }
-
-    public void flushAll() {
-        dockerRedis.flushAll();
     }
 }

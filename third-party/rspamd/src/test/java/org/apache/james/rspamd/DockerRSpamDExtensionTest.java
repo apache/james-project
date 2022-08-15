@@ -27,6 +27,8 @@ import org.apache.james.junit.categories.Unstable;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.core.IsIterableContaining;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -120,5 +122,32 @@ public class DockerRSpamDExtensionTest {
         .then()
             .statusCode(HttpStatus.FORBIDDEN_403)
             .body("error", is("Unauthorized"));
+    }
+
+    @Test
+    void checkVirusEmailWithExactPasswordHeaderShouldReturnClamVirusSymbol() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/attachment/inlineVirusTextAttachment.eml"))
+            .post("checkv2")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("symbols.CLAM_VIRUS.name", is("CLAM_VIRUS"))
+            .body("symbols.CLAM_VIRUS.options", IsIterableContaining.hasItem("Eicar-Signature"));
+    }
+
+    @Test
+    void checkNonVirusEmailWithExactPasswordHeaderShouldNotReturnClamVirusSymbol() {
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
+
+        rspamdApi
+            .header(new Header("Password", PASSWORD))
+            .body(ClassLoader.getSystemResourceAsStream("mail/attachment/inlineNonVirusTextAttachment.eml"))
+            .post("checkv2")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("symbols.CLAM_VIRUS", IsNull.nullValue());
     }
 }
