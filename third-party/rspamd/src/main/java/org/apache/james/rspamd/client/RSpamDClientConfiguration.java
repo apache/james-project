@@ -23,7 +23,7 @@ import java.net.URL;
 import java.util.Optional;
 
 public class RSpamDClientConfiguration {
-    public static final Integer DEFAULT_TIMEOUT_IN_SECONDS = 10;
+    public static final Integer DEFAULT_TIMEOUT_IN_SECONDS = 15;
 
     private final URL url;
     private final String password;

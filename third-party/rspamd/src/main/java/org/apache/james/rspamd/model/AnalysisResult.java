@@ -24,10 +24,12 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(using = AnalysisResultDeserializer.class)
 public class AnalysisResult {
 
     public static Builder builder() {
@@ -39,6 +41,7 @@ public class AnalysisResult {
         private float score;
         private float requiredScore;
         private Optional<String> desiredRewriteSubject;
+        private boolean hasVirus;
 
         public Builder() {
             desiredRewriteSubject = Optional.empty();
@@ -64,10 +67,15 @@ public class AnalysisResult {
             return this;
         }
 
+        public Builder hasVirus(boolean hasVirus) {
+            this.hasVirus = hasVirus;
+            return this;
+        }
+
         public AnalysisResult build() {
             Preconditions.checkNotNull(action);
 
-            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject);
+            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject, hasVirus);
         }
     }
 
@@ -94,15 +102,18 @@ public class AnalysisResult {
     private final float score;
     private final float requiredScore;
     private final Optional<String> desiredRewriteSubject;
+    private final boolean hasVirus;
 
     public AnalysisResult(@JsonProperty("action") Action action,
                           @JsonProperty("score") float score,
                           @JsonProperty("required_score") float requiredScore,
-                          @JsonProperty("subject") Optional<String> desiredRewriteSubject) {
+                          @JsonProperty("subject") Optional<String> desiredRewriteSubject,
+                          boolean hasVirus) {
         this.action = action;
         this.score = score;
         this.requiredScore = requiredScore;
         this.desiredRewriteSubject = desiredRewriteSubject;
+        this.hasVirus = hasVirus;
     }
 
     public Action getAction() {
@@ -121,6 +132,10 @@ public class AnalysisResult {
         return desiredRewriteSubject;
     }
 
+    public boolean getHasVirus() {
+        return hasVirus;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof AnalysisResult) {
@@ -129,14 +144,15 @@ public class AnalysisResult {
             return Objects.equals(this.score, that.score)
                 && Objects.equals(this.requiredScore, that.requiredScore)
                 && Objects.equals(this.action, that.action)
-                && Objects.equals(this.desiredRewriteSubject, that.desiredRewriteSubject);
+                && Objects.equals(this.desiredRewriteSubject, that.desiredRewriteSubject)
+                && Objects.equals(this.hasVirus, that.hasVirus);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(action, score, requiredScore, desiredRewriteSubject);
+        return Objects.hash(action, score, requiredScore, desiredRewriteSubject, hasVirus);
     }
 
     @Override
@@ -146,6 +162,7 @@ public class AnalysisResult {
             .add("score", score)
             .add("requiredScore", requiredScore)
             .add("desiredRewriteSubject", desiredRewriteSubject)
+            .add("hasVirus", hasVirus)
             .toString();
     }
 }
