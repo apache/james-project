@@ -360,7 +360,10 @@ public class StoreMailboxManager implements MailboxManager {
                         } else {
                             return createMailboxesForPath(mailboxSession, sanitizedMailboxPath).takeLast(1).next();
                         }
-                    });
+                    })
+                    .retryWhen(Retry.backoff(5, Duration.ofMillis(100))
+                        .jitter(0.5)
+                        .maxBackoff(Duration.ofSeconds(1)));
             } catch (MailboxNameException e) {
                 return Mono.error(e);
             }
