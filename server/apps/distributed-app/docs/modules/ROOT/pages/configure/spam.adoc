@@ -21,10 +21,10 @@ detection is not supported by this hook.
 
 == AntiSpam Mailets
 
-James' repository provide two AntiSpam mailets: SpamAssassin and RSpamDScanner.
+James' repository provide two AntiSpam mailets: SpamAssassin and RspamdScanner.
 We can select one in them for filtering spam mail.
 
-* *SpamAssassin and RSpamDScanner* Mailet is designed to classify the messages as spam or not
+* *SpamAssassin and RspamdScanner* Mailet is designed to classify the messages as spam or not
 with a configurable score threshold. Usually a message will only be
 considered as spam if it matches multiple criteria; matching just a single test
 will not usually be enough to reach the threshold. Note that this mailet is executed on a per-user basis.
@@ -93,44 +93,44 @@ Example:
 </listeners>
 ....
 
-== RSpamD
+== Rspamd
 
-The RSpamD extension (optional) requires an extra configuration file `rspamd.properties` to configure RSpamd connection
+The Rspamd extension (optional) requires an extra configuration file `rspamd.properties` to configure RSpamd connection
 
 .rspamd.properties content
 |===
 | Property name | explanation
 
-| rSpamDUrl
-| URL defining the RSpamD's server. Eg: http://rspamd:11334
+| rSpamdUrl
+| URL defining the Rspamd's server. Eg: http://rspamd:11334
 
-| rSpamDPassword
-| Password for pass authentication when request to RSpamD's server. Eg: admin
+| rSpamdPassword
+| Password for pass authentication when request to Rspamd's server. Eg: admin
 |===
 
 
-Here is an example of mailet pipeline conducting out RSpamDScanner execution:
+Here is an example of mailet pipeline conducting out RspamdScanner execution:
 
 ....
-<mailet match="All" class="org.apache.james.rspamd.RSpamDScanner">
+<mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
 </mailet>
 <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
     <targetFolderName>Spam</targetFolderName>
 </mailet>
 ....
 
-=== Feedback for RSpamD
-If enabled, the `RSpamDListener` will base on the Mailbox event to detect the message is a spam or not, then James will send report `spam` or `ham` to RSpamD
-The RSpamD listener needs to explicitly be registered with xref:configure/listeners.adoc[listeners.xml].
+=== Feedback for Rspamd
+If enabled, the `RspamdListener` will base on the Mailbox event to detect the message is a spam or not, then James will send report `spam` or `ham` to Rspamd
+The Rspamd listener needs to explicitly be registered with xref:configure/listeners.adoc[listeners.xml].
 
 Example:
 
 ....
 <listeners>
     <listener>
-        <class>org.apache.james.rspamd.RSpamDListener</class>
+        <class>org.apache.james.rspamd.RspamdListener</class>
     </listener>
 </listeners>
 ....
 
-For more detail about how to use RSpamD's extension: `third-party/rspamd/index.md`
+For more detail about how to use Rspamd's extension: `third-party/rspamd/index.md`

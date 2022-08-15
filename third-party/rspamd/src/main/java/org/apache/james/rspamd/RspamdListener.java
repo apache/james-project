@@ -41,7 +41,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.SpamEventListener;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
@@ -54,24 +54,24 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class RSpamDListener implements SpamEventListener, EventListener.ReactiveGroupEventListener {
-    public static class RSpamDListenerGroup extends Group {
+public class RspamdListener implements SpamEventListener, EventListener.ReactiveGroupEventListener {
+    public static class RspamdListenerGroup extends Group {
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RSpamDListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RspamdListener.class);
 
     private static final int LIMIT = 1;
-    private static final Group GROUP = new RSpamDListenerGroup();
+    private static final Group GROUP = new RspamdListenerGroup();
 
-    private final RSpamDHttpClient rSpamDHttpClient;
+    private final RspamdHttpClient rspamdHttpClient;
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory mapperFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
 
     @Inject
-    public RSpamDListener(RSpamDHttpClient rSpamDHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, SystemMailboxesProvider systemMailboxesProvider) {
-        this.rSpamDHttpClient = rSpamDHttpClient;
+    public RspamdListener(RspamdHttpClient rspamdHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, SystemMailboxesProvider systemMailboxesProvider) {
+        this.rspamdHttpClient = rspamdHttpClient;
         this.mailboxManager = mailboxManager;
         this.mapperFactory = mapperFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
@@ -115,7 +115,7 @@ public class RSpamDListener implements SpamEventListener, EventListener.Reactive
             .flatMapMany(pair -> Flux.fromIterable(MessageRange.toRanges(addedEvent.getUids()))
                 .flatMap(range -> pair.getRight().findInMailboxReactive(pair.getLeft(), range, MessageMapper.FetchType.FULL, LIMIT)))
             .map(Throwing.function(MailboxMessage::getFullContent))
-            .flatMap(rSpamDHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY)
+            .flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
 
@@ -134,11 +134,11 @@ public class RSpamDListener implements SpamEventListener, EventListener.Reactive
             .flatMap(isSpam -> {
                 if (isSpam) {
                     LOGGER.debug("Spam event detected, EventId = {}", messageMoveEvent.getEventId().getId());
-                    return mailboxMessagesPublisher.flatMap(rSpamDHttpClient::reportAsSpam, ReactorUtils.DEFAULT_CONCURRENCY)
+                    return mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsSpam, ReactorUtils.DEFAULT_CONCURRENCY)
                         .then();
                 } else {
                     return reportHamIfNotSpamDetected
-                        .flatMapMany(isHam -> mailboxMessagesPublisher.flatMap(rSpamDHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY))
+                        .flatMapMany(isHam -> mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY))
                         .then();
                 }
             });

@@ -25,13 +25,13 @@ import java.util.Set;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTask;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTaskAdditionalInformationDTO;
-import org.apache.james.rspamd.task.FeedHamToRSpamDTaskDTO;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTask;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskAdditionalInformationDTO;
-import org.apache.james.rspamd.task.FeedSpamToRSpamDTaskDTO;
+import org.apache.james.rspamd.client.RspamdHttpClient;
+import org.apache.james.rspamd.task.FeedHamToRspamdTask;
+import org.apache.james.rspamd.task.FeedHamToRspamdTaskAdditionalInformationDTO;
+import org.apache.james.rspamd.task.FeedHamToRspamdTaskDTO;
+import org.apache.james.rspamd.task.FeedSpamToRspamdTask;
+import org.apache.james.rspamd.task.FeedSpamToRspamdTaskAdditionalInformationDTO;
+import org.apache.james.rspamd.task.FeedSpamToRspamdTaskDTO;
 import org.apache.james.server.task.json.TaskExtensionModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -43,20 +43,20 @@ import org.apache.james.user.api.UsersRepository;
 
 import com.google.inject.Inject;
 
-public class RSpamDTaskExtensionModule implements TaskExtensionModule {
+public class RspamdTaskExtensionModule implements TaskExtensionModule {
 
-    private final TaskDTOModule<FeedSpamToRSpamDTask, FeedSpamToRSpamDTaskDTO> feedSpamTaskDTOModule;
-    private final TaskDTOModule<FeedHamToRSpamDTask, FeedHamToRSpamDTaskDTO> feedHamTaskDTOModule;
+    private final TaskDTOModule<FeedSpamToRspamdTask, FeedSpamToRspamdTaskDTO> feedSpamTaskDTOModule;
+    private final TaskDTOModule<FeedHamToRspamdTask, FeedHamToRspamdTaskDTO> feedHamTaskDTOModule;
 
     @Inject
-    public RSpamDTaskExtensionModule(MailboxManager mailboxManager,
+    public RspamdTaskExtensionModule(MailboxManager mailboxManager,
                                      UsersRepository usersRepository,
                                      MessageIdManager messageIdManager,
                                      MailboxSessionMapperFactory mapperFactory,
-                                     RSpamDHttpClient rSpamDHttpClient,
+                                     RspamdHttpClient rspamdHttpClient,
                                      Clock clock) {
-        this.feedSpamTaskDTOModule = FeedSpamToRSpamDTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rSpamDHttpClient, clock);
-        this.feedHamTaskDTOModule = FeedHamToRSpamDTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rSpamDHttpClient, clock);
+        this.feedSpamTaskDTOModule = FeedSpamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock);
+        this.feedHamTaskDTOModule = FeedHamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class RSpamDTaskExtensionModule implements TaskExtensionModule {
 
     @Override
     public Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> taskAdditionalInformationDTOModules() {
-        return Set.of(FeedSpamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
-            FeedHamToRSpamDTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+        return Set.of(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+            FeedHamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     }
 }

@@ -22,7 +22,7 @@
 
 <listeners>
     <listener>
-        <class>org.apache.james.rspamd.RSpamDListener</class>
+        <class>org.apache.james.rspamd.RspamdListener</class>
         <async>true</async>
     </listener>
 </listeners>

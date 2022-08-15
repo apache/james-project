@@ -19,11 +19,11 @@
 
 package org.apache.james.rspamd.exception;
 
-public class RSpamDUnexpectedException extends RuntimeException {
-    public RSpamDUnexpectedException() {
+public class RspamdUnexpectedException extends RuntimeException {
+    public RspamdUnexpectedException() {
     }
 
-    public RSpamDUnexpectedException(String message) {
+    public RspamdUnexpectedException(String message) {
         super(message);
     }
 }

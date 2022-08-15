@@ -17,12 +17,12 @@ As an example, here is a part of a mailet pipeline which can be used in your Loc
 ....
 
 In order to use this with `rspamd`, we need to declare a condition for the matcher
-and drop the RSpamD jar (*third-party/rspamd*) in the James extensions-jars folder.
-Eg: With the recipient header for RSpamD being *org.apache.james.rspamd.status*,
+and drop the Rspamd jar (*third-party/rspamd*) in the James extensions-jars folder.
+Eg: With the recipient header for Rspamd being *org.apache.james.rspamd.status*,
 then the configuration would be:
 
 ....
-<!-- RSpamD mailets pipeline -->
+<!-- Rspamd mailets pipeline -->
     <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
         <targetFolderName>Spam</targetFolderName>
     </mailet>

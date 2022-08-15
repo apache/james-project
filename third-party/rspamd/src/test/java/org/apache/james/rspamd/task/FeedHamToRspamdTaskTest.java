@@ -19,11 +19,11 @@
 
 package org.apache.james.rspamd.task;
 
-import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_PERIOD;
-import static org.apache.james.rspamd.task.FeedHamToRSpamDTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
-import static org.apache.james.rspamd.task.FeedSpamToRSpamDTaskTest.BOB_SPAM_MAILBOX;
+import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
+import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
+import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_PERIOD;
+import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
+import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.BOB_SPAM_MAILBOX;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -49,9 +49,9 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.DockerRSpamDExtension;
-import org.apache.james.rspamd.client.RSpamDClientConfiguration;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -66,9 +66,9 @@ import org.mockito.Mockito;
 import com.github.fge.lambdas.Throwing;
 
 @Tag(Unstable.TAG)
-public class FeedHamToRSpamDTaskTest {
+public class FeedHamToRspamdTaskTest {
     @RegisterExtension
-    static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
+    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
 
     public static final String INBOX_MAILBOX_NAME = "INBOX";
     public static final Domain DOMAIN = Domain.of("domain.tld");
@@ -88,8 +88,8 @@ public class FeedHamToRSpamDTaskTest {
     private MailboxSessionMapperFactory mapperFactory;
     private UsersRepository usersRepository;
     private Clock clock;
-    private RSpamDHttpClient client;
-    private FeedHamToRSpamDTask task;
+    private RspamdHttpClient client;
+    private FeedHamToRspamdTask task;
 
     @BeforeEach
     void setup() throws Exception {
@@ -107,10 +107,10 @@ public class FeedHamToRSpamDTaskTest {
         mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE));
 
         clock = new UpdatableTickingClock(NOW);
-        client = new RSpamDHttpClient(new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
         messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         mapperFactory = mailboxManager.getMapperFactory();
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, FeedHamToRSpamDTask.RunningOptions.DEFAULT, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, FeedHamToRspamdTask.RunningOptions.DEFAULT, clock);
     }
 
     @Test
@@ -119,7 +119,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
@@ -138,7 +138,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)
@@ -150,9 +150,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskShouldReportHamMessageInPeriod() throws MailboxException {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
 
@@ -160,7 +160,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(1)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
@@ -172,9 +172,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskShouldNotReportHamMessageNotInPeriod() throws MailboxException {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
 
@@ -182,7 +182,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(1)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
@@ -194,9 +194,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void mixedInternalDateCase() throws MailboxException {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
@@ -205,7 +205,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(2)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
@@ -217,9 +217,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskWithSamplingProbabilityIsZeroShouldReportNonHamMessage() {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.empty(),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -228,7 +228,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(10)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
@@ -247,7 +247,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(10)
                 .reportedHamMessageCount(10)
                 .errorCount(0)
@@ -259,9 +259,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskWithVeryLowSamplingProbabilityShouldReportNotAllHamMessages() {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.empty(),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.01);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
                 .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -278,9 +278,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskWithVeryHighSamplingProbabilityShouldReportMoreThanZeroMessage() {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.empty(),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.99);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -297,9 +297,9 @@ public class FeedHamToRSpamDTaskTest {
 
     @Test
     void taskWithAverageSamplingProbabilityShouldReportSomeMessages() {
-        FeedHamToRSpamDTask.RunningOptions runningOptions = new FeedHamToRSpamDTask.RunningOptions(Optional.empty(),
+        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.5);
-        task = new FeedHamToRSpamDTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -323,7 +323,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
@@ -342,7 +342,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)
@@ -363,7 +363,7 @@ public class FeedHamToRSpamDTaskTest {
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
-            .isEqualTo(FeedHamToRSpamDTask.Context.Snapshot.builder()
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)

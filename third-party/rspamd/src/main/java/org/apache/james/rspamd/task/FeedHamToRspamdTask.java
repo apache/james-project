@@ -31,7 +31,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -46,9 +46,8 @@ import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Mono;
 
-public class FeedSpamToRSpamDTask implements Task {
-    public static final String SPAM_MAILBOX_NAME = "Spam";
-    public static final TaskType TASK_TYPE = TaskType.of("FeedSpamToRSpamDTask");
+public class FeedHamToRspamdTask implements Task {
+    public static final TaskType TASK_TYPE = TaskType.of("FeedHamToRspamdTask");
 
     public static class RunningOptions {
         public static final Optional<Long> DEFAULT_PERIOD = Optional.empty();
@@ -88,8 +87,8 @@ public class FeedSpamToRSpamDTask implements Task {
             Context.Snapshot snapshot = context.snapshot();
             return new AdditionalInformation(
                 Clock.systemUTC().instant(),
-                snapshot.getSpamMessageCount(),
-                snapshot.getReportedSpamMessageCount(),
+                snapshot.getHamMessageCount(),
+                snapshot.getReportedHamMessageCount(),
                 snapshot.getErrorCount(),
                 snapshot.getMessagesPerSecond(),
                 snapshot.getPeriod(),
@@ -97,29 +96,29 @@ public class FeedSpamToRSpamDTask implements Task {
         }
 
         private final Instant timestamp;
-        private final long spamMessageCount;
-        private final long reportedSpamMessageCount;
+        private final long hamMessageCount;
+        private final long reportedHamMessageCount;
         private final long errorCount;
         private final int messagesPerSecond;
         private final Optional<Long> period;
         private final double samplingProbability;
 
-        public AdditionalInformation(Instant timestamp, long spamMessageCount, long reportedSpamMessageCount, long errorCount, int messagesPerSecond, Optional<Long> period, double samplingProbability) {
+        public AdditionalInformation(Instant timestamp, long hamMessageCount, long reportedHamMessageCount, long errorCount, int messagesPerSecond, Optional<Long> period, double samplingProbability) {
             this.timestamp = timestamp;
-            this.spamMessageCount = spamMessageCount;
-            this.reportedSpamMessageCount = reportedSpamMessageCount;
+            this.hamMessageCount = hamMessageCount;
+            this.reportedHamMessageCount = reportedHamMessageCount;
             this.errorCount = errorCount;
             this.messagesPerSecond = messagesPerSecond;
             this.period = period;
             this.samplingProbability = samplingProbability;
         }
 
-        public long getSpamMessageCount() {
-            return spamMessageCount;
+        public long getHamMessageCount() {
+            return hamMessageCount;
         }
 
-        public long getReportedSpamMessageCount() {
-            return reportedSpamMessageCount;
+        public long getReportedHamMessageCount() {
+            return reportedHamMessageCount;
         }
 
         public long getErrorCount() {
@@ -153,16 +152,16 @@ public class FeedSpamToRSpamDTask implements Task {
             }
 
             static class Builder {
-                private Optional<Long> spamMessageCount;
-                private Optional<Long> reportedSpamMessageCount;
+                private Optional<Long> hamMessageCount;
+                private Optional<Long> reportedHamMessageCount;
                 private Optional<Long> errorCount;
                 private Optional<Integer> messagesPerSecond;
                 private Optional<Long> period;
                 private Optional<Double> samplingProbability;
 
                 Builder() {
-                    spamMessageCount = Optional.empty();
-                    reportedSpamMessageCount = Optional.empty();
+                    hamMessageCount = Optional.empty();
+                    reportedHamMessageCount = Optional.empty();
                     errorCount = Optional.empty();
                     messagesPerSecond = Optional.empty();
                     period = Optional.empty();
@@ -171,21 +170,21 @@ public class FeedSpamToRSpamDTask implements Task {
 
                 public Snapshot build() {
                     return new Snapshot(
-                        spamMessageCount.orElse(0L),
-                        reportedSpamMessageCount.orElse(0L),
+                        hamMessageCount.orElse(0L),
+                        reportedHamMessageCount.orElse(0L),
                         errorCount.orElse(0L),
                         messagesPerSecond.orElse(0),
                         period,
                         samplingProbability.orElse(1D));
                 }
 
-                public Builder spamMessageCount(long spamMessageCount) {
-                    this.spamMessageCount = Optional.of(spamMessageCount);
+                public Builder hamMessageCount(long hamMessageCount) {
+                    this.hamMessageCount = Optional.of(hamMessageCount);
                     return this;
                 }
 
-                public Builder reportedSpamMessageCount(long reportedSpamMessageCount) {
-                    this.reportedSpamMessageCount = Optional.of(reportedSpamMessageCount);
+                public Builder reportedHamMessageCount(long reportedHamMessageCount) {
+                    this.reportedHamMessageCount = Optional.of(reportedHamMessageCount);
                     return this;
                 }
 
@@ -210,29 +209,29 @@ public class FeedSpamToRSpamDTask implements Task {
                 }
             }
 
-            private final long spamMessageCount;
-            private final long reportedSpamMessageCount;
+            private final long hamMessageCount;
+            private final long reportedHamMessageCount;
             private final long errorCount;
             private final int messagesPerSecond;
             private final Optional<Long> period;
             private final double samplingProbability;
 
-            public Snapshot(long spamMessageCount, long reportedSpamMessageCount, long errorCount, int messagesPerSecond, Optional<Long> period,
+            public Snapshot(long hamMessageCount, long reportedHamMessageCount, long errorCount, int messagesPerSecond, Optional<Long> period,
                             double samplingProbability) {
-                this.spamMessageCount = spamMessageCount;
-                this.reportedSpamMessageCount = reportedSpamMessageCount;
+                this.hamMessageCount = hamMessageCount;
+                this.reportedHamMessageCount = reportedHamMessageCount;
                 this.errorCount = errorCount;
                 this.messagesPerSecond = messagesPerSecond;
                 this.period = period;
                 this.samplingProbability = samplingProbability;
             }
 
-            public long getSpamMessageCount() {
-                return spamMessageCount;
+            public long getHamMessageCount() {
+                return hamMessageCount;
             }
 
-            public long getReportedSpamMessageCount() {
-                return reportedSpamMessageCount;
+            public long getReportedHamMessageCount() {
+                return reportedHamMessageCount;
             }
 
             public long getErrorCount() {
@@ -256,8 +255,8 @@ public class FeedSpamToRSpamDTask implements Task {
                 if (o instanceof Snapshot) {
                     Snapshot snapshot = (Snapshot) o;
 
-                    return Objects.equals(this.spamMessageCount, snapshot.spamMessageCount)
-                        && Objects.equals(this.reportedSpamMessageCount, snapshot.reportedSpamMessageCount)
+                    return Objects.equals(this.hamMessageCount, snapshot.hamMessageCount)
+                        && Objects.equals(this.reportedHamMessageCount, snapshot.reportedHamMessageCount)
                         && Objects.equals(this.errorCount, snapshot.errorCount)
                         && Objects.equals(this.messagesPerSecond, snapshot.messagesPerSecond)
                         && Objects.equals(this.samplingProbability, snapshot.samplingProbability)
@@ -268,14 +267,14 @@ public class FeedSpamToRSpamDTask implements Task {
 
             @Override
             public final int hashCode() {
-                return Objects.hash(spamMessageCount, reportedSpamMessageCount, errorCount, messagesPerSecond, period, samplingProbability);
+                return Objects.hash(hamMessageCount, reportedHamMessageCount, errorCount, messagesPerSecond, period, samplingProbability);
             }
 
             @Override
             public String toString() {
                 return MoreObjects.toStringHelper(this)
-                    .add("spamMessageCount", spamMessageCount)
-                    .add("reportedSpamMessageCount", reportedSpamMessageCount)
+                    .add("hamMessageCount", hamMessageCount)
+                    .add("reportedHamMessageCount", reportedHamMessageCount)
                     .add("errorCount", errorCount)
                     .add("messagesPerSecond", messagesPerSecond)
                     .add("period", period)
@@ -284,28 +283,28 @@ public class FeedSpamToRSpamDTask implements Task {
             }
         }
 
-        private final AtomicLong spamMessageCount;
-        private final AtomicLong reportedSpamMessageCount;
+        private final AtomicLong hamMessageCount;
+        private final AtomicLong reportedHamMessageCount;
         private final AtomicLong errorCount;
         private final Integer messagesPerSecond;
         private final Optional<Long> period;
         private final Double samplingProbability;
 
         public Context(RunningOptions runningOptions) {
-            this.spamMessageCount = new AtomicLong();
-            this.reportedSpamMessageCount = new AtomicLong();
+            this.hamMessageCount = new AtomicLong();
+            this.reportedHamMessageCount = new AtomicLong();
             this.errorCount = new AtomicLong();
             this.messagesPerSecond = runningOptions.messagesPerSecond;
             this.period = runningOptions.periodInSecond;
             this.samplingProbability = runningOptions.samplingProbability;
         }
 
-        public void incrementSpamMessageCount() {
-            spamMessageCount.incrementAndGet();
+        public void incrementHamMessageCount() {
+            hamMessageCount.incrementAndGet();
         }
 
-        public void incrementReportedSpamMessageCount(int count) {
-            reportedSpamMessageCount.addAndGet(count);
+        public void incrementReportedHamMessageCount(int count) {
+            reportedHamMessageCount.addAndGet(count);
         }
 
         public void incrementErrorCount() {
@@ -314,8 +313,8 @@ public class FeedSpamToRSpamDTask implements Task {
 
         public Snapshot snapshot() {
             return Snapshot.builder()
-                .spamMessageCount(spamMessageCount.get())
-                .reportedSpamMessageCount(reportedSpamMessageCount.get())
+                .hamMessageCount(hamMessageCount.get())
+                .reportedHamMessageCount(reportedHamMessageCount.get())
                 .errorCount(errorCount.get())
                 .messagesPerSecond(messagesPerSecond)
                 .period(period)
@@ -325,16 +324,16 @@ public class FeedSpamToRSpamDTask implements Task {
     }
 
     private final GetMailboxMessagesService messagesService;
-    private final RSpamDHttpClient rSpamDHttpClient;
+    private final RspamdHttpClient rspamdHttpClient;
     private final RunningOptions runningOptions;
     private final Context context;
     private final Clock clock;
 
-    public FeedSpamToRSpamDTask(MailboxManager mailboxManager, UsersRepository usersRepository, MessageIdManager messageIdManager, MailboxSessionMapperFactory mapperFactory,
-                                RSpamDHttpClient rSpamDHttpClient, RunningOptions runningOptions, Clock clock) {
+    public FeedHamToRspamdTask(MailboxManager mailboxManager, UsersRepository usersRepository, MessageIdManager messageIdManager, MailboxSessionMapperFactory mapperFactory,
+                               RspamdHttpClient rspamdHttpClient, RunningOptions runningOptions, Clock clock) {
         this.runningOptions = runningOptions;
         this.messagesService = new GetMailboxMessagesService(mailboxManager, usersRepository, mapperFactory, messageIdManager);
-        this.rSpamDHttpClient = rSpamDHttpClient;
+        this.rspamdHttpClient = rspamdHttpClient;
         this.context = new Context(runningOptions);
         this.clock = clock;
     }
@@ -343,17 +342,17 @@ public class FeedSpamToRSpamDTask implements Task {
     public Result run() {
         Optional<Date> afterDate = runningOptions.periodInSecond.map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         try {
-            return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions.getSamplingProbability(), context)
-                .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
+            return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions.getSamplingProbability(), context)
+                .transform(ReactorUtils.<MessageResult, Result>throttle()
                     .elements(runningOptions.messagesPerSecond)
                     .per(Duration.ofSeconds(1))
-                    .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rSpamDHttpClient.reportAsSpam(messageResult.getFullContent().getInputStream())))
+                    .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsHam(messageResult.getFullContent().getInputStream())))
                         .then(Mono.fromCallable(() -> {
-                            context.incrementReportedSpamMessageCount(1);
+                            context.incrementReportedHamMessageCount(1);
                             return Result.COMPLETED;
                         }))
                         .onErrorResume(error -> {
-                            LOGGER.error("Error when report spam message to RSpamD", error);
+                            LOGGER.error("Error when report ham message to Rspamd", error);
                             context.incrementErrorCount();
                             return Mono.just(Result.PARTIAL);
                         })))
@@ -362,7 +361,7 @@ public class FeedSpamToRSpamDTask implements Task {
                 .block();
         } catch (UsersRepositoryException e) {
             LOGGER.error("Error while accessing users from repository", e);
-            return Task.Result.PARTIAL;
+            return Result.PARTIAL;
         }
     }
 

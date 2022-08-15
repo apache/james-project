@@ -58,21 +58,21 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-public class RSpamDListenerTest {
+public class RspamdListenerTest {
     static final Username USER = Username.of("user");
     static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     static final UidValidity UID_VALIDITY = UidValidity.of(43);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
     static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
 
-    private RSpamDHttpClient rSpamDHttpClient;
-    private RSpamDListener listener;
+    private RspamdHttpClient rspamdHttpClient;
+    private RspamdListener listener;
     private MailboxSessionMapperFactory mapperFactory;
 
     private Mailbox inbox;
@@ -86,10 +86,10 @@ public class RSpamDListenerTest {
 
     @BeforeEach
     void setup() {
-        rSpamDHttpClient = mock(RSpamDHttpClient.class);
+        rspamdHttpClient = mock(RspamdHttpClient.class);
 
-        when(rSpamDHttpClient.reportAsHam(any())).thenReturn(Mono.empty());
-        when(rSpamDHttpClient.reportAsSpam(any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsHam(any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsSpam(any())).thenReturn(Mono.empty());
 
         StoreMailboxManager mailboxManager = spy(InMemoryIntegrationResources.defaultResources().getMailboxManager());
         SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
@@ -106,13 +106,13 @@ public class RSpamDListenerTest {
         spamCapitalMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY).block().getMailboxId();
         trashMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY).block().getMailboxId();
 
-        listener = new RSpamDListener(rSpamDHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider);
     }
 
     @Test
     void deserializeListenerGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.rspamd.RSpamDListener$RSpamDListenerGroup"))
-            .isEqualTo(new RSpamDListener.RSpamDListenerGroup());
+        assertThat(Group.deserialize("org.apache.james.rspamd.RspamdListener$RspamdListenerGroup"))
+            .isEqualTo(new RspamdListener.RspamdListenerGroup());
     }
 
     @Test
@@ -228,7 +228,7 @@ public class RSpamDListenerTest {
 
         listener.event(messageMoveEvent);
 
-        verify(rSpamDHttpClient).reportAsSpam(any());
+        verify(rspamdHttpClient).reportAsSpam(any());
     }
 
     @Test
@@ -246,7 +246,7 @@ public class RSpamDListenerTest {
 
         listener.event(messageMoveEvent);
 
-        verify(rSpamDHttpClient).reportAsHam(any());
+        verify(rspamdHttpClient).reportAsHam(any());
     }
 
     @Test
@@ -262,7 +262,7 @@ public class RSpamDListenerTest {
 
         listener.event(addedEvent);
 
-        verify(rSpamDHttpClient).reportAsHam(any());
+        verify(rspamdHttpClient).reportAsHam(any());
     }
 
     @Test
@@ -278,7 +278,7 @@ public class RSpamDListenerTest {
 
         listener.event(addedEvent);
 
-        verify(rSpamDHttpClient, never()).reportAsHam(any());
+        verify(rspamdHttpClient, never()).reportAsHam(any());
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox) throws MailboxException {

@@ -27,30 +27,30 @@ import org.apache.commons.configuration2.Configuration;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
-public class RSpamDClientConfiguration {
+public class RspamdClientConfiguration {
     public static final Integer DEFAULT_TIMEOUT_IN_SECONDS = 15;
 
-    public static RSpamDClientConfiguration from(Configuration config) {
-        URL rSpamDUrl = Optional.ofNullable(config.getString("rSpamDUrl", null))
+    public static RspamdClientConfiguration from(Configuration config) {
+        URL rspamdUrl = Optional.ofNullable(config.getString("rspamdUrl", null))
             .filter(s -> !s.isEmpty())
             .map(Throwing.function(URL::new))
-            .orElseThrow(() -> new IllegalArgumentException("RSpamD's url is invalid."));
+            .orElseThrow(() -> new IllegalArgumentException("Rspamd's url is invalid."));
 
-        Optional<Integer> rSpamDTimeoutConfigure = Optional.ofNullable(config.getInteger("rSpamDTimeout", null))
+        Optional<Integer> rspamdTimeoutConfigure = Optional.ofNullable(config.getInteger("rspamdTimeout", null))
             .map(i -> {
-                Preconditions.checkArgument(i > 0, "rSpamDTimeout should be positive number");
+                Preconditions.checkArgument(i > 0, "rspamdTimeout should be positive number");
                 return i;
             });
 
-        String rSpamDPassword = config.getString("rSpamDPassword", "");
-        return new RSpamDClientConfiguration(rSpamDUrl, rSpamDPassword, rSpamDTimeoutConfigure);
+        String rspamdPassword = config.getString("rspamdPassword", "");
+        return new RspamdClientConfiguration(rspamdUrl, rspamdPassword, rspamdTimeoutConfigure);
     }
 
     private final URL url;
     private final String password;
     private final Optional<Integer> timeout;
 
-    public RSpamDClientConfiguration(URL url, String password, Optional<Integer> timeout) {
+    public RspamdClientConfiguration(URL url, String password, Optional<Integer> timeout) {
         this.url = url;
         this.password = password;
         this.timeout = timeout;
