@@ -1,6 +1,7 @@
 # James' extensions for RSpamD
 
-This module is for developing and delivering extensions to James for the [RSpamD](https://rspamd.com/) (the spam filtering system) 
+This module is for developing and delivering extensions to James for the [RSpamD](https://rspamd.com/) (the spam filtering system)
+and [ClamAV](https://www.clamav.net/) (the antivirus engine).
 
 ## How to run
 
@@ -24,13 +25,39 @@ guice.extension.task=org.apache.james.rspamd.module.RSpamDTaskExtensionModule
 </listener>
 ```
 
-- Declare the RSpamD mailet for custom mail processing. Mailet pipeline Eg:
+- Declare the RSpamD mailet for custom mail processing. 
 
-```
-<mailet match="All" class="org.apache.james.rspamd.RSpamDScanner"></mailet>
-<mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
-    <targetFolderName>Spam</targetFolderName>
-</mailet>
+  You can specify the `virusProcessor` if you want to enable virus scanning for mail. Upon configurable `virusProcessor`
+you can specify how James process mail virus. We provide a sample Rspamd mailet and `virusProcessor` configuration:
+
+```xml
+<processor state="local-delivery" enableJmx="true">
+    <mailet match="All" class="org.apache.james.rspamd.RSpamDScanner">
+        <rewriteSubject>true</rewriteSubject>
+        <virusProcessor>virus</virusProcessor>
+    </mailet>
+    <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+</processor>
+
+<!--Choose one between these two following virus processor, or configure a custom one if you want-->
+<!--Hard reject virus mail-->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="ToRepository">
+        <repositoryPath>file://var/mail/virus/</repositoryPath>
+    </mailet>
+</processor>
+<!--Soft reject virus mail-->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="StripAttachment">
+        <remove>all</remove>
+        <pattern>.*</pattern>
+    </mailet>
+    <mailet match="All" class="AddSubjectPrefix">
+        <subjectPrefix>[VIRUS]</subjectPrefix>
+    </mailet>
+</processor>
 ```
 
 - Declare the webadmin for RSpamD in `webadmin.properties`
@@ -40,7 +67,9 @@ extensions.routes=org.apache.james.rspamd.route.FeedMessageRoute
 ```
 How to use admin endpoint, see more at [Additional webadmin endpoints](README.md)
 
-- Docker compose file example: [docker-compose.yml](docker-compose.yml) or [docker-compose-distributed.yml](docker-compose-distributed.yml)
+- Docker compose file example: [docker-compose.yml](docker-compose.yml) or [docker-compose-distributed.yml](docker-compose-distributed.yml).
+  
+  Please configure `ClamAV` integration into `Rspamd` if you want to enable virus scanning.
 - The sample-configuration: [sample-configuration](sample-configuration)
 - For running docker-compose, first compile this project 
 
