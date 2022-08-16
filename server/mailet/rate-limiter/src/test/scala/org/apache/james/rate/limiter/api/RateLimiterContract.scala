@@ -128,10 +128,10 @@ trait RateLimiterContract {
  def shouldFailWhenLowerLimitExceeded(): Unit = {
   val rateLimiter = testee().withSpecification(Rules(Seq(
    Rule(2L, Duration.ofSeconds(5)),
-   Rule(1L, Duration.ofSeconds(1)))), SLIDING_WIDOW_PRECISION)
+   Rule(1L, Duration.ofSeconds(2)))), SLIDING_WIDOW_PRECISION)
 
   SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
-  // 2 requests in less than 1 s -> fail
+  // 2 requests in less than 2 s -> fail
   val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
   assertThat(actual).isEqualTo(RateExceeded)
  }
