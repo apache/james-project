@@ -31,8 +31,8 @@ services:
       - "993:993"
       - "8000:8000"
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+  opensearch:
+    image: opensearchproject/opensearch:2.1.0
     environment:
       - discovery.type=single-node
 
