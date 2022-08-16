@@ -22,6 +22,9 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.server.core.MailImpl;
 import org.junit.jupiter.api.Test;
@@ -62,6 +65,27 @@ class MailModifierTest {
                 .mail(mock(MailImpl.class))
                 .dns(mock(DNSService.class))
                 .build())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void initializeDateIfNotPresentShouldNotThrow() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("name")
+            .build();
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setText("My content")
+            .build();
+        mail.setMessage(mimeMessage);
+        mail.getMessage().removeHeader("Date");
+
+        assertThatCode(() ->
+            MailModifier.builder()
+                .mailet(mock(RedirectNotify.class))
+                .mail(mail)
+                .dns(mock(DNSService.class))
+                .build()
+                .initializeDateIfNotPresent())
             .doesNotThrowAnyException();
     }
 }
