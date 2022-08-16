@@ -224,7 +224,7 @@ class DomainManageTest {
 
             SoftAssertions.assertSoftly( softly -> {
                 assertThat(exitCode).isEqualTo(1);
-                assertThat(errorStreamCaptor.toString().trim()).isEqualTo("{\"statusCode\":404,\"type\":\"InvalidArgument\",\"message\":\"The domain list does not contain: unknown.com\",\"details\":null}");
+                assertThat(errorStreamCaptor.toString().trim()).contains("{\"statusCode\":404,\"type\":\"InvalidArgument\",\"message\":\"The domain list does not contain: unknown.com\",\"details\":null}");
             });
         }
     }

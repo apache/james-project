@@ -23,7 +23,8 @@ import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.MailboxClient;
+import org.apache.james.webadmin.httpclient.MailboxClient;
+import org.apache.james.webadmin.httpclient.feign.MailboxFeignClient;
 
 import picocli.CommandLine;
 
@@ -55,7 +56,7 @@ public class MailboxCommand implements Callable<Integer> {
     }
 
     public MailboxClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(MailboxClient.class, webAdminCli.jamesUrl + partOfUrl);
+        return new MailboxClient(webAdminCli.feignClientFactory(err).target(MailboxFeignClient.class, webAdminCli.jamesUrl + partOfUrl));
     }
 
 }

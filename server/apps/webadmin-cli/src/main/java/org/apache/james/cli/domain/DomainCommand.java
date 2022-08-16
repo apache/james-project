@@ -23,7 +23,8 @@ import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.feign.DomainFeignClient;
 
 import picocli.CommandLine;
 
@@ -57,7 +58,7 @@ public class DomainCommand implements Callable<Integer> {
     }
 
     public DomainClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(DomainClient.class, webAdminCli.jamesUrl + partOfUrl);
+        return new DomainClient(webAdminCli.feignClientFactory(err).target(DomainFeignClient.class, webAdminCli.jamesUrl + partOfUrl));
     }
 
 }

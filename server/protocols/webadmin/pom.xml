@@ -38,6 +38,7 @@
         <module>webadmin-core</module>
         <module>webadmin-data</module>
         <module>webadmin-dropwizard-metrics</module>
+        <module>webadmin-http-client</module>
         <module>webadmin-jmap</module>
         <module>webadmin-mail-over-web</module>
         <module>webadmin-mailbox</module>

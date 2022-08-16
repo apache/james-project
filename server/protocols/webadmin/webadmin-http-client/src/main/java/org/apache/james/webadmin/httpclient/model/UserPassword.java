@@ -17,20 +17,17 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient.model;
+package org.apache.james.webadmin.httpclient.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MailboxName {
+public class UserPassword {
 
-    @JsonProperty("mailboxName")
-    private String mailboxName;
+    @JsonProperty("password")
+    private String password;
 
-    @JsonProperty("mailboxId")
-    private String mailboxId;
-
-    public String getMailboxName() {
-        return mailboxName;
+    public UserPassword(String password) {
+        this.password = password;
     }
 
 }

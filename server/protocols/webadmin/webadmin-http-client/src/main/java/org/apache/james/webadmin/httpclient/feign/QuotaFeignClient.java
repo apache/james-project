@@ -17,35 +17,27 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.webadmin.httpclient.feign;
 
-import java.util.List;
-
-import org.apache.james.httpclient.model.UserName;
-import org.apache.james.httpclient.model.UserPassword;
-
-import feign.Headers;
-import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 
-public interface UserClient {
+public interface QuotaFeignClient {
+    @RequestLine("GET /quota/count")
+    Long getQuotaCount();
 
-    @RequestLine("GET")
-    List<UserName> getUserNameList();
+    @RequestLine("GET /quota/size")
+    Long getQuotaSize();
 
-    @RequestLine("PUT /{userName}")
-    @Headers("Content-Type: application/json")
-    Response createAUser(@Param("userName") String userName, UserPassword password);
+    @RequestLine("PUT /quota/count")
+    Response setQuotaCount(Long count);
 
-    @RequestLine("PUT /{userName}?force")
-    @Headers("Content-Type: application/json")
-    Response updateAUserPassword(@Param("userName") String userName, UserPassword password);
+    @RequestLine("PUT /quota/size")
+    Response setQuotaSize(Long size);
 
-    @RequestLine("DELETE /{userToBeDeleted}")
-    Response deleteAUser(@Param("userToBeDeleted") String userName);
+    @RequestLine("DELETE /quota/count")
+    Response deleteQuotaCount();
 
-    @RequestLine("HEAD /{userName}")
-    Response doesExist(@Param("userName") String userName);
-
+    @RequestLine("DELETE /quota/size")
+    Response deleteQuotaSize();
 }

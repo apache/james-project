@@ -22,20 +22,15 @@ package org.apache.james.cli.user;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.UserClient;
-import org.apache.james.httpclient.model.UserPassword;
+import org.apache.james.webadmin.httpclient.UserClient;
+import org.apache.james.webadmin.httpclient.feign.JamesFeignException;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "create",
     description = "Create a new User")
 public class UserCreateCommand implements Callable<Integer> {
-
-    public static final int CREATED_CODE = 204;
-    public static final int BAD_REQUEST_CODE = 400;
-    public static final int CONFLICT_CODE = 409;
 
     @CommandLine.ParentCommand UserCommand userCommand;
 
@@ -60,37 +55,30 @@ public class UserCreateCommand implements Callable<Integer> {
 
     private Integer createAUser(UserClient userClient) {
         try {
-            Response rs = userClient.createAUser(userName, new UserPassword(new String(password)));
-            if (rs.status() == CREATED_CODE) {
-                userCommand.out.println("The user was created successfully");
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == BAD_REQUEST_CODE) {
-                userCommand.err.println("The user name or the payload is invalid");
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            } else if (rs.status() == CONFLICT_CODE) {
-                userCommand.err.println("The user already exists");
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-            return WebAdminCli.CLI_FINISHED_FAILED;
+            userClient.createAUser(userName, new String(password));
+            userCommand.out.println("The user was created successfully");
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
-            e.printStackTrace(userCommand.err);
+            if (e instanceof JamesFeignException) {
+                userCommand.err.println(e.getMessage());
+            } else {
+                e.printStackTrace(userCommand.err);
+            }
             return WebAdminCli.CLI_FINISHED_FAILED;
         }
     }
 
     private Integer updateAUserPassword(UserClient userClient) {
         try {
-            Response rs = userClient.updateAUserPassword(userName, new UserPassword(new String(password)));
-            if (rs.status() == CREATED_CODE) {
-                userCommand.out.println("The user's password was successfully updated");
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == BAD_REQUEST_CODE) {
-                userCommand.err.println("The user name or the payload is invalid");
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-            return WebAdminCli.CLI_FINISHED_FAILED;
+            userClient.updateAUserPassword(userName, new String(password));
+            userCommand.out.println("The user's password was successfully updated");
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
-            e.printStackTrace(userCommand.err);
+            if (e instanceof JamesFeignException) {
+                userCommand.err.println(e.getMessage());
+            } else {
+                e.printStackTrace(userCommand.err);
+            }
             return WebAdminCli.CLI_FINISHED_FAILED;
         }
     }

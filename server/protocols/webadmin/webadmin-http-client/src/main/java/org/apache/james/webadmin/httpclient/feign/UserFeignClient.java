@@ -17,27 +17,35 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.webadmin.httpclient.feign;
 
+import java.util.List;
+
+import org.apache.james.webadmin.httpclient.model.UserName;
+import org.apache.james.webadmin.httpclient.model.UserPassword;
+
+import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 
-public interface MailboxClient {
+public interface UserFeignClient {
 
-    @RequestLine("PUT /{userNameToBeUsed}/mailboxes/{mailboxNameToBeCreated}")
-    Response createAMailbox(@Param("userNameToBeUsed") String userName, @Param("mailboxNameToBeCreated") String mailboxName);
+    @RequestLine("GET")
+    List<UserName> getUserNameList();
 
-    @RequestLine("GET /{usernameToBeUsed}/mailboxes/{mailboxNameToBeTested}")
-    Response doesExist(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeTested") String mailboxName);
+    @RequestLine("PUT /{userName}")
+    @Headers("Content-Type: application/json")
+    Response createAUser(@Param("userName") String userName, UserPassword password);
 
-    @RequestLine("GET /{usernameToBeUsed}/mailboxes")
-    Response getMailboxList(@Param("usernameToBeUsed") String userName);
+    @RequestLine("PUT /{userName}?force")
+    @Headers("Content-Type: application/json")
+    Response updateAUserPassword(@Param("userName") String userName, UserPassword password);
 
-    @RequestLine("DELETE /{usernameToBeUsed}/mailboxes/{mailboxNameToBeDeleted}")
-    Response deleteAMailbox(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeDeleted") String mailboxName);
+    @RequestLine("DELETE /{userToBeDeleted}")
+    Response deleteAUser(@Param("userToBeDeleted") String userName);
 
-    @RequestLine("DELETE /{usernameToBeUsed}/mailboxes")
-    Response deleteAllMailboxes(@Param("usernameToBeUsed") String userName);
+    @RequestLine("HEAD /{userName}")
+    Response doesExist(@Param("userName") String userName);
 
 }

@@ -22,17 +22,14 @@ package org.apache.james.cli.user;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.UserClient;
+import org.apache.james.webadmin.httpclient.UserClient;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "delete",
     description = "Delete a user")
 public class UserDeleteCommand implements Callable<Integer> {
-
-    public static final int DELETED_CODE = 204;
 
     @CommandLine.ParentCommand UserCommand userCommand;
 
@@ -42,12 +39,8 @@ public class UserDeleteCommand implements Callable<Integer> {
     public Integer call() {
         try {
             UserClient userClient = userCommand.fullyQualifiedURL("/users");
-            Response rs = userClient.deleteAUser(userName);
-            if (rs.status() == DELETED_CODE) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
+            userClient.deleteAUser(userName);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(userCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;

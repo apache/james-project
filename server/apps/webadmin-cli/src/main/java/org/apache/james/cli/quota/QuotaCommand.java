@@ -23,7 +23,8 @@ import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.QuotaClient;
+import org.apache.james.webadmin.httpclient.QuotaClient;
+import org.apache.james.webadmin.httpclient.feign.QuotaFeignClient;
 
 import picocli.CommandLine;
 
@@ -51,6 +52,6 @@ public class QuotaCommand implements Callable<Integer> {
     }
 
     public QuotaClient fullyQualifiedURL() {
-        return webAdminCli.feignClientFactory(err).target(QuotaClient.class, webAdminCli.jamesUrl);
+        return new QuotaClient(webAdminCli.feignClientFactory(err).target(QuotaFeignClient.class, webAdminCli.jamesUrl));
     }
 }

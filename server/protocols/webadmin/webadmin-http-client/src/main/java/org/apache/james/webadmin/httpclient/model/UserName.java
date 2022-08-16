@@ -17,23 +17,17 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.webadmin.httpclient.model;
 
-import java.io.PrintStream;
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class JwtToken {
+public class UserName {
 
-    final Optional<String> jwtTokenString;
+    @JsonProperty("username")
+    private String userName;
 
-    final Optional<String> jwtFilePath;
-
-    PrintStream err;
-
-    public JwtToken(Optional<String> jwtTokenString, Optional<String> jwtFilePath, PrintStream err) {
-        this.jwtTokenString = jwtTokenString;
-        this.jwtFilePath = jwtFilePath;
-        this.err = err;
+    public String getUserName() {
+        return userName;
     }
 
 }

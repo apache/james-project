@@ -1945,6 +1945,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-webadmin-http-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>javax-mail-extension</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2726,6 +2731,11 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>4.6.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-inline</artifactId>
+                <version>4.7.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>

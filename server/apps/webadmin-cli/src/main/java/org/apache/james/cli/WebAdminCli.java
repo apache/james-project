@@ -28,12 +28,8 @@ import org.apache.james.cli.domain.DomainCommand;
 import org.apache.james.cli.mailbox.MailboxCommand;
 import org.apache.james.cli.quota.QuotaCommand;
 import org.apache.james.cli.user.UserCommand;
-import org.apache.james.httpclient.FeignClientFactory;
-import org.apache.james.httpclient.JwtToken;
 
 import feign.Feign;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -92,11 +88,9 @@ public class WebAdminCli implements Callable<Integer> {
     }
 
     public Feign.Builder feignClientFactory(PrintStream err) {
-        return new FeignClientFactory(new JwtToken(Optional.ofNullable(jwt),
+        return new WebAdminHTTPClientUtil(new WebAdminHTTPClientUtil.JwtToken(Optional.ofNullable(jwt),
             Optional.ofNullable(jwtFilePath), err))
-            .builder()
-            .decoder(new JacksonDecoder())
-            .encoder(new JacksonEncoder());
+            .builder();
     }
 
 }

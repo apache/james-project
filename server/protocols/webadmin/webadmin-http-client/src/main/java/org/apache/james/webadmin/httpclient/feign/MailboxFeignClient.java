@@ -17,43 +17,31 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.cli.mailbox;
+package org.apache.james.webadmin.httpclient.feign;
 
-import java.util.concurrent.Callable;
+import java.util.List;
 
-import org.apache.james.cli.WebAdminCli;
-import org.apache.james.webadmin.httpclient.feign.JamesFeignException;
+import org.apache.james.webadmin.httpclient.model.MailboxName;
 
-import picocli.CommandLine;
+import feign.Param;
+import feign.RequestLine;
+import feign.Response;
 
-@CommandLine.Command(
-    name = "create",
-    description = "Create a new mailbox")
-public class MailboxCreateCommand implements Callable<Integer> {
+public interface MailboxFeignClient {
 
-    @CommandLine.ParentCommand MailboxCommand mailboxCommand;
+    @RequestLine("PUT /{userNameToBeUsed}/mailboxes/{mailboxNameToBeCreated}")
+    Response createAMailbox(@Param("userNameToBeUsed") String userName, @Param("mailboxNameToBeCreated") String mailboxName);
 
-    @CommandLine.Parameters(description = "Username")
-    String userName;
+    @RequestLine("GET /{usernameToBeUsed}/mailboxes/{mailboxNameToBeTested}")
+    Response doesExist(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeTested") String mailboxName);
 
-    @CommandLine.Parameters(description = "Mailbox's name to be created")
-    String mailboxName;
+    @RequestLine("GET /{usernameToBeUsed}/mailboxes")
+    List<MailboxName> getMailboxList(@Param("usernameToBeUsed") String userName);
 
-    @Override
-    public Integer call() {
-        try {
-            mailboxCommand.fullyQualifiedURL("/users")
-                .createAMailbox(userName, mailboxName);
-            mailboxCommand.out.println("The mailbox was created successfully.");
-            return WebAdminCli.CLI_FINISHED_SUCCEED;
-        } catch (Exception e) {
-            if (e instanceof JamesFeignException) {
-                mailboxCommand.err.println(e.getMessage());
-            } else {
-                e.printStackTrace(mailboxCommand.err);
-            }
-            return WebAdminCli.CLI_FINISHED_FAILED;
-        }
-    }
+    @RequestLine("DELETE /{usernameToBeUsed}/mailboxes/{mailboxNameToBeDeleted}")
+    Response deleteAMailbox(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeDeleted") String mailboxName);
+
+    @RequestLine("DELETE /{usernameToBeUsed}/mailboxes")
+    Response deleteAllMailboxes(@Param("usernameToBeUsed") String userName);
 
 }

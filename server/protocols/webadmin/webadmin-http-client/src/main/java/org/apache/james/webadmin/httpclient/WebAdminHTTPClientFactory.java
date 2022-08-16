@@ -17,17 +17,26 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient.model;
+package org.apache.james.webadmin.httpclient;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import feign.Feign;
+import feign.Logger;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.slf4j.Slf4jLogger;
 
-public class UserPassword {
+public class WebAdminHTTPClientFactory {
 
-    @JsonProperty("password")
-    private String password;
-
-    public UserPassword(String password) {
-        this.password = password;
+    public static Feign.Builder feignBuilder(String bearerToken) {
+        return feignBuilder()
+            .requestInterceptor(requestTemplate -> requestTemplate.header("Authorization", "Bearer " + bearerToken));
     }
 
+    public static Feign.Builder feignBuilder() {
+        return Feign.builder()
+            .decoder(new JacksonDecoder())
+            .encoder(new JacksonEncoder())
+            .logger(new Slf4jLogger("james-webadmin-http-client"))
+            .logLevel(Logger.Level.BASIC);
+    }
 }

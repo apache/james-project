@@ -19,14 +19,10 @@
 
 package org.apache.james.cli.domain;
 
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -41,13 +37,9 @@ public class DomainDeleteCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
-            Response rs = domainClient.deleteADomain(domainName);
-            if (rs.status() == NO_CONTENT) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
+            domainCommand.fullyQualifiedURL("/domains")
+                .deleteADomain(domainName);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(domainCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;
