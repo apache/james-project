@@ -74,7 +74,7 @@ public class RSpamDScanner extends GenericMailet {
                 .ifPresent(Throwing.consumer(desiredRewriteSubject -> mail.getMessage().setSubject(desiredRewriteSubject)));
         }
 
-        if (rSpamDResult.getHasVirus()) {
+        if (rSpamDResult.hasVirus()) {
             virusProcessor.ifPresent(state -> {
                 LOGGER.info("Detected a mail containing virus. Sending mail {} to {}", mail, virusProcessor);
                 mail.setState(state);
