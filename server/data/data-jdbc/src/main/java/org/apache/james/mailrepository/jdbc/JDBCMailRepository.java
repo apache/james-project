@@ -422,7 +422,11 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             insertMessage.setString(1, mc.getName());
             insertMessage.setString(2, repositoryName);
             insertMessage.setString(3, mc.getState());
-            insertMessage.setString(4, mc.getErrorMessage());
+            if (mc.getErrorMessage() != null && mc.getErrorMessage().length() > 200) {
+                insertMessage.setString(4, mc.getErrorMessage().substring(0, 199));
+            } else {
+                insertMessage.setString(4, mc.getErrorMessage());
+            }
             if (mc.getMaybeSender().isNullSender()) {
                 insertMessage.setNull(5, Types.VARCHAR);
             } else {
@@ -510,7 +514,11 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
         // Update the existing record
         try (PreparedStatement updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true))) {
             updateMessage.setString(1, mc.getState());
-            updateMessage.setString(2, mc.getErrorMessage());
+            if (mc.getErrorMessage() != null && mc.getErrorMessage().length() > 200) {
+                updateMessage.setString(2, mc.getErrorMessage().substring(0, 199));
+            } else {
+                updateMessage.setString(2, mc.getErrorMessage());
+            }
             if (mc.getMaybeSender().isNullSender()) {
                 updateMessage.setNull(3, Types.VARCHAR);
             } else {
