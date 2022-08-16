@@ -49,7 +49,7 @@ public class RSpamDScanner extends GenericMailet {
 
     private final RSpamDHttpClient rSpamDHttpClient;
     private boolean rewriteSubject;
-    private Optional<String> spamProcessor;
+    private Optional<String> virusProcessor;
 
     @Inject
     public RSpamDScanner(RSpamDHttpClient rSpamDHttpClient) {
@@ -59,7 +59,7 @@ public class RSpamDScanner extends GenericMailet {
     @Override
     public void init() {
         rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
-        spamProcessor = getInitParameterAsOptional("spamProcessor");
+        virusProcessor = getInitParameterAsOptional("virusProcessor");
     }
 
     @Override
@@ -75,10 +75,10 @@ public class RSpamDScanner extends GenericMailet {
         }
 
         if (rSpamDResult.getHasVirus()) {
-            if (isDebug()) {
-                LOGGER.debug("Detected a mail containing virus. Sending mail {} to {}", mail, spamProcessor);
-            }
-            spamProcessor.ifPresent(mail::setState);
+            virusProcessor.ifPresent(state -> {
+                LOGGER.info("Detected a mail containing virus. Sending mail {} to {}", mail, virusProcessor);
+                mail.setState(state);
+            });
         }
     }
 
@@ -104,9 +104,5 @@ public class RSpamDScanner extends GenericMailet {
                 + " actions=" + rSpamDResult.getAction().getDescription()
                 + " score=" + rSpamDResult.getScore()
                 + " requiredScore=" + rSpamDResult.getRequiredScore())));
-    }
-
-    private boolean isDebug() {
-        return getInitParameter("debug", false);
     }
 }

@@ -254,9 +254,9 @@ class RSpamDScannerTest {
     }
 
     @Test
-    void shouldSendMailToSpamProcessorWhenMailHasAVirusAndConfigSpamProcessor() throws Exception {
+    void shouldSendMailToSpamProcessorWhenMailHasAVirusAndConfigVirusProcessor() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty("spamProcessor", "spam")
+            .setProperty("virusProcessor", "virus")
             .build();
 
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
@@ -271,13 +271,13 @@ class RSpamDScannerTest {
         mailet.init(mailetConfig);
         mailet.service(mail);
 
-        assertThat(mail.getState()).isEqualTo("spam");
+        assertThat(mail.getState()).isEqualTo("virus");
     }
 
     @Test
-    void shouldNotSendMailToSpamProcessorWhenMailHasNoVirus() throws Exception {
+    void shouldNotSendMailToVirusProcessorWhenMailHasNoVirus() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty("spamProcessor", "spam")
+            .setProperty("virusProcessor", "virus")
             .build();
 
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
@@ -296,7 +296,7 @@ class RSpamDScannerTest {
     }
 
     @Test
-    void shouldNotSendMailToSpamProcessorWhenMailHasAVirusByDefault() throws Exception {
+    void shouldNotSendMailToVirusProcessorWhenMailHasAVirusByDefault() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder().build();
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
             ClassLoader.getSystemResourceAsStream("mail/attachment/inlineVirusTextAttachment.eml"));
