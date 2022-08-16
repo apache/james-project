@@ -652,7 +652,6 @@
         <scala.version>${scala.base}.8</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
-        <jetty.version>9.4.46.v20220331</jetty.version>
     </properties>
 
     <dependencyManagement>
@@ -2212,25 +2211,7 @@
             <dependency>
                 <groupId>com.sparkjava</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>2.9.3</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-server</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-webapp</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty.websocket</groupId>
-                        <artifactId>websocket-server</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty.websocket</groupId>
-                        <artifactId>websocket-servlet</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>2.9.4</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.activation</groupId>
@@ -2689,27 +2670,6 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>${bouncycastle.version}</version>
-            </dependency>
-            <!-- JETTY DEPENDENCIES -->
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-webapp</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-servlet</artifactId>
-                <version>${jetty.version}</version>
             </dependency>
 
             <dependency>
