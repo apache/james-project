@@ -22,13 +22,10 @@ package org.apache.james.rspamd.model;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = AnalysisResultDeserializer.class)
 public class AnalysisResult {
 
@@ -80,12 +77,12 @@ public class AnalysisResult {
     }
 
     public enum Action {
-        @JsonProperty("no action") NO_ACTION("no action"), // message is likely ham
-        @JsonProperty("greylist") GREY_LIST("greylist"), // message should be grey listed
-        @JsonProperty("add header") ADD_HEADER("add header"), // message is suspicious and should be marked as spam
-        @JsonProperty("rewrite subject") REWRITE_SUBJECT("rewrite subject"), // message is suspicious and should have subject rewritten
-        @JsonProperty("soft reject") SOFT_REJECT("soft reject"), // message should be temporary rejected (for example, due to rate limit exhausting)
-        @JsonProperty("reject") REJECT("reject"); // message should be rejected as spam
+        NO_ACTION("no action"), // message is likely ham
+        GREY_LIST("greylist"), // message should be grey listed
+        ADD_HEADER("add header"), // message is suspicious and should be marked as spam
+        REWRITE_SUBJECT("rewrite subject"), // message is suspicious and should have subject rewritten
+        SOFT_REJECT("soft reject"), // message should be temporary rejected (for example, due to rate limit exhausting)
+        REJECT("reject"); // message should be rejected as spam
 
         private final String description;
 
@@ -104,11 +101,7 @@ public class AnalysisResult {
     private final Optional<String> desiredRewriteSubject;
     private final boolean hasVirus;
 
-    public AnalysisResult(@JsonProperty("action") Action action,
-                          @JsonProperty("score") float score,
-                          @JsonProperty("required_score") float requiredScore,
-                          @JsonProperty("subject") Optional<String> desiredRewriteSubject,
-                          boolean hasVirus) {
+    public AnalysisResult(Action action, float score, float requiredScore, Optional<String> desiredRewriteSubject, boolean hasVirus) {
         this.action = action;
         this.score = score;
         this.requiredScore = requiredScore;
@@ -132,7 +125,7 @@ public class AnalysisResult {
         return desiredRewriteSubject;
     }
 
-    public boolean getHasVirus() {
+    public boolean hasVirus() {
         return hasVirus;
     }
 

@@ -130,7 +130,7 @@ class RSpamDHttpClientTest {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
             softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
             softly.assertThat(analysisResult.getDesiredRewriteSubject()).isEqualTo(Optional.empty());
-            softly.assertThat(analysisResult.getHasVirus()).isEqualTo(false);
+            softly.assertThat(analysisResult.hasVirus()).isEqualTo(false);
         });
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
@@ -169,7 +169,7 @@ class RSpamDHttpClientTest {
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(virusMessage)).block();
-        assertThat(analysisResult.getHasVirus()).isTrue();
+        assertThat(analysisResult.hasVirus()).isTrue();
     }
 
     @Test
@@ -178,7 +178,7 @@ class RSpamDHttpClientTest {
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(nonVirusMessage)).block();
-        assertThat(analysisResult.getHasVirus()).isFalse();
+        assertThat(analysisResult.hasVirus()).isFalse();
     }
 
     private void reportAsSpam(RSpamDHttpClient client, InputStream inputStream) {
