@@ -49,6 +49,7 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.ProcessingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,9 +152,9 @@ public class RecipientRewriteTableProcessor {
     private final RecipientRewriteTable virtualTableStore;
     private final MailetContext mailetContext;
     private final Supplier<Domain> defaultDomainSupplier;
-    private final String errorProcessor;
+    private final ProcessingState errorProcessor;
 
-    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext, String errorProcessor) {
+    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext, ProcessingState errorProcessor) {
         this.virtualTableStore = virtualTableStore;
         this.mailetContext = mailetContext;
         this.defaultDomainSupplier = MemoizedSupplier.of(
@@ -162,7 +163,7 @@ public class RecipientRewriteTableProcessor {
     }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
-        this(virtualTableStore, domainList, mailetContext, Mail.ERROR);
+        this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR));
     }
 
     private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
@@ -200,7 +201,7 @@ public class RecipientRewriteTableProcessor {
                 .sender(mail.getMaybeSender())
                 .addRecipients(executionResults.recipientWithError)
                 .mimeMessage(mail.getMessage())
-                .state(errorProcessor)
+                .state(errorProcessor.getValue())
                 .build();
             mailetContext.sendMail(newMail);
             LifecycleUtil.dispose(newMail);

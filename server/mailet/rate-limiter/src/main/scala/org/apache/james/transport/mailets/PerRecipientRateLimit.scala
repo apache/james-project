@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets
 
 import java.time.Duration
+import java.util
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
@@ -28,8 +29,8 @@ import org.apache.james.core.MailAddress
 import org.apache.james.lifecycle.api.LifecycleUtil
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
-import org.apache.mailet.Mail
 import org.apache.mailet.base.GenericMailet
+import org.apache.mailet.{Mail, ProcessingState}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -148,5 +149,8 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
         .map(rateLimitingResult => (recipient, rateLimitingResult)), DEFAULT_CONCURRENCY)
       .collectSeq()
       .block()
+
+
+  override def requiredProcessingState(): util.Collection[ProcessingState] = ImmutableList.of(new ProcessingState(exceededProcessor))
 
 }

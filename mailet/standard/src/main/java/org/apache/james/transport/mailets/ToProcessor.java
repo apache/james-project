@@ -21,15 +21,19 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>This mailet redirects the mail to the named processor</p>
@@ -48,16 +52,14 @@ public class ToProcessor extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToProcessor.class);
 
     private boolean debug;
-    private String processor;
+    private ProcessingState processor;
     private Optional<String> noticeText;
 
     @Override
     public void init() throws MailetException {
         debug = isDebug();
-        processor = getInitParameter("processor");
-        if (processor == null) {
-            throw new MailetException("processor parameter is required");
-        }
+        processor = new ProcessingState(Optional.ofNullable(getInitParameter("processor"))
+            .orElseThrow(() -> new MailetException("processor parameter is required")));
         noticeText = Optional.ofNullable(getInitParameter("notice"));
     }
 
@@ -75,7 +77,7 @@ public class ToProcessor extends GenericMailet {
         if (debug) {
             LOGGER.debug("Sending mail {} to {}", mail, processor);
         }
-        mail.setState(processor);
+        mail.setState(processor.getValue());
         if (noticeText.isPresent()) {
             setNoticeInErrorMessage(mail);
         }
@@ -87,5 +89,10 @@ public class ToProcessor extends GenericMailet {
         } else {
             mail.setErrorMessage(String.format("%s\r\n%s", mail.getErrorMessage(), noticeText.get()));
         }
+    }
+
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return ImmutableList.of(processor);
     }
 }

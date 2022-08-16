@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -39,11 +40,13 @@ import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.mailet.Mail;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
@@ -257,4 +260,11 @@ public class RemoteDelivery extends GenericMailet {
         }
     }
 
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return Stream.of(configuration.getBounceProcessor().stream(),
+                configuration.getOnSuccess().stream())
+            .flatMap(x -> x)
+            .collect(ImmutableList.toImmutableList());
+    }
 }

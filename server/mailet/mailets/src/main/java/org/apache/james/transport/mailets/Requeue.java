@@ -23,6 +23,7 @@ import static org.apache.mailet.Mail.GHOST;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -34,10 +35,12 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.util.DurationParser;
 import org.apache.mailet.Mail;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p><b>Requeue</b> puts back the email in a queue.
@@ -72,7 +75,7 @@ public class Requeue extends GenericMailet {
 
     private MailQueue mailQueue;
     private Optional<Duration> delayDuration;
-    private String processor;
+    private ProcessingState processor;
     private boolean consume;
 
     @Inject
@@ -89,7 +92,8 @@ public class Requeue extends GenericMailet {
         delayDuration = Optional.ofNullable(getInitParameter("delay"))
             .map(delayValue -> DurationParser.parse(delayValue, ChronoUnit.SECONDS));
         processor = Optional.ofNullable(getInitParameter("processor"))
-            .orElse(Mail.DEFAULT);
+            .map(ProcessingState::new)
+            .orElse(new ProcessingState(Mail.DEFAULT));
 
         consume = getInitParameter("consume", true);
 
@@ -113,8 +117,13 @@ public class Requeue extends GenericMailet {
         }
     }
 
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return ImmutableList.of(processor);
+    }
+
     private void enqueue(Mail mail) {
-        mail.setState(processor);
+        mail.setState(processor.getValue());
         delayDuration.ifPresentOrElse(
             Throwing.consumer(delay -> mailQueue.enQueue(mail, delay)),
             Throwing.runnable(() -> mailQueue.enQueue(mail)).sneakyThrow());

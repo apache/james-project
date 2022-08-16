@@ -145,7 +145,7 @@ public class DeliveryRunnable implements Disposable {
             case SUCCESS:
                 outgoingMailsMetric.increment();
                 configuration.getOnSuccess()
-                    .ifPresent(Throwing.consumer(onSuccess -> mailetContext.sendMail(mail, onSuccess)));
+                    .ifPresent(Throwing.consumer(onSuccess -> mailetContext.sendMail(mail, onSuccess.getValue())));
                 break;
             case TEMPORARY_FAILURE:
                 handleTemporaryFailure(mail, executionResult);
