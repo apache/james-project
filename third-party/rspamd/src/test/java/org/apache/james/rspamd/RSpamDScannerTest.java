@@ -19,8 +19,11 @@
 
 package org.apache.james.rspamd;
 
-
+import static org.apache.james.rspamd.DockerRSpamD.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -31,10 +34,12 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.rspamd.client.RSpamDClientConfiguration;
 import org.apache.james.rspamd.client.RSpamDHttpClient;
+import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,17 +47,20 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 class RSpamDScannerTest {
 
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
-    static final String rSpamDPassword = "admin";
+    static final String INIT_SUBJECT = "initial subject";
+    static final String REWRITE_SUBJECT = "rewrite subject";
 
     private RSpamDScanner mailet;
 
     @BeforeEach
     void setup() {
-        RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), rSpamDPassword, Optional.empty());
+        RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RSpamDHttpClient client = new RSpamDHttpClient(configuration);
         mailet = new RSpamDScanner(client);
     }
@@ -147,5 +155,98 @@ class RSpamDScannerTest {
                 .isPresent();
 
         });
+    }
+
+    @Test
+    void shouldRewriteSubjectWhenRewriteSubjectIsTrueAndAnalysisResultHasDesiredRewriteSubject() throws Exception {
+        RSpamDHttpClient rSpamDHttpClient = mock(RSpamDHttpClient.class);
+        when(rSpamDHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+                .action(AnalysisResult.Action.REWRITE_SUBJECT)
+                .score(12.1F)
+                .requiredScore(14F)
+                .desiredRewriteSubject(REWRITE_SUBJECT)
+            .build()));
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty("rewriteSubject", "true")
+            .build();
+
+        mailet = new RSpamDScanner(rSpamDHttpClient);
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient("user1@exemple.com")
+                .addFrom("sender@exemple.com")
+                .setSubject(INIT_SUBJECT)
+                .setText("Please!")
+                .build())
+            .build();
+
+        mailet.init(mailetConfig);
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo(REWRITE_SUBJECT);
+    }
+
+    @Test
+    void shouldNotRewriteSubjectWhenRewriteSubjectIsFalseByDefaultAndAnalysisResultHasDesiredRewriteSubject() throws Exception {
+        RSpamDHttpClient rSpamDHttpClient = mock(RSpamDHttpClient.class);
+        when(rSpamDHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+            .action(AnalysisResult.Action.REWRITE_SUBJECT)
+            .score(12.1F)
+            .requiredScore(14F)
+            .desiredRewriteSubject(REWRITE_SUBJECT)
+            .build()));
+
+        mailet = new RSpamDScanner(rSpamDHttpClient);
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient("user1@exemple.com")
+                .addFrom("sender@exemple.com")
+                .setSubject(INIT_SUBJECT)
+                .setText("Please!")
+                .build())
+            .build();
+
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo(INIT_SUBJECT);
+    }
+
+    @Test
+    void shouldNotRewriteSubjectWhenRewriteSubjectIsTrueAndAnalysisResultDoesNotHaveDesiredRewriteSubject() throws Exception {
+        RSpamDHttpClient rSpamDHttpClient = mock(RSpamDHttpClient.class);
+        when(rSpamDHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+            .action(AnalysisResult.Action.NO_ACTION)
+            .score(0.99F)
+            .requiredScore(14F)
+            .build()));
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty("rewriteSubject", "true")
+            .build();
+
+        mailet = new RSpamDScanner(rSpamDHttpClient);
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient("user1@exemple.com")
+                .addFrom("sender@exemple.com")
+                .setSubject(INIT_SUBJECT)
+                .setText("Please!")
+                .build())
+            .build();
+
+        mailet.init(mailetConfig);
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo(INIT_SUBJECT);
     }
 }

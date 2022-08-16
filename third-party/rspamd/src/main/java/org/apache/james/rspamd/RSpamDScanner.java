@@ -36,6 +36,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class RSpamDScanner extends GenericMailet {
@@ -43,10 +44,16 @@ public class RSpamDScanner extends GenericMailet {
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
 
     private final RSpamDHttpClient rSpamDHttpClient;
+    private boolean rewriteSubject;
 
     @Inject
     public RSpamDScanner(RSpamDHttpClient rSpamDHttpClient) {
         this.rSpamDHttpClient = rSpamDHttpClient;
+    }
+
+    @Override
+    public void init() {
+        rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
     }
 
     @Override
@@ -55,6 +62,11 @@ public class RSpamDScanner extends GenericMailet {
 
         mail.getRecipients()
             .forEach(recipient -> appendRSpamDResultHeader(mail, recipient, rSpamDResult));
+
+        if (rewriteSubject) {
+            rSpamDResult.getDesiredRewriteSubject()
+                .ifPresent(Throwing.consumer(desiredRewriteSubject -> mail.getMessage().setSubject(desiredRewriteSubject)));
+        }
     }
 
     private void appendRSpamDResultHeader(Mail mail, MailAddress recipient, AnalysisResult rSpamDResult) {
