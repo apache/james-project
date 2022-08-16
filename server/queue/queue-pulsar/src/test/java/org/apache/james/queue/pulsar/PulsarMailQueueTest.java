@@ -39,6 +39,7 @@ import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.queue.api.DelayedMailQueueContract;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
@@ -57,6 +58,7 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -171,6 +173,16 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                         .consumeOne())
                 .map(ConsumerMessage::value);
         assertThat(deadletterMessage).contains("BAD");
+    }
+
+    @Test
+    // JAMES-3805 PulsarMailQueueTest.dequeueShouldBeConcurrent is unstable
+    // java.lang.IllegalStateException: Too many concurrent offers. Specified maximum is 1. You have to wait for one previous future to be resolved to send another request
+    //    at akka.stream.impl.QueueSource$$anon$1.bufferElem(QueueSource.scala:115)
+    @Tag(Unstable.TAG)
+    @Override
+    public void dequeueShouldBeConcurrent() {
+        MailQueueMetricContract.super.dequeueShouldBeConcurrent();
     }
 
     @Test
