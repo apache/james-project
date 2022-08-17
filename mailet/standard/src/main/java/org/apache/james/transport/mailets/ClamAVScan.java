@@ -29,7 +29,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -37,13 +36,11 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -584,17 +581,13 @@ public class ClamAVScan extends GenericMailet {
 
         if (mimeMessage == null) {
             LOGGER.debug("Null MimeMessage. Will send to ghost");
-            // write mail info to log
-            logMailInfo(mail);
             mail.setState(Mail.GHOST);
             return;
         }
 
         try {
             if (hasVirus(new MimeMessageInputStream(mimeMessage))) {
-                // write mail and message info to log
-                logMailInfo(mail);
-                logMessageInfo(mimeMessage);
+                LOGGER.info("Detected mail {} containing virus, adding infected header/attribute.", mail);
 
                 // mark the mail with a mail attribute to check later on by other matchers/mailets
                 mail.setAttribute(makeInfectedAttribute(true));
@@ -708,79 +701,6 @@ public class ClamAVScan extends GenericMailet {
         message.saveChanges();
         if (messageId != null) {
             message.setHeader(RFC2822Headers.MESSAGE_ID, messageId);
-        }
-    }
-
-    private void logMailInfo(Mail mail) {
-
-        if (LOGGER.isDebugEnabled()) {
-            // writes the error message to the log
-            StringWriter sout = new StringWriter();
-            PrintWriter out = new PrintWriter(sout, true);
-
-            out.print("Mail details:");
-            out.print(" MAIL FROM: " + mail.getMaybeSender().asString());
-            Iterator<MailAddress> rcptTo = mail.getRecipients().iterator();
-            out.print(", RCPT TO: " + rcptTo.next());
-            while (rcptTo.hasNext()) {
-                out.print(", " + rcptTo.next());
-            }
-
-            LOGGER.debug(sout.toString());
-        }
-    }
-
-    private void logMessageInfo(MimeMessage mimeMessage) {
-
-        if (LOGGER.isDebugEnabled()) {
-            // writes the error message to the log
-            StringWriter sout = new StringWriter();
-            PrintWriter out = new PrintWriter(sout, true);
-
-            out.println("MimeMessage details:");
-
-            try {
-                if (mimeMessage.getSubject() != null) {
-                    out.println("  Subject: " + mimeMessage.getSubject());
-                }
-                if (mimeMessage.getSentDate() != null) {
-                    out.println("  Sent date: " + mimeMessage.getSentDate());
-                }
-                String[] sender;
-                sender = mimeMessage.getHeader(RFC2822Headers.FROM);
-                if (sender != null) {
-                    out.print("  From: ");
-                    for (String aSender : sender) {
-                        out.print(aSender + " ");
-                    }
-                    out.println();
-                }
-                String[] rcpts;
-                rcpts = mimeMessage.getHeader(RFC2822Headers.TO);
-                if (rcpts != null) {
-                    out.print("  To: ");
-                    for (String rcpt : rcpts) {
-                        out.print(rcpt + " ");
-                    }
-                    out.println();
-                }
-                rcpts = mimeMessage.getHeader(RFC2822Headers.CC);
-                if (rcpts != null) {
-                    out.print("  CC: ");
-                    for (String rcpt : rcpts) {
-                        out.print(rcpt + " ");
-                    }
-                    out.println();
-                }
-                out.print("  Size (in bytes): " + mimeMessage.getSize());
-                if (mimeMessage.getLineCount() >= 0) {
-                    out.print(", Number of lines: " + mimeMessage.getLineCount());
-                }
-            } catch (MessagingException me) {
-                LOGGER.error("Exception caught reporting message details", me);
-            }
-
-            LOGGER.debug(sout.toString());
         }
     }
 
