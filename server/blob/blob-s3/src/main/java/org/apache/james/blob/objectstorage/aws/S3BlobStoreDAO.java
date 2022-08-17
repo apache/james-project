@@ -161,7 +161,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
         return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .block()
             .flux);
     }
@@ -172,7 +172,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .map(res -> ReactorUtils.toInputStream(res.flux));
     }
 
@@ -225,7 +225,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                     builder -> builder.bucket(resolvedBucketName.asString()).key(blobId.asString()),
                     new MinimalCopyBytesResponseTransformer()))
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .publishOn(Schedulers.parallel())
             .map(BytesWrapper::asByteArray);
     }
