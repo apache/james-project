@@ -185,9 +185,9 @@ public class ClamAVScan extends GenericMailet {
 
     private static final int DEFAULT_PORT = 3310;
 
-    private static final int DEFAULT_MAX_PINGS = 6;
+    private static final int DEFAULT_MAX_PINGS = 2;
 
-    private static final int DEFAULT_PING_INTERVAL_MILLI = 30000;
+    private static final int DEFAULT_PING_INTERVAL_MILLI = 10000;
 
     private static final int DEFAULT_STREAM_BUFFER_SIZE = 8192;
 
