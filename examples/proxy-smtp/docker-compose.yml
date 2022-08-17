@@ -1,0 +1,22 @@
+version: '3.0'
+
+services:
+  haproxy:
+    image: haproxytech/haproxy-alpine:2.4
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - james
+
+  james:
+    image: apache/james:jpa-smtp-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./smtpserver.xml:/root/conf/smtpserver.xml:ro
+
+  helo:
+    image: alpine:latest
+    command: "ash -c 'apk add --update --no-cache netcat-openbsd && echo \"HELO example.local\" | nc haproxy 25'"
+    depends_on:
+      - haproxy

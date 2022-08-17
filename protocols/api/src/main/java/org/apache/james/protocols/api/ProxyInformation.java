@@ -22,11 +22,16 @@ package org.apache.james.protocols.api;
 import java.net.InetSocketAddress;
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 public class ProxyInformation {
     private final InetSocketAddress source;
     private final InetSocketAddress destination;
 
     public ProxyInformation(InetSocketAddress source, InetSocketAddress destination) {
+        Preconditions.checkNotNull(source);
+        Preconditions.checkNotNull(destination);
+
         this.source = source;
         this.destination = destination;
     }
@@ -46,9 +51,19 @@ public class ProxyInformation {
         return source;
     }
 
-
     @Override
     public final int hashCode() {
         return Objects.hash(source, destination);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (!(o instanceof ProxyInformation)) {
+            return false;
+        } else {
+            return this.hashCode() == o.hashCode();
+        }
+     }
 }
