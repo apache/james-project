@@ -24,7 +24,9 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -32,6 +34,8 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -40,6 +44,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -107,15 +112,10 @@ import com.google.common.collect.ImmutableSet;
  * the specified <CODE>&lt;port&gt;</CODE>, and increments the "next" index;
  * if the connection request is not accepted tries with the next one
  * in the list unless all of them have failed;</LI>
- * <LI>sends a "<CODE>STREAM</CODE>" request;</LI>
- * <LI>parses the "<CODE>PORT <I>streamPort</I></CODE>" answer obtaining the port number;</LI>
- * <LI>makes a second connection (the <I>stream connection</I>) to CLAMD at the same host (or IP)
- * on the <I>streamPort</I> just obtained;</LI>
- * <LI>sends the mime message to CLAMD (using {@link MimeMessage#writeTo(java.io.OutputStream)})
- * through the <I>stream connection</I>;</LI>
- * <LI>closes the <I>stream connection</I>;</LI>
- * <LI>gets the "<CODE>OK</CODE>" or "<CODE>... FOUND</CODE>" answer from the main connection;</LI>
- * <LI>closes the main connection;</LI>
+ * <LI>sends a "<CODE>INSTREAM</CODE>" request;</LI>
+ * <LI>sends the mime message to CLAMD;</LI>
+ * <LI>gets the "<CODE>OK</CODE>" or "<CODE>... FOUND</CODE>" answer from the connection;</LI>
+ * <LI>closes the connection;</LI>
  * <LI>sets the "<CODE>org.apache.james.infected</CODE>" <I>mail attribute</I> to either
  * "<CODE>true</CODE>" or "<CODE>false</CODE>";</LI>
  * <LI>adds the "<CODE>X-MessageIsInfected</CODE>" <I>header</I> to either
@@ -134,8 +134,7 @@ import com.google.common.collect.ImmutableSet;
  * <LI><CODE>ScanMail</CODE> must be uncommented</LI>
  * </UL>
  * <p/>
- * <P>Here follows an example of config.xml definitions deploying CLAMD on localhost,
- * and handling the infected messages:</P>
+ * <P>Here follows an example of mailetcontainer.xml which handles the infected messages bases on a CLAMD deployed on localhost with port 3316:</P>
  * <PRE><CODE>
  * <p/>
  * ...
@@ -197,15 +196,11 @@ public class ClamAVScan extends GenericMailet {
 
     private static final int DEFAULT_STREAM_BUFFER_SIZE = 8192;
 
-    //private static final int DEFAULT_CONNECTION_TIMEOUT = 20000;
-
-    private static final String STREAM_PORT_STRING = "PORT ";
-
     private static final String FOUND_STRING = "FOUND";
 
-    private static final AttributeName MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.infected");
+    protected static final AttributeName INFECTED_MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.infected");
 
-    private static final String HEADER_NAME = "X-MessageIsInfected";
+    protected static final String INFECTED_HEADER_NAME = "X-MessageIsInfected";
 
     /**
      * Holds value of property debug.
@@ -272,7 +267,7 @@ public class ClamAVScan extends GenericMailet {
      */
     protected void initDebug() {
         String debugParam = getInitParameter("debug");
-        this.debug = (debugParam != null) && Boolean.parseBoolean(debugParam);
+        this.debug = Boolean.parseBoolean(debugParam);
     }
 
     /**
@@ -513,9 +508,9 @@ public class ClamAVScan extends GenericMailet {
      * the connection.
      *
      * @return a socket connected to CLAMD
-     * @throws MessagingException if no CLAMD in the round-robin address list has accepted the connection
+     * @throws ConnectException if no CLAMD in the round-robin address list has accepted the connection
      */
-    protected Socket getClamdSocket() throws MessagingException {
+    protected Socket getClamdSocket() throws ConnectException {
 
         InetAddress address;
 
@@ -528,7 +523,7 @@ public class ClamAVScan extends GenericMailet {
                 if (usedAddresses.size() >= getAddressesCount()) {
                     String logText = "Unable to connect to CLAMD. All addresses failed.";
                     LOGGER.debug("{} Giving up.", logText);
-                    throw new MessagingException(logText);
+                    throw new ConnectException(logText);
                 }
                 address = getNextAddress();
             } while (!usedAddresses.add(address));
@@ -536,7 +531,7 @@ public class ClamAVScan extends GenericMailet {
                 // get the socket
                 return new Socket(address, getPort());
             } catch (IOException ioe) {
-                LOGGER.error("Exception caught acquiring main socket to CLAMD on {} on port {}: ", address, getPort(), ioe);
+                LOGGER.error("Exception caught acquiring main socket to CLAMD on {} on port {}: {}", address, getPort(), ioe.getMessage());
                 getNextAddress();
                 // retry
             }
@@ -568,7 +563,6 @@ public class ClamAVScan extends GenericMailet {
 
         } catch (Exception e) {
             LOGGER.error("Exception thrown", e);
-            throw new MessagingException("Exception thrown", e);
         }
     }
 
@@ -582,7 +576,7 @@ public class ClamAVScan extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
 
         // if already checked no action
-        if (mail.getAttribute(MAIL_ATTRIBUTE_NAME).isPresent()) {
+        if (mail.getAttribute(INFECTED_MAIL_ATTRIBUTE_NAME).isPresent()) {
             return;
         }
 
@@ -596,100 +590,30 @@ public class ClamAVScan extends GenericMailet {
             return;
         }
 
-        Socket clamdSocket = getClamdSocket();
+        try {
+            if (hasVirus(new MimeMessageInputStream(mimeMessage))) {
+                // write mail and message info to log
+                logMailInfo(mail);
+                logMessageInfo(mimeMessage);
 
-        try (Socket socket = clamdSocket;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "ASCII"));
-            PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true)) {
+                // mark the mail with a mail attribute to check later on by other matchers/mailets
+                mail.setAttribute(makeInfectedAttribute(true));
 
-            // write a request for a port to use for streaming out the data to scan
-            writer.println("STREAM");
-            writer.flush();
-
-            // parse and get the "stream" port#
-            int streamPort = getStreamPortFromAnswer(reader.readLine());
-
-            // get the "stream" socket and the related (buffered) output stream
-            try (Socket streamSocket = new Socket(socket.getInetAddress(), streamPort);
-                 BufferedOutputStream bos = new BufferedOutputStream(streamSocket.getOutputStream(), getStreamBufferSize())) {
-
-                // stream out the message to the scanner
-                mimeMessage.writeTo(bos);
-                bos.flush();
-                bos.close();
-                streamSocket.close();
-
-                String answer;
-                boolean virusFound = false;
-                String logMessage = "";
-                for (; ; ) {
-                    answer = reader.readLine();
-                    if (answer != null) {
-                        answer = answer.trim();
-
-                        // if a virus is found the answer will be '... FOUND'
-                        if (answer.substring(answer.length() - FOUND_STRING.length()).equals(FOUND_STRING)) {
-                            virusFound = true;
-                            logMessage = answer + " (by CLAMD on " + socket.getInetAddress() + ")";
-                            LOGGER.debug(logMessage);
-                        }
-                    } else {
-                        break;
-                    }
-                }
-
-                reader.close();
-                writer.close();
-
-                if (virusFound) {
-                    String errorMessage = mail.getErrorMessage();
-                    if (errorMessage == null) {
-                        errorMessage = "";
-                    } else {
-                        errorMessage += "\r\n";
-                    }
-                    StringBuilder sb = new StringBuilder(errorMessage);
-                    sb.append(logMessage).append("\r\n");
-
-                    // write mail and message info to log
-                    logMailInfo(mail);
-                    logMessageInfo(mimeMessage);
-
-                    // mark the mail with a mail attribute to check later on by other matchers/mailets
-                    mail.setAttribute(makeAttribute(true));
-
-                    // sets the error message to be shown in any "notifyXxx" message
-                    mail.setErrorMessage(sb.toString());
-
-                    // mark the message with a header string
-                    mimeMessage.setHeader(HEADER_NAME, "true");
-
-                } else {
-                    if (isDebug()) {
-                        LOGGER.debug("OK (by CLAMD on {})", socket.getInetAddress());
-                    }
-                    mail.setAttribute(makeAttribute(false));
-
-                    // mark the message with a header string
-                    mimeMessage.setHeader(HEADER_NAME, "false");
-
-                }
-
-                try {
-                    saveChanges(mimeMessage);
-                } catch (Exception ex) {
-                    LOGGER.error("Exception caught while saving changes (header) to the MimeMessage. Ignoring ...", ex);
-                }
+                // mark the message with a header string
+                mimeMessage.setHeader(INFECTED_HEADER_NAME, "true");
+            } else {
+                mail.setAttribute(makeInfectedAttribute(false));
+                // mark the message with a header string
+                mimeMessage.setHeader(INFECTED_HEADER_NAME, "false");
             }
-        } catch (Exception ex) {
-            LOGGER.error("Exception caught calling CLAMD on {}: {}", clamdSocket.getInetAddress(), ex.getMessage(), ex);
-            throw new MessagingException("Exception caught", ex);
+            saveChanges(mimeMessage);
+        } catch (IOException ex) {
+            LOGGER.error("Exception caught calling CLAMD: {}", ex.getMessage());
         }
-
     }
 
-    private Attribute makeAttribute(boolean value) {
-        return new Attribute(MAIL_ATTRIBUTE_NAME, AttributeValue.of(value));
+    private Attribute makeInfectedAttribute(boolean value) {
+        return new Attribute(INFECTED_MAIL_ATTRIBUTE_NAME, AttributeValue.of(value));
     }
 
     /**
@@ -740,7 +664,7 @@ public class ClamAVScan extends GenericMailet {
 
         try {
             // get the reader and writer to ping and receive pong
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "ASCII"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
             PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 
             LOGGER.debug("Sending: \"PING\" to {} ...", address);
@@ -772,30 +696,6 @@ public class ClamAVScan extends GenericMailet {
         } finally {
             socket.close();
         }
-    }
-
-    /**
-     * Parses the answer from a STREAM request and gets the port number.
-     *
-     * @param answer the answer from CLAMD containing the port number
-     * @return the port number for streaming out the data to scan
-     */
-    protected final int getStreamPortFromAnswer(String answer) throws ConnectException {
-        int port = -1;
-        if (answer != null && answer.startsWith(STREAM_PORT_STRING)) {
-            String portSubstring = answer.substring(STREAM_PORT_STRING.length());
-            try {
-                port = Integer.parseInt(portSubstring);
-            } catch (NumberFormatException nfe) {
-                LOGGER.error("Can not parse port from substring {}", portSubstring);
-            }
-        }
-
-        if (port <= 0) {
-            throw new ConnectException("\"PORT nn\" expected - unable to parse: " + "\"" + answer + "\"");
-        }
-
-        return port;
     }
 
     /**
@@ -884,5 +784,34 @@ public class ClamAVScan extends GenericMailet {
         }
     }
 
+    public boolean hasVirus(InputStream mimeMessage) throws IOException {
+        try (Socket socket = getClamdSocket();
+        OutputStream clamAVOutputStream = new BufferedOutputStream(socket.getOutputStream(), getStreamBufferSize());
+        InputStream clamAvInputStream = socket.getInputStream()) {
+            socket.setSoTimeout(2000);
+            clamAVOutputStream.write("zINSTREAM\0".getBytes());
+            clamAVOutputStream.flush();
+
+            byte[] buffer = new byte[getStreamBufferSize()];
+            int read = mimeMessage.read(buffer);
+            while (read >= 0) {
+                byte[] chunkSize = ByteBuffer.allocate(4).putInt(read).array();
+                clamAVOutputStream.write(chunkSize);
+                clamAVOutputStream.write(buffer, 0, read);
+                if (clamAvInputStream.available() > 0) {
+                    byte[] reply = clamAvInputStream.readAllBytes();
+                    throw new IOException("Reply from server: " + new String(reply));
+                }
+                read = mimeMessage.read(buffer);
+            }
+            clamAVOutputStream.write(new byte[]{0, 0, 0, 0});
+            clamAVOutputStream.flush();
+            return replyContainsFound(new String(clamAvInputStream.readAllBytes()));
+        }
+    }
+
+    private boolean replyContainsFound(String reply) {
+        return reply.contains(FOUND_STRING);
+    }
 }
 
