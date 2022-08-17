@@ -45,7 +45,6 @@ import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
-import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -181,7 +180,6 @@ import com.google.common.collect.ImmutableSet;
  * @see <a href="http://www.sosdg.org/clamav-win32/">ClamAV For Windows</a>
  * @since 2.2.1
  */
-@Experimental
 public class ClamAVScan extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClamAVScan.class);
 
