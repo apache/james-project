@@ -170,7 +170,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     pSession.setProxyDestinationAddress(new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
                     pSession.setProxySourceAddress(new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()));
                 } else {
-                    // TODO how to handle?
+                    throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
                 }
 
                 haproxyMsg.release();
