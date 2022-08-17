@@ -127,6 +127,11 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
+    public boolean isProxyRequired() {
+        return false;
+    }
+
+    @Override
     public Response newLineTooLongResponse() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
@@ -144,6 +149,26 @@ public class BaseFakeSMTPSession implements SMTPSession {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return new InetSocketAddress("localhost", 22);
+    }
+
+    @Override
+    public InetSocketAddress getProxyDestinationAddress() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public void setProxyDestinationAddress(InetSocketAddress addr) {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public InetSocketAddress getProxySourceAddress() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public void setProxySourceAddress(InetSocketAddress addr) {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
     @Override

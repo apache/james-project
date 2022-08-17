@@ -34,15 +34,16 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
                                                   int maxConnections, int maxConnectsPerIp,
+                                                  boolean proxyRequired,
                                                   ChannelHandlerFactory frameHandlerFactory,
                                                   EventExecutorGroup eventExecutorGroup) {
-        super(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
+        super(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, Encryption secure,
+            int maxConnections, int maxConnectsPerIp, boolean proxyRequired, Encryption secure,
             ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(timeout, maxConnections, maxConnectsPerIp, frameHandlerFactory, eventExecutorGroup);
+        this(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
 
         this.secure = secure;
     }

@@ -148,9 +148,38 @@ public interface ProtocolSession extends CommandDetectionSession {
 
     
     /**
-     * Return the {@link InetSocketAddress} of the remote peer
+     * Return the {@link InetSocketAddress} of the remote peer. If proxy support
+     * is enabled, then it returns the remote peer given by the proxy.
      */
     InetSocketAddress getRemoteAddress();
+
+    /**
+     * Return true if PROXY is required by the configuration
+     *
+     * @return supported
+     */
+    boolean isProxyRequired();
+
+    /**
+     * Return the {@link InetSocketAddress} of the proxy peer or null if proxy support is disabled.
+     */
+    InetSocketAddress getProxyDestinationAddress();
+
+    /**
+     * Sets the {@link InetSocketAddress} of the proxy peer.
+     */
+    void setProxyDestinationAddress(InetSocketAddress addr);
+
+    /**
+     * Return the {@link InetSocketAddress} of the remote peer if proxy is enabled or null if proxy
+     * support is disabled.
+     */
+    InetSocketAddress getProxySourceAddress();
+
+    /**
+     * Sets the {@link InetSocketAddress} remote peer provided by the proxy.
+     */
+    void setProxySourceAddress(InetSocketAddress addr);
 
     /**
      * Return the {@link InetSocketAddress} of the local bound address

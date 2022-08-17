@@ -39,8 +39,8 @@ public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
 
     private final SmtpMetrics smtpMetrics;
 
-    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics) {
-        super(new SMTPMDCContextFactory(), protocol, encryption);
+    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, boolean proxyRequired, SmtpMetrics smtpMetrics) {
+        super(new SMTPMDCContextFactory(), protocol, encryption, proxyRequired);
         this.smtpMetrics = smtpMetrics;
         this.resultHandlers.add(recordCommandCount(smtpMetrics));
     }

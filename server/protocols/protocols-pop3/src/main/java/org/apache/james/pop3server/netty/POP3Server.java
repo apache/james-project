@@ -86,7 +86,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption());
+        return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption(), false);
     }
 
     @Override

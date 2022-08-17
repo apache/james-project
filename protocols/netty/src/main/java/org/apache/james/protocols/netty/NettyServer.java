@@ -36,6 +36,7 @@ import io.netty.channel.DefaultEventLoopGroup;
 public class NettyServer extends AbstractAsyncServer {
     public static class Factory {
         private Protocol protocol;
+        private boolean proxyRequired;
         private Optional<Encryption> secure;
         private Optional<ChannelHandlerFactory> frameHandlerFactory;
 
@@ -56,6 +57,11 @@ public class NettyServer extends AbstractAsyncServer {
             return this;
         }
 
+        public Factory proxyRequired(boolean proxyRequired) {
+            this.proxyRequired = proxyRequired;
+            return this;
+        }
+
         public Factory frameHandlerFactory(ChannelHandlerFactory frameHandlerFactory) {
             this.frameHandlerFactory = Optional.ofNullable(frameHandlerFactory);
             return this;
@@ -65,6 +71,7 @@ public class NettyServer extends AbstractAsyncServer {
             Preconditions.checkState(protocol != null, "'protocol' is mandatory");
             return new NettyServer(protocol, 
                     secure.orElse(null),
+                    proxyRequired,
                     frameHandlerFactory.orElse(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
         }
     }
@@ -74,10 +81,12 @@ public class NettyServer extends AbstractAsyncServer {
     private final ChannelHandlerFactory frameHandlerFactory;
     private int maxCurConnections;
     private int maxCurConnectionsPerIP;
+    private boolean proxyRequired;
    
-    private NettyServer(Protocol protocol, Encryption secure, ChannelHandlerFactory frameHandlerFactory) {
+    private NettyServer(Protocol protocol, Encryption secure, boolean proxyRequired, ChannelHandlerFactory frameHandlerFactory) {
         this.protocol = protocol;
         this.secure = secure;
+        this.proxyRequired = proxyRequired;
         this.frameHandlerFactory = frameHandlerFactory;
     }
     
@@ -96,7 +105,8 @@ public class NettyServer extends AbstractAsyncServer {
     }
 
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
+        return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure,
+            proxyRequired);
     }
     
     @Override
@@ -115,6 +125,7 @@ public class NettyServer extends AbstractAsyncServer {
             getTimeout(),
             maxCurConnections,
             maxCurConnectionsPerIP,
+            proxyRequired,
             secure,
             getFrameHandlerFactory(),
             new DefaultEventLoopGroup(16)) {

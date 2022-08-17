@@ -21,6 +21,7 @@ package org.apache.james.protocols.netty;
 import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 
 import java.io.Closeable;
+import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -48,6 +49,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
+import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
 
 /**
@@ -62,20 +65,22 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
+    protected final boolean proxyRequired;
     private final ProtocolMDCContextFactory mdcContextFactory;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
     private final Optional<LineHandler> lineHandler;
     protected final LinkedList<ProtocolHandlerResultHandler> resultHandlers;
 
     public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
-        this(mdcContextFactory, protocol, null);
+        this(mdcContextFactory, protocol, null, false);
     }
 
-    public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure) {
+    public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure, boolean proxyRequired) {
         this.mdcContextFactory = mdcContextFactory;
         this.protocol = protocol;
         this.chain = protocol.getProtocolChain();
         this.secure = secure;
+        this.proxyRequired = proxyRequired;
         this.lineHandler = chain.getFirstHandler(LineHandler.class);
         this.resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
     }
@@ -158,6 +163,21 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
         try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
 
+            if (msg instanceof HAProxyMessage) {
+                HAProxyMessage haproxyMsg = (HAProxyMessage) msg;
+
+                if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
+                    pSession.setProxyDestinationAddress(new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
+                    pSession.setProxySourceAddress(new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()));
+                } else {
+                    // TODO how to handle?
+                }
+
+                haproxyMsg.release();
+                super.channelReadComplete(ctx);
+                return;
+            }
+
             if (lineHandler.isPresent()) {
                 ByteBuf buf = (ByteBuf) msg;
                 byte[] bytes = new byte[buf.readableBytes()];
@@ -197,7 +217,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     
     
     protected ProtocolSession createSession(ChannelHandlerContext ctx) {
-        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), secure));
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), secure, proxyRequired));
     }
 
     @Override

@@ -42,6 +42,8 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final Map<AttachmentKey<?>, Object> connectionState;
     private final Map<AttachmentKey<?>, Object> sessionState;
     private Username username;
+    private InetSocketAddress proxySourceAddress = null;
+    private InetSocketAddress proxyDestinationAddress = null;
     protected final ProtocolConfiguration config;
     private boolean needsCommandInjectionDetection;
     private static final String DELIMITER = "\r\n";
@@ -76,7 +78,30 @@ public class ProtocolSessionImpl implements ProtocolSession {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
+        if (proxySourceAddress != null) {
+            return proxySourceAddress;
+        }
         return transport.getRemoteAddress();
+    }
+
+    @Override
+    public InetSocketAddress getProxySourceAddress() {
+        return proxySourceAddress;
+    }
+
+    @Override
+    public void setProxySourceAddress(InetSocketAddress proxySourceAddress) {
+        this.proxySourceAddress = proxySourceAddress;
+    }
+
+    @Override
+    public void setProxyDestinationAddress(InetSocketAddress proxyDestinationAddress) {
+        this.proxyDestinationAddress = proxyDestinationAddress;
+    }
+
+    @Override
+    public InetSocketAddress getProxyDestinationAddress() {
+        return proxyDestinationAddress;
     }
 
     @Override
@@ -104,6 +129,11 @@ public class ProtocolSessionImpl implements ProtocolSession {
     @Override
     public boolean isTLSStarted() {
         return transport.isTLSStarted();
+    }
+
+    @Override
+    public boolean isProxyRequired() {
+        return transport.isProxyRequired();
     }
 
     @Override

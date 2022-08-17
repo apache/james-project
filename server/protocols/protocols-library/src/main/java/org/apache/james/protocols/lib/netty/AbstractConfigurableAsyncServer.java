@@ -79,11 +79,16 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     /** The name of the parameter defining the service hello name. */
     public static final String HELLO_NAME = "helloName";
 
+    /** The name of the parameter defining the service hello name. */
+    public static final String PROXY_REQUIRED = "proxyRequired";
+
     public static final int DEFAULT_MAX_EXECUTOR_COUNT = 16;
 
     private FileSystem fileSystem;
 
     private boolean enabled;
+
+    protected boolean proxyRequired;
 
     protected int connPerIP;
 
@@ -215,6 +220,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         sslConfig = SslConfig.parse(config);
 
         Optional.ofNullable(config.getBoolean("gracefulShutdown", null)).ifPresent(this::setGracefulShutdown);
+
+        proxyRequired = config.getBoolean(PROXY_REQUIRED, false);
 
         doConfigure(config);
 
@@ -448,6 +455,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
         return new AbstractSSLAwareChannelPipelineFactory<>(getTimeout(), connectionLimit, connPerIP,
+            proxyRequired,
             getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override

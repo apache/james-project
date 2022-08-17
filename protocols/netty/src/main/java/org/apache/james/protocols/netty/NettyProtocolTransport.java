@@ -44,10 +44,12 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     
     private final Channel channel;
     private final Encryption encryption;
+    private final boolean proxyRequired;
     
-    public NettyProtocolTransport(Channel channel, Encryption encryption) {
+    public NettyProtocolTransport(Channel channel, Encryption encryption, boolean proxyRequired) {
         this.channel = channel;
         this.encryption = encryption;
+        this.proxyRequired = proxyRequired;
     }
 
     @Override
@@ -70,6 +72,10 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         return encryption != null && encryption.isStartTLS();
     }
 
+    @Override
+    public boolean isProxyRequired() {
+        return proxyRequired;
+    }
 
     @Override
     public void popLineHandler() {

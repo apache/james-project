@@ -41,4 +41,6 @@ public interface HandlerConstants {
 
     String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
 
+    String PROXY_HANDLER = "proxyHandler";
+
 }
