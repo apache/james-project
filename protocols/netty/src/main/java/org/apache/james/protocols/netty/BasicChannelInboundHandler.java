@@ -34,6 +34,7 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
@@ -167,8 +168,12 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                 HAProxyMessage haproxyMsg = (HAProxyMessage) msg;
 
                 if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
-                    pSession.setProxyDestinationAddress(new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
-                    pSession.setProxySourceAddress(new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()));
+                    pSession.setProxyInformation(
+                        new ProxyInformation(
+                            new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
+                            new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort())
+                        )
+                    );
                 } else {
                     throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
                 }

@@ -29,6 +29,7 @@ import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
@@ -101,10 +102,10 @@ public class NettyProxySMTPServerTest {
     server = createServer(createProtocol(Optional.of(new HeloHook(){
       @Override
       public HookResult doHelo(SMTPSession session, String helo) {
-        assertThat(session.isProxyRequired()).isTrue();
-        assertThat(session.getProxySourceAddress().getHostString()).isEqualTo("localhost");
-        assertThat(session.getProxyDestinationAddress().getHostString()).isEqualTo(destination);
+        ProxyInformation proxyInformation = session.getProxyInformation().orElseThrow();
         assertThat(session.getRemoteAddress().getHostString()).isEqualTo(source);
+        assertThat(proxyInformation.getSource().getHostString()).isEqualTo(source);
+        assertThat(proxyInformation.getDestination().getHostString()).isEqualTo(destination);
         return HookResult.OK;
       }
     })));
@@ -147,7 +148,7 @@ public class NettyProxySMTPServerTest {
 
     smptClient.sendCommand("PROXY UNKNOWN\r\nHELO localhost");
 
-    assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isTrue();
+    assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isFalse();
   }
 
 }

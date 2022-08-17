@@ -154,32 +154,17 @@ public interface ProtocolSession extends CommandDetectionSession {
     InetSocketAddress getRemoteAddress();
 
     /**
-     * Return true if PROXY is required by the configuration
+     * Sets the proxy information if proxying is enabled.
      *
-     * @return supported
+     * @param proxyInformation proxy information including source and destination addresses
      */
-    boolean isProxyRequired();
+    void setProxyInformation(ProxyInformation proxyInformation);
 
     /**
-     * Return the {@link InetSocketAddress} of the proxy peer or null if proxy support is disabled.
+     * Gets the proxy information if proxying is enabled.
+     * @return
      */
-    InetSocketAddress getProxyDestinationAddress();
-
-    /**
-     * Sets the {@link InetSocketAddress} of the proxy peer.
-     */
-    void setProxyDestinationAddress(InetSocketAddress addr);
-
-    /**
-     * Return the {@link InetSocketAddress} of the remote peer if proxy is enabled or null if proxy
-     * support is disabled.
-     */
-    InetSocketAddress getProxySourceAddress();
-
-    /**
-     * Sets the {@link InetSocketAddress} remote peer provided by the proxy.
-     */
-    void setProxySourceAddress(InetSocketAddress addr);
+    Optional<ProxyInformation> getProxyInformation();
 
     /**
      * Return the {@link InetSocketAddress} of the local bound address

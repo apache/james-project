@@ -42,8 +42,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final Map<AttachmentKey<?>, Object> connectionState;
     private final Map<AttachmentKey<?>, Object> sessionState;
     private Username username;
-    private InetSocketAddress proxySourceAddress = null;
-    private InetSocketAddress proxyDestinationAddress = null;
+    private ProxyInformation proxyInformation = null;
     protected final ProtocolConfiguration config;
     private boolean needsCommandInjectionDetection;
     private static final String DELIMITER = "\r\n";
@@ -78,30 +77,20 @@ public class ProtocolSessionImpl implements ProtocolSession {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
-        if (proxySourceAddress != null) {
-            return proxySourceAddress;
+        if (proxyInformation != null) {
+            return proxyInformation.getSource();
         }
         return transport.getRemoteAddress();
     }
 
     @Override
-    public InetSocketAddress getProxySourceAddress() {
-        return proxySourceAddress;
+    public Optional<ProxyInformation> getProxyInformation() {
+        return Optional.of(proxyInformation);
     }
 
     @Override
-    public void setProxySourceAddress(InetSocketAddress proxySourceAddress) {
-        this.proxySourceAddress = proxySourceAddress;
-    }
-
-    @Override
-    public void setProxyDestinationAddress(InetSocketAddress proxyDestinationAddress) {
-        this.proxyDestinationAddress = proxyDestinationAddress;
-    }
-
-    @Override
-    public InetSocketAddress getProxyDestinationAddress() {
-        return proxyDestinationAddress;
+    public void setProxyInformation(ProxyInformation proxyInformation) {
+        this.proxyInformation = proxyInformation;
     }
 
     @Override
@@ -132,16 +121,10 @@ public class ProtocolSessionImpl implements ProtocolSession {
     }
 
     @Override
-    public boolean isProxyRequired() {
-        return transport.isProxyRequired();
-    }
-
-    @Override
     public String getSessionID() {
         return transport.getId();
     }
-    
-    
+
     @Override
     public Map<AttachmentKey<?>, Object> getConnectionState() {
         return connectionState;
