@@ -440,6 +440,39 @@ class IMAPServerTest {
     }
 
     @Nested
+    class Proxy {
+        IMAPServer imapServer;
+        private SocketChannel clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerProxy.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
+        }
+
+        @AfterEach
+        void tearDown() throws Exception {
+            clientConnection.close();
+            imapServer.destroy();
+        }
+
+        @Test
+        void shouldNotFailOnProxyInformation() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
+                "TCP4", "255.255.255.254", "255.255.255.255", 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
+                .startsWith("a0 OK");
+        }
+    }
+
+    @Nested
     class Compress {
         IMAPServer imapServer;
         private int port;
