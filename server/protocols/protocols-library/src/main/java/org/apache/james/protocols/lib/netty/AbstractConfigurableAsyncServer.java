@@ -467,7 +467,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             @Override
             protected ChannelInboundHandlerAdapter createProxyHandler() {
-                return createProxyHandler();
+                return AbstractConfigurableAsyncServer.this.createProxyHandler();
             }
         };
     }
