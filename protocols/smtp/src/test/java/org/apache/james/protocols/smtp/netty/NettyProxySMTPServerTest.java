@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
+
 import org.apache.commons.net.smtp.SMTPConnectionClosedException;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
@@ -39,116 +40,110 @@ import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
-import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-public class NettyProxySMTPServerTest {
+class NettyProxySMTPServerTest {
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int RANDOM_PORT = 0;
 
-  private static final String LOCALHOST_IP = "127.0.0.1";
-  private static final int RANDOM_PORT = 0;
+    private SMTPSClient smptClient = null;
+    private ProtocolServer server = null;
 
-  private SMTPSClient smptClient = null;
-  private ProtocolServer server = null;
-
-  @AfterEach
-  void tearDown() throws Exception {
-    if (smptClient != null) {
-      smptClient.disconnect();
+    @AfterEach
+    void tearDown() throws Exception {
+        if (smptClient != null) {
+            smptClient.disconnect();
+        }
+        if (server != null) {
+            server.unbind();
+        }
     }
-    if (server != null) {
-      server.unbind();
+
+    private ProtocolServer createServer(Protocol protocol) {
+        NettyServer server = new NettyServer.Factory()
+            .protocol(protocol)
+            .proxyRequired(true)
+            .build();
+        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
+        return server;
     }
-  }
 
-  private ProtocolServer createServer(Protocol protocol) {
-    NettyServer server = new NettyServer.Factory()
-        .protocol(protocol)
-        .proxyRequired(true)
-        .build();
-    server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
-    return server;
-  }
-
-  private SMTPSClient createClient() {
-    SMTPSClient client = new SMTPSClient(false, BogusSslContextFactory.getClientContext());
-    client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
-    return client;
-  }
-
-  private Protocol createProtocol(Optional<ProtocolHandler> handler) throws WiringException {
-    SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new RecordingMetricFactory());
-    if (handler.isPresent()) {
-      chain.add(handler.get());
+    private SMTPSClient createClient() {
+        SMTPSClient client = new SMTPSClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        return client;
     }
-    chain.wireExtensibleHandlers();
-    return new SMTPProtocol(chain, new SMTPConfigurationImpl());
-  }
 
-  @Test
-  void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommandTCP4() throws Exception {
-    heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand("TCP4", "255.255.255.254", "255.255.255.255");
-  }
+    private Protocol createProtocol(Optional<ProtocolHandler> handler) throws WiringException {
+        SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new RecordingMetricFactory());
+        if (handler.isPresent()) {
+            chain.add(handler.get());
+        }
+        chain.wireExtensibleHandlers();
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl());
+    }
 
-  @Test
-  void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommandTCP6() throws Exception {
-    heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand("TCP6", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
-  }
+    @Test
+    void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommandTCP4() throws Exception {
+        heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand("TCP4", "255.255.255.254", "255.255.255.255");
+    }
 
-  private void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand(String protocol, String source, String destination)
-      throws Exception {
-    server = createServer(createProtocol(Optional.of(new HeloHook(){
-      @Override
-      public HookResult doHelo(SMTPSession session, String helo) {
-        ProxyInformation proxyInformation = session.getProxyInformation().orElseThrow();
-        assertThat(session.getRemoteAddress().getHostString()).isEqualTo(source);
-        assertThat(proxyInformation.getSource().getHostString()).isEqualTo(source);
-        assertThat(proxyInformation.getDestination().getHostString()).isEqualTo(destination);
-        return HookResult.OK;
-      }
-    })));
+    @Test
+    void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommandTCP6() throws Exception {
+        heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand("TCP6", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+    }
 
-    smptClient = createClient();
+    private void heloShouldReturnTrueWhenSendingTheCommandWithProxyCommand(String protocol, String source, String destination)
+        throws Exception {
+        server = createServer(createProtocol(Optional.of((HeloHook) (session, helo) -> {
+            ProxyInformation proxyInformation = session.getProxyInformation().orElseThrow();
+            assertThat(session.getRemoteAddress().getHostString()).isEqualTo(source);
+            assertThat(proxyInformation.getSource().getHostString()).isEqualTo(source);
+            assertThat(proxyInformation.getDestination().getHostString()).isEqualTo(destination);
+            return HookResult.OK;
+        })));
 
-    server.bind();
-    InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-    smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smptClient = createClient();
 
-    smptClient.sendCommand(String.format("PROXY %s %s %s %d %d\r\nHELO localhost", protocol, source, destination, 65535, 65535));
+        server.bind();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-    assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isTrue();
-    assertThat(smptClient.getReplyString()).contains(source);
-  }
+        smptClient.sendCommand(String.format("PROXY %s %s %s %d %d\r\nHELO localhost", protocol, source, destination, 65535, 65535));
 
-  @Test
-  void heloShouldReturnFalseWhenSendingCommandWithoutProxyCommand() throws Exception {
-    server = createServer(createProtocol(Optional.empty()));
-    smptClient = createClient();
+        assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isTrue();
+        assertThat(smptClient.getReplyString()).contains(source);
+    }
 
-    server.bind();
-    InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-    smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+    @Test
+    void heloShouldReturnFalseWhenSendingCommandWithoutProxyCommand() throws Exception {
+        server = createServer(createProtocol(Optional.empty()));
+        smptClient = createClient();
 
-    assertThatThrownBy(() -> smptClient.sendCommand("HELO localhost"))
-        .isInstanceOf(SMTPConnectionClosedException.class)
-        .hasMessage("Connection closed without indication.");
-  }
+        server.bind();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-  @Test
-  void heloShouldReturnTrueWhenSendingCommandWithProxyCommandUnknown() throws Exception {
+        assertThatThrownBy(() -> smptClient.sendCommand("HELO localhost"))
+            .isInstanceOf(SMTPConnectionClosedException.class)
+            .hasMessage("Connection closed without indication.");
+    }
 
-    server = createServer(createProtocol(Optional.empty()));
-    smptClient = createClient();
+    @Test
+    void heloShouldReturnTrueWhenSendingCommandWithProxyCommandUnknown() throws Exception {
+        server = createServer(createProtocol(Optional.empty()));
+        smptClient = createClient();
 
-    server.bind();
-    InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-    smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        server.bind();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-    smptClient.sendCommand("PROXY UNKNOWN\r\nHELO localhost");
+        smptClient.sendCommand("PROXY UNKNOWN\r\nHELO localhost");
 
-    assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isFalse();
-  }
+        assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isFalse();
+    }
 
 }
