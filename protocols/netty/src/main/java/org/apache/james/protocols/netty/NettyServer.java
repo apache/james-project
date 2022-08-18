@@ -134,6 +134,11 @@ public class NettyServer extends AbstractAsyncServer {
             protected ChannelInboundHandlerAdapter createHandler() {
                 return createCoreHandler();
             }
+
+            @Override
+            protected ChannelInboundHandlerAdapter createProxyHandler() {
+                return new HAProxyMessageHandler(protocol, new ProtocolMDCContextFactory.Standard());
+            }
         };
 
     }

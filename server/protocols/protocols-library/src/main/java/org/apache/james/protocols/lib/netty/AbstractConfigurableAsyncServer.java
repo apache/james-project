@@ -451,7 +451,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
 
     protected abstract ChannelInboundHandlerAdapter createCoreHandler();
-    
+
+    protected abstract ChannelInboundHandlerAdapter createProxyHandler();
+
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
         return new AbstractSSLAwareChannelPipelineFactory<>(getTimeout(), connectionLimit, connPerIP,
@@ -461,7 +463,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return AbstractConfigurableAsyncServer.this.createCoreHandler();
+            }
 
+            @Override
+            protected ChannelInboundHandlerAdapter createProxyHandler() {
+                return createProxyHandler();
             }
         };
     }

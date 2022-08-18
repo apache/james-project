@@ -68,6 +68,7 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
         if (proxyRequired) {
             pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+            pipeline.addLast("proxyInformationHandler", createProxyHandler());
         }
 
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
@@ -87,5 +88,10 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
      * @return coreHandler
      */
     protected abstract ChannelInboundHandlerAdapter createHandler();
+
+    /**
+     * @return A handler that set HAProxy information on the underlying protocol objects.
+     */
+    protected abstract ChannelInboundHandlerAdapter createProxyHandler();
 
 }

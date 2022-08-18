@@ -33,8 +33,10 @@ import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.netty.HAProxyMessageHandler;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
+import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
 import org.slf4j.Logger;
@@ -151,6 +153,17 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
             }
         };
         return new SMTPChannelInboundHandler(transport, lmtpMetrics);
+    }
+
+    @Override
+    protected ChannelInboundHandlerAdapter createProxyHandler() {
+        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig) {
+            @Override
+            public ProtocolSession newSession(ProtocolTransport transport) {
+                return new ExtendedSMTPSession(lmtpConfig, transport);
+            }
+        };
+        return new HAProxyMessageHandler(transport, new SMTPMDCContextFactory());
     }
 
     @Override

@@ -21,7 +21,6 @@ package org.apache.james.protocols.netty;
 import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 
 import java.io.Closeable;
-import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -34,7 +33,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
-import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
@@ -50,8 +48,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
-import io.netty.handler.codec.haproxy.HAProxyMessage;
-import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
 
 /**
@@ -164,25 +160,6 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
         try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
 
-            if (msg instanceof HAProxyMessage) {
-                HAProxyMessage haproxyMsg = (HAProxyMessage) msg;
-
-                if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
-                    pSession.setProxyInformation(
-                        new ProxyInformation(
-                            new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
-                            new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort())
-                        )
-                    );
-                } else {
-                    throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
-                }
-
-                haproxyMsg.release();
-                super.channelReadComplete(ctx);
-                return;
-            }
-
             if (lineHandler.isPresent()) {
                 ByteBuf buf = (ByteBuf) msg;
                 byte[] bytes = new byte[buf.readableBytes()];
@@ -227,6 +204,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
         try (Closeable closeable = mdc(ctx).build()) {
             Channel channel = ctx.channel();
             ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
