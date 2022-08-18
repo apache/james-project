@@ -57,13 +57,12 @@ public class ProxyInformation {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        } else if (!(o instanceof ProxyInformation)) {
-            return false;
-        } else {
-            return this.hashCode() == o.hashCode();
+    public final boolean equals(Object obj) {
+        if (obj instanceof ProxyInformation) {
+            ProxyInformation other = (ProxyInformation) obj;
+            return Objects.equals(this.source, other.source)
+                && Objects.equals(this.destination, other.destination);
         }
+        return false;
      }
 }
