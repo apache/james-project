@@ -139,6 +139,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
             .map(MailetProcessorImpl.class::cast)
             .flatMap(processor -> processor.getPairs().stream().map(MatcherMailetPair::getMailet))
             .flatMap(this::requiredProcessorStates)
+            .filter(state -> !state.equals(new ProcessingState("propagate")) && !state.equals(new ProcessingState("ignore")))
             .filter(state -> !processors.containsKey(state.getValue()))
             .collect(ImmutableList.toImmutableList());
 
