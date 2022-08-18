@@ -55,14 +55,16 @@ public class TemporaryJamesServer {
         return MailetContainer.builder()
             .putProcessor(CommonProcessors.root())
             .putProcessor(CommonProcessors.error())
-            .putProcessor(CommonProcessors.transport());
+            .putProcessor(CommonProcessors.transport())
+            .putProcessor(CommonProcessors.bounces());
     }
 
     public static MailetContainer.Builder simpleMailetContainerConfiguration() {
         return MailetContainer.builder()
             .putProcessor(CommonProcessors.simpleRoot())
             .putProcessor(CommonProcessors.error())
-            .putProcessor(CommonProcessors.transport());
+            .putProcessor(CommonProcessors.transport())
+            .putProcessor(CommonProcessors.bounces());
     }
 
 
