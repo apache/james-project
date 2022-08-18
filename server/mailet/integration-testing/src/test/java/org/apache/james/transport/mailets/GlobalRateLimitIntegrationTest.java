@@ -223,6 +223,7 @@ public class GlobalRateLimitIntegrationTest {
                 .mimeMessage(message)
                 .sender(SENDER1)
                 .recipient(RECIPIENT1));
+        Thread.sleep(100);
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER2, PASSWORD)
             .sendMessage(FakeMail.builder()
