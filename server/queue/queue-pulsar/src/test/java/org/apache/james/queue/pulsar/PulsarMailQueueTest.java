@@ -251,6 +251,8 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
+    @Disabled("JAMES-3805 PulsarMailQueueTest::removeShouldRemoveMailFromStoreWhenFilteredOut is unstable")
+    // https://ci-builds.apache.org/job/james/job/ApacheJames/job/PR-1109/12/testReport/junit/org.apache.james.queue.pulsar/PulsarMailQueueTest/removeShouldRemoveMailFromStoreWhenFilteredOut/
     @Test
     void removeShouldRemoveMailFromStoreWhenFilteredOut() throws Exception {
         enQueue(defaultMail()
