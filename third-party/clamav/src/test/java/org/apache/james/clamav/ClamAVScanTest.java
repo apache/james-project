@@ -17,10 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets;
+package org.apache.james.clamav;
 
-import static org.apache.james.transport.mailets.ClamAVScan.INFECTED_HEADER_NAME;
-import static org.apache.james.transport.mailets.ClamAVScan.INFECTED_MAIL_ATTRIBUTE_NAME;
+import static org.apache.james.clamav.ClamAVScan.INFECTED_HEADER_NAME;
+import static org.apache.james.clamav.ClamAVScan.INFECTED_MAIL_ATTRIBUTE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;

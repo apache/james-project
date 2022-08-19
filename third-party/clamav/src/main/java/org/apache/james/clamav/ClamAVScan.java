@@ -18,7 +18,7 @@
  ****************************************************************/
 
 
-package org.apache.james.transport.mailets;
+package org.apache.james.clamav;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
