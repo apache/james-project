@@ -100,6 +100,7 @@ public class ExecutionFlowTest {
                             .build())
                         .addMailet(MailetConfiguration.LOCAL_DELIVERY))
                 .putProcessor(CommonProcessors.error())
+                .putProcessor(CommonProcessors.bounces())
                 .putProcessor(CommonProcessors.root()))
             .build(temporaryFolder);
         jamesServer.start();
