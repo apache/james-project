@@ -872,45 +872,6 @@ public class ExecutionFlowTest {
     }
 
     @Test
-    public void toProcessorShouldSendToErrorWhenNotFound(@TempDir File temporaryFolder) throws Exception {
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_AND_IMAP_MODULE)
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(ProcessorConfiguration.transport()
-                    .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIs.class)
-                        .matcherCondition(RECIPIENT)
-                        .mailet(ToProcessor.class)
-                        .addProperty("processor", "custom")
-                        .build())
-                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
-                .putProcessor(ProcessorConfiguration.error()
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(CountingExecutionMailet.class)))
-                .putProcessor(CommonProcessors.root()))
-            .build(temporaryFolder);
-        jamesServer.start();
-        jamesServer.getProbe(DataProbeImpl.class)
-            .fluent()
-            .addDomain(DEFAULT_DOMAIN)
-            .addUser(FROM, PASSWORD)
-            .addUser(RECIPIENT, PASSWORD);
-
-        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, ImmutableList.of(FROM, RECIPIENT));
-
-        Thread.sleep(100); // queue delays might cause the processing not to start straight at the end of the SMTP session
-        awaitAtMostOneMinute.untilAsserted(() -> assertThat(
-            jamesServer.getProbe(SpoolerProbe.class).processingFinished())
-            .isTrue());
-        assertThat(CountingExecutionMailet.executionCount())
-            .isEqualTo(1);
-    }
-
-    @Test
     public void splitShouldNotDisposeContent(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
