@@ -169,11 +169,16 @@ public class DockerCassandra {
                     additionalSteps.applyStep(builder
                         .from("cassandra:3.11.10")
                         .env("CASSANDRA_CONFIG", "/etc/cassandra")
-                        .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
-                        .run("echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
-                        .run("sed", "-i", "s/auto_snapshot: true/auto_snapshot: false/g", "/etc/cassandra/cassandra.yaml")
-                        .run("echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml")
-                        .run("echo 'authorizer: org.apache.cassandra.auth.CassandraAuthorizer' >> /etc/cassandra/cassandra.yaml"))
+                        .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
+                            + "&& echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
+                            + "&& echo \"-Dcassandra.skip_wait_for_gossip_to_settle=0\" >> " + JVM_OPTIONS
+                            + "&& echo \"-Dcassandra.load_ring_state=false\" >> " + JVM_OPTIONS
+                            + "&& echo \"-Dcassandra.initial_token=1 \" >> " + JVM_OPTIONS
+                            + "&& echo \"-Dcassandra.num_tokens=nil \" >> " + JVM_OPTIONS
+                            + "&& echo \"-Dcassandra.allocate_tokens_for_local_replication_factor=nil \" >> " + JVM_OPTIONS
+                            + "&& sed -i 's/auto_snapshot: true/auto_snapshot: false/g' /etc/cassandra/cassandra.yaml"
+                            + "&& echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml"
+                            + "&& echo 'authorizer: org.apache.cassandra.auth.CassandraAuthorizer' >> /etc/cassandra/cassandra.yaml"))
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
