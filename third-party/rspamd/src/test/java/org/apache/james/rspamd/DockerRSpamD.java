@@ -32,12 +32,14 @@ public class DockerRSpamD {
     private static final int DEFAULT_PORT = 11334;
 
     private final DockerRedis dockerRedis;
+    private final DockerClamAV dockerClamAV;
     private final GenericContainer<?> container;
     private final Network network;
 
     public DockerRSpamD() {
         this.network = Network.newNetwork();
         this.dockerRedis = new DockerRedis(network);
+        this.dockerClamAV = new DockerClamAV(network);
         this.container = createRspamD();
     }
 
@@ -45,7 +47,9 @@ public class DockerRSpamD {
         return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
             .withEnv("REDIS", "redis")
+            .withEnv("CLAMAV", "clamav")
             .withEnv("PASSWORD", PASSWORD)
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
             .withNetwork(network);
     }
@@ -55,6 +59,7 @@ public class DockerRSpamD {
     }
 
     public void start() {
+        dockerClamAV.start();
         dockerRedis.start();
         if (!container.isRunning()) {
             container.start();
@@ -64,6 +69,7 @@ public class DockerRSpamD {
     public void stop() {
         container.stop();
         dockerRedis.stop();
+        dockerClamAV.stop();
     }
 
     public void flushAll() {

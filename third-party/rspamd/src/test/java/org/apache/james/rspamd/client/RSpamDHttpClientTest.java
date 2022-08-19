@@ -51,17 +51,23 @@ import io.restassured.specification.RequestSpecification;
 class RSpamDHttpClientTest {
     private final static String SPAM_MESSAGE_PATH = "mail/spam/spam8.eml";
     private final static String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
+    private final static String VIRUS_MESSAGE_PATH = "mail/attachment/inlineVirusTextAttachment.eml";
+    private final static String NON_VIRUS_MESSAGE_PATH = "mail/attachment/inlineNonVirusTextAttachment.eml";
 
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
 
     private byte[] spamMessage;
     private byte[] hamMessage;
+    private byte[] virusMessage;
+    private byte[] nonVirusMessage;
 
     @BeforeEach
     void setup() {
         spamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(SPAM_MESSAGE_PATH);
         hamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(HAM_MESSAGE_PATH);
+        virusMessage = ClassLoaderUtils.getSystemResourceAsByteArray(VIRUS_MESSAGE_PATH);
+        nonVirusMessage = ClassLoaderUtils.getSystemResourceAsByteArray(NON_VIRUS_MESSAGE_PATH);
     }
 
     @Test
@@ -124,6 +130,7 @@ class RSpamDHttpClientTest {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
             softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
             softly.assertThat(analysisResult.getDesiredRewriteSubject()).isEqualTo(Optional.empty());
+            softly.assertThat(analysisResult.hasVirus()).isEqualTo(false);
         });
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rSpamDExtension.dockerRSpamD().getPort()));
@@ -154,6 +161,24 @@ class RSpamDHttpClientTest {
 
         assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void checkVirusMailUsingRSpamDClientWithExactPasswordShouldReturnHasVirus() {
+        RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RSpamDHttpClient client = new RSpamDHttpClient(configuration);
+
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(virusMessage)).block();
+        assertThat(analysisResult.hasVirus()).isTrue();
+    }
+
+    @Test
+    void checkNonVirusMailUsingRSpamDClientWithExactPasswordShouldReturnHasNoVirus() {
+        RSpamDClientConfiguration configuration = new RSpamDClientConfiguration(rSpamDExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RSpamDHttpClient client = new RSpamDHttpClient(configuration);
+
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(nonVirusMessage)).block();
+        assertThat(analysisResult.hasVirus()).isFalse();
     }
 
     private void reportAsSpam(RSpamDHttpClient client, InputStream inputStream) {

@@ -22,12 +22,11 @@ package org.apache.james.rspamd.model;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(using = AnalysisResultDeserializer.class)
 public class AnalysisResult {
 
     public static Builder builder() {
@@ -39,6 +38,7 @@ public class AnalysisResult {
         private float score;
         private float requiredScore;
         private Optional<String> desiredRewriteSubject;
+        private boolean hasVirus;
 
         public Builder() {
             desiredRewriteSubject = Optional.empty();
@@ -64,20 +64,25 @@ public class AnalysisResult {
             return this;
         }
 
+        public Builder hasVirus(boolean hasVirus) {
+            this.hasVirus = hasVirus;
+            return this;
+        }
+
         public AnalysisResult build() {
             Preconditions.checkNotNull(action);
 
-            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject);
+            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject, hasVirus);
         }
     }
 
     public enum Action {
-        @JsonProperty("no action") NO_ACTION("no action"), // message is likely ham
-        @JsonProperty("greylist") GREY_LIST("greylist"), // message should be grey listed
-        @JsonProperty("add header") ADD_HEADER("add header"), // message is suspicious and should be marked as spam
-        @JsonProperty("rewrite subject") REWRITE_SUBJECT("rewrite subject"), // message is suspicious and should have subject rewritten
-        @JsonProperty("soft reject") SOFT_REJECT("soft reject"), // message should be temporary rejected (for example, due to rate limit exhausting)
-        @JsonProperty("reject") REJECT("reject"); // message should be rejected as spam
+        NO_ACTION("no action"), // message is likely ham
+        GREY_LIST("greylist"), // message should be grey listed
+        ADD_HEADER("add header"), // message is suspicious and should be marked as spam
+        REWRITE_SUBJECT("rewrite subject"), // message is suspicious and should have subject rewritten
+        SOFT_REJECT("soft reject"), // message should be temporary rejected (for example, due to rate limit exhausting)
+        REJECT("reject"); // message should be rejected as spam
 
         private final String description;
 
@@ -94,15 +99,14 @@ public class AnalysisResult {
     private final float score;
     private final float requiredScore;
     private final Optional<String> desiredRewriteSubject;
+    private final boolean hasVirus;
 
-    public AnalysisResult(@JsonProperty("action") Action action,
-                          @JsonProperty("score") float score,
-                          @JsonProperty("required_score") float requiredScore,
-                          @JsonProperty("subject") Optional<String> desiredRewriteSubject) {
+    public AnalysisResult(Action action, float score, float requiredScore, Optional<String> desiredRewriteSubject, boolean hasVirus) {
         this.action = action;
         this.score = score;
         this.requiredScore = requiredScore;
         this.desiredRewriteSubject = desiredRewriteSubject;
+        this.hasVirus = hasVirus;
     }
 
     public Action getAction() {
@@ -121,6 +125,10 @@ public class AnalysisResult {
         return desiredRewriteSubject;
     }
 
+    public boolean hasVirus() {
+        return hasVirus;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof AnalysisResult) {
@@ -129,14 +137,15 @@ public class AnalysisResult {
             return Objects.equals(this.score, that.score)
                 && Objects.equals(this.requiredScore, that.requiredScore)
                 && Objects.equals(this.action, that.action)
-                && Objects.equals(this.desiredRewriteSubject, that.desiredRewriteSubject);
+                && Objects.equals(this.desiredRewriteSubject, that.desiredRewriteSubject)
+                && Objects.equals(this.hasVirus, that.hasVirus);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(action, score, requiredScore, desiredRewriteSubject);
+        return Objects.hash(action, score, requiredScore, desiredRewriteSubject, hasVirus);
     }
 
     @Override
@@ -146,6 +155,7 @@ public class AnalysisResult {
             .add("score", score)
             .add("requiredScore", requiredScore)
             .add("desiredRewriteSubject", desiredRewriteSubject)
+            .add("hasVirus", hasVirus)
             .toString();
     }
 }

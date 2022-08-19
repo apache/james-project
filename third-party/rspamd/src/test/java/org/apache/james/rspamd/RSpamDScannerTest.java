@@ -252,4 +252,64 @@ class RSpamDScannerTest {
 
         assertThat(mail.getMessage().getSubject()).isEqualTo(INIT_SUBJECT);
     }
+
+    @Test
+    void shouldSendMailToSpamProcessorWhenMailHasAVirusAndConfigVirusProcessor() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty("virusProcessor", "virus")
+            .build();
+
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+            ClassLoader.getSystemResourceAsStream("mail/attachment/inlineVirusTextAttachment.eml"));
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(mimeMessage)
+            .build();
+
+        mailet.init(mailetConfig);
+        mailet.service(mail);
+
+        assertThat(mail.getState()).isEqualTo("virus");
+    }
+
+    @Test
+    void shouldNotSendMailToVirusProcessorWhenMailHasNoVirus() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty("virusProcessor", "virus")
+            .build();
+
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+            ClassLoader.getSystemResourceAsStream("mail/attachment/inlineNonVirusTextAttachment.eml"));
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(mimeMessage)
+            .build();
+
+        mailet.init(mailetConfig);
+        mailet.service(mail);
+
+        assertThat(mail.getState()).isNull();
+    }
+
+    @Test
+    void shouldNotSendMailToVirusProcessorWhenMailHasAVirusByDefault() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder().build();
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+            ClassLoader.getSystemResourceAsStream("mail/attachment/inlineVirusTextAttachment.eml"));
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(mimeMessage)
+            .build();
+
+        mailet.init(mailetConfig);
+        mailet.service(mail);
+
+        assertThat(mail.getState()).isNull();
+    }
 }

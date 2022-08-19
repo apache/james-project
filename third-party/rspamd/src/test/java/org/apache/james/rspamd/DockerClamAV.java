@@ -17,33 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rspamd.client;
+package org.apache.james.rspamd;
 
-import java.net.URL;
-import java.util.Optional;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.utility.DockerImageName;
 
-public class RSpamDClientConfiguration {
-    public static final Integer DEFAULT_TIMEOUT_IN_SECONDS = 15;
+public class DockerClamAV {
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav");
+    private static final String DEFAULT_TAG = "0.105";
+    private static final int DEFAULT_PORT = 3310;
 
-    private final URL url;
-    private final String password;
-    private final Optional<Integer> timeout;
+    private final GenericContainer<?> container;
 
-    public RSpamDClientConfiguration(URL url, String password, Optional<Integer> timeout) {
-        this.url = url;
-        this.password = password;
-        this.timeout = timeout;
+    public DockerClamAV(Network network) {
+        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
+            .withExposedPorts(DEFAULT_PORT)
+            .withNetwork(network)
+            .withNetworkAliases("clamav");
     }
 
-    public URL getUrl() {
-        return url;
+    public Integer getPort() {
+        return container.getMappedPort(DEFAULT_PORT);
     }
 
-    public String getPassword() {
-        return password;
+    public void start() {
+        if (!container.isRunning()) {
+            container.start();
+        }
     }
 
-    public Optional<Integer> getTimeout() {
-        return timeout;
+    public void stop() {
+        container.stop();
     }
 }
