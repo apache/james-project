@@ -21,6 +21,8 @@ package org.apache.james.jmap.http;
 
 import static org.apache.james.util.ReactorUtils.context;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
 
@@ -36,7 +38,8 @@ public interface LoggingHelper {
     static Context jmapContext(HttpServerRequest req) {
         return context("JMAP", MDCBuilder.create()
             .addToContext(MDCBuilder.PROTOCOL, "JMAP")
-            .addToContext(MDCBuilder.IP, req.hostAddress().getHostString()));
+            .addToContext(MDCBuilder.IP, req.hostAddress().getHostString())
+            .addToContextIfPresent("real-ip", Optional.ofNullable(req.requestHeaders().getAsString("X-Real-IP"))));
     }
 
     static Context jmapAction(String action) {

@@ -21,6 +21,7 @@ package org.apache.james.webadmin.mdc;
 
 import static org.apache.james.webadmin.authentication.AuthenticationFilter.LOGIN;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -49,6 +50,7 @@ public class LoggingRequestFilter implements Filter {
             MDCStructuredLogger.forLogger(LOGGER)
                     .field(REQUEST_ID, requestId.asString())
                     .field(IP, request.ip())
+                    .field("real-ip", Optional.ofNullable(request.headers("X-Real-IP")).orElse(""))
                     .field(ENDPOINT, request.url())
                     .field(METHOD, request.requestMethod())
                     .field(LOGIN, request.attribute(LOGIN))

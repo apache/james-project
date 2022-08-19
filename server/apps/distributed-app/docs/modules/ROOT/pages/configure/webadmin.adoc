@@ -92,3 +92,9 @@ This token can then be passed as `Bearer` of the `Authorization` header :
     curl -H "Authorization: Bearer $token" -XGET http://127.0.0.1:8000/domains
 
 The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properties` configuration file.
+
+== Reverse-proxy set up
+
+WebAdmin adds the value of `X-Real-IP` header as part of the logging MDC.
+
+This allows for reverse proxies to cary other the IP address of the client down to the JMAP server for diagnostic purpose.
