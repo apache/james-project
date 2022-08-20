@@ -185,6 +185,12 @@
 
                 <pre><code>_jmap._tcp.domain.tld. 3600        IN    SRV    0 1 443 jmap.domain.tld.</code></pre>
             </subsection>
+
+            <subsection name="Reverse-proxy set up">
+                <p>James implementation adds the value of <code>X-Real-IP</code> header as part of the logging MDC.</p>
+
+                <p>This allows for reverse proxies to cary other the IP address of the client down to the JMAP server for diagnostic purpose.</p>
+            </subsection>
         </section>
 
     </body>

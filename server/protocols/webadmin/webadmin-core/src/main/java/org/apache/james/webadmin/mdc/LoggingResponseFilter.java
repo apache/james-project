@@ -26,6 +26,8 @@ import static org.apache.james.webadmin.mdc.LoggingRequestFilter.METHOD;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.QUERY_PARAMETERS;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.REQUEST_ID;
 
+import java.util.Optional;
+
 import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public class LoggingResponseFilter implements Filter {
         MDCStructuredLogger.forLogger(LOGGER)
             .field(REQUEST_ID, requestId.asString())
             .field(IP, request.ip())
+            .field("real-ip", Optional.ofNullable(request.headers("X-Real-IP")).orElse(""))
             .field(ENDPOINT, request.url())
             .field(METHOD, request.requestMethod())
             .field(LOGIN, request.attribute(LOGIN))
