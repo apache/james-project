@@ -57,7 +57,12 @@ public interface ProtocolTransport {
      * Return <code>true</code> if <code>STARTTLS</code> is supported by this {@link ProtocolTransport}
      */
     boolean isStartTLSSupported();
-    
+
+    /**
+     * Return <code>true</code> if <code>PROXY</code> is required by this {@link ProtocolTransport}
+     */
+    boolean isProxyRequired();
+
     /**
      * Write the {@link Response} to the {@link ProtocolTransport} which will forward it to the connected
      * peer

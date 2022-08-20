@@ -62,20 +62,22 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
+    protected final boolean proxyRequired;
     private final ProtocolMDCContextFactory mdcContextFactory;
     private final Deque<ChannelInboundHandlerAdapter> behaviourOverrides = new ConcurrentLinkedDeque<>();
     private final Optional<LineHandler> lineHandler;
     protected final LinkedList<ProtocolHandlerResultHandler> resultHandlers;
 
     public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol) {
-        this(mdcContextFactory, protocol, null);
+        this(mdcContextFactory, protocol, null, false);
     }
 
-    public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure) {
+    public BasicChannelInboundHandler(ProtocolMDCContextFactory mdcContextFactory, Protocol protocol, Encryption secure, boolean proxyRequired) {
         this.mdcContextFactory = mdcContextFactory;
         this.protocol = protocol;
         this.chain = protocol.getProtocolChain();
         this.secure = secure;
+        this.proxyRequired = proxyRequired;
         this.lineHandler = chain.getFirstHandler(LineHandler.class);
         this.resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
     }
@@ -197,11 +199,12 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     
     
     protected ProtocolSession createSession(ChannelHandlerContext ctx) {
-        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), secure));
+        return protocol.newSession(new NettyProtocolTransport(ctx.channel(), secure, proxyRequired));
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
         try (Closeable closeable = mdc(ctx).build()) {
             Channel channel = ctx.channel();
             ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();

@@ -33,13 +33,25 @@ import io.netty.channel.ChannelHandlerContext;
 public class IMAPMDCContext {
     public static MDCBuilder boundMDC(ChannelHandlerContext ctx) {
         MDCBuilder mdc = MDCBuilder.create()
-            .addToContext(MDCBuilder.PROTOCOL, "IMAP")
-            .addToContext(MDCBuilder.IP, retrieveIp(ctx));
+            .addToContext(MDCBuilder.PROTOCOL, "IMAP");
+        setIpAndProxyInformation(ctx, mdc);
 
         if (ProtocolMDCContextFactory.ADD_HOST_TO_MDC) {
             return mdc.addToContext(MDCBuilder.HOST, retrieveHost(ctx));
         }
         return mdc;
+    }
+
+    private static void setIpAndProxyInformation(ChannelHandlerContext ctx, MDCBuilder mdcBuilder) {
+        Optional.ofNullable(ctx.channel().attr(HAProxyMessageHandler.PROXY_INFO)
+            .get())
+            .ifPresentOrElse(proxyInformation -> {
+                    mdcBuilder.addToContext(MDCBuilder.IP, proxyInformation.getSource().toString());
+                    mdcBuilder.addToContext("proxy.source", proxyInformation.getSource().toString());
+                    mdcBuilder.addToContext("proxy.destination", proxyInformation.getDestination().toString());
+                    mdcBuilder.addToContext("proxy.ip", retrieveIp(ctx));
+                },
+                () -> mdcBuilder.addToContext(MDCBuilder.IP, retrieveIp(ctx)));
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {

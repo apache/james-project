@@ -85,6 +85,9 @@ public class AbstractProtocolTransportTest {
             public boolean isReadable() {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public boolean isProxyRequired() { throw new UnsupportedOperationException(); }
             
             @Override
             public InetSocketAddress getRemoteAddress() {

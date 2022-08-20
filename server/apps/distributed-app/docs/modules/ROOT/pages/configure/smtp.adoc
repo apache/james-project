@@ -54,6 +54,12 @@ this case, if no body is present, the value "localhost" will be used.
 | connectionLimitPerIP
 | Set the maximum simultaneous incoming connections per IP for this service.
 
+| proxyRequired
+| Enables proxy support for this service for incoming connections. HAProxy's protocol
+(https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
+with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
+using HAProxy's proxy protocol.
+
 | authRequired
 | (deprecated) use auth.announce instead.
 

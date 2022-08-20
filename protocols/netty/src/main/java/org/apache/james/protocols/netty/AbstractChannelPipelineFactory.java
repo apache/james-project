@@ -25,6 +25,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 
@@ -36,18 +37,20 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
     public static final int MAX_LINE_LENGTH = 8192;
 
     private final int timeout;
+    private final boolean proxyRequired;
     private final Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler;
     private final Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler;
     private final ChannelHandlerFactory frameHandlerFactory;
     private final EventExecutorGroup eventExecutorGroup;
 
     public AbstractChannelPipelineFactory(ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(0, 0, 0, frameHandlerFactory, eventExecutorGroup);
+        this(0, 0, 0, false, frameHandlerFactory, eventExecutorGroup);
     }
 
-    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
+    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, boolean proxyRequired,
                                           ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
         this.timeout = timeout;
+        this.proxyRequired = proxyRequired;
         this.frameHandlerFactory = frameHandlerFactory;
         this.eventExecutorGroup = eventExecutorGroup;
         this.connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(maxConnections);
@@ -62,6 +65,11 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
 
         connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
         connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
+
+        if (proxyRequired) {
+            pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+            pipeline.addLast("proxyInformationHandler", createProxyHandler());
+        }
 
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
         pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
@@ -80,5 +88,10 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
      * @return coreHandler
      */
     protected abstract ChannelInboundHandlerAdapter createHandler();
+
+    /**
+     * @return A handler that set HAProxy information on the underlying protocol objects.
+     */
+    protected abstract ChannelInboundHandlerAdapter createProxyHandler();
 
 }

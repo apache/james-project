@@ -80,6 +80,13 @@
         <dd>Set the maximum simultaneous incoming connections for this service</dd>
         <dt><strong>handler.connectionLimitPerIP</strong></dt>
         <dd>Set the maximum simultaneous incoming connections per IP for this service</dd>
+        <dt><strong>handler.proxyRequired</strong></dt>
+        <dd>
+          Enables proxy support for this service for incoming connections. HAProxy's protocol
+          (https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
+          with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
+          using HAProxy's proxy protocol.
+        </dd>
         <dt><strong>handler.handlerchain</strong></dt>
         <dd>This loads the core CommandHandlers. Only remove this if you really 
              know what you are doing</dd>

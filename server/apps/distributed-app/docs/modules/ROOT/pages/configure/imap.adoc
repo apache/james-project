@@ -107,6 +107,12 @@ will use the specified value.
 | connectionLimitPerIP
 | Set the maximum simultaneous incoming connections per IP for this service
 
+| proxyRequired
+| Enables proxy support for this service for incoming connections. HAProxy's protocol
+(https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
+with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
+using HAProxy's proxy protocol.
+
 | bossWorkerCount
 | Set the maximum count of boss threads. Boss threads are responsible for accepting incoming IMAP connections
 and initializing associated resources. Optional integer, by default, boss threads are not used and this responsibility is being dealt with

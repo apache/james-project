@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
 
@@ -223,12 +224,22 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             }
 
             @Override
+            protected ChannelInboundHandlerAdapter createProxyHandler() {
+                return new HAProxyMessageHandler();
+            }
+
+            @Override
             public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
 
                 connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
                 connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
+
+                if (proxyRequired) {
+                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+                    pipeline.addLast("proxyInformationHandler", createProxyHandler());
+                }
 
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
@@ -270,6 +281,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .heartbeatInterval(heartbeatInterval)
             .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
             .build();
+    }
+
+    @Override
+    protected ChannelInboundHandlerAdapter createProxyHandler() {
+        return new HAProxyMessageHandler();
     }
 
     @Override

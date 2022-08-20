@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
@@ -144,6 +145,16 @@ public class BaseFakeSMTPSession implements SMTPSession {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return new InetSocketAddress("localhost", 22);
+    }
+
+    @Override
+    public Optional<ProxyInformation> getProxyInformation() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public void setProxyInformation(ProxyInformation proxyInformation) {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
     @Override
