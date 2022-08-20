@@ -22,18 +22,14 @@ package org.apache.james.cli.mailbox;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.MailboxClient;
+import org.apache.james.webadmin.httpclient.feign.JamesFeignException;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
         name = "deleteAll",
         description = "Delete all mailboxes of a user")
 public class MailboxDeleteAllCommand implements Callable<Integer> {
-
-    public static final int DELETED_CODE = 204;
-    public static final int NOT_FOUND_CODE = 404;
 
     @CommandLine.ParentCommand MailboxCommand mailboxCommand;
 
@@ -43,18 +39,16 @@ public class MailboxDeleteAllCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
-            Response rs = mailboxClient.deleteAllMailboxes(userName);
-            if (rs.status() == DELETED_CODE) {
-                mailboxCommand.out.println("The user do not have mailboxes anymore.");
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == NOT_FOUND_CODE) {
-                mailboxCommand.err.println("The user name does not exist.");
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-            return WebAdminCli.CLI_FINISHED_FAILED;
+            mailboxCommand.fullyQualifiedURL("/users")
+                .deleteAllMailboxes(userName);
+            mailboxCommand.out.println("The user do not have mailboxes anymore.");
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
-            e.printStackTrace(mailboxCommand.err);
+            if (e instanceof JamesFeignException) {
+                mailboxCommand.err.println(e.getMessage());
+            } else {
+                e.printStackTrace(mailboxCommand.err);
+            }
             return WebAdminCli.CLI_FINISHED_FAILED;
         }
     }

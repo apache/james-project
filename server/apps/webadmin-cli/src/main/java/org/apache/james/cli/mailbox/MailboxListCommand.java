@@ -19,28 +19,17 @@
 
 package org.apache.james.cli.mailbox;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.MailboxClient;
-import org.apache.james.httpclient.model.MailboxName;
+import org.apache.james.webadmin.httpclient.MailboxClient;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "list",
     description = "Show all mailboxes of a user")
 public class MailboxListCommand implements Callable<Integer> {
-
-    public static int SUCCEED_CODE = 200;
-    public static int USERNAME_NOT_FOUND_CODE = 404;
 
     @CommandLine.ParentCommand MailboxCommand mailboxCommand;
 
@@ -51,17 +40,8 @@ public class MailboxListCommand implements Callable<Integer> {
     public Integer call() {
         try {
             MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
-            Response rs = mailboxClient.getMailboxList(userName);
-            if (rs.status() == SUCCEED_CODE) {
-                String bodyString = IOUtils.toString(rs.body().asInputStream(), StandardCharsets.UTF_8);
-                List<MailboxName> mailboxNameList = new ObjectMapper().readValue(bodyString, new TypeReference<>() {
-                });
-                mailboxNameList.forEach(mailboxName -> mailboxCommand.out.println(mailboxName.getMailboxName()));
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == USERNAME_NOT_FOUND_CODE) {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-            return WebAdminCli.CLI_FINISHED_FAILED;
+            mailboxClient.getMailboxList(userName).forEach(mailboxName -> mailboxCommand.out.println(mailboxName.getMailboxName()));
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(mailboxCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;

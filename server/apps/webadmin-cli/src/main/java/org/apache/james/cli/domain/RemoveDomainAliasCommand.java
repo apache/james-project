@@ -19,14 +19,11 @@
 
 package org.apache.james.cli.domain;
 
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.DomainClient;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -45,12 +42,8 @@ public class RemoveDomainAliasCommand implements Callable<Integer> {
     public Integer call() {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
-            Response rs = domainClient.deleteADomainAlias(destinationDomain, sourceDomain);
-            if (rs.status() == NO_CONTENT) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
+            domainClient.deleteADomainAlias(destinationDomain, sourceDomain);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(domainCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;

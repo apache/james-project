@@ -17,9 +17,35 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.webadmin.httpclient.feign;
 
-public interface Constants {
-    int NO_CONTENT = 204;
-    int NOT_FOUND = 404;
+import java.util.List;
+
+import org.apache.james.webadmin.httpclient.model.DomainAlias;
+
+import feign.Param;
+import feign.RequestLine;
+import feign.Response;
+
+public interface DomainFeignClient {
+    @RequestLine("GET")
+    List<String> getDomainList();
+
+    @RequestLine("PUT /{domainToBeCreated}")
+    Response createADomain(@Param("domainToBeCreated") String domainName);
+
+    @RequestLine("DELETE /{domainToBeDeleted}")
+    Response deleteADomain(@Param("domainToBeDeleted") String domainName);
+
+    @RequestLine("GET /{domainName}")
+    Response doesExist(@Param("domainName") String domainName);
+
+    @RequestLine("DELETE /{destinationDomain}/aliases/{sourceDomain}")
+    Response deleteADomainAlias(@Param("destinationDomain") String destinationDomain, @Param("sourceDomain") String sourceDomain);
+
+    @RequestLine("PUT /{destinationDomain}/aliases/{sourceDomain}")
+    Response addADomainAlias(@Param("destinationDomain") String destinationDomain, @Param("sourceDomain") String sourceDomain);
+
+    @RequestLine("GET /{domainName}/aliases")
+    List<DomainAlias> getDomainAliasList(@Param("domainName") String domainName);
 }

@@ -19,15 +19,11 @@
 
 package org.apache.james.cli.domain;
 
-import static org.apache.james.httpclient.Constants.NOT_FOUND;
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.DomainClient;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -43,15 +39,12 @@ public class DomainExistCommand implements Callable<Integer> {
     public Integer call() {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
-            Response rs = domainClient.doesExist(domainName);
-            if (rs.status() == NO_CONTENT) {
+            if (domainClient.doesExist(domainName)) {
                 domainCommand.out.println(domainName + " exists");
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == NOT_FOUND) {
+            } else {
                 domainCommand.out.println(domainName + " does not exist");
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
             }
-            return WebAdminCli.CLI_FINISHED_FAILED;
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(domainCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;

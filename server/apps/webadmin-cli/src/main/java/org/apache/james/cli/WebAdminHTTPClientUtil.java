@@ -17,19 +17,37 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.cli;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Scanner;
+
+import org.apache.james.webadmin.httpclient.WebAdminHTTPClientFactory;
 
 import feign.Feign;
 
-public class FeignClientFactory {
+public class WebAdminHTTPClientUtil {
+
+    public static class JwtToken {
+        final Optional<String> jwtTokenString;
+
+        final Optional<String> jwtFilePath;
+
+        PrintStream err;
+
+        public JwtToken(Optional<String> jwtTokenString, Optional<String> jwtFilePath, PrintStream err) {
+            this.jwtTokenString = jwtTokenString;
+            this.jwtFilePath = jwtFilePath;
+            this.err = err;
+        }
+    }
 
     private final JwtToken jwtToken;
 
-    public FeignClientFactory(JwtToken jwtToken) {
+    public WebAdminHTTPClientUtil(JwtToken jwtToken) {
         this.jwtToken = jwtToken;
     }
 
@@ -49,12 +67,11 @@ public class FeignClientFactory {
 
     private Feign.Builder jwtTokenAndJwtFileAreBothPresentHandler() {
         jwtToken.err.println("Cannot specify both --jwt-from-file and --jwt-token options.");
-        return Feign.builder();
+        return WebAdminHTTPClientFactory.feignBuilder();
     }
 
     private Feign.Builder jwtTokenIsPresentAndJwtFromFileIsNotPresentHandler(String tokenString) {
-        return Feign.builder()
-            .requestInterceptor(requestTemplate -> requestTemplate.header("Authorization", "Bearer " + tokenString));
+        return WebAdminHTTPClientFactory.feignBuilder(tokenString);
     }
 
     private Feign.Builder jwtTokenIsNotPresentAndJwtFromFileIsPresentHandler(String tokenFile) {
@@ -64,8 +81,7 @@ public class FeignClientFactory {
             while (myReader.hasNextLine()) {
                 data.append(myReader.nextLine());
             }
-            return Feign.builder()
-                .requestInterceptor(requestTemplate -> requestTemplate.header("Authorization", "Bearer " + data.toString()));
+            return WebAdminHTTPClientFactory.feignBuilder(data.toString());
         } catch (FileNotFoundException e) {
             e.printStackTrace(jwtToken.err);
             return Feign.builder();
@@ -73,7 +89,7 @@ public class FeignClientFactory {
     }
 
     private Feign.Builder jwtTokenAndJwtFromFileAreNotPresentHandler() {
-        return Feign.builder();
+        return WebAdminHTTPClientFactory.feignBuilder();
     }
 
 }

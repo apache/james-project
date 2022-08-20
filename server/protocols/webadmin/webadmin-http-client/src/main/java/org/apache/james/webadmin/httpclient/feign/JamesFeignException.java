@@ -17,17 +17,11 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient.model;
+package org.apache.james.webadmin.httpclient.feign;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+public class JamesFeignException extends RuntimeException {
 
-public class UserName {
-
-    @JsonProperty("username")
-    private String userName;
-
-    public String getUserName() {
-        return userName;
+    public JamesFeignException(String message) {
+        super(message);
     }
-
 }

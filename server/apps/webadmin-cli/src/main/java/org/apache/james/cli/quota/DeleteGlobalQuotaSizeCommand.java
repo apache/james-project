@@ -19,14 +19,10 @@
 
 package org.apache.james.cli.quota;
 
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.QuotaClient;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -39,13 +35,9 @@ public class DeleteGlobalQuotaSizeCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            QuotaClient quotaClient = parentCommand.parentCommand.quotaCommand.fullyQualifiedURL();
-            Response rs = quotaClient.deleteQuotaSize();
-            if (rs.status() == NO_CONTENT) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
+            parentCommand.parentCommand.quotaCommand.fullyQualifiedURL()
+                .deleteQuotaSize();
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
             e.printStackTrace(parentCommand.parentCommand.quotaCommand.err);
             return WebAdminCli.CLI_FINISHED_FAILED;

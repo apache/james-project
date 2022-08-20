@@ -22,7 +22,7 @@ package org.apache.james.cli.domain;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.DomainClient;
 
 import picocli.CommandLine;
 

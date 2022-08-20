@@ -19,16 +19,12 @@
 
 package org.apache.james.cli.domain;
 
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.DomainClient;
+import org.apache.james.webadmin.httpclient.feign.JamesFeignException;
 
-import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -47,15 +43,14 @@ public class AddDomainAliasCommand implements Callable<Integer> {
     public Integer call() {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
-            Response rs = domainClient.addADomainAlias(destinationDomain, sourceDomain);
-            if (rs.status() == NO_CONTENT) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                domainCommand.err.println(IOUtils.toString(rs.body().asInputStream(), StandardCharsets.UTF_8));
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
+            domainClient.addADomainAlias(destinationDomain, sourceDomain);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
-            e.printStackTrace(domainCommand.err);
+            if (e instanceof JamesFeignException) {
+                domainCommand.err.println(e.getMessage());
+            } else {
+                e.printStackTrace(domainCommand.err);
+            }
             return WebAdminCli.CLI_FINISHED_FAILED;
         }
     }

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.QuotaClient;
+import org.apache.james.webadmin.httpclient.QuotaClient;
 
 import picocli.CommandLine;
 

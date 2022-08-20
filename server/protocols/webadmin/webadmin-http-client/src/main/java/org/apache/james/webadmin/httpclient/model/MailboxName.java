@@ -17,27 +17,20 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.webadmin.httpclient.model;
 
-import feign.RequestLine;
-import feign.Response;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface QuotaClient {
-    @RequestLine("GET /quota/count")
-    Long getQuotaCount();
+public class MailboxName {
 
-    @RequestLine("GET /quota/size")
-    Long getQuotaSize();
+    @JsonProperty("mailboxName")
+    private String mailboxName;
 
-    @RequestLine("PUT /quota/count")
-    Response setQuotaCount(Long count);
+    @JsonProperty("mailboxId")
+    private String mailboxId;
 
-    @RequestLine("PUT /quota/size")
-    Response setQuotaSize(Long size);
+    public String getMailboxName() {
+        return mailboxName;
+    }
 
-    @RequestLine("DELETE /quota/count")
-    Response deleteQuotaCount();
-
-    @RequestLine("DELETE /quota/size")
-    Response deleteQuotaSize();
 }
