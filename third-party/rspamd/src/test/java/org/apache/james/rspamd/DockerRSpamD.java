@@ -19,6 +19,8 @@
 
 package org.apache.james.rspamd;
 
+import java.util.stream.Stream;
+
 import org.apache.james.rate.limiter.DockerRedis;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -59,8 +61,10 @@ public class DockerRSpamD {
     }
 
     public void start() {
-        dockerClamAV.start();
-        dockerRedis.start();
+        Stream.<Runnable>of(dockerClamAV::start, dockerRedis::start)
+            .parallel()
+            .forEach(Runnable::run);
+
         if (!container.isRunning()) {
             container.start();
         }
