@@ -32,16 +32,13 @@ public class DockerRSpamDExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        DOCKER_RSPAMD_SINGLETON.start();
+        if (!DOCKER_RSPAMD_SINGLETON.isRunning()) {
+            DOCKER_RSPAMD_SINGLETON.start();
+        }
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        DOCKER_RSPAMD_SINGLETON.stop();
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         DOCKER_RSPAMD_SINGLETON.flushAll();
     }
 

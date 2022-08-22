@@ -45,6 +45,10 @@ public class DockerRSpamD {
         this.container = createRspamD();
     }
 
+    public boolean isRunning() {
+        return container.isRunning();
+    }
+
     private GenericContainer<?> createRspamD() {
         return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
@@ -68,12 +72,6 @@ public class DockerRSpamD {
         if (!container.isRunning()) {
             container.start();
         }
-    }
-
-    public void stop() {
-        container.stop();
-        dockerRedis.stop();
-        dockerClamAV.stop();
     }
 
     public void flushAll() {
