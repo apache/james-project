@@ -41,6 +41,7 @@ import com.github.fge.lambdas.consumers.ThrowingConsumer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.Receiver;
@@ -108,14 +109,20 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
         return mailQueueView.isPresent(item.getEnqueueId())
-            .handle((isPresent, sink) -> {
+            .<RabbitMQMailQueueItem>handle((isPresent, sink) -> {
                 if (isPresent) {
                     sink.next(item);
                 } else {
                     item.done(true);
                     sink.complete();
                 }
-            });
+            })
+            .onErrorResume(e -> Mono.fromRunnable(() -> {
+                LOGGER.error("Failure to see if {} was deleted", item.enqueueId.asUUID(), e);
+                item.done(false);
+            })
+                .subscribeOn(Schedulers.elastic())
+                .then(Mono.error(e)));
     }
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
