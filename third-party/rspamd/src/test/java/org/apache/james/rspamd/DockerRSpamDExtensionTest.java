@@ -39,7 +39,7 @@ import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
 @Tag(Unstable.TAG)
-public class DockerRSpamDExtensionTest {
+class DockerRSpamDExtensionTest {
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
 

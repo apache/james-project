@@ -66,7 +66,7 @@ import org.mockito.Mockito;
 import com.github.fge.lambdas.Throwing;
 
 @Tag(Unstable.TAG)
-class FeedHamToRSpamDTaskTest {
+public class FeedHamToRSpamDTaskTest {
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
 
