@@ -31,7 +31,9 @@ public class DockerClamAV {
 
     public DockerClamAV() {
         this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
-            .withExposedPorts(DEFAULT_PORT);
+            .withExposedPorts(DEFAULT_PORT)
+            .withEnv("CLAMAV_NO_FRESHCLAMD", "true")
+            .withEnv("CLAMAV_NO_MILTERD", "true");
     }
 
     public Integer getPort() {
