@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -27,11 +28,11 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class CassandraHostSystemExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
-    private final DockerCassandraExtension cassandraExtension;
+    private final CassandraClusterExtension cassandraExtension;
     private CassandraHostSystem system;
 
     public CassandraHostSystemExtension() {
-        this.cassandraExtension = new DockerCassandraExtension();
+        this.cassandraExtension = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
     }
 
     @Override
@@ -42,6 +43,7 @@ public class CassandraHostSystemExtension implements BeforeAllCallback, AfterAll
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         system.afterTest();
+        cassandraExtension.afterEach(extensionContext);
     }
 
     @Override
@@ -52,7 +54,7 @@ public class CassandraHostSystemExtension implements BeforeAllCallback, AfterAll
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         cassandraExtension.beforeEach(extensionContext);
-        system = new CassandraHostSystem(cassandraExtension.getDockerCassandra().getHost());
+        system = new CassandraHostSystem(cassandraExtension.getCassandraCluster());
         system.beforeTest();
     }
 

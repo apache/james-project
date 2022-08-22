@@ -19,31 +19,34 @@
 
 package org.apache.james.mpt.managesieve.cassandra;
 
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.mpt.ManageSieveMPTContract;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
-import org.junit.jupiter.api.AfterEach;
+import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(DockerCassandraExtension.class)
 class CassandraManageSieveMPTTest implements ManageSieveMPTContract {
+    @RegisterExtension
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraDomainListModule.MODULE,
+        CassandraSieveRepositoryModule.MODULE,
+        CassandraUsersRepositoryModule.MODULE));
+
     private ManageSieveHostSystem system;
 
     @BeforeEach
-    void setUp(DockerCassandraExtension.DockerCassandra dockerCassandra) throws Exception {
-        system = new CassandraHostSystem(dockerCassandra.getHost());
+    void setUp() throws Exception {
+        system = new CassandraHostSystem(cassandra.getCassandraCluster());
         system.beforeTest();
     }
 
     @Override
     public ManageSieveHostSystem hostSystem() {
         return system;
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        hostSystem().afterTest();
     }
 }
