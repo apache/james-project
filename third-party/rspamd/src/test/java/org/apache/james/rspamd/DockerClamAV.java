@@ -39,17 +39,9 @@ public class DockerClamAV {
             .withNetworkAliases("clamav");
     }
 
-    public Integer getPort() {
-        return container.getMappedPort(DEFAULT_PORT);
-    }
-
     public void start() {
         if (!container.isRunning()) {
             container.start();
         }
-    }
-
-    public void stop() {
-        container.stop();
     }
 }
