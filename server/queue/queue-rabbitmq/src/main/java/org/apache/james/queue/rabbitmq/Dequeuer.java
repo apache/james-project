@@ -32,6 +32,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
+import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,14 +109,20 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
         return mailQueueView.isPresent(item.getEnqueueId())
-            .handle((isPresent, sink) -> {
+            .<RabbitMQMailQueueItem>handle((isPresent, sink) -> {
                 if (isPresent) {
                     sink.next(item);
                 } else {
                     item.done(true);
                     sink.complete();
                 }
-            });
+            })
+            .onErrorResume(e -> Mono.fromRunnable(() -> {
+                LOGGER.error("Failure to see if {} was deleted", item.enqueueId.asUUID(), e);
+                item.done(false);
+            })
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .then(Mono.error(e)));
     }
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
