@@ -34,13 +34,16 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -73,6 +76,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
     }
 
+    @PreDestroy
+    public void clean() {
+        mailQueues.clear();
+    }
+
     @Override
     public Set<MailQueueName> listCreatedMailQueues() {
         return mailQueues.values()
@@ -83,15 +91,20 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
 
     @Override
     public Optional<MemoryCacheableMailQueue> getQueue(MailQueueName name, PrefetchCount count) {
-        return Optional.ofNullable(mailQueues.get(name));
+        Optional<MemoryCacheableMailQueue> queue = Optional.ofNullable(mailQueues.get(name));
+        queue.ifPresent(MemoryCacheableMailQueue::reference);
+        return queue;
     }
 
     @Override
     public MemoryCacheableMailQueue createQueue(MailQueueName name, PrefetchCount prefetchCount) {
-        return mailQueues.computeIfAbsent(name, mailQueueName -> new MemoryCacheableMailQueue(mailQueueName, mailQueueItemDecoratorFactory));
+        MemoryCacheableMailQueue queue = mailQueues.computeIfAbsent(name, mailQueueName -> new MemoryCacheableMailQueue(mailQueueName, mailQueueItemDecoratorFactory));
+        queue.reference();
+        return queue;
     }
 
     public static class MemoryCacheableMailQueue implements ManageableMailQueue {
+        private final AtomicInteger references = new AtomicInteger(0);
         private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
         private final MailQueueName name;
@@ -111,9 +124,20 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
                 .map(item -> mailQueueItemDecoratorFactory.decorate(item, name));
         }
 
+        public void reference() {
+            references.incrementAndGet();
+        }
+
         @Override
         public void close() {
-            this.scheduler.dispose();
+            if (references.decrementAndGet() <= 0) {
+                this.scheduler.dispose();
+
+                mailItems.forEach(LifecycleUtil::dispose);
+                inProcessingMailItems.forEach(LifecycleUtil::dispose);
+                mailItems.clear();
+                inProcessingMailItems.clear();
+            }
         }
 
         @Override

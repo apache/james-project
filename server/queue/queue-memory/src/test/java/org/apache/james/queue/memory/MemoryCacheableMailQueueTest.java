@@ -27,6 +27,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,11 @@ public class MemoryCacheableMailQueueTest implements DelayedManageableMailQueueC
     @BeforeEach
     public void setUp() {
         mailQueue = new MemoryMailQueueFactory.MemoryCacheableMailQueue(MailQueueName.of("test"), new RawMailQueueItemDecoratorFactory());
+    }
+
+    @AfterEach
+    public void tearDown() {
+        mailQueue.close();
     }
 
     @Override
