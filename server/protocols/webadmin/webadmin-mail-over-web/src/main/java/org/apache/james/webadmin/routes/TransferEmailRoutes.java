@@ -20,8 +20,10 @@
 package org.apache.james.webadmin.routes;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.UUID;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -47,6 +49,15 @@ public class TransferEmailRoutes implements Routes {
     @Inject
     public TransferEmailRoutes(MailQueueFactory<?> queueFactory) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
+    }
+
+    @PreDestroy
+    void tearDown() {
+        try {
+            queue.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -93,7 +93,7 @@ public class RabbitMQMailQueuesRoutes implements Routes {
 
     private Task republishNotProcessedMails(Request request) {
         MailQueueName mailQueue = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
-        getMailQueue(mailQueue);
+        getMailQueue(mailQueue).close();
         return new RepublishNotprocessedMailsTask(mailQueue,
             name -> mailQueueFactory
                 .getQueue(name)

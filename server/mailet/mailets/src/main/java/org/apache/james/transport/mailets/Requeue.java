@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.mailet.Mail.GHOST;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -95,6 +96,14 @@ public class Requeue extends GenericMailet {
 
         Preconditions.checkArgument(delayDuration.isEmpty() || !delayDuration.get().isNegative(),
             "Duration should be non-negative");
+    }
+
+    public void destroy() {
+        try {
+            mailQueue.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
