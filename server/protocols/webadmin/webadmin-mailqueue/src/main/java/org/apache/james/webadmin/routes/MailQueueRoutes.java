@@ -136,14 +136,21 @@ public class MailQueueRoutes implements Routes {
                     .haltError());
     }
 
-    private MailQueueDTO toDTO(ManageableMailQueue queue) {
-        try {
+    private MailQueueDTO toDTO(ManageableMailQueue q) {
+        try (ManageableMailQueue queue = q) {
             return MailQueueDTO.from(queue);
         } catch (MailQueueException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for getting the mail queue %s", queue)
+                .message("Invalid request for getting the mail queue %s", q.getName().asString())
+                .cause(e)
+                .haltError();
+        } catch (IOException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorType.SERVER_ERROR)
+                .message("Cannot close queue %s", q.getName().asString())
                 .cause(e)
                 .haltError();
         }
@@ -157,14 +164,19 @@ public class MailQueueRoutes implements Routes {
 
     private List<MailQueueItemDTO> listMails(Request request) {
         MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
-        return mailQueueFactory.getQueue(mailQueueName)
-                .map(queue -> listMails(queue, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
+        Optional<? extends ManageableMailQueue> queue = mailQueueFactory.getQueue(mailQueueName);
+        try {
+            return queue
+                .map(q -> listMails(q, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
                         .message("%s can not be found", mailQueueName)
                         .statusCode(HttpStatus.NOT_FOUND_404)
                         .type(ErrorResponder.ErrorType.NOT_FOUND)
                         .haltError());
+        } finally {
+            queue.ifPresent(Throwing.consumer(Closeable::close));
+        }
     }
 
     @VisibleForTesting Optional<Boolean> isDelayed(String delayedAsString) {
