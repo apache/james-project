@@ -41,6 +41,7 @@ import javax.mail.Flags;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -57,13 +58,15 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 
 import com.github.fge.lambdas.Throwing;
 
-public class FeedHamToRSpamDTaskTest {
+@Tag(Unstable.TAG)
+class FeedHamToRSpamDTaskTest {
     @RegisterExtension
     static DockerRSpamDExtension rSpamDExtension = new DockerRSpamDExtension();
 
