@@ -134,7 +134,7 @@ public class CassandraMailQueueBrowser {
 
     Flux<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName, Instant browseStart) {
         return allSlicesStartingAt(browseStart)
-            .flatMapSequential(slice -> browseSlice(queueName, slice));
+            .flatMapSequential(slice -> browseSlice(queueName, slice), 4);
     }
 
     private Mono<Pair<EnqueuedItem, Mail>> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
