@@ -45,9 +45,8 @@ public class ClusterFactory {
 
         sessionBuilder.withLocalDatacenter(configuration.getLocalDC().orElse("datacenter1"));
 
-        try (CqlSession session = sessionBuilder.build()) {
-            KeyspaceFactory.createKeyspace(keyspaceConfiguration, session);
-        }
+        createKeyspace(keyspaceConfiguration, sessionBuilder);
+
         sessionBuilder.withKeyspace(keyspaceConfiguration.getKeyspace());
         CqlSession session = sessionBuilder.build();
 
@@ -58,6 +57,12 @@ public class ClusterFactory {
             session.close();
             throw e;
         }
+    }
+
+    private static void createKeyspace(KeyspaceConfiguration keyspaceConfiguration, CqlSessionBuilder sessionBuilder) {
+        CqlSession cqlSession = sessionBuilder.build();
+        KeyspaceFactory.createKeyspace(keyspaceConfiguration, cqlSession);
+        cqlSession.forceCloseAsync();
     }
 
     private static void ensureContactable(CqlSession session) {
