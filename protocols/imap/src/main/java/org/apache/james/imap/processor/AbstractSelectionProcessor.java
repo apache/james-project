@@ -73,6 +73,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import io.vavr.Tuple;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<R> implements PermitEnableCapabilityProcessor {
@@ -129,31 +130,17 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
         return selectMailbox(fullMailboxPath, session, responder)
             .doOnNext(metaData -> {
+                    SelectedMailbox selected = session.getSelected();
 
-                final SelectedMailbox selected = session.getSelected();
-                MessageUid firstUnseen = metaData.getFirstUnseen();
-
-                flags(responder, selected);
-                exists(responder, metaData);
-                recent(responder, selected);
-                uidValidity(responder, metaData);
-
-
-                // try to write the UNSEEN message to the client and retry if we fail because of concurrent sessions.
-                //
-                // See IMAP-345
-                int retryCount = 0;
-                while (unseen(responder, firstUnseen, selected) == false) {
-                    // if we not was able to get find the unseen within 5 retries we should just not send it
-                    if (retryCount == 5) {
-                        LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
-                        break;
-                    }
-                    firstUnseen = selectMailbox(fullMailboxPath, session, responder).block().getFirstUnseen();
-                    retryCount++;
-
-                }
-
+                    flags(responder, selected);
+                    exists(responder, metaData);
+                    recent(responder, selected);
+                    uidValidity(responder, metaData);
+                })
+            .flatMap(metadata -> firstUnseen(session, fullMailboxPath, responder, metadata.getFirstUnseen(), session.getSelected())
+            .thenReturn(metadata))
+            .doOnNext(metaData -> {
+                SelectedMailbox selected = session.getSelected();
                 permanentFlags(responder, metaData.getPermanentFlags(), selected);
                 highestModSeq(responder, metaData);
                 uidNext(responder, metaData);
@@ -195,6 +182,28 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 SearchResUtil.resetSavedSequenceSet(session);
             })
             .then();
+    }
+
+    private Mono<MessageUid> firstUnseen(ImapSession session, MailboxPath fullMailboxPath, Responder responder, MessageUid firstUnseen, SelectedMailbox selected) {
+        // try to write the UNSEEN message to the client and retry if we fail because of concurrent sessions.
+        // See IMAP-345
+
+        if (firstUnseen == null) {
+            return Mono.empty();
+        }
+
+        return Flux.<MessageUid>concat(
+            Flux.just(firstUnseen),
+            Flux.range(0, 5)
+                .concatMap(i -> selectMailbox(fullMailboxPath, session, responder)
+                    .map(MailboxMetaData::getFirstUnseen)))
+            .filter(unseenUid -> unseen(responder, firstUnseen, selected))
+            .next()
+            .switchIfEmpty(Mono.fromCallable(() -> {
+                // if we not was able to get find the unseen within 5 retries we should just not send it
+                LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
+                return firstUnseen;
+            }));
     }
 
     private Optional<UidRange[]> uidSet(AbstractMailboxSelectionRequest request, MailboxMetaData metaData) {
