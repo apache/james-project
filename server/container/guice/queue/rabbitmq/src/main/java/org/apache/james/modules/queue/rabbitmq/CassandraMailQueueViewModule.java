@@ -23,12 +23,14 @@ import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobReferenceSource;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.BrowseStartDAO;
+import org.apache.james.queue.rabbitmq.view.cassandra.BrowseStartHealthCheck;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailDelete;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailStore;
@@ -72,6 +74,9 @@ public class CassandraMailQueueViewModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
             .addBinding().to(MailQueueViewBlobReferenceSource.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding().to(BrowseStartHealthCheck.class);
     }
 
     @Provides
