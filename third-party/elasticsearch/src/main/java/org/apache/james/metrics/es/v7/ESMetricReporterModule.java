@@ -17,16 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.metrics.es.v7;
 
 import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.metrics.es.v7.ESMetricReporter;
-import org.apache.james.metrics.es.v7.ESReporterConfiguration;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,13 +30,12 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class ElasticSearchMetricReporterModule extends AbstractModule {
+public class ESMetricReporterModule extends AbstractModule {
     private static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
     private static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMetricReporterModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ESMetricReporterModule.class);
 
     public static final boolean DEFAULT_DISABLE = false;
     public static final int DEFAULT_ES_HTTP_PORT = 9200;
@@ -75,12 +70,5 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
 
     private boolean isMetricEnable(Configuration propertiesReader) {
         return propertiesReader.getBoolean("elasticsearch.metrics.reports.enabled", DEFAULT_DISABLE);
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation startReporter(ESMetricReporter instance) {
-        return InitilizationOperationBuilder
-            .forClass(ESMetricReporter.class)
-            .init(instance::start);
     }
 }
