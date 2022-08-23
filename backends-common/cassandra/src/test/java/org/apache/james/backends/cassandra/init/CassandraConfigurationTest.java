@@ -71,20 +71,6 @@ class CassandraConfigurationTest {
     }
 
     @Test
-    void messageReadChunkSizeShouldThrowOnNegativeValue() {
-        assertThatThrownBy(() -> CassandraConfiguration.builder()
-                .messageReadChunkSize(-1))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void messageReadChunkSizeShouldThrowOnZero() {
-        assertThatThrownBy(() -> CassandraConfiguration.builder()
-                .messageReadChunkSize(0))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     void flagsUpdateMessageIdMaxRetryShouldThrowOnNegativeValue() {
         assertThatThrownBy(() -> CassandraConfiguration.builder()
                 .flagsUpdateMessageIdMaxRetry(-1))
@@ -219,7 +205,6 @@ class CassandraConfigurationTest {
             .fetchNextPageInAdvanceRow(fetchNextPageInAdvanceRow)
             .flagsUpdateMessageMaxRetry(flagsUpdateMessageMaxRetry)
             .flagsUpdateMessageIdMaxRetry(flagsUpdateMessageIdMaxRetry)
-            .messageReadChunkSize(messageReadChunkSize)
             .expungeChunkSize(expungeChunkSize)
             .blobPartSize(blobPartSize)
             .attachmentV2MigrationReadTimeout(attachmentV2MigrationReadTimeout)
@@ -235,7 +220,6 @@ class CassandraConfigurationTest {
             softly.assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
             softly.assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
             softly.assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
-            softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
             softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
             softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
             softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);

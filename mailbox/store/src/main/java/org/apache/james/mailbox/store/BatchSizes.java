@@ -20,6 +20,8 @@ package org.apache.james.mailbox.store;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.store.mail.MessageMapper;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -142,6 +144,20 @@ public class BatchSizes {
 
     public int getFetchFull() {
         return fetchFull;
+    }
+
+    public int forFetchType(MessageMapper.FetchType fetchType) {
+        switch (fetchType) {
+            case METADATA:
+                return fetchMetadata;
+            case HEADERS:
+                return fetchHeaders;
+            case BODY:
+                return fetchBody;
+            case FULL:
+                return fetchFull;
+        }
+        throw new RuntimeException("Unknown fetchTpe: " + fetchType);
     }
 
     public Optional<Integer> getCopyBatchSize() {
