@@ -31,6 +31,7 @@ import java.time.Instant;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
@@ -39,12 +40,14 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class BrowseStartDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectOne;
+    private final PreparedStatement selectAll;
     private final PreparedStatement insertOne;
     private final PreparedStatement updateOne;
 
@@ -55,6 +58,10 @@ public class BrowseStartDAO {
         this.selectOne = session.prepare(selectFrom(TABLE_NAME)
             .all()
             .whereColumn(QUEUE_NAME).isEqualTo(bindMarker(QUEUE_NAME))
+            .build());
+
+        this.selectAll = session.prepare(selectFrom(TABLE_NAME)
+            .all()
             .build());
 
         this.updateOne = session.prepare(update(TABLE_NAME)
@@ -84,6 +91,11 @@ public class BrowseStartDAO {
         return executor.executeVoid(insertOne.bind()
             .setInstant(BROWSE_START, sliceStart)
             .setString(QUEUE_NAME, mailQueueName.asString()));
+    }
+
+    Flux<Pair<MailQueueName, Instant>> listAll() {
+        return executor.executeRows(selectAll.bind())
+            .map(row -> Pair.of(MailQueueName.fromString(row.getString(QUEUE_NAME)), row.getInstant(BROWSE_START)));
     }
 
     @VisibleForTesting
