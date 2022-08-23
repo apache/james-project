@@ -33,6 +33,23 @@ docker-compose up helo
 
 If you expose HAProxy's port 25 you can also send a HELO using telnet.
 
+## IMAP
+
+This docker example uses HAProxy exposes port 143 (SMTP)
+
+Then interacting with HAProxy port 143:
+
+```
+telnet 127.0.0.1 143
+```
+
+Will generate the following logs:
+
+```
+james      | 02:30:48.927 [INFO ] o.a.j.i.n.ImapChannelUpstreamHandler - Connection established from 192.168.208.3
+james      | 02:30:48.963 [INFO ] o.a.j.i.n.HAProxyMessageHandler - Connection from 192.168.208.1 runs through 192.168.208.3 proxy
+```
+
 ## Limitations
 
 * Since HAProxy's protocol does not require to know the application layer protocol,

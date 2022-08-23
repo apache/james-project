@@ -79,3 +79,8 @@ Of course alternative technologies can be used.
 ## Custom metric exporters
 
 [This example](metrics-graphite) demonstrates how to set up custom metric exporters and demonstrate how to do so with Graphite.
+
+## HAProxy set up example
+
+[This example](proxy-smtp) demonstrate how to set up the proxy protocol to preserve client origin IP address despite the use
+of a proxy.

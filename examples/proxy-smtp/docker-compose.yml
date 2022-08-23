@@ -5,15 +5,20 @@ services:
     image: haproxytech/haproxy-alpine:2.4
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - 25:25
+      - 143:143
     depends_on:
       - james
 
   james:
-    image: apache/james:jpa-smtp-latest
+    image: apache/james:memory-latest
     container_name: james
     hostname: james.local
     volumes:
       - ./smtpserver.xml:/root/conf/smtpserver.xml:ro
+      - ./imapserver.xml:/root/conf/imapserver.xml:ro
+      - ./keystore:/root/conf/keystore
 
   helo:
     image: alpine:latest
