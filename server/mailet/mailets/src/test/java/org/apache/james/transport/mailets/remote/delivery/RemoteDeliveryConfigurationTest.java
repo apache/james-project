@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
@@ -231,7 +232,7 @@ class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getBounceProcessor())
-            .isNull();
+            .isEmpty();
     }
 
     @Test
@@ -242,7 +243,7 @@ class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getBounceProcessor())
-            .isEqualTo(value);
+            .contains(new ProcessingState(value));
     }
 
     @Test

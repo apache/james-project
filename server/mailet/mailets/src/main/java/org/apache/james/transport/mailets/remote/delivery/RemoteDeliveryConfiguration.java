@@ -29,6 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.mailet.MailetConfig;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,12 +85,12 @@ public class RemoteDeliveryConfiguration {
     private final HeloNameProvider heloNameProvider;
     private final MailQueueName outGoingQueueName;
     private final String bindAddress;
-    private final String bounceProcessor;
+    private final Optional<ProcessingState> bounceProcessor;
     private final Collection<String> gatewayServer;
     private final String authUser;
     private final String authPass;
     private final Properties javaxAdditionalProperties;
-    private final Optional<String> onSuccess;
+    private final Optional<ProcessingState> onSuccess;
 
     public RemoteDeliveryConfiguration(MailetConfig mailetConfig, DomainList domainList) {
         isDebug = MailetUtil.getInitParameter(mailetConfig, DEBUG).orElse(false);
@@ -100,7 +101,8 @@ public class RemoteDeliveryConfiguration {
         outGoingQueueName = Optional.ofNullable(mailetConfig.getInitParameter(OUTGOING))
             .map(MailQueueName::of)
             .orElse(DEFAULT_OUTGOING_QUEUE_NAME);
-        bounceProcessor = mailetConfig.getInitParameter(BOUNCE_PROCESSOR);
+        bounceProcessor = Optional.ofNullable(mailetConfig.getInitParameter(BOUNCE_PROCESSOR))
+            .map(ProcessingState::new);
         bindAddress = mailetConfig.getInitParameter(BIND);
 
         DelaysAndMaxRetry delaysAndMaxRetry = computeDelaysAndMaxRetry(mailetConfig);
@@ -123,7 +125,8 @@ public class RemoteDeliveryConfiguration {
         }
         isBindUsed = bindAddress != null;
         javaxAdditionalProperties = computeJavaxProperties(mailetConfig);
-        onSuccess = Optional.ofNullable(mailetConfig.getInitParameter(ON_SUCCESS));
+        onSuccess = Optional.ofNullable(mailetConfig.getInitParameter(ON_SUCCESS))
+            .map(ProcessingState::new);
     }
 
     private Properties computeJavaxProperties(MailetConfig mailetConfig) {
@@ -286,7 +289,7 @@ public class RemoteDeliveryConfiguration {
         return isBindUsed;
     }
 
-    public String getBounceProcessor() {
+    public Optional<ProcessingState> getBounceProcessor() {
         return bounceProcessor;
     }
 
@@ -322,7 +325,7 @@ public class RemoteDeliveryConfiguration {
         return bindAddress;
     }
 
-    public Optional<String> getOnSuccess() {
+    public Optional<ProcessingState> getOnSuccess() {
         return onSuccess;
     }
 }

@@ -148,7 +148,7 @@ public class MailDelivrer {
                             copy.setRecipients(deliveredAddresses.stream()
                                 .map(Throwing.function(MailAddress::new))
                                 .collect(ImmutableList.toImmutableList()));
-                            mailetContext.sendMail(copy, onSuccess);
+                            mailetContext.sendMail(copy, onSuccess.getValue());
                         } finally {
                             LifecycleUtil.dispose(copy);
                         }

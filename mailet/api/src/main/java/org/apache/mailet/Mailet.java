@@ -20,7 +20,11 @@
 
 package org.apache.mailet;
 
+import java.util.Collection;
+
 import javax.mail.MessagingException;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * A Mailet processes mail messages.
@@ -127,5 +131,14 @@ public interface Mailet {
      * @return the Mailet information (as a plain text string)
      */
     String getMailetInfo();
+
+    /**
+     * @return the list of processors that needs to be present according to this mailet configuration.
+     *
+     * Needs to be called after {@link Mailet::init()}
+     */
+    default Collection<ProcessingState> requiredProcessingState() {
+        return ImmutableList.of();
+    }
 
 }

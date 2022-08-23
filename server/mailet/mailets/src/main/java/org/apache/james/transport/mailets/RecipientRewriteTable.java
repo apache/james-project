@@ -19,15 +19,19 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Collection;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.Mail;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Mailet which should get used when using RecipientRewriteTable-Store to
@@ -51,13 +55,8 @@ public class RecipientRewriteTable extends GenericMailet {
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private RecipientRewriteTableProcessor processor;
+    private ProcessingState errorProcessor;
 
-    /**
-     * Sets the virtual table store.
-     * 
-     * @param vut
-     *            the vutStore to set, possibly null
-     */
     @Inject
     public RecipientRewriteTable(org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore, DomainList domainList) {
         this.virtualTableStore = virtualTableStore;
@@ -66,7 +65,7 @@ public class RecipientRewriteTable extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        String errorProcessor = getInitParameter(ERROR_PROCESSOR, Mail.ERROR);
+        errorProcessor = new ProcessingState(getInitParameter(ERROR_PROCESSOR, Mail.ERROR));
         processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor);
     }
 
@@ -95,4 +94,8 @@ public class RecipientRewriteTable extends GenericMailet {
         return "RecipientRewriteTable Mailet";
     }
 
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return ImmutableList.of(errorProcessor);
+    }
 }

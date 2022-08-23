@@ -57,17 +57,17 @@ public class Bouncer {
         if (!mail.hasSender()) {
             LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
-            if (configuration.getBounceProcessor() != null) {
-                computeErrorCode(ex).ifPresent(mail::setAttribute);
-                mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
-                try {
-                    mailetContext.sendMail(mail, configuration.getBounceProcessor());
-                } catch (MessagingException e) {
-                    LOGGER.warn("Exception re-inserting failed mail: ", e);
-                }
-            } else {
-                bounceWithMailetContext(mail, ex);
-            }
+            configuration.getBounceProcessor().ifPresentOrElse(
+                bounceProcessor -> {
+                    computeErrorCode(ex).ifPresent(mail::setAttribute);
+                    mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
+                    try {
+                        mailetContext.sendMail(mail, bounceProcessor.getValue());
+                    } catch (MessagingException e) {
+                        LOGGER.warn("Exception re-inserting failed mail: ", e);
+                    }
+                },
+                () -> bounceWithMailetContext(mail, ex));
         }
     }
 

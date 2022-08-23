@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -36,11 +37,17 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
+import org.apache.james.mailetcontainer.impl.MailetProcessorImpl;
+import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorImpl;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateCompositeProcessorListener;
 import org.apache.mailet.Mail;
+import org.apache.mailet.Mailet;
+import org.apache.mailet.ProcessingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Abstract base class for {@link CompositeProcessorImpl} which service the
@@ -126,6 +133,28 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         if (!processors.containsKey(Mail.DEFAULT)) {
             throw new ConfigurationException("You need to configure a Processor with name " + Mail.DEFAULT);
         }
+        ImmutableList<ProcessingState> missingProcessors = processors.values()
+            .stream()
+            .filter(MailetProcessorImpl.class::isInstance)
+            .map(MailetProcessorImpl.class::cast)
+            .flatMap(processor -> processor.getPairs().stream().map(MatcherMailetPair::getMailet))
+            .flatMap(this::requiredProcessorStates)
+            .filter(state -> !state.equals(new ProcessingState("propagate")) && !state.equals(new ProcessingState("ignore")))
+            .filter(state -> !processors.containsKey(state.getValue()))
+            .collect(ImmutableList.toImmutableList());
+
+        if (!missingProcessors.isEmpty()) {
+            throw new ConfigurationException("Your configurations specifies the following undefined processors: " + missingProcessors);
+        }
+    }
+
+    private Stream<ProcessingState> requiredProcessorStates(Mailet mailet) {
+        return Stream.concat(mailet.requiredProcessingState().stream(),
+            Stream.of(
+                    Optional.ofNullable(mailet.getMailetConfig().getInitParameter("onMailetException")),
+                    Optional.ofNullable(mailet.getMailetConfig().getInitParameter("onMatcherException")))
+                .flatMap(Optional::stream)
+                .map(ProcessingState::new));
     }
 
     @PostConstruct
