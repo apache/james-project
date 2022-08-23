@@ -88,14 +88,14 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS}'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT}'
             }
         }
 
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT}'
             }
             post {
                 always {
@@ -113,7 +113,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT}'
                 }
             }
             post {
@@ -132,7 +132,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 echo 'Deploying'
-                sh 'mvn -B -e deploy -Pdeploy -DskipTests -T1C'
+                sh 'mvn -B -e deploy -Pdeploy -DskipTests -T1C ${MVN_LOCAL_REPO_OPT}'
             }
         }
    }
