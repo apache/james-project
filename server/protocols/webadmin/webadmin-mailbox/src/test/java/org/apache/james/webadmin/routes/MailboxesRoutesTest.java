@@ -33,6 +33,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -44,6 +45,7 @@ import javax.mail.Flags;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
@@ -96,7 +98,9 @@ import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -113,25 +117,34 @@ import reactor.core.publisher.Mono;
 class MailboxesRoutesTest {
     static final Username USERNAME = Username.of("benwa@apache.org");
     static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
-    static final int BATCH_SIZE = 1;
     static final int SEARCH_SIZE = 1;
 
     @RegisterExtension
-    DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
+        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
 
+    static ReactorOpenSearchClient client;
     WebAdminServer webAdminServer;
     ListeningMessageSearchIndex searchIndex;
     InMemoryMailboxManager mailboxManager;
     MessageIdManager messageIdManager;
     MemoryTaskManager taskManager;
-    ReactorOpenSearchClient client;
+
+    @BeforeAll
+    static void setUpAll() {
+        client = openSearch.getDockerOpenSearch().clientProvider().get();
+        MailboxIndexCreationUtil.prepareDefaultClient(
+            client,
+            openSearch.getDockerOpenSearch().configuration());
+    }
+
+    @AfterAll
+    static void tearDownAll() throws IOException {
+        client.close();
+    }
 
     @BeforeEach
-    void beforeEach() throws Exception {
-        client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.getDockerOpenSearch().clientProvider().get(),
-            elasticSearch.getDockerOpenSearch().configuration());
-
+    void beforeEach() {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 

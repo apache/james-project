@@ -133,7 +133,7 @@ public interface DockerOpenSearch {
 
         static DockerContainer defaultContainer(String imageName) {
             return DockerContainer.fromName(imageName)
-                .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
+                .withTmpFs(ImmutableMap.of("/usr/share/opensearch/data/nodes/0", "rw,size=200m"))
                 .withExposedPorts(ES_HTTP_PORT)
                 .withEnv("discovery.type", "single-node")
                 .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
@@ -228,6 +228,7 @@ public interface DockerOpenSearch {
                         .withFileFromClasspath("conf/default.key", "auth-es/default.key")
                         .withFileFromClasspath("Dockerfile", "auth-es/NginxDockerfile")))
                 .withExposedPorts(ES_HTTP_PORT)
+                .withTmpFs(ImmutableMap.of("/usr/share/opensearch/data/nodes/0", "rw,size=200m"))
                 .withLogConsumer(frame -> LOGGER.debug("[NGINX] " + frame.getUtf8String()))
                 .withNetwork(network)
                 .withName("james-testing-nginx-" + UUID.randomUUID());
@@ -342,7 +343,9 @@ public interface DockerOpenSearch {
     default OpenSearchConfiguration.Builder configurationBuilder(Optional<Duration> requestTimeout) {
         return OpenSearchConfiguration.builder()
             .addHost(getHttpHost())
-            .requestTimeout(requestTimeout);
+            .requestTimeout(requestTimeout)
+            .nbReplica(0)
+            .nbShards(1);
     }
 
     default OpenSearchConfiguration configuration() {

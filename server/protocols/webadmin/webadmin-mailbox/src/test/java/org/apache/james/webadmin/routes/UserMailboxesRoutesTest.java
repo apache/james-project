@@ -58,6 +58,7 @@ import javax.mail.Flags;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxManager;
@@ -1448,7 +1449,8 @@ class UserMailboxesRoutesTest {
         static final int SEARCH_SIZE = 1;
 
         @RegisterExtension
-        DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
+        DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
+            new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
 
         private InMemoryMailboxManager mailboxManager;
         private ListeningMessageSearchIndex searchIndex;
@@ -1457,8 +1459,8 @@ class UserMailboxesRoutesTest {
         @BeforeEach
         void setUp() throws Exception {
             ReactorOpenSearchClient client = MailboxIndexCreationUtil.prepareDefaultClient(
-                elasticSearch.getDockerOpenSearch().clientProvider().get(),
-                elasticSearch.getDockerOpenSearch().configuration());
+                openSearch.getDockerOpenSearch().clientProvider().get(),
+                openSearch.getDockerOpenSearch().configuration());
 
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
             MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();

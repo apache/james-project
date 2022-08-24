@@ -19,20 +19,71 @@
 
 package org.apache.james.backends.opensearch;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.opensearch.index.query.QueryBuilders;
+
+import reactor.core.publisher.Mono;
 
 public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
+    @FunctionalInterface
+    interface CleanupStrategy {
+        CleanupStrategy NONE = any -> {};
+
+        void clean(DockerOpenSearch elasticSearch);
+    }
+
+    public static class DefaultCleanupStrategy implements CleanupStrategy {
+        @Override
+        public void clean(DockerOpenSearch elasticSearch) {
+            elasticSearch.cleanUpData();
+        }
+    }
+
+    public static class DeleteAllIndexDocumentsCleanupStrategy implements CleanupStrategy {
+        private final WriteAliasName aliasName;
+
+        public DeleteAllIndexDocumentsCleanupStrategy(WriteAliasName aliasName) {
+            this.aliasName = aliasName;
+        }
+
+        @Override
+        public void clean(DockerOpenSearch elasticSearch) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            elasticSearch.flushIndices();
+            new DeleteByQueryPerformer(elasticSearch.clientProvider().get(), aliasName)
+                .perform(QueryBuilders.matchAllQuery())
+                .delayElement(Duration.ofMillis(50))
+                .block();
+            elasticSearch.flushIndices();
+        }
+    }
+
     private final DockerOpenSearch elasticSearch = DockerOpenSearchSingleton.INSTANCE;
+    private final CleanupStrategy cleanupStrategy;
+
+    public DockerOpenSearchExtension() {
+        this.cleanupStrategy = new DefaultCleanupStrategy();
+    }
+
+    public DockerOpenSearchExtension(CleanupStrategy cleanupStrategy) {
+        this.cleanupStrategy = cleanupStrategy;
+    }
 
     @Override
     public void afterEach(ExtensionContext context) {
-        elasticSearch.cleanUpData();
+        cleanupStrategy.clean(elasticSearch);
     }
 
     @Override
