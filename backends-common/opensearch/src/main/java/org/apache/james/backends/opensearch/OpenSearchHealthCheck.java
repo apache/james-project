@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.opensearch;
 
-import java.io.IOException;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -62,8 +61,7 @@ public class OpenSearchHealthCheck implements HealthCheck {
 
         return client.health(request)
             .map(this::toHealthCheckResult)
-            .onErrorResume(IOException.class, e -> Mono.just(
-                Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
     }
 
     @VisibleForTesting

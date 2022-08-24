@@ -52,6 +52,7 @@ public class EmptyErrorMailRepositoryHealthCheck implements HealthCheck {
             .filter(FunctionalUtils.identityPredicate())
             .map(hasSize -> Result.degraded(COMPONENT_NAME, "MailRepository is not empty"))
             .switchIfEmpty(Mono.just(Result.healthy(COMPONENT_NAME)))
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Could not check mail repositories size", e)))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 }
