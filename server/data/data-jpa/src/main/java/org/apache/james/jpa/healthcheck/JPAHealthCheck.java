@@ -57,6 +57,7 @@ public class JPAHealthCheck implements HealthCheck {
                 }
             })
             .onErrorResume(IllegalStateException.class,
-                e -> Mono.just(unhealthy(componentName(), "EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy", e)));
+                e -> Mono.just(unhealthy(componentName(), "EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy", e)))
+            .onErrorResume(e -> Mono.just(unhealthy(componentName(), "Unexpected exception upon checking JPA driver", e)));
     }
 }
