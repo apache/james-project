@@ -169,7 +169,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldBeNoSizeChangeOnOtherEvent() {
+    void testShouldBeNoSizeChangeOnOtherEvent() throws Exception {
             MailboxEvent event = new MailboxAdded(MAILBOX_SESSION.getSessionId(),
             MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
       
@@ -179,14 +179,14 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldBeNoSizeChangeOnAdded() {
+    void testShouldBeNoSizeChangeOnAdded() throws Exception {
         testee.event(ADDED);
 
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
-    void testShouldNoSizeChangeAfterReset() {
+    void testShouldNoSizeChangeAfterReset() throws Exception {
         testee.event(ADDED);
         testee.resetEvents();
 
@@ -194,7 +194,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldNotSetUidWhenNoSystemFlagChange() {
+    void testShouldNotSetUidWhenNoSystemFlagChange() throws Exception {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
@@ -208,7 +208,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldSetUidWhenSystemFlagChange() {
+    void testShouldSetUidWhenSystemFlagChange() throws Exception {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
@@ -223,7 +223,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldClearFlagUidsUponReset() {
+    void testShouldClearFlagUidsUponReset() throws Exception {
         SelectedMailboxImpl analyser = this.testee;
 
         FlagsUpdated update = EventFactory.flagsUpdated()
@@ -241,7 +241,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
+    void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() throws Exception {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
@@ -258,7 +258,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
+    void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() throws Exception {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
@@ -275,7 +275,7 @@ class MailboxEventAnalyserTest {
     }
 
     @Test
-    void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
+    void testShouldNotSetUidWhenOnlyRecentFlagUpdated() throws Exception {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)

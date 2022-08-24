@@ -83,7 +83,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private final StatusResponseFactory statusResponseFactory;
     private final boolean openReadOnly;
     private final EventBus eventBus;
-    
+
     public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
                                       MetricFactory metricFactory, EventBus eventBus) {
         super(acceptableClass, mailboxManager, statusResponseFactory, metricFactory);
@@ -195,8 +195,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         return Flux.<MessageUid>concat(
             Flux.just(firstUnseen),
             Flux.range(0, 5)
-                .concatMap(i -> selectMailbox(fullMailboxPath, session, responder)
-                    .map(MailboxMetaData::getFirstUnseen)))
+                .concatMap(i -> retrieveFirstUnseen(session, fullMailboxPath, responder)))
             .filter(unseenUid -> unseen(responder, firstUnseen, selected))
             .next()
             .switchIfEmpty(Mono.fromCallable(() -> {
@@ -204,6 +203,11 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getMailboxId().serialize());
                 return firstUnseen;
             }));
+    }
+
+    private Mono<MessageUid> retrieveFirstUnseen(ImapSession session, MailboxPath fullMailboxPath, Responder responder) {
+        return selectMailbox(fullMailboxPath, session, responder)
+            .map(MailboxMetaData::getFirstUnseen);
     }
 
     private Optional<UidRange[]> uidSet(AbstractMailboxSelectionRequest request, MailboxMetaData metaData) {
