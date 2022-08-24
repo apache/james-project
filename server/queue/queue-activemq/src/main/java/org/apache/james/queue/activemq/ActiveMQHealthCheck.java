@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class ActiveMQHealthCheck implements HealthCheck {
     public static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQHealthCheck.class);
@@ -60,7 +61,7 @@ public class ActiveMQHealthCheck implements HealthCheck {
                 LOGGER.warn("{} is unhealthy. {}", COMPONENT_NAME.getName(), e.getMessage());
                 return Result.unhealthy(COMPONENT_NAME, e.getMessage());
             }
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 }
 
