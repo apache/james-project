@@ -83,6 +83,8 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -101,7 +103,6 @@ import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
 import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
-import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -344,17 +345,18 @@ public class CassandraMessageDAOV3 {
         BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
         int bodyStartOctet = row.getInt(BODY_START_OCTET);
 
-        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet).map(content ->
-            new MessageRepresentation(
-                cassandraMessageId,
-                Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)),
-                row.getLong(FULL_CONTENT_OCTETS_LOWERCASE),
-                row.getInt(BODY_START_OCTET_LOWERCASE),
-                new ByteContent(content),
-                getProperties(row),
-                getAttachments(row).collect(ImmutableList.toImmutableList()),
-                headerId,
-                bodyId));
+        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet)
+            .map(content ->
+                new MessageRepresentation(
+                    cassandraMessageId,
+                    Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)),
+                    row.getLong(FULL_CONTENT_OCTETS_LOWERCASE),
+                    row.getInt(BODY_START_OCTET_LOWERCASE),
+                    content,
+                    getProperties(row),
+                    getAttachments(row).collect(ImmutableList.toImmutableList()),
+                    headerId,
+                    bodyId));
     }
 
     private Properties getProperties(Row row) {
@@ -398,22 +400,23 @@ public class CassandraMessageDAOV3 {
             .setUuid(MESSAGE_ID, messageId.get()));
     }
 
-    private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
+    private Mono<Content> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
         switch (fetchType) {
             case FULL:
                 return getFullContent(headerId, bodyId);
             case HEADERS:
-                return getContent(headerId, SIZE_BASED);
+                return getContent(headerId, SIZE_BASED)
+                    .map(ByteContent::new);
             case METADATA:
-                return Mono.just(EMPTY_BYTE_ARRAY);
+                return Mono.just(new ByteContent(EMPTY_BYTE_ARRAY));
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     }
 
-    private Mono<byte[]> getFullContent(BlobId headerId, BlobId bodyId) {
+    private Mono<Content> getFullContent(BlobId headerId, BlobId bodyId) {
         return getContent(headerId, SIZE_BASED)
-            .zipWith(getContent(bodyId, LOW_COST), Bytes::concat);
+            .zipWith(getContent(bodyId, LOW_COST), HeaderAndBodyByteContent::new);
     }
 
     private Mono<byte[]> getContent(BlobId blobId, BlobStore.StoragePolicy storagePolicy) {
