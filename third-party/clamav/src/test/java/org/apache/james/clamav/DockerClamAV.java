@@ -19,6 +19,8 @@
 
 package org.apache.james.clamav;
 
+import java.time.Duration;
+
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -33,7 +35,8 @@ public class DockerClamAV {
         this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
             .withEnv("CLAMAV_NO_FRESHCLAMD", "true")
-            .withEnv("CLAMAV_NO_MILTERD", "true");
+            .withEnv("CLAMAV_NO_MILTERD", "true")
+            .withStartupTimeout(Duration.ofMinutes(2));
     }
 
     public Integer getPort() {
