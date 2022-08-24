@@ -19,10 +19,12 @@
 
 package org.apache.james.backends.cassandra;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.util.Host;
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
@@ -49,11 +51,16 @@ public class CassandraWaitStrategy implements WaitStrategy {
     public void waitUntilReady(WaitStrategyTarget waitStrategyTarget) {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
                 try {
-                    return cassandraContainer
-                        .execInContainer("cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "show host")
-                        .getStdout()
-                        .contains("Connected to Test Cluster");
-                } catch (IOException | InterruptedException e) {
+                    ClusterFactory.createWithoutKeyspace(ClusterConfiguration.builder()
+                        .host(Host.from(cassandraContainer.getContainerIpAddress(), cassandraContainer.getMappedPort(9042)))
+                        .username("cassandra")
+                        .password("cassandra")
+                        .maxRetry(1)
+                        .build())
+                        .forceCloseAsync();
+
+                    return true;
+                } catch (Exception e) {
                     return false;
                 }
             }

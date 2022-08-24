@@ -59,9 +59,35 @@ public class ClusterFactory {
         }
     }
 
+    public static CqlSession createWithoutKeyspace(ClusterConfiguration configuration) {
+        Preconditions.checkState(configuration.getUsername().isPresent() == configuration.getPassword().isPresent(), "If you specify username, you must specify password");
+
+        CqlSessionBuilder sessionBuilder = CqlSession.builder();
+
+        configuration.getHosts().forEach(server -> sessionBuilder
+            .addContactPoint(InetSocketAddress.createUnresolved(server.getHostName(), server.getPort())));
+
+
+        configuration.getUsername().ifPresent(username ->
+            configuration.getPassword().ifPresent(password ->
+                sessionBuilder.withAuthCredentials(username, password)));
+
+        sessionBuilder.withLocalDatacenter(configuration.getLocalDC().orElse("datacenter1"));
+
+        CqlSession session = sessionBuilder.build();
+
+        try {
+            ensureContactable(session);
+            return session;
+        } catch (Exception e) {
+            session.close();
+            throw e;
+        }
+    }
+
     private static void createKeyspace(KeyspaceConfiguration keyspaceConfiguration, CqlSessionBuilder sessionBuilder) {
         CqlSession cqlSession = sessionBuilder.build();
-        KeyspaceFactory.createKeyspace(keyspaceConfiguration, cqlSession);
+        KeyspaceFactory.createKeyspace(keyspaceConfiguration, cqlSession).block();
         cqlSession.forceCloseAsync();
     }
 
