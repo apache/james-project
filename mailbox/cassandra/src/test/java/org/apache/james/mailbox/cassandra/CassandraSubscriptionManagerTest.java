@@ -47,6 +47,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -116,6 +117,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 aclMapper,
                 userMailboxRightsDAO,
                 recomputeMailboxCountersService,
-                CassandraConfiguration.DEFAULT_CONFIGURATION));
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                BatchSizes.defaultValues()));
     }
 }

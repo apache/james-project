@@ -49,6 +49,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -104,7 +105,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 ACLMapper aclMapper,
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 RecomputeMailboxCountersService recomputeMailboxCountersService,
-                                                CassandraConfiguration cassandraConfiguration) {
+                                                CassandraConfiguration cassandraConfiguration,
+                                                BatchSizes batchSizes) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.threadDAO = threadDAO;
@@ -148,10 +150,10 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             firstUnseenDAO,
             deletedMessageDAO,
             blobStore,
-            cassandraConfiguration, recomputeMailboxCountersService);
+            cassandraConfiguration, batchSizes, recomputeMailboxCountersService);
         this.cassandraMessageIdMapper = new CassandraMessageIdMapper(cassandraMailboxMapper, mailboxDAO,
             cassandraAttachmentMapper, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, indexTableHandler,
-            modSeqProvider, blobStore, cassandraConfiguration);
+            modSeqProvider, blobStore, cassandraConfiguration, batchSizes);
         this.cassandraAnnotationMapper = new CassandraAnnotationMapper(session);
     }
 

@@ -55,7 +55,6 @@ class CassandraConfigurationReadingTest {
                 .flagsUpdateMessageMaxRetry(4)
                 .flagsUpdateMessageIdMaxRetry(5)
                 .fetchNextPageInAdvanceRow(6)
-                .messageReadChunkSize(7)
                 .expungeChunkSize(8)
                 .blobPartSize(9)
                 .attachmentV2MigrationReadTimeout(10)

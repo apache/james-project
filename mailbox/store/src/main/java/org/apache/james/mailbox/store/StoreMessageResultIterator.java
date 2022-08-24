@@ -117,21 +117,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             range = MessageRange.range(cursor, to);
             break;
         }
-        next = mapper.findInMailbox(mailbox, range, ftype, batchSizeFromFetchType(ftype));
-    }
-
-    private int batchSizeFromFetchType(FetchType fetchType) {
-        switch (fetchType) {
-        case METADATA:
-            return batchSizes.getFetchMetadata();
-        case HEADERS:
-            return batchSizes.getFetchHeaders();
-        case BODY:
-            return batchSizes.getFetchBody();
-        case FULL:
-            return batchSizes.getFetchFull();
-        }
-        throw new RuntimeException("Unknown fetchTpe: " + fetchType);
+        next = mapper.findInMailbox(mailbox, range, ftype, batchSizes.forFetchType(ftype));
     }
 
     @Override

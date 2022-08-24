@@ -23,6 +23,10 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
+import org.apache.james.mailbox.store.BatchSizes;
+
+import com.google.inject.Guice;
+import com.google.inject.util.Modules;
 
 public class TestCassandraMailboxSessionMapperFactory {
 
@@ -35,6 +39,16 @@ public class TestCassandraMailboxSessionMapperFactory {
                                                                 CassandraMessageId.Factory factory, CassandraConfiguration cassandraConfiguration) {
 
         return GuiceUtils.testInjector(cassandra.getConf(), cassandra.getTypesProvider(), factory, cassandraConfiguration)
+            .getInstance(CassandraMailboxSessionMapperFactory.class);
+    }
+
+    public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
+                                                                CassandraMessageId.Factory factory,
+                                                                CassandraConfiguration cassandraConfiguration,
+                                                                BatchSizes batchSizes) {
+
+        return Guice.createInjector(Modules.override(GuiceUtils.commonModules(cassandra.getConf(), cassandra.getTypesProvider(), factory, cassandraConfiguration))
+                .with(binder -> binder.bind(BatchSizes.class).toInstance(batchSizes)))
             .getInstance(CassandraMailboxSessionMapperFactory.class);
     }
 

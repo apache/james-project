@@ -43,6 +43,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -74,11 +75,12 @@ public class GuiceUtils {
             commonModules(session, typesProvider, messageIdFactory, configuration));
     }
 
-    private static Module commonModules(CqlSession session, CassandraTypesProvider typesProvider,
+    public static Module commonModules(CqlSession session, CassandraTypesProvider typesProvider,
                                         CassandraMessageId.Factory messageIdFactory,
                                         CassandraConfiguration configuration) {
         return Modules.combine(
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
+            binder -> binder.bind(BatchSizes.class).toInstance(BatchSizes.defaultValues()),
             binder -> binder.bind(UidProvider.class).to(CassandraUidProvider.class),
             binder -> binder.bind(ModSeqProvider.class).to(CassandraModSeqProvider.class),
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),

@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -88,11 +89,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final AttachmentLoader attachmentLoader;
     private final BlobStore blobStore;
     private final CassandraConfiguration cassandraConfiguration;
+    private final BatchSizes batchSizes;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                     CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
-                                    ModSeqProvider modSeqProvider, BlobStore blobStore, CassandraConfiguration cassandraConfiguration) {
+                                    ModSeqProvider modSeqProvider, BlobStore blobStore, CassandraConfiguration cassandraConfiguration, BatchSizes batchSizes) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -105,6 +107,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.blobStore = blobStore;
         this.cassandraConfiguration = cassandraConfiguration;
+        this.batchSizes = batchSizes;
     }
 
     @Override
@@ -118,8 +121,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromIterable(messageIds)
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty(), chooseReadConsistency()),
-                cassandraConfiguration.getMessageReadChunkSize())
-            .flatMap(metadata -> toMailboxMessage(metadata, fetchType), cassandraConfiguration.getMessageReadChunkSize())
+                batchSizes.forFetchType(fetchType))
+            .flatMap(metadata -> toMailboxMessage(metadata, fetchType), batchSizes.forFetchType(fetchType))
             .groupBy(MailboxMessage::getMailboxId)
             .flatMap(this::keepMessageIfMailboxExists, ReactorUtils.DEFAULT_CONCURRENCY);
     }

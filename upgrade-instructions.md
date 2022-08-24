@@ -20,6 +20,18 @@ Change list:
 - [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
 - [Migration to OpenSearch](#migration-to-opensearch)
 
+### Removal of cassandra.properties chunk.size.message.read
+
+Date: 23/08/2022
+
+Concerned products: Distributed James, Cassandra James
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3809
+
+This setting was duplicated and do not account for the fetch type. Removed to avoid confusion.
+
+Use `batchsize.properties` configuration file instead.
+
 ### Migration to OpenSearch
 
 Date: 01/08/2022

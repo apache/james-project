@@ -42,6 +42,7 @@ import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFacto
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
@@ -74,8 +75,12 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandraCluster.getCassandraCluster(),
             messageIdFactory,
-            CassandraConfiguration.builder()
-                .messageReadChunkSize(3)
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            BatchSizes.builder()
+                .fetchMetadata(3)
+                .fetchBody(3)
+                .fetchHeaders(3)
+                .fetchFull(3)
                 .build());
 
         saveMessages();
@@ -107,8 +112,12 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandraCluster.getCassandraCluster(),
             messageIdFactory,
-            CassandraConfiguration.builder()
-                .messageReadChunkSize(3)
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            BatchSizes.builder()
+                .fetchMetadata(3)
+                .fetchBody(3)
+                .fetchHeaders(3)
+                .fetchFull(3)
                 .build());
 
         saveMessages();
