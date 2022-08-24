@@ -62,6 +62,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -75,9 +76,7 @@ import reactor.core.scheduler.Schedulers;
 /**
  * Default implementation of {@link SelectedMailbox}
  */
-public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
-
-
+public class SelectedMailboxImpl implements SelectedMailbox, EventListener.ReactiveEventListener {
     private static final Void VOID = null;
     private static final Flag UNINTERESTING_FLAGS = Flag.RECENT;
 
@@ -135,7 +134,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final StampedLock applicableFlagsLock = new StampedLock();
-    private final AtomicReference<EventListener> idleEventListener = new AtomicReference<>();
+    private final AtomicReference<ReactiveEventListener> idleEventListener = new AtomicReference<>();
     private final AtomicBoolean recentUidRemoved = new AtomicBoolean(false);
     private final AtomicBoolean isDeletedByOtherSession = new AtomicBoolean(false);
     private final AtomicBoolean sizeChanged = new AtomicBoolean(false);
@@ -172,7 +171,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
     }
 
     @Override
-    public void registerIdle(EventListener idle) {
+    public void registerIdle(ReactiveEventListener idle) {
         idleEventListener.set(idle);
     }
 
@@ -391,12 +390,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
         applicableFlagsLock.unlockWrite(stamp);
     }
 
-    
     @Override
-    public void event(Event event) {
-        synchronizedEvent(event);
-        Optional.ofNullable(idleEventListener.get())
-            .ifPresent(Throwing.<EventListener>consumer(listener -> listener.event(event)).sneakyThrow());
+    public Publisher<Void> reactiveEvent(Event event) {
+        return Mono.fromRunnable(() -> synchronizedEvent(event))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then(Optional.ofNullable(idleEventListener.get())
+                .map(listener -> Mono.from(listener.reactiveEvent(event)))
+                .orElse(Mono.empty()));
     }
 
     private synchronized void synchronizedEvent(Event event) {

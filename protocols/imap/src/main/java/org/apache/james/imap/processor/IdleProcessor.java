@@ -44,6 +44,7 @@ import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +147,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         return CAPS;
     }
 
-    private class IdleMailboxListener implements EventListener {
+    private class IdleMailboxListener implements EventListener.ReactiveEventListener {
 
         private final Responder responder;
         private final ImapSession session;
@@ -162,8 +163,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         @Override
-        public void event(Event event) {
-            unsolicitedResponses(session, responder, false).block();
+        public Publisher<Void> reactiveEvent(Event event) {
+            return unsolicitedResponses(session, responder, false);
         }
 
         @Override

@@ -45,7 +45,7 @@ public interface SelectedMailbox {
      */
     Mono<Void> deselect();
 
-    void registerIdle(EventListener idle);
+    void registerIdle(EventListener.ReactiveEventListener idle);
 
     void unregisterIdle();
 

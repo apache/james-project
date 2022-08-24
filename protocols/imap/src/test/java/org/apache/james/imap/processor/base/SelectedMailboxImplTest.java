@@ -138,7 +138,7 @@ class SelectedMailboxImplTest {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
-            .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
+            .register(any(EventListener.ReactiveEventListener.class), eq(mailboxIdRegistrationKey));
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
             mailboxManager,
             eventBus,
@@ -154,7 +154,7 @@ class SelectedMailboxImplTest {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
-            .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
+            .register(any(EventListener.ReactiveEventListener.class), eq(mailboxIdRegistrationKey));
 
         new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager).finishInit().block();
 
@@ -166,7 +166,7 @@ class SelectedMailboxImplTest {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
-            .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
+            .register(any(EventListener.ReactiveEventListener.class), eq(mailboxIdRegistrationKey));
 
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
         selectedMailbox.finishInit().block();
@@ -179,7 +179,7 @@ class SelectedMailboxImplTest {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
-            .register(any(EventListener.class), eq(mailboxIdRegistrationKey));
+            .register(any(EventListener.ReactiveEventListener.class), eq(mailboxIdRegistrationKey));
 
         new SelectedMailboxImpl(
             mailboxManager,
