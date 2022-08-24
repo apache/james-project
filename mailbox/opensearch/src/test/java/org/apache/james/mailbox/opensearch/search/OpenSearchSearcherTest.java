@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -89,7 +90,8 @@ class OpenSearchSearcherTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
+        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
 
     TikaTextExtractor textExtractor;
     ReactorOpenSearchClient client;

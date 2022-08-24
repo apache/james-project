@@ -32,6 +32,7 @@ import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.events.Event;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.SessionProvider;
@@ -47,7 +48,8 @@ import org.apache.james.quota.search.opensearch.json.QuotaRatioToOpenSearchJson;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -57,7 +59,6 @@ import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 class OpenSearchQuotaMailboxListenerTest {
-
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
@@ -65,20 +66,29 @@ class OpenSearchQuotaMailboxListenerTest {
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @RegisterExtension
-    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
+        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("quota_ratio_write_alias")));
+    static ReactorOpenSearchClient client;
 
     OpenSearchQuotaMailboxListener quotaMailboxListener;
-    ReactorOpenSearchClient client;
     private DefaultUserQuotaRootResolver quotaRootResolver;
 
-    @BeforeEach
-    void setUp() throws IOException {
+    @BeforeAll
+    static void beforeAll() throws IOException {
         client = openSearch.getDockerOpenSearch().clientProvider().get();
 
         QuotaSearchIndexCreationUtil.prepareDefaultClient(client, OpenSearchConfiguration.builder()
             .addHost(openSearch.getDockerOpenSearch().getHttpHost())
             .build());
+    }
 
+    @AfterAll
+    static void afterAll() throws IOException {
+        client.close();
+    }
+
+    @BeforeEach
+    void setUp() {
         quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
         quotaMailboxListener = new OpenSearchQuotaMailboxListener(
             new OpenSearchIndexer(client,
@@ -87,10 +97,6 @@ class OpenSearchQuotaMailboxListenerTest {
             new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
-    @AfterEach
-    void tearDown() throws IOException {
-        client.close();
-    }
 
     @Test
     void deserializeOpenSearchQuotaMailboxListenerGroup() throws Exception {

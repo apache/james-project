@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -57,7 +58,8 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,13 +88,28 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
+        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
 
-    TikaTextExtractor textExtractor;
-    ReactorOpenSearchClient client;
+    static TikaTextExtractor textExtractor;
+    static ReactorOpenSearchClient client;
 
-    @AfterEach
-    void tearDown() throws IOException {
+    @BeforeAll
+    static void setUpAll() throws Exception {
+        client = openSearch.getDockerOpenSearch().clientProvider().get();
+        MailboxIndexCreationUtil.prepareDefaultClient(
+            client,
+            openSearch.getDockerOpenSearch().configuration());
+        textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
+            new TikaHttpClientImpl(TikaConfiguration.builder()
+                .host(tika.getIp())
+                .port(tika.getPort())
+                .timeoutInMillis(tika.getTimeoutInMillis())
+                .build()));
+    }
+
+    @AfterAll
+    static void tearDown() throws IOException {
         client.close();
     }
 
@@ -102,18 +119,8 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Override
-    protected void initializeMailboxManager() throws Exception {
+    protected void initializeMailboxManager() {
         messageIdFactory = new InMemoryMessageId.Factory();
-        textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
-            new TikaHttpClientImpl(TikaConfiguration.builder()
-                .host(tika.getIp())
-                .port(tika.getPort())
-                .timeoutInMillis(tika.getTimeoutInMillis())
-                .build()));
-
-        client = MailboxIndexCreationUtil.prepareDefaultClient(
-            openSearch.getDockerOpenSearch().clientProvider().get(),
-            openSearch.getDockerOpenSearch().configuration());
 
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
@@ -184,7 +191,13 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789", 3300), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 14);
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(client.search(
+                new SearchRequest(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT)
+                .block()
+                .getHits().getTotalHits().value).isGreaterThanOrEqualTo(14));
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());

@@ -43,4 +43,12 @@ public class DeleteByQueryPerformer {
         return client.deleteByQuery(deleteRequest, RequestOptions.DEFAULT)
             .then();
     }
+
+    public Mono<Void> perform(QueryBuilder queryBuilder) {
+        DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest(aliasName.getValue());
+        deleteRequest.setQuery(queryBuilder);
+
+        return client.deleteByQuery(deleteRequest, RequestOptions.DEFAULT)
+            .then();
+    }
 }
