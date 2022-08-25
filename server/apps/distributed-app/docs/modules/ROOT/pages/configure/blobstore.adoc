@@ -144,6 +144,11 @@ Maximum size of stored objects expressed in bytes.
 
 | objectstorage.s3.connection.timeout
 | optional: HTTP connection timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.
+
+| objectstorage.s3.in.read.limit
+| optional: Object read in memory will be rejected if they exceed the size limit exposed here. Size, exemple `100M`.
+Supported units: K, M, G, defaults to B if no unit is specified. If unspecified, big object won't be prevented
+from being loaded in memory. This settings complements protocol limits.
 |===
 
 ==== Buckets Configuration

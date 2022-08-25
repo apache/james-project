@@ -94,11 +94,13 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     private final BucketNameResolver bucketNameResolver;
     private final S3AsyncClient client;
     private final BlobId.Factory blobIdFactory;
+    private final S3BlobStoreConfiguration configuration;
 
     @Inject
     S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory) {
         this.blobIdFactory = blobIdFactory;
-        AwsS3AuthConfiguration authConfiguration = configuration.getSpecificAuthConfiguration();
+        this.configuration = configuration;
+        AwsS3AuthConfiguration authConfiguration = this.configuration.getSpecificAuthConfiguration();
 
         S3Configuration pathStyleAccess = S3Configuration.builder()
             .pathStyleAccessEnabled(true)
@@ -223,7 +225,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return Mono.fromFuture(() ->
                 client.getObject(
                     builder -> builder.bucket(resolvedBucketName.asString()).key(blobId.asString()),
-                    new MinimalCopyBytesResponseTransformer()))
+                    new MinimalCopyBytesResponseTransformer(configuration, blobId)))
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .publishOn(Schedulers.parallel())
