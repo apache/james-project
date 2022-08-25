@@ -69,7 +69,7 @@ might not even be desirable.
 </processor>
 
 <!--Store rejected spam emails (with a very high score) -->
-<processor state="virus" enableJmx="false">
+<processor state="spam" enableJmx="false">
     <mailet match="All" class="ToRepository">
         <repositoryPath>cassandra://var/mail/spam</repositoryPath>
     </mailet>
