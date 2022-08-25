@@ -36,9 +36,16 @@ might not even be desirable.
 
   The `rewriteSubject` option allows to rewritte subjects when asked by Rspamd.
   
+  The `perUserScans` allows to specify if scans should be done on a per user basis, enabling per user scan results based on 
+  their own per-user bayes database. This is achieved through the use of Rspamd `Deliver-To` HTTP header. If true, Rspamd 
+  will be called for each recipient of the mail, which comes at a performance cost. If true, subjects are not rewritten.
+  If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the cost of email copies.
+  Defaults to false.
+  
 ```xml
 <processor state="local-delivery" enableJmx="true">
     <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
+        <perUserScans>false</perUserScans>
         <rewriteSubject>true</rewriteSubject>
         <virusProcessor>virus</virusProcessor>
         <rejectSpamProcessor>spam</rejectSpamProcessor>
@@ -66,6 +73,7 @@ might not even be desirable.
     <mailet match="All" class="AddSubjectPrefix">
         <subjectPrefix>[VIRUS]</subjectPrefix>
     </mailet>
+    <mailet match="All" class="LocalDelivery"/>
 </processor>
 
 <!--Store rejected spam emails (with a very high score) -->

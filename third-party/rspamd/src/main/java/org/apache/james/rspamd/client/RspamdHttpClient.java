@@ -24,11 +24,13 @@ import static org.apache.james.rspamd.client.RspamdClientConfiguration.DEFAULT_T
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.rspamd.exception.RspamdUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
@@ -44,6 +46,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
@@ -62,6 +65,10 @@ public class RspamdHttpClient {
             return new Options(Optional.of(username));
         }
 
+        public static Options forMailAddress(MailAddress username) {
+            return new Options(Optional.of(Username.fromMailAddress(username)));
+        }
+
         private final Optional<Username> username;
 
         public Options(Optional<Username> username) {
@@ -71,6 +78,28 @@ public class RspamdHttpClient {
         private HttpClient decorate(HttpClient httpClient) {
             return username.map(user -> httpClient.headers(h -> h.add("Deliver-To", user.asString())))
                 .orElse(httpClient);
+        }
+
+        private Collection<MailAddress> filterRecipients(Collection<MailAddress> recipients) {
+            Optional<Collection<MailAddress>> mailAddresses = username.map(user -> recipients.stream()
+                .filter(rcpt -> rcpt.asString().equals(user.asString()))
+                .collect(ImmutableList.toImmutableList()));
+
+            return mailAddresses.orElse(recipients);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Options) {
+                Options options = (Options) o;
+                return Objects.equal(username, options.username);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hashCode(username);
         }
     }
 
@@ -91,7 +120,8 @@ public class RspamdHttpClient {
     }
 
     public Mono<AnalysisResult> checkV2(InputStream mimeMessage, Options options) {
-        return httpClient.post()
+        return options.decorate(httpClient)
+            .post()
             .uri(CHECK_V2_ENDPOINT)
             .send(ReactorUtils.toChunks(mimeMessage, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer))
@@ -100,7 +130,7 @@ public class RspamdHttpClient {
     }
 
     public Mono<AnalysisResult> checkV2(Mail mail, Options options) throws MessagingException {
-        return httpClient
+        return options.decorate(httpClient)
             .headers(headers -> transportInformationToHeaders(mail, headers))
             .post()
             .uri(CHECK_V2_ENDPOINT)
