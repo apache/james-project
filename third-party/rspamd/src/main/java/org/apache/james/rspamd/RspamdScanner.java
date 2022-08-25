@@ -43,13 +43,15 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class RspamdScanner extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RspamdScanner.class);
+
     public static final AttributeName FLAG_MAIL = AttributeName.of("org.apache.james.rspamd.flag");
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
-    private static final Logger LOGGER = LoggerFactory.getLogger(RspamdScanner.class);
 
     private final RspamdHttpClient rspamdHttpClient;
     private boolean rewriteSubject;
     private Optional<String> virusProcessor;
+    private Optional<String> rejectSpamProcessor;
 
     @Inject
     public RspamdScanner(RspamdHttpClient rspamdHttpClient) {
@@ -60,11 +62,16 @@ public class RspamdScanner extends GenericMailet {
     public void init() {
         rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
         virusProcessor = getInitParameterAsOptional("virusProcessor");
+        rejectSpamProcessor = getInitParameterAsOptional("rejectSpamProcessor");
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
         AnalysisResult rspamdResult = rspamdHttpClient.checkV2(new MimeMessageInputStream(mail.getMessage())).block();
+
+        if (rspamdResult.getAction() == AnalysisResult.Action.REJECT) {
+            rejectSpamProcessor.ifPresent(mail::setState);
+        }
 
         mail.getRecipients()
             .forEach(recipient -> appendRspamdResultHeader(mail, recipient, rspamdResult));
@@ -94,7 +101,9 @@ public class RspamdScanner extends GenericMailet {
     private List<Attribute> getHeadersAsAttributes(AnalysisResult rspamdResult) {
         String defaultFlagMailAttributeValue = "NO";
         String defaultStatusMailAttributeValue = "No";
-        if (rspamdResult.getAction().equals(AnalysisResult.Action.REJECT)) {
+        if (rspamdResult.getAction().equals(AnalysisResult.Action.REJECT)
+                || rspamdResult.getAction().equals(AnalysisResult.Action.ADD_HEADER)
+                || rspamdResult.getAction().equals(AnalysisResult.Action.REWRITE_SUBJECT)) {
             defaultFlagMailAttributeValue = "YES";
             defaultStatusMailAttributeValue = "Yes";
         }

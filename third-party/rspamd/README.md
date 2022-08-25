@@ -30,15 +30,23 @@ guice.extension.task=org.apache.james.rspamd.module.RspamdTaskExtensionModule
   You can specify the `virusProcessor` if you want to enable virus scanning for mail. Upon configurable `virusProcessor`
 you can specify how James process mail virus. We provide a sample Rspamd mailet and `virusProcessor` configuration:
 
+  You can specify the `rejectSpamProcessor`. Emails marked as `rejected` by Rspamd will be redirected to this
+processor. This corresponds to emails with the highest spam score, thus delivering them to users as marked as spam 
+might not even be desirable.
+
+  The `rewriteSubject` option allows to rewritte subjects when asked by Rspamd.
+  
 ```xml
 <processor state="local-delivery" enableJmx="true">
     <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
         <rewriteSubject>true</rewriteSubject>
         <virusProcessor>virus</virusProcessor>
+        <rejectSpamProcessor>spam</rejectSpamProcessor>
     </mailet>
     <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
         <targetFolderName>Spam</targetFolderName>
     </mailet>
+    <mailet match="All" class="LocalDelivery"/>
 </processor>
 
 <!--Choose one between these two following virus processor, or configure a custom one if you want-->
@@ -48,6 +56,7 @@ you can specify how James process mail virus. We provide a sample Rspamd mailet 
         <repositoryPath>file://var/mail/virus/</repositoryPath>
     </mailet>
 </processor>
+
 <!--Soft reject virus mail-->
 <processor state="virus" enableJmx="false">
     <mailet match="All" class="StripAttachment">
@@ -56,6 +65,13 @@ you can specify how James process mail virus. We provide a sample Rspamd mailet 
     </mailet>
     <mailet match="All" class="AddSubjectPrefix">
         <subjectPrefix>[VIRUS]</subjectPrefix>
+    </mailet>
+</processor>
+
+<!--Store rejected spam emails (with a very high score) -->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="ToRepository">
+        <repositoryPath>cassandra://var/mail/spam</repositoryPath>
     </mailet>
 </processor>
 ```
