@@ -108,11 +108,7 @@ public class RspamdHttpClient {
 
         // User: Defines username for authenticated SMTP client.
         mail.getAttribute(Mail.SMTP_AUTH_USER)
-            .map(attr -> attr.getValue().value())
-            .filter(String.class::isInstance)
-            .map(String.class::cast)
-            .ifPresent(helo -> headers.add("User", helo));
-        mail.getAttribute(AttributeName.of("org.apache.james.jmap.send.MailMetaData.username"))
+            .or(() -> mail.getAttribute(AttributeName.of("org.apache.james.jmap.send.MailMetaData.username")))
             .map(attr -> attr.getValue().value())
             .filter(String.class::isInstance)
             .map(String.class::cast)
