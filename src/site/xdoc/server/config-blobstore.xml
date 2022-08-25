@@ -183,6 +183,11 @@ generate salt with : openssl rand -hex 16
 
                         <dt><strong>objectstorage.s3.connection.timeout</strong></dt>
                         <dd><i>optional:</i> HTTP connection timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.</dd>
+
+                        <dt><strong>objectstorage.s3.in.read.limit</strong></dt>
+                        <dd><i>optional:</i> Object read in memory will be rejected if they exceed the size limit exposed here. Size, exemple `100M`.
+                            Supported units: K, M, G, defaults to B if no unit is specified. If unspecified, big object won't be prevented
+                            from being loaded in memory. This settings complements protocol limits.</dd>
                     </dl>
                 </subsection>
             </subsection>

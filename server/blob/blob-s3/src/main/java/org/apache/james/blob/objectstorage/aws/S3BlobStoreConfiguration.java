@@ -56,6 +56,7 @@ public class S3BlobStoreConfiguration {
             private Optional<Duration> readTimeout;
             private Optional<Duration> writeTimeout;
             private Optional<Duration> connectionTimeout;
+            private Optional<Long> inMemoryReadLimit;
             private Region region;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
@@ -67,6 +68,7 @@ public class S3BlobStoreConfiguration {
                 this.readTimeout = Optional.empty();
                 this.writeTimeout = Optional.empty();
                 this.connectionTimeout = Optional.empty();
+                this.inMemoryReadLimit = Optional.empty();
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -86,6 +88,11 @@ public class S3BlobStoreConfiguration {
 
             public ReadyToBuild writeTimeout(Optional<Duration> writeTimeout) {
                 this.writeTimeout = writeTimeout;
+                return this;
+            }
+
+            public ReadyToBuild inMemoryReadLimit(Optional<Long> inMemoryReadLimit) {
+                this.inMemoryReadLimit = inMemoryReadLimit;
                 return this;
             }
 
@@ -110,7 +117,7 @@ public class S3BlobStoreConfiguration {
             }
 
             public S3BlobStoreConfiguration build() {
-                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY), readTimeout, writeTimeout, connectionTimeout);
+                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY), inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout);
             }
         }
 
@@ -123,6 +130,7 @@ public class S3BlobStoreConfiguration {
     private final Optional<BucketName> namespace;
     private final Optional<String> bucketPrefix;
     private final int httpConcurrency;
+    private final Optional<Long> inMemoryReadLimit;
     private Optional<Duration> readTimeout;
     private Optional<Duration> writeTimeout;
     private Optional<Duration> connectionTimeout;
@@ -133,6 +141,7 @@ public class S3BlobStoreConfiguration {
                              Region region,
                              AwsS3AuthConfiguration specificAuthConfiguration,
                              int httpConcurrency,
+                             Optional<Long> inMemoryReadLimit,
                              Optional<Duration> readTimeout,
                              Optional<Duration> writeTimeout,
                              Optional<Duration> connectionTimeout) {
@@ -141,9 +150,14 @@ public class S3BlobStoreConfiguration {
         this.region = region;
         this.specificAuthConfiguration = specificAuthConfiguration;
         this.httpConcurrency = httpConcurrency;
+        this.inMemoryReadLimit = inMemoryReadLimit;
         this.readTimeout = readTimeout;
         this.writeTimeout = writeTimeout;
         this.connectionTimeout = connectionTimeout;
+    }
+
+    public Optional<Long> getInMemoryReadLimit() {
+        return inMemoryReadLimit;
     }
 
     public Optional<BucketName> getNamespace() {
@@ -187,6 +201,7 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
                 && Objects.equals(this.region, that.region)
                 && Objects.equals(this.httpConcurrency, that.httpConcurrency)
+                && Objects.equals(this.inMemoryReadLimit, that.inMemoryReadLimit)
                 && Objects.equals(this.readTimeout, that.readTimeout)
                 && Objects.equals(this.writeTimeout, that.writeTimeout)
                 && Objects.equals(this.connectionTimeout, that.connectionTimeout)
@@ -206,6 +221,7 @@ public class S3BlobStoreConfiguration {
         return MoreObjects.toStringHelper(this)
             .add("namespace", namespace)
             .add("httpConcurrency", httpConcurrency)
+            .add("inMemoryReadLimit", inMemoryReadLimit)
             .add("bucketPrefix", bucketPrefix)
             .add("region", region)
             .add("specificAuthConfiguration", specificAuthConfiguration)
