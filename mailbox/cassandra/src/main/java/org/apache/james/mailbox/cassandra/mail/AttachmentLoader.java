@@ -50,7 +50,7 @@ public class AttachmentLoader {
     }
 
     private Mono<List<MessageAttachmentMetadata>> loadAttachments(Stream<MessageAttachmentRepresentation> messageAttachmentRepresentations, MessageMapper.FetchType fetchType) {
-        if (fetchType == MessageMapper.FetchType.BODY || fetchType == MessageMapper.FetchType.FULL) {
+        if (fetchType == MessageMapper.FetchType.FULL) {
             return getAttachments(messageAttachmentRepresentations.collect(ImmutableList.toImmutableList()));
         } else {
             return Mono.just(ImmutableList.of());

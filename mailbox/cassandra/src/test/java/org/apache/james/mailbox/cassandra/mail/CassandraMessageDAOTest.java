@@ -74,8 +74,7 @@ class CassandraMessageDAOTest {
             CassandraSchemaVersionModule.MODULE);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
-            MODULES);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);
 
     private CassandraMessageDAO testee;
     private CassandraMessageId.Factory messageIdFactory;
@@ -146,22 +145,6 @@ class CassandraMessageDAOTest {
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent().getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT);
-    }
-
-    @Test
-    void saveShouldStoreMessageWithBodyContent() throws Exception {
-        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
-
-        testee.save(message).block();
-
-        MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.BODY));
-
-        byte[] expected = Bytes.concat(
-            new byte[BODY_START],
-            CONTENT.substring(BODY_START).getBytes(StandardCharsets.UTF_8));
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent().getInputStream(), StandardCharsets.UTF_8))
-            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), StandardCharsets.UTF_8));
     }
 
     @Test

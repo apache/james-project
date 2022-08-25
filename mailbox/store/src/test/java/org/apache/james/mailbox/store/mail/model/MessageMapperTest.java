@@ -281,17 +281,6 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void messagesRetrievedUsingFetchTypeBodyShouldHaveBodyDataLoaded() throws MailboxException, IOException {
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.BODY;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
-        assertThat(retrievedMessageIterator)
-            .toIterable()
-            .isEmpty();
-    }
-
-    @Test
     void messagesRetrievedUsingFetchTypeFullShouldHaveBodyDataLoaded() throws MailboxException, IOException {
         saveMessages();
         MessageMapper.FetchType fetchType = FetchType.FULL;
@@ -819,7 +808,7 @@ public abstract class MessageMapperTest {
 
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStored \n\nBody\n.\n", BODY_START, propBuilder);
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
 
         assertProperties(message.getProperties().toProperties()).containsOnly(propBuilder.toProperties());
     }
@@ -831,7 +820,7 @@ public abstract class MessageMapperTest {
 
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStoredWhenDuplicateEntries \n\nBody\n.\n", BODY_START, propBuilder);
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
 
         assertProperties(message.getProperties().toProperties()).containsOnly(propBuilder.toProperties());
     }
@@ -840,7 +829,7 @@ public abstract class MessageMapperTest {
     void messagePropertiesShouldBeStoredWhenNoProperty() throws Exception {
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStoredWhenNoProperty \n\nBody\n.\n", BODY_START, new PropertyBuilder());
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
         assertThat(message.getProperties().toProperties()).isEmpty();
     }
 
@@ -852,7 +841,7 @@ public abstract class MessageMapperTest {
 
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStoredWhenDuplicateEntries \n\nBody\n.\n", BODY_START, propBuilder);
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
         assertThat(message.getTextualLineCount()).isEqualTo(textualLineCount);
     }
 
@@ -864,7 +853,7 @@ public abstract class MessageMapperTest {
 
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStoredWhenDuplicateEntries \n\nBody\n.\n", BODY_START, propBuilder);
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
         assertThat(message.getMediaType()).isEqualTo(mediaType);
     }
 
@@ -876,7 +865,7 @@ public abstract class MessageMapperTest {
 
         MailboxMessage messageWithProperties = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: messagePropertiesShouldBeStoredWhenDuplicateEntries \n\nBody\n.\n", BODY_START, propBuilder);
         MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithProperties);
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.BODY, 1).next();
+        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(messageMetaData.getUid()), FetchType.FULL, 1).next();
         assertThat(message.getSubType()).isEqualTo(subType);
     }
 

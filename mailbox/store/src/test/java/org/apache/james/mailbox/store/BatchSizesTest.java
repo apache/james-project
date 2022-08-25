@@ -37,7 +37,6 @@ class BatchSizesTest {
         BatchSizes batchSizes = BatchSizes.defaultValues();
         assertThat(batchSizes.getFetchMetadata()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
         assertThat(batchSizes.getFetchHeaders()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
-        assertThat(batchSizes.getFetchBody()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
         assertThat(batchSizes.getFetchFull()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
         assertThat(batchSizes.getCopyBatchSize()).isEmpty();
         assertThat(batchSizes.getMoveBatchSize()).isEmpty();
@@ -49,7 +48,6 @@ class BatchSizesTest {
         BatchSizes batchSizes = BatchSizes.uniqueBatchSize(batchSize);
         assertThat(batchSizes.getFetchMetadata()).isEqualTo(batchSize);
         assertThat(batchSizes.getFetchHeaders()).isEqualTo(batchSize);
-        assertThat(batchSizes.getFetchBody()).isEqualTo(batchSize);
         assertThat(batchSizes.getFetchFull()).isEqualTo(batchSize);
         assertThat(batchSizes.getCopyBatchSize()).contains(batchSize);
         assertThat(batchSizes.getMoveBatchSize()).contains(batchSize);
@@ -80,20 +78,6 @@ class BatchSizesTest {
     void fetchHeadersShouldThrowWhenZero() {
         assertThatThrownBy(() -> BatchSizes.builder()
                 .fetchHeaders(0))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void fetchBodyShouldThrowWhenNegative() {
-        assertThatThrownBy(() -> BatchSizes.builder()
-                .fetchBody(-1))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void fetchBodyShouldThrowWhenZero() {
-        assertThatThrownBy(() -> BatchSizes.builder()
-                .fetchBody(0))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -169,22 +153,6 @@ class BatchSizesTest {
                 .fetchHeaders(expected)
                 .build();
         assertThat(batchSizes.getFetchHeaders()).isEqualTo(expected);
-    }
-
-    @Test
-    void buildShouldSetDefaultValueToFetchBodyWhenNotGiven() {
-        BatchSizes batchSizes = BatchSizes.builder()
-                .build();
-        assertThat(batchSizes.getFetchBody()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
-    }
-
-    @Test
-    void buildShouldSetValueToFetchBodyWhenGiven() {
-        int expected = 123;
-        BatchSizes batchSizes = BatchSizes.builder()
-                .fetchBody(expected)
-                .build();
-        assertThat(batchSizes.getFetchBody()).isEqualTo(expected);
     }
 
     @Test

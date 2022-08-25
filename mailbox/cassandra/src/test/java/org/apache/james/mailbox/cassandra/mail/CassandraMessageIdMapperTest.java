@@ -78,7 +78,6 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             BatchSizes.builder()
                 .fetchMetadata(3)
-                .fetchBody(3)
                 .fetchHeaders(3)
                 .fetchFull(3)
                 .build());
@@ -115,7 +114,6 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             BatchSizes.builder()
                 .fetchMetadata(3)
-                .fetchBody(3)
                 .fetchHeaders(3)
                 .fetchFull(3)
                 .build());

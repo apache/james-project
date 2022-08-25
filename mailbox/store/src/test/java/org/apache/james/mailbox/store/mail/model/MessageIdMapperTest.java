@@ -443,7 +443,7 @@ public abstract class MessageIdMapperTest {
 
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REMOVE).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).isRecent()).isTrue();
         assertThat(messages.get(0).isFlagged()).isFalse();
@@ -543,7 +543,7 @@ public abstract class MessageIdMapperTest {
         MessageId messageId = message1.getMessageId();
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).isAnswered()).isTrue();
     }
@@ -559,7 +559,7 @@ public abstract class MessageIdMapperTest {
         Flags newFlags = new Flags(Flag.ANSWERED);
         sut.setFlags(messageId, ImmutableList.of(), newFlags, FlagsUpdateMode.REMOVE).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).getModSeq()).isEqualTo(modSeq);
     }
@@ -574,7 +574,7 @@ public abstract class MessageIdMapperTest {
         MessageId messageId = message1.getMessageId();
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).getModSeq()).isGreaterThan(modSeq);
     }
@@ -592,7 +592,7 @@ public abstract class MessageIdMapperTest {
         Flags newFlags = new Flags(Flag.ANSWERED);
         sut.setFlags(messageId, ImmutableList.of(), newFlags, FlagsUpdateMode.REMOVE).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).createFlags()).isEqualTo(initialFlags);
     }
@@ -611,7 +611,7 @@ public abstract class MessageIdMapperTest {
         MessageId messageId = message1.getMessageId();
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId(), message1InOtherMailbox.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(2);
         assertThat(messages.get(0).isAnswered()).isTrue();
         assertThat(messages.get(1).isAnswered()).isTrue();
@@ -635,7 +635,7 @@ public abstract class MessageIdMapperTest {
         MessageId messageId = message1.getMessageId();
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).isAnswered()).isTrue();
     }
@@ -658,7 +658,7 @@ public abstract class MessageIdMapperTest {
         MessageId messageId = message1.getMessageId();
         sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId(), message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD).block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).isAnswered()).isTrue();
     }
@@ -681,7 +681,7 @@ public abstract class MessageIdMapperTest {
             .operationCount(updateCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).createFlags().getUserFlags()).hasSize(threadCount * updateCount);
     }
@@ -715,7 +715,7 @@ public abstract class MessageIdMapperTest {
             .operationCount(updateCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).createFlags().getUserFlags()).isEmpty();
     }
@@ -823,7 +823,7 @@ public abstract class MessageIdMapperTest {
             FlagsUpdateMode.ADD)
             .block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).getModSeq()).isEqualTo(modSeq);
     }
@@ -843,7 +843,7 @@ public abstract class MessageIdMapperTest {
             FlagsUpdateMode.ADD)
             .block();
 
-        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.BODY);
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.FULL);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).createFlags()).isEqualTo(flags);
     }

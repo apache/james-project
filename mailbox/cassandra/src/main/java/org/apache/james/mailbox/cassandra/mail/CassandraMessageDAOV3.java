@@ -404,9 +404,6 @@ public class CassandraMessageDAOV3 {
                 return getFullContent(headerId, bodyId);
             case HEADERS:
                 return getContent(headerId, SIZE_BASED);
-            case BODY:
-                return getContent(bodyId, LOW_COST)
-                    .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
             case METADATA:
                 return Mono.just(EMPTY_BYTE_ARRAY);
             default:
