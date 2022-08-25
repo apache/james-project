@@ -82,6 +82,33 @@ class SpamAssassinTest {
     }
 
     @Test
+    void serviceShouldWriteSpamAttributeOnMailWhenGlobalScan() throws Exception {
+        FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
+            .mailetName("SpamAssassin")
+            .setProperty("perUserScans", "false")
+            .build();
+        SpamAssassin mailet = mailet();
+        mailet.init(mailetConfiguration);
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .recipient("user1@exemple.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient("user1@exemple.com")
+                .addFrom("sender@exemple.com")
+                .setSubject("testing")
+                .setText("Please!")
+                .build())
+            .build();
+
+        mailet.service(mail);
+
+
+        assertThat(mail.getMessage().getHeader(SpamAssassinResult.FLAG_MAIL.asString())).isNotNull();
+        assertThat(mail.getMessage().getHeader(SpamAssassinResult.STATUS_MAIL.asString())).isNotNull();
+    }
+
+    @Test
     void serviceShouldWriteMessageAsNotSpamWhenNotSpam() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")

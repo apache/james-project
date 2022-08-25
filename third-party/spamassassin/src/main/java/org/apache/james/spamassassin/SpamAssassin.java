@@ -52,10 +52,17 @@ import com.github.fge.lambdas.Throwing;
  * </code>
  * </pre>
  *
+ * Options:
+ *
+ *  - perUserScans: Boolean. If true spamAssassin is called on a per user basis which comes at a performance cost but
+ *  allows per-user feedback. Defaults to true.
+ *
  * Sample Configuration:
  *
  * <pre>
- * &lt;mailet notmatch="SenderHostIsLocal" class="SpamAssassin"&gt;
+ * &lt;mailet notmatch="All" class="SpamAssassin"&gt;
+ *   &lt;perUserScans"&gt;false&lt;/perUserScans"&gt;
+ * &lt;/mailet&gt;
  * </pre>
  */
 public class SpamAssassin extends GenericMailet {
@@ -63,6 +70,7 @@ public class SpamAssassin extends GenericMailet {
     private final UsersRepository usersRepository;
 
     private final Host spamAssassinHost;
+    private boolean perUserScans;
 
     @Inject
     public SpamAssassin(MetricFactory metricFactory, UsersRepository usersRepository, SpamAssassinConfiguration spamAssassinConfiguration) {
@@ -71,16 +79,26 @@ public class SpamAssassin extends GenericMailet {
         this.spamAssassinHost = spamAssassinConfiguration.getHost();
     }
 
+
+    @Override
+    public void init() {
+        perUserScans = getBooleanParameter(getInitParameter("perUserScans"), true);
+    }
+
     @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
         // Invoke SpamAssassin connection and scan the message
         SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamAssassinHost.getHostName(), spamAssassinHost.getPort());
-        mail.getRecipients()
-            .forEach(
-                Throwing.consumer((MailAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
-                    .sneakyThrow());
+        if (perUserScans) {
+            mail.getRecipients()
+                .forEach(
+                    Throwing.consumer((MailAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
+                        .sneakyThrow());
+        } else {
+            querySpamAssassin(mail, message, sa);
+        }
     }
 
     private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
@@ -92,6 +110,16 @@ public class SpamAssassin extends GenericMailet {
                 .name(attribute.getName().asString())
                 .value((String) attribute.getValue().value())
                 .build(), recipient);
+        }
+    }
+
+    private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa) throws MessagingException {
+        SpamAssassinResult result = sa.scanMail(message);
+
+        // Add headers per recipient to mail object
+        for (Attribute attribute : result.getHeadersAsAttributes()) {
+            mail.getMessage().addHeader(attribute.getName().asString(),
+                (String) attribute.getValue().value());
         }
     }
 
