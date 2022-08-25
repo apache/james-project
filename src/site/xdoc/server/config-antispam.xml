@@ -50,9 +50,11 @@
     <ul>
       <li>Black listing Mailet</li>
       <li>Grey listing Mailet</li>
-      <li>SpamAssassin Mailet is designed to classify the messages as spam or not 
-          with an configurable score threshold. Usually a message will only be 
-          considered as spam if it matches multiple criteria; matching just a single test 
+      <li><a href="https://github.com/apache/james-project/tree/master/third-party/rspamd">Rspamd</a> extension
+          allows querying Rspamd and supports both real-time and batch learning.</li>
+      <li>SpamAssassin Mailet is designed to classify the messages as spam or not
+          with an configurable score threshold. Usually a message will only be
+          considered as spam if it matches multiple criteria; matching just a single test
           will not usually be enough to reach the threshold.</li>
       <li>BayesianAnalysis in the Mailet uses Bayesian probability to classify mail as 
           spam or not spam. It relies on the training data coming from the users’ judgment. 

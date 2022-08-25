@@ -8,6 +8,11 @@ message exceeds the threshold, the header X-Spam-Flag will be added with the
 value of YES. The default host for spamd is localhost and the default port is
 783.
 
+Supports the following options:
+
+* perUserScans: Boolean. If true spamAssassin is called on a per user basis which comes at a performance cost but
+ allows per-user feedback. Defaults to true.
+
 ....
  org.apache.james.spamassassin.status - Holds the status
  org.apache.james.spamassassin.flag   - Holds the flag
@@ -19,5 +24,6 @@ Sample Configuration:
 <mailet notmatch="SenderHostIsLocal" class="SpamAssassin">
   <spamdHost>localhost</spamdHost>
   <spamdPort>783</spamdPort>
+  <perUserScans>false</perUserScans>
 </mailet>
 ....
