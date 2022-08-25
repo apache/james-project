@@ -27,6 +27,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.MessageResult;
@@ -238,10 +240,13 @@ public class FeedHamToRspamdTask implements Task {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         try {
             return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions.getSamplingProbability(), context)
-                .transform(ReactorUtils.<MessageResult, Result>throttle()
+                .transform(ReactorUtils.<Pair<Username, MessageResult>, Result>throttle()
                     .elements(runningOptions.getMessagesPerSecond())
                     .per(Duration.ofSeconds(1))
-                    .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsHam(messageResult.getFullContent().getInputStream())))
+                    .forOperation(messageResultAndUser -> Mono.fromSupplier(Throwing.supplier(() ->
+                        rspamdHttpClient.reportAsHam(
+                            messageResultAndUser.getRight().getFullContent().getInputStream(),
+                            RspamdHttpClient.Options.forUser(messageResultAndUser.getLeft()))))
                         .then(Mono.fromCallable(() -> {
                             context.incrementReportedHamMessageCount(1);
                             return Result.COMPLETED;

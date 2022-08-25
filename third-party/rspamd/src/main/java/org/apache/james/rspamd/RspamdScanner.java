@@ -69,7 +69,7 @@ public class RspamdScanner extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        AnalysisResult rspamdResult = rspamdHttpClient.checkV2(mail).block();
+        AnalysisResult rspamdResult = rspamdHttpClient.checkV2(mail, RspamdHttpClient.Options.NONE).block();
 
         if (rspamdResult.getAction() == AnalysisResult.Action.REJECT) {
             rejectSpamProcessor.ifPresent(mail::setState);

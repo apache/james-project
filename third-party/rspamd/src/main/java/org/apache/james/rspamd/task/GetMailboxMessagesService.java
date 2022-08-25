@@ -24,6 +24,7 @@ import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAM
 import java.util.Date;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -62,18 +63,20 @@ public class GetMailboxMessagesService {
         this.messageIdManager = messageIdManager;
     }
 
-    public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, double samplingProbability,
+    public Flux<Pair<Username, MessageResult>> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, double samplingProbability,
                                                            FeedSpamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
-            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, samplingProbability, context), ReactorUtils.DEFAULT_CONCURRENCY);
+            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, samplingProbability, context)
+                .map(message -> Pair.of(username, message)), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
-    public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, double samplingProbability,
+    public Flux<Pair<Username, MessageResult>> getHamMessagesOfAllUser(Optional<Date> afterDate, double samplingProbability,
                                                        FeedHamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
             .flatMap(Throwing.function(username -> Flux.fromIterable(mailboxManager.list(mailboxManager.createSystemSession(username)))
                 .filter(this::hamMailboxesPredicate)
-                .flatMap(mailboxPath -> getMailboxMessagesOfAUser(username, mailboxPath, afterDate, samplingProbability, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
+                .flatMap(mailboxPath -> getMailboxMessagesOfAUser(username, mailboxPath, afterDate, samplingProbability, context), 2)
+                .map(message -> Pair.of(username, message))), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,

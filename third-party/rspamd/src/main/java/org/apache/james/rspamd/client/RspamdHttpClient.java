@@ -29,6 +29,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Username;
 import org.apache.james.rspamd.exception.RspamdUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
@@ -54,6 +55,25 @@ import reactor.netty.http.client.HttpClientResponse;
 public class RspamdHttpClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(RspamdHttpClient.class);
 
+    public static class Options {
+        public static final Options NONE = new Options(Optional.empty());
+
+        public static Options forUser(Username username) {
+            return new Options(Optional.of(username));
+        }
+
+        private final Optional<Username> username;
+
+        public Options(Optional<Username> username) {
+            this.username = username;
+        }
+
+        private HttpClient decorate(HttpClient httpClient) {
+            return username.map(user -> httpClient.headers(h -> h.add("Deliver-To", user.asString())))
+                .orElse(httpClient);
+        }
+    }
+
     public static final String CHECK_V2_ENDPOINT = "/checkV2";
     public static final String LEARN_SPAM_ENDPOINT = "/learnspam";
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
@@ -70,7 +90,7 @@ public class RspamdHttpClient {
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
     }
 
-    public Mono<AnalysisResult> checkV2(InputStream mimeMessage) {
+    public Mono<AnalysisResult> checkV2(InputStream mimeMessage, Options options) {
         return httpClient.post()
             .uri(CHECK_V2_ENDPOINT)
             .send(ReactorUtils.toChunks(mimeMessage, BUFFER_SIZE)
@@ -79,7 +99,7 @@ public class RspamdHttpClient {
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
-    public Mono<AnalysisResult> checkV2(Mail mail) throws MessagingException {
+    public Mono<AnalysisResult> checkV2(Mail mail, Options options) throws MessagingException {
         return httpClient
             .headers(headers -> transportInformationToHeaders(mail, headers))
             .post()
@@ -119,12 +139,12 @@ public class RspamdHttpClient {
             .ifPresent(user -> headers.add("User", user));
     }
 
-    public Mono<Void> reportAsSpam(InputStream content) {
-        return reportMail(content, LEARN_SPAM_ENDPOINT);
+    public Mono<Void> reportAsSpam(InputStream content, Options options) {
+        return reportMail(content, LEARN_SPAM_ENDPOINT, options);
     }
 
-    public Mono<Void> reportAsHam(InputStream content) {
-        return reportMail(content, LEARN_HAM_ENDPOINT);
+    public Mono<Void> reportAsHam(InputStream content, Options options) {
+        return reportMail(content, LEARN_HAM_ENDPOINT, options);
     }
 
     private HttpClient buildReactorNettyHttpClient(RspamdClientConfiguration configuration) {
@@ -135,8 +155,9 @@ public class RspamdHttpClient {
             .headers(headers -> headers.add("Password", configuration.getPassword()));
     }
 
-    private Mono<Void> reportMail(InputStream content, String endpoint) {
-        return httpClient.post()
+    private Mono<Void> reportMail(InputStream content, String endpoint, Options options) {
+        return options.decorate(httpClient)
+            .post()
             .uri(endpoint)
             .send(ReactorUtils.toChunks(content, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer)

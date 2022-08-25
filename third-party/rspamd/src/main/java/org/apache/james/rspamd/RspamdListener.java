@@ -115,7 +115,7 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .flatMapMany(pair -> Flux.fromIterable(MessageRange.toRanges(addedEvent.getUids()))
                 .flatMap(range -> pair.getRight().findInMailboxReactive(pair.getLeft(), range, MessageMapper.FetchType.FULL, LIMIT)))
             .map(Throwing.function(MailboxMessage::getFullContent))
-            .flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY)
+            .flatMap(message -> rspamdHttpClient.reportAsHam(message, RspamdHttpClient.Options.forUser(addedEvent.getUsername())), ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
 
@@ -130,15 +130,16 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .filter(FunctionalUtils.identityPredicate())
             .doOnNext(isHam -> LOGGER.debug("Ham event detected, EventId = {}", messageMoveEvent.getEventId().getId()));
 
+        RspamdHttpClient.Options options = RspamdHttpClient.Options.forUser(messageMoveEvent.getUsername());
         return isMessageMovedToSpamMailbox(messageMoveEvent)
             .flatMap(isSpam -> {
                 if (isSpam) {
                     LOGGER.debug("Spam event detected, EventId = {}", messageMoveEvent.getEventId().getId());
-                    return mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsSpam, ReactorUtils.DEFAULT_CONCURRENCY)
+                    return mailboxMessagesPublisher.flatMap(message -> rspamdHttpClient.reportAsSpam(message, options), ReactorUtils.DEFAULT_CONCURRENCY)
                         .then();
                 } else {
                     return reportHamIfNotSpamDetected
-                        .flatMapMany(isHam -> mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY))
+                        .flatMapMany(isHam -> mailboxMessagesPublisher.flatMap(message -> rspamdHttpClient.reportAsHam(message, options), ReactorUtils.DEFAULT_CONCURRENCY))
                         .then();
                 }
             });

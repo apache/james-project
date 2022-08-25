@@ -75,7 +75,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatThrownBy(() -> client.checkV2(new ByteArrayInputStream(spamMessage)).block())
+        assertThatThrownBy(() -> client.checkV2(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.NONE).block())
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
@@ -105,7 +105,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(spamMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.NONE).block();
         assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
@@ -125,7 +125,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(hamMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(hamMessage), RspamdHttpClient.Options.NONE).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
             softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
@@ -150,7 +150,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
+        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.NONE).block())
             .doesNotThrowAnyException();
     }
 
@@ -159,7 +159,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
+        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage), RspamdHttpClient.Options.NONE).block())
             .doesNotThrowAnyException();
     }
 
@@ -188,7 +188,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(virusMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(virusMessage), RspamdHttpClient.Options.NONE).block();
         assertThat(analysisResult.hasVirus()).isTrue();
     }
 
@@ -197,16 +197,16 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(nonVirusMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(nonVirusMessage), RspamdHttpClient.Options.NONE).block();
         assertThat(analysisResult.hasVirus()).isFalse();
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
-        client.reportAsSpam(inputStream).block();
+        client.reportAsSpam(inputStream, RspamdHttpClient.Options.NONE).block();
     }
 
     private void reportAsHam(RspamdHttpClient client, InputStream inputStream) {
-        client.reportAsHam(inputStream).block();
+        client.reportAsHam(inputStream, RspamdHttpClient.Options.NONE).block();
     }
 
 }
