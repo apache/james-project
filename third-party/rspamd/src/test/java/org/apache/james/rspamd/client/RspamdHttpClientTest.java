@@ -201,6 +201,30 @@ class RspamdHttpClientTest {
         assertThat(analysisResult.hasVirus()).isFalse();
     }
 
+    @Test
+    void test() throws InterruptedException {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        client.reportAsSpam(new ByteArrayInputStream(nonVirusMessage), Optional.of("bob@domain.tld")).block();
+        client.reportAsHam(new ByteArrayInputStream(virusMessage), Optional.of("alice@domain.tld")).block();
+
+        client.reportAsSpam(new ByteArrayInputStream(spamMessage), Optional.of("alice@domain.tld")).block();
+        client.reportAsHam(new ByteArrayInputStream(hamMessage), Optional.of("bob@domain.tld")).block();
+
+
+        AnalysisResult analysisResultBob = client.checkV2(new ByteArrayInputStream(nonVirusMessage), Optional.of("bob@domain.tld")).block();
+        AnalysisResult analysisResultAlice = client.checkV2(new ByteArrayInputStream(nonVirusMessage), Optional.of("alice@domain.tld")).block();
+
+        System.out.println(analysisResultBob);
+        System.out.println(analysisResultAlice);
+
+        Thread.sleep(2000000);
+
+        assertThat(analysisResultBob.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
+        assertThat(analysisResultAlice.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
+    }
+
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
         client.reportAsSpam(inputStream, RspamdHttpClient.Options.NONE).block();
     }
