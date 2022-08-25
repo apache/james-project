@@ -172,6 +172,10 @@ public class RspamdHttpClient {
                             LOGGER.debug(responseBody);
                             return Mono.empty();
                         }
+                        if (responseBody.contains(" has been already learned as spam, ignore it")) {
+                            LOGGER.debug(responseBody);
+                            return Mono.empty();
+                        }
                         return Mono.error(() -> new RspamdUnexpectedException(responseBody));
                     });
         }

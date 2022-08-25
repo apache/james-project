@@ -174,6 +174,16 @@ class RspamdHttpClientTest {
     }
 
     @Test
+    void learnSpamMShouldBeIdempotent() {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block();
+        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void checkVirusMailUsingRspamdClientWithExactPasswordShouldReturnHasVirus() {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
