@@ -36,6 +36,8 @@ import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +52,8 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 
 public class RspamdHttpClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RspamdHttpClient.class);
+
     public static final String CHECK_V2_ENDPOINT = "/checkV2";
     public static final String LEARN_SPAM_ENDPOINT = "/learnspam";
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
@@ -163,7 +167,13 @@ public class RspamdHttpClient {
                     .flatMap(responseBody -> Mono.error(() -> new UnauthorizedException(responseBody)));
             default:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
-                    .flatMap(responseBody -> Mono.error(() -> new RspamdUnexpectedException(responseBody)));
+                    .flatMap(responseBody -> {
+                        if (responseBody.contains(" has been already learned as ham, ignore it")) {
+                            LOGGER.debug(responseBody);
+                            return Mono.empty();
+                        }
+                        return Mono.error(() -> new RspamdUnexpectedException(responseBody));
+                    });
         }
     }
 
