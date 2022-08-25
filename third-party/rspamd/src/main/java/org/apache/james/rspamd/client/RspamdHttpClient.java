@@ -112,7 +112,7 @@ public class RspamdHttpClient {
             .map(attr -> attr.getValue().value())
             .filter(String.class::isInstance)
             .map(String.class::cast)
-            .ifPresent(helo -> headers.add("User", helo));
+            .ifPresent(user -> headers.add("User", user));
     }
 
     public Mono<Void> reportAsSpam(InputStream content) {
