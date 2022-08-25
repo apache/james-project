@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.server.core.MailImpl;
@@ -42,6 +43,9 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
             final MailImpl mailImpl = (MailImpl) mail;
             mailImpl.setRemoteHost(session.getRemoteAddress().getHostName());
             mailImpl.setRemoteAddr(session.getRemoteAddress().getAddress().getHostAddress());
+            session.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection)
+                .ifPresent(helo ->  mail.setAttribute(new Attribute(Mail.SMTP_HELO, AttributeValue.of(helo))));
+
             if (session.getUsername() != null) {
                 mail.setAttribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of(session.getUsername().asString())));
             }

@@ -24,18 +24,24 @@ import static org.apache.james.rspamd.client.RspamdClientConfiguration.DEFAULT_T
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.mail.MessagingException;
 
 import org.apache.james.rspamd.exception.RspamdUnexpectedException;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.ReactorUtils;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
 import reactor.core.publisher.Mono;
@@ -67,6 +73,50 @@ public class RspamdHttpClient {
                 .map(Unpooled::wrappedBuffer))
             .responseSingle(this::checkMailHttpResponseHandler)
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
+
+    public Mono<AnalysisResult> checkV2(Mail mail) throws MessagingException {
+        return httpClient
+            .headers(headers -> transportInformationToHeaders(mail, headers))
+            .post()
+            .uri(CHECK_V2_ENDPOINT)
+            .send(ReactorUtils.toChunks(new MimeMessageInputStream(mail.getMessage()), BUFFER_SIZE)
+                .map(Unpooled::wrappedBuffer))
+            .responseSingle(this::checkMailHttpResponseHandler)
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
+
+    // CF https://rspamd.com/doc/architecture/protocol.html#http-headers
+    // Adding SMTP transport information improves Rspamd accuracy
+    private void transportInformationToHeaders(Mail mail, io.netty.handler.codec.http.HttpHeaders headers) {
+        // IP: Defines IP from which this message is received.
+        Optional.ofNullable(mail.getRemoteAddr()).ifPresent(ip -> headers.add("IP", ip));
+
+        // HELO: Defines SMTP helo
+        mail.getAttribute(Mail.SMTP_HELO)
+            .map(attr -> attr.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .ifPresent(helo -> headers.add("HELO", helo));
+
+        // From: Defines SMTP mail from command data
+        mail.getMaybeSender().asOptional().ifPresent(from -> headers.add("From", from.asString()));
+
+        // Rcpt: Defines SMTP recipient (there may be several Rcpt headers)
+        Optional.ofNullable(mail.getRecipients()).orElse(ImmutableList.of())
+            .forEach(rcpt -> headers.add("Rcpt", rcpt.asString()));
+
+        // User: Defines username for authenticated SMTP client.
+        mail.getAttribute(Mail.SMTP_AUTH_USER)
+            .map(attr -> attr.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .ifPresent(helo -> headers.add("User", helo));
+        mail.getAttribute(AttributeName.of("org.apache.james.jmap.send.MailMetaData.username"))
+            .map(attr -> attr.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .ifPresent(helo -> headers.add("User", helo));
     }
 
     public Mono<Void> reportAsSpam(InputStream content) {

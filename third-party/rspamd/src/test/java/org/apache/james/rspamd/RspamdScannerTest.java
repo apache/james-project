@@ -36,6 +36,8 @@ import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
@@ -133,6 +135,7 @@ class RspamdScannerTest {
 
         Mail mail = FakeMail.builder()
             .name("name")
+            .remoteAddr("1.55.251.37")
             .recipient("user1@exemple.com")
             .mimeMessage(mimeMessage)
             .build();
@@ -160,9 +163,36 @@ class RspamdScannerTest {
     }
 
     @Test
+    void serviceShouldNotFailWhenAllInfos() throws Exception {
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+            ClassLoader.getSystemResourceAsStream("mail/ham/ham1.eml"));
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .remoteAddr("127.0.0.1")
+            .sender("user1@exemple.com")
+            .recipient("user1@exemple.com")
+            .attribute(new Attribute(Mail.SMTP_HELO, AttributeValue.of("exemple.com")))
+            .attribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of("user1@exemple.com")))
+            .mimeMessage(mimeMessage)
+            .build();
+
+        mailet.service(mail);
+
+        Collection<PerRecipientHeaders.Header> headersForRecipient = mail.getPerRecipientSpecificHeaders()
+            .getHeadersForRecipient(new MailAddress("user1@exemple.com"));
+
+        assertThat(headersForRecipient.stream()
+                    .filter(header -> header.getName().equals(RspamdScanner.FLAG_MAIL.asString()))
+                    .filter(header -> header.getValue().startsWith("NO"))
+                    .findAny())
+                .isPresent();
+    }
+
+    @Test
     void shouldRewriteSubjectWhenRewriteSubjectIsTrueAndAnalysisResultHasDesiredRewriteSubject() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
                 .action(AnalysisResult.Action.REWRITE_SUBJECT)
                 .score(12.1F)
                 .requiredScore(14F)
@@ -195,7 +225,7 @@ class RspamdScannerTest {
     @Test
     void shouldNotRewriteSubjectWhenRewriteSubjectIsFalseByDefaultAndAnalysisResultHasDesiredRewriteSubject() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
             .action(AnalysisResult.Action.REWRITE_SUBJECT)
             .score(12.1F)
             .requiredScore(14F)
@@ -223,7 +253,7 @@ class RspamdScannerTest {
     @Test
     void shouldNotRewriteSubjectWhenRewriteSubjectIsTrueAndAnalysisResultDoesNotHaveDesiredRewriteSubject() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
             .action(AnalysisResult.Action.NO_ACTION)
             .score(0.99F)
             .requiredScore(14F)
