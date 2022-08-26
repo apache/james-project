@@ -153,7 +153,7 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - [PERF] Allow disabling host information in protocol MDC (#928)
  - JAMES-3433 MimeMessageStore StoragePolicy should be the same on read and writes
 
-## [3.7.1] - [Unreleased]
+## [3.7.1] - 2022-08-26
 
 ### Changes
 
