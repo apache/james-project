@@ -102,6 +102,7 @@ public interface Mail extends Serializable, Cloneable {
     String LOCAL_DELIVERY = "local-delivery";
 
     AttributeName SMTP_AUTH_USER = AttributeName.of("org.apache.james.SMTPAuthUser");
+    AttributeName SMTP_HELO = AttributeName.of("org.apache.james.HELO");
     AttributeName MAILET_ERROR = AttributeName.of("org.apache.james.MailetError");
     Attribute SENT_BY_MAILET_ATTRIBUTE = Attribute.convertToAttribute("org.apache.james.SentByMailet", true);
 

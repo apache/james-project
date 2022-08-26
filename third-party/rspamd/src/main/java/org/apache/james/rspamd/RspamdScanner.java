@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
-import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -64,7 +63,7 @@ public class RspamdScanner extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        AnalysisResult rspamdResult = rspamdHttpClient.checkV2(new MimeMessageInputStream(mail.getMessage())).block();
+        AnalysisResult rspamdResult = rspamdHttpClient.checkV2(mail).block();
 
         mail.getRecipients()
             .forEach(recipient -> appendRspamdResultHeader(mail, recipient, rspamdResult));
