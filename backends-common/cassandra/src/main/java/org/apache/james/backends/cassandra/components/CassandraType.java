@@ -29,6 +29,8 @@ import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateType;
 import com.google.common.base.MoreObjects;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraType {
     public enum InitializationStatus {
         ALREADY_DONE,
@@ -56,14 +58,14 @@ public class CassandraType {
         return name;
     }
 
-    public InitializationStatus initialize(KeyspaceMetadata keyspaceMetadata, CqlSession session) {
+    public Mono<InitializationStatus> initialize(KeyspaceMetadata keyspaceMetadata, CqlSession session) {
         if (keyspaceMetadata.getUserDefinedTypes().get(CqlIdentifier.fromCql(name)) != null) {
-            return InitializationStatus.ALREADY_DONE;
+            return Mono.just(InitializationStatus.ALREADY_DONE);
         }
 
-        session.execute(createStatement.build()
-            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session)));
-        return InitializationStatus.FULL;
+        return Mono.from(session.executeReactive(createStatement.build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session))))
+            .thenReturn(InitializationStatus.FULL);
     }
 
     @Override

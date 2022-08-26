@@ -22,6 +22,7 @@ import static org.apache.james.backends.cassandra.components.CassandraTable.Init
 import static org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus.FULL;
 import static org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus.PARTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,16 +33,24 @@ import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveRow;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverConfig;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.datastax.oss.driver.api.core.metadata.schema.TableMetadata;
 import com.datastax.oss.driver.api.core.type.DataTypes;
@@ -49,6 +58,7 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateTable;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import reactor.core.publisher.Mono;
 
 class CassandraTableTest {
     private static final String NAME = "tableName";
@@ -73,15 +83,39 @@ class CassandraTableTest {
         DriverContext context = mock(DriverContext.class);
         DriverConfig config = mock(DriverConfig.class);
         when(session.getContext()).thenReturn(context);
+        when(session.executeReactive(any(SimpleStatement.class))).thenReturn(new ReactiveResultSet() {
+            @NotNull
+            @Override
+            public Publisher<? extends ColumnDefinitions> getColumnDefinitions() {
+                return Mono.empty();
+            }
+
+            @NotNull
+            @Override
+            public Publisher<? extends ExecutionInfo> getExecutionInfos() {
+                return Mono.empty();
+            }
+
+            @NotNull
+            @Override
+            public Publisher<Boolean> wasApplied() {
+                return Mono.just(true);
+            }
+
+            @Override
+            public void subscribe(Subscriber<? super ReactiveRow> s) {
+                s.onComplete();
+            }
+        });
         when(context.getConfig()).thenReturn(config);
         when(config.getProfiles()).thenReturn(ImmutableMap.of());
         when(config.getDefaultProfile()).thenReturn(mock(DriverExecutionProfile.class));
 
-        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)))
+        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)).block())
                 .isEqualByComparingTo(FULL);
 
         verify(keyspace).getTable(NAME);
-        verify(session).execute(STATEMENT.build());
+        verify(session).executeReactive(STATEMENT.build());
     }
 
     @Test
@@ -89,12 +123,36 @@ class CassandraTableTest {
         KeyspaceMetadata keyspace = mock(KeyspaceMetadata.class);
         when(keyspace.getTable(NAME)).thenReturn(Optional.of(mock(TableMetadata.class)));
         CqlSession session = mock(CqlSession.class);
+        when(session.executeReactive(any(SimpleStatement.class))).thenReturn(new ReactiveResultSet() {
+            @NotNull
+            @Override
+            public Publisher<? extends ColumnDefinitions> getColumnDefinitions() {
+                return Mono.empty();
+            }
 
-        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)))
+            @NotNull
+            @Override
+            public Publisher<? extends ExecutionInfo> getExecutionInfos() {
+                return Mono.empty();
+            }
+
+            @NotNull
+            @Override
+            public Publisher<Boolean> wasApplied() {
+                return Mono.just(true);
+            }
+
+            @Override
+            public void subscribe(Subscriber<? super ReactiveRow> s) {
+                s.onComplete();
+            }
+        });
+
+        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)).block())
                 .isEqualByComparingTo(ALREADY_DONE);
 
         verify(keyspace).getTable(NAME);
-        verify(session, never()).execute(STATEMENT.build());
+        verify(session, never()).executeReactive(STATEMENT.build());
     }
 
     @ParameterizedTest
