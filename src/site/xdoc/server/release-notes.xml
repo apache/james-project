@@ -39,6 +39,14 @@
                 of a <a href="https://github.com/apache/james-project/blob/master/CHANGELOG.md">changelog file</a>
                 as well as details <a href="https://github.com/apache/james-project/blob/master/upgrade-instructions.md">upgrade instructions</a>.</p>
         </section>
+        <section name="Version 3.7.1">
+            <p>Released March 2021</p>
+            <p><a href="https://james.apache.org/james/update/2022/08/26/james-3.7.1.html">Read the release announce</a>. </p>
+        </section>
+        <section name="Version 3.7.0">
+            <p>Released March 2021</p>
+            <p><a href="https://james.apache.org/james/update/2022/03/21/james-3.7.0.html">Read the release announce</a>. </p>
+        </section>
         <section name="Version 3.6.1">
             <p>Released December 2021</p>
             <p><a href="https://james.apache.org/james/update/2021/12/02/james-3.6.1.html">Read the release announce</a>. </p>
@@ -49,10 +57,6 @@
                 <li><b>CVE-2021-40111</b>: Apache James IMAP parsing Denial Of Service</li>
                 <li><b>CVE-2021-40525</b>: Apache James: Sieve file storage vulnerable to path traversal attacks</li>
             </ul>
-        </section>
-        <section name="Version 3.7.0">
-            <p>Released March 2021</p>
-            <p><a href="https://james.apache.org/james/update/2022/03/21/james-3.7.0.html">Read the release announce</a>. </p>
         </section>
         <section name="Version 3.6.0">
             <p>Released March 2021</p>
