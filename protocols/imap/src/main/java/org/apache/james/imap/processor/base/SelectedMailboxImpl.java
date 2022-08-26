@@ -192,7 +192,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
 
     @Override
     public Mono<Void> deselect() {
-        return Mono.from(registration.get().unregister())
+        return Mono.from(
+            Optional.ofNullable(registration.get())
+                .map(Registration::unregister)
+                .orElse(Mono.empty()))
             .then(Mono.fromRunnable(this::clearInternalStructures)
                 .subscribeOn(Schedulers.boundedElastic()))
             .then();
