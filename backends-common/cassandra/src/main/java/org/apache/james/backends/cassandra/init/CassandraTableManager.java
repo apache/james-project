@@ -52,9 +52,9 @@ public class CassandraTableManager {
         KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
         return module.moduleTables()
-                .stream()
+                .parallelStream()
                 .map(table -> table.initialize(keyspaceMetadata, session, typesProvider))
-                .reduce((left, right) -> left.reduce(right))
+                .reduce(InitializationStatus::reduce)
                 .orElse(InitializationStatus.ALREADY_DONE);
     }
 

@@ -142,8 +142,7 @@ public interface CassandraModule {
             Preconditions.checkState(comment.isPresent(), "`comment` is compulsory");
 
             Function<CassandraTypesProvider, CreateTable> createStatement = toCreateStatement.apply(
-                createTable(tableName)
-                    .ifNotExists());
+                createTable(tableName));
 
             Function<CassandraTypesProvider, CreateTableWithOptions> finalStatement = options.map(optionTramsformation ->
                createStatement.andThen(table -> optionTramsformation.apply(table).withComment(comment.get())))
@@ -166,8 +165,7 @@ public interface CassandraModule {
         public Builder statement(Function<CreateTypeStart, CreateType> createStatement) {
             return originalBuilderReference.addType(
                 new CassandraType(typeName, createStatement.apply(
-                    createType(typeName)
-                        .ifNotExists())));
+                    createType(typeName))));
         }
     }
 

@@ -39,7 +39,7 @@ public class CassandraTypesCreator {
     public InitializationStatus initializeTypes() {
         KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
-        return types.stream()
+        return types.parallelStream()
                 .map(type -> type.initialize(keyspaceMetadata, session))
                 .reduce(InitializationStatus::reduce)
                 .orElse(InitializationStatus.ALREADY_DONE);
