@@ -44,11 +44,6 @@ public class SpamAssassinModuleExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        spamAssassin.afterAll(extensionContext);
-    }
-
-    @Override
     public Module getModule() {
         return new SpamAssassinTestModule(spamAssassin);
     }

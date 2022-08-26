@@ -29,7 +29,7 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.apache.james.util.docker.RateLimiters;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -37,48 +37,50 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.Base58;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
-public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallback, ParameterResolver {
     private static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(30);
+    private static final String UNIQUE_IDENTIFIER = Base58.randomString(16).toLowerCase();
 
-    private final GenericContainer<?> spamAssassinContainer;
-    private SpamAssassin spamAssassin;
+    private static final boolean DELETE_ON_EXIT = false;
+    private static final GenericContainer<?> spamAssassinContainer  = new GenericContainer<>(
+        new ImageFromDockerfile("james-spamassassin/" + UNIQUE_IDENTIFIER, DELETE_ON_EXIT)
+            .withFileFromClasspath("Dockerfile", "docker/spamassassin/Dockerfile")
+            .withFileFromClasspath("local.cf", "docker/spamassassin/local.cf")
+            .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
+            .withFileFromClasspath("spamd.sh", "docker/spamassassin/spamd.sh")
+            .withFileFromClasspath("rule-update.sh", "docker/spamassassin/rule-update.sh")
+            .withFileFromClasspath("bayes_pg.sql", "docker/spamassassin/bayes_pg.sql"))
+        .withCreateContainerCmdModifier(cmd -> cmd.withName("spam-assassin-" + UUID.randomUUID().toString()))
+        .withStartupTimeout(STARTUP_TIMEOUT)
+        .withExposedPorts(783)
+        .withTmpFs(ImmutableMap.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=200m"))
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
-    public SpamAssassinExtension() {
-        boolean deleteOnExit = false;
-        spamAssassinContainer = new GenericContainer<>(
-            new ImageFromDockerfile("james-spamassassin/" + Base58.randomString(16).toLowerCase(), deleteOnExit)
-                .withFileFromClasspath("Dockerfile", "docker/spamassassin/Dockerfile")
-                .withFileFromClasspath("local.cf", "docker/spamassassin/local.cf")
-                .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
-                .withFileFromClasspath("spamd.sh", "docker/spamassassin/spamd.sh")
-                .withFileFromClasspath("rule-update.sh", "docker/spamassassin/rule-update.sh")
-                .withFileFromClasspath("bayes_pg.sql", "docker/spamassassin/bayes_pg.sql"));
-        spamAssassinContainer
-            .withCreateContainerCmdModifier(cmd -> cmd.withName(containerName()))
-            .withStartupTimeout(STARTUP_TIMEOUT)
-            .withExposedPorts(783)
-            .waitingFor(new SpamAssassinWaitStrategy(spamAssassinContainer, STARTUP_TIMEOUT));
+    static {
+        spamAssassinContainer.start();
     }
+
+    private SpamAssassin spamAssassin;
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        spamAssassinContainer.start();
         spamAssassin = new SpamAssassin(spamAssassinContainer);
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
         clearSpamAssassinDatabase();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) {
-        spamAssassinContainer.close();
     }
 
     private void clearSpamAssassinDatabase() {
@@ -103,12 +105,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
         return spamAssassin;
     }
 
-    private String containerName() {
-        return "spam-assassin-" + UUID.randomUUID().toString();
-    }
-
     public static class SpamAssassin {
-        
         private static final int SPAMASSASSIN_PORT = 783;
 
         private final String ip;
@@ -130,8 +127,14 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
         }
 
         public void train(String user) throws IOException, URISyntaxException {
-            train(user, Paths.get(ClassLoader.getSystemResource("spamassassin_db/spam").toURI()), TrainingKind.SPAM);
-            train(user, Paths.get(ClassLoader.getSystemResource("spamassassin_db/ham").toURI()), TrainingKind.HAM);
+            Path spamPath = Paths.get(ClassLoader.getSystemResource("spamassassin_db/spam").toURI());
+            Path hamPath = Paths.get(ClassLoader.getSystemResource("spamassassin_db/ham").toURI());
+
+            Flux.merge(
+                Mono.fromRunnable(Throwing.runnable(() -> train(user, spamPath, TrainingKind.SPAM))),
+                Mono.fromRunnable(Throwing.runnable(() -> train(user, hamPath, TrainingKind.HAM))))
+                .subscribeOn(Schedulers.boundedElastic())
+                .blockLast();
         }
 
         private void train(String user, Path folder, TrainingKind trainingKind) throws IOException {
@@ -140,7 +143,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
                 .withRemotePath("/root")
                 .exec();
             try (Stream<Path> paths = Files.walk(folder)) {
-                paths
+                paths.parallel()
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
                     .forEach(Throwing.consumer(file -> spamAssassinContainer.execInContainer("sa-learn",

@@ -131,7 +131,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
@@ -257,7 +257,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
@@ -322,7 +322,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
@@ -387,7 +387,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
@@ -512,7 +512,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
@@ -596,7 +596,7 @@ public interface SpamAssassinContract {
             .extract()
             .path(ARGUMENTS + ".messageIds");
 
-        messageIds
+        messageIds.parallelStream()
             .forEach(messageId -> given()
                 .header("Authorization", aliceAccessToken.asString())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
