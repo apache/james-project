@@ -76,7 +76,7 @@ public class CassandraCacheSessionModule extends AbstractModule {
             this.cluster = cluster;
 
             if (clusterConfiguration.shouldCreateKeyspace()) {
-                KeyspaceFactory.createKeyspace(keyspacesConfiguration.cacheKeyspaceConfiguration(), cluster);
+                KeyspaceFactory.createKeyspace(keyspacesConfiguration.cacheKeyspaceConfiguration(), cluster).block();
             }
         }
     }

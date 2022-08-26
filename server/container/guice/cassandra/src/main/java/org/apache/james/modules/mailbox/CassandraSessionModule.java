@@ -166,7 +166,7 @@ public class CassandraSessionModule extends AbstractModule {
             this.cluster = sessionProvider.get();
 
             if (clusterConfiguration.shouldCreateKeyspace()) {
-                KeyspaceFactory.createKeyspace(keyspacesConfiguration.mainKeyspaceConfiguration(), cluster);
+                KeyspaceFactory.createKeyspace(keyspacesConfiguration.mainKeyspaceConfiguration(), cluster).block();
             }
         }
     }

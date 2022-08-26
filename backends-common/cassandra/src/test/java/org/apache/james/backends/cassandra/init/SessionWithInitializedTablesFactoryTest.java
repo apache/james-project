@@ -129,7 +129,7 @@ class SessionWithInitializedTablesFactoryTest {
             .build();
         KeyspaceConfiguration keyspaceConfiguration = DockerCassandra.mainKeyspaceConfiguration();
         CqlSession cluster = ClusterFactory.create(clusterConfiguration, keyspaceConfiguration);
-        KeyspaceFactory.createKeyspace(keyspaceConfiguration, cluster);
+        KeyspaceFactory.createKeyspace(keyspaceConfiguration, cluster).block();
 
         return () -> new SessionWithInitializedTablesFactory( cluster, MODULE).get();
     }

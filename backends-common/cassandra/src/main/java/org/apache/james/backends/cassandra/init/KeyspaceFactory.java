@@ -27,18 +27,22 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 public class KeyspaceFactory {
-    public static void createKeyspace(KeyspaceConfiguration configuration, CqlSession session) {
+    public static Mono<Void> createKeyspace(KeyspaceConfiguration configuration, CqlSession session) {
         if (!keyspaceExist(session, configuration.getKeyspace())) {
-            session.execute(SchemaBuilder.createKeyspace(configuration.getKeyspace())
+            return Mono.from(session.executeReactive(SchemaBuilder.createKeyspace(configuration.getKeyspace())
                 .ifNotExists()
                 .withReplicationOptions(ImmutableMap.<String, Object>builder()
                     .put("class", "SimpleStrategy")
                     .put("replication_factor", configuration.getReplicationFactor())
                     .build())
                 .withDurableWrites(configuration.isDurableWrites())
-                .build());
+                .build()))
+                .then();
         }
+        return Mono.empty();
     }
 
     @VisibleForTesting
