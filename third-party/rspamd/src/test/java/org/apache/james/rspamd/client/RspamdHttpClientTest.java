@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
@@ -168,8 +169,8 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsHam(new ByteArrayInputStream(hamMessage)).block();
-        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
+        client.reportAsHam(new ByteArrayInputStream(hamMessage), RspamdHttpClient.Options.NONE).block();
+        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage), RspamdHttpClient.Options.NONE).block())
             .doesNotThrowAnyException();
     }
 
@@ -178,8 +179,8 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block();
-        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
+        client.reportAsSpam(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.NONE).block();
+        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.NONE).block())
             .doesNotThrowAnyException();
     }
 
@@ -206,15 +207,15 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsSpam(new ByteArrayInputStream(nonVirusMessage), Optional.of("bob@domain.tld")).block();
-        client.reportAsHam(new ByteArrayInputStream(virusMessage), Optional.of("alice@domain.tld")).block();
+        client.reportAsSpam(new ByteArrayInputStream(nonVirusMessage), RspamdHttpClient.Options.forUser(Username.of("bob@domain.tld"))).block();
+        client.reportAsHam(new ByteArrayInputStream(virusMessage), RspamdHttpClient.Options.forUser(Username.of("alice@domain.tld"))).block();
 
-        client.reportAsSpam(new ByteArrayInputStream(spamMessage), Optional.of("alice@domain.tld")).block();
-        client.reportAsHam(new ByteArrayInputStream(hamMessage), Optional.of("bob@domain.tld")).block();
+        client.reportAsSpam(new ByteArrayInputStream(spamMessage), RspamdHttpClient.Options.forUser(Username.of("alice@domain.tld"))).block();
+        client.reportAsHam(new ByteArrayInputStream(hamMessage), RspamdHttpClient.Options.forUser(Username.of("bob@domain.tld"))).block();
 
 
-        AnalysisResult analysisResultBob = client.checkV2(new ByteArrayInputStream(nonVirusMessage), Optional.of("bob@domain.tld")).block();
-        AnalysisResult analysisResultAlice = client.checkV2(new ByteArrayInputStream(nonVirusMessage), Optional.of("alice@domain.tld")).block();
+        AnalysisResult analysisResultBob = client.checkV2(new ByteArrayInputStream(nonVirusMessage), RspamdHttpClient.Options.forUser(Username.of("bob@domain.tld"))).block();
+        AnalysisResult analysisResultAlice = client.checkV2(new ByteArrayInputStream(nonVirusMessage), RspamdHttpClient.Options.forUser(Username.of("alice@domain.tld"))).block();
 
         System.out.println(analysisResultBob);
         System.out.println(analysisResultAlice);
