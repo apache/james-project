@@ -45,6 +45,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>
@@ -84,6 +88,11 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailrepository-api</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -151,7 +160,8 @@
                         org/apache/james/user/jpa/model/JPAUser.class,
                         org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,
                         org/apache/james/domainlist/jpa/model/JPADomain.class,
-                        org/apache/james/mailrepository/jpa/JPAUrl.class</includes>
+                        org/apache/james/mailrepository/jpa/JPAUrl.class,
+                        org/apache/james/mailrepository/jpa/model/JPAMail.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
                     <toolProperties>
@@ -166,7 +176,8 @@
                                 org.apache.james.user.jpa.model.JPAUser;
                                 org.apache.james.rrt.jpa.model.JPARecipientRewrite;
                                 org.apache.james.domainlist.jpa.model.JPADomain;
-                                org.apache.james.mailrepository.jpa.JPAUrl)</value>
+                                org.apache.james.mailrepository.jpa.JPAUrl;
+                                org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>
                     </toolProperties>
                 </configuration>

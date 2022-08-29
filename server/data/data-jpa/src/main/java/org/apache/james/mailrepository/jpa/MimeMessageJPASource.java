@@ -17,31 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.mailrepository.jpa;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
-import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.mailrepository.jpa.JPAMailRepository;
-import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
-import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import org.apache.james.server.core.MimeMessageSource;
 
-public class JPAMailRepositoryModule extends AbstractModule {
+public class MimeMessageJPASource implements MimeMessageSource {
+
+    private final JPAMailRepository jpaMailRepository;
+    private final String key;
+    private final byte[] body;
+
+    public MimeMessageJPASource(JPAMailRepository jpaMailRepository, String key, byte[] body) {
+        this.jpaMailRepository = jpaMailRepository;
+        this.key = key;
+        this.body = body;
+    }
 
     @Override
-    protected void configure() {
-        bind(JPAMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
+    public String getSourceId() {
+        return jpaMailRepository.getRepositoryName() + "/" + key;
+    }
 
-        bind(MailRepositoryUrlStore.class).to(JPAMailRepositoryUrlStore.class);
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return new ByteArrayInputStream(body);
+    }
 
-        bind(MailRepositoryStoreConfiguration.Item.class)
-            .toProvider(() -> new MailRepositoryStoreConfiguration.Item(
-                ImmutableList.of(new Protocol("jpa")),
-                JPAMailRepository.class.getName(),
-                new BaseHierarchicalConfiguration()));
+    @Override
+    public long getMessageSize() throws IOException {
+        return body.length;
     }
 }

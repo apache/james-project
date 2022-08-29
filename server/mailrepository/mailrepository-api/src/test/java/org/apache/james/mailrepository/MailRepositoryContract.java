@@ -163,6 +163,8 @@ public interface MailRepositoryContract {
             .name(MAIL_1.asString())
             .sender(MailAddress.nullSender())
             .recipient(MailAddressFixture.RECIPIENT1)
+            .lastUpdated(new Date())
+            .state(Mail.DEFAULT)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSubject("test")
                 .setText("String body")
