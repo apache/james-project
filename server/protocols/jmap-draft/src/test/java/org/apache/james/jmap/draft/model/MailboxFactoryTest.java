@@ -180,7 +180,7 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
-            Optional.of(ImmutableList.of(new MailboxMetaData(parentMailboxPath, parentId, DELIMITER,
+            Optional.of(ImmutableMap.of(parentMailboxPath, new MailboxMetaData(parentMailboxPath, parentId, DELIMITER,
                 MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
                 MailboxCounters.empty(parentId)))),
             mailboxSession).block();
@@ -212,7 +212,7 @@ public class MailboxFactoryTest {
         Mailbox retrievedMailbox = sut.builder()
             .id(otherId.get())
             .session(mailboxSession)
-            .usingPreloadedMailboxesMetadata(Optional.of(ImmutableList.of(new MailboxMetaData(
+            .usingPreloadedMailboxesMetadata(Optional.of(ImmutableMap.of(inbox, new MailboxMetaData(
                 inbox,
                 preLoadedId,
                 DELIMITER,

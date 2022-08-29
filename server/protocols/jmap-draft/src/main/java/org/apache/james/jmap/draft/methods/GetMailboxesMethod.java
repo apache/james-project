@@ -23,7 +23,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.Comparator;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,6 +41,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -61,7 +62,7 @@ public class GetMailboxesMethod implements Method {
 
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMailboxes");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("mailboxes");
-    private static final Optional<List<MailboxMetaData>> NO_PRELOADED_METADATA = Optional.empty();
+    private static final Optional<Map<MailboxPath, MailboxMetaData>> NO_PRELOADED_METADATA = Optional.empty();
     private static final String ACTION = "GET_MAILBOXES";
 
     private final MailboxManager mailboxManager;
@@ -149,12 +150,12 @@ public class GetMailboxesMethod implements Method {
     }
 
     private Flux<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) {
-        Mono<List<MailboxMetaData>> userMailboxesMono = getAllMailboxesMetaData(mailboxSession).collectList();
+        Mono<Map<MailboxPath, MailboxMetaData>> userMailboxesMono = getAllMailboxesMetaData(mailboxSession).collectMap(m -> m.getPath());
         Mono<QuotaLoaderWithDefaultPreloaded> quotaLoaderMono = QuotaLoaderWithDefaultPreloaded.preLoad(quotaRootResolver, quotaManager, mailboxSession);
 
         return userMailboxesMono.zipWith(quotaLoaderMono)
             .flatMapMany(
-                tuple -> Flux.fromIterable(tuple.getT1())
+                tuple -> Flux.fromIterable(tuple.getT1().values())
                     .flatMap(mailboxMetaData -> mailboxFactory.builder()
                         .mailboxMetadata(mailboxMetaData)
                         .session(mailboxSession)

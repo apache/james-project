@@ -120,6 +120,10 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
              subscriptions: Subscriptions,
              allMailboxesMetadata: Seq[MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
+    val allMetadataMap: Map[MailboxPath, MailboxMetaData] = allMailboxesMetadata
+      .map(m => (m.getPath, m))
+      .toMap
+
     val sanitizedCounters: MailboxCounters.Sanitized = mailboxMetaData.getCounters.sanitize()
 
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
@@ -133,9 +137,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
             val rights: Rights = getRights(mailboxMetaData.getResolvedAcls)
             val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
             val parentPath: Option[MailboxPath] = getParentPath(mailboxMetaData.getPath, mailboxSession)
-            val parentId: Option[MailboxId] = allMailboxesMetadata.filter(otherMetadata => parentPath.contains(otherMetadata.getPath))
-              .map(_.getId)
-              .headOption
+            val parentId: Option[MailboxId] = parentPath.flatMap(path => allMetadataMap.get(path)).map(_.getId)
             val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
             val isSubscribed: IsSubscribed = subscriptions.isSubscribed(mailboxMetaData)
 
