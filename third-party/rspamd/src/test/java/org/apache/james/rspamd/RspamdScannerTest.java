@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -228,7 +229,7 @@ class RspamdScannerTest {
     @Test
     void serviceShouldMoveRejetedEmailToTheSpamProcessor() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
                 .action(AnalysisResult.Action.REJECT)
                 .score(12.1F)
                 .requiredScore(14F)
@@ -261,7 +262,7 @@ class RspamdScannerTest {
     @Test
     void serviceShouldNotMoveRejetedEmailWhenNoSpamProcessor() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
                 .action(AnalysisResult.Action.REJECT)
                 .score(12.1F)
                 .requiredScore(14F)
@@ -293,7 +294,7 @@ class RspamdScannerTest {
     @Test
     void serviceShouldNotMoveLegitimateEmailToSpamProcessor() throws Exception {
         RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
-        when(rspamdHttpClient.checkV2(any())).thenReturn(Mono.just(AnalysisResult.builder()
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
                 .action(AnalysisResult.Action.ADD_HEADER)
                 .score(12.1F)
                 .requiredScore(14F)
