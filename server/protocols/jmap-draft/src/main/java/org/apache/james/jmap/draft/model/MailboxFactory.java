@@ -19,6 +19,7 @@
 package org.apache.james.jmap.draft.model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -84,7 +85,7 @@ public class MailboxFactory {
         private MailboxSession session;
         private Optional<MailboxId> id = Optional.empty();
         private Optional<MailboxMetaData> mailboxMetaData = Optional.empty();
-        private Optional<List<MailboxMetaData>> userMailboxesMetadata = Optional.empty();
+        private Optional<Map<MailboxPath, MailboxMetaData>> userMailboxesMetadata = Optional.empty();
 
         private MailboxBuilder(MailboxFactory mailboxFactory, QuotaLoader quotaLoader) {
             this.mailboxFactory = mailboxFactory;
@@ -111,7 +112,7 @@ public class MailboxFactory {
             return this;
         }
 
-        public MailboxBuilder usingPreloadedMailboxesMetadata(Optional<List<MailboxMetaData>> userMailboxesMetadata) {
+        public MailboxBuilder usingPreloadedMailboxesMetadata(Optional<Map<MailboxPath, MailboxMetaData>> userMailboxesMetadata) {
             this.userMailboxesMetadata = userMailboxesMetadata;
             return this;
         }
@@ -172,7 +173,7 @@ public class MailboxFactory {
                          MailboxPath mailboxPath,
                          MailboxCounters.Sanitized mailboxCounters,
                          MailboxACL resolvedAcl,
-                         Optional<List<MailboxMetaData>> userMailboxesMetadata,
+                         Optional<Map<MailboxPath, MailboxMetaData>> userMailboxesMetadata,
                          QuotaLoader quotaLoader,
                          MailboxSession mailboxSession) {
         boolean isOwner = mailboxPath.belongsTo(mailboxSession);
@@ -224,7 +225,7 @@ public class MailboxFactory {
     }
 
     @VisibleForTesting
-    Mono<Optional<MailboxId>> getParentIdFromMailboxPath(MailboxPath mailboxPath, Optional<List<MailboxMetaData>> userMailboxesMetadata,
+    Mono<Optional<MailboxId>> getParentIdFromMailboxPath(MailboxPath mailboxPath, Optional<Map<MailboxPath, MailboxMetaData>> userMailboxesMetadata,
                                                    MailboxSession mailboxSession) {
         List<MailboxPath> levels = mailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter());
         if (levels.size() <= 1) {
@@ -241,10 +242,7 @@ public class MailboxFactory {
             .map(Optional::of);
     }
 
-    private Optional<MailboxId> retrieveParentFromMetadata(MailboxPath parent, List<MailboxMetaData> list) {
-        return list.stream()
-            .filter(metadata -> metadata.getPath().equals(parent))
-            .map(MailboxMetaData::getId)
-            .findAny();
+    private Optional<MailboxId> retrieveParentFromMetadata(MailboxPath parent, Map<MailboxPath, MailboxMetaData> userMailboxesMetadata) {
+        return Optional.ofNullable(userMailboxesMetadata.get(parent)).map(MailboxMetaData::getId);
     }
 }
