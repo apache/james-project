@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.opensearch;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -56,29 +58,28 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
 
         @Override
         public void clean(DockerOpenSearch elasticSearch) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            elasticSearch.flushIndices();
-            ReactorOpenSearchClient client = elasticSearch.clientProvider().get();
-            new DeleteByQueryPerformer(client, aliasName)
-                .perform(QueryBuilders.matchAllQuery())
-                .block();
-
-            SearchRequest searchRequest = new SearchRequest();
-            searchRequest.source(new SearchSourceBuilder()
-                .query(QueryBuilders.matchAllQuery()));
             Awaitility.await()
-                .until(() -> client.search(new SearchRequest(searchRequest), RequestOptions.DEFAULT)
-                    .map(searchResponse -> searchResponse.getHits().getHits().length)
-                    .block() == 0);
-            try {
-                client.close();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+                .until(() -> {
+                    elasticSearch.flushIndices();
+                    ReactorOpenSearchClient client = elasticSearch.clientProvider().get();
+                    new DeleteByQueryPerformer(client, aliasName)
+                        .perform(QueryBuilders.matchAllQuery())
+                        .block();
+                    SearchRequest searchRequest = new SearchRequest();
+                    searchRequest.source(new SearchSourceBuilder()
+                        .query(QueryBuilders.matchAllQuery()));
+                    elasticSearch.flushIndices();
+                    boolean result = client.search(new SearchRequest(searchRequest), RequestOptions.DEFAULT)
+                        .map(searchResponse -> searchResponse.getHits().getHits().length)
+                        .block() == 0;
+
+                    try {
+                        client.close();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return result;
+                });
         }
     }
 
