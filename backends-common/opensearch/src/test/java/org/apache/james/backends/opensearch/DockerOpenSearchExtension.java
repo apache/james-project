@@ -19,17 +19,17 @@
 
 package org.apache.james.backends.opensearch;
 
-import java.time.Duration;
-
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.RequestOptions;
 import org.opensearch.index.query.QueryBuilders;
-
-import reactor.core.publisher.Mono;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
@@ -62,11 +62,23 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
                 throw new RuntimeException(e);
             }
             elasticSearch.flushIndices();
-            new DeleteByQueryPerformer(elasticSearch.clientProvider().get(), aliasName)
+            ReactorOpenSearchClient client = elasticSearch.clientProvider().get();
+            new DeleteByQueryPerformer(client, aliasName)
                 .perform(QueryBuilders.matchAllQuery())
-                .delayElement(Duration.ofMillis(50))
                 .block();
-            elasticSearch.flushIndices();
+
+            SearchRequest searchRequest = new SearchRequest();
+            searchRequest.source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery()));
+            Awaitility.await()
+                .until(() -> client.search(new SearchRequest(searchRequest), RequestOptions.DEFAULT)
+                    .map(searchResponse -> searchResponse.getHits().getHits().length)
+                    .block() == 0);
+            try {
+                client.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
