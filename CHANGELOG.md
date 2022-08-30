@@ -4,7 +4,177 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
-### Changed
+
+This release brings the following significant changes:
+
+ - Upgrade TCP protocols to Netty 4
+ - Migrate IMAP protocol as reactive
+ - Upgrade to Cassandra driver 4
+ - Migrate to OpenSearch
+ - Review our threading model to cap threads performing blocking tasks
+
+### Added
+
+ - JAMES-3775 Rspamd extension
+ - JAMES-3810 Health check for the RabbitMQ MailQueue view
+ - JAMES-3788 IMAP/SMTP compatibility with the proxy protocol (HAProxy)
+ - JAMES-3802 Webadmin route to clean events of a dead letter group
+ - JAMES-3784 EmptyErrorMailRepositoryHealthCheck
+ - JAMES-3796 Guice support the custom task in extension
+ - JAMES-3794 Implement ActiveMQ HealthCheck (#1105)
+ - JAMES-3778 Extension example for publishing metrics into Graphite
+ - JAMES-3757 IMAP/SMTP OIDC extensions should support impersonation (#1035)
+ - JAMES-3756 Webadmin API for delegation
+ - JAMES-3768 Allow disabling Cassandra Mail queue view (#1009)
+ - JAMES-3758 Webadmin task to delete old emails from the user INBOX
+ - JAMES-3755 IMAP/SMTP OIDC token introspection (#1006)
+ - JAMES-3769 Search overrides to offload searches on OpenSearch to Cassandra when meaningful
+ - JAMES-3715 Allow disabling graceful shutdown
+ - JAMES-3724 Leak detection to prevent temporary file leaks
+ - JAMES-3723 Allow to not consume emails upon reprocessing
+
+### Changes
+
+ - JAMES-3774 Migrate to Cassandra driver 4
+ - JAMES-3711 Migrate to OpenSearch instead of ElasticSearch
+ - JAMES-3797 Move SpamAssassin as an extension
+ - JAMES-3775 Move ClamAV as an extension
+ - JAMES-3711 Move ElasticSearch as a separate extension (#1110)
+ - JAMES-3773 Migrate from Schedulers.elastic() to Schedulers.boundedElastic()
+ - JAMES-3799 Get rid of Body FetchType
+ - JAMES-3809 Get rid of cassandra.properties chunk.size.message.read in favor of batchsize.properties (#1148)
+ - JAMES-3804 Improve error handling when mailetContainer misses a processor
+ - JAMES-3806 S3BlobStoreDAO logs missing blob id if not found
+ - JAMES-3799 Optimize memory requirements of SimpleMessageSearchIndex
+ - JAMES-3792 Remote and Local delivery should log MIME MessageId
+ - JAMES-3776 SMTP should log MIME MessageId in MDC
+ - JAMES-3786 Mailbox index could support dedicated language (example)
+ - JAMES-3774 JVM properties: io.netty.leakDetection.level
+ - JAMES-3390 Allow Email/query to put inMailbox in its top level AND operators (#1060)
+ - [Upgrade] Multiple dependencies updates
+ - JAMES-3772 Migrate rabbitMQ client from commons-pool2 to reactor-pool
+ - JAMES-3737 Reactive IMAP
+ - JAMES-3747 Metrics for RabbitMQ channelPool
+ - JAMES-3715 Migration to Netty 4
+ - JAMES-3594 ReadOnlyLDAPUser adapt log message (#925)
+ - Naming threads: Spooler threads should be named
+ - Naming threads: RabbitMQ driver threads should be named
+ - Naming threads: ElasticSearch driver threads should be named
+ 
+### Fixed
+
+ - JAMES-3775 ClamAV support had been fixed
+ - Various build time and build stability enhancements
+ - JAMES-3810 Reliability for browsing large RabbitMQMailQueue
+ - JAMES-3810 Avoid unacknowledged messages in RabbitMQMailQueue
+ - JAMES-3803 RemoteDelivery uses different scheduler for dequeuing
+   - (this could cause ActiveMQMailQueue to hang under load)
+ - JAMES-3798 fix bounce exception when no date header is present (#1107)
+ - JAMES-3791 Wrong sender for RemoteDelivery under load
+ - Add a vhost configuration option to RabbitMQ
+ - [IMPROVEMENT] Prevent RMI from doing System.gc every hour
+ - [FIX] NettyImapSession race conditions
+ - JAMES-2146 James should exit when startup sequence fails
+ - JAMES-3783 (JMAP) multipart/alternative should display text/html last
+ - JAMES-3773 Acquiring the Mailbox path lock on another dedicated Scheduler
+ - JAMES-343 Mail: Fix resetting DSN parameters
+ - JAMES-3431 Stricter validation for DSN ENVID (#1002)
+ - JAMES-3751 IMAP SEARCH was ignoring MODSEQ for last range
+   - Tests for RFC-4731 RFC-5182
+ - JAMES-3753 Fix FlowedMessageUtils.deflow() (#972)
+ - JAMES-3737 Don't encapsulate a Cassandra query in a lock
+ - JAMES-3744 remove redundant hashmaps which lead to OOM
+ - JAMES-3743 Mailbox/get failure upon negative quotas (#955)
+ - JAMES-3733 Support multi EventBus when re-deliver events from the dea… (#933)
+ - JAMES-3729 LocalDelivery error handling is non-standard (#936)
+ - JAMES-3439 Email/set create should encode attachments in base64
+ - JAMES-3722 Parse an arbitrary number of IMAP FETCH modifiers
+ - JAMES-3722 SELECT do not supports CONDSTORE to be immediately followed by a ')'
+ - JAMES-3722 SELECT + QRESYNC did not comply with formal syntax + Fix for IMAP SELECT QRESYNC known sequences application
+ - [FIX] UidValidity generate fails for Long.MIN_VALUE
+ - JAMES-3715 Fix a data race upon IDLE
+ - JMAP Email/set create should use tooLarge when attempt to create an oversize mail (#918)
+ 
+### Documentation
+
+ - JAMES-3734 Document database benchmark methodologies and base performances (#937)
+
+### Security
+
+ - [UPGRADE] Spark 2.9.3 -> 2.9.4 (#1129)
+ - JAMES-3789 Upgrade apache commons-configuration to 2.8.0
+ 
+### Performance
+
+Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and JMAP.
+ 
+ - JAMES-3773 Slightly improve S3BlobStoreDAO::readReactive
+ - [FIX] MailboxFactory should not block when parentId
+ - [PERF] RequestObject::using is better suited as a set
+ - [PERF] Slightly improve Email/query deserialization
+ - [PERF] Optimize further response serialization
+ - [PERF] Optimize further Mailbox/get serialization
+ - [PERF] Optimize further Email/get serialization
+ - Tiny performance enhancement for JMAP RFC-8621
+ - [REACTOR] TerminationSubscriber don't require a subscriber switch
+ - [REACTOR] Reactify MessageManager::delete
+ - [REACTOR] JMAP RFC-8621: Reactify Mailbox/set deletion
+ - [REACTOR] JMAP RFC-8621: Reactify Email/set massive operations
+ - [REACTOR] JMAP RFC-8621: Remove unneeded subscribeOn calls
+ - [REACTOR] JMAP RFC-8621: Remove unneeded subscribeOn calls
+ - [PERF] Rely more on UnsynchronizedByteArrayOutputStream
+ - [PERF] MimeMessageInputStreamSource: prefer FileInputStream VS SharedFileInutStream
+ - [PERF] Store byte sources should come up with pre-computed size
+ - [PERF] Improve SMTP performance
+ - [PERF] IMAP FETCH headers: Use a simpler BodyDescriptor builder
+ - [PERF] ChannelImapResponseWriter: avoid double literal inputStream computation
+ - [PERF] Reduce MimeBodyElement memory allocation
+ - [PERF] Fasten BodyOffsetInputStream
+ - [PERF] JMAP RFC-8621 Email/get full: do not parse mime message twice
+ - JAMES-3765: Improve some IMAP commands (STORE, COPY, MOVE) performance
+ - JAMES-3737 RabbitMQ unbinding is potentially blocking
+ - [PERF] S3BlobStoreDAO: readBytes copies too much data
+ - JAMES-3719 Reactive textual content extraction with Apache Tika
+ - [PERF] Decode UTF-7 only if needed
+ - [PERF] IMAP avoid memory allocation when parsing STATUS items
+ - [PERF] IMAP improve status items parsing
+ - [PERF] IMAP improve flags parsing
+ - [PERF] IMAP use constants for CharValidator where immutable
+ - [REFACTORING] Use Splitter::splitToStream (#989)
+ - JAMES-3752 Allow disabling ImapChannelUpstreamHandler heartbeat handler
+ - JAMES-3740 Compact primitive collections for UID <-> MSN mapping
+ - JAMES-3749 Allow disable durability, publish confirms (RabbitMQ)
+ - JAMES-3744 Generify UriPathTemplate and provide a non regex alternative
+ - JAMES-3745 Use FastByteArrayOutputStream as a short lived object (#958)
+ - [PERF] Reuse JwtTokenVerifier parsers (#956)
+ - [PERF] Thread configuration for WebAdmin, redis and some reactor improvments (#950)
+ - [PERF] IMAP LIST: Avoid potentiallyexpensive REGEX when not needed
+ - JAMES-3715 Schedule IMAP IDLE heartbits on the Netty Event loop (#948)
+ - [PERF] Allow disabling host information in protocol MDC (#928)
+ - JAMES-3433 MimeMessageStore StoragePolicy should be the same on read and writes
+
+## [3.7.1] - [Unreleased]
+
+### Changes
+
+ - [UPGRADE] Adopt MIME4J 0.8.7 (#961)
+ - [UPGRADE] jackson 2.13.1 -> 2.13.2.2 fixes CVE-2020-36518 [3.7.x] (#982)
+
+### Fixed 
+
+ - JAMES-3720 Fix temporary file leaks in multiple places
+ - JAMES-3731 Fix default configuration for rabbitmq regarding distributed images (#938)
+ - JAMES-1862 Fix several issues with STARTTLS command injection detection [BACKPORT]
+ - JAMES-3746 Backport memory leak for IMAP IDLE [3.7.x] (#962)
+ - JAMES-3787 RemoteDelivery: Error upon enqueue lead to email loss
+ - JAMES-3791 Remote Delivery uses a pool of SMTP sessions.
+ - [3.7.x] Update docker-compose sample - Remove entrypoint
+ - JAMES-3801 Nack errors upon dequeue
+ - JAMES-3800 S3BlobStoreDAO should be explicit upon future cancellation
+ - JAMES-3738 Generify encryption management in protocols
+
+### Recommended upgrades
+
 - Upgrade docker relevant: rabbitmq -> 3.9.18
 - Upgrade docker relevant: tika -> 1.28.2 
 - Upgrade docker relevant: spamassassin -> 3.4.6-1 T
