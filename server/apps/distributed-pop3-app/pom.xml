@@ -418,6 +418,7 @@
                         <jvmFlags>
                             <jvmFlag>-Dlogback.configurationFile=/root/conf/logback.xml</jvmFlag>
                             <jvmFlag>-Dworking.directory=/root/</jvmFlag>
+                            <jvmFlag>-Dextra.props=/root/conf/jvm.properties</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <volumes>
