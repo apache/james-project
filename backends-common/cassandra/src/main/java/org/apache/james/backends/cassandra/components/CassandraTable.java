@@ -30,6 +30,8 @@ import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateTableWithOptions;
 import com.google.common.base.MoreObjects;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraTable {
     public enum InitializationStatus {
         ALREADY_DONE,
@@ -57,15 +59,14 @@ public class CassandraTable {
         return name;
     }
 
-    public InitializationStatus initialize(KeyspaceMetadata keyspaceMetadata, CqlSession session, CassandraTypesProvider typesProvider) {
+    public Mono<InitializationStatus> initialize(KeyspaceMetadata keyspaceMetadata, CqlSession session, CassandraTypesProvider typesProvider) {
         if (keyspaceMetadata.getTable(name).isPresent()) {
-            return InitializationStatus.ALREADY_DONE;
+            return Mono.just(InitializationStatus.ALREADY_DONE);
         }
 
-        session.execute(createStatement.apply(typesProvider).build()
-            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session)));
-
-        return InitializationStatus.FULL;
+        return Mono.from(session.executeReactive(createStatement.apply(typesProvider).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session))))
+            .thenReturn(InitializationStatus.FULL);
     }
 
     @Override

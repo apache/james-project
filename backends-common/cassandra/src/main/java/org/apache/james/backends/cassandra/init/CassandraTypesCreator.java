@@ -27,6 +27,9 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class CassandraTypesCreator {
     private final ImmutableList<CassandraType> types;
     private final CqlSession session;
@@ -39,9 +42,10 @@ public class CassandraTypesCreator {
     public InitializationStatus initializeTypes() {
         KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
-        return types.stream()
-                .map(type -> type.initialize(keyspaceMetadata, session))
-                .reduce(InitializationStatus::reduce)
-                .orElse(InitializationStatus.ALREADY_DONE);
+        return Flux.fromIterable(types)
+            .flatMap(type -> type.initialize(keyspaceMetadata, session))
+            .reduce(InitializationStatus::reduce)
+            .switchIfEmpty(Mono.just(InitializationStatus.ALREADY_DONE))
+            .block();
     }
 }
