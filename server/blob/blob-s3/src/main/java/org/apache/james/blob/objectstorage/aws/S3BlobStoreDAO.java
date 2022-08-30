@@ -227,7 +227,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .publishOn(Schedulers.parallel())
-            .map(BytesWrapper::asByteArray);
+            .map(BytesWrapper::asByteArrayUnsafe);
     }
 
     @Override
