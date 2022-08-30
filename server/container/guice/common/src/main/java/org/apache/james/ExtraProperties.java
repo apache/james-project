@@ -32,10 +32,9 @@ public class ExtraProperties {
         String propsPath = System.getProperty(OVERRIDE_PROPERTY, DEFAULT_PATH);
         try (FileInputStream in = new FileInputStream(propsPath)) {
             System.getProperties().load(in);
+            JamesServerMain.LOGGER.info("Load extra system properties file {}", propsPath);
         } catch (FileNotFoundException e) {
-            if (!DEFAULT_PATH.equals(propsPath)) {
-                JamesServerMain.LOGGER.warn("Could not find extra system properties file {}", propsPath);
-            }
+            JamesServerMain.LOGGER.warn("Could not find extra system properties file {}", propsPath);
         } catch (IOException e) {
             JamesServerMain.LOGGER.warn(
                     "Failed to load extra system properties from file {} : {}", propsPath, e.getMessage());
