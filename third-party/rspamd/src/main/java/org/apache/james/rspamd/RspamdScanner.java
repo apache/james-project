@@ -20,8 +20,10 @@
 package org.apache.james.rspamd;
 
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -34,6 +36,7 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,5 +115,13 @@ public class RspamdScanner extends GenericMailet {
                 + " actions=" + rspamdResult.getAction().getDescription()
                 + " score=" + rspamdResult.getScore()
                 + " requiredScore=" + rspamdResult.getRequiredScore())));
+    }
+
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return Stream.of(virusProcessor, rejectSpamProcessor)
+            .flatMap(Optional::stream)
+            .map(ProcessingState::new)
+            .collect(ImmutableList.toImmutableList());
     }
 }
