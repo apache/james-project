@@ -44,6 +44,23 @@ class FeedSpamToRspamdTaskAdditionalInformationDTOTest {
     }
 
     @Test
+    void shouldMatchJsonSerializationContractWhenClassifiedAsHam() throws Exception {
+        JsonSerializationVerifier.dtoModule(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(new FeedSpamToRspamdTask.AdditionalInformation(
+                Instant.parse("2007-12-03T10:15:30.00Z"),
+                4,
+                2,
+                1,
+                new RunningOptions(
+                    Optional.empty(),
+                    RunningOptions.DEFAULT_MESSAGES_PER_SECOND,
+                    RunningOptions.DEFAULT_SAMPLING_PROBABILITY,
+                    Optional.of(false))))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/feedSpamClassifiedAsHam.additionalInformation.json"))
+            .verify();
+    }
+
+    @Test
     void shouldMatchJsonSerializationContractWhenNonEmptyPeriod() throws Exception {
         JsonSerializationVerifier.dtoModule(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
             .bean(new FeedSpamToRspamdTask.AdditionalInformation(
@@ -54,7 +71,8 @@ class FeedSpamToRspamdTaskAdditionalInformationDTOTest {
                 new RunningOptions(
                     Optional.of(3600L),
                     DEFAULT_MESSAGES_PER_SECOND,
-                    DEFAULT_SAMPLING_PROBABILITY)))
+                    DEFAULT_SAMPLING_PROBABILITY,
+                    Optional.empty())))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/feedSpamNonEmptyPeriod.additionalInformation.json"))
             .verify();
     }

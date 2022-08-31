@@ -30,9 +30,11 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Message;
@@ -62,22 +64,24 @@ public class GetMailboxMessagesService {
         this.messageIdManager = messageIdManager;
     }
 
-    public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, double samplingProbability,
+    public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, RunningOptions runningOptions,
                                                            FeedSpamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
-            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, samplingProbability, context), ReactorUtils.DEFAULT_CONCURRENCY);
+            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
-    public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, double samplingProbability,
+    public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
                                                        FeedHamToRspamdTask.Context context) throws UsersRepositoryException {
         return Iterators.toFlux(userRepository.list())
-            .flatMap(Throwing.function(username -> Flux.fromIterable(mailboxManager.list(mailboxManager.createSystemSession(username)))
-                .filter(this::hamMailboxesPredicate)
-                .flatMap(mailboxPath -> getMailboxMessagesOfAUser(username, mailboxPath, afterDate, samplingProbability, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
+            .flatMap(Throwing.function(username ->
+                Flux.from(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxManager.createSystemSession(username)).build(),
+                    mailboxManager.createSystemSession(username)))
+                .filter(mbxMetadata -> hamMailboxesPredicate(mbxMetadata.getPath()))
+                .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,
-                                                          double samplingProbability, FeedSpamToRspamdTask.Context context) {
+                                                          RunningOptions runningOptions, FeedSpamToRspamdTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
         return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName), mailboxSession))
@@ -85,32 +89,34 @@ public class GetMailboxMessagesService {
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
-            .filter(message -> randomBooleanWithProbability(samplingProbability))
+            .filter(message -> randomBooleanWithProbability(runningOptions))
             .map(Message::getMessageId)
             .collectList()
-            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession));
+            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession))
+            .filter(runningOptions.correspondingClassificationFilter());
     }
 
-    private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, MailboxPath mailboxPath, Optional<Date> afterDate,
-                                                          double samplingProbability, FeedHamToRspamdTask.Context context) {
+    private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, MailboxMetaData mailboxMetaData, Optional<Date> afterDate,
+                                                          RunningOptions runningOptions, FeedHamToRspamdTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
-        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxMetaData.getId(), mailboxSession))
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
             .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
-            .filter(message -> randomBooleanWithProbability(samplingProbability))
+            .filter(message -> randomBooleanWithProbability(runningOptions))
             .map(Message::getMessageId)
             .collectList()
-            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession));
+            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession))
+            .filter(runningOptions.correspondingClassificationFilter());
     }
 
-    public static boolean randomBooleanWithProbability(double probability) {
-        if (probability == 1.0) {
+    public static boolean randomBooleanWithProbability(RunningOptions runningOptions) {
+        if (runningOptions.getSamplingProbability() == 1.0) {
             return true;
         }
-        return Math.random() < probability;
+        return Math.random() < runningOptions.getSamplingProbability();
     }
 
     private boolean hamMailboxesPredicate(MailboxPath mailboxPath) {

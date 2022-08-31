@@ -182,6 +182,34 @@ public class FeedMessageRouteTest {
         }
 
         @Test
+        void taskShouldDisplayClassifiedAsSpamRunningOption() throws MailboxException {
+            appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW));
+            appendMessage(ALICE_SPAM_MAILBOX, Date.from(NOW));
+
+            String taskId = given()
+                .queryParam("action", "reportSpam")
+                .queryParam("classifiedAsSpam", "false")
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
+                .body("additionalInformation.spamMessageCount", is(2))
+                .body("additionalInformation.reportedSpamMessageCount", is(2))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.classifiedAsSpam", is(false))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+        }
+
+        @Test
         void taskShouldReportOnlyMailInPeriod() throws MailboxException {
             appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
             appendMessage(ALICE_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
@@ -424,6 +452,34 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+        }
+
+        @Test
+        void taskShouldDisplayClassifiedAsSpamRunningOption() throws MailboxException {
+            appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW));
+            appendMessage(ALICE_INBOX_MAILBOX, Date.from(NOW));
+
+            String taskId = given()
+                .queryParam("action", "reportHam")
+                .queryParam("classifiedAsSpam", "true")
+                .post()
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is(FeedHamToRspamdTask.TASK_TYPE.asString()))
+                .body("additionalInformation.hamMessageCount", is(2))
+                .body("additionalInformation.reportedHamMessageCount", is(2))
+                .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.classifiedAsSpam", is(true))
                 .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));

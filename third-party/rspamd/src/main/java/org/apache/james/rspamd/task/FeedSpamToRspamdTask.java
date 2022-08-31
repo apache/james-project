@@ -238,7 +238,7 @@ public class FeedSpamToRspamdTask implements Task {
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         try {
-            return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions.getSamplingProbability(), context)
+            return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions, context)
                 .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
                     .elements(runningOptions.getMessagesPerSecond())
                     .per(Duration.ofSeconds(1))

@@ -21,6 +21,7 @@ package org.apache.james.rspamd.task;
 
 import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
+import static org.apache.james.rspamd.task.RunningOptions.ALL_MESSAGES;
 import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
 import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -137,7 +138,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskShouldReportSpamMessageInPeriod() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
-            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
@@ -156,7 +157,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskShouldNotReportSpamMessageNotInPeriod() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
-            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
@@ -175,7 +176,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void mixedInternalDateCase() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
-            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
@@ -195,7 +196,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskWithSamplingProbabilityIsZeroShouldReportNonSpamMessage() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
-            DEFAULT_MESSAGES_PER_SECOND, 0);
+            DEFAULT_MESSAGES_PER_SECOND, 0, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
@@ -231,7 +232,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskWithVeryLowSamplingProbabilityShouldReportNotAllSpamMessages() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
-            DEFAULT_MESSAGES_PER_SECOND, 0.01);
+            DEFAULT_MESSAGES_PER_SECOND, 0.01, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
@@ -250,7 +251,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskWithVeryHighSamplingProbabilityShouldReportMoreThanZeroMessage() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
-            DEFAULT_MESSAGES_PER_SECOND, 0.99);
+            DEFAULT_MESSAGES_PER_SECOND, 0.99, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
@@ -269,7 +270,7 @@ public class FeedSpamToRspamdTaskTest {
     @Test
     void taskWithAverageSamplingProbabilityShouldReportSomeMessages() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
-            DEFAULT_MESSAGES_PER_SECOND, 0.5);
+            DEFAULT_MESSAGES_PER_SECOND, 0.5, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
         IntStream.range(0, 10)
@@ -285,10 +286,183 @@ public class FeedSpamToRspamdTaskTest {
         });
     }
 
+    @Test
+    void shouldReportUnclassifiedWhenClassifiedAsSpamIsTrue() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldNotReportHamWhenClassifiedAsSpamIsTrue() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isZero();
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldReportSpamWhenClassifiedAsSpamIsTrue() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldReportUnclassifiedWhenClassifiedAsSpamIsOmited() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldReportHamWhenClassifiedAsSpamIsOmited() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldNotReportSpamWhenClassifiedAsSpamIsOmited() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldReportUnclassifiedWhenClassifiedAsSpamIsFalse() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldReportHamWhenClassifiedAsSpamIsFalse() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+    @Test
+    void shouldNotReportSpamWhenClassifiedAsSpamIsFalse() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.COMPLETED);
+            assertThat(task.snapshot().getSpamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedSpamMessageCount()).isZero();
+            assertThat(task.snapshot().getErrorCount()).isZero();
+        });
+    }
+
+
     private void appendSpamMessage(MailboxPath mailboxPath, Date internalDate) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());
         mailboxManager.getMailbox(mailboxPath, session)
             .appendMessage(new ByteArrayInputStream(String.format("random content %4.3f", Math.random()).getBytes()),
+                internalDate,
+                session,
+                true,
+                new Flags());
+    }
+
+    private void appendMessage(MailboxPath mailboxPath, Date internalDate, String header) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());
+        mailboxManager.getMailbox(mailboxPath, session)
+            .appendMessage(new ByteArrayInputStream((header + "\r\n\r\n" + String.format("random content %4.3f", Math.random())).getBytes()),
                 internalDate,
                 session,
                 true,
