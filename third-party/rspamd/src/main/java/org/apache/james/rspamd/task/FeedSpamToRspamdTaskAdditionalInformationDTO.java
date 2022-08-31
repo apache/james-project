@@ -42,9 +42,7 @@ public class FeedSpamToRspamdTaskAdditionalInformationDTO implements AdditionalI
             dto.spamMessageCount,
             dto.reportedSpamMessageCount,
             dto.errorCount,
-            dto.runningOptions.getMessagesPerSecond(),
-            dto.runningOptions.getPeriodInSecond(),
-            dto.runningOptions.getSamplingProbability());
+            dto.runningOptions);
     }
 
     private static FeedSpamToRspamdTaskAdditionalInformationDTO toDto(FeedSpamToRspamdTask.AdditionalInformation domainObject, String type) {
@@ -54,7 +52,7 @@ public class FeedSpamToRspamdTaskAdditionalInformationDTO implements AdditionalI
             domainObject.getSpamMessageCount(),
             domainObject.getReportedSpamMessageCount(),
             domainObject.getErrorCount(),
-            new FeedSpamToRspamdTask.RunningOptions(domainObject.getPeriod(), domainObject.getMessagesPerSecond(), domainObject.getSamplingProbability()));
+            domainObject.getRunningOptions());
     }
 
     private final String type;
@@ -62,14 +60,14 @@ public class FeedSpamToRspamdTaskAdditionalInformationDTO implements AdditionalI
     private final long spamMessageCount;
     private final long reportedSpamMessageCount;
     private final long errorCount;
-    private final FeedSpamToRspamdTask.RunningOptions runningOptions;
+    private final RunningOptions runningOptions;
 
     public FeedSpamToRspamdTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                         @JsonProperty("timestamp") Instant timestamp,
                                                         @JsonProperty("spamMessageCount") long spamMessageCount,
                                                         @JsonProperty("reportedSpamMessageCount") long reportedSpamMessageCount,
                                                         @JsonProperty("errorCount") long errorCount,
-                                                        @JsonProperty("runningOptions") FeedSpamToRspamdTask.RunningOptions runningOptions) {
+                                                        @JsonProperty("runningOptions") RunningOptions runningOptions) {
         this.type = type;
         this.timestamp = timestamp;
         this.spamMessageCount = spamMessageCount;
@@ -100,7 +98,7 @@ public class FeedSpamToRspamdTaskAdditionalInformationDTO implements AdditionalI
         return errorCount;
     }
 
-    public FeedSpamToRspamdTask.RunningOptions getRunningOptions() {
+    public RunningOptions getRunningOptions() {
         return runningOptions;
     }
 }

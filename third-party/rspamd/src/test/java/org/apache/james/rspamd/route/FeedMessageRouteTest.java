@@ -69,6 +69,7 @@ import org.apache.james.rspamd.task.FeedHamToRspamdTask;
 import org.apache.james.rspamd.task.FeedHamToRspamdTaskAdditionalInformationDTO;
 import org.apache.james.rspamd.task.FeedSpamToRspamdTask;
 import org.apache.james.rspamd.task.FeedSpamToRspamdTaskAdditionalInformationDTO;
+import org.apache.james.rspamd.task.RunningOptions;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
@@ -175,9 +176,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -202,9 +203,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(2))
                 .body("additionalInformation.reportedSpamMessageCount", is(1))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(172800))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -229,7 +230,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(10))
                 .body("additionalInformation.reportedSpamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
         }
@@ -295,9 +296,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.spamMessageCount", is(0))
                 .body("additionalInformation.reportedSpamMessageCount", is(0))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @ParameterizedTest
@@ -423,9 +424,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -450,9 +451,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(1))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(172800))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @Test
@@ -477,7 +478,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(10))
                 .body("additionalInformation.reportedHamMessageCount", is(allOf(greaterThan(0), lessThan(10))))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is(0.5F));
         }
@@ -543,9 +544,9 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(0))
                 .body("additionalInformation.reportedHamMessageCount", is(0))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.messagesPerSecond", is(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
-                .body("additionalInformation.runningOptions.samplingProbability", is((float) FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
+                .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
 
         @ParameterizedTest

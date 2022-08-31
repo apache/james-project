@@ -20,10 +20,9 @@
 package org.apache.james.rspamd.task;
 
 import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_PERIOD;
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTaskTest.BOB_SPAM_MAILBOX;
+import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
+import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -110,7 +109,7 @@ public class FeedHamToRspamdTaskTest {
         client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
         messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         mapperFactory = mailboxManager.getMapperFactory();
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, FeedHamToRspamdTask.RunningOptions.DEFAULT, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock);
     }
 
     @Test
@@ -123,9 +122,6 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
@@ -142,15 +138,12 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskShouldReportHamMessageInPeriod() throws MailboxException {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -164,15 +157,12 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(1)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskShouldNotReportHamMessageNotInPeriod() throws MailboxException {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -186,15 +176,12 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(1)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void mixedInternalDateCase() throws MailboxException {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -209,15 +196,12 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(2)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskWithSamplingProbabilityIsZeroShouldReportNonHamMessage() {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -232,9 +216,6 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(10)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(0)
                 .build());
     }
 
@@ -251,15 +232,12 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(10)
                 .reportedHamMessageCount(10)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskWithVeryLowSamplingProbabilityShouldReportNotAllHamMessages() {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.01);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -278,7 +256,7 @@ public class FeedHamToRspamdTaskTest {
 
     @Test
     void taskWithVeryHighSamplingProbabilityShouldReportMoreThanZeroMessage() {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.99);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -297,7 +275,7 @@ public class FeedHamToRspamdTaskTest {
 
     @Test
     void taskWithAverageSamplingProbabilityShouldReportSomeMessages() {
-        FeedHamToRspamdTask.RunningOptions runningOptions = new FeedHamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.5);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -327,9 +305,6 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
@@ -346,9 +321,6 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
@@ -367,9 +339,6 @@ public class FeedHamToRspamdTaskTest {
                 .hamMessageCount(2)
                 .reportedHamMessageCount(2)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 

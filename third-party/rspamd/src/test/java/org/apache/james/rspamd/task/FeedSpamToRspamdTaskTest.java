@@ -20,10 +20,9 @@
 package org.apache.james.rspamd.task;
 
 import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
-import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_PERIOD;
-import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
+import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
+import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -103,7 +102,7 @@ public class FeedSpamToRspamdTaskTest {
         client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
         messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         mapperFactory = mailboxManager.getMapperFactory();
-        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, FeedSpamToRspamdTask.RunningOptions.DEFAULT, clock);
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock);
     }
 
     @Test
@@ -116,9 +115,6 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(0)
                 .reportedSpamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
@@ -135,15 +131,12 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(2)
                 .reportedSpamMessageCount(2)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskShouldReportSpamMessageInPeriod() throws MailboxException {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -157,15 +150,12 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(1)
                 .reportedSpamMessageCount(1)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskShouldNotReportSpamMessageNotInPeriod() throws MailboxException {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -179,15 +169,12 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(1)
                 .reportedSpamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void mixedInternalDateCase() throws MailboxException {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -202,15 +189,12 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(2)
                 .reportedSpamMessageCount(1)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(Optional.of(TWO_DAYS_IN_SECOND))
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskWithSamplingProbabilityIsZeroShouldReportNonSpamMessage() {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -225,9 +209,6 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(10)
                 .reportedSpamMessageCount(0)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(0)
                 .build());
     }
 
@@ -244,15 +225,12 @@ public class FeedSpamToRspamdTaskTest {
                 .spamMessageCount(10)
                 .reportedSpamMessageCount(10)
                 .errorCount(0)
-                .messagesPerSecond(DEFAULT_MESSAGES_PER_SECOND)
-                .period(DEFAULT_PERIOD)
-                .samplingProbability(DEFAULT_SAMPLING_PROBABILITY)
                 .build());
     }
 
     @Test
     void taskWithVeryLowSamplingProbabilityShouldReportNotAllSpamMessages() {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.01);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -271,7 +249,7 @@ public class FeedSpamToRspamdTaskTest {
 
     @Test
     void taskWithVeryHighSamplingProbabilityShouldReportMoreThanZeroMessage() {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.99);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 
@@ -290,7 +268,7 @@ public class FeedSpamToRspamdTaskTest {
 
     @Test
     void taskWithAverageSamplingProbabilityShouldReportSomeMessages() {
-        FeedSpamToRspamdTask.RunningOptions runningOptions = new FeedSpamToRspamdTask.RunningOptions(Optional.empty(),
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.5);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
 

@@ -19,10 +19,6 @@
 
 package org.apache.james.rspamd.task;
 
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_PERIOD;
-import static org.apache.james.rspamd.task.FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
-
 import java.time.Instant;
 import java.util.Optional;
 
@@ -39,9 +35,7 @@ class FeedHamToRspamdTaskAdditionalInformationDTOTest {
                 4,
                 2,
                 1,
-                DEFAULT_MESSAGES_PER_SECOND,
-                DEFAULT_PERIOD,
-                DEFAULT_SAMPLING_PROBABILITY))
+                RunningOptions.DEFAULT))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/feedHamEmptyPeriod.additionalInformation.json"))
             .verify();
     }
@@ -54,9 +48,10 @@ class FeedHamToRspamdTaskAdditionalInformationDTOTest {
                 4,
                 2,
                 1,
-                DEFAULT_MESSAGES_PER_SECOND,
-                Optional.of(3600L),
-                DEFAULT_SAMPLING_PROBABILITY))
+                new RunningOptions(
+                    Optional.of(3600L),
+                    RunningOptions.DEFAULT_MESSAGES_PER_SECOND,
+                    RunningOptions.DEFAULT_SAMPLING_PROBABILITY)))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/feedHamNonEmptyPeriod.additionalInformation.json"))
             .verify();
     }
