@@ -173,7 +173,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <!--https://issues.apache.org/jira/browse/JAMES-3724-->
-                        <james.ligecycle.leak.detection.mode>testing</james.ligecycle.leak.detection.mode>
+                        <james.lifecycle.leak.detection.mode>testing</james.lifecycle.leak.detection.mode>
                         <!--https://netty.io/wiki/reference-counted-objects.html#best-practices-to-avoid-leaks -->
                         <io.netty.leakDetection.level>PARANOID</io.netty.leakDetection.level>
                     </systemPropertyVariables>
