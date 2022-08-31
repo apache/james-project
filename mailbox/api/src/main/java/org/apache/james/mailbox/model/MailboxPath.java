@@ -237,7 +237,11 @@ public class MailboxPath {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(namespace, user, name);
+        int result = 1;
+        result += result * 31 + namespace.hashCode();
+        result += result * 31 + Objects.hashCode(user);
+        result += result * 31 + Objects.hashCode(name);
+        return result;
     }
 
     /**

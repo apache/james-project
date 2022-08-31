@@ -41,6 +41,7 @@ class MailboxPathTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxPath.class)
+            .withNonnullFields("namespace")
             .verify();
     }
 

@@ -33,6 +33,7 @@ class UsernameTest {
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Username.class)
+            .withNonnullFields("localPart", "domainPart")
             .verify();
     }
 
