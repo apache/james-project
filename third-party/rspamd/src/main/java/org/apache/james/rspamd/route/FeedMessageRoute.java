@@ -91,18 +91,11 @@ public class FeedMessageRoute implements Routes {
 
         return Optional.ofNullable(request.queryParams("action"))
             .filter(action -> action.equals(REPORT_SPAM_PARAM))
-            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getFeedSpamTaskRunningOptions(request), clock))
-            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getFeedHamTaskRunningOptions(request), clock));
+            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock))
+            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock));
     }
 
-    private RunningOptions getFeedSpamTaskRunningOptions(Request request) {
-        Optional<Long> periodInSecond = getPeriod(request);
-        int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
-        double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
-        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
-    }
-
-    private RunningOptions getFeedHamTaskRunningOptions(Request request) {
+    private RunningOptions getRunningOptions(Request request) {
         Optional<Long> periodInSecond = getPeriod(request);
         int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
         double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
