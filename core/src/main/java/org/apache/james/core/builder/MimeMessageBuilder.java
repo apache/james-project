@@ -33,6 +33,7 @@ import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -47,6 +48,7 @@ import org.apache.commons.io.IOUtils;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Booleans;
 
 public class MimeMessageBuilder {
 
@@ -140,6 +142,7 @@ public class MimeMessageBuilder {
         private Optional<String> disposition = Optional.empty();
         private Optional<String> dataAsString = Optional.empty();
         private Optional<byte[]> dataAsBytes = Optional.empty();
+        private Optional<Multipart> dataAsMultipart = Optional.empty();
         private Optional<String> type = Optional.empty();
 
         public BodyPartBuilder cid(String cid) {
@@ -159,6 +162,11 @@ public class MimeMessageBuilder {
 
         public BodyPartBuilder data(String data) {
             this.dataAsString = Optional.of(data);
+            return this;
+        }
+
+        public BodyPartBuilder data(Multipart data) {
+            this.dataAsMultipart = Optional.of(data);
             return this;
         }
 
@@ -187,7 +195,8 @@ public class MimeMessageBuilder {
         }
 
         public BodyPart build() throws IOException, MessagingException {
-            Preconditions.checkState(!(dataAsString.isPresent() && dataAsBytes.isPresent()), "Can not specify data as bytes and data as string at the same time");
+            Preconditions.checkState(Booleans.countTrue(dataAsString.isPresent(),
+                dataAsBytes.isPresent(), dataAsMultipart.isPresent()) == 1, "Can not specify data as bytes, multipart and data as string at the same time");
             MimeBodyPart bodyPart = new MimeBodyPart();
             if (dataAsBytes.isPresent()) {
                 bodyPart.setDataHandler(
@@ -196,13 +205,15 @@ public class MimeMessageBuilder {
                             dataAsBytes.get(),
                             type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
-            } else {
+            } else if (dataAsString.isPresent()) {
                 bodyPart.setDataHandler(
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsString.orElse(DEFAULT_VALUE),
                             type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
+            } else {
+                bodyPart.setContent(dataAsMultipart.get());
             }
             if (filename.isPresent()) {
                 bodyPart.setFileName(filename.get());

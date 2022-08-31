@@ -138,6 +138,8 @@ include::partial$ServerTime.adoc[]
 
 include::partial$SPF.adoc[]
 
+include::partial$ToPlainText.adoc[]
+
 include::partial$ToSenderFolder.adoc[]
 
 include::partial$UnwrapText.adoc[]
