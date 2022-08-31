@@ -143,7 +143,7 @@ public class Username {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(localPart, domainPart);
+        return localPart.hashCode() + 31 * domainPart.hashCode();
     }
 
     @Override
