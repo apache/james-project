@@ -97,6 +97,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
@@ -731,6 +732,7 @@ public class StoreMailboxManager implements MailboxManager {
         Mono<List<Mailbox>> mailboxesMono = searchMailboxes(expression, session, Right.Lookup).collectList();
 
         return mailboxesMono
+            .publishOn(Schedulers.parallel())
             .flatMapMany(mailboxes -> Flux.fromIterable(mailboxes)
                 .filter(expression::matches)
                 .transform(metadataTransformation(fetchType, session, mailboxes)))
