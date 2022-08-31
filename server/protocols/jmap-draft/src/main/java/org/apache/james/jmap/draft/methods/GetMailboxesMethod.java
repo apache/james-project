@@ -57,6 +57,7 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class GetMailboxesMethod implements Method {
 
@@ -154,6 +155,7 @@ public class GetMailboxesMethod implements Method {
         Mono<QuotaLoaderWithDefaultPreloaded> quotaLoaderMono = QuotaLoaderWithDefaultPreloaded.preLoad(quotaRootResolver, quotaManager, mailboxSession);
 
         return userMailboxesMono.zipWith(quotaLoaderMono)
+            .publishOn(Schedulers.parallel())
             .flatMapMany(
                 tuple -> Flux.fromIterable(tuple.getT1().values())
                     .flatMap(mailboxMetaData -> mailboxFactory.builder()
