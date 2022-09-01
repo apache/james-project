@@ -77,8 +77,8 @@ using `auth.plainAuthEnabled=false`.
 
  - 3. Set up reasonable xref:operate/webadmin.adoc#_administrating_quotas[storage quota] for your users.
 
- - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:configure/spam.adoc[SpamAssassin]
-integration, and some experimental, insufficiently tested xref:configure/mailets.adoc#_clamavscan[ClamAV] tooling exisits.
+ - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:configure/spam.adoc[Rspams and SpamAssassin]
+integration, and some experimental, insufficiently tested xref:configure/mailets.adoc#_clamavscan[ClamAV] tooling exists.
 Filtering with third party systems upstream is also possible.
 
  - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
