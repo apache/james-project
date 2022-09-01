@@ -74,27 +74,6 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of a MailRepository on a database.
- * 
- * <p>
- * Requires a configuration element in the .conf.xml file of the form:
- * 
- * <pre>
- *  &lt;repository destinationURL="db://&lt;datasource&gt;/&lt;table_name&gt;/&lt;repository_name&gt;"
- *              type="MAIL"
- *              model="SYNCHRONOUS"/&gt;
- *  &lt;/repository&gt;
- * </pre>
- * 
- * </p>
- * <p>
- * destinationURL specifies..(Serge??) <br>
- * Type can be SPOOL or MAIL <br>
- * Model is currently not used and may be dropped
- * </p>
- * 
- * <p>
- * Requires a logger called MailRepository.
- * </p>
  */
 public class JDBCMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
