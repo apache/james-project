@@ -203,17 +203,15 @@ public class MimeMessageBuilder {
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsBytes.get(),
-                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
-                    ));
+                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))));
             } else if (dataAsMultipart.isPresent()) {
                 bodyPart.setContent(dataAsMultipart.get());
-            }else {
+            } else {
                 bodyPart.setDataHandler(
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsString.orElse(DEFAULT_VALUE),
-                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
-                    ));
+                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))));
             }
             if (filename.isPresent()) {
                 bodyPart.setFileName(filename.get());
