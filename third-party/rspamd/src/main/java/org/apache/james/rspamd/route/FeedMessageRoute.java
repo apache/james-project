@@ -32,6 +32,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.task.FeedHamToRspamdTask;
 import org.apache.james.rspamd.task.FeedSpamToRspamdTask;
+import org.apache.james.rspamd.task.RunningOptions;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
@@ -90,22 +91,15 @@ public class FeedMessageRoute implements Routes {
 
         return Optional.ofNullable(request.queryParams("action"))
             .filter(action -> action.equals(REPORT_SPAM_PARAM))
-            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getFeedSpamTaskRunningOptions(request), clock))
-            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getFeedHamTaskRunningOptions(request), clock));
+            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock))
+            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock));
     }
 
-    private FeedSpamToRspamdTask.RunningOptions getFeedSpamTaskRunningOptions(Request request) {
+    private RunningOptions getRunningOptions(Request request) {
         Optional<Long> periodInSecond = getPeriod(request);
-        int messagesPerSecond = getMessagesPerSecond(request).orElse(FeedSpamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
-        double samplingProbability = getSamplingProbability(request).orElse(FeedSpamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
-        return new FeedSpamToRspamdTask.RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
-    }
-
-    private FeedHamToRspamdTask.RunningOptions getFeedHamTaskRunningOptions(Request request) {
-        Optional<Long> periodInSecond = getPeriod(request);
-        int messagesPerSecond = getMessagesPerSecond(request).orElse(FeedHamToRspamdTask.RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
-        double samplingProbability = getSamplingProbability(request).orElse(FeedHamToRspamdTask.RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
-        return new FeedHamToRspamdTask.RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
+        int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
+        double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
+        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
     }
 
     private Optional<Long> getPeriod(Request req) {

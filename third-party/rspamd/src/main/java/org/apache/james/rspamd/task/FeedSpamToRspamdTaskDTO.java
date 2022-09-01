@@ -47,7 +47,7 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
                 messageIdManager,
                 mapperFactory,
                 rspamdHttpClient,
-                new FeedSpamToRspamdTask.RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
+                new RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
                     dto.getMessagesPerSecond(),
                     dto.getSamplingProbability()),
                 clock))
