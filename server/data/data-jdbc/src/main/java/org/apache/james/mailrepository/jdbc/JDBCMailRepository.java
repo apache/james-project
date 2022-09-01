@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -406,14 +407,10 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             } else {
                 insertMessage.setString(5, mc.getMaybeSender().get().toString());
             }
-            StringBuilder recipients = new StringBuilder();
-            for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
-                recipients.append(i.next().toString());
-                if (i.hasNext()) {
-                    recipients.append("\r\n");
-                }
-            }
-            insertMessage.setString(6, recipients.toString());
+            String recipients = mc.getRecipients().stream()
+                .map(MailAddress::toString)
+                .collect(Collectors.joining("\r\n"));
+            insertMessage.setString(6, recipients);
             insertMessage.setString(7, mc.getRemoteHost());
             insertMessage.setString(8, mc.getRemoteAddr());
             if (mc.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
@@ -494,14 +491,10 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             } else {
                 updateMessage.setString(3, mc.getMaybeSender().get().toString());
             }
-            StringBuilder recipients = new StringBuilder();
-            for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
-                recipients.append(i.next().toString());
-                if (i.hasNext()) {
-                    recipients.append("\r\n");
-                }
-            }
-            updateMessage.setString(4, recipients.toString());
+            String recipients = mc.getRecipients().stream()
+                .map(MailAddress::toString)
+                .collect(Collectors.joining("\r\n"));
+            updateMessage.setString(4, recipients);
             updateMessage.setString(5, mc.getRemoteHost());
             updateMessage.setString(6, mc.getRemoteAddr());
             updateMessage.setTimestamp(7, new java.sql.Timestamp(mc.getLastUpdated().getTime()));
