@@ -196,7 +196,7 @@ public class MimeMessageBuilder {
 
         public BodyPart build() throws IOException, MessagingException {
             Preconditions.checkState(Booleans.countTrue(dataAsString.isPresent(),
-                dataAsBytes.isPresent(), dataAsMultipart.isPresent()) == 1, "Can not specify data as bytes, multipart and data as string at the same time");
+                dataAsBytes.isPresent(), dataAsMultipart.isPresent()) <= 1, "Can not specify data as bytes, multipart and data as string at the same time");
             MimeBodyPart bodyPart = new MimeBodyPart();
             if (dataAsBytes.isPresent()) {
                 bodyPart.setDataHandler(
@@ -205,15 +205,15 @@ public class MimeMessageBuilder {
                             dataAsBytes.get(),
                             type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
-            } else if (dataAsString.isPresent()) {
+            } else if (dataAsMultipart.isPresent()) {
+                bodyPart.setContent(dataAsMultipart.get());
+            }else {
                 bodyPart.setDataHandler(
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsString.orElse(DEFAULT_VALUE),
                             type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
-            } else {
-                bodyPart.setContent(dataAsMultipart.get());
             }
             if (filename.isPresent()) {
                 bodyPart.setFileName(filename.get());
