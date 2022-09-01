@@ -58,6 +58,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.Initializable;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageWrapper;
@@ -145,55 +146,27 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         LOGGER.debug("{}.configure()", getClass().getName());
         destination = configuration.getString("[@destinationURL]");
-
-        // normalize the destination, to simplify processing.
-        if (!destination.endsWith("/")) {
-            destination += "/";
+        MailRepositoryUrl url = MailRepositoryUrl.from(destination); // also validates url
+        // parse the destinationURL into the name of the datasource,
+        // the table to use, and the (optional) repository key
+        String[] parts = url.getPath().asString().split("/", 3);
+        if (parts.length == 0) {
+            throw new ConfigurationException(
+                "Malformed destinationURL - Must be of the format 'db://<data-source>[/<table>[/<repositoryName>]]'.  Was passed " + destination);
         }
-        // Parse the DestinationURL for the name of the datasource,
-        // the table to use, and the (optional) repository Key.
-        // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<>();
-        int start = 5;
-        if (destination.startsWith("dbfile")) {
-            // this is dbfile:// instead of db://
-            start += 4;
+        datasourceName = parts[0];
+        if (parts.length > 1) {
+            tableName = parts[1];
         }
-        int end = destination.indexOf('/', start);
-        while (end > -1) {
-            urlParams.add(destination.substring(start, end));
-            start = end + 1;
-            end = destination.indexOf('/', start);
+        if (parts.length > 2) {
+            repositoryName = parts[2];
         }
 
-        // Build SqlParameters and get datasource name from URL parameters
-        if (urlParams.size() == 0) {
-            String exceptionBuffer = "Malformed destinationURL - Must be of the format '" + "db://<data-source>[/<table>[/<repositoryName>]]'.  Was passed " + configuration.getString("[@destinationURL]");
-            throw new ConfigurationException(exceptionBuffer);
-        }
-        if (urlParams.size() >= 1) {
-            datasourceName = urlParams.get(0);
-        }
-        if (urlParams.size() >= 2) {
-            tableName = urlParams.get(1);
-        }
-        if (urlParams.size() >= 3) {
-            repositoryName = "";
-            for (int i = 2; i < urlParams.size(); i++) {
-                if (i >= 3) {
-                    repositoryName += '/';
-                }
-                repositoryName += urlParams.get(i);
-            }
-        }
-
-        LOGGER.debug("Parsed URL: table = '{}', repositoryName = '{}'", tableName, repositoryName);
+        LOGGER.debug("Parsed URL: datasource = '{}', table = '{}', repositoryName = '{}'", datasource, tableName, repositoryName);
 
         inMemorySizeLimit = configuration.getInt("inMemorySizeLimit", 409600000);
-
         filestore = configuration.getString("filestore", null);
         sqlFileName = configuration.getString("sqlFile");
-
     }
 
     /**
