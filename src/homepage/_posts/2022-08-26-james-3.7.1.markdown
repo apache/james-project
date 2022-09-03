@@ -13,7 +13,11 @@ The Apache James PMC would like to thanks all contributors who made this release
 
 ## Announcement
 
-As this is a minor maintenance release, including bug fixes, there is no major announcements.
+As this is a minor maintenance release.
+
+This release addresses CVE-2022-28220 `STARTTLS command injection in Apache JAMES`.
+
+It also includes various bugfixes.
 
 ## Release changelog
 
