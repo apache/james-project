@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -41,6 +40,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.api.SoftAssertions;
@@ -68,6 +68,45 @@ class RspamdScannerTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), rspamdPassword, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
         mailet = new RspamdScanner(client);
+    }
+
+    @Test
+    void requiredProcessingStateShouldReturnEmptyByDefault() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .setProperty("rewriteSubject", "true")
+            .build());
+
+        assertThat(mailet.requiredProcessingState()).isEmpty();
+    }
+
+    @Test
+    void requiredProcessingStateShouldReturnVirusProcessor() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .setProperty("virusProcessor", "virus")
+            .build());
+
+        assertThat(mailet.requiredProcessingState()).containsOnly(new ProcessingState("virus"));
+    }
+
+    @Test
+    void requiredProcessingStateShouldReturnRejectedProcessor() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .setProperty("rejectSpamProcessor", "rejected")
+            .build());
+
+        assertThat(mailet.requiredProcessingState()).containsOnly(new ProcessingState("rejected"));
+    }
+
+    @Test
+    void requiredProcessingStateShouldReturnVirusAndRejectedProcessor() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .setProperty("virusProcessor", "virus")
+            .setProperty("rejectSpamProcessor", "rejected")
+            .build());
+
+        assertThat(mailet.requiredProcessingState())
+            .containsOnly(new ProcessingState("virus"),
+                new ProcessingState("rejected"));
     }
 
     @Test
