@@ -32,7 +32,7 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 import scala.math.Ordered.orderingToOrdered
 
-import org.apache.james.backends.pulsar.{PulsarConfiguration, PulsarReader}
+import org.apache.james.backends.pulsar.PulsarReader
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.core.{MailAddress, MaybeSender}
@@ -85,8 +85,7 @@ private[pulsar] object schemas {
  * A filter cannot remove messages that are enqueued after the call to the `remove` method.
  */
 class PulsarMailQueue(
-  name: MailQueueName,
-  config: PulsarConfiguration,
+  config: PulsarMailQueueConfiguration,
   blobIdFactory: BlobId.Factory,
   mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
   mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
@@ -100,29 +99,27 @@ class PulsarMailQueue(
 
   type MessageAsJson = String
 
-  private val enqueueBufferSize = 10
-  private val requeueBufferSize = 10
   private val awaitTimeout = 10.seconds
 
-  gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + name, () => getSize)
-  private val dequeueMetrics = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString)
-  private val enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString)
+  gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + config.name, () => getSize)
+  private val dequeueMetrics = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + config.name.asString)
+  private val enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + config.name.asString)
 
   private implicit val implicitSystem: ActorSystem = system
   private implicit val ec: ExecutionContextExecutor = system.dispatcher
   private implicit val implicitBlobIdFactory: BlobId.Factory = blobIdFactory
-  private implicit val client: PulsarAsyncClient = PulsarClient(config.brokerUri)
+  private implicit val client: PulsarAsyncClient = PulsarClient(config.pulsar.brokerUri)
   private val admin = {
     val builder = PulsarAdmin.builder()
-    builder.serviceHttpUrl(config.adminUri).build()
+    builder.serviceHttpUrl(config.pulsar.adminUri).build()
   }
 
-  private val outTopic = Topic(s"persistent://${config.namespace.asString}/James-${name.asString()}")
-  private val scheduledTopic = Topic(s"persistent://${config.namespace.asString}/${name.asString()}-scheduled")
-  private val filterTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-${name.asString()}")
-  private val filterScheduledTopic = Topic(s"persistent://${config.namespace.asString}/pmq-filter-scheduled-${name.asString()}")
-  private val subscription = Subscription("subscription-" + name.asString())
-  private val scheduledSubscription = Subscription("scheduled-subscription-" + name.asString())
+  private val outTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/James-${config.name.asString()}")
+  private val scheduledTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/${config.name.asString()}-scheduled")
+  private val filterTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/pmq-filter-${config.name.asString()}")
+  private val filterScheduledTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/pmq-filter-scheduled-${config.name.asString()}")
+  private val subscription = Subscription("subscription-" + config.name.asString())
+  private val scheduledSubscription = Subscription("scheduled-subscription-" + config.name.asString())
 
   private val outTopicProducer = client.producer(ProducerConfig(outTopic, enableBatching = Some(false)))
   private val scheduledTopicProducer = client.producer(ProducerConfig(scheduledTopic, enableBatching = Some(false)))
@@ -178,7 +175,7 @@ class PulsarMailQueue(
    */
   private val enqueueFlow: RunnableGraph[SourceQueueWithComplete[(Mail, Duration, Promise[Done])]] =
     Source
-      .queue[(Mail, Duration, Promise[Done])](enqueueBufferSize, OverflowStrategy.backpressure)
+      .queue[(Mail, Duration, Promise[Done])](config.enqueueBufferSize, OverflowStrategy.backpressure, config.maxEnqueueConcurrency)
       .flatMapConcat(saveMail.tupled)
       .via(buildProducerMessage)
       .wireTap(_ => enqueueMetric.increment())
@@ -190,7 +187,7 @@ class PulsarMailQueue(
    * Scheduled messages go through this source when delay expires
    */
   private val requeueFlow: RunnableGraph[SourceQueueWithComplete[ProducerMessage[MessageAsJson]]] = Source
-    .queue[ProducerMessage[MessageAsJson]](requeueBufferSize, OverflowStrategy.backpressure)
+    .queue[ProducerMessage[MessageAsJson]](config.requeueBufferSize, OverflowStrategy.backpressure)
     .via(debugLogger("requeue"))
     .to(sinkOf(outTopicProducer))
 
@@ -230,7 +227,7 @@ class PulsarMailQueue(
     streams.committableSource(consumer)
       .via(filteringFlow(filterStage))
       .map { case (mail, partsId, message) => new PulsarMailQueueItem(mail, partsId, message) }
-      .map(mailQueueItemDecoratorFactory.decorate(_, name))
+      .map(mailQueueItemDecoratorFactory.decorate(_, config.name))
       .alsoTo(counter)
       // akka streams virtual publisher handles a subscription timeout to the
       // exposed publisher which will terminate the stream if the timeout is not
@@ -294,13 +291,13 @@ class PulsarMailQueue(
   private val filtersCommandFlowControl: Control =
     filtersCommandFlow(
       filterTopic,
-      Subscription("filter-subscription-" + name.asString() + "-" + UUID.randomUUID().toString),
+      Subscription("filter-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString),
       filterStage
     ).run()
   private val scheduledFiltersCommandFlowControl: Control =
     filtersCommandFlow(
       filterScheduledTopic,
-      Subscription("filter-scheduled-subscription-" + name.asString() + "-" + UUID.randomUUID().toString),
+      Subscription("filter-scheduled-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString),
       filterScheduledStage
     ).run()
 
@@ -345,7 +342,7 @@ class PulsarMailQueue(
   /**
    * @inheritdoc
    */
-  override val getName: MailQueueName = name
+  override val getName: MailQueueName = config.name
 
   /**
    * @inheritdoc
@@ -359,7 +356,7 @@ class PulsarMailQueue(
 
   private def syncEnqueue(mail: Mail, delay: Duration): Unit = {
     metricFactory.decorateSupplierWithTimerMetric(
-      ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString,
+      ENQUEUED_TIMER_METRIC_NAME_PREFIX + config.name.asString,
       () => Await.result(internalEnqueue(mail, delay), awaitTimeout)
     )
   }
@@ -369,7 +366,7 @@ class PulsarMailQueue(
    */
   override def enqueueReactive(mail: Mail): Publisher[Void] = {
     metricFactory.decoratePublisherWithTimerMetric(
-      ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString,
+      ENQUEUED_TIMER_METRIC_NAME_PREFIX + config.name.asString,
       Source.lazyFuture(() => internalEnqueue(mail, Duration.Undefined)).runWith(Sink.asPublisher[Void](fanout = true))
     )
   }

@@ -67,6 +67,10 @@ public interface MailQueueContract {
 
     MailQueue getMailQueue();
 
+    default int getMailQueueMaxConcurrency() {
+        return Integer.MAX_VALUE;
+    }
+
     default void enQueue(Mail mail) throws MailQueue.MailQueueException {
         getMailQueue().enQueue(mail);
     }
@@ -571,7 +575,7 @@ public interface MailQueueContract {
         Flux.range(0, nbMails)
             .flatMap(Throwing.function(i -> testee.enqueueReactive(defaultMail()
                 .name("name" + i)
-                .build())))
+                .build())), getMailQueueMaxConcurrency())
             .blockLast();
 
         ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();

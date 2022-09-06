@@ -73,6 +73,7 @@ import scala.jdk.javaapi.OptionConverters;
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
 
+    int MAX_CONCURRENCY = 10;
     PulsarMailQueue mailQueue;
 
     private HashBlobId.Factory blobIdFactory;
@@ -80,7 +81,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     private MailQueueItemDecoratorFactory factory;
     private MailQueueName mailQueueName;
     private MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem;
-    private PulsarConfiguration config;
+    private PulsarConfiguration pulsarConfiguration;
     private ActorSystem system;
     private MemoryBlobStoreDAO memoryBlobStore;
 
@@ -120,15 +121,21 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     }
 
     @Override
+    public int getMailQueueMaxConcurrency() {
+        return MAX_CONCURRENCY;
+    }
+
+    @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
     }
 
     public PulsarMailQueue newInstance(DockerPulsarExtension.DockerPulsar pulsar) {
-        config = pulsar.getConfiguration();
+        pulsarConfiguration = pulsar.getConfiguration();
+        int enqueueBufferSize = 10;
+        int requeueBufferSize = 10;
         return new PulsarMailQueue(
-                mailQueueName,
-                config,
+                new PulsarMailQueueConfiguration(mailQueueName, pulsarConfiguration, MAX_CONCURRENCY, enqueueBufferSize, requeueBufferSize),
                 blobIdFactory,
                 mimeMessageStore,
                 factory,
@@ -173,16 +180,6 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                         .consumeOne())
                 .map(ConsumerMessage::value);
         assertThat(deadletterMessage).contains("BAD");
-    }
-
-    @Test
-    // JAMES-3805 PulsarMailQueueTest.dequeueShouldBeConcurrent is unstable
-    // java.lang.IllegalStateException: Too many concurrent offers. Specified maximum is 1. You have to wait for one previous future to be resolved to send another request
-    //    at akka.stream.impl.QueueSource$$anon$1.bufferElem(QueueSource.scala:115)
-    @Tag(Unstable.TAG)
-    @Override
-    public void dequeueShouldBeConcurrent() {
-        MailQueueMetricContract.super.dequeueShouldBeConcurrent();
     }
 
     @Test
