@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.util.streams.Limit;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -1189,5 +1190,29 @@ class CassandraMessageIdDAOTest {
         assertThat(testee.retrieveMessages(mailboxId, MessageRange.one(messageUid2), Limit.unlimited()).toIterable())
             .extracting(CassandraMessageMetadata::getComposedMessageId)
             .containsOnly(composedMessageIdWithMetaData);
+    }
+
+    @Test
+    void retrieveMessageShouldHandlePossibleNullInternalDate() {
+        CassandraMessageId messageId = messageIdFactory.generate();
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .threadId(ThreadId.fromBaseMessageId(messageId))
+            .build();
+
+        testee.insertNullInternalDateAndHeaderContent(CassandraMessageMetadata.builder()
+                .ids(composedMessageIdWithMetaData)
+                .build())
+            .block();
+
+        SoftAssertions.assertSoftly(softAssertions -> {
+            Optional<CassandraMessageMetadata> message = testee.retrieve(mailboxId, messageUid).block();
+            assertThat(message.get().getComposedMessageId()).isEqualTo(composedMessageIdWithMetaData);
+            assertThat(message.get().getInternalDate()).isEmpty();
+        });
     }
 }

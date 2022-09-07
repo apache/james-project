@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -768,4 +769,37 @@ class CassandraMessageIdToImapUidDAOTest {
             .extracting(CassandraMessageMetadata::getComposedMessageId)
             .containsOnly(expectedComposedMessageId, expectedComposedMessageId2);
     }
+
+    @Test
+    void retrieveMessageShouldHandlePossibleNullInternalDate() {
+        CassandraMessageId messageId = CassandraMessageId.Factory.of(Uuids.timeBased());
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .threadId(ThreadId.fromBaseMessageId(messageId))
+            .build();
+
+        testee.insertNullInternalDateAndHeaderContent(CassandraMessageMetadata.builder()
+                .ids(expectedComposedMessageId)
+                .build())
+            .block();
+
+        SoftAssertions.assertSoftly(softAssertions -> {
+            softAssertions.assertThatCode(() -> testee.retrieveAllMessages().collectList().block())
+                .doesNotThrowAnyException();
+
+            List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
+            softAssertions.assertThat(messages)
+                .extracting(CassandraMessageMetadata::getComposedMessageId)
+                .containsOnly(expectedComposedMessageId);
+
+            softAssertions.assertThat(messages)
+                .extracting(CassandraMessageMetadata::getInternalDate)
+                .containsOnly(Optional.empty());
+        });
+    }
+
 }
