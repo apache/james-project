@@ -403,7 +403,8 @@ public class CassandraMessageIdToImapUidDAO {
                 .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
                 .build())
             .bodyStartOctet(row.getInt(BODY_START_OCTET_LOWERCASE))
-            .internalDate(Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)))
+            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE))
+                .map(Date::from))
             .size(row.getLong(FULL_CONTENT_OCTETS_LOWERCASE))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT_LOWERCASE))
                 .map(blobIdFactory::from))
@@ -432,5 +433,38 @@ public class CassandraMessageIdToImapUidDAO {
         } else {
             return statement;
         }
+    }
+
+    @VisibleForTesting
+    Mono<Void> insertNullInternalDateAndHeaderContent(CassandraMessageMetadata metadata) {
+        ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
+        Flags flags = metadata.getComposedMessageId().getFlags();
+        ThreadId threadId = metadata.getComposedMessageId().getThreadId();
+
+        BoundStatementBuilder statementBuilder = insert.boundStatementBuilder();
+        if (metadata.getComposedMessageId().getFlags().getUserFlags().length == 0) {
+            statementBuilder.unset(USER_FLAGS);
+        } else {
+            statementBuilder.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class);
+        }
+
+        return cassandraAsyncExecutor.executeVoid(statementBuilder
+            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, composedMessageId.getUid().asLong())
+            .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
+            .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
+            .setBoolean(ANSWERED, flags.contains(Flag.ANSWERED))
+            .setBoolean(DELETED, flags.contains(Flag.DELETED))
+            .setBoolean(DRAFT, flags.contains(Flag.DRAFT))
+            .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
+            .setBoolean(RECENT, flags.contains(Flag.RECENT))
+            .setBoolean(SEEN, flags.contains(Flag.SEEN))
+            .setBoolean(USER, flags.contains(Flag.USER))
+            .setInstant(INTERNAL_DATE, null)
+            .setInt(BODY_START_OCTET, 0)
+            .setLong(FULL_CONTENT_OCTETS, 0)
+            .setString(HEADER_CONTENT, null)
+            .build());
     }
 }

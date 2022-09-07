@@ -85,6 +85,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -524,7 +525,8 @@ public class CassandraMessageIdDAO {
                 .threadId(getThreadIdFromRow(row, messageId))
                 .build())
             .bodyStartOctet(row.getInt(BODY_START_OCTET_LOWERCASE))
-            .internalDate(Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)))
+            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE))
+                .map(Date::from))
             .size(row.getLong(FULL_CONTENT_OCTETS_LOWERCASE))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT_LOWERCASE))
                 .map(blobIdFactory::from))
@@ -537,5 +539,37 @@ public class CassandraMessageIdDAO {
             return ThreadId.fromBaseMessageId(messageId);
         }
         return ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(threadIdUUID));
+    }
+
+    @VisibleForTesting
+    Mono<Void> insertNullInternalDateAndHeaderContent(CassandraMessageMetadata metadata) {
+        ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
+        Flags flags = metadata.getComposedMessageId().getFlags();
+        ThreadId threadId = metadata.getComposedMessageId().getThreadId();
+
+        BoundStatementBuilder statementBuilder = insert.boundStatementBuilder();
+        if (flags.getUserFlags().length == 0) {
+            statementBuilder.unset(USER_FLAGS);
+        } else {
+            statementBuilder.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class);
+        }
+        return cassandraAsyncExecutor.executeVoid(statementBuilder
+            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, composedMessageId.getUid().asLong())
+            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+            .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
+            .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
+            .setBoolean(ANSWERED, flags.contains(Flag.ANSWERED))
+            .setBoolean(DELETED, flags.contains(Flag.DELETED))
+            .setBoolean(DRAFT, flags.contains(Flag.DRAFT))
+            .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
+            .setBoolean(RECENT, flags.contains(Flag.RECENT))
+            .setBoolean(SEEN, flags.contains(Flag.SEEN))
+            .setBoolean(USER, flags.contains(Flag.USER))
+            .setInstant(INTERNAL_DATE, null)
+            .setInt(BODY_START_OCTET, 0)
+            .setLong(FULL_CONTENT_OCTETS, 0)
+            .setString(HEADER_CONTENT, null)
+            .build());
     }
 }
