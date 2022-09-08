@@ -524,10 +524,10 @@ public class CassandraMessageIdDAO {
                 .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
                 .threadId(getThreadIdFromRow(row, messageId))
                 .build())
-            .bodyStartOctet(row.getInt(BODY_START_OCTET_LOWERCASE))
+            .bodyStartOctet(row.get(BODY_START_OCTET_LOWERCASE, Integer.class))
             .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE))
                 .map(Date::from))
-            .size(row.getLong(FULL_CONTENT_OCTETS_LOWERCASE))
+            .size(row.get(FULL_CONTENT_OCTETS_LOWERCASE, Long.class))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT_LOWERCASE))
                 .map(blobIdFactory::from))
             .build());
