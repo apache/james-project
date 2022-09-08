@@ -73,9 +73,9 @@ services:
     container_name: rspamd
     image: a16bitsysop/rspamd:3.2-r2-alpine3.16.0-r0
     environment:
-      - REDIS:redis
-      - CLAMAV:clamav
-      - PASSWORD:admin
+      - REDIS=redis
+      - CLAMAV=clamav
+      - PASSWORD=admin
     volumes:
       - $PWD/sample-configuration/antivirus.conf:/etc/rspamd/override.d/antivirus.conf
     ports:
