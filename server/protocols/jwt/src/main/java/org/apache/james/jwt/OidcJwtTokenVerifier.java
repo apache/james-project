@@ -40,20 +40,21 @@ public class OidcJwtTokenVerifier {
     public static final IntrospectionClient INTROSPECTION_CLIENT = new DefaultIntrospectionClient();
 
     public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
-        PublicKeyProvider jwksPublicKeyProvider = getClaimWithoutSignatureVerification(jwtToken, "kid", String.class)
+        Optional<String> unverifiedClain = getClaimWithoutSignatureVerification(jwtToken, "kid");
+        PublicKeyProvider jwksPublicKeyProvider = unverifiedClain
             .map(kidValue -> JwksPublicKeyProvider.of(jwksURL, kidValue))
             .orElse(JwksPublicKeyProvider.of(jwksURL));
         return new JwtTokenVerifier(jwksPublicKeyProvider).verifyAndExtractClaim(jwtToken, claimName, String.class);
     }
 
-    public static <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName, Class<T> returnType) {
+    public static <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName) {
         int signatureIndex = token.lastIndexOf('.');
         if (signatureIndex <= 0) {
             return Optional.empty();
         }
         String nonSignedToken = token.substring(0, signatureIndex + 1);
         try {
-            Jwt<Header, Claims> headerClaims = Jwts.parser().parseClaimsJwt(nonSignedToken);
+            Jwt<Header, Claims> headerClaims = Jwts.parserBuilder().build().parseClaimsJwt(nonSignedToken);
             T claim = (T) headerClaims.getHeader().get(claimName);
             if (claim == null) {
                 throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
