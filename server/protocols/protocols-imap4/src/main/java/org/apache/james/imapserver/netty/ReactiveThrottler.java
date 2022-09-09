@@ -49,7 +49,7 @@ public class ReactiveThrottler {
         this.maxQueueSize = maxQueueSize;
     }
 
-    public Publisher<Void> throttle(Publisher<Void> task) {
+    public Mono<Void> throttle(Publisher<Void> task) {
         int requestNumber = concurrentRequests.incrementAndGet();
 
         if (requestNumber <= maxConcurrentRequests) {

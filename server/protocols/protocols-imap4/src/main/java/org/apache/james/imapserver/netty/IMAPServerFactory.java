@@ -29,6 +29,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
@@ -40,19 +41,21 @@ public class IMAPServerFactory extends AbstractServerFactory {
     protected final ImapEncoder encoder;
     protected final ImapProcessor processor;
     protected final ImapMetrics imapMetrics;
+    protected final GaugeRegistry gaugeRegistry;
 
     @Inject
     public IMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor,
-                             MetricFactory metricFactory) {
+                             MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.fileSystem = fileSystem;
         this.decoder = decoder;
         this.encoder = encoder;
         this.processor = processor;
         this.imapMetrics = new ImapMetrics(metricFactory);
+        this.gaugeRegistry = gaugeRegistry;
     }
 
     protected IMAPServer createServer() {
-       return new IMAPServer(decoder, encoder, processor, imapMetrics);
+       return new IMAPServer(decoder, encoder, processor, imapMetrics, gaugeRegistry);
     }
     
     @Override

@@ -85,6 +85,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.OIDCSASLHelper;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
@@ -157,7 +158,8 @@ class IMAPServerTest {
                 memoryIntegrationResources.getQuotaManager(),
                 memoryIntegrationResources.getQuotaRootResolver(),
                 metricFactory),
-            new ImapMetrics(metricFactory));
+            new ImapMetrics(metricFactory),
+            new NoopGaugeRegistry());
 
         Configuration configuration = Configuration.builder()
             .workingDirectory("../")
