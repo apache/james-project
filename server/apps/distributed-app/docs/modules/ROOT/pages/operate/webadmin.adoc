@@ -3826,7 +3826,7 @@ Response codes:
 === Redeliver all events
 
 ....
-curl -XPOST http://ip:port/events/deadLetter?action=redeliver
+curl -XPOST http://ip:port/events/deadLetter?action=reDeliver
 ....
 
 Additional query parameters are supported:
@@ -3837,7 +3837,7 @@ If unspecified the count of the processed elements is unbounded
 For instance:
 
 ....
-curl -XPOST http://ip:port/events/deadLetter?action=redeliver&limit=10
+curl -XPOST http://ip:port/events/deadLetter?action=reDeliver&limit=10
 ....
 
 Will create a task that will attempt to redeliver all events stored in
@@ -3855,7 +3855,7 @@ Response codes:
 === Redeliver group events
 
 ....
-curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA?action=redeliver
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA?action=reDeliver
 ....
 
 Will create a task that will attempt to redeliver all events of a
@@ -3870,7 +3870,7 @@ If unspecified the count of the processed elements is unbounded
 For instance:
 
 ....
-curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA?action=redeliver&limit=10
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA?action=reDeliver&limit=10
 ....
 
 link:#_endpoints_returning_a_task[More details about endpoints returning

@@ -3760,7 +3760,7 @@ Response codes:
 ### Redeliver all events
 
 ```
-curl -XPOST http://ip:port/events/deadLetter?action=redeliver
+curl -XPOST http://ip:port/events/deadLetter?action=reDeliver
 ```
 
 Will create a task that will attempt to redeliver all events stored in "Event Dead Letter".
