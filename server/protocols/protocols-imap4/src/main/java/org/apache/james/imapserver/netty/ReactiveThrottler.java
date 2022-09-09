@@ -50,6 +50,9 @@ public class ReactiveThrottler {
     }
 
     public Mono<Void> throttle(Publisher<Void> task) {
+        if (maxConcurrentRequests < 0) {
+            return Mono.from(task);
+        }
         int requestNumber = concurrentRequests.incrementAndGet();
 
         if (requestNumber <= maxConcurrentRequests) {

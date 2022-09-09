@@ -75,7 +75,6 @@ public class ImapConfiguration {
         }
 
         public Builder concurrentRequests(int concurrentRequests) {
-            Preconditions.checkArgument(concurrentRequests > 0, "concurrentRequests should not be zero or negative");
             this.concurrentRequests = Optional.of(concurrentRequests);
             return this;
         }
