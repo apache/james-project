@@ -73,6 +73,12 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private ImapMetrics imapMetrics;
         private boolean ignoreIDLEUponProcessing;
         private Duration heartbeatInterval;
+        private ReactiveThrottler reactiveThrottler;
+
+        public ImapChannelUpstreamHandlerBuilder reactiveThrottler(ReactiveThrottler reactiveThrottler) {
+            this.reactiveThrottler = reactiveThrottler;
+            return this;
+        }
 
         public ImapChannelUpstreamHandlerBuilder hello(String hello) {
             this.hello = hello;
@@ -120,7 +126,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
 
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds());
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler);
         }
     }
 
@@ -129,28 +135,20 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     }
 
     private final String hello;
-
     private final Encryption secure;
-
     private final boolean compress;
-
     private final ImapProcessor processor;
-
     private final ImapEncoder encoder;
-
     private final ImapHeartbeatHandler heartbeatHandler;
-
     private final AuthenticationConfiguration authenticationConfiguration;
-
     private final Metric imapConnectionsMetric;
-
     private final Metric imapCommandsMetric;
-
     private final boolean ignoreIDLEUponProcessing;
+    private final ReactiveThrottler reactiveThrottler;
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
-                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds) {
+                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -161,6 +159,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
         this.ignoreIDLEUponProcessing = ignoreIDLEUponProcessing;
         this.heartbeatHandler = new ImapHeartbeatHandler(heartbeatIntervalSeconds, heartbeatIntervalSeconds, heartbeatIntervalSeconds);
+        this.reactiveThrottler = reactiveThrottler;
     }
 
     @Override
@@ -275,7 +274,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         imapCommandsMetric.increment();
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
         ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
@@ -283,40 +282,41 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
         beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
-        processor.processReactive(message, responseEncoder, session)
-            .doOnEach(Throwing.consumer(signal -> {
-                if (session.getState() == ImapSessionState.LOGOUT) {
-                    // Make sure we close the channel after all the buffers were flushed out
-                    Channel channel = ctx.channel();
-                    if (channel.isActive()) {
-                        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                    }
-                }
-                if (signal.isOnComplete()) {
-                    IOException failure = responseEncoder.getFailure();
-                    if (failure != null) {
-                        try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(signal).build()) {
-                            LOGGER.info(failure.getMessage());
-                            LOGGER.debug("Failed to write {}", message, failure);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+        reactiveThrottler.throttle(
+            processor.processReactive(message, responseEncoder, session)
+                .doOnEach(Throwing.consumer(signal -> {
+                    if (session.getState() == ImapSessionState.LOGOUT) {
+                        // Make sure we close the channel after all the buffers were flushed out
+                        Channel channel = ctx.channel();
+                        if (channel.isActive()) {
+                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
                         }
+                    }
+                    if (signal.isOnComplete()) {
+                        IOException failure = responseEncoder.getFailure();
+                        if (failure != null) {
+                            try (Closeable mdc = ReactorUtils.retrieveMDCBuilder(signal).build()) {
+                                LOGGER.info(failure.getMessage());
+                                LOGGER.debug("Failed to write {}", message, failure);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
 
-                        ctx.fireExceptionCaught(failure);
+                            ctx.fireExceptionCaught(failure);
+                        }
                     }
-                }
-                if (signal.isOnComplete() || signal.isOnError()) {
-                    afterIDLEUponProcessing(ctx);
-                    if (message instanceof Closeable) {
-                        ((Closeable) message).close();
+                    if (signal.isOnComplete() || signal.isOnError()) {
+                        afterIDLEUponProcessing(ctx);
+                        if (message instanceof Closeable) {
+                            ((Closeable) message).close();
+                        }
                     }
-                }
-                if (signal.hasError()) {
-                    ctx.fireExceptionCaught(signal.getThrowable());
-                }
-                ctx.fireChannelReadComplete();
-            }))
-            .contextWrite(ReactorUtils.context("imap", mdc(ctx)))
+                    if (signal.hasError()) {
+                        ctx.fireExceptionCaught(signal.getThrowable());
+                    }
+                    ctx.fireChannelReadComplete();
+                }))
+                .contextWrite(ReactorUtils.context("imap", mdc(ctx))))
             .subscribe();
     }
 

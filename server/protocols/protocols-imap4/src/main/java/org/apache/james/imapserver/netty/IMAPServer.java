@@ -31,6 +31,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -121,11 +122,16 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private static final String SOFTWARE_TYPE = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
+    public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
+    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
+    public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
+    public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
     private final ImapProcessor processor;
     private final ImapEncoder encoder;
     private final ImapDecoder decoder;
     private final ImapMetrics imapMetrics;
+    private final GaugeRegistry gaugeRegistry;
 
     private String hello;
     private boolean compress;
@@ -138,17 +144,15 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
     private boolean ignoreIDLEUponProcessing;
     private Duration heartbeatInterval;
+    private ReactiveThrottler reactiveThrottler;
 
-    public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
-    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
-    public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
-    public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
-    public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics) {
+    public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics, GaugeRegistry gaugeRegistry) {
         this.processor = processor;
         this.encoder = encoder;
         this.decoder = decoder;
         this.imapMetrics = imapMetrics;
+        this.gaugeRegistry = gaugeRegistry;
     }
 
     @Override
@@ -179,6 +183,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ignoreIDLEUponProcessing = configuration.getBoolean("ignoreIDLEUponProcessing", true);
         ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
         heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
+        reactiveThrottler = new ReactiveThrottler(gaugeRegistry, imapConfiguration.getConcurrentRequests(), imapConfiguration.getMaxQueueSize());
         processor.configure(imapConfiguration);
     }
 
@@ -190,6 +195,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
                 .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
                 .disabledCaps(disabledCaps)
+                .maxQueueSize(configuration.getInteger("maxQueueSize", ImapConfiguration.DEFAULT_QUEUE_SIZE))
+                .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
                 .build();
     }
 
@@ -271,6 +278,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         Encryption secure = getEncryption();
         return ImapChannelUpstreamHandler.builder()
+            .reactiveThrottler(reactiveThrottler)
             .hello(hello)
             .processor(processor)
             .encoder(encoder)

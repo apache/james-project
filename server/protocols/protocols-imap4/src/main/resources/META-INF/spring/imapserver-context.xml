@@ -25,6 +25,7 @@
         <constructor-arg index="2" ref="imapEncoder" />
         <constructor-arg index="3" ref="imapProcessor" />
         <constructor-arg index="4" ref="metricFactory" />
+        <constructor-arg index="5" ref="gaugeRegistry" />
     </bean>
 
     <!-- The imapProcessor configuration will be reviewed when IMAP will be integrated into Protocols project -->

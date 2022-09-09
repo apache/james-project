@@ -35,12 +35,15 @@ public class ImapConfiguration {
     public static final boolean DEFAULT_ENABLE_IDLE = true;
     public static final long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
     public static final TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
+    public static final int DEFAULT_CONCURRENT_REQUESTS = 128;
+    public static final int DEFAULT_QUEUE_SIZE = 4096;
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
+
         private static boolean noBlankString(String disableCap) {
             return !StringUtils.isBlank(disableCap);
         }
@@ -48,12 +51,16 @@ public class ImapConfiguration {
         private static final boolean DEFAULT_CONDSTORE_DISABLE = false;
 
         private Optional<Long> idleTimeInterval;
+        private Optional<Integer> concurrentRequests;
+        private Optional<Integer> maxQueueSize;
         private Optional<TimeUnit> idleTimeIntervalUnit;
         private Optional<Boolean> enableIdle;
         private ImmutableSet<String> disabledCaps;
         private Optional<Boolean> isCondstoreEnable;
 
         private Builder() {
+            this.concurrentRequests = Optional.empty();
+            this.maxQueueSize = Optional.empty();
             this.idleTimeInterval = Optional.empty();
             this.idleTimeIntervalUnit = Optional.empty();
             this.enableIdle = Optional.empty();
@@ -62,8 +69,20 @@ public class ImapConfiguration {
         }
 
         public Builder idleTimeInterval(long idleTimeInterval) {
-            Preconditions.checkArgument(idleTimeInterval > 0, "The interval time should not be rezo or negative");
+            Preconditions.checkArgument(idleTimeInterval > 0, "The interval time should not be zero or negative");
             this.idleTimeInterval = Optional.of(idleTimeInterval);
+            return this;
+        }
+
+        public Builder concurrentRequests(int concurrentRequests) {
+            Preconditions.checkArgument(concurrentRequests > 0, "concurrentRequests should not be zero or negative");
+            this.concurrentRequests = Optional.of(concurrentRequests);
+            return this;
+        }
+
+        public Builder maxQueueSize(int maxQueueSize) {
+            Preconditions.checkArgument(maxQueueSize > 0, "maxQueueSize should not be negative");
+            this.maxQueueSize = Optional.of(maxQueueSize);
             return this;
         }
 
@@ -106,6 +125,8 @@ public class ImapConfiguration {
             return new ImapConfiguration(
                     enableIdle.orElse(DEFAULT_ENABLE_IDLE),
                     idleTimeInterval.orElse(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
+                    concurrentRequests.orElse(DEFAULT_CONCURRENT_REQUESTS),
+                    maxQueueSize.orElse(DEFAULT_QUEUE_SIZE),
                     idleTimeIntervalUnit.orElse(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                     normalizeDisableCaps,
                     isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE));
@@ -113,17 +134,29 @@ public class ImapConfiguration {
     }
 
     private final long idleTimeInterval;
+    private final int concurrentRequests;
+    private final int maxQueueSize;
     private final TimeUnit idleTimeIntervalUnit;
     private final ImmutableSet<Capability> disabledCaps;
     private final boolean enableIdle;
     private final boolean isCondstoreEnable;
 
-    private ImapConfiguration(boolean enableIdle, long idleTimeInterval, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
+    private ImapConfiguration(boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
+        this.concurrentRequests = concurrentRequests;
+        this.maxQueueSize = maxQueueSize;
         this.idleTimeIntervalUnit = idleTimeIntervalUnit;
         this.disabledCaps = disabledCaps;
         this.isCondstoreEnable = isCondstoreEnable;
+    }
+
+    public int getConcurrentRequests() {
+        return concurrentRequests;
+    }
+
+    public int getMaxQueueSize() {
+        return maxQueueSize;
     }
 
     public long getIdleTimeInterval() {
@@ -157,6 +190,8 @@ public class ImapConfiguration {
             return Objects.equal(that.isEnableIdle(), enableIdle)
                 && Objects.equal(that.getIdleTimeInterval(), idleTimeInterval)
                 && Objects.equal(that.getIdleTimeIntervalUnit(), idleTimeIntervalUnit)
+                && Objects.equal(that.getConcurrentRequests(), concurrentRequests)
+                && Objects.equal(that.getMaxQueueSize(), maxQueueSize)
                 && Objects.equal(that.getDisabledCaps(), disabledCaps)
                 && Objects.equal(that.isCondstoreEnable(), isCondstoreEnable);
         }
@@ -165,7 +200,8 @@ public class ImapConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable);
+        return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable,
+            concurrentRequests, maxQueueSize);
     }
 
     @Override
@@ -176,6 +212,8 @@ public class ImapConfiguration {
                 .add("idleTimeIntervalUnit", idleTimeIntervalUnit)
                 .add("disabledCaps", disabledCaps)
                 .add("isCondstoreEnable", isCondstoreEnable)
+                .add("concurrentRequests", concurrentRequests)
+                .add("maxQueueSize", maxQueueSize)
                 .toString();
     }
 }
