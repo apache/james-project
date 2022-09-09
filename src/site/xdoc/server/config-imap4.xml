@@ -80,6 +80,12 @@
         <dd>Set the maximum simultaneous incoming connections for this service</dd>
         <dt><strong>handler.connectionLimitPerIP</strong></dt>
         <dd>Set the maximum simultaneous incoming connections per IP for this service</dd>
+        <dt><strong>concurrentRequests</strong></dt>
+        <dd>Maximum number of IMAP requests executed simultaneously. Past that limit requests are queued. Defaults to 20.
+            Negative values deactivate this feature, leading to unbounded concurrency.</dd>
+        <dt><strong>maxQueueSize</strong></dt>
+        <dd>Upper bound to the IMAP throttler queue. Upon burst, requests that cannot be queued are rejected and not executed.
+            Integer, defaults to 4096, must be positive, 0 means no queue.</dd>
         <dt><strong>handler.proxyRequired</strong></dt>
         <dd>
           Enables proxy support for this service for incoming connections. HAProxy's protocol

@@ -107,6 +107,14 @@ will use the specified value.
 | connectionLimitPerIP
 | Set the maximum simultaneous incoming connections per IP for this service
 
+| concurrentRequests
+| Maximum number of IMAP requests executed simultaneously. Past that limit requests are queued. Defaults to 20.
+Negative values deactivate this feature, leading to unbounded concurrency.
+
+| maxQueueSize
+| Upper bound to the IMAP throttler queue. Upon burst, requests that cannot be queued are rejected and not executed.
+Integer, defaults to 4096, must be positive, 0 means no queue.
+
 | proxyRequired
 | Enables proxy support for this service for incoming connections. HAProxy's protocol
 (https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
