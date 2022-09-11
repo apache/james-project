@@ -21,16 +21,13 @@ package org.apache.james.mailrepository.jpa;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,7 +44,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Configurable;
@@ -58,12 +54,20 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.jpa.model.JPAMail;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageWrapper;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -71,6 +75,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class JPAMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JPAMailRepository.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private String repositoryName;
 
@@ -167,21 +172,28 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
         return out.toByteArray();
     }
 
-    private byte[] serializeAttributes(Stream<Attribute> attributes) {
-        Map<String, Object> map = attributes.collect(Collectors.toMap(
+    private String serializeAttributes(Stream<Attribute> attributes) {
+        Map<String, JsonNode> map = attributes.collect(Collectors.toMap(
             attribute -> attribute.getName().asString(),
-            attribute -> attribute.getValue().value()));
-        return SerializationUtils.serialize((Serializable)map);
+            attribute -> attribute.getValue().toJson()));
+
+        return new ObjectNode(JsonNodeFactory.instance, map).toString();
     }
 
-    private List<Attribute> deserializeAttributes(byte[] data) {
-        HashMap<String, Object> attributes = SerializationUtils.deserialize(data);
-        return Optional.ofNullable(attributes)
-            .orElse(new HashMap<>())
-            .entrySet()
-            .stream()
-            .map(entry -> Attribute.convertToAttribute(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
+    private List<Attribute> deserializeAttributes(String data) {
+        try {
+            JsonNode jsonNode = OBJECT_MAPPER.readTree(data);
+            if (jsonNode instanceof ObjectNode) {
+                ObjectNode objectNode = (ObjectNode) jsonNode;
+
+                return Iterators.toStream(objectNode.fields())
+                    .map(entry -> new Attribute(AttributeName.of(entry.getKey()), AttributeValue.fromJson(entry.getValue())))
+                    .collect(ImmutableList.toImmutableList());
+            }
+            throw new IllegalArgumentException("JSON object corresponding to mail attibutes must be a JSON object");
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Mail attributes is not a valid JSON object", e);
+        }
     }
 
     private String serializePerRecipientHeaders(PerRecipientHeaders perRecipientHeaders) {

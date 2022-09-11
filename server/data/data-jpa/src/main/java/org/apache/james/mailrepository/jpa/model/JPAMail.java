@@ -121,7 +121,7 @@ public class JPAMail {
     @Basic(optional = true, fetch = FetchType.LAZY)
     @Column(name = "MESSAGE_ATTRIBUTES", nullable = true, length = 10485760)
     @Lob
-    private byte[] messageAttributes; // TODO: replace java serialization (see e.g. JAMES-2578, PR 4110)
+    private String messageAttributes;
 
     public JPAMail() {
     }
@@ -214,11 +214,11 @@ public class JPAMail {
         this.messageBody = messageBody;
     }
 
-    public byte[] getMessageAttributes() {
+    public String getMessageAttributes() {
         return messageAttributes;
     }
 
-    public void setMessageAttributes(byte[] messageAttributes) {
+    public void setMessageAttributes(String messageAttributes) {
         this.messageAttributes = messageAttributes;
     }
 
