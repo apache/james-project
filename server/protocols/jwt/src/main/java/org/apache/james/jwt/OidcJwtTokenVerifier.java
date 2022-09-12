@@ -40,8 +40,8 @@ public class OidcJwtTokenVerifier {
     public static final IntrospectionClient INTROSPECTION_CLIENT = new DefaultIntrospectionClient();
 
     public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
-        Optional<String> unverifiedClain = getClaimWithoutSignatureVerification(jwtToken, "kid");
-        PublicKeyProvider jwksPublicKeyProvider = unverifiedClain
+        Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
+        PublicKeyProvider jwksPublicKeyProvider = unverifiedClaim
             .map(kidValue -> JwksPublicKeyProvider.of(jwksURL, kidValue))
             .orElse(JwksPublicKeyProvider.of(jwksURL));
         return new JwtTokenVerifier(jwksPublicKeyProvider).verifyAndExtractClaim(jwtToken, claimName, String.class);
