@@ -237,7 +237,7 @@ public class FeedHamToRspamdTask implements Task {
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         try {
-            return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions.getSamplingProbability(), context)
+            return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions, context)
                 .transform(ReactorUtils.<MessageResult, Result>throttle()
                     .elements(runningOptions.getMessagesPerSecond())
                     .per(Duration.ofSeconds(1))

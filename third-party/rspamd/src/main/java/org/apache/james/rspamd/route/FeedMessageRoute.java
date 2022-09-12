@@ -99,7 +99,8 @@ public class FeedMessageRoute implements Routes {
         Optional<Long> periodInSecond = getPeriod(request);
         int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
         double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
-        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability);
+        Optional<Boolean> classifiedAsSpam = getClassifiedAsSpam(request);
+        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability, classifiedAsSpam);
     }
 
     private Optional<Long> getPeriod(Request req) {
@@ -138,6 +139,15 @@ public class FeedMessageRoute implements Routes {
                 });
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("'samplingProbability' must be numeric");
+        }
+    }
+
+    private Optional<Boolean> getClassifiedAsSpam(Request req) {
+        try {
+            return Optional.ofNullable(req.queryParams("classifiedAsSpam"))
+                .map(Boolean::parseBoolean);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("'classifiedAsSpam' must be a boolean (true|false)");
         }
     }
 }

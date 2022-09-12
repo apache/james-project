@@ -20,25 +20,70 @@
 package org.apache.james.rspamd.task;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.rspamd.RspamdScanner;
+import org.apache.james.util.streams.Iterators;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RunningOptions {
+    interface ClassificationFilter extends Predicate<MessageResult> {
+        ClassificationFilter ALL = any -> true;
+        ClassificationFilter CLASSIFIED_AS_HAM = new HeaderBasedPredicate("NO");
+        ClassificationFilter CLASSIFIED_AS_SPAM = new HeaderBasedPredicate("YES");
+
+        class HeaderBasedPredicate implements ClassificationFilter {
+            private final String value;
+
+            public HeaderBasedPredicate(String value) {
+                this.value = value;
+            }
+
+            @Override
+            public boolean test(MessageResult messageResult) {
+                try {
+                    return Iterators.toStream(messageResult.getHeaders().headers())
+                        .filter(header -> header.getName().equalsIgnoreCase(RspamdScanner.FLAG_MAIL.asString()))
+                        .findFirst()
+                        .map(header -> header.getValue().equalsIgnoreCase(value))
+                        // Message was not classified by Rspamd, include it
+                        .orElse(true);
+                } catch (MailboxException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+
+
     public static final Optional<Long> DEFAULT_PERIOD = Optional.empty();
     public static final int DEFAULT_MESSAGES_PER_SECOND = 10;
     public static final double DEFAULT_SAMPLING_PROBABILITY = 1;
-    public static final RunningOptions DEFAULT = new RunningOptions(DEFAULT_PERIOD, DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY);
+    public static final Optional<Boolean> ALL_MESSAGES = Optional.empty();
+    public static final RunningOptions DEFAULT = new RunningOptions(DEFAULT_PERIOD, DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
 
     private final Optional<Long> periodInSecond;
     private final int messagesPerSecond;
     private final double samplingProbability;
+    private final Optional<Boolean> classifiedAsSpam;
 
     public RunningOptions(@JsonProperty("periodInSecond") Optional<Long> periodInSecond,
                           @JsonProperty("messagesPerSecond") int messagesPerSecond,
-                          @JsonProperty("samplingProbability") double samplingProbability) {
+                          @JsonProperty("samplingProbability") double samplingProbability,
+                          @JsonProperty("classifiedAsSpam") Optional<Boolean> classifiedAsSpam) {
         this.periodInSecond = periodInSecond;
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
+        this.classifiedAsSpam = classifiedAsSpam;
+    }
+
+    public Optional<Boolean> getClassifiedAsSpam() {
+        return classifiedAsSpam;
     }
 
     public Optional<Long> getPeriodInSecond() {
@@ -51,5 +96,16 @@ public class RunningOptions {
 
     public double getSamplingProbability() {
         return samplingProbability;
+    }
+
+    @JsonIgnore
+    public ClassificationFilter correspondingClassificationFilter() {
+        return classifiedAsSpam.map(result -> {
+            if (result) {
+                return ClassificationFilter.CLASSIFIED_AS_SPAM;
+            } else {
+                return ClassificationFilter.CLASSIFIED_AS_HAM;
+            }
+        }).orElse(ClassificationFilter.ALL);
     }
 }

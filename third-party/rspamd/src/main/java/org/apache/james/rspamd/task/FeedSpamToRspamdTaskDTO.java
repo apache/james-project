@@ -49,13 +49,15 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
                 rspamdHttpClient,
                 new RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
                     dto.getMessagesPerSecond(),
-                    dto.getSamplingProbability()),
+                    dto.getSamplingProbability(),
+                    dto.getClassifiedAsSpam()),
                 clock))
             .toDTOConverter((domain, type) -> new FeedSpamToRspamdTaskDTO(
                 type,
                 domain.getRunningOptions().getPeriodInSecond().orElse(null),
                 domain.getRunningOptions().getMessagesPerSecond(),
-                domain.getRunningOptions().getSamplingProbability()))
+                domain.getRunningOptions().getSamplingProbability(),
+                domain.getRunningOptions().getClassifiedAsSpam()))
             .typeName(FeedSpamToRspamdTask.TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
@@ -64,16 +66,19 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
     private final Long periodInSecond;
     private final int messagesPerSecond;
     private final double samplingProbability;
+    private final Optional<Boolean> classifiedAsSpam;
 
 
     public FeedSpamToRspamdTaskDTO(@JsonProperty("type") String type,
                                    @JsonProperty("periodInSecond") Long periodInSecond,
                                    @JsonProperty("messagesPerSecond") int messagesPerSecond,
-                                   @JsonProperty("samplingProbability") double samplingProbability) {
+                                   @JsonProperty("samplingProbability") double samplingProbability,
+                                   @JsonProperty("classifiedAsSpam") Optional<Boolean> classifiedAsSpam) {
         this.type = type;
         this.periodInSecond = periodInSecond;
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
+        this.classifiedAsSpam = classifiedAsSpam;
     }
 
     @Override
@@ -91,5 +96,9 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
 
     public double getSamplingProbability() {
         return samplingProbability;
+    }
+
+    public Optional<Boolean> getClassifiedAsSpam() {
+        return classifiedAsSpam;
     }
 }

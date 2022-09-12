@@ -111,6 +111,8 @@ all messages are reported.
    These inputs represent the same duration: `1d`, `1day`, `86400 seconds`, `86400`...
 - `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to Rspamd. 
 By default, all messages are reported.
+- `classifiedAsSpam` (optional): Boolean, true to only include messages tagged as Spam by Rspamd, false for only
+messages tagged as ham by Rspamd. If omitted all messages are included.
 
 Will return the task id. E.g:
 ```
@@ -157,6 +159,8 @@ This endpoint has the following param:
   These inputs represent the same duration: `1d`, `1day`, `86400 seconds`, `86400`...
 - `samplingProbability` (optional): float between 0 and 1, represent the chance to report each given message to Rspamd.
   By default, all messages are reported.
+- `classifiedAsSpam` (optional): Boolean, true to only include messages tagged as Spam by Rspamd, false for only
+messages tagged as ham by Rspamd. If omitted all messages are included.
 
 Will return the task id. E.g:
 ```

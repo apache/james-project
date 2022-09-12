@@ -49,12 +49,14 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
                 rspamdHttpClient,
                 new RunningOptions(Optional.ofNullable(dto.getPeriodInSecond()),
                     dto.getMessagesPerSecond(),
-                    dto.getSamplingProbability()),
+                    dto.getSamplingProbability(),
+                    dto.getClassifiedAsSpam()),
                 clock))
             .toDTOConverter((domain, type) -> new FeedHamToRspamdTaskDTO(type,
                 domain.getRunningOptions().getPeriodInSecond().orElse(null),
                 domain.getRunningOptions().getMessagesPerSecond(),
-                domain.getRunningOptions().getSamplingProbability()))
+                domain.getRunningOptions().getSamplingProbability(),
+                domain.getRunningOptions().getClassifiedAsSpam()))
             .typeName(FeedHamToRspamdTask.TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
@@ -64,20 +66,27 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
     private final Long periodInSecond;
     private final int messagesPerSecond;
     private final double samplingProbability;
+    private final Optional<Boolean> classifiedAsSpam;
 
     public FeedHamToRspamdTaskDTO(@JsonProperty("type") String type,
                                   @JsonProperty("periodInSecond") Long periodInSecond,
                                   @JsonProperty("messagesPerSecond") int messagesPerSecond,
-                                  @JsonProperty("samplingProbability") double samplingProbability) {
+                                  @JsonProperty("samplingProbability") double samplingProbability,
+                                  @JsonProperty("classifiedAsSpam") Optional<Boolean> classifiedAsSpam) {
         this.type = type;
         this.periodInSecond = periodInSecond;
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
+        this.classifiedAsSpam = classifiedAsSpam;
     }
 
     @Override
     public String getType() {
         return type;
+    }
+
+    public Optional<Boolean> getClassifiedAsSpam() {
+        return classifiedAsSpam;
     }
 
     public Long getPeriodInSecond() {
