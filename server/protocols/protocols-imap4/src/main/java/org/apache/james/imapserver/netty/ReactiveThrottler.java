@@ -28,6 +28,7 @@ import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 public class ReactiveThrottler {
     public static class RejectedException extends RuntimeException {
@@ -58,7 +59,7 @@ public class ReactiveThrottler {
         if (requestNumber <= maxConcurrentRequests) {
             // We have capacity for one more concurrent request
             return Mono.from(task)
-                .then(Mono.defer(this::onRequestDone));
+                .doFinally(any -> onRequestDone());
         } else if (requestNumber <= maxQueueSize + maxConcurrentRequests) {
             // Queue the request for later
             Sinks.One<Void> one = Sinks.one();
@@ -77,13 +78,14 @@ public class ReactiveThrottler {
         }
     }
 
-    private Mono<Void> onRequestDone() {
+    private void onRequestDone() {
         concurrentRequests.decrementAndGet();
         Publisher<Void> throttled = queue.poll();
         if (throttled != null) {
-            return Mono.from(throttled)
-                .then(Mono.defer(this::onRequestDone));
+            Mono.from(throttled)
+                .doFinally(any -> onRequestDone())
+                .subscribeOn(Schedulers.parallel())
+                .subscribe();
         }
-        return Mono.empty();
     }
 }
