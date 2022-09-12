@@ -50,9 +50,7 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,15 +129,11 @@ public class EmailQueryViewPopulator {
     }
 
     private Flux<MessageResult> listAllMailboxMessages(Progress progress) {
-        try {
-            return Iterators.toFlux(usersRepository.list())
-                .map(mailboxManager::createSystemSession)
-                .doOnNext(any -> progress.incrementProcessedUserCount())
-                .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY)
-                .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
-        } catch (UsersRepositoryException e) {
-            return Flux.error(e);
-        }
+        return Flux.from(usersRepository.listReactive())
+            .map(mailboxManager::createSystemSession)
+            .doOnNext(any -> progress.incrementProcessedUserCount())
+            .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY)
+            .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
     }
 
     private Flux<MessageResult> listUserMailboxMessages(Progress progress, MailboxSession session) {

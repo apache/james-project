@@ -39,7 +39,6 @@ import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +46,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class RecomputeCurrentQuotasService {
@@ -162,17 +162,16 @@ public class RecomputeCurrentQuotasService {
     }
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
-        try {
-            return Iterators.toFlux(usersRepository.list())
-                .transform(ReactorUtils.<Username, Task.Result>throttle()
-                    .elements(runningOptions.getUsersPerSecond())
-                    .per(Duration.ofSeconds(1))
-                    .forOperation(username -> recomputeUserCurrentQuotas(context, username)))
-                .reduce(Task.Result.COMPLETED, Task::combine);
-        } catch (UsersRepositoryException e) {
-            LOGGER.error("Error while accessing users from repository", e);
-            return Mono.just(Task.Result.PARTIAL);
-        }
+        return Flux.from(usersRepository.listReactive())
+            .transform(ReactorUtils.<Username, Task.Result>throttle()
+                .elements(runningOptions.getUsersPerSecond())
+                .per(Duration.ofSeconds(1))
+                .forOperation(username -> recomputeUserCurrentQuotas(context, username)))
+            .reduce(Task.Result.COMPLETED, Task::combine)
+            .onErrorResume(UsersRepositoryException.class, e -> {
+                LOGGER.error("Error while accessing users from repository", e);
+                return Mono.just(Task.Result.PARTIAL);
+            });
     }
 
     private Mono<Task.Result> recomputeUserCurrentQuotas(Context context, Username username) {
