@@ -60,6 +60,7 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,12 +201,12 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
         if (perRecipientHeaders == null) {
             return null;
         }
-        Map<MailAddress, Collection<PerRecipientHeaders.Header>> map = perRecipientHeaders.getHeadersByRecipient().asMap();
+        Map<MailAddress, Collection<Header>> map = perRecipientHeaders.getHeadersByRecipient().asMap();
         if (map.isEmpty()) {
             return null;
         }
         ObjectNode node = JsonNodeFactory.instance.objectNode();
-        for (Map.Entry<MailAddress, Collection<PerRecipientHeaders.Header>> entry : map.entrySet()) {
+        for (Map.Entry<MailAddress, Collection<Header>> entry : map.entrySet()) {
             String recipient = entry.getKey().asString();
             ObjectNode headers = node.putObject(recipient);
             entry.getValue().forEach(header -> headers.put(header.getName(), header.getValue()));
@@ -222,26 +223,28 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
             JsonNode node = OBJECT_MAPPER.readTree(data);
             if (node instanceof ObjectNode) {
                 ObjectNode objectNode = (ObjectNode) node;
-                Iterators.toStream(objectNode.fields()).forEach(recipientEntry -> {
-                    try {
-                        MailAddress recipient = new MailAddress(recipientEntry.getKey());
-                        Iterators.toStream(recipientEntry.getValue().fields()).forEach(
-                            headerEntry -> {
-                                PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder()
-                                    .name(headerEntry.getKey())
-                                    .value(headerEntry.getValue().textValue())
-                                    .build();
-                                perRecipientHeaders.addHeaderForRecipient(header, recipient);
-                            });
-                    } catch (AddressException ae) {
-                        throw new IllegalArgumentException("invalid recipient address", ae);
-                    }
-                });
+                Iterators.toStream(objectNode.fields()).forEach(
+                    entry -> addPerRecipientHeaders(perRecipientHeaders, entry.getKey(), entry.getValue()));
                 return perRecipientHeaders;
             }
             throw new IllegalArgumentException("JSON object corresponding to recipient headers must be a JSON object");
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("per recipient headers is not a valid JSON object", e);
+        }
+    }
+
+    private void addPerRecipientHeaders(PerRecipientHeaders perRecipientHeaders, String recipient, JsonNode headers) {
+        try {
+            MailAddress address = new MailAddress(recipient);
+            Iterators.toStream(headers.fields()).forEach(
+                entry -> {
+                    String name = entry.getKey();
+                    String value = entry.getValue().textValue();
+                    Header header = Header.builder().name(name).value(value).build();
+                    perRecipientHeaders.addHeaderForRecipient(header, address);
+                });
+        } catch (AddressException ae) {
+            throw new IllegalArgumentException("invalid recipient address", ae);
         }
     }
 
