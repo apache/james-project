@@ -204,28 +204,45 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
         if (map.isEmpty()) {
             return null;
         }
-        StringBuilder data = new StringBuilder(map.size() * 1024);
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
         for (Map.Entry<MailAddress, Collection<PerRecipientHeaders.Header>> entry : map.entrySet()) {
-            data.append(entry.getKey().asString()).append('\n');
-            entry.getValue().forEach(header -> data.append(header.asString()).append('\n'));
-            data.append('\n');
+            String recipient = entry.getKey().asString();
+            ObjectNode headers = node.putObject(recipient);
+            entry.getValue().forEach(header -> headers.put(header.getName(), header.getValue()));
         }
-        return data.toString();
+        return node.toString();
     }
 
-    private PerRecipientHeaders deserializePerRecipientHeaders(String data) throws AddressException {
+    private PerRecipientHeaders deserializePerRecipientHeaders(String data) {
         if (data == null || data.isEmpty()) {
             return null;
         }
         PerRecipientHeaders perRecipientHeaders = new PerRecipientHeaders();
-        for (String entry : data.split("\n\n")) {
-            String[] lines = entry.split("\n");
-            MailAddress address = new MailAddress(lines[0]);
-            for (int i = 1; i < lines.length; i++) {
-                perRecipientHeaders.addHeaderForRecipient(PerRecipientHeaders.Header.fromString(lines[i]), address);
+        try {
+            JsonNode node = OBJECT_MAPPER.readTree(data);
+            if (node instanceof ObjectNode) {
+                ObjectNode objectNode = (ObjectNode) node;
+                Iterators.toStream(objectNode.fields()).forEach(recipientEntry -> {
+                    try {
+                        MailAddress recipient = new MailAddress(recipientEntry.getKey());
+                        Iterators.toStream(recipientEntry.getValue().fields()).forEach(
+                            headerEntry -> {
+                                PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder()
+                                    .name(headerEntry.getKey())
+                                    .value(headerEntry.getValue().textValue())
+                                    .build();
+                                perRecipientHeaders.addHeaderForRecipient(header, recipient);
+                            });
+                    } catch (AddressException ae) {
+                        throw new IllegalArgumentException("invalid recipient address", ae);
+                    }
+                });
+                return perRecipientHeaders;
             }
+            throw new IllegalArgumentException("JSON object corresponding to recipient headers must be a JSON object");
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("per recipient headers is not a valid JSON object", e);
         }
-        return perRecipientHeaders;
     }
 
     @Override
