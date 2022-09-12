@@ -160,7 +160,7 @@
                         org/apache/james/user/jpa/model/JPAUser.class,
                         org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,
                         org/apache/james/domainlist/jpa/model/JPADomain.class,
-                        org/apache/james/mailrepository/jpa/JPAUrl.class,
+                        org/apache/james/mailrepository/jpa/model/JPAUrl.class,
                         org/apache/james/mailrepository/jpa/model/JPAMail.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
@@ -176,7 +176,7 @@
                                 org.apache.james.user.jpa.model.JPAUser;
                                 org.apache.james.rrt.jpa.model.JPARecipientRewrite;
                                 org.apache.james.domainlist.jpa.model.JPADomain;
-                                org.apache.james.mailrepository.jpa.JPAUrl;
+                                org.apache.james.mailrepository.jpa.model.JPAUrl;
                                 org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>
                     </toolProperties>

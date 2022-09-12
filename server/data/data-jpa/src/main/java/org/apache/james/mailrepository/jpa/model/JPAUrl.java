@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.jpa;
+package org.apache.james.mailrepository.jpa.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

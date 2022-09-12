@@ -32,7 +32,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.mailrepository.jpa.JPAUrl;
+import org.apache.james.mailrepository.jpa.model.JPAUrl;
 import org.apache.james.mailrepository.jpa.model.JPAMail;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;

@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.fail;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
-import org.apache.james.mailrepository.jpa.JPAUrl;
+import org.apache.james.mailrepository.jpa.model.JPAUrl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
