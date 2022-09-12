@@ -36,7 +36,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
