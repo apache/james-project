@@ -22,6 +22,7 @@ package org.apache.james.rspamd.task;
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -37,7 +38,6 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.ReactorUtils;
 
@@ -88,9 +88,7 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
             .filter(message -> randomBooleanWithProbability(runningOptions))
-            .map(Message::getMessageId)
-            .collectList()
-            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession))
+            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession))
             .filter(runningOptions.correspondingClassificationFilter());
     }
 
@@ -104,9 +102,7 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
             .filter(message -> randomBooleanWithProbability(runningOptions))
-            .map(Message::getMessageId)
-            .collectList()
-            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession))
+            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession))
             .filter(runningOptions.correspondingClassificationFilter());
     }
 
