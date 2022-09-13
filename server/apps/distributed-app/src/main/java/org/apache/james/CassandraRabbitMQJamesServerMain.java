@@ -82,6 +82,7 @@ import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
+import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -94,7 +95,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new VacationRoutesModule(),
-        new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
@@ -146,7 +146,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
         new CassandraConsistencyTaskSerializationModule(),
         new CassandraMailboxModule(),
-        new CassandraDeletedMessageVaultModule(),
         new MailboxModule(),
         new TikaMailboxModule());
 
@@ -190,6 +189,18 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
-                .chooseModules(configuration.getUsersRepositoryImplementation()));
+                .chooseModules(configuration.getUsersRepositoryImplementation()))
+            .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()));
+    }
+
+    private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
+        if (vaultConfiguration.isEnabled()) {
+            return Modules.combine(
+                new CassandraDeletedMessageVaultModule(),
+                new DeletedMessageVaultRoutesModule());
+        }
+        return binder -> {
+
+        };
     }
 }

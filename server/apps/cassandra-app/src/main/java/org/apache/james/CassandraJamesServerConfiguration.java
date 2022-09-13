@@ -22,6 +22,7 @@ package org.apache.james;
 import java.io.File;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -31,6 +32,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.vault.VaultConfiguration;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -49,6 +51,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         private Optional<ConfigurationPath> configurationPath;
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
+        private Optional<VaultConfiguration> vaultConfiguration;
 
         private Builder() {
             rootDirectory = Optional.empty();
@@ -56,6 +59,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             searchConfiguration = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             blobStoreConfiguration = Optional.empty();
+            vaultConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -101,6 +105,11 @@ public class CassandraJamesServerConfiguration implements Configuration {
             return this;
         }
 
+        public Builder vaultConfiguration(VaultConfiguration vaultConfiguration) {
+            this.vaultConfiguration = Optional.of(vaultConfiguration);
+            return this;
+        }
+
         public CassandraJamesServerConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -121,7 +130,15 @@ public class CassandraJamesServerConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
-            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice);
+            VaultConfiguration vaultConfiguration = this.vaultConfiguration.orElseGet(() -> {
+                try {
+                    return VaultConfiguration.from(configurationProvider.getConfiguration("deletedMessageVault"));
+                } catch (ConfigurationException e) {
+                    return VaultConfiguration.DEFAULT;
+                }
+            });
+
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice, vaultConfiguration);
         }
     }
 
@@ -134,13 +151,15 @@ public class CassandraJamesServerConfiguration implements Configuration {
     private final SearchConfiguration searchConfiguration;
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final VaultConfiguration vaultConfiguration;
 
-    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, VaultConfiguration vaultConfiguration) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.vaultConfiguration = vaultConfiguration;
     }
 
     @Override
@@ -155,6 +174,10 @@ public class CassandraJamesServerConfiguration implements Configuration {
 
     public SearchConfiguration searchConfiguration() {
         return searchConfiguration;
+    }
+
+    public VaultConfiguration getVaultConfiguration() {
+        return vaultConfiguration;
     }
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {

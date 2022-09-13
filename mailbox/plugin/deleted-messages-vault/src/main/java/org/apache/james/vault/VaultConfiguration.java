@@ -32,7 +32,9 @@ import com.google.common.base.Preconditions;
 
 public class VaultConfiguration {
     public static final VaultConfiguration DEFAULT =
-        new VaultConfiguration(ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+    public static final VaultConfiguration ENABLED_DEFAULT =
+        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
 
     public static VaultConfiguration from(Configuration propertiesConfiguration) {
         Duration retentionPeriod = Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
@@ -40,18 +42,25 @@ public class VaultConfiguration {
             .orElse(DEFAULT.getRetentionPeriod());
         String restoreLocation = Optional.ofNullable(propertiesConfiguration.getString("restoreLocation"))
             .orElse(DEFAULT.getRestoreLocation());
-        return new VaultConfiguration(retentionPeriod, restoreLocation);
+        boolean enabled = propertiesConfiguration.getBoolean("enabled", false);
+        return new VaultConfiguration(enabled, retentionPeriod, restoreLocation);
     }
 
+    private final boolean enabled;
     private final Duration retentionPeriod;
     private final String restoreLocation;
 
-    VaultConfiguration(Duration retentionPeriod, String restoreLocation) {
+    VaultConfiguration(boolean enabled, Duration retentionPeriod, String restoreLocation) {
+        this.enabled = enabled;
         Preconditions.checkNotNull(retentionPeriod);
         Preconditions.checkNotNull(restoreLocation);
 
         this.retentionPeriod = retentionPeriod;
         this.restoreLocation = restoreLocation;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public Duration getRetentionPeriod() {
@@ -68,13 +77,14 @@ public class VaultConfiguration {
             VaultConfiguration that = (VaultConfiguration) o;
 
             return Objects.equals(this.retentionPeriod, that.retentionPeriod)
-                && Objects.equals(this.restoreLocation, that.restoreLocation);
+                && Objects.equals(this.restoreLocation, that.restoreLocation)
+                && Objects.equals(this.enabled, that.enabled);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(retentionPeriod, restoreLocation);
+        return Objects.hash(retentionPeriod, restoreLocation, enabled);
     }
 }

@@ -191,14 +191,14 @@ class DeletedMessagesVaultRoutesTest {
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
-            VaultConfiguration.DEFAULT));
+            VaultConfiguration.ENABLED_DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         JsonTransformer jsonTransformer = new JsonTransformer();
 
-        RestoreService vaultRestore = new RestoreService(vault, mailboxManager, VaultConfiguration.DEFAULT);
+        RestoreService vaultRestore = new RestoreService(vault, mailboxManager, VaultConfiguration.ENABLED_DEFAULT);
         blobExporting = spy(new NoopBlobExporting());
         zipper = new DeletedMessageZipper();
         exportService = new ExportService(blobExporting, blobStore, zipper, vault);
