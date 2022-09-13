@@ -58,6 +58,7 @@ public class RspamdHttpClient {
     public static final String LEARN_SPAM_ENDPOINT = "/learnspam";
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
     private static final int OK = 200;
+    private static final int NO_CONTENT = 204;
     private static final int FORBIDDEN = 403;
     private static final int BUFFER_SIZE = 16384;
 
@@ -160,6 +161,7 @@ public class RspamdHttpClient {
 
     private Mono<Void> reportMailHttpResponseHandler(HttpClientResponse httpClientResponse, ByteBufMono byteBufMono) {
         switch (httpClientResponse.status().code()) {
+            case NO_CONTENT:
             case OK:
                 return Mono.empty();
             case FORBIDDEN:
