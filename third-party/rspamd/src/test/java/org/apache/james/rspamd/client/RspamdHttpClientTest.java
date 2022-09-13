@@ -26,17 +26,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Optional;
+
+import javax.mail.MessagingException;
 
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
-import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,17 +60,33 @@ class RspamdHttpClientTest {
     @RegisterExtension
     static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
 
-    private byte[] spamMessage;
-    private byte[] hamMessage;
-    private byte[] virusMessage;
-    private byte[] nonVirusMessage;
+    private Mail spamMessage;
+    private Mail hamMessage;
+    private Mail virusMessage;
+    private Mail nonVirusMessage;
 
     @BeforeEach
-    void setup() {
-        spamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(SPAM_MESSAGE_PATH);
-        hamMessage = ClassLoaderUtils.getSystemResourceAsByteArray(HAM_MESSAGE_PATH);
-        virusMessage = ClassLoaderUtils.getSystemResourceAsByteArray(VIRUS_MESSAGE_PATH);
-        nonVirusMessage = ClassLoaderUtils.getSystemResourceAsByteArray(NON_VIRUS_MESSAGE_PATH);
+    void setup() throws MessagingException {
+        spamMessage = FakeMail.builder()
+            .name("spam")
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream(SPAM_MESSAGE_PATH)))
+            .build();
+        hamMessage = FakeMail.builder()
+            .name("ham")
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream(HAM_MESSAGE_PATH)))
+            .build();
+        virusMessage = FakeMail.builder()
+            .name("virus")
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream(VIRUS_MESSAGE_PATH)))
+            .build();
+        nonVirusMessage = FakeMail.builder()
+            .name("non virus")
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream(NON_VIRUS_MESSAGE_PATH)))
+            .build();
     }
 
     @Test
@@ -75,7 +94,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatThrownBy(() -> client.checkV2(new ByteArrayInputStream(spamMessage)).block())
+        assertThatThrownBy(() -> client.checkV2(spamMessage).block())
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
@@ -85,7 +104,8 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatThrownBy(() -> reportAsSpam(client, new ByteArrayInputStream(spamMessage)))
+
+        assertThatThrownBy(() -> reportAsSpam(client, spamMessage.getMessage().getInputStream()))
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
@@ -95,17 +115,17 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatThrownBy(() -> reportAsHam(client, new ByteArrayInputStream(spamMessage)))
+        assertThatThrownBy(() -> reportAsHam(client, spamMessage.getMessage().getInputStream()))
             .hasMessage("{\"error\":\"Unauthorized\"}")
             .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
-    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() {
+    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(spamMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(spamMessage).block();
         assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
@@ -121,11 +141,11 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void checkHamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() {
+    void checkHamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(hamMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(hamMessage).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
             softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
@@ -150,7 +170,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
+        assertThatCode(() -> client.reportAsSpam(spamMessage.getMessage().getInputStream()).block())
             .doesNotThrowAnyException();
     }
 
@@ -159,45 +179,45 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
+        assertThatCode(() -> client.reportAsHam(hamMessage.getMessage().getInputStream()).block())
             .doesNotThrowAnyException();
     }
 
     @Test
-    void learnHamMShouldBeIdempotent() {
+    void learnHamMShouldBeIdempotent() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsHam(new ByteArrayInputStream(hamMessage)).block();
-        assertThatCode(() -> client.reportAsHam(new ByteArrayInputStream(hamMessage)).block())
+        client.reportAsHam(hamMessage.getMessage().getInputStream()).block();
+        assertThatCode(() -> client.reportAsHam(hamMessage.getMessage().getInputStream()).block())
             .doesNotThrowAnyException();
     }
 
     @Test
-    void learnSpamMShouldBeIdempotent() {
+    void learnSpamMShouldBeIdempotent() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block();
-        assertThatCode(() -> client.reportAsSpam(new ByteArrayInputStream(spamMessage)).block())
+        client.reportAsSpam(spamMessage.getMessage().getInputStream()).block();
+        assertThatCode(() -> client.reportAsSpam(spamMessage.getMessage().getInputStream()).block())
             .doesNotThrowAnyException();
     }
 
     @Test
-    void checkVirusMailUsingRspamdClientWithExactPasswordShouldReturnHasVirus() {
+    void checkVirusMailUsingRspamdClientWithExactPasswordShouldReturnHasVirus() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(virusMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(virusMessage).block();
         assertThat(analysisResult.hasVirus()).isTrue();
     }
 
     @Test
-    void checkNonVirusMailUsingRspamdClientWithExactPasswordShouldReturnHasNoVirus() {
+    void checkNonVirusMailUsingRspamdClientWithExactPasswordShouldReturnHasNoVirus() throws Exception {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        AnalysisResult analysisResult = client.checkV2(new ByteArrayInputStream(nonVirusMessage)).block();
+        AnalysisResult analysisResult = client.checkV2(nonVirusMessage).block();
         assertThat(analysisResult.hasVirus()).isFalse();
     }
 
