@@ -240,7 +240,7 @@ public class FeedSpamToRspamdTask implements Task {
             .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsSpam(messageResult.getFullContent().getInputStream())))
+                .forOperation(messageResult -> rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> messageResult.getFullContent().getInputStream()).get())
                     .then(Mono.fromCallable(() -> {
                         context.incrementReportedSpamMessageCount(1);
                         return Result.COMPLETED;

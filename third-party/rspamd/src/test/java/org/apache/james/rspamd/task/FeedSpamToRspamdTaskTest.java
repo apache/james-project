@@ -29,11 +29,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import javax.mail.Flags;
@@ -64,6 +66,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+
 @Tag(Unstable.TAG)
 public class FeedSpamToRspamdTaskTest {
     @RegisterExtension
@@ -78,6 +83,25 @@ public class FeedSpamToRspamdTaskTest {
     public static final long TWO_DAYS_IN_SECOND = 172800;
     public static final long ONE_DAY_IN_SECOND = 86400;
     public static final Instant NOW = ZonedDateTime.now().toInstant();
+
+    static class TestRspamdHttpClient extends RspamdHttpClient {
+        private final AtomicInteger hitCounter;
+        public TestRspamdHttpClient(RspamdClientConfiguration configuration) {
+            super(configuration);
+            this.hitCounter = new AtomicInteger(0);
+        }
+
+        @Override
+        public Mono<Void> reportAsSpam(InputStream content) {
+            return Mono.fromCallable(() -> content)
+                .doOnNext(e -> hitCounter.incrementAndGet())
+                .then();
+        }
+
+        public int getHitCounter() {
+            return hitCounter.get();
+        }
+    }
 
     private InMemoryMailboxManager mailboxManager;
     private MessageIdManager messageIdManager;
@@ -133,6 +157,19 @@ public class FeedSpamToRspamdTaskTest {
                 .reportedSpamMessageCount(2)
                 .errorCount(0)
                 .build());
+    }
+
+    @Test
+    void taskShouldHitToRspamdServerWhenLearnSpam() throws MailboxException {
+        appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW));
+        appendSpamMessage(ALICE_SPAM_MAILBOX, Date.from(NOW));
+
+        TestRspamdHttpClient rspamdHttpClient = new TestRspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        FeedSpamToRspamdTask feedSpamToRspamdTask = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, RunningOptions.DEFAULT, clock);
+        Task.Result result = feedSpamToRspamdTask.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(rspamdHttpClient.getHitCounter()).isEqualTo(2);
     }
 
     @Test
