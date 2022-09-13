@@ -71,15 +71,6 @@ public class RspamdHttpClient {
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
     }
 
-    public Mono<AnalysisResult> checkV2(InputStream mimeMessage) {
-        return httpClient.post()
-            .uri(CHECK_V2_ENDPOINT)
-            .send(ReactorUtils.toChunks(mimeMessage, BUFFER_SIZE)
-                .map(Unpooled::wrappedBuffer))
-            .responseSingle(this::checkMailHttpResponseHandler)
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
-    }
-
     public Mono<AnalysisResult> checkV2(Mail mail) throws MessagingException {
         return httpClient
             .headers(headers -> transportInformationToHeaders(mail, headers))
@@ -89,6 +80,14 @@ public class RspamdHttpClient {
                 .map(Unpooled::wrappedBuffer))
             .responseSingle(this::checkMailHttpResponseHandler)
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
+
+    public Mono<Void> reportAsSpam(InputStream content) {
+        return reportMail(content, LEARN_SPAM_ENDPOINT);
+    }
+
+    public Mono<Void> reportAsHam(InputStream content) {
+        return reportMail(content, LEARN_HAM_ENDPOINT);
     }
 
     // CF https://rspamd.com/doc/architecture/protocol.html#http-headers
@@ -118,14 +117,6 @@ public class RspamdHttpClient {
             .filter(String.class::isInstance)
             .map(String.class::cast)
             .ifPresent(user -> headers.add("User", user));
-    }
-
-    public Mono<Void> reportAsSpam(InputStream content) {
-        return reportMail(content, LEARN_SPAM_ENDPOINT);
-    }
-
-    public Mono<Void> reportAsHam(InputStream content) {
-        return reportMail(content, LEARN_HAM_ENDPOINT);
     }
 
     private HttpClient buildReactorNettyHttpClient(RspamdClientConfiguration configuration) {
