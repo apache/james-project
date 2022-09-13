@@ -22,10 +22,8 @@ package org.apache.james.queue.pulsar
 import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
-
 import javax.mail.MessagingException
 import javax.mail.internet.MimeMessage
-
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -46,7 +44,6 @@ import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
 import org.reactivestreams.Publisher
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
 import akka.stream.{Attributes, OverflowStrategy}
@@ -55,8 +52,10 @@ import akka.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
 import com.sksamuel.pulsar4s.akka.streams
 import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
-
+import org.slf4j.LoggerFactory
 import play.api.libs.json._
+
+import scala.util.Failure
 
 private[pulsar] object serializers {
   implicit val headerFormat: Format[Header] = Json.format[Header]
@@ -98,6 +97,8 @@ class PulsarMailQueue(
   import serializers._
 
   type MessageAsJson = String
+
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val awaitTimeout = 10.seconds
 
@@ -250,9 +251,11 @@ class PulsarMailQueue(
     ).ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterActor)
       .flatMapConcat {
         case (None, Some(partsId), committableMessage) =>
-          committableMessage.ack()
-          deleteMimeMessage(partsId)
-            .flatMapConcat(_ => Source.empty)
+          Source.lazyFuture(() => committableMessage.ack())
+            .flatMapConcat(_ =>
+              deleteMimeMessage(partsId)
+                .flatMapConcat(_ => Source.empty)
+            )
         case (Some(metadata), _, committableMessage) =>
           val partsId = metadata.partsId
           Source
@@ -270,7 +273,12 @@ class PulsarMailQueue(
       if (success) {
         dequeueMetrics.increment()
         Await.ready(message.ack(cumulative = false), awaitTimeout)
-        deleteMimeMessage(partsId).run()
+        val eventualDone = deleteMimeMessage(partsId).run()
+
+        eventualDone.onComplete {
+          case Failure(e) => logger.error("Failed to delete parts {} for mail {}", partsId, mail.getName(), e)
+          case _ => logger.trace("Deleted parts {} for mail {}", partsId, mail.getName())
+        }
       } else {
         Await.ready(message.nack(), awaitTimeout)
       }
