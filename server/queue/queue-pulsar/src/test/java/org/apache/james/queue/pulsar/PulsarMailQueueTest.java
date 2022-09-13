@@ -22,6 +22,7 @@ package org.apache.james.queue.pulsar;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
@@ -61,6 +63,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.sksamuel.pulsar4s.ConsumerMessage;
@@ -257,8 +260,6 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
-    @Disabled("JAMES-3805 PulsarMailQueueTest::removeShouldRemoveMailFromStoreWhenFilteredOut is unstable")
-    // https://ci-builds.apache.org/job/james/job/ApacheJames/job/PR-1109/12/testReport/junit/org.apache.james.queue.pulsar/PulsarMailQueueTest/removeShouldRemoveMailFromStoreWhenFilteredOut/
     @Test
     void removeShouldRemoveMailFromStoreWhenFilteredOut() throws Exception {
         enQueue(defaultMail()
@@ -267,7 +268,11 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         enQueue(defaultMail()
                 .name("name2")
                 .build());
+        enQueue(defaultMail()
+                .name("name3")
+                .build());
 
+        //this won't delete the mail from the store until we try a dequeue
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 
         awaitRemove();
@@ -276,10 +281,9 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 .toIterable()
                 .extracting(ManageableMailQueue.MailQueueItemView::getMail)
                 .extracting(Mail::getName)
-                .containsExactly("name1");
+                .containsExactly("name1", "name3");
 
-        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
-        mailQueueItem.done(true);
+        Flux.from(getMailQueue().deQueue()).take(2).doOnNext(Throwing.consumer(x -> x.done(true))).blockLast();
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
