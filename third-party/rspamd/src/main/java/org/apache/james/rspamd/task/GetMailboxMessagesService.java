@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -64,20 +65,23 @@ public class GetMailboxMessagesService {
         this.messageIdManager = messageIdManager;
     }
 
-    public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, RunningOptions runningOptions,
-                                                           FeedSpamToRspamdTask.Context context) {
+    public Flux<Pair<Username, MessageResult>> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, RunningOptions runningOptions,
+                                                                           FeedSpamToRspamdTask.Context context) {
         return Flux.from(userRepository.listReactive())
-            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context), 2);
+            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context)
+                .map(result -> Pair.of(username, result)), 2);
     }
 
-    public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
+    public Flux<Pair<Username, MessageResult>> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
                                                        FeedHamToRspamdTask.Context context) {
         return Flux.from(userRepository.listReactive())
             .flatMap(Throwing.function(username ->
                 Flux.from(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxManager.createSystemSession(username)).build(),
                     mailboxManager.createSystemSession(username)))
                     .filter(mbxMetadata -> hamMailboxesPredicate(mbxMetadata.getPath()))
-                    .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
+                    .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)
+                    .map(result -> Pair.of(username, result))
+            ), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,

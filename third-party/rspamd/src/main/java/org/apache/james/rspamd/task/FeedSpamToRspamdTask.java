@@ -27,6 +27,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.MessageResult;
@@ -237,10 +239,11 @@ public class FeedSpamToRspamdTask implements Task {
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions, context)
-            .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
+            .transform(ReactorUtils.<Pair<Username, MessageResult>, Task.Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(messageResult -> rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> messageResult.getFullContent().reactiveBytes()).get())
+                .forOperation(userAndMessageResult -> rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> userAndMessageResult.getRight().getFullContent().reactiveBytes()).get(),
+                         RspamdHttpClient.Options.forUser(userAndMessageResult.getLeft()))
                     .timeout(runningOptions.getRspamdTimeout())
                     .then(Mono.fromCallable(() -> {
                         context.incrementReportedSpamMessageCount(1);

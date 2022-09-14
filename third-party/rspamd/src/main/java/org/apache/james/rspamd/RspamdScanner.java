@@ -28,9 +28,12 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
+import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -42,7 +45,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RspamdScanner extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RspamdScanner.class);
@@ -52,6 +61,7 @@ public class RspamdScanner extends GenericMailet {
 
     private final RspamdHttpClient rspamdHttpClient;
     private boolean rewriteSubject;
+    private boolean perUserScans;
     private Optional<String> virusProcessor;
     private Optional<String> rejectSpamProcessor;
 
@@ -65,11 +75,62 @@ public class RspamdScanner extends GenericMailet {
         rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
         virusProcessor = getInitParameterAsOptional("virusProcessor");
         rejectSpamProcessor = getInitParameterAsOptional("rejectSpamProcessor");
+        perUserScans = getBooleanParameter(getInitParameter("perUserScans"), false);
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
+        if (perUserScans) {
+            scanPerUser(mail);
+        } else {
+            scanAll(mail);
+        }
+    }
+
+    private void scanPerUser(Mail mail) {
+        Flux.fromIterable(mail.getRecipients())
+            .flatMap(Throwing.function(rcpt -> rspamdHttpClient.checkV2(mail, RspamdHttpClient.Options.forMailAddress(rcpt))
+                .map(result -> Pair.of(rcpt, result))), ReactorUtils.DEFAULT_CONCURRENCY)
+            .concatMap(rcptAndResult -> Mono.fromRunnable(Throwing.runnable(() -> {
+                if (AnalysisResult.Action.REJECT == rcptAndResult.getValue().getAction()) {
+                    rejectSpamProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+                }
+
+                appendRspamdResultHeader(mail, rcptAndResult.getKey(), rcptAndResult.getRight());
+
+                if (rcptAndResult.getRight().hasVirus()) {
+                    virusProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+                }
+            })).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+            .blockLast();
+    }
+
+    private void processorPerUser(Mail mail, MailAddress rcpt, String processor) {
+        Mail copy = null;
+        try {
+            copy = mail.duplicate();
+            copy.setRecipients(ImmutableList.of(rcpt));
+            getMailetContext().sendMail(copy, processor);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error when processor per user", e);
+        } finally {
+            if (copy != null) {
+                mail.setRecipients(Sets.difference(
+                    ImmutableSet.copyOf(mail.getRecipients()),
+                    ImmutableSet.of(rcpt)));
+                LifecycleUtil.dispose(copy);
+            }
+        }
+        if (virusProcessor.equals(Optional.of(processor))) {
+            LOGGER.info("Detected a mail containing virus. Sending mail {} to {}", mail, virusProcessor);
+            mail.setState(processor);
+        }
+    }
+
+
+    private void scanAll(Mail mail) throws MessagingException {
         AnalysisResult rspamdResult = rspamdHttpClient.checkV2(mail).block();
+        Preconditions.checkNotNull(rspamdResult);
 
         if (rspamdResult.getAction() == AnalysisResult.Action.REJECT) {
             rejectSpamProcessor.ifPresent(mail::setState);

@@ -104,7 +104,7 @@ public class FeedHamToRspamdTaskTest {
         }
 
         @Override
-        public Mono<Void> reportAsHam(Publisher<ByteBuffer> content) {
+        public Mono<Void> reportAsHam(Publisher<ByteBuffer> content, Options options) {
             return Mono.from(content)
                 .doOnNext(e -> hitCounter.incrementAndGet())
                 .then();

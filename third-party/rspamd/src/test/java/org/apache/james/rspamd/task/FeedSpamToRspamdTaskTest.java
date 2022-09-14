@@ -103,7 +103,7 @@ public class FeedSpamToRspamdTaskTest {
         }
 
         @Override
-        public Mono<Void> reportAsSpam(Publisher<ByteBuffer> content) {
+        public Mono<Void> reportAsSpam(Publisher<ByteBuffer> content, Options options) {
             return Mono.from(content)
                 .doOnNext(e -> hitCounter.incrementAndGet())
                 .then();

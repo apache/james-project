@@ -29,9 +29,11 @@ import static org.hamcrest.core.Is.is;
 
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
@@ -45,6 +47,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -123,16 +126,17 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
+    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws MessagingException {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(spamMessage).block();
-        assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
+        assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.ADD_HEADER);
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
         rspamdApi
             .header(new Header("Password", PASSWORD))
+            .header(new Header("IP", spamMessage.getRemoteAddr()))
             .body(ClassLoader.getSystemResourceAsStream(SPAM_MESSAGE_PATH))
             .post("checkv2")
         .then()
@@ -221,6 +225,28 @@ class RspamdHttpClientTest {
 
         AnalysisResult analysisResult = client.checkV2(nonVirusMessage).block();
         assertThat(analysisResult.hasVirus()).isFalse();
+    }
+
+    @Disabled("not stable")
+    @Test
+    void rspamdResultShouldReturnDifferenceScoreWhenDifferenceUser() throws Exception {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        Username bob = Username.of("bob@domain.tld");
+        Username alice = Username.of("alice@domain.tld");
+
+        TimeUnit.SECONDS.sleep(30); // for warm up to already learning
+        client.reportAsSpam(spamMessage.getMessage().getInputStream(), RspamdHttpClient.Options.forUser(bob)).block();
+        client.reportAsHam(hamMessage.getMessage().getInputStream(), RspamdHttpClient.Options.forUser(bob)).block();
+        client.reportAsSpam(virusMessage.getMessage().getInputStream(), RspamdHttpClient.Options.forUser(bob)).block();
+        client.reportAsHam(nonVirusMessage.getMessage().getInputStream(), RspamdHttpClient.Options.forUser(bob)).block();
+
+        TimeUnit.SECONDS.sleep(10);
+        AnalysisResult analysisResultBob = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(bob)).block();
+        AnalysisResult analysisResultAlice = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(alice)).block();
+
+        assertThat(analysisResultBob.getScore()).isNotEqualTo(analysisResultAlice.getScore());
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {

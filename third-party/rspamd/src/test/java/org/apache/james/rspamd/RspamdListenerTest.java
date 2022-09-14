@@ -88,8 +88,8 @@ public class RspamdListenerTest {
     void setup() {
         rspamdHttpClient = mock(RspamdHttpClient.class);
 
-        when(rspamdHttpClient.reportAsHam(any())).thenReturn(Mono.empty());
-        when(rspamdHttpClient.reportAsSpam(any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsHam(any(), any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsSpam(any(), any())).thenReturn(Mono.empty());
 
         StoreMailboxManager mailboxManager = spy(InMemoryIntegrationResources.defaultResources().getMailboxManager());
         SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
@@ -228,7 +228,7 @@ public class RspamdListenerTest {
 
         listener.event(messageMoveEvent);
 
-        verify(rspamdHttpClient).reportAsSpam(any());
+        verify(rspamdHttpClient).reportAsSpam(any(), any());
     }
 
     @Test
@@ -246,7 +246,7 @@ public class RspamdListenerTest {
 
         listener.event(messageMoveEvent);
 
-        verify(rspamdHttpClient).reportAsHam(any());
+        verify(rspamdHttpClient).reportAsHam(any(), any());
     }
 
     @Test
@@ -262,7 +262,7 @@ public class RspamdListenerTest {
 
         listener.event(addedEvent);
 
-        verify(rspamdHttpClient).reportAsHam(any());
+        verify(rspamdHttpClient).reportAsHam(any(), any());
     }
 
     @Test
@@ -279,6 +279,7 @@ public class RspamdListenerTest {
         listener.event(addedEvent);
 
         verify(rspamdHttpClient, never()).reportAsHam(any());
+        verify(rspamdHttpClient, never()).reportAsHam(any(), any());
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox) throws MailboxException {
