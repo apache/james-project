@@ -47,6 +47,8 @@ import javax.persistence.Table;
         query = "SELECT COUNT(mail) FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName"),
     @NamedQuery(name = "deleteMailMessages",
         query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName IN (:messageNames)"),
+    @NamedQuery(name = "deleteAllMailMessages",
+        query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName"),
     @NamedQuery(name = "findMailMessage",
         query = "SELECT mail FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName = :messageName")
 })
@@ -108,7 +110,7 @@ public class JPAMail {
     @Column(name = "LAST_UPDATED", nullable = false)
     private Timestamp lastUpdated;
 
-    @Basic(optional = true, fetch = FetchType.LAZY)
+    @Basic(optional = true)
     @Column(name = "PER_RECIPIENT_HEADERS", nullable = true, length = 10485760)
     @Lob
     private String perRecipientHeaders;
@@ -118,7 +120,7 @@ public class JPAMail {
     @Lob
     private byte[] messageBody; // TODO: support streaming body where possible (see e.g. JPAStreamingMailboxMessage)
 
-    @Basic(optional = true, fetch = FetchType.LAZY)
+    @Basic(optional = true)
     @Column(name = "MESSAGE_ATTRIBUTES", nullable = true, length = 10485760)
     @Lob
     private String messageAttributes;

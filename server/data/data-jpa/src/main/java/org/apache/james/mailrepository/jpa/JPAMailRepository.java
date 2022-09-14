@@ -331,11 +331,6 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
     }
 
     @Override
-    public void removeAll() throws MessagingException {
-        remove(ImmutableList.copyOf(list()));
-    }
-
-    @Override
     public void remove(Collection<MailKey> keys) throws MessagingException {
         Collection<String> messageNames = keys.stream().map(MailKey::asString).collect(Collectors.toList());
         EntityManager entityManager = entityManager();
@@ -345,6 +340,23 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
             entityManager.createNamedQuery("deleteMailMessages")
                 .setParameter("repositoryName", repositoryName)
                 .setParameter("messageNames", messageNames)
+                .executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            throw new MessagingException("Exception while removing message(s): " + e.getMessage(), e);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
+    }
+
+    @Override
+    public void removeAll() throws MessagingException {
+        EntityManager entityManager = entityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
+        transaction.begin();
+        try {
+            entityManager.createNamedQuery("deleteAllMailMessages")
+                .setParameter("repositoryName", repositoryName)
                 .executeUpdate();
             transaction.commit();
         } catch (Exception e) {
