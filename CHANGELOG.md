@@ -155,6 +155,10 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
 
 ## [3.7.1] - 2022-08-26
 
+### Security
+
+This release fixes CVE-2022-28220 `STARTTLS command injection in Apache JAMES`.
+
 ### Changes
 
  - [UPGRADE] Adopt MIME4J 0.8.7 (#961)
