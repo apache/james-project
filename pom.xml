@@ -312,7 +312,16 @@
             </roles>
             <timezone />
         </developer>
-    </developers>
+        <developer>
+            <id>jhelou</id>
+            <name>Jean Helou</name>
+            <email>jhelou@apache.org</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone />
+        </developer>
+     </developers>
 
     <contributors>
         <contributor>
