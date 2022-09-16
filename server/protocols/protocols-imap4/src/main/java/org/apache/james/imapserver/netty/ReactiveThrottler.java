@@ -28,7 +28,6 @@ import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-import reactor.core.scheduler.Schedulers;
 
 public class ReactiveThrottler {
     public static class RejectedException extends RuntimeException {
@@ -84,7 +83,6 @@ public class ReactiveThrottler {
         if (throttled != null) {
             Mono.from(throttled)
                 .doFinally(any -> onRequestDone())
-                .subscribeOn(Schedulers.parallel())
                 .subscribe();
         }
     }
