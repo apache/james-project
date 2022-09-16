@@ -343,13 +343,12 @@ public class CassandraMessageDAOV3 {
     private Mono<MessageRepresentation> message(Row row, CassandraMessageId cassandraMessageId, FetchType fetchType) {
         BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
         BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
-        int bodyStartOctet = row.getInt(BODY_START_OCTET);
 
-        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet)
+        return buildContentRetriever(fetchType, headerId, bodyId)
             .map(content ->
                 new MessageRepresentation(
                     cassandraMessageId,
-                    Date.from(row.getInstant(INTERNAL_DATE_LOWERCASE)),
+                    Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE)).map(Date::from).orElse(null),
                     row.getLong(FULL_CONTENT_OCTETS_LOWERCASE),
                     row.getInt(BODY_START_OCTET_LOWERCASE),
                     content,
@@ -377,7 +376,7 @@ public class CassandraMessageDAOV3 {
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
-        List<UdtValue> udtValues = row.get(ATTACHMENTS, CodecRegistry.DEFAULT.codecFor(listOf(attachmentsType)));
+        List<UdtValue> udtValues = Optional.<List<UdtValue>>ofNullable(row.get(ATTACHMENTS, CodecRegistry.DEFAULT.codecFor(listOf(attachmentsType)))).orElse(List.of());
         return attachmentByIds(udtValues);
     }
 
@@ -400,7 +399,7 @@ public class CassandraMessageDAOV3 {
             .setUuid(MESSAGE_ID, messageId.get()));
     }
 
-    private Mono<Content> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
+    private Mono<Content> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId) {
         switch (fetchType) {
             case FULL:
                 return getFullContent(headerId, bodyId);
