@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -57,6 +58,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.Initializable;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageWrapper;
@@ -74,27 +76,6 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of a MailRepository on a database.
- * 
- * <p>
- * Requires a configuration element in the .conf.xml file of the form:
- * 
- * <pre>
- *  &lt;repository destinationURL="db://&lt;datasource&gt;/&lt;table_name&gt;/&lt;repository_name&gt;"
- *              type="MAIL"
- *              model="SYNCHRONOUS"/&gt;
- *  &lt;/repository&gt;
- * </pre>
- * 
- * </p>
- * <p>
- * destinationURL specifies..(Serge??) <br>
- * Type can be SPOOL or MAIL <br>
- * Model is currently not used and may be dropped
- * </p>
- * 
- * <p>
- * Requires a logger called MailRepository.
- * </p>
  */
 public class JDBCMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
@@ -165,55 +146,27 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         LOGGER.debug("{}.configure()", getClass().getName());
         destination = configuration.getString("[@destinationURL]");
-
-        // normalize the destination, to simplify processing.
-        if (!destination.endsWith("/")) {
-            destination += "/";
+        MailRepositoryUrl url = MailRepositoryUrl.from(destination); // also validates url
+        // parse the destinationURL into the name of the datasource,
+        // the table to use, and the (optional) repository key
+        String[] parts = url.getPath().asString().split("/", 3);
+        if (parts.length == 0) {
+            throw new ConfigurationException(
+                "Malformed destinationURL - Must be of the format 'db://<data-source>[/<table>[/<repositoryName>]]'.  Was passed " + destination);
         }
-        // Parse the DestinationURL for the name of the datasource,
-        // the table to use, and the (optional) repository Key.
-        // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<>();
-        int start = 5;
-        if (destination.startsWith("dbfile")) {
-            // this is dbfile:// instead of db://
-            start += 4;
+        datasourceName = parts[0];
+        if (parts.length > 1) {
+            tableName = parts[1];
         }
-        int end = destination.indexOf('/', start);
-        while (end > -1) {
-            urlParams.add(destination.substring(start, end));
-            start = end + 1;
-            end = destination.indexOf('/', start);
+        if (parts.length > 2) {
+            repositoryName = parts[2];
         }
 
-        // Build SqlParameters and get datasource name from URL parameters
-        if (urlParams.size() == 0) {
-            String exceptionBuffer = "Malformed destinationURL - Must be of the format '" + "db://<data-source>[/<table>[/<repositoryName>]]'.  Was passed " + configuration.getString("[@destinationURL]");
-            throw new ConfigurationException(exceptionBuffer);
-        }
-        if (urlParams.size() >= 1) {
-            datasourceName = urlParams.get(0);
-        }
-        if (urlParams.size() >= 2) {
-            tableName = urlParams.get(1);
-        }
-        if (urlParams.size() >= 3) {
-            repositoryName = "";
-            for (int i = 2; i < urlParams.size(); i++) {
-                if (i >= 3) {
-                    repositoryName += '/';
-                }
-                repositoryName += urlParams.get(i);
-            }
-        }
-
-        LOGGER.debug("Parsed URL: table = '{}', repositoryName = '{}'", tableName, repositoryName);
+        LOGGER.debug("Parsed URL: datasource = '{}', table = '{}', repositoryName = '{}'", datasource, tableName, repositoryName);
 
         inMemorySizeLimit = configuration.getInt("inMemorySizeLimit", 409600000);
-
         filestore = configuration.getString("filestore", null);
         sqlFileName = configuration.getString("sqlFile");
-
     }
 
     /**
@@ -427,14 +380,10 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             } else {
                 insertMessage.setString(5, mc.getMaybeSender().get().toString());
             }
-            StringBuilder recipients = new StringBuilder();
-            for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
-                recipients.append(i.next().toString());
-                if (i.hasNext()) {
-                    recipients.append("\r\n");
-                }
-            }
-            insertMessage.setString(6, recipients.toString());
+            String recipients = mc.getRecipients().stream()
+                .map(MailAddress::toString)
+                .collect(Collectors.joining("\r\n"));
+            insertMessage.setString(6, recipients);
             insertMessage.setString(7, mc.getRemoteHost());
             insertMessage.setString(8, mc.getRemoteAddr());
             if (mc.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
@@ -515,14 +464,10 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             } else {
                 updateMessage.setString(3, mc.getMaybeSender().get().toString());
             }
-            StringBuilder recipients = new StringBuilder();
-            for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
-                recipients.append(i.next().toString());
-                if (i.hasNext()) {
-                    recipients.append("\r\n");
-                }
-            }
-            updateMessage.setString(4, recipients.toString());
+            String recipients = mc.getRecipients().stream()
+                .map(MailAddress::toString)
+                .collect(Collectors.joining("\r\n"));
+            updateMessage.setString(4, recipients);
             updateMessage.setString(5, mc.getRemoteHost());
             updateMessage.setString(6, mc.getRemoteAddr());
             updateMessage.setTimestamp(7, new java.sql.Timestamp(mc.getLastUpdated().getTime()));

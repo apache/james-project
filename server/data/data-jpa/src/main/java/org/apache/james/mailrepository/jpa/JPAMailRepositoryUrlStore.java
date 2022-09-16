@@ -27,6 +27,7 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.jpa.model.JPAUrl;
 
 public class JPAMailRepositoryUrlStore implements MailRepositoryUrlStore {
     private final TransactionRunner transactionRunner;

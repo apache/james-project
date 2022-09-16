@@ -54,20 +54,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Iterators;
 
 /**
- * <p>
  * Implementation of a MailRepository on a FileSystem.
- * </p>
- * <p>
- * Requires a configuration element in the .conf.xml file of the form:
- * <p/>
- * <pre>
- *  &lt;repository destinationURL="file://path-to-root-dir-for-repository"
- *              type="MAIL"
- *              model="SYNCHRONOUS"/&gt;
- * </pre>
- * <p/>
- * Requires a logger called MailRepository.
- * </p>
  */
 public class FileMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailRepository.class);

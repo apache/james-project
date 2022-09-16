@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.jpa;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.jpa.model.JPAUrl;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
