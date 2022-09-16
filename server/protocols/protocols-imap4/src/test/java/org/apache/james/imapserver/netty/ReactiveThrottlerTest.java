@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 class ReactiveThrottlerTest {
     @Test
@@ -55,9 +54,9 @@ class ReactiveThrottlerTest {
 
         // When I submit many tasks task
         AtomicBoolean executed = new AtomicBoolean(false);
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).subscribe();
 
         // Then that task is not executed straight away
         assertThat(executed.get()).isFalse();
@@ -70,9 +69,9 @@ class ReactiveThrottlerTest {
 
         // When I submit many tasks task
         AtomicBoolean executed = new AtomicBoolean(false);
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).subscribe();
 
         // Then that task is eventually executed
         Awaitility.await().atMost(Duration.ofSeconds(10))
@@ -86,8 +85,8 @@ class ReactiveThrottlerTest {
 
         // When I await a submitted task execution and it is queued
         AtomicBoolean executed = new AtomicBoolean(false);
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
         Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).block();
 
         // Then when done that task have been executed
@@ -101,10 +100,10 @@ class ReactiveThrottlerTest {
 
         // When I submit too many tasks task
         AtomicBoolean executed = new AtomicBoolean(false);
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(50)).then())).subscribe();
 
         // Then extra tasks are rejected
         assertThatThrownBy(() -> Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)))).block())
@@ -122,9 +121,9 @@ class ReactiveThrottlerTest {
         AtomicBoolean executed = new AtomicBoolean(false);
         Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(100)).then()))
             .then(Mono.fromRunnable(() -> executed.getAndSet(true)))
-            .subscribeOn(Schedulers.boundedElastic())
+
             .subscribe();
-        Mono.from(testee.throttle(Mono.delay(Duration.ofSeconds(2)).then())).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofSeconds(2)).then())).subscribe();
 
         // Then extra tasks are rejected
         Thread.sleep(200);
@@ -148,10 +147,10 @@ class ReactiveThrottlerTest {
                 int i = concurrentTasks.getAndDecrement();
                 concurrentTasksCountSnapshots.add(i);
             }));
-        Mono.from(testee.throttle(operation)).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(operation)).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(operation)).subscribeOn(Schedulers.boundedElastic()).subscribe();
-        Mono.from(testee.throttle(operation)).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        Mono.from(testee.throttle(operation)).subscribe();
+        Mono.from(testee.throttle(operation)).subscribe();
+        Mono.from(testee.throttle(operation)).subscribe();
+        Mono.from(testee.throttle(operation)).subscribe();
 
         // Then maximum parallelism is not exceeded
         Awaitility.await().untilAsserted(() -> assertThat(concurrentTasksCountSnapshots.size()).isEqualTo(8));
