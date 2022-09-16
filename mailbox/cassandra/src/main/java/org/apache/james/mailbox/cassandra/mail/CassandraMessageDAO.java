@@ -256,12 +256,11 @@ public class CassandraMessageDAO {
     private Mono<MessageRepresentation> message(Row row, CassandraMessageId cassandraMessageId, FetchType fetchType) {
         BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
         BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
-        int bodyStartOctet = row.getInt(BODY_START_OCTET);
 
-        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet).map(content ->
+        return buildContentRetriever(fetchType, headerId, bodyId).map(content ->
             new MessageRepresentation(
                 cassandraMessageId,
-                Date.from(row.getInstant(INTERNAL_DATE)),
+                Optional.ofNullable(row.getInstant(INTERNAL_DATE)).map(Date::from).orElse(null),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 new ByteContent(content),
@@ -278,7 +277,7 @@ public class CassandraMessageDAO {
 
         return new MessageRepresentation(
             messageId,
-            Date.from(row.getInstant(INTERNAL_DATE)),
+            Optional.ofNullable(row.getInstant(INTERNAL_DATE)).map(Date::from).orElse(null),
             row.getLong(FULL_CONTENT_OCTETS),
             row.getInt(BODY_START_OCTET),
             new ByteContent(EMPTY_BYTE_ARRAY),
@@ -289,10 +288,10 @@ public class CassandraMessageDAO {
     }
 
     private org.apache.james.mailbox.store.mail.model.impl.Properties getProperties(Row row) {
-        PropertyBuilder property = new PropertyBuilder(
-            row.getList(PROPERTIES, UdtValue.class).stream()
-                .map(this::toProperty)
-                .collect(Collectors.toList()));
+        PropertyBuilder property = new PropertyBuilder(Optional.ofNullable(row.getList(PROPERTIES, UdtValue.class))
+            .map(list -> list.stream().map(this::toProperty)
+                .collect(Collectors.toList()))
+            .orElse(List.of()));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property.build();
     }
@@ -302,7 +301,7 @@ public class CassandraMessageDAO {
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
-        List<UdtValue> udtValues = row.getList(ATTACHMENTS, UdtValue.class);
+        List<UdtValue> udtValues = Optional.ofNullable(row.getList(ATTACHMENTS, UdtValue.class)).orElse(List.of());
         return attachmentByIds(udtValues);
     }
 
@@ -325,7 +324,7 @@ public class CassandraMessageDAO {
             .setUuid(MESSAGE_ID, messageId.get()));
     }
 
-    private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId) {
         switch (fetchType) {
             case FULL:
                 return getFullContent(headerId, bodyId);
