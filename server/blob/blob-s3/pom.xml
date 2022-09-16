@@ -34,7 +34,7 @@
 
     <properties>
         <s3-sdk.version>2.17.107</s3-sdk.version>
-        <netty.version>4.1.72.Final</netty.version>
+        <netty.version>4.1.81.Final</netty.version>
     </properties>
 
     <dependencies>
