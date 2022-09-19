@@ -12,7 +12,7 @@ Implemented.
 
 See description of blocking vs reactive programming odel described in [ADR-57](0057-reactive-imap.md).
 
-Sometime Reactive code needs to execute blocking tasks. 
+Sometimes reactive code needs to execute blocking tasks. 
 
  - This is the case when inter-operating with blocking libraries
  - James reactive adoption is progressive, some parts of our application
@@ -47,7 +47,7 @@ using a scheduler dedicated by nested blocking calls.
 
 ## Alternatives
 
-Alternatives to the "blocking call wrapper" scheduler describes above includes a full reactive 
+Alternatives to the "blocking call wrapper" scheduler described above includes a full reactive 
 migration for Apache James (ie no blocking calls meaning no nested blocking calls).
 
 While this clearly is the target such a work is not realistically done within a limited time frame. 
