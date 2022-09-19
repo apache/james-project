@@ -28,7 +28,9 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface UsersDAO {
     default boolean getDefaultVirtualHostingValue() {
@@ -51,6 +53,16 @@ public interface UsersDAO {
     int countUsers() throws UsersRepositoryException;
 
     Iterator<Username> list() throws UsersRepositoryException;
+
+    default Publisher<Username> listReactive() {
+        return Flux.fromIterable(() -> {
+            try {
+                return list();
+            } catch (UsersRepositoryException e) {
+                throw new RuntimeException(e);
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
 
     void addUser(Username username, String password) throws UsersRepositoryException;
 }

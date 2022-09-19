@@ -39,9 +39,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.streams.Iterators;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -65,19 +63,19 @@ public class GetMailboxMessagesService {
     }
 
     public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, RunningOptions runningOptions,
-                                                           FeedSpamToRspamdTask.Context context) throws UsersRepositoryException {
-        return Iterators.toFlux(userRepository.list())
+                                                           FeedSpamToRspamdTask.Context context) {
+        return Flux.from(userRepository.listReactive())
             .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
-                                                       FeedHamToRspamdTask.Context context) throws UsersRepositoryException {
-        return Iterators.toFlux(userRepository.list())
+                                                       FeedHamToRspamdTask.Context context) {
+        return Flux.from(userRepository.listReactive())
             .flatMap(Throwing.function(username ->
                 Flux.from(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxManager.createSystemSession(username)).build(),
                     mailboxManager.createSystemSession(username)))
-                .filter(mbxMetadata -> hamMailboxesPredicate(mbxMetadata.getPath()))
-                .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
+                    .filter(mbxMetadata -> hamMailboxesPredicate(mbxMetadata.getPath()))
+                    .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)), ReactorUtils.DEFAULT_CONCURRENCY);
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, String mailboxName, Optional<Date> afterDate,

@@ -200,6 +200,11 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     }
 
     @Override
+    public Publisher<Username> listReactive() {
+        return usersDAO.listReactive();
+    }
+
+    @Override
     public boolean supportVirtualHosting() {
         return virtualHosting;
     }

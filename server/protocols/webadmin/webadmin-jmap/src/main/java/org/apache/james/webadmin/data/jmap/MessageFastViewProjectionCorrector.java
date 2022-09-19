@@ -46,9 +46,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,14 +156,10 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Flux<ProjectionEntry> listAllMailboxMessages(Progress progress) {
-        try {
-            return Iterators.toFlux(usersRepository.list())
-                .map(mailboxManager::createSystemSession)
-                .doOnNext(any -> progress.incrementProcessedUserCount())
-                .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY);
-        } catch (UsersRepositoryException e) {
-            return Flux.error(e);
-        }
+        return Flux.from(usersRepository.listReactive())
+            .map(mailboxManager::createSystemSession)
+            .doOnNext(any -> progress.incrementProcessedUserCount())
+            .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY);
     }
 
     private Flux<ProjectionEntry> listUserMailboxMessages(Progress progress, MailboxSession session) {

@@ -157,8 +157,8 @@ public class ExpireMailboxServiceTest {
 
 
     @Test
-    public void testIgnoresUserListFailure() throws Exception {
-        when(usersRepository.list()).thenThrow(new UsersRepositoryException("it is broken"));
+    void testIgnoresUserListFailure() {
+        when(usersRepository.listReactive()).thenReturn(Flux.error(new UsersRepositoryException("it is broken")));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
         Date now = new Date();
@@ -172,8 +172,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testIgnoresMissingMailbox() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testIgnoresMissingMailbox() {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
         
         // intentionally no mailbox creation
         
@@ -189,8 +189,8 @@ public class ExpireMailboxServiceTest {
     }
     
     @Test
-    public void testIgnoresEmptyMailbox() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testIgnoresEmptyMailbox() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
        
         mailboxManager.createMailbox(aliceInbox, aliceSession);
 
@@ -207,8 +207,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testHandlesMailboxErrors() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testHandlesMailboxErrors() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         mailboxManager.createMailbox(aliceInbox, aliceSession);
         MessageManager aliceManager = mailboxManager.getMailbox(aliceInbox, aliceSession);
@@ -228,8 +228,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testExpiresMailboxByAge() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testExpiresMailboxByAge() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         mailboxManager.createMailbox(aliceInbox, aliceSession);
         MessageManager aliceManager = mailboxManager.getMailbox(aliceInbox, aliceSession);
@@ -249,8 +249,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testExpiresMailboxByHeader() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testExpiresMailboxByHeader() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         mailboxManager.createMailbox(aliceInbox, aliceSession);
         MessageManager aliceManager = mailboxManager.getMailbox(aliceInbox, aliceSession);
@@ -281,8 +281,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testExpiresNamedMailbox() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testExpiresNamedMailbox() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         String mailboxName = "Archived";
         MailboxPath mailboxPath = MailboxPath.forUser(alice, mailboxName);
@@ -305,8 +305,8 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testExpiresNamedMailbox2() throws Exception {
-        when(usersRepository.list()).thenReturn(List.of(alice).iterator());
+    void testExpiresNamedMailbox2() throws Exception {
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
         ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, "NoSuchMailbox", false, Optional.of("1s"));
@@ -321,12 +321,12 @@ public class ExpireMailboxServiceTest {
     }
 
     @Test
-    public void testContinuesAfterFailure() throws Exception {
+    void testContinuesAfterFailure() throws Exception {
         Username bob = Username.of("bob@example.org");
         MailboxPath bobInbox = MailboxPath.inbox(bob);
         MailboxSession bobSession = mailboxManager.createSystemSession(bob);
-        
-        when(usersRepository.list()).thenReturn(List.of(alice, bob).iterator());
+
+        when(usersRepository.listReactive()).thenReturn(Flux.just(alice, bob));
 
         mailboxManager.createMailbox(aliceInbox, aliceSession);
         MessageManager aliceManager = mailboxManager.getMailbox(aliceInbox, aliceSession);

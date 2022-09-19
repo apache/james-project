@@ -36,7 +36,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
@@ -237,28 +236,23 @@ public class FeedSpamToRspamdTask implements Task {
     @Override
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
-        try {
-            return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions, context)
-                .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
-                    .elements(runningOptions.getMessagesPerSecond())
-                    .per(Duration.ofSeconds(1))
-                    .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsSpam(messageResult.getFullContent().getInputStream())))
-                        .then(Mono.fromCallable(() -> {
-                            context.incrementReportedSpamMessageCount(1);
-                            return Result.COMPLETED;
-                        }))
-                        .onErrorResume(error -> {
-                            LOGGER.error("Error when report spam message to Rspamd", error);
-                            context.incrementErrorCount();
-                            return Mono.just(Result.PARTIAL);
-                        })))
-                .reduce(Task::combine)
-                .switchIfEmpty(Mono.just(Result.COMPLETED))
-                .block();
-        } catch (UsersRepositoryException e) {
-            LOGGER.error("Error while accessing users from repository", e);
-            return Task.Result.PARTIAL;
-        }
+        return messagesService.getMailboxMessagesOfAllUser(SPAM_MAILBOX_NAME, afterDate, runningOptions, context)
+            .transform(ReactorUtils.<MessageResult, Task.Result>throttle()
+                .elements(runningOptions.getMessagesPerSecond())
+                .per(Duration.ofSeconds(1))
+                .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsSpam(messageResult.getFullContent().getInputStream())))
+                    .then(Mono.fromCallable(() -> {
+                        context.incrementReportedSpamMessageCount(1);
+                        return Result.COMPLETED;
+                    }))
+                    .onErrorResume(error -> {
+                        LOGGER.error("Error when report spam message to Rspamd", error);
+                        context.incrementErrorCount();
+                        return Mono.just(Result.PARTIAL);
+                    })))
+            .reduce(Task::combine)
+            .switchIfEmpty(Mono.just(Result.COMPLETED))
+            .block();
     }
 
     @Override

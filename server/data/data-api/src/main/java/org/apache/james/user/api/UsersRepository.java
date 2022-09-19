@@ -125,6 +125,8 @@ public interface UsersRepository {
      */
     Iterator<Username> list() throws UsersRepositoryException;
 
+    Publisher<Username> listReactive();
+
     /**
      * Return true if virtualHosting support is enabled, otherwise false
      * 

@@ -230,11 +230,16 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public Iterator<Username> list() {
-        return executor.executeRows(listStatement.bind())
-            .mapNotNull(row -> row.getString(NAME))
-            .map(Username::of)
+        return listReactive()
             .toIterable()
             .iterator();
+    }
+
+    @Override
+    public Flux<Username> listReactive() {
+        return executor.executeRows(listStatement.bind())
+            .mapNotNull(row -> row.getString(NAME))
+            .map(Username::of);
     }
 
     @Override

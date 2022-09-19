@@ -39,8 +39,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -110,8 +108,8 @@ public class RandomStoring extends GenericMailet {
             .collect(ImmutableSet.toImmutableSet());
     }
 
-    private Mono<List<ReroutingInfos>> retrieveReroutingInfos() throws UsersRepositoryException {
-        return Iterators.toFlux(usersRepository.list())
+    private Mono<List<ReroutingInfos>> retrieveReroutingInfos() {
+        return Flux.from(usersRepository.listReactive())
             .flatMap(this::buildReRoutingInfos)
             .collect(ImmutableList.toImmutableList());
     }

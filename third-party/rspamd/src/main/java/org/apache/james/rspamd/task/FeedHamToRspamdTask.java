@@ -36,7 +36,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
@@ -236,28 +235,23 @@ public class FeedHamToRspamdTask implements Task {
     @Override
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
-        try {
-            return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions, context)
-                .transform(ReactorUtils.<MessageResult, Result>throttle()
-                    .elements(runningOptions.getMessagesPerSecond())
-                    .per(Duration.ofSeconds(1))
-                    .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsHam(messageResult.getFullContent().getInputStream())))
-                        .then(Mono.fromCallable(() -> {
-                            context.incrementReportedHamMessageCount(1);
-                            return Result.COMPLETED;
-                        }))
-                        .onErrorResume(error -> {
-                            LOGGER.error("Error when report ham message to Rspamd", error);
-                            context.incrementErrorCount();
-                            return Mono.just(Result.PARTIAL);
-                        })))
-                .reduce(Task::combine)
-                .switchIfEmpty(Mono.just(Result.COMPLETED))
-                .block();
-        } catch (UsersRepositoryException e) {
-            LOGGER.error("Error while accessing users from repository", e);
-            return Result.PARTIAL;
-        }
+        return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions, context)
+            .transform(ReactorUtils.<MessageResult, Result>throttle()
+                .elements(runningOptions.getMessagesPerSecond())
+                .per(Duration.ofSeconds(1))
+                .forOperation(messageResult -> Mono.fromSupplier(Throwing.supplier(() -> rspamdHttpClient.reportAsHam(messageResult.getFullContent().getInputStream())))
+                    .then(Mono.fromCallable(() -> {
+                        context.incrementReportedHamMessageCount(1);
+                        return Result.COMPLETED;
+                    }))
+                    .onErrorResume(error -> {
+                        LOGGER.error("Error when report ham message to Rspamd", error);
+                        context.incrementErrorCount();
+                        return Mono.just(Result.PARTIAL);
+                    })))
+            .reduce(Task::combine)
+            .switchIfEmpty(Mono.just(Result.COMPLETED))
+            .block();
     }
 
     @Override
