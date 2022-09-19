@@ -25,7 +25,7 @@ revoked:
  - Use of an introspection endpoint: the application asks the OIDC server to validate the token
  through an HTTP call. This result in load on the identity provider, which becomes central to the
  authentication process. This can be assimilated to a 'synchronous' mode.
- - use of back-channel upon token revocation. The OIDC provider is then responsible to call an 
+ - Use of back-channel upon token revocation. The OIDC provider is then responsible to call an 
  applicative endpoint to invalidate a token. Invalidated tokens are then stored by the application
  and access token are challenged against that storage. This approach scales better yet is harder 
  to implement and can be seen as less secure (a network incident can prevent revoked token 
