@@ -166,7 +166,7 @@ public class FeedHamToRspamdTaskTest {
     }
 
     @Test
-    void taskShouldHitToRspamdServerWhenLearnHam() throws MailboxException{
+    void taskShouldHitToRspamdServerWhenLearnHam() throws MailboxException {
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW));
         appendHamMessage(ALICE_INBOX_MAILBOX, Date.from(NOW));
 
