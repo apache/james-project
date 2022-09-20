@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.event;
 
+import static org.apache.james.events.NamingStrategy.JMAP_NAMING_STRATEGY;
+
 import javax.inject.Named;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
@@ -30,7 +32,6 @@ import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.KeyReconnectionHandler;
-import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
@@ -52,7 +53,6 @@ import com.google.inject.name.Names;
 import reactor.rabbitmq.Sender;
 
 public class JMAPEventBusModule extends AbstractModule {
-    public static final NamingStrategy JMAP_NAMING_STRATEGY = new NamingStrategy("jmapEvent");
 
     @Override
     protected void configure() {
