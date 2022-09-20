@@ -125,6 +125,9 @@ public interface RabbitMQManagementAPI {
         @JsonProperty("consumer_details")
         List<ConsumerDetails> consumerDetails;
 
+        @JsonProperty("messages")
+        long queueLength;
+
         public String getName() {
             return name;
         }
@@ -151,6 +154,10 @@ public interface RabbitMQManagementAPI {
 
         public List<ConsumerDetails> getConsumerDetails() {
             return consumerDetails;
+        }
+
+        public long getQueueLength() {
+            return queueLength;
         }
     }
 
