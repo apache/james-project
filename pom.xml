@@ -2468,7 +2468,7 @@
                         <groupId>org.springframework.osgi</groupId>
                         <artifactId>spring-osgi-core</artifactId>
                     </exclusion>
-                    <!-- exlude this, its only used in the authentication plugin which we don't use -->
+                    <!-- exclude this, it's only used in the authentication plugin which we don't use -->
                     <exclusion>
                         <groupId>com.ibm.icu</groupId>
                         <artifactId>icu4j</artifactId>
