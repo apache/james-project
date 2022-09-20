@@ -118,6 +118,26 @@ class RabbitMQTest {
         }
 
         @Test
+        void getQueueLengthShouldReturnEmptyWhenEmptyQueue() throws Exception {
+            String queueName = createQueue(channel);
+
+            awaitAtMostOneMinute.until(() -> rabbitMQExtension.managementAPI()
+                .queueDetails("/", queueName)
+                .getQueueLength() == 0);
+        }
+
+        @Test
+        void getQueueLengthShouldReturnExactlyNumberOfMessagesInQueue() throws Exception {
+            String queueName = createQueue(channel);
+            publishAMessage(channel);
+            publishAMessage(channel);
+
+            awaitAtMostOneMinute.until(() -> rabbitMQExtension.managementAPI()
+                .queueDetails("/", queueName)
+                .getQueueLength() == 2);
+        }
+
+        @Test
         void demonstrateDurability(DockerRabbitMQ rabbitMQ) throws Exception {
             String queueName = createQueue(channel);
             publishAMessage(channel);
