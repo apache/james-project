@@ -131,10 +131,6 @@ by IO threads.
 (split line by line). IO threads also take care of compression and SSL encryption. Their tasks are short-lived and non-blocking.
 Optional integer, defaults to 2 times the count of CPUs.
 
-| maxExecutorCount
-| Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like decoding IMAP requests
-(litterals can be buffered to temporary files) or executing IMAP commands. Optional integer, defaults to 16.
-
 | ignoreIDLEUponProcessing
 | true or false - Allow disabling the heartbeat handler. Defaults to true.
 |===
