@@ -110,12 +110,8 @@ public class ToPlainText extends GenericMailet {
             return true;
         }
         if (mimeMessage.getContent() instanceof Multipart) {
-            boolean mutated = false;
             Multipart multipart = (Multipart) mimeMessage.getContent();
-            for (int i = 0; i < multipart.getCount(); i++) {
-                mutated = convertRemainingHtmlToPlainText(multipart.getBodyPart(i));
-            }
-            return mutated;
+            return multipartHtmlToText(multipart);
         }
         return false;
     }
@@ -124,17 +120,21 @@ public class ToPlainText extends GenericMailet {
     private boolean convertRemainingHtmlToPlainText(BodyPart bodyPart) throws IOException, MessagingException {
         if (bodyPart.getContent() instanceof Multipart) {
             Multipart multipart = (Multipart) bodyPart.getContent();
-            boolean mutated = false;
-            for (int i = 0; i < multipart.getCount(); i++) {
-                mutated = convertRemainingHtmlToPlainText(multipart.getBodyPart(i));
-            }
-            return mutated;
+            return multipartHtmlToText(multipart);
         }
         if (bodyPart.getContentType().startsWith("text/html")) {
             bodyPart.setContent(htmlTextExtractor.toPlainText(IOUtils.toString(bodyPart.getInputStream())), "text/plain");
             return true;
         }
         return false;
+    }
+
+    private boolean multipartHtmlToText(Multipart multipart) throws MessagingException, IOException {
+        boolean mutated = false;
+        for (int i = 0; i < multipart.getCount(); i++) {
+            mutated |= convertRemainingHtmlToPlainText(multipart.getBodyPart(i));
+        }
+        return mutated;
     }
 
     @Override
