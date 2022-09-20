@@ -22,6 +22,8 @@ package org.apache.james.events;
 import reactor.rabbitmq.QueueSpecification;
 
 public class NamingStrategy {
+    public static final NamingStrategy JMAP_NAMING_STRATEGY = new NamingStrategy("jmapEvent");
+
     private final String prefix;
 
     public NamingStrategy(String prefix) {
