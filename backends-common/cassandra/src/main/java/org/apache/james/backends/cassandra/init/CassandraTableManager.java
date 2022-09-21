@@ -52,7 +52,7 @@ public class CassandraTableManager {
         KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
         return Flux.fromIterable(module.moduleTables())
-            .flatMap(table -> table.initialize(keyspaceMetadata, session, typesProvider))
+            .flatMap(table -> table.initialize(keyspaceMetadata, session, typesProvider), DEFAULT_CONCURRENCY)
             .reduce(InitializationStatus::reduce)
             .switchIfEmpty(Mono.just(InitializationStatus.ALREADY_DONE))
             .block();
