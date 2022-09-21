@@ -19,14 +19,21 @@
 
 package org.apache.james.webadmin.integration.memory;
 
+import static io.restassured.RestAssured.when;
 import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
+import org.apache.james.webadmin.routes.HealthCheckRoutes;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
@@ -40,4 +47,20 @@ class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegra
         .server(MemoryJamesServerMain::createServer)
         .lifeCycle(PER_CLASS)
         .build();
+
+    @Test
+    void healthCheckComponentsList() {
+        List<String> listComponentNames =
+            when()
+                .get(HealthCheckRoutes.HEALTHCHECK)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .extract()
+                .body()
+                .jsonPath()
+                .getList("checks.componentName", String.class);
+
+        assertThat(listComponentNames).containsOnly("Guice application lifecycle", "MailReceptionCheck",
+            "EventDeadLettersHealthCheck", "EmptyErrorMailRepository", "MessageFastViewProjection");
+    }
 }
