@@ -74,6 +74,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
@@ -105,6 +106,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
                     .deduplication()
                     .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
+            .vaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())

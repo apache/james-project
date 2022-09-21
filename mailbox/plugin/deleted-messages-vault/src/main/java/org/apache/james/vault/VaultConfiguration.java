@@ -34,7 +34,7 @@ public class VaultConfiguration {
     public static final VaultConfiguration DEFAULT =
         new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
     public static final VaultConfiguration ENABLED_DEFAULT =
-        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
 
     public static VaultConfiguration from(Configuration propertiesConfiguration) {
         Duration retentionPeriod = Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
