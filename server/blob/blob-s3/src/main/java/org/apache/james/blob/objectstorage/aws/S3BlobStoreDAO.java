@@ -109,10 +109,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         client = S3AsyncClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
-            .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                .tlsTrustManagersProvider(getTrustManagerProvider(configuration.getSpecificAuthConfiguration()))
-                .maxConcurrency(configuration.getHttpConcurrency())
-                .maxPendingConnectionAcquires(10_000))
+            .httpClientBuilder(httpClientBuilder(configuration))
             .endpointOverride(authConfiguration.getEndpoint())
             .region(configuration.getRegion().asAws())
             .serviceConfiguration(pathStyleAccess)
@@ -122,6 +119,17 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .prefix(configuration.getBucketPrefix())
             .namespace(configuration.getNamespace())
             .build();
+    }
+
+    private NettyNioAsyncHttpClient.Builder httpClientBuilder(S3BlobStoreConfiguration configuration) {
+        NettyNioAsyncHttpClient.Builder result = NettyNioAsyncHttpClient.builder()
+            .tlsTrustManagersProvider(getTrustManagerProvider(configuration.getSpecificAuthConfiguration()))
+            .maxConcurrency(configuration.getHttpConcurrency())
+            .maxPendingConnectionAcquires(10_000);
+        configuration.getWriteTimeout().ifPresent(result::writeTimeout);
+        configuration.getReadTimeout().ifPresent(result::readTimeout);
+        configuration.getConnectionTimeout().ifPresent(result::connectionTimeout);
+        return result;
     }
 
     private TlsTrustManagersProvider getTrustManagerProvider(AwsS3AuthConfiguration configuration) {
