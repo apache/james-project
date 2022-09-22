@@ -1,0 +1,13 @@
+=== ToPlainText
+
+This mailet converts HTML parts of a message into Plain text.
+
+It starts looking for multipart/alternative containing a text/plain and a text/html part
+and only keep the text/plain part. Then in a second pass replaces remaining text/html by
+their textual content, infered by parsing the HTML content and handling common tags.
+
+Eg:
+
+----
+<mailet matcher="All" class="ToPlainText"/>
+----
