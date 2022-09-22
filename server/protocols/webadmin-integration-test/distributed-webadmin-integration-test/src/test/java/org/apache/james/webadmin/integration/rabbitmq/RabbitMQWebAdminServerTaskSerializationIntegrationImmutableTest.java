@@ -44,6 +44,7 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
@@ -73,6 +74,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
                     .disableCache()
                     .deduplication()
                     .noCryptoConfig())
+            .vaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())

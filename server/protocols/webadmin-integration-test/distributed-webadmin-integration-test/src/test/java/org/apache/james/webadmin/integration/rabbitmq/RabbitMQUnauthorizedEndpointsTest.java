@@ -35,6 +35,7 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.integration.UnauthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
 import org.apache.james.webadmin.routes.AliasRoutes;
@@ -75,6 +76,7 @@ class RabbitMQUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
                 .deduplication()
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
+            .vaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
