@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -47,7 +46,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
     private SMTPSession setupMockSession(String argument,
-             final boolean relaying, final boolean authRequired, final Username username, MailAddress recipient) {
+             final boolean relaying, final boolean authRequired, final Username username) {
 
         return new BaseFakeSMTPSession() {
 
@@ -130,35 +129,32 @@ public class ResolvableEhloHeloHandlerTest {
     
     @Test
     void testRejectInvalidHelo() throws Exception {
-        MailAddress mailAddress = new MailAddress("test@localhost");
-        SMTPSession session = setupMockSession(INVALID_HOST, false, false, null, mailAddress);
+        SMTPSession session = setupMockSession(INVALID_HOST, false, false, null);
         ResolvableEhloHeloHandler handler = createHandler();
         
         handler.doHelo(session, INVALID_HOST);
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Invalid HELO").isPresent();
 
-        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
+        HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
     @Test
     void testNotRejectValidHelo() throws Exception {
-        MailAddress mailAddress = new MailAddress("test@localhost");
-        SMTPSession session = setupMockSession(VALID_HOST, false, false, null, mailAddress);
+        SMTPSession session = setupMockSession(VALID_HOST, false, false, null);
         ResolvableEhloHeloHandler handler = createHandler();
 
   
         handler.doHelo(session, VALID_HOST);
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Valid HELO").isEmpty();
 
-        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
+        HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.declined()).describedAs("Not reject").isEqualTo(result);
     }
    
     @Test
     void testRejectInvalidHeloAuthUser() throws Exception {
-        MailAddress mailAddress = new MailAddress("test@localhost");
-        SMTPSession session = setupMockSession(INVALID_HOST, false, true, Username.of("valid@user"), mailAddress);
+        SMTPSession session = setupMockSession(INVALID_HOST, false, true, Username.of("valid@user"));
         ResolvableEhloHeloHandler handler = createHandler();
 
 
@@ -166,15 +162,14 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isPresent();
 
 
-        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
+        HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
    
     @Test
     void testRejectRelay() throws Exception {
-        MailAddress mailAddress = new MailAddress("test@localhost");
-        SMTPSession session = setupMockSession(INVALID_HOST, true, false, null, mailAddress);
+        SMTPSession session = setupMockSession(INVALID_HOST, true, false, null);
         ResolvableEhloHeloHandler handler = createHandler();
 
 
@@ -182,7 +177,7 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isPresent();
 
 
-        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
+        HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
 }

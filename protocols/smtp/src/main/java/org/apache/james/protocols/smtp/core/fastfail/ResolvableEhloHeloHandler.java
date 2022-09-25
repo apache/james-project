@@ -22,7 +22,6 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -32,13 +31,13 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
-import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.apache.james.protocols.smtp.hook.MailHook;
 
 
 /**
  * This CommandHandler can be used to reject not resolvable EHLO/HELO
  */
-public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
+public class ResolvableEhloHeloHandler implements MailHook, HeloHook {
 
     public static final ProtocolSession.AttachmentKey<Boolean> BAD_EHLO_HELO = ProtocolSession.AttachmentKey.of("BAD_EHLO_HELO", Boolean.class);
 
@@ -78,7 +77,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         if (check(session)) {
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.deny())
