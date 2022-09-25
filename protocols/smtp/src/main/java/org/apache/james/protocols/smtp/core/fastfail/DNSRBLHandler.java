@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -33,14 +32,20 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
-import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.apache.james.protocols.smtp.hook.MailHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-  * Connect handler for DNSRBL processing
+  * Handler for DNSRBL processing. The DNSRBL handler should be called as early as possible to
+  * prevent bad actors to drain James resources. One can argue It makes sense to implement the
+  * handler as a ConnectHandler, so the blocklist check is on connect. However, if authorized
+  * user connects (e.g. SMTP AUTH) it makes sense to check DNSRBL after AUTH stage.Therefore it
+  * makes sense to implement the DNSRBL handler at MAIL FROM stage. One caveat: According to
+  * <a href="https://datatracker.ietf.org/doc/html/rfc4954#section-5">RFC 4954</a> auth information
+  * can optionally provided as ESMTP AUTH parameter with a single value in the 'MAIL FROM:' command.
   */
-public class DNSRBLHandler implements RcptHook {
+public class DNSRBLHandler implements MailHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSRBLHandler.class);
 
     /**
@@ -167,7 +172,7 @@ public class DNSRBLHandler implements RcptHook {
     }
     
     @Override
-    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
     
         if (!session.isRelayingAllowed()) {
