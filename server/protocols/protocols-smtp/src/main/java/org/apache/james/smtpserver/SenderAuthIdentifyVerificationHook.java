@@ -27,7 +27,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook;
+import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
@@ -38,25 +38,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Handler which check if the authenticated user is incorrect
  */
-public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthIdentifyVerificationRcptHook {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SenderAuthIdentifyVerificationRcptHook.class);
+public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdentifyVerificationHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SenderAuthIdentifyVerificationHook.class);
 
     private final DomainList domains;
     private final UsersRepository users;
     private final CanSendFrom canSendFrom;
 
     @Inject
-    public SenderAuthIdentifyVerificationRcptHook(DomainList domains, UsersRepository users, CanSendFrom canSendFrom) {
+    public SenderAuthIdentifyVerificationHook(DomainList domains, UsersRepository users, CanSendFrom canSendFrom) {
         this.domains = domains;
         this.users = users;
         this.canSendFrom = canSendFrom;
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         if (nSession.verifyIdentity()) {
-            return super.doRcpt(session, sender, rcpt);
+            return super.doMail(session, sender);
         } else {
             return HookResult.DECLINED;
         }

@@ -27,14 +27,14 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
-import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.apache.james.protocols.smtp.hook.MailHook;
 
 import com.google.common.base.Preconditions;
 
 /**
  * Handler which check if the authenticated user is the same as the one used as MAIL FROM
  */
-public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements RcptHook {  
+public abstract class AbstractSenderAuthIdentifyVerificationHook implements MailHook {
     private static final HookResult INVALID_AUTH = HookResult.builder()
         .hookReturnCode(HookReturnCode.deny())
         .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
@@ -49,7 +49,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
         .build();
     
     @Override
-    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         if (session.getUsername() != null) {
             // Check if the sender address is the same as the user which was used to authenticate.
             // Its important to ignore case here to fix JAMES-837. This is save to do because if the handler is called
