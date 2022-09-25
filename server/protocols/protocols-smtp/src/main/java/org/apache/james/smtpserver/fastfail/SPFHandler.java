@@ -49,7 +49,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, ProtocolHandler {
+public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SPFHandler.class);
 
@@ -155,8 +155,10 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         if (!session.isRelayingAllowed()) {
+            doSPFCheck(session, sender);
+
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction).isPresent()) {
 
@@ -172,12 +174,6 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
                     .build();
             }
         }
-        return HookResult.DECLINED;
-    }
-
-    @Override
-    public HookResult doMail(SMTPSession session, MaybeSender sender) {
-        doSPFCheck(session, sender);
         return HookResult.DECLINED;
     }
 
