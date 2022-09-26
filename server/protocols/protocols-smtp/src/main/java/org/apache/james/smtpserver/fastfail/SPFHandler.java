@@ -24,7 +24,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.SPFErrorConstants;
@@ -40,7 +39,6 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
-import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.smtpserver.JamesMessageHook;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
