@@ -535,8 +535,22 @@ class PulsarMailQueue(
     }
   }
 
+  /**
+   * The publish filter implementation optimizes for the local/single instance case.
+   *
+   * This is reliant on the FilterStage implementation being able to deduplicate
+   * filters. The current implementation defined filters as value objects and stores
+   * them in a Set which will effectively dedpulicate them.
+   * @see org.apache.james.queue.pulsar.FilterStage.filters
+   * @param producer
+   * @param filter
+   */
   private def publishFilter(producer:Producer[String])(filter:Filter): Unit ={
     import Filter._
+    // Optimizes for the local/single instance case, the duplicated filter
+    // received through pulsar will be eliminated by the filter stage as
+    // filters are stored in a set @see org.apache.james.queue.pulsar.FilterStage.filters
+    filterStage ! filter
     producer.send(Json.stringify(Json.toJson(filter)))
   }
 

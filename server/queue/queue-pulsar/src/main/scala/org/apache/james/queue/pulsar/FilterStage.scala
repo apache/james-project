@@ -27,6 +27,9 @@ import org.apache.james.blob.api.BlobId
 import scala.math.Ordered.orderingToOrdered
 
 private[pulsar] class FilterStage(implicit val blobIdFactory:BlobId.Factory) extends Actor with ActorLogging {
+  // PulsarMailQueue#publishFilter relies on the stage being able to
+  // deduplicate filters. The deduplication capability comes from this being
+  // a Set and Filters being value objects.
   private var filters = Set.empty[Filter]
   private val name = self.path.name
 
