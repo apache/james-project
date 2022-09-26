@@ -67,7 +67,7 @@ public class MyCmdHandlerLoader implements HandlersPackage {
             MailSizeEsmtpExtension.class,
             UsersRepositoryAuthHook.class,
             AuthRequiredToRelayRcptHook.class,
-            SenderAuthIdentifyVerificationRcptHook.class,
+            SenderAuthIdentifyVerificationHook.class,
             PostmasterAbuseRcptHook.class,
             ReceivedDataLineFilter.class,
             DataLineJamesMessageHookHandler.class,

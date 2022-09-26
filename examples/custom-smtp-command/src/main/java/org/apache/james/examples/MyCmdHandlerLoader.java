@@ -49,7 +49,7 @@ import org.apache.james.smtpserver.JamesMailCmdHandler;
 import org.apache.james.smtpserver.JamesRcptCmdHandler;
 import org.apache.james.smtpserver.JamesWelcomeMessageHandler;
 import org.apache.james.smtpserver.SendMailHandler;
-import org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook;
+import org.apache.james.smtpserver.SenderAuthIdentifyVerificationHook;
 import org.apache.james.smtpserver.UsersRepositoryAuthHook;
 
 /**
@@ -78,7 +78,7 @@ public class MyCmdHandlerLoader implements HandlersPackage {
             MailSizeEsmtpExtension.class,
             UsersRepositoryAuthHook.class,
             AuthRequiredToRelayRcptHook.class,
-            SenderAuthIdentifyVerificationRcptHook.class,
+            SenderAuthIdentifyVerificationHook.class,
             PostmasterAbuseRcptHook.class,
             ReceivedDataLineFilter.class,
             DataLineJamesMessageHookHandler.class,
