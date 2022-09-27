@@ -53,10 +53,10 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     }
 
     @Override
-    public HookResult doMail(SMTPSession session, MaybeSender sender) {
+    public HookResult doCheck(SMTPSession session, MaybeSender sender) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         if (nSession.verifyIdentity()) {
-            return super.doMail(session, sender);
+            return super.doCheck(session, sender);
         } else {
             return HookResult.DECLINED;
         }

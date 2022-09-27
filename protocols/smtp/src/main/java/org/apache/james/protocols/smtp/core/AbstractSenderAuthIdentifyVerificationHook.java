@@ -28,13 +28,14 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
+import org.apache.james.protocols.smtp.hook.RcptHook;
 
 import com.google.common.base.Preconditions;
 
 /**
  * Handler which check if the authenticated user is the same as the one used as MAIL FROM
  */
-public abstract class AbstractSenderAuthIdentifyVerificationHook implements MailHook {
+public abstract class AbstractSenderAuthIdentifyVerificationHook implements MailHook, RcptHook {
     private static final HookResult INVALID_AUTH = HookResult.builder()
         .hookReturnCode(HookReturnCode.deny())
         .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
@@ -47,28 +48,46 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
             + " Authentication Required")
         .build();
+
+    /*
+     * Check if the sender address is the same as the user which was used to authenticate.
+     * Its important to ignore case here to fix JAMES-837. This is save to do because if the handler is called
+     * the user was already authenticated
+     */
+    private boolean senderDoesNotMatchAuthUser(SMTPSession session, MaybeSender sender) {
+        return session.getUsername() != null &&
+            (isAnonymous(sender) || !senderMatchSessionUser(sender, session) || !belongsToLocalDomain(sender));
+    }
+
+    /*
+     * Validate that unauthenticated users do not use local addresses in MAIL FROM
+     */
+    private boolean unauthenticatedSenderIsLocalUser(SMTPSession session, MaybeSender sender) {
+        return session.getUsername() == null && !session.isRelayingAllowed() && belongsToLocalDomain(sender);
+    }
+
+    protected HookResult doCheck(SMTPSession session, MaybeSender sender) {
+        if (senderDoesNotMatchAuthUser(session, sender)) {
+            return INVALID_AUTH;
+        } else if (unauthenticatedSenderIsLocalUser(session, sender)) {
+            return AUTH_REQUIRED;
+        } else {
+            return HookResult.DECLINED;
+        }
+    }
     
     @Override
     public HookResult doMail(SMTPSession session, MaybeSender sender) {
-        if (session.getUsername() != null) {
-            // Check if the sender address is the same as the user which was used to authenticate.
-            // Its important to ignore case here to fix JAMES-837. This is save to do because if the handler is called
-            // the user was already authenticated
+        return doCheck(session, sender);
+    }
 
-            if (isAnonymous(sender)
-                || !senderMatchSessionUser(sender, session)
-                || !belongsToLocalDomain(sender)) {
-                return INVALID_AUTH;
-            }
-            return HookResult.DECLINED;
-        } else {
-            // Validate that unauthenticated users do not use local addresses in MAIL FROM
-            if (belongsToLocalDomain(sender) && !session.isRelayingAllowed()) {
-                return AUTH_REQUIRED;
-            } else {
-                return HookResult.DECLINED;
-            }
-        }
+    /**
+     * If {@link #doMail(SMTPSession, MaybeSender)} was skipped because of successful AUTH
+     * we need to check it here.
+     */
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        return doCheck(session, sender);
     }
 
     private boolean isAnonymous(MaybeSender maybeSender) {
