@@ -22,9 +22,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.StringTokenizer;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -33,6 +33,7 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
+import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;
   * <a href="https://datatracker.ietf.org/doc/html/rfc4954#section-5">RFC 4954</a> auth information
   * can optionally provided as ESMTP AUTH parameter with a single value in the 'MAIL FROM:' command.
   */
-public class DNSRBLHandler implements MailHook {
+public class DNSRBLHandler implements MailHook, RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSRBLHandler.class);
 
     /**
@@ -55,10 +56,12 @@ public class DNSRBLHandler implements MailHook {
     private String[] blacklist;
         
     private boolean getDetail = false;
+
+    public static final ProtocolSession.AttachmentKey<Boolean> RBL_CHECK_PERFORMED = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.checked", Boolean.class);
+
+    public static final ProtocolSession.AttachmentKey<Boolean> RBL_BLOCKLISTED = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.blocklisted", Boolean.class);
     
-    public static final ProtocolSession.AttachmentKey<Boolean> RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.blocklisted", Boolean.class);
-    
-    public static final ProtocolSession.AttachmentKey<String> RBL_DETAIL_MAIL_ATTRIBUTE_NAME = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.detail", String.class);
+    public static final ProtocolSession.AttachmentKey<String> RBL_DETAIL = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.detail", String.class);
 
     /**
      * Set the whitelist array
@@ -109,95 +112,107 @@ public class DNSRBLHandler implements MailHook {
      * the sender will only be permitted to send e-mail to postmaster (RFC 2821) or
      * abuse (RFC 2142), unless authenticated.
      */
-    public void checkDNSRBL(SMTPSession session, String ipAddress) {
-        
-        /*
-         * don't check against rbllists if the client is allowed to relay..
-         * This whould make no sense.
-         */
-        if (session.isRelayingAllowed()) {
-            LOGGER.info("Ipaddress {} is allowed to relay. Don't check it", session.getRemoteAddress().getAddress());
+    protected void checkDNSRBL(SMTPSession session, String ipAddress) {
+
+        if (whitelist == null && blacklist == null) {
+            // no whitelist/blacklist configured
             return;
         }
-        
-        if (whitelist != null || blacklist != null) {
-            StringBuilder sb = new StringBuilder();
-            StringTokenizer st = new StringTokenizer(ipAddress, " .", false);
-            while (st.hasMoreTokens()) {
-                sb.insert(0, st.nextToken() + ".");
-            }
-            String reversedOctets = sb.toString();
 
-            if (whitelist != null) {
-                String[] rblList = whitelist;
-                for (String rbl : rblList) {
-                    if (resolve(reversedOctets + rbl)) {
-                        LOGGER.info("Connection from {} whitelisted by {}", ipAddress, rbl);
-                        return;
-                    } else {
-                        LOGGER.debug("IpAddress {} not listed on {}", session.getRemoteAddress().getAddress(), rbl);
-                    }
+        StringBuilder sb = new StringBuilder();
+        StringTokenizer st = new StringTokenizer(ipAddress, " .", false);
+        while (st.hasMoreTokens()) {
+            sb.insert(0, st.nextToken() + ".");
+        }
+        String reversedOctets = sb.toString();
+
+        if (whitelist != null) {
+            String[] rblList = whitelist;
+            for (String rbl : rblList) {
+                if (resolve(reversedOctets + rbl)) {
+                    LOGGER.info("Connection from {} whitelisted by {}", ipAddress, rbl);
+                    return;
+                } else {
+                    LOGGER.debug("IpAddress {} not listed on {}",
+                        session.getRemoteAddress().getAddress(), rbl);
                 }
             }
+        }
 
-            if (blacklist != null) {
-                String[] rblList = blacklist;
-                for (String rbl : rblList) {
-                    if (resolve(reversedOctets + rbl)) {
-                        LOGGER.info("Connection from {} restricted by {} to SMTP AUTH/postmaster/abuse.", ipAddress, rbl);
+        if (blacklist != null) {
+            String[] rblList = blacklist;
+            for (String rbl : rblList) {
+                if (resolve(reversedOctets + rbl)) {
+                    LOGGER.info(
+                        "Connection from {} restricted by {} to SMTP AUTH/postmaster/abuse.",
+                        ipAddress, rbl);
 
-                        // we should try to retrieve details
-                        if (getDetail) {
-                            Collection<String> txt = resolveTXTRecords(reversedOctets + rbl);
+                    // we should try to retrieve details
+                    if (getDetail) {
+                        Collection<String> txt = resolveTXTRecords(reversedOctets + rbl);
 
-                            // Check if we found a txt record
-                            if (!txt.isEmpty()) {
-                                // Set the detail
-                                String blocklistedDetail = txt.iterator().next().toString();
+                        // Check if we found a txt record
+                        if (!txt.isEmpty()) {
+                            // Set the detail
+                            String blocklistedDetail = txt.iterator().next().toString();
 
-                                session.setAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, blocklistedDetail, State.Connection);
-                            }
+                            session.setAttachment(RBL_DETAIL,
+                                blocklistedDetail, State.Connection);
                         }
-
-                        session.setAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, true, State.Connection);
-                        return;
-                    } else {
-                        // if it is unknown, it isn't blocked
-                        LOGGER.debug("unknown host exception thrown: {}", rbl);
                     }
 
+                    session.setAttachment(RBL_BLOCKLISTED, true,
+                        State.Connection);
+                    return;
+                } else {
+                    // if it is unknown, it isn't blocked
+                    LOGGER.debug("unknown host exception thrown: {}", rbl);
                 }
             }
         }
     }
-    
-    @Override
-    public HookResult doMail(SMTPSession session, MaybeSender sender) {
-        checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
-    
-        if (!session.isRelayingAllowed()) {
-            Optional<Boolean> blocklisted = session.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, State.Connection);
-            Optional<String> blocklistedDetail = session.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection);
 
-            if (blocklisted.isPresent()) { // was found in the RBL
-                if (!blocklistedDetail.isPresent()) {
-                    return HookResult.builder()
-                        .hookReturnCode(HookReturnCode.deny())
-                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
-                            + " Rejected: unauthenticated e-mail from " + session.getRemoteAddress().getAddress()
-                            + " is restricted.  Contact the postmaster for details.")
-                        .build();
-                } else {
+    private boolean isBlocklisted(SMTPSession session) {
+        // only check IP addresses that are not authorized to relay
+        if (session.isRelayingAllowed()) {
+            LOGGER.info("Ipaddress {} is allowed to relay. Don't check it", session.getRemoteAddress().getAddress());
+            return false;
+        } else if (session.getAttachment(RBL_CHECK_PERFORMED, State.Connection).isEmpty()) {
+            // perform rbl check only once and store the result in connection state
+            checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
+            session.setAttachment(RBL_CHECK_PERFORMED, true, State.Connection);
+        }
+        return session.getAttachment(RBL_BLOCKLISTED, State.Connection).isPresent();
+    }
 
-                    return HookResult.builder()
-                        .hookReturnCode(HookReturnCode.deny())
-                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail.get())
-                        .build();
-                }
-               
+    private HookResult doCheck(SMTPSession session) {
+        if (isBlocklisted(session)) {
+            String blocklistedDetail = session.getAttachment(RBL_DETAIL, State.Connection).orElse(null);
+            if (blocklistedDetail == null) {
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+                        + " Rejected: unauthenticated e-mail from " + session.getRemoteAddress().getAddress()
+                        + " is restricted.  Contact the postmaster for details.")
+                    .build();
+            } else {
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail)
+                    .build();
             }
         }
         return HookResult.DECLINED;
+    }
+    
+    @Override
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
+        return doCheck(session);
+    }
+
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        return doCheck(session);
     }
 
     /**
