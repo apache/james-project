@@ -100,7 +100,7 @@ class SmtpIdentityVerificationTest {
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
                 .sendMessageNoSender(USER))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
 
     @Test
@@ -124,7 +124,7 @@ class SmtpIdentityVerificationTest {
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .sendMessage(USER, USER))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "530 5.7.1 Authentication Required\n"));
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "530 5.7.1 Authentication Required\n"));
     }
 
     @Test
@@ -148,6 +148,6 @@ class SmtpIdentityVerificationTest {
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(ATTACKER, ATTACKER_PASSWORD)
                 .sendMessage(USER, USER))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
 }
