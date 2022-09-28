@@ -25,8 +25,12 @@ import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_D
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_UPDATED;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID;
+import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID_2;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -38,9 +42,14 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskExecutionDetailsFixture;
+import org.apache.james.task.TaskManager;
+import org.apache.james.task.TaskType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
 
 class CassandraTaskExecutionDetailsProjectionDAOTest {
 
@@ -110,5 +119,66 @@ class CassandraTaskExecutionDetailsProjectionDAOTest {
 
         Stream<TaskExecutionDetails> taskExecutionDetails = testee.listDetails().toStream();
         assertThat(taskExecutionDetails).containsOnly(TASK_EXECUTION_DETAILS_UPDATED());
+    }
+
+    @Test
+    void listBeforeDateShouldReturnCorrectEntry() {
+        TaskExecutionDetails taskExecutionDetails1 = new TaskExecutionDetails(TASK_ID(),
+            TaskType.of("type"),
+            TaskManager.Status.COMPLETED,
+            ZonedDateTime.ofInstant(Instant.parse("2000-01-01T00:00:00Z"), ZoneId.systemDefault()),
+            TaskExecutionDetailsFixture.SUBMITTED_NODE(),
+            Optional::empty,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        TaskExecutionDetails taskExecutionDetails2 = new TaskExecutionDetails(TASK_ID_2(),
+            TaskType.of("type"),
+            TaskManager.Status.COMPLETED,
+            ZonedDateTime.ofInstant(Instant.parse("2000-01-20T00:00:00Z"), ZoneId.systemDefault()),
+            TaskExecutionDetailsFixture.SUBMITTED_NODE(),
+            Optional::empty,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        testee.saveDetails(taskExecutionDetails1).block();
+        testee.saveDetails(taskExecutionDetails2).block();
+
+        assertThat(Flux.from(testee.listDetailsByBeforeDate(Instant.parse("2000-01-15T12:00:55Z"))).collectList().block())
+            .containsOnly(taskExecutionDetails1);
+    }
+
+    @Test
+    void removeShouldDeleteAssignEntry() {
+        TaskExecutionDetails taskExecutionDetails1 = new TaskExecutionDetails(TASK_ID(),
+            TaskType.of("type"),
+            TaskManager.Status.COMPLETED,
+            ZonedDateTime.ofInstant(Instant.parse("2000-01-01T00:00:00Z"), ZoneId.systemDefault()),
+            TaskExecutionDetailsFixture.SUBMITTED_NODE(),
+            Optional::empty,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        testee.saveDetails(taskExecutionDetails1).block();
+
+        assertThat(testee.listDetails().collectList().block())
+            .hasSize(1);
+
+        testee.remove(taskExecutionDetails1).block();
+
+        assertThat(testee.listDetails().collectList().block())
+            .isEmpty();
     }
 }
