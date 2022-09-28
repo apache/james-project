@@ -31,6 +31,7 @@ import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.TasksCleanupTaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
@@ -82,6 +83,7 @@ import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
+import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
@@ -105,6 +107,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new SieveRoutesModule(),
+        new TasksCleanupRoutesModule(),
         new WebAdminServerModule(),
         new WebAdminReIndexingTaskSerializationModule(),
         new MessagesRoutesModule(),
@@ -140,6 +143,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
+        new TasksCleanupTaskSerializationModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
