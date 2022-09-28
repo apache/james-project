@@ -85,6 +85,7 @@ import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
+import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -98,7 +99,6 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new VacationRoutesModule(),
-        new DeletedMessageVaultRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
         new MailboxesExportRoutesModule(),
@@ -132,7 +132,6 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new CassandraBlobStoreDependenciesModule(),
         new CassandraDomainListModule(),
         new CassandraEventStoreModule(),
-        new CassandraDeletedMessageVaultModule(),
         new CassandraJmapModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
@@ -196,6 +195,18 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
                 binder.bind(UidProvider.class).to(RandomUidProvider.class);
                 binder.bind(RandomModSeqProvider.class).in(Scopes.SINGLETON);
                 binder.bind(ModSeqProvider.class).to(RandomModSeqProvider.class);
-            });
+            })
+            .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()));
+    }
+
+    private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
+        if (vaultConfiguration.isEnabled()) {
+            return Modules.combine(
+                new CassandraDeletedMessageVaultModule(),
+                new DeletedMessageVaultRoutesModule());
+        }
+        return binder -> {
+
+        };
     }
 }

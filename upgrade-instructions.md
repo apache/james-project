@@ -19,6 +19,23 @@ Change list:
 - [Adding authorized_users column to user table](#adding-authorized_users-column-to-user-table)
 - [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
 - [Migration to OpenSearch](#migration-to-opensearch)
+- [Deleted message vault is now deactivated by default](#deleted-message-vault-is-now-deactivated-by-default)
+
+### Deleted message vault is now deactivated by default
+
+Date: 13/09/2022
+
+Concerned products: Distributed James, Cassandra James
+
+In order to limit Cassandra table count, amongst others, the deleted message vault is now 
+disabled by default.
+
+Users relying on it needs to enable it within `deletedMessageVault.properties` with the following 
+property:
+
+```
+enabled=true
+```
 
 ### Removal of cassandra.properties chunk.size.message.read
 
