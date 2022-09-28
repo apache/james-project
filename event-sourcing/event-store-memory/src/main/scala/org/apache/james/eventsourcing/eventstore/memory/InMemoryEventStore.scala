@@ -63,4 +63,6 @@ class InMemoryEventStore() extends EventStore {
   private def belongsToSameAggregate(aggregateId: AggregateId, events: Iterable[Event]) =
     events.forall(_.getAggregateId.equals(aggregateId))
 
+  override def remove(aggregateId: AggregateId): Publisher[Void] =
+    SMono.fromCallable(() => storeRef.set(storeRef.get().removed(aggregateId))).`then`()
 }

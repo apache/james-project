@@ -21,7 +21,6 @@ package org.apache.james.eventsourcing.eventstore
 import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.Test
-
 import reactor.core.scala.publisher.SMono
 
 object EventStoreContract {
@@ -80,5 +79,20 @@ trait EventStoreContract {
     SMono(testee.append(event2)).block()
     assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
       .isEqualTo(History.of(event1, event2))
+  }
+
+  @Test
+  def removeShouldDeleteAssignEntry(testee: EventStore): Unit = {
+    val event1 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
+    val event2 = TestEvent(event1.eventId.next, EventStoreContract.AGGREGATE_2, "second")
+    SMono(testee.append(event1)).block()
+    SMono(testee.append(event2)).block()
+
+    SMono(testee.remove(EventStoreContract.AGGREGATE_1)).block()
+
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
+      .isEqualTo(History.empty)
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_2)).block())
+      .isEqualTo(History.of(event2))
   }
 }

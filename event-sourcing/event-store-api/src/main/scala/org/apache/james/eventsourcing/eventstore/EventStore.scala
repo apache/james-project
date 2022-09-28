@@ -36,4 +36,6 @@ trait EventStore {
   def appendAll(events: Iterable[Event]): Publisher[Void]
 
   def getEventsOfAggregate(aggregateId: AggregateId): Publisher[History]
+
+  def remove(aggregateId: AggregateId): Publisher[Void]
 }

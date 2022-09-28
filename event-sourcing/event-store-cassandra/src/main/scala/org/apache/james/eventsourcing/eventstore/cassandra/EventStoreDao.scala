@@ -37,6 +37,7 @@ class EventStoreDao @Inject() (val session: CqlSession,
   private val cassandraAsyncExecutor = new CassandraAsyncExecutor(session)
   private val insert = prepareInsert(session)
   private val select = prepareSelect(session)
+  private val deleteByAggregateId = prepareDelete(session)
   private val executionProfile = JamesExecutionProfiles.getLWTProfile(session)
 
   private def prepareInsert(session: CqlSession): PreparedStatement =
@@ -52,6 +53,11 @@ class EventStoreDao @Inject() (val session: CqlSession,
     session.prepare(QueryBuilder
       .selectFrom(EVENTS_TABLE)
       .all()
+      .whereColumn(AGGREGATE_ID).isEqualTo(bindMarker(AGGREGATE_ID))
+      .build())
+
+  private def prepareDelete(session: CqlSession): PreparedStatement =
+    session.prepare(QueryBuilder.deleteFrom(EVENTS_TABLE)
       .whereColumn(AGGREGATE_ID).isEqualTo(bindMarker(AGGREGATE_ID))
       .build())
 
@@ -87,6 +93,12 @@ class EventStoreDao @Inject() (val session: CqlSession,
 
     listEvents.map(History.of(_))
   }
+
+  def delete(aggregateId: AggregateId): SMono[Unit] =
+    SMono(cassandraAsyncExecutor.executeVoid(deleteByAggregateId
+      .bind()
+      .setString(AGGREGATE_ID, aggregateId.asAggregateKey)))
+      .`then`()
 
   private def toEvent(row: Row): SMono[Event] = SMono.fromCallable(() => jsonEventSerializer.deserialize(row.getString(EVENT)))
     .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
