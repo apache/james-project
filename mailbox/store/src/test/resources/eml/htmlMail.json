@@ -101,13 +101,15 @@
   "from":[
     {
       "name":"Airbnb",
-      "address":"discover@airbnb.com"
+      "address":"discover@airbnb.com",
+      "domain":"airbnb"
     }
   ],
   "to":[
     {
       "name":null,
-      "address":"mister@james.org"
+      "address":"mister@james.org",
+      "domain":"james"
     }
   ],
   "cc":[],

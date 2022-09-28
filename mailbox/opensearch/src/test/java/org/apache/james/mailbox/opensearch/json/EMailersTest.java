@@ -47,7 +47,7 @@ class EMailersTest {
 
     @Test
     void serializeShouldNotJoinWhenOneElement() {
-        EMailer emailer = new EMailer(Optional.of("name"), "address");
+        EMailer emailer = new EMailer(Optional.of("name"), "address@domain.tld", "domain.tld");
         EMailers eMailers = EMailers.from(ImmutableSet.of(emailer));
 
         assertThat(eMailers.serialize()).isEqualTo(emailer.serialize());
@@ -55,9 +55,9 @@ class EMailersTest {
 
     @Test
     void serializeShouldJoinWhenMultipleElements() {
-        EMailer emailer = new EMailer(Optional.of("name"), "address");
-        EMailer emailer2 = new EMailer(Optional.of("name2"), "address2");
-        EMailer emailer3 = new EMailer(Optional.of("name3"), "address3");
+        EMailer emailer = new EMailer(Optional.of("name"), "address@domain.tld", "domain.tld");
+        EMailer emailer2 = new EMailer(Optional.of("name2"), "address2@domain.tld", "domain.tld");
+        EMailer emailer3 = new EMailer(Optional.of("name3"), "address3@domain.tld", "domain.tld");
 
         String expected = Joiner.on(" ").join(emailer.serialize(), emailer2.serialize(), emailer3.serialize());
 

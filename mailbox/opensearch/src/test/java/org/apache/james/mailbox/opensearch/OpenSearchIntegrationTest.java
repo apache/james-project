@@ -336,6 +336,38 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
+    @Test
+    void addressMatchesShouldMatchDomainPart() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice@domain.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAllQuery(), 15);
+        Thread.sleep(500);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "other")), session)).toStream())
+            .containsOnly(messageId2.getUid());
+    }
+
     @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce OpenSearch disk space usage")
     @Test
     public void textShouldNotMatchOtherAddressesOfTheSameDomain() {

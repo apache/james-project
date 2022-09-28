@@ -5,7 +5,11 @@
   "textBody":"This is an inline attachment: Cheers!",
   "cc":[],
   "date":"2015-06-07T00:00:00+0200",
-  "from":[{"name":"Antoine DUPRAT","address":"xyz@linagora.com"}],
+  "from":[{
+    "name":"Antoine DUPRAT",
+    "address":"xyz@linagora.com",
+    "domain":"linagora"
+  }],
   "hasAttachment":false,
   "headers":[
     {"name":"to","value":"Antoine DUPRAT <xyz@linagora.com>"},
@@ -26,7 +30,11 @@
   "size":25,
   "subject":["Inline attachment"],
   "subtype":"text",
-  "to":[{"name":"Antoine DUPRAT","address":"xyz@linagora.com"}],
+  "to":[{
+    "name":"Antoine DUPRAT",
+    "address":"xyz@linagora.com",
+    "domain":"linagora"
+  }],
   "uid":25,
   "userFlags":[],
   "mimeMessageID":"<26d91590-b995-8d45-f66a-0433c65745bb@linagora.com>",

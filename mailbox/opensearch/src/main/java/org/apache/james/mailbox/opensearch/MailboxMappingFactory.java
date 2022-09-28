@@ -45,6 +45,7 @@ import org.opensearch.common.xcontent.XContentBuilder;
 
 public class MailboxMappingFactory {
     private static final String STANDARD = "standard";
+    private static final String SIMPLE = "simple";
     private static final String STORE = "store";
 
     public static XContentBuilder getMappingContent() {
@@ -135,6 +136,11 @@ public class MailboxMappingFactory {
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .endObject()
+                                .startObject(JsonMessageConstants.EMailer.DOMAIN)
+                                    .field(TYPE, JsonMessageConstants.TEXT)
+                                    .field(ANALYZER, SIMPLE)
+                                    .field(SEARCH_ANALYZER, KEYWORD)
+                                .endObject()
                                 .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, STANDARD)
@@ -179,6 +185,11 @@ public class MailboxMappingFactory {
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .endObject()
+                                .startObject(JsonMessageConstants.EMailer.DOMAIN)
+                                    .field(TYPE, JsonMessageConstants.TEXT)
+                                    .field(ANALYZER, SIMPLE)
+                                    .field(SEARCH_ANALYZER, KEYWORD)
+                                .endObject()
                                 .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, STANDARD)
@@ -199,6 +210,11 @@ public class MailboxMappingFactory {
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .endObject()
+                                .startObject(JsonMessageConstants.EMailer.DOMAIN)
+                                    .field(TYPE, JsonMessageConstants.TEXT)
+                                    .field(ANALYZER, SIMPLE)
+                                    .field(SEARCH_ANALYZER, KEYWORD)
+                                .endObject()
                                 .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, STANDARD)
@@ -218,6 +234,11 @@ public class MailboxMappingFactory {
                                 .startObject(JsonMessageConstants.EMailer.NAME)
                                     .field(TYPE, JsonMessageConstants.TEXT)
                                     .field(ANALYZER, KEEP_MAIL_AND_URL)
+                                .endObject()
+                                .startObject(JsonMessageConstants.EMailer.DOMAIN)
+                                    .field(TYPE, JsonMessageConstants.TEXT)
+                                    .field(ANALYZER, SIMPLE)
+                                    .field(SEARCH_ANALYZER, KEYWORD)
                                 .endObject()
                                 .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                     .field(TYPE, JsonMessageConstants.TEXT)
