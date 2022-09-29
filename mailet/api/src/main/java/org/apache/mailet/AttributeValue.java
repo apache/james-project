@@ -102,18 +102,24 @@ public class AttributeValue<T> {
 
     public static <T> AttributeValue<Optional<AttributeValue<T>>> of(Optional<AttributeValue<T>> value) {
         Preconditions.checkNotNull(value, "value should not be null");
+        Preconditions.checkArgument(value.map(v -> v instanceof AttributeValue).orElse(true),
+            "value should be of type Optional<AttributeValue<T>> and was not");
         return new AttributeValue<>(value, new Serializer.OptionalSerializer<>());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static AttributeValue<Collection<AttributeValue<?>>> of(Collection<AttributeValue<?>> value) {
         Preconditions.checkNotNull(value, "value should not be null");
+        Preconditions.checkArgument(value.stream().allMatch(entry -> entry instanceof AttributeValue),
+            "Expecting Collection<AttributeValue<?>: invalid typing.");
         return new AttributeValue<>(value, new Serializer.CollectionSerializer());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static AttributeValue<Map<String, AttributeValue<?>>> of(Map<String, AttributeValue<?>> value) {
         Preconditions.checkNotNull(value, "value should not be null");
+        Preconditions.checkArgument(value.entrySet().stream().allMatch(entry -> (entry.getKey() instanceof String) && (entry.getValue() instanceof AttributeValue)),
+            "Expecting Map<String, AttributeValue<?>>: invalid typing.");
         return new AttributeValue<>(value, new Serializer.MapSerializer());
     }
 

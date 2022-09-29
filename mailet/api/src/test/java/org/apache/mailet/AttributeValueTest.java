@@ -518,6 +518,14 @@ class AttributeValueTest {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"CollectionSerializer\",\"value\": {}}"));
         }
+
+        @Test
+        void ofShouldRejectIllegalTypes() {
+            ImmutableList invalidList = ImmutableList.of("b");
+
+            assertThatThrownBy(() -> AttributeValue.of(invalidList))
+                .isInstanceOf(ClassCastException.class);
+        }
     }
 
     @Nested
@@ -573,6 +581,14 @@ class AttributeValueTest {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"MapSerializer\",\"value\": []}"));
         }
+
+        @Test
+        void ofShouldRejectIllegalTypes() {
+            ImmutableMap invalid = ImmutableMap.of("b", "c");
+
+            assertThatThrownBy(() -> AttributeValue.of(invalid))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Nested
@@ -625,6 +641,14 @@ class AttributeValueTest {
         void fromJsonStringShouldThrowOnMalformedFormattedJson() {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"OptionalSerializer\",\"value\": []}"));
+        }
+
+        @Test
+        void ofShouldRejectIllegalTypes() {
+            Optional invalid = Optional.of("b");
+
+            assertThatThrownBy(() -> AttributeValue.of(invalid))
+                .isInstanceOf(ClassCastException.class);
         }
     }
 
