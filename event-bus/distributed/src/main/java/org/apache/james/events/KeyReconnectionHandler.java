@@ -55,7 +55,7 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
         return Mono.fromRunnable(() -> {
             try (Channel channel = connection.createChannel()) {
                 channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE,
-                    configuration.workQueueArgumentsBuilder().build());
+                    configuration.workQueueArgumentsBuilder(AUTO_DELETE).build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }
