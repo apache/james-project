@@ -214,11 +214,11 @@ public class DownloadRoutes implements JMAPRoutes {
         String blobId = downloadPath.getBlobId();
 
         return Mono.from(blobManager.retrieve(ImmutableList.of(BlobId.of(blobId)), mailboxSession))
+            .switchIfEmpty(Mono.error(() -> new BlobNotFoundException(BlobId.of(blobId))))
             .flatMap(blob -> Mono.usingWhen(
                 Mono.fromCallable(blob::getStream),
                 stream -> downloadBlob(downloadPath.getName(), response, blob.getSize(), blob.getContentType(), stream),
                 stream -> Mono.fromRunnable(Throwing.runnable(stream::close).sneakyThrow())))
-            .switchIfEmpty(Mono.error(() -> new BlobNotFoundException(BlobId.of(blobId))))
             .onErrorResume(BlobNotFoundException.class, e -> {
                 LOGGER.info("Attachment '{}' not found", blobId, e);
                 return response.status(NOT_FOUND).send();
