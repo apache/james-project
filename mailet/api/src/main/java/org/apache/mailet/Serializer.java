@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MessageIdDto;
 import org.apache.james.util.streams.Iterators;
 import org.nustaq.serialization.FSTConfiguration;
@@ -70,6 +71,8 @@ public interface Serializer<T> {
     Optional<T> deserialize(JsonNode json);
 
     String getName();
+
+    T duplicate(T value);
 
     class Registry {
 
@@ -116,6 +119,11 @@ public interface Serializer<T> {
         }
 
         @Override
+        public Boolean duplicate(Boolean value) {
+            return value;
+        }
+
+        @Override
         public String getName() {
             return "BooleanSerializer";
         }
@@ -149,6 +157,11 @@ public interface Serializer<T> {
         }
 
         @Override
+        public String duplicate(String value) {
+            return value;
+        }
+
+        @Override
         public String getName() {
             return "StringSerializer";
         }
@@ -179,6 +192,11 @@ public interface Serializer<T> {
             } else {
                 return Optional.empty();
             }
+        }
+
+        @Override
+        public Integer duplicate(Integer value) {
+            return value;
         }
 
         @Override
@@ -217,6 +235,11 @@ public interface Serializer<T> {
         }
 
         @Override
+        public Long duplicate(Long value) {
+            return value;
+        }
+
+        @Override
         public String getName() {
             return "LongSerializer";
         }
@@ -252,6 +275,11 @@ public interface Serializer<T> {
         }
 
         @Override
+        public Float duplicate(Float value) {
+            return value;
+        }
+
+        @Override
         public String getName() {
             return "FloatSerializer";
         }
@@ -282,6 +310,11 @@ public interface Serializer<T> {
             } else {
                 return Optional.empty();
             }
+        }
+
+        @Override
+        public Double duplicate(Double value) {
+            return value;
         }
 
         @Override
@@ -320,6 +353,11 @@ public interface Serializer<T> {
         }
 
         @Override
+        public ZonedDateTime duplicate(ZonedDateTime value) {
+            return ZonedDateTime.ofInstant(value.toInstant(), value.getZone());
+        }
+
+        @Override
         public String getName() {
             return "DateSerializer";
         }
@@ -350,6 +388,11 @@ public interface Serializer<T> {
             return STRING_SERIALIZER
                     .deserialize(json)
                     .map(MessageIdDto::new);
+        }
+
+        @Override
+        public MessageIdDto duplicate(MessageIdDto value) {
+            return value;
         }
 
         @Override
@@ -426,6 +469,11 @@ public interface Serializer<T> {
         public int hashCode() {
             return Objects.hash(getClass());
         }
+
+        @Override
+        public T duplicate(T value) {
+            return deserialize(serialize(value)).get();
+        }
     }
 
     class UrlSerializer implements Serializer<URL> {
@@ -459,6 +507,11 @@ public interface Serializer<T> {
         public int hashCode() {
             return Objects.hash(getClass());
         }
+
+        @Override
+        public URL duplicate(URL value) {
+            return value;
+        }
     }
 
     Serializer<URL> URL_SERIALIZER = new UrlSerializer();
@@ -482,6 +535,13 @@ public interface Serializer<T> {
             } else {
                 return Optional.empty();
             }
+        }
+
+        @Override
+        public Collection<AttributeValue<U>> duplicate(Collection<AttributeValue<U>> value) {
+            return value.stream()
+                .map(AttributeValue::duplicate)
+                .collect(ImmutableList.toImmutableList());
         }
 
         @Override
@@ -523,6 +583,14 @@ public interface Serializer<T> {
         }
 
         @Override
+        public Map<String, AttributeValue<U>> duplicate(Map<String, AttributeValue<U>> value) {
+            return value.entrySet()
+                .stream()
+                .map(entry -> Pair.of(entry.getKey(), entry.getValue().duplicate()))
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+        }
+
+        @Override
         public String getName() {
             return "MapSerializer";
         }
@@ -556,6 +624,11 @@ public interface Serializer<T> {
             } else {
                 return Optional.empty();
             }
+        }
+
+        @Override
+        public Optional<AttributeValue<U>> duplicate(Optional<AttributeValue<U>> value) {
+            return value.map(AttributeValue::duplicate);
         }
 
         @Override
@@ -594,6 +667,11 @@ public interface Serializer<T> {
             } catch (JsonProcessingException e) {
                 throw new UncheckedIOException(e);
             }
+        }
+
+        @Override
+        public Serializable duplicate(Serializable value) {
+            return deserialize(serialize(value)).get();
         }
 
         @Override

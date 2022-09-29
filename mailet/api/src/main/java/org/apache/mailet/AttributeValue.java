@@ -244,10 +244,8 @@ public class AttributeValue<T> {
         }
     }
 
-    //FIXME : poor performance
-    @SuppressWarnings("unchecked")
     public AttributeValue<T> duplicate() {
-        return (AttributeValue<T>) fromJson(toJson());
+        return new AttributeValue<>(serializer.duplicate(value), serializer);
     }
 
     public JsonNode toJson() {
