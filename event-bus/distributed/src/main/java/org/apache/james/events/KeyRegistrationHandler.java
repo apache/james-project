@@ -122,7 +122,7 @@ class KeyRegistrationHandler {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(AUTO_DELETE)
-                .arguments(configuration.workQueueArgumentsBuilder().build()))
+                .arguments(configuration.workQueueArgumentsBuilder(AUTO_DELETE).build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))

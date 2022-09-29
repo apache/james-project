@@ -722,9 +722,9 @@ public class RabbitMQConfiguration {
         return sslConfiguration;
     }
 
-    public QueueArguments.Builder workQueueArgumentsBuilder() {
+    public QueueArguments.Builder workQueueArgumentsBuilder(boolean autoDeleteQueue) {
         QueueArguments.Builder builder = QueueArguments.builder();
-        if (useQuorumQueues) {
+        if (!autoDeleteQueue && useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
         }
         queueTTL.ifPresent(builder::queueTTL);

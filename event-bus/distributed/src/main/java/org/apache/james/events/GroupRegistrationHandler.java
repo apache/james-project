@@ -104,7 +104,7 @@ class GroupRegistrationHandler {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(configuration.workQueueArgumentsBuilder()
+                .arguments(configuration.workQueueArgumentsBuilder(!AUTO_DELETE)
                     .deadLetter(namingStrategy.deadLetterExchange())
                     .build()),
             BindingSpecification.binding()
