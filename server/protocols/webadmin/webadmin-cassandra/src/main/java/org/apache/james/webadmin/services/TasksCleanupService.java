@@ -24,11 +24,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
-import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.task.Task;
-import org.apache.james.task.eventsourcing.TaskAggregateId;
-import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
-import org.apache.james.util.ReactorUtils;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,31 +82,29 @@ public class TasksCleanupService {
         }
     }
 
-    private final EventStore eventStore;
-    private final TaskExecutionDetailsProjection taskExecutionDetailsProjection;
+    private final TaskManager taskManager;
 
     @Inject
-    public TasksCleanupService(EventStore eventStore, TaskExecutionDetailsProjection taskExecutionDetailsProjection) {
-        this.eventStore = eventStore;
-        this.taskExecutionDetailsProjection = taskExecutionDetailsProjection;
+    public TasksCleanupService(TaskManager taskManager) {
+        this.taskManager = taskManager;
     }
 
     public Mono<Task.Result> removeBeforeDate(Instant beforeDate, Context context) {
-        return Flux.from(taskExecutionDetailsProjection.listDetailsByBeforeDate(beforeDate))
-            .doOnNext(oldTaskDetail -> context.incrementProcessedTaskCount())
-            .flatMap(taskExecutionDetails -> Mono.from(eventStore.remove(new TaskAggregateId(taskExecutionDetails.taskId())))
-                .then(Mono.from(taskExecutionDetailsProjection.remove(taskExecutionDetails)))
-                .then(Mono.fromRunnable(context::incrementRemovedTasksCount)
-                    .thenReturn(Task.Result.COMPLETED))
-                .onErrorResume(e -> {
-                    LOGGER.error("Error while cleanup task {}", taskExecutionDetails.getTaskId().asString(), e);
-                    return Mono.just(Task.Result.PARTIAL);
-                }), ReactorUtils.DEFAULT_CONCURRENCY)
+        return Flux.from(taskManager.remove(beforeDate))
+            .doOnNext(pair -> doOnNext(pair, context))
+            .map(Pair::getValue)
             .reduce(Task.Result.COMPLETED, Task::combine)
             .onErrorResume(e -> {
                 LOGGER.error("Error listing tasks execution detail", e);
                 return Mono.just(Task.Result.PARTIAL);
             });
+    }
+
+    private static void doOnNext(Pair<TaskId, Task.Result> next, Context context) {
+        context.incrementProcessedTaskCount();
+        if (Task.Result.COMPLETED.equals(next.getValue())) {
+            context.incrementRemovedTasksCount();
+        }
     }
 
 }

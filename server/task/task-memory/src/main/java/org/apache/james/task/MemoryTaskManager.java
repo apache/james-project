@@ -21,6 +21,7 @@ package org.apache.james.task;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,7 @@ import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
@@ -144,6 +146,15 @@ public class MemoryTaskManager implements TaskManager {
                 workQueue.cancel(id);
             }
         );
+    }
+
+    @Override
+    public Publisher<Pair<TaskId, Task.Result>> remove(Instant beforeDate) {
+        return Flux.fromIterable(list())
+            .filter(detail -> detail.getSubmittedDate().toInstant().isBefore(beforeDate))
+            .filter(detail -> !(detail.getStatus().equals(Status.WAITING) || detail.getStatus().equals(Status.IN_PROGRESS)))
+            .map(detail -> idToExecutionDetails.remove(detail.getTaskId()))
+            .map(detail -> Pair.of(detail.getTaskId(), Task.Result.COMPLETED));
     }
 
     @Override

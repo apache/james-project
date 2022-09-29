@@ -20,8 +20,12 @@
 package org.apache.james.task;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.reactivestreams.Publisher;
 
 public interface TaskManager {
     boolean FINISHED = true;
@@ -71,6 +75,8 @@ public interface TaskManager {
     List<TaskExecutionDetails> list(Status status);
 
     void cancel(TaskId id);
+
+    Publisher<Pair<TaskId, Task.Result>> remove(Instant beforeDate);
 
     TaskExecutionDetails await(TaskId id, Duration timeout) throws TaskNotFoundException, ReachedTimeoutException;
 }

@@ -24,11 +24,13 @@ import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.mock;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.History;
@@ -43,8 +45,11 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskType;
 import org.apache.james.task.eventsourcing.Created;
+import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.MemoryTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TaskAggregateId;
+import org.apache.james.task.eventsourcing.TerminationSubscriber;
+import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.services.TasksCleanupService;
@@ -56,6 +61,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
@@ -92,7 +99,8 @@ public class TasksCleanupRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         eventStore = new InMemoryEventStore();
         taskExecutionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
-        TasksCleanupService tasksCleanupService = new TasksCleanupService(eventStore, taskExecutionDetailsProjection);
+        TaskManager eventSourcingTaskManager = new EventSourcingTaskManager(mock(WorkQueueSupplier.class), eventStore, taskExecutionDetailsProjection, new Hostname("foo"), mock(TerminationSubscriber.class));
+        TasksCleanupService tasksCleanupService = new TasksCleanupService(eventSourcingTaskManager);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksCleanupRoutes(taskManager, clock, tasksCleanupService, jsonTransformer),
@@ -312,5 +320,62 @@ public class TasksCleanupRoutesTest {
         assertThat(CollectionConverters.asJava(taskExecutionDetailsProjection.list()
             .map(TaskExecutionDetails::getTaskId)))
             .containsOnly(tasksId2);
+    }
+
+    @ParameterizedTest
+    @MethodSource(value = "inProgressStatus")
+    void tasksCleanupShouldNotRemoveInProgressTask(TaskManager.Status status) {
+        TaskExecutionDetails taskExecutionDetail = new TaskExecutionDetails(TaskId.generateTaskId(),
+            TaskType.of("type"),
+            status,
+            ZonedDateTime.now(),
+            new Hostname("foo"),
+            Optional::empty,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        taskExecutionDetailsProjection.update(taskExecutionDetail);
+        TaskAggregateId taskAggregateId = new TaskAggregateId(taskExecutionDetail.taskId());
+        Created event = new Created(taskAggregateId, EventId.first(), new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), new Hostname("foo"));
+        Mono.from(eventStore.append(event)).block();
+
+        String taskId = given()
+            .queryParam("olderThan", "15day")
+            .delete()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("tasks-cleanup"))
+            .body("additionalInformation.removedTaskCount", is(0))
+            .body("additionalInformation.processedTaskCount", is(0))
+            .body("additionalInformation.olderThan", is(notNullValue()))
+            .body("additionalInformation.timestamp", is(notNullValue()))
+            .body("additionalInformation.type", is("tasks-cleanup"))
+            .body("startedDate", is(notNullValue()))
+            .body("submitDate", is(notNullValue()))
+            .body("completedDate", is(notNullValue()));
+
+        assertThat(Mono.from(eventStore.getEventsOfAggregate(taskAggregateId)).block())
+            .isEqualTo(History.of(event));
+        assertThat(taskExecutionDetailsProjection.list().size())
+            .isEqualTo(1);
+    }
+
+    static Stream<Arguments> inProgressStatus() {
+        return Stream.of(
+            Arguments.of(TaskManager.Status.IN_PROGRESS),
+            Arguments.of(TaskManager.Status.WAITING)
+        );
     }
 }
