@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
@@ -184,29 +185,26 @@ public class DownloadRoutes implements JMAPRoutes {
 
     private Mono<Void> respondAttachmentAccessToken(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServerResponse resp) {
         String blobId = downloadPath.getBlobId();
-        try {
-            if (!attachmentExists(mailboxSession, blobId)) {
-                return resp.status(NOT_FOUND).send();
-            }
-            AttachmentAccessToken attachmentAccessToken = simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().asString(), blobId);
-            byte[] bytes = attachmentAccessToken.serialize().getBytes(StandardCharsets.UTF_8);
-            return resp.header(CONTENT_TYPE, TEXT_PLAIN_CONTENT_TYPE)
-                .status(OK)
-                .header(CONTENT_LENGTH, Integer.toString(bytes.length))
-                .sendByteArray(Mono.just(bytes))
-                .then();
-        } catch (MailboxException e) {
-            throw new InternalErrorException("Error while asking attachment access token", e);
-        }
+
+        return attachmentExists(mailboxSession, blobId)
+            .flatMap(exists -> {
+                if (exists) {
+                    AttachmentAccessToken attachmentAccessToken = simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().asString(), blobId);
+                    byte[] bytes = attachmentAccessToken.serialize().getBytes(StandardCharsets.UTF_8);
+                    return resp.header(CONTENT_TYPE, TEXT_PLAIN_CONTENT_TYPE)
+                        .status(OK)
+                        .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                        .sendByteArray(Mono.just(bytes))
+                        .then();
+                } else {
+                    return resp.status(NOT_FOUND).send();
+                }
+            });
     }
 
-    private boolean attachmentExists(MailboxSession mailboxSession, String blobId) throws MailboxException {
-        try {
-            blobManager.retrieve(BlobId.of(blobId), mailboxSession);
-            return true;
-        } catch (BlobNotFoundException e) {
-            return false;
-        }
+    private Mono<Boolean> attachmentExists(MailboxSession mailboxSession, String blobId) {
+        return Flux.from(blobManager.retrieve(ImmutableList.of(BlobId.of(blobId)), mailboxSession))
+            .hasElements();
     }
 
     @VisibleForTesting
