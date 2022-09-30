@@ -66,7 +66,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     ManageableMailQueue getManageableMailQueue();
 
     @Test
-    default void getSizeShouldReturnZeroWhenNoMessage() throws Exception {
+    default void getSizeShouldReturnZeroWhenNoMessage() {
         Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(0L));
     }
 
@@ -91,7 +91,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         enQueue(defaultMail().name("name").build());
 
         Flux.from(getManageableMailQueue().deQueue())
-            .concatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true))).subscribeOn(Schedulers.elastic()))
+            .concatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))).subscribeOn(Schedulers.elastic()))
             .subscribeOn(Schedulers.elastic())
             .subscribe();
 
@@ -103,7 +103,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         enQueue(defaultMail().name("name").build());
 
         Flux.from(getManageableMailQueue().deQueue())
-            .doOnNext(Throwing.consumer(item -> item.done(false)))
+            .doOnNext(Throwing.consumer(item -> item.done(MailQueue.MailQueueItem.CompletionStatus.RETRY)))
             .blockFirst();
 
         Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(1L));
@@ -151,7 +151,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         enQueue(mail);
 
         Flux.from(getManageableMailQueue().deQueue())
-            .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true)))
+            .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
                 .subscribeOn(Schedulers.elastic())
                 .thenReturn(item))
                 .blockFirst();

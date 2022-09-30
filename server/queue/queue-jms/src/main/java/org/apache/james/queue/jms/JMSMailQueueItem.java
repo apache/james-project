@@ -43,9 +43,9 @@ public class JMSMailQueueItem implements MailQueueItem {
     }
 
     @Override
-    public void done(boolean success) throws MailQueueException {
+    public void done(CompletionStatus success) throws MailQueueException {
         try {
-            if (success) {
+            if (success == CompletionStatus.SUCCESS) {
                 session.commit();
             } else {
                 JMSCacheableMailQueue.rollback(session);

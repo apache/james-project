@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.reactivestreams.Publisher;
@@ -115,7 +116,11 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             .then(runTask(taskWithId, listener))
             .onErrorResume(this::isCausedByInterruptedException, e -> cancelled(taskWithId, listener))
             .onErrorResume(Exception.class, e -> {
-                LOGGER.error("Error while running task {}", taskWithId.getId(), e);
+                MDCStructuredLogger.forLogger(LOGGER)
+                    .field("taskId", taskWithId.getId().asString())
+                    .field("taskType", taskWithId.getTask().type().asString())
+                    .log(logger -> logger.error("Error while running task {}", taskWithId.getId(), e));
+
                 return Mono.from(listener.failed(taskWithId.getId(), taskWithId.getTask().detailsReactive(), e))
                     .thenReturn(Task.Result.PARTIAL);
             });
@@ -126,7 +131,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             return true;
         }
         return Stream.iterate(e, t -> t.getCause() != null, Throwable::getCause)
-            .anyMatch(t -> t instanceof InterruptedException);
+            .anyMatch(InterruptedException.class::isInstance);
     }
 
     private Mono<Task.Result> cancelled(TaskWithId taskWithId, Listener listener) {
@@ -139,10 +144,16 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         return Mono.fromCallable(() -> taskWithId.getTask().run())
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .doOnNext(result -> result
-                .onComplete(any -> Mono.from(listener.completed(taskWithId.getId(), result, taskWithId.getTask().detailsReactive())).block())
+                .onComplete(any -> Mono.from(listener.completed(taskWithId.getId(), result, taskWithId.getTask().detailsReactive()))
+                    .subscribe())
                 .onFailure(() -> {
-                    LOGGER.error("Task was partially performed. Check logs for more details. Taskid : " + taskWithId.getId());
-                    Mono.from(listener.failed(taskWithId.getId(), taskWithId.getTask().detailsReactive())).block();
+                    MDCStructuredLogger.forLogger(LOGGER)
+                        .field("taskId", taskWithId.getId().asString())
+                        .field("taskType", taskWithId.getTask().type().asString())
+                        .log(logger -> logger.error("Task was partially performed. Check logs for more details. Taskid : {}", taskWithId.getId()));
+
+                    Mono.from(listener.failed(taskWithId.getId(), taskWithId.getTask().detailsReactive()))
+                        .subscribe();
                 }));
     }
 

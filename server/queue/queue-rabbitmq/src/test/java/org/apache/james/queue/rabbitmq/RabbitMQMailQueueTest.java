@@ -202,7 +202,7 @@ class RabbitMQMailQueueTest {
 
             dequeueFlux.take(1)
                 .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
-                    mailQueueItem.done(true);
+                    mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                     return mailQueueItem;
                 }).subscribeOn(Schedulers.elastic())).blockLast(Duration.ofSeconds(10));
 
@@ -656,10 +656,10 @@ class RabbitMQMailQueueTest {
                 .deQueue())
                 .concatMap(mailQueueItem -> Mono.fromCallable(() -> {
                     if (counter.getAndIncrement() < times) {
-                        mailQueueItem.done(true);
+                        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                         return mailQueueItem;
                     } else {
-                        mailQueueItem.done(false);
+                        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
                         return null;
                     }
                 }).subscribeOn(Schedulers.elastic()))
@@ -730,7 +730,7 @@ class RabbitMQMailQueueTest {
             Flux.from(getMailQueue().deQueue())
                 .take(3)
                 .doOnNext(item -> dequeuedNames.add(item.getMail().getName()))
-                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true)))
+                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
                     .subscribeOn(Schedulers.elastic()))
                 .subscribeOn(Schedulers.elastic())
                 .subscribe();
@@ -779,7 +779,7 @@ class RabbitMQMailQueueTest {
 
             Flux.from(getMailQueue().deQueue())
                 .doOnNext(item -> dequeuedMailNames.add(item.getMail().getName()))
-                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true)))
+                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
                     .subscribeOn(Schedulers.elastic()))
                 .subscribe();
 
@@ -819,7 +819,7 @@ class RabbitMQMailQueueTest {
 
             Flux.from(getMailQueue().deQueue())
                 .doOnNext(item -> dequeuedMailNames.add(item.getMail().getName()))
-                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(true)))
+                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
                     .subscribeOn(Schedulers.elastic()))
                 .subscribe();
 
@@ -829,7 +829,7 @@ class RabbitMQMailQueueTest {
         }
 
         @Test
-        void rejectedMessagesShouldBeDeadLettered() {
+        void invalidMessagesShouldBeDeadLettered() {
             String emptyRoutingKey = "";
             rabbitMQExtension.getSender()
                 .send(Mono.just(new OutboundMessage("JamesMailQueue-exchange-spool",
@@ -846,10 +846,36 @@ class RabbitMQMailQueueTest {
                 .subscribe();
 
             Flux.from(getMailQueue().deQueue())
-                .doOnNext(Throwing.consumer(item -> item.done(true)))
+                .doOnNext(Throwing.consumer(item -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
                 .subscribeOn(Schedulers.elastic())
                 .subscribe();
 
+
+            Awaitility.await().atMost(TEN_SECONDS)
+                .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
+        }
+
+        @Test
+        void rejectedMessagesShouldBeDeadLettered() throws Exception {
+            String name1 = "myMail1";
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().deQueue()
+                .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.REJECT)))
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .thenReturn(item))
+                .blockFirst();
+
+            AtomicInteger deadLetteredCount = new AtomicInteger();
+            rabbitMQExtension.getRabbitChannelPool()
+                .createReceiver()
+                .consumeAutoAck("JamesMailQueue-dead-letter-queue-spool")
+                .doOnNext(next -> deadLetteredCount.incrementAndGet())
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
 
             Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
@@ -934,7 +960,7 @@ class RabbitMQMailQueueTest {
             List<MailQueue.MailQueueItem> items = dequeueFlux.take(2)
                 .concatMap(mailQueueItem ->
                     Mono.fromCallable(() -> {
-                        mailQueueItem.done(true);
+                        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                         return mailQueueItem;
                     }).subscribeOn(Schedulers.elastic())
                         .thenReturn(mailQueueItem)

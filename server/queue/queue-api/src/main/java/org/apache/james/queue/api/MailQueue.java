@@ -133,6 +133,11 @@ public interface MailQueue extends Closeable {
      *
      */
     interface MailQueueItem {
+        enum CompletionStatus {
+            SUCCESS,
+            RETRY,
+            REJECT
+        }
 
         /**
          * Return the dequeued {@link Mail}
@@ -150,6 +155,6 @@ public interface MailQueue extends Closeable {
          * @param success
          * @throws MailQueueException
          */
-        void done(boolean success) throws MailQueueException;
+        void done(CompletionStatus success) throws MailQueueException;
     }
 }

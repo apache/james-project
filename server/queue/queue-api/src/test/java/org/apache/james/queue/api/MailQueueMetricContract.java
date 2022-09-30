@@ -67,7 +67,7 @@ public interface MailQueueMetricContract extends MailQueueContract {
         Flux.from(getMailQueue().deQueue())
             .take(times)
             .flatMap(x -> Mono.fromCallable(() -> {
-                x.done(true);
+                x.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                 return x;
             }).subscribeOn(Schedulers.elastic()))
             .blockLast();
