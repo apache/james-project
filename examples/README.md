@@ -49,6 +49,11 @@ interact with third party systems, do advance reporting...
 
 [This example](custom-webadmin-route) shows how to write additional Webadmin routes!
 
+## Configure Custom Healthchecks
+
+[This example](custom-healthcheck) demonstrates how to write custom healthchecks for Apache James.
+This enables writing new custom healthcheck that fits your monitoring need.
+
 ## Write Custom James server assembly
 
 [This example](custom-james-assembly) demonstrates how to write a custom assembly in order to write your own tailor-made server.
