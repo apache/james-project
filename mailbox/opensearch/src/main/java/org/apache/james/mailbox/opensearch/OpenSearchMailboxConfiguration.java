@@ -78,13 +78,13 @@ public class OpenSearchMailboxConfiguration {
         return new Builder();
     }
 
-    private static final String ELASTICSEARCH_INDEX_NAME = "opensearch.index.name";
-    private static final String ELASTICSEARCH_INDEX_MAILBOX_NAME = "opensearch.index.mailbox.name";
-    private static final String ELASTICSEARCH_ALIAS_READ_NAME = "opensearch.alias.read.name";
-    private static final String ELASTICSEARCH_ALIAS_WRITE_NAME = "opensearch.alias.write.name";
-    private static final String ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME = "opensearch.alias.read.mailbox.name";
-    private static final String ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME = "opensearch.alias.write.mailbox.name";
-    private static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "opensearch.indexAttachments";
+    private static final String OPENSEARCH_INDEX_NAME = "opensearch.index.name";
+    private static final String OPENSEARCH_INDEX_MAILBOX_NAME = "opensearch.index.mailbox.name";
+    private static final String OPENSEARCH_ALIAS_READ_NAME = "opensearch.alias.read.name";
+    private static final String OPENSEARCH_ALIAS_WRITE_NAME = "opensearch.alias.write.name";
+    private static final String OPENSEARCH_ALIAS_READ_MAILBOX_NAME = "opensearch.alias.read.mailbox.name";
+    private static final String OPENSEARCH_ALIAS_WRITE_MAILBOX_NAME = "opensearch.alias.write.mailbox.name";
+    private static final String OPENSEARCH_INDEX_ATTACHMENTS = "opensearch.indexAttachments";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
 
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
@@ -99,29 +99,29 @@ public class OpenSearchMailboxConfiguration {
     }
 
     static Optional<IndexName> computeMailboxIndexName(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_INDEX_MAILBOX_NAME))
                 .map(IndexName::new)
-            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
+            .or(() -> Optional.ofNullable(configuration.getString(OPENSEARCH_INDEX_NAME))
                 .map(IndexName::new));
     }
 
     static Optional<WriteAliasName> computeMailboxWriteAlias(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_WRITE_MAILBOX_NAME))
                 .map(WriteAliasName::new)
-            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
+            .or(() -> Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_WRITE_NAME))
                 .map(WriteAliasName::new));
     }
 
     static Optional<ReadAliasName> computeMailboxReadAlias(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_READ_MAILBOX_NAME))
                 .map(ReadAliasName::new)
-            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
+            .or(() -> Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_READ_NAME))
                 .map(ReadAliasName::new));
     }
 
 
     private static IndexAttachments provideIndexAttachments(Configuration configuration) {
-        if (configuration.getBoolean(ELASTICSEARCH_INDEX_ATTACHMENTS, DEFAULT_INDEX_ATTACHMENTS)) {
+        if (configuration.getBoolean(OPENSEARCH_INDEX_ATTACHMENTS, DEFAULT_INDEX_ATTACHMENTS)) {
             return IndexAttachments.YES;
         }
         return IndexAttachments.NO;
