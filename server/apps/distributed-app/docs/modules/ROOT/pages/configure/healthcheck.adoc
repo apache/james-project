@@ -19,4 +19,7 @@ If not specified, the mail reception check is a noop.
 
 | reception.check.timeout
 | Period after which mail reception is considered faulty. Defaults to one minute.
+
+| additional.healthchecks
+| List of fully qualified HealthCheck class names in addition to James' default healthchecks. Default to empty list.
 |===

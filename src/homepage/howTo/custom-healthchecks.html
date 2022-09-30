@@ -1,0 +1,95 @@
+---
+layout: howTo
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<!-- Main -->
+<div id="main">
+
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Configure Custom Healthchecks</b></h1>
+                </header>
+
+                <p>
+                    The current project demonstrates how to write custom healthchecks for Apache James.
+                    This enables writing new custom healthcheck that fits your monitoring need.
+                </p>
+
+                <p>
+                    Find this example on <a href="https://github.com/apache/james-project/tree/master/examples/custom-healthcheck">GitHub</a>.
+                </p>
+
+                <p>
+                    Start by importing the dependencies:
+                </p>
+
+                <pre><code>
+&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;james-core&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+    &lt;artifactId&gt;reactor-core&lt;/artifactId&gt;
+&lt;/dependency&gt;
+                </code></pre>
+
+                <p>You can then start writing your first HealthCheck by implementing HealthCheck interface.</p>
+
+                <p>You can compile this example project:</p>
+
+                <pre><code>mvn clean install</code></pre>
+
+                <p>Then embed your healthcheck into a James server. First configure your custom healthcheck into <code>healthcheck.properties</code>:</p>
+
+                <pre><code># List of fully qualified HealthCheck class names in addition to James' default healthchecks.
+# Healthchecks need to be located within the classpath or in the ./extensions-jars folder.
+additional.healthchecks=org.apache.james.examples.HealthCheckA</code></pre>
+
+                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
+
+                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
+
+                <p>Then start a James server with your JAR and the configuration:</p>
+
+                <pre><code>docker run -d \
+   -v $PWD/healthcheck.properties:/root/conf/healthcheck.properties \
+   -v $PWD/healthcheck-extension.jar:/root/extensions-jars \
+   -v $PWD/keystore:/root/conf/keystore \
+   -p 25:25 \
+   apache/james:memory-latest</code></pre>
+
+                <p>You can use <code>curl</code> command to get your healthcheck status:</p>
+
+                <pre><code>$ curl -XGET http://172.17.0.2:8000/healthcheck</code></pre>
+            </div>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
+
+</div>

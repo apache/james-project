@@ -47,5 +47,6 @@
     <module>custom-smtp-hooks</module>
     <module>custom-webadmin-route</module>
     <module>metrics-graphite</module>
+    <module>custom-healthcheck</module>
   </modules>
 </project>

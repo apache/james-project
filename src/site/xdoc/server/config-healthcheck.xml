@@ -42,6 +42,9 @@
 
                 <dt><strong>reception.check.timeout</strong></dt>
                 <dd>Period after which mail reception is considered faulty. Defaults to one minute.</dd>
+
+                <dt><strong>additional.healthchecks</strong></dt>
+                <dd>List of fully qualified HealthCheck class names in addition to James' default healthchecks. Default to empty list.</dd>
             </dl>
         </section>
     </body>
