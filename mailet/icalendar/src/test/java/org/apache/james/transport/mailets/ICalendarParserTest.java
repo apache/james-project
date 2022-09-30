@@ -56,7 +56,7 @@ class ICalendarParserTest {
 
     static final String WRONG_ICAL_VALUE = "anyValue";
     @SuppressWarnings("unchecked")
-    static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
+    static final Class<Map<String, AttributeValue<Serializable>>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, AttributeValue<Serializable>>>) (Object) Map.class;
 
     ICalendarParser mailet = new ICalendarParser();
 
@@ -189,8 +189,8 @@ class ICalendarParserTest {
 
         mailet.init(mailetConfiguration);
 
-        Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
-            .put("key", RIGHT_ICAL_VALUE.getBytes())
+        Map<String, AttributeValue<byte[]>> attachments = ImmutableMap.<String, AttributeValue<byte[]>>builder()
+            .put("key", AttributeValue.of(RIGHT_ICAL_VALUE.getBytes()))
             .build();
 
         Mail mail = FakeMail.builder()
@@ -218,9 +218,9 @@ class ICalendarParserTest {
 
         mailet.init(mailetConfiguration);
 
-        Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
-            .put("key1", WRONG_ICAL_VALUE.getBytes())
-            .put("key2", RIGHT_ICAL_VALUE.getBytes())
+        Map<String, AttributeValue<byte[]>> attachments = ImmutableMap.<String, AttributeValue<byte[]>>builder()
+            .put("key1", AttributeValue.of(WRONG_ICAL_VALUE.getBytes()))
+            .put("key2", AttributeValue.of(RIGHT_ICAL_VALUE.getBytes()))
             .build();
         Mail mail = FakeMail.builder()
             .name("mail")
@@ -229,8 +229,8 @@ class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
-        Map.Entry<String, Calendar> expectedCalendar = Maps.immutableEntry("key2", new Calendar());
+        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        Map.Entry<String, AttributeValue<Serializable>> expectedCalendar = Maps.immutableEntry("key2", AttributeValue.ofSerializable(new Calendar()));
 
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
             assertThat(calendars)
@@ -253,8 +253,8 @@ class ICalendarParserTest {
 
         mailet.init(mailetConfiguration);
 
-        Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
-            .put("key", ClassLoaderUtils.getSystemResourceAsByteArray("ics/ics_with_error.ics"))
+        Map<String, AttributeValue<byte[]>> attachments = ImmutableMap.<String, AttributeValue<byte[]>>builder()
+            .put("key", AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/ics_with_error.ics")))
             .build();
 
         Mail mail = FakeMail.builder()
@@ -264,7 +264,7 @@ class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
                 assertThat(calendars)
                         .hasSize(1));

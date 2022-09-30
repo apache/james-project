@@ -65,7 +65,7 @@ class StripAttachmentTest {
     @SuppressWarnings("unchecked")
     private static Class<Collection<AttributeValue<String>>> COLLECTION_STRING_CLASS = (Class<Collection<AttributeValue<String>>>) (Object) Collection.class;
     @SuppressWarnings("unchecked")
-    private static Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static Class<Map<String, AttributeValue<?>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<?>>>) (Object) Map.class;
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "#¤ãàé";
     private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
@@ -283,13 +283,13 @@ class StripAttachmentTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, byte[]>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
-        ConsumerChainer<Map<String, byte[]>> assertValue = Throwing.consumer(saved -> {
+        Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
+        ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
             assertThat(saved)
                     .hasSize(1)
                     .containsKeys(expectedKey);
 
-            MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
+            MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
             String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
             assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
         });
@@ -321,13 +321,13 @@ class StripAttachmentTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, byte[]>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
-        ConsumerChainer<Map<String, byte[]>> assertValue = Throwing.consumer(saved -> {
+        Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
+        ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
             assertThat(saved)
                     .hasSize(1)
                     .containsKeys(expectedKey);
 
-            MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
+            MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
             String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
             assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
         });
@@ -655,7 +655,7 @@ class StripAttachmentTest {
         
         //Then
         assertThat(actual).isTrue();
-        Optional<Map<String, byte[]>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
+        Optional<Map<String,  AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
         assertThat(savedValue)
                 .isPresent()
                 .hasValueSatisfying(saved ->

@@ -93,7 +93,7 @@ import com.google.common.collect.ImmutableMap;
 public class StripAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<byte[]>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<byte[]>>>) (Object) Map.class;
 
     @SuppressWarnings("unchecked")
     private static final Class<List<AttributeValue<String>>> LIST_OF_STRINGS = (Class<List<AttributeValue<String>>>)(Object) List.class;
@@ -354,15 +354,17 @@ public class StripAttachment extends GenericMailet {
     }
 
     private void addPartContent(BodyPart bodyPart, Mail mail, String fileName, AttributeName attributeName) throws IOException, MessagingException {
-        ImmutableMap.Builder<String, byte[]> fileNamesToPartContent = AttributeUtils
+        ImmutableMap.Builder<String, AttributeValue<?>> fileNamesToPartContent = AttributeUtils
             .getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
-            .map(ImmutableMap.<String, byte[]>builder()::putAll)
+            .map(ImmutableMap.<String, AttributeValue<?>>builder()::putAll)
             .orElse(ImmutableMap.builder());
 
         UnsynchronizedByteArrayOutputStream byteArrayOutputStream = new UnsynchronizedByteArrayOutputStream();
         bodyPart.writeTo(byteArrayOutputStream);
-        fileNamesToPartContent.put(fileName, byteArrayOutputStream.toByteArray());
-        mail.setAttribute(new Attribute(attributeName, AttributeValue.ofAny(fileNamesToPartContent.build())));
+        fileNamesToPartContent.put(fileName, AttributeValue.of(byteArrayOutputStream.toByteArray()));
+
+        Map<String, AttributeValue<?>> build = fileNamesToPartContent.build();
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(build)));
     }
 
     private void storeFileNameAsAttribute(Mail mail, AttributeValue<String> fileName, boolean hasToBeStored) {

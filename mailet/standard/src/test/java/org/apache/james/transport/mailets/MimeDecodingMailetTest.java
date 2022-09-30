@@ -37,7 +37,6 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -49,7 +48,7 @@ class MimeDecodingMailetTest {
 
     private static final AttributeName MAIL_ATTRIBUTE = AttributeName.of("mime.attachments");
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<byte[]>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<byte[]>>>) (Object) Map.class;
 
     private MailetContext mailetContext;
     private MimeDecodingMailet testee;
@@ -145,15 +144,15 @@ class MimeDecodingMailetTest {
                 + "Content-Type: application/octet-stream; charset=utf-8\r\n\r\n"
                 + text;
         String expectedKey = "mimePart1";
-        AttributeValue<?> value = AttributeValue.ofAny(ImmutableMap.of(expectedKey, content.getBytes(StandardCharsets.UTF_8)));
+        AttributeValue<?> value = AttributeValue.of(ImmutableMap.of(expectedKey, AttributeValue.of(content.getBytes(StandardCharsets.UTF_8))));
         mail.setAttribute(new Attribute(MAIL_ATTRIBUTE, value));
 
-        byte[] expectedValue = text.getBytes(StandardCharsets.UTF_8);
+        AttributeValue<byte[]> expectedValue = AttributeValue.of(text.getBytes(StandardCharsets.UTF_8));
         testee.service(mail);
 
-        Optional<Map<String, byte[]>> processedAttribute = AttributeUtils.getValueAndCastFromMail(mail, MAIL_ATTRIBUTE, MAP_STRING_BYTES_CLASS);
+        Optional<Map<String, AttributeValue<byte[]>>> processedAttribute = AttributeUtils.getValueAndCastFromMail(mail, MAIL_ATTRIBUTE, MAP_STRING_BYTES_CLASS);
         assertThat(processedAttribute).hasValueSatisfying(map ->
-            assertThat(map)
-                .containsExactly(MapEntry.entry(expectedKey, expectedValue)));
+            assertThat(map.values().stream().findFirst().get().getValue())
+                .contains(expectedValue.value()));
     }
 }

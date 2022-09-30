@@ -206,12 +206,12 @@ public class SMIMECheckSignature extends GenericMailet {
         // If at least one mail signer is found 
         // the mail attributes are set.
         if (signers != null) {
-            ArrayList<X509Certificate> signerinfolist = new ArrayList<>();
+            ArrayList<AttributeValue<?>> signerinfolist = new ArrayList<>();
 
             for (SMIMESignerInfo info : signers) {
                 if (info.isSignValid()
                         && (!onlyTrusted || info.getCertPath() != null)) {
-                    signerinfolist.add(info.getSignerCertificate());
+                    signerinfolist.add(AttributeValue.ofSerializable(info.getSignerCertificate()));
                 }
             }
 
