@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -62,7 +63,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     private final Set<HealthCheck> healthChecks;
 
     @Inject
-    public HealthCheckRoutes(Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer) {
+    public HealthCheckRoutes(@Named("resolved-checks") Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer) {
         this.healthChecks = healthChecks;
         this.jsonTransformer = jsonTransformer;
     }
