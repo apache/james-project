@@ -26,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ import net.fortuna.ical4j.model.component.VEvent;
 public class ICALToHeader extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICALToHeader.class);
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR = (Class<Map<String, Calendar>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<?>>> MAP_STRING_CALENDAR = (Class<Map<String, AttributeValue<?>>>) (Object) Map.class;
 
     public static final String ATTRIBUTE_PROPERTY = "attribute";
     public static final String ATTRIBUTE_DEFAULT_NAME = "icalendar";
@@ -105,11 +106,14 @@ public class ICALToHeader extends GenericMailet {
         }
     }
 
-    private void processCalendars(Map<String, Calendar> calendarMap, Mail mail) {
+    private void processCalendars(Map<String, AttributeValue<?>> calendarMap, Mail mail) {
         calendarMap
             .values()
             .stream()
             .findAny()
+            .map(AttributeValue::getValue)
+            .filter(Calendar.class::isInstance)
+            .map(Calendar.class::cast)
             .ifPresent(Throwing.<Calendar>consumer(calendar -> writeToHeaders(calendar, mail))
                     .sneakyThrow());
     }

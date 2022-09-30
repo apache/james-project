@@ -162,9 +162,9 @@ public class SMIMEDecrypt extends GenericMailet {
             // behavior of the SMIMEVerifySignature mailet. In that way
             // it is possible to reuse the same matchers to analyze
             // the result of the operation.
-            ArrayList<X509Certificate> list = new ArrayList<>(1);
-            list.add(keyHolder.getCertificate());
-            mail.setAttribute(new Attribute(mailAttribute, AttributeValue.ofAny(list)));
+            ArrayList<AttributeValue<?>> list = new ArrayList<>(1);
+            list.add(AttributeValue.ofSerializable(keyHolder.getCertificate()));
+            mail.setAttribute(new Attribute(mailAttribute, AttributeValue.of(list)));
 
             // I start the message stripping.
             try {

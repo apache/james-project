@@ -22,6 +22,8 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Map;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.util.MimeMessageUtil;
@@ -102,7 +104,7 @@ class ICALToHeadersTest {
         Mail mail = FakeMail.builder()
             .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(makeAttribute("This is the wrong type"))
+            .attribute(new Attribute(ICALToHeader.ATTRIBUTE_DEFAULT, AttributeValue.of("This is the wrong type")))
             .build();
 
         testee.service(mail);
@@ -112,8 +114,8 @@ class ICALToHeadersTest {
 
     @Test
     void serviceShouldNotFailOnMailsWithWrongParametrizedAttribute() throws Exception {
-        ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.<String, String>builder()
-            .put("key", "value")
+        ImmutableMap<String, AttributeValue<?>> wrongParametrizedMap = ImmutableMap.<String, AttributeValue<?>>builder()
+            .put("key", AttributeValue.of("value"))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -131,8 +133,8 @@ class ICALToHeadersTest {
     @Test
     void serviceShouldWriteSingleICalendarToHeaders() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
-        ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
-            .put("key", calendar)
+        Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
+            .put("key", AttributeValue.ofSerializable(calendar))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -158,8 +160,8 @@ class ICALToHeadersTest {
     @Test
     void serviceShouldNotWriteHeaderWhenPropertyIsAbsent() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_without_dtstamp.ics"));
-        ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
-            .put("key", calendar)
+        Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
+            .put("key", AttributeValue.ofSerializable(calendar))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -185,9 +187,9 @@ class ICALToHeadersTest {
     void serviceShouldWriteOnlyOneICalendarToHeaders() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
         Calendar calendar2 = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_2.ics"));
-        ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
-            .put("key", calendar)
-            .put("key2", calendar2)
+        Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
+            .put("key", AttributeValue.ofSerializable(calendar))
+            .put("key2", AttributeValue.ofSerializable(calendar2))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -204,7 +206,7 @@ class ICALToHeadersTest {
 
     @Test
     void serviceShouldNotFailOnEmptyMaps() throws Exception {
-        ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
+        Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -219,7 +221,7 @@ class ICALToHeadersTest {
         assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).isNull();
     }
 
-    private Attribute makeAttribute(Object icals) {
-        return new Attribute(ICALToHeader.ATTRIBUTE_DEFAULT, AttributeValue.ofAny(icals));
+    private Attribute makeAttribute(Map<String, AttributeValue<?>> icals) {
+        return new Attribute(ICALToHeader.ATTRIBUTE_DEFAULT, AttributeValue.of(icals));
     }
 }

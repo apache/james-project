@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
@@ -46,17 +45,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import com.google.common.collect.ImmutableMap;
-
 class AmqpForwardAttributeTest {
 
     private static final AttributeName MAIL_ATTRIBUTE = AttributeName.of("ampq.attachments");
     private static final String EXCHANGE_NAME = "exchangeName";
     private static final String ROUTING_KEY = "routingKey";
     private static final String AMQP_URI = "amqp://host";
-    private static final byte[] ATTACHMENT_CONTENT = "Attachment content".getBytes(StandardCharsets.UTF_8);
-    private static final ImmutableMap<String, byte[]> ATTRIBUTE_VALUE = ImmutableMap.of("attachment1.txt", ATTACHMENT_CONTENT);
-    private static final Optional<Attribute> ATTRIBUTE_CONTENT = Optional.of(new Attribute(MAIL_ATTRIBUTE, AttributeValue.ofAny(ATTRIBUTE_VALUE)));
 
     private AmqpForwardAttribute mailet;
     private MailetContext mailetContext;

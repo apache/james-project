@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -43,8 +44,8 @@ class MailAttributesListToMimeHeadersTest {
     private static final String VALUE_1_2 = "test1.2";
     private static final String VALUE_2_1 = "test2.1";
     private static final String VALUE_2_2 = "test2.2";
-    private static final ImmutableList<String> MAIL_ATTRIBUTE_VALUE1 = ImmutableList.of(VALUE_1_1, VALUE_1_2);
-    private static final ImmutableList<String> MAIL_ATTRIBUTE_VALUE2 = ImmutableList.of(VALUE_2_1, VALUE_2_2);
+    private static final ImmutableList<AttributeValue<String>> MAIL_ATTRIBUTE_VALUE1 = ImmutableList.of(AttributeValue.of(VALUE_1_1), AttributeValue.of(VALUE_1_2));
+    private static final ImmutableList<AttributeValue<String>> MAIL_ATTRIBUTE_VALUE2 = ImmutableList.of(AttributeValue.of(VALUE_2_1), AttributeValue.of(VALUE_2_2));
 
     private static final String MAIL_ATTRIBUTE_NAME1 = "org.apache.james.test";
     private static final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test2";
@@ -128,32 +129,6 @@ class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    void shouldIgnoreNullValueInsideList() throws MessagingException {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .mailetName("Test")
-            .setProperty("simplemapping",
-                MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
-            .build();
-
-        mailet.init(mailetConfig);
-
-        ArrayList<String> listWithNull = new ArrayList<>();
-        listWithNull.add("1");
-        listWithNull.add(null);
-        listWithNull.add("2");
-        FakeMail mail = FakeMail.builder()
-            .name("mail")
-            .mimeMessage(MailUtil.createMimeMessage())
-            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, listWithNull))
-            .build();
-
-        mailet.service(mail);
-
-        assertThat(mail.getMessage().getHeader(HEADER_NAME1))
-            .containsExactly("1", "2");
-    }
-
-    @Test
     void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -175,10 +150,14 @@ class MailAttributesListToMimeHeadersTest {
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME1))
-            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE1);
+            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE1.stream()
+                .map(AttributeValue::getValue)
+                .collect(ImmutableList.toImmutableList()));
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME2))
-            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE2);
+            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE2.stream()
+                .map(AttributeValue::getValue)
+                .collect(ImmutableList.toImmutableList()));
     }
 
     @Test
@@ -224,7 +203,9 @@ class MailAttributesListToMimeHeadersTest {
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME1)).isNull();
         assertThat(mail.getMessage().getHeader(HEADER_NAME2))
-            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE2);
+            .containsExactlyElementsOf(MAIL_ATTRIBUTE_VALUE2.stream()
+                .map(AttributeValue::getValue)
+                .collect(ImmutableList.toImmutableList()));
     }
 
 
@@ -240,7 +221,7 @@ class MailAttributesListToMimeHeadersTest {
         FakeMail mail = FakeMail.builder()
             .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
-            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value)))
+            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(AttributeValue.of(3L), AttributeValue.of(value))))
             .build();
 
         mailet.service(mail);

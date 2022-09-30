@@ -60,6 +60,11 @@ public class AttributeValue<T> {
         return new AttributeValue<>(value, Serializer.STRING_SERIALIZER);
     }
 
+    public static AttributeValue<byte[]> of(byte[] value) {
+        Preconditions.checkNotNull(value, "value should not be null");
+        return new AttributeValue<>(value, Serializer.BYTES_SERIALIZER);
+    }
+
     public static AttributeValue<Integer> of(Integer value) {
         Preconditions.checkNotNull(value, "value should not be null");
         return new AttributeValue<>(value, Serializer.INT_SERIALIZER);
@@ -136,6 +141,9 @@ public class AttributeValue<T> {
         }
         if (value instanceof String) {
             return of((String) value);
+        }
+        if (value instanceof byte[]) {
+            return of((byte[]) value);
         }
         if (value instanceof Integer) {
             return of((Integer) value);

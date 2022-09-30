@@ -91,9 +91,9 @@ import net.fortuna.ical4j.model.Calendar;
 public class ICALToJsonAttribute extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICALToJsonAttribute.class);
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<byte[]>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<byte[]>>>) (Object) Map.class;
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<Calendar>>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, AttributeValue<Calendar>>>) (Object) Map.class;
 
     public static final String SOURCE_ATTRIBUTE_NAME = "source";
     public static final String RAW_SOURCE_ATTRIBUTE_NAME = "rawSource";
@@ -164,14 +164,14 @@ public class ICALToJsonAttribute extends GenericMailet {
         try {
             AttributeUtils.getValueAndCastFromMail(mail, sourceAttributeName, MAP_STRING_CALENDAR_CLASS)
                 .ifPresent(calendars -> AttributeUtils.getValueAndCastFromMail(mail, rawSourceAttributeName, MAP_STRING_BYTES_CLASS)
-                    .ifPresent(Throwing.<Map<String, byte[]>>consumer(rawCalendars ->
+                    .ifPresent(Throwing.<Map<String, AttributeValue<byte[]>>>consumer(rawCalendars ->
                         setAttribute(mail, calendars, rawCalendars)).sneakyThrow()));
         } catch (ClassCastException e) {
             LOGGER.error("Received a mail with {} not being an ICAL object for mail {}", sourceAttributeName, mail.getName(), e);
         }
     }
 
-    private void setAttribute(Mail mail, Map<String, Calendar> calendars, Map<String, byte[]> rawCalendars) throws MessagingException {
+    private void setAttribute(Mail mail, Map<String, AttributeValue<Calendar>> calendars, Map<String, AttributeValue<byte[]>> rawCalendars) throws MessagingException {
         Optional<MailAddress> sender = retrieveSender(mail);
         if (!sender.isPresent()) {
             LOGGER.info("Skipping {} because no sender and no from", mail.getName());
@@ -181,11 +181,11 @@ public class ICALToJsonAttribute extends GenericMailet {
         MailAddress transportSender = sender.get();
         MailAddress replyTo = fetchReplyTo(mail).orElse(transportSender);
 
-        Map<String, byte[]> jsonsInByteForm = calendars.entrySet()
+        Map<String, AttributeValue<?>> jsonsInByteForm = calendars.entrySet()
             .stream()
             .flatMap(calendar -> toJson(calendar, rawCalendars, mail, transportSender, replyTo))
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
-        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.ofAny(jsonsInByteForm)));
+        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(jsonsInByteForm)));
     }
 
     private Optional<MailAddress> fetchReplyTo(Mail mail) throws MessagingException {
@@ -216,8 +216,8 @@ public class ICALToJsonAttribute extends GenericMailet {
         }
     }
 
-    private Stream<Pair<String, byte[]>> toJson(Map.Entry<String, Calendar> entry,
-                                                Map<String, byte[]> rawCalendars,
+    private Stream<Pair<String, AttributeValue<byte[]>>> toJson(Map.Entry<String, AttributeValue<Calendar>> entry,
+                                                Map<String, AttributeValue<byte[]>> rawCalendars,
                                                 Mail mail,
                                                 MailAddress sender,
                                                 MailAddress replyTo) {
@@ -225,7 +225,8 @@ public class ICALToJsonAttribute extends GenericMailet {
             .stream()
             .flatMap(recipient -> toICAL(entry, rawCalendars, recipient, sender, replyTo))
             .flatMap(ical -> toJson(ical, mail.getName()))
-            .map(json -> Pair.of(UUID.randomUUID().toString(), json.getBytes(StandardCharsets.UTF_8)));
+            .map(json -> Pair.of(UUID.randomUUID().toString(),
+                AttributeValue.of(json.getBytes(StandardCharsets.UTF_8))));
     }
 
     private Stream<String> toJson(ICALAttributeDTO ical, String mailName) {
@@ -240,20 +241,20 @@ public class ICALToJsonAttribute extends GenericMailet {
         }
     }
 
-    private Stream<ICALAttributeDTO> toICAL(Map.Entry<String, Calendar> entry,
-                                            Map<String, byte[]> rawCalendars,
+    private Stream<ICALAttributeDTO> toICAL(Map.Entry<String, AttributeValue<Calendar>> entry,
+                                            Map<String, AttributeValue<byte[]>> rawCalendars,
                                             MailAddress recipient,
                                             MailAddress sender,
                                             MailAddress replyTo) {
-        Calendar calendar = entry.getValue();
-        byte[] rawICal = rawCalendars.get(entry.getKey());
-        if (rawICal == null) {
+        Calendar calendar = entry.getValue().getValue();
+        Optional<byte[]> rawICal = Optional.ofNullable(rawCalendars.get(entry.getKey())).map(AttributeValue::getValue);
+        if (!rawICal.isPresent()) {
             LOGGER.debug("Cannot find matching raw ICAL from key: {}", entry.getKey());
             return Stream.of();
         }
         try {
             return Stream.of(ICALAttributeDTO.builder()
-                .from(calendar, rawICal)
+                .from(calendar, rawICal.get())
                 .sender(sender)
                 .recipient(recipient)
                 .replyTo(replyTo));

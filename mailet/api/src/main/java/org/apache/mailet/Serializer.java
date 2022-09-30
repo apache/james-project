@@ -27,6 +27,7 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,7 @@ public interface Serializer<T> {
                     DOUBLE_SERIALIZER,
                     DATE_SERIALIZER,
                     MESSAGE_ID_DTO_SERIALIZER,
+                    BYTES_SERIALIZER,
                     new Serializer.ArbitrarySerializableSerializer<>(),
                     URL_SERIALIZER,
                     new CollectionSerializer<>(),
@@ -677,6 +679,42 @@ public interface Serializer<T> {
         @Override
         public String getName() {
             return "FSTSerializer";
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return this.getClass() == other.getClass();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass());
+        }
+    }
+
+    Serializer<byte[]> BYTES_SERIALIZER = new BytesSerializer();
+
+    class BytesSerializer implements Serializer<byte[]> {
+
+        @Override
+        public JsonNode serialize(byte[] object) {
+            return STRING_SERIALIZER.serialize(Base64.getEncoder().encodeToString(object));
+        }
+
+        @Override
+        public Optional<byte[]> deserialize(JsonNode json) {
+            return STRING_SERIALIZER.deserialize(json).map(Base64.getDecoder()::decode);
+        }
+
+        @Override
+        public String getName() {
+            return "BytesSerializer";
+        }
+
+        @Override
+        public byte[] duplicate(byte[] value) {
+            // Assume byte arrays never to be mutated
+            return value;
         }
 
         @Override

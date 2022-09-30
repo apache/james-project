@@ -69,7 +69,7 @@ import net.fortuna.ical4j.model.Calendar;
 public class ICalendarParser extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICalendarParser.class);
     @SuppressWarnings("unchecked")
-    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static final Class<Map<String, AttributeValue<byte[]>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<byte[]>>>) (Object) Map.class;
 
     public static final String SOURCE_ATTRIBUTE_PARAMETER_NAME = "sourceAttribute";
     public static final String DESTINATION_ATTRIBUTE_PARAMETER_NAME = "destinationAttribute";
@@ -116,13 +116,13 @@ public class ICalendarParser extends GenericMailet {
             .ifPresent(icsAttachments -> addCalendarsToAttribute(mail, icsAttachments));
     }
 
-    private void addCalendarsToAttribute(Mail mail, Map<String, byte[]> icsAttachments) {
-        Map<String, Calendar> calendars = icsAttachments.entrySet()
+    private void addCalendarsToAttribute(Mail mail, Map<String, AttributeValue<byte[]>> icsAttachments) {
+        Map<String, AttributeValue<?>> calendars = icsAttachments.entrySet()
             .stream()
-            .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue()))
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+            .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue().getValue()))
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, pair -> AttributeValue.ofSerializable(pair.getValue())));
 
-        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.ofAny(calendars)));
+        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(calendars)));
     }
 
     @Override

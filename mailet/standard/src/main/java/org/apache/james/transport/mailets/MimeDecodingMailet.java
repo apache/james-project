@@ -79,32 +79,32 @@ public class MimeDecodingMailet extends GenericMailet {
     }
 
     private void setAttribute(Mail mail, Attribute attribute) {
-        Function<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>> convertToMapContent =
+        Function<Map.Entry<String, AttributeValue<byte[]>>, Stream<Pair<String, byte[]>>> convertToMapContent =
             Throwing
-                .<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>>function(entry ->
-                    extractContent(entry.getValue())
+                .<Map.Entry<String, AttributeValue<byte[]>>, Stream<Pair<String, byte[]>>>function(entry ->
+                    extractContent(entry.getValue().getValue())
                         .stream()
                         .map(content -> Pair.of(entry.getKey(), content)))
                 .sneakyThrow();
 
-        ImmutableMap<String, byte[]> extractedMimeContentByName = getAttributeContent(attribute)
+        Map<String, AttributeValue<?>> extractedMimeContentByName = getAttributeContent(attribute)
                 .entrySet()
                 .stream()
                 .flatMap(convertToMapContent)
-                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, pair -> AttributeValue.of(pair.getValue())));
 
-        mail.setAttribute(new Attribute(attributeName, AttributeValue.ofAny(extractedMimeContentByName)));
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(extractedMimeContentByName)));
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, byte[]> getAttributeContent(Attribute attribute) {
+    private Map<String, AttributeValue<byte[]>> getAttributeContent(Attribute attribute) {
         Object attributeValue = attribute.getValue().value();
         if (! (attributeValue instanceof Map)) {
             LOGGER.debug("Invalid attribute found into attribute {} class Map expected but {} found.",
                     attribute, attributeValue.getClass());
             return ImmutableMap.of();
         }
-        return (Map<String, byte[]>) attributeValue;
+        return (Map<String, AttributeValue<byte[]>>) attributeValue;
     }
 
     private Optional<byte[]> extractContent(Object rawMime) throws MessagingException {
