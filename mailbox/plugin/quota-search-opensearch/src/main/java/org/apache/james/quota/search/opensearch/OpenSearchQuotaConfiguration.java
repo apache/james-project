@@ -81,9 +81,9 @@ public class OpenSearchQuotaConfiguration {
         return new Builder();
     }
 
-    public static final String ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME = "elasticsearch.index.quota.ratio.name";
-    public static final String ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME = "elasticsearch.alias.read.quota.ratio.name";
-    public static final String ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME = "elasticsearch.alias.write.quota.ratio.name";
+    public static final String ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME = "opensearch.index.quota.ratio.name";
+    public static final String ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME = "opensearch.alias.read.quota.ratio.name";
+    public static final String ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME = "opensearch.alias.write.quota.ratio.name";
 
     public static final OpenSearchQuotaConfiguration DEFAULT_CONFIGURATION = builder().build();
 

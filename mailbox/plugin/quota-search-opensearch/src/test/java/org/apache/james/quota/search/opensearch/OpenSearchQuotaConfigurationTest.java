@@ -33,8 +33,8 @@ class OpenSearchQuotaConfigurationTest {
     void getReadAliasQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.read.quota.ratio.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.read.quota.ratio.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
@@ -45,7 +45,7 @@ class OpenSearchQuotaConfigurationTest {
     @Test
     void getReadAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
@@ -57,8 +57,8 @@ class OpenSearchQuotaConfigurationTest {
     void getWriteAliasQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.write.quota.ratio.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.write.quota.ratio.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
@@ -69,7 +69,7 @@ class OpenSearchQuotaConfigurationTest {
     @Test
     void getWriteAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
@@ -81,8 +81,8 @@ class OpenSearchQuotaConfigurationTest {
     void getIndexQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.index.quota.ratio.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.quota.ratio.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 
@@ -93,7 +93,7 @@ class OpenSearchQuotaConfigurationTest {
     @Test
     void getIndexQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchQuotaConfiguration elasticSearchConfiguration = OpenSearchQuotaConfiguration.fromProperties(configuration);
 

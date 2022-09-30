@@ -78,13 +78,13 @@ public class OpenSearchMailboxConfiguration {
         return new Builder();
     }
 
-    private static final String ELASTICSEARCH_INDEX_NAME = "elasticsearch.index.name";
-    private static final String ELASTICSEARCH_INDEX_MAILBOX_NAME = "elasticsearch.index.mailbox.name";
-    private static final String ELASTICSEARCH_ALIAS_READ_NAME = "elasticsearch.alias.read.name";
-    private static final String ELASTICSEARCH_ALIAS_WRITE_NAME = "elasticsearch.alias.write.name";
-    private static final String ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME = "elasticsearch.alias.read.mailbox.name";
-    private static final String ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME = "elasticsearch.alias.write.mailbox.name";
-    private static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "elasticsearch.indexAttachments";
+    private static final String ELASTICSEARCH_INDEX_NAME = "opensearch.index.name";
+    private static final String ELASTICSEARCH_INDEX_MAILBOX_NAME = "opensearch.index.mailbox.name";
+    private static final String ELASTICSEARCH_ALIAS_READ_NAME = "opensearch.alias.read.name";
+    private static final String ELASTICSEARCH_ALIAS_WRITE_NAME = "opensearch.alias.write.name";
+    private static final String ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME = "opensearch.alias.read.mailbox.name";
+    private static final String ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME = "opensearch.alias.write.mailbox.name";
+    private static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "opensearch.indexAttachments";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
 
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
