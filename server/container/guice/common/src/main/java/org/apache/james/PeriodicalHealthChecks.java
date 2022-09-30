@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
@@ -46,7 +47,7 @@ public class PeriodicalHealthChecks implements Startable {
     private Disposable disposable;
 
     @Inject
-    PeriodicalHealthChecks(Set<HealthCheck> healthChecks, PeriodicalHealthChecksConfiguration configuration) {
+    PeriodicalHealthChecks(@Named("resolved-checks") Set<HealthCheck> healthChecks, PeriodicalHealthChecksConfiguration configuration) {
         this.healthChecks = healthChecks;
         this.configuration = configuration;
     }

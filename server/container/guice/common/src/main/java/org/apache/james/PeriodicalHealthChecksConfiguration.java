@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.configuration2.Configuration;
@@ -32,6 +33,7 @@ import com.google.common.base.Preconditions;
 public class PeriodicalHealthChecksConfiguration {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
+    private static final String ADDITIONAL_HEALTH_CHECK = "additional.healthchecks";
     private static final Duration DEFAULT_HEALTH_CHECK_PERIOD = Duration.ofSeconds(60);
     private static final Duration MINIMAL_HEALTH_CHECK_PERIOD = Duration.ofSeconds(10);
     public static final PeriodicalHealthChecksConfiguration DEFAULT_CONFIGURATION = builder()
@@ -47,16 +49,23 @@ public class PeriodicalHealthChecksConfiguration {
 
         class ReadyToBuild {
             private final Duration period;
+            private List<String> additionalHealthChecks;
 
             ReadyToBuild(Duration period) {
                 this.period = period;
+                this.additionalHealthChecks = List.of();
+            }
+
+            ReadyToBuild additionalHealthChecks(List<String> additionalHealthChecks) {
+                this.additionalHealthChecks = additionalHealthChecks;
+                return this;
             }
 
             PeriodicalHealthChecksConfiguration build() {
                 Preconditions.checkArgument(period.compareTo(MINIMAL_HEALTH_CHECK_PERIOD) >= 0,
                     "'period' must be equal or greater than %d ms", MINIMAL_HEALTH_CHECK_PERIOD.toMillis());
 
-                return new PeriodicalHealthChecksConfiguration(period);
+                return new PeriodicalHealthChecksConfiguration(period, additionalHealthChecks);
             }
         }
     }
@@ -68,18 +77,30 @@ public class PeriodicalHealthChecksConfiguration {
     public static PeriodicalHealthChecksConfiguration from(Configuration configuration) {
         return builder()
             .period(getDurationFromConfiguration(configuration))
+            .additionalHealthChecks(List.of(configuration.getStringArray(ADDITIONAL_HEALTH_CHECK)))
             .build();
     }
 
     private final Duration period;
+    private final List<String> additionalHealthChecks;
+
+    PeriodicalHealthChecksConfiguration(Duration period, List<String> additionalHealthChecks) {
+        this.period = period;
+        this.additionalHealthChecks = additionalHealthChecks;
+    }
 
     @VisibleForTesting
     PeriodicalHealthChecksConfiguration(Duration period) {
         this.period = period;
+        this.additionalHealthChecks = List.of();
     }
 
     public Duration getPeriod() {
         return period;
+    }
+
+    public List<String> getAdditionalHealthChecks() {
+        return additionalHealthChecks;
     }
 
     @Override
@@ -87,14 +108,15 @@ public class PeriodicalHealthChecksConfiguration {
         if (o instanceof PeriodicalHealthChecksConfiguration) {
             PeriodicalHealthChecksConfiguration that = (PeriodicalHealthChecksConfiguration) o;
 
-            return Objects.equals(this.period, that.period);
+            return Objects.equals(this.period, that.period)
+                && Objects.equals(this.additionalHealthChecks, that.additionalHealthChecks);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(period);
+        return Objects.hash(period, additionalHealthChecks);
     }
 
     private static Duration getDurationFromConfiguration(Configuration configuration) {

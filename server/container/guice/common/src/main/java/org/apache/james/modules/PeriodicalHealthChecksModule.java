@@ -20,23 +20,31 @@
 package org.apache.james.modules;
 
 import java.io.FileNotFoundException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.PeriodicalHealthChecks;
 import org.apache.james.PeriodicalHealthChecksConfiguration;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.NamingScheme;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Named;
 
 public class PeriodicalHealthChecksModule extends AbstractModule {
 
@@ -46,6 +54,24 @@ public class PeriodicalHealthChecksModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), HealthCheck.class);
+    }
+
+    @Singleton
+    @Provides
+    @Named("resolved-checks")
+    Set<HealthCheck> provideHealthChecks(Set<HealthCheck> builtInHealthChecks, GuiceGenericLoader loader,
+                                         PeriodicalHealthChecksConfiguration configuration) {
+        Set<HealthCheck> additionalHealthChecks = configuration.getAdditionalHealthChecks()
+            .stream()
+            .map(ClassName::new)
+            .map(Throwing.function(loader.<HealthCheck>withNamingSheme(NamingScheme.IDENTITY)::instantiate))
+            .peek(additionalHealthCheck -> LOGGER.info("Loading additional Healthcheck {}", additionalHealthCheck.getClass().getCanonicalName()))
+            .collect(Collectors.toSet());
+
+        return ImmutableSet.<HealthCheck>builder()
+            .addAll(builtInHealthChecks)
+            .addAll(additionalHealthChecks)
+            .build();
     }
 
     @Singleton
