@@ -35,10 +35,10 @@ public class EMailer implements SerializableMessage {
     public EMailer(Optional<String> name, String address, String domain) {
         this.name = name;
         this.address = address;
-        this.domain = la(domain);
+        this.domain = removeTopDomain(domain);
     }
 
-    String la(String s) {
+    String removeTopDomain(String s) {
         if (s.contains(".")) {
             return s.substring(0, s.lastIndexOf('.'));
         }
