@@ -285,6 +285,7 @@ class PulsarMailQueue(
       case CompletionStatus.REJECT =>
         Await.ready(message.nack(), awaitTimeout)
     }
+  }
 
   def registerDequeueSubscription(): Unit = consumer().close()
 
