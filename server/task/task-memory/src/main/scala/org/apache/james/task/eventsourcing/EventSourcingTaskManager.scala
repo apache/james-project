@@ -19,20 +19,18 @@
 package org.apache.james.task.eventsourcing
 
 import com.google.common.annotations.VisibleForTesting
-import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, EventSourcingSystem, Subscriber}
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.task.TaskManager.ReachedTimeoutException
 import org.apache.james.task._
 import org.apache.james.task.eventsourcing.TaskCommand._
-import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.publisher.{Flux, Mono}
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
 import java.io.Closeable
-import java.time.{Duration, Instant}
+import java.time.Duration
 import java.util
 import javax.annotation.PreDestroy
 import javax.inject.Inject
@@ -103,17 +101,6 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     val command = RequestCancel(id)
     SMono(eventSourcingSystem.dispatch(command)).block()
   }
-
-  override def remove(beforeDate: Instant): Publisher[Pair[TaskId, Task.Result]] =
-    SFlux(executionDetailsProjection.listDetailsByBeforeDate(beforeDate))
-      .filter(oldTaskDetail => !(oldTaskDetail.getStatus.equals(TaskManager.Status.WAITING) || oldTaskDetail.getStatus.equals(TaskManager.Status.IN_PROGRESS)))
-      .flatMap(oldTaskDetail => SMono(eventStore.remove(new TaskAggregateId(oldTaskDetail.taskId)))
-        .`then`(SMono(executionDetailsProjection.remove(oldTaskDetail)))
-        .`then`(SMono.just(Pair.of(oldTaskDetail.taskId, Task.Result.COMPLETED)))
-        .onErrorResume(error => {
-          LOGGER.error("Error while cleanup task {}", oldTaskDetail.taskId.asString, error)
-          return SMono.just(Pair.of(oldTaskDetail.taskId, Task.Result.PARTIAL))
-        }))
 
   @throws(classOf[TaskNotFoundException])
   @throws(classOf[ReachedTimeoutException])

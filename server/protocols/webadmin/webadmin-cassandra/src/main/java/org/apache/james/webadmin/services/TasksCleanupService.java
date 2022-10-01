@@ -25,9 +25,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.eventsourcing.TaskAggregateId;
+import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,15 +85,18 @@ public class TasksCleanupService {
         }
     }
 
-    private final TaskManager taskManager;
+    private final TaskExecutionDetailsProjection taskExecutionDetailsProjection;
+    private final EventStore eventStore;
 
     @Inject
-    public TasksCleanupService(TaskManager taskManager) {
-        this.taskManager = taskManager;
+    public TasksCleanupService(TaskExecutionDetailsProjection taskExecutionDetailsProjection,
+                               EventStore eventStore) {
+        this.eventStore = eventStore;
+        this.taskExecutionDetailsProjection = taskExecutionDetailsProjection;
     }
 
     public Mono<Task.Result> removeBeforeDate(Instant beforeDate, Context context) {
-        return Flux.from(taskManager.remove(beforeDate))
+        return removeTask(beforeDate)
             .doOnNext(pair -> doOnNext(pair, context))
             .map(Pair::getValue)
             .reduce(Task.Result.COMPLETED, Task::combine)
@@ -98,6 +104,19 @@ public class TasksCleanupService {
                 LOGGER.error("Error listing tasks execution detail", e);
                 return Mono.just(Task.Result.PARTIAL);
             });
+    }
+
+    private Flux<Pair<TaskId, Task.Result>> removeTask(Instant beforeDate) {
+        return Flux.from(taskExecutionDetailsProjection.listDetailsByBeforeDate(beforeDate))
+            .filter(oldTaskDetail -> !(oldTaskDetail.getStatus().equals(TaskManager.Status.WAITING)
+                || oldTaskDetail.getStatus().equals(TaskManager.Status.IN_PROGRESS)))
+            .flatMap(oldTaskDetail -> Mono.from(eventStore.remove(new TaskAggregateId(oldTaskDetail.getTaskId())))
+                .then(Mono.from(taskExecutionDetailsProjection.remove(oldTaskDetail)))
+                .then(Mono.just(Pair.of(oldTaskDetail.getTaskId(), Task.Result.COMPLETED)))
+                .onErrorResume(error -> {
+                    LOGGER.error("Error while cleanup task {}", oldTaskDetail.getTaskId().asString(), error);
+                    return Mono.just(Pair.of(oldTaskDetail.getTaskId(), Task.Result.PARTIAL));
+                }));
     }
 
     private static void doOnNext(Pair<TaskId, Task.Result> next, Context context) {

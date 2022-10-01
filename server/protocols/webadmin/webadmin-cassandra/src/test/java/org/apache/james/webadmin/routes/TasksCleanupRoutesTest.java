@@ -24,7 +24,6 @@ import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.mock;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -45,11 +44,8 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskType;
 import org.apache.james.task.eventsourcing.Created;
-import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.MemoryTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TaskAggregateId;
-import org.apache.james.task.eventsourcing.TerminationSubscriber;
-import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.services.TasksCleanupService;
@@ -99,8 +95,7 @@ public class TasksCleanupRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         eventStore = new InMemoryEventStore();
         taskExecutionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
-        TaskManager eventSourcingTaskManager = new EventSourcingTaskManager(mock(WorkQueueSupplier.class), eventStore, taskExecutionDetailsProjection, new Hostname("foo"), mock(TerminationSubscriber.class));
-        TasksCleanupService tasksCleanupService = new TasksCleanupService(eventSourcingTaskManager);
+        TasksCleanupService tasksCleanupService = new TasksCleanupService(taskExecutionDetailsProjection, eventStore);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksCleanupRoutes(taskManager, clock, tasksCleanupService, jsonTransformer),
