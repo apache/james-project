@@ -103,12 +103,12 @@ public class PostDequeueDecoratorTest {
     @Test
     public void doneShouldCallDecoratedDone() throws Exception {
         try {
-            testee.done(true);
+            testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         } catch (Exception e) {
             //Ignore
         }
 
-        verify(mockedMailQueueItem).done(true);
+        verify(mockedMailQueueItem).done(MailQueueItem.CompletionStatus.SUCCESS);
     }
     
     @Test
@@ -121,7 +121,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(sentMessageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
     }
     
     @Test(expected = MailboxRoleNotFoundException.class)
@@ -133,7 +133,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
 
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
     }
     
     @Test
@@ -146,7 +146,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager sentMailbox = mailboxManager.getMailbox(SENT_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = sentMailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -164,7 +164,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -182,7 +182,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
         
-        testee.done(false);
+        testee.done(MailQueueItem.CompletionStatus.RETRY);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -198,7 +198,7 @@ public class PostDequeueDecoratorTest {
         MessageManager messageManager = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         messageManager.appendMessage(AppendCommand.from(message), mailboxSession);
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -215,7 +215,7 @@ public class PostDequeueDecoratorTest {
         ComposedMessageId messageId = messageManager.appendMessage(AppendCommand.from(message), mailboxSession).getId();
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -232,7 +232,7 @@ public class PostDequeueDecoratorTest {
         messageManager.appendMessage(AppendCommand.from(message), mailboxSession);
         mail.setAttribute(USERNAME_ATTRIBUTE);
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -250,7 +250,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(USERNAME_ATTRIBUTE);
         mail.setAttribute(messageIdAttribute("invalid"));
         
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroup.FULL_CONTENT, mailboxSession);
@@ -281,8 +281,8 @@ public class PostDequeueDecoratorTest {
         when(messageIdManager.setFlagsReactive(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class)))
             .thenReturn(Mono.empty());
 
-        testee.done(true);
-        testee.done(true);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
+        testee.done(MailQueueItem.CompletionStatus.SUCCESS);
 
         verify(messageIdManager, times(1)).getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
         verify(messageIdManager, times(1)).setInMailboxesReactive(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
@@ -308,7 +308,7 @@ public class PostDequeueDecoratorTest {
         when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class)))
             .thenReturn(Flux.error(new MailboxException()));
 
-        assertThatThrownBy(() -> testee.done(true))
+        assertThatThrownBy(() -> testee.done(MailQueueItem.CompletionStatus.SUCCESS))
             .hasCauseInstanceOf(MailboxException.class);
     }
 
