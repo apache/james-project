@@ -189,15 +189,6 @@ public class AttributeValue<T> {
         return fromJson(tree);
     }
 
-    public static Optional<AttributeValue<?>> optionalFromJsonString(String json) {
-        try {
-            return Optional.of(fromJsonString(json));
-        } catch (IOException e) {
-            LOGGER.error("Error while deserializing '" + json + "'", e);
-            return Optional.empty();
-        }
-    }
-
     public static AttributeValue<?> fromJson(JsonNode input) {
         return Optional.ofNullable(input)
                 .filter(ObjectNode.class::isInstance)
