@@ -75,6 +75,7 @@ public class FeedSpamToRspamdTaskTest {
     static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
 
     public static final Domain DOMAIN = Domain.of("domain.tld");
+    public static final Username CEDRIC = Username.fromLocalPartWithDomain("cedric", DOMAIN);
     public static final Username BOB = Username.fromLocalPartWithDomain("bob", DOMAIN);
     public static final Username ALICE = Username.fromLocalPartWithDomain("alice", DOMAIN);
     public static final MailboxPath BOB_SPAM_MAILBOX = MailboxPath.forUser(BOB, SPAM_MAILBOX_NAME);
@@ -208,6 +209,19 @@ public class FeedSpamToRspamdTaskTest {
                 .reportedSpamMessageCount(0)
                 .errorCount(0)
                 .build());
+    }
+
+    @Test
+    void taskShouldNotFailWhenMissingSpamMailbox() throws Exception {
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+
+        usersRepository.addUser(CEDRIC, "kdvebv");
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test

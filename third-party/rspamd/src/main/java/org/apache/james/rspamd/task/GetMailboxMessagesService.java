@@ -20,6 +20,7 @@
 package org.apache.james.rspamd.task;
 
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
+import static org.apache.james.task.Task.LOGGER;
 
 import java.util.Date;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -83,6 +85,10 @@ public class GetMailboxMessagesService {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
         return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName), mailboxSession))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.info("Missing Spam mailbox {}", e.getMessage());
+                return Mono.empty();
+            })
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
