@@ -161,6 +161,8 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     @Override
     public void close() {
+        Optional.ofNullable(runningTask.get())
+            .ifPresent(task -> cancelTask(task.getT1()));
         taskExecutor.dispose();
     }
 }
