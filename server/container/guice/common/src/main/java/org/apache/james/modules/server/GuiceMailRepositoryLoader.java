@@ -20,9 +20,9 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryLoader;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.mailrepository.memory.MailRepositoryLoader;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
 

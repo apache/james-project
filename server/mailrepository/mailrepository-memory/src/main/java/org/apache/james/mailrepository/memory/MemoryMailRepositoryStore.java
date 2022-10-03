@@ -35,6 +35,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.Initializable;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryLoader;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;

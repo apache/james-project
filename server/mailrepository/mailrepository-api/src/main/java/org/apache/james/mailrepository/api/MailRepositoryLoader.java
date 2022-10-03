@@ -17,11 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.memory;
-
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+package org.apache.james.mailrepository.api;
 
 public interface MailRepositoryLoader {
     MailRepository load(String fullyQualifiedClassName, MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException;
