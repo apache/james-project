@@ -30,6 +30,8 @@ import java.util.Optional;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.ImapSession.SessionId;
@@ -37,6 +39,8 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
+import org.apache.james.imap.message.request.AbstractImapRequest;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.util.MDCBuilder;
@@ -244,33 +248,50 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
                 response.untaggedResponse(ImapConstants.BAD + " failed. Maximum command line length exceeded");
 
+            } else if (cause instanceof ReactiveThrottler.RejectedException) {
+                manageRejectedException(ctx, (ReactiveThrottler.RejectedException) cause);
             } else {
-
-                // logout on error not sure if that is the best way to handle it
-                final ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-
-                Optional.ofNullable(imapSession)
-                    .map(ImapSession::logout)
-                    .orElse(Mono.empty())
-                    .doFinally(Throwing.consumer(signal -> {
-                        // Make sure we close the channel after all the buffers were flushed out
-                        Channel channel = ctx.channel();
-                        if (channel.isActive()) {
-                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                        }
-                        super.channelInactive(ctx);
-                    }))
-                    .subscribe(any -> {
-
-                    }, e -> {
-                        LOGGER.error("Exception while handling errors for channel {}", ctx.channel(), e);
-                        Channel channel = ctx.channel();
-                        if (channel.isActive()) {
-                            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                        }
-                    });
+                manageUnknownError(ctx);
             }
         }
+    }
+
+    private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) {
+        if (cause.getImapMessage() instanceof AbstractImapRequest) {
+            AbstractImapRequest req = (AbstractImapRequest) cause.getImapMessage();
+            ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
+
+            new ResponseEncoder(encoder, response)
+            .respond(new ImmutableStatusResponse(StatusResponse.Type.NO, req.getTag(), req.getCommand(), new HumanReadableText(cause.getClass().getName(), cause.getMessage()), null));
+        } else {
+            manageUnknownError(ctx);
+        }
+    }
+
+    private void manageUnknownError(ChannelHandlerContext ctx) {
+        // logout on error not sure if that is the best way to handle it
+        final ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+
+        Optional.ofNullable(imapSession)
+            .map(ImapSession::logout)
+            .orElse(Mono.empty())
+            .doFinally(Throwing.consumer(signal -> {
+                // Make sure we close the channel after all the buffers were flushed out
+                Channel channel = ctx.channel();
+                if (channel.isActive()) {
+                    channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+                }
+                super.channelInactive(ctx);
+            }))
+            .subscribe(any -> {
+
+            }, e -> {
+                LOGGER.error("Exception while handling errors for channel {}", ctx.channel(), e);
+                Channel channel = ctx.channel();
+                if (channel.isActive()) {
+                    channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+                }
+            });
     }
 
     @Override
@@ -316,7 +337,9 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     }
                     ctx.fireChannelReadComplete();
                 }))
-                .contextWrite(ReactorUtils.context("imap", mdc(ctx))))
+                .contextWrite(ReactorUtils.context("imap", mdc(ctx))), message)
+            // Manage throttling errors
+            .doOnError(ctx::fireExceptionCaught)
             .subscribe();
     }
 

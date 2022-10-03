@@ -23,6 +23,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.reactivestreams.Publisher;
 
@@ -31,8 +32,15 @@ import reactor.core.publisher.Sinks;
 
 public class ReactiveThrottler {
     public static class RejectedException extends RuntimeException {
-        public RejectedException(String message) {
+        private final ImapMessage imapMessage;
+
+        public RejectedException(String message, ImapMessage imapMessage) {
             super(message);
+            this.imapMessage = imapMessage;
+        }
+
+        public ImapMessage getImapMessage() {
+            return imapMessage;
         }
     }
 
@@ -49,7 +57,7 @@ public class ReactiveThrottler {
         this.maxQueueSize = maxQueueSize;
     }
 
-    public Mono<Void> throttle(Publisher<Void> task) {
+    public Mono<Void> throttle(Publisher<Void> task, ImapMessage imapMessage) {
         if (maxConcurrentRequests < 0) {
             return Mono.from(task);
         }
@@ -73,7 +81,7 @@ public class ReactiveThrottler {
                 String.format(
                     "The IMAP server has reached its maximum capacity "
                         + "(concurrent requests: %d, queue size: %d)",
-                    maxConcurrentRequests, maxQueueSize)));
+                    maxConcurrentRequests, maxQueueSize), imapMessage));
         }
     }
 
