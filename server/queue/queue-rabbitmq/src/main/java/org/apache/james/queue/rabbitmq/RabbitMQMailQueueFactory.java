@@ -167,7 +167,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(configuration.workQueueArgumentsBuilder()
+                .arguments(configuration.workQueueArgumentsBuilder(!AUTO_DELETE)
                     .deadLetter(mailQueueName.toDeadLetterExchangeName())
                     .build())),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
