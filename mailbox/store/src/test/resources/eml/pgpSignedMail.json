@@ -146,13 +146,15 @@
   "from": [
 	{
 	  "name": "Markus Koschany",
-	  "address": "apo@gambaru.de"
+	  "address": "apo@gambaru.de",
+	  "domain": "gambaru"
 	}
   ],
   "to": [
 	{
 	  "name": null,
-	  "address": "debian-security-announce@lists.debian.org"
+	  "address": "debian-security-announce@lists.debian.org",
+	  "domain": "lists.debian"
 	}
   ],
   "cc": [],

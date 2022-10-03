@@ -62,13 +62,15 @@
   "from": [
     {
       "name": "Matthieu Baechler",
-      "address": "mbaechler@linagora.com"
+      "address": "mbaechler@linagora.com",
+      "domain": "linagora"
     }
   ],
   "to": [
     {
       "name": null,
-      "address": "btellier@linagora.com"
+      "address": "btellier@linagora.com",
+      "domain":"linagora"
     }
   ],
   "cc": [],

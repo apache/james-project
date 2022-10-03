@@ -58,6 +58,7 @@ public interface JsonMessageConstants {
     interface EMailer {
         String NAME = "name";
         String ADDRESS = "address";
+        String DOMAIN = "domain";
     }
 
     interface HEADER {

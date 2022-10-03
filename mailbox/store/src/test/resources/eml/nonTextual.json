@@ -13,7 +13,11 @@
   "textBody":"This mail have a non textual attachment !\r\n",
   "cc":[],
   "date":"2015-06-07T00:00:00+0200",
-  "from":[{"name":"Benoit Tellier","address":"btellier@linagora.com"}],
+  "from":[{
+    "name":"Benoit Tellier",
+    "address":"btellier@linagora.com",
+    "domain":"linagora"
+  }],
   "hasAttachment":false,
   "headers": [{
     "name": "return-path",
@@ -61,7 +65,11 @@
   "size":25,
   "subject":["Test message"],
   "subtype":"text",
-  "to":[{"name":null,"address":"btellier@linagora.com"}],
+  "to":[{
+    "name":null,
+    "address":"btellier@linagora.com",
+    "domain":"linagora"
+  }],
   "uid":25,
   "userFlags":[],
   "mimeMessageID":"<5582A0CE.4020801@linagora.com>",

@@ -21,7 +21,8 @@
     "date": "2015-06-07T00:00:00+0200",
     "from": [{
         "name": "Bob",
-        "address": "bob@domain.tld"
+        "address": "bob@domain.tld",
+        "domain":"domain"
     }],
     "hasAttachment": false,
     "headers": [{
@@ -63,7 +64,8 @@
     "subtype": "text",
     "to": [{
         "name": "Alice",
-        "address": "alice@domain.tld"
+        "address": "alice@domain.tld",
+        "domain":"domain"
     }],
     "uid": 25,
     "userFlags": [],

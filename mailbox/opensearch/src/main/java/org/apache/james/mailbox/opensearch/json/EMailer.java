@@ -30,10 +30,19 @@ public class EMailer implements SerializableMessage {
 
     private final Optional<String> name;
     private final String address;
+    private final String domain;
 
-    public EMailer(Optional<String> name, String address) {
+    public EMailer(Optional<String> name, String address, String domain) {
         this.name = name;
         this.address = address;
+        this.domain = removeTopDomain(domain);
+    }
+
+    String removeTopDomain(String s) {
+        if (s.contains(".")) {
+            return s.substring(0, s.lastIndexOf('.'));
+        }
+        return s;
     }
 
     @JsonProperty(JsonMessageConstants.EMailer.NAME)
@@ -46,6 +55,11 @@ public class EMailer implements SerializableMessage {
         return address;
     }
 
+    @JsonProperty(JsonMessageConstants.EMailer.DOMAIN)
+    public String getDomain() {
+        return domain;
+    }
+
     @Override
     public String serialize() {
         return Joiner.on(" ").join(name.orElse(" "), address);
@@ -56,14 +70,15 @@ public class EMailer implements SerializableMessage {
         if (o instanceof EMailer) {
             EMailer otherEMailer = (EMailer) o;
             return Objects.equals(name, otherEMailer.name)
-                && Objects.equals(address, otherEMailer.address);
+                && Objects.equals(address, otherEMailer.address)
+                && Objects.equals(domain, otherEMailer.domain);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(name, address);
+        return Objects.hash(name, address, domain);
     }
 
     @Override
@@ -71,6 +86,7 @@ public class EMailer implements SerializableMessage {
         return MoreObjects.toStringHelper(this)
             .add("name", name)
             .add("address", address)
+            .add("domain", domain)
             .toString();
     }
 }

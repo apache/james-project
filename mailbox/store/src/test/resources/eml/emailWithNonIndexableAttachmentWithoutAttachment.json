@@ -23,7 +23,8 @@
    "from" : [
       {
          "address" : "laura.ro@linagora.com",
-         "name" : "Laura ROYET"
+         "name" : "Laura ROYET",
+         "domain":"linagora"
       }
    ],
    "isUnread" : false,
@@ -69,7 +70,8 @@
    "to" : [
       {
          "address" : "laura.ro@linagora.com",
-         "name" : "Laura ROYET"
+         "name" : "Laura ROYET",
+         "domain":"linagora"
       }
    ]
 }

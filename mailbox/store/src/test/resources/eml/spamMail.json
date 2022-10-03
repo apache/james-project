@@ -101,13 +101,15 @@
   "from": [
 	{
 	  "name": "Content-filter at spam.minet.net",
-	  "address": "postmaster@minet.net"
+	  "address": "postmaster@minet.net",
+	  "domain": "minet"
 	}
   ],
   "to": [
 	{
 	  "name": null,
-	  "address": "root@listes.minet.net"
+	  "address": "root@listes.minet.net",
+      "domain": "listes.minet"
 	}
   ],
   "cc": [],

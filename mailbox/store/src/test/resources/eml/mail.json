@@ -143,17 +143,20 @@
  "from": [
   {
    "name": "Murari",
-   "address": "murari.ksr@gmail.com"
+   "address": "murari.ksr@gmail.com",
+    "domain":"gmail"
   }
  ],
  "to": [
   {
    "name": "General Discussion about Arch Linux",
-   "address": "arch-general@archlinux.org"
+   "address": "arch-general@archlinux.org",
+    "domain":"archlinux"
   },
   {
    "name": "Üsteliğhan Maşrapa",
-   "address": "ustelighanmasrapa@domain.tld"
+   "address": "ustelighanmasrapa@domain.tld",
+    "domain":"domain"
   }
  ],
  "cc": [],
