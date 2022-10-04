@@ -1,0 +1,20 @@
+# Identity sort order
+
+> :warning:
+> Not implemented
+
+### urn:apache:james:params:jmap:mail:identity:sortorder
+
+This represents support for the extra `sortOrder` property on the `Identity` object.
+
+Servers supporting this specification MUST add this property to the capabilities object.
+
+This extension is specific to the Apache James server and is a temporary solution while waiting for the main work on
+Identity sort order as part of the IETF group to be finalized as a proper RFC document.
+
+### Additions to the Identity object
+
+This specification adds the following property on `Identity` object:
+
+- **sortOrder**: `UnsignedInt` (default: 0)  Defines the sort order of Identities when presented in the client’s UI, so
+it is consistent between devices. The number MUST be an integer in the range 0 <= sortOrder < 2^31.
