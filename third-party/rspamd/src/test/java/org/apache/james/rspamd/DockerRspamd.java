@@ -57,6 +57,7 @@ public class DockerRspamd {
             .withEnv("PASSWORD", PASSWORD)
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
+            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withMemory(236870912L))  // ~256MB
             .withNetwork(network);
     }
 

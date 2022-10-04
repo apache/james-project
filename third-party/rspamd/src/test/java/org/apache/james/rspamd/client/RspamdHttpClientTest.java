@@ -27,28 +27,43 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.github.fge.lambdas.Throwing;
+
+import io.netty.buffer.Unpooled;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientResponse;
 
 @Tag(Unstable.TAG)
 class RspamdHttpClientTest {
@@ -219,6 +234,46 @@ class RspamdHttpClientTest {
 
         AnalysisResult analysisResult = client.checkV2(nonVirusMessage).block();
         assertThat(analysisResult.hasVirus()).isFalse();
+    }
+
+    @Disabled
+    @Test
+    void concurrentTest() {
+        HttpClient httpClient = HttpClient.create()
+            .disableRetry(true)
+            .responseTimeout(Duration.ofSeconds(1000))
+            .baseUrl(rspamdExtension.getBaseUrl().toString())
+            .headers(headers -> headers.add("Password", PASSWORD));
+
+        AtomicInteger counter = new AtomicInteger();
+        AtomicInteger responseCounter = new AtomicInteger();
+
+        Flux<HttpClientResponse> rspamdRequestPublisher = Flux.range(0, 100)
+            .map(i -> Throwing.supplier(() -> getRandomMail().getMessage().getInputStream()).get())
+            .doOnNext(e -> System.out.println("Hit Counter: " + counter.incrementAndGet()))
+            .flatMap(mail -> httpClient.post()
+                .uri("/learnspam")
+                .send(ReactorUtils.toChunks(mail, 16384)
+                    .map(Unpooled::wrappedBuffer)
+                    .subscribeOn(Schedulers.boundedElastic()))
+                .response()
+                .doOnNext(e -> System.out.printf("Response counter = %s, status = %s%n", responseCounter.incrementAndGet(), e.status().code())), 16);
+
+        assertThatThrownBy(() -> rspamdRequestPublisher.last().block())
+            .doesNotThrowAnyException();
+    }
+
+    private Mail getRandomMail() throws Exception {
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("test" + UUID.randomUUID())
+            .setText(RandomStringUtils.random(1000000, true, true))
+            .build();
+
+        return FakeMail.builder()
+            .name("spam")
+            .sender(String.format("%s@sender.com", UUID.randomUUID()))
+            .mimeMessage(mimeMessage)
+            .build();
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
