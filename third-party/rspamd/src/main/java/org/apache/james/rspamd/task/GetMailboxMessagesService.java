@@ -65,7 +65,7 @@ public class GetMailboxMessagesService {
     public Flux<MessageResult> getMailboxMessagesOfAllUser(String mailboxName, Optional<Date> afterDate, RunningOptions runningOptions,
                                                            FeedSpamToRspamdTask.Context context) {
         return Flux.from(userRepository.listReactive())
-            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context), ReactorUtils.DEFAULT_CONCURRENCY);
+            .flatMap(username -> getMailboxMessagesOfAUser(username, mailboxName, afterDate, runningOptions, context), 2);
     }
 
     public Flux<MessageResult> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
@@ -88,7 +88,7 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
             .filter(message -> randomBooleanWithProbability(runningOptions))
-            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession))
+            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
             .filter(runningOptions.correspondingClassificationFilter());
     }
 
@@ -102,7 +102,7 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
             .filter(message -> randomBooleanWithProbability(runningOptions))
-            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession))
+            .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
             .filter(runningOptions.correspondingClassificationFilter());
     }
 
