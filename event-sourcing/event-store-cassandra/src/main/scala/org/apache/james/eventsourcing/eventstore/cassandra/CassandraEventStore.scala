@@ -51,4 +51,6 @@ class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends Event
   override def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
     eventStoreDao.getEventsOfAggregate(aggregateId)
   }
+
+  override def remove(aggregateId: AggregateId): Publisher[Void] = eventStoreDao.delete(aggregateId)
 }

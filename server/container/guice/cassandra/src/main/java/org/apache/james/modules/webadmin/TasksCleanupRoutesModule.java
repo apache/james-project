@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,27 +15,26 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
-package org.apache.james.eventsourcing.eventstore
+ ****************************************************************/
 
-import org.apache.james.eventsourcing.{AggregateId, Event}
+package org.apache.james.modules.webadmin;
 
-import scala.annotation.varargs
-import org.reactivestreams.Publisher
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.TasksCleanupRoutes;
+import org.apache.james.webadmin.services.TasksCleanupService;
 
-trait EventStore {
-  def append(event: Event): Publisher[Void] = appendAll(List(event))
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
-  @varargs
-  def appendAll(events: Event*): Publisher[Void] = appendAll(events.toList)
+public class TasksCleanupRoutesModule extends AbstractModule {
 
-  /**
-   * This method should check that no input event has an id already stored and throw otherwise
-   * It should also check that all events belong to the same aggregate
-   */
-  def appendAll(events: Iterable[Event]): Publisher[Void]
+    @Override
+    protected void configure() {
+        bind(TasksCleanupService.class).in(Scopes.SINGLETON);
+        bind(TasksCleanupRoutes.class).in(Scopes.SINGLETON);
 
-  def getEventsOfAggregate(aggregateId: AggregateId): Publisher[History]
-
-  def remove(aggregateId: AggregateId): Publisher[Void]
+        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(TasksCleanupRoutes.class);
+    }
 }

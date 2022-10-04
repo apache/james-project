@@ -24,6 +24,7 @@ import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
 import org.reactivestreams.Publisher
 
+import java.time.Instant
 import scala.compat.java8.OptionConverters._
 import scala.jdk.CollectionConverters._
 
@@ -45,4 +46,8 @@ class CassandraTaskExecutionDetailsProjection @Inject()(cassandraTaskExecutionDe
   override def listReactive(): Publisher[TaskExecutionDetails] = cassandraTaskExecutionDetailsProjectionDAO.listDetails()
 
   override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = cassandraTaskExecutionDetailsProjectionDAO.saveDetails(details)
+
+  override def listDetailsByBeforeDate(beforeDate: Instant): Publisher[TaskExecutionDetails] = cassandraTaskExecutionDetailsProjectionDAO.listDetailsByBeforeDate(beforeDate)
+
+  override def remove(taskExecutionDetails: TaskExecutionDetails): Publisher[Void] = cassandraTaskExecutionDetailsProjectionDAO.remove(taskExecutionDetails)
 }

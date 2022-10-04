@@ -18,13 +18,10 @@
  ****************************************************************/
 package org.apache.james.task.eventsourcing.cassandra
 
-import java.util.Optional
-
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{BoundStatement, Row}
 import com.datastax.oss.driver.api.core.data.UdtValue
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, insertInto, selectFrom}
-import javax.inject.Inject
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, deleteFrom, insertInto, selectFrom}
 import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeModule}
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer
@@ -34,6 +31,9 @@ import org.apache.james.util.ReactorUtils
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
 
+import java.time.Instant
+import java.util.Optional
+import javax.inject.Inject
 import scala.compat.java8.OptionConverters._
 
 class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, typesProvider: CassandraTypesProvider, jsonTaskAdditionalInformationSerializer: JsonTaskAdditionalInformationSerializer) {
@@ -61,6 +61,11 @@ class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, 
     .build())
 
   private val listStatement = session.prepare(selectFrom(TABLE_NAME).all().build())
+
+
+  private val removeStatement = session.prepare(deleteFrom(TABLE_NAME)
+    .whereColumn(TASK_ID).isEqualTo(bindMarker(TASK_ID))
+    .build())
 
   def saveDetails(details: TaskExecutionDetails): Mono[Void] =
     Mono.from(serializeAdditionalInformation(details)
@@ -113,6 +118,14 @@ class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, 
   def listDetails(): Flux[TaskExecutionDetails] = cassandraAsyncExecutor
     .executeRows(listStatement.bind())
     .map(readRow)
+
+  def listDetailsByBeforeDate(beforeDate: Instant): Flux[TaskExecutionDetails] =
+    listDetails()
+      .filter(detail => detail.getSubmittedDate.toInstant.isBefore(beforeDate))
+
+  def remove(details: TaskExecutionDetails) : Mono[Void] =
+    cassandraAsyncExecutor.executeVoid(removeStatement.bind()
+      .setUuid(TASK_ID, details.getTaskId.getValue))
 
   private def readRow(row: Row): TaskExecutionDetails = {
     val taskType = TaskType.of(row.getString(TYPE))
