@@ -81,9 +81,9 @@ public class OpenSearchQuotaConfiguration {
         return new Builder();
     }
 
-    public static final String ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME = "elasticsearch.index.quota.ratio.name";
-    public static final String ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME = "elasticsearch.alias.read.quota.ratio.name";
-    public static final String ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME = "elasticsearch.alias.write.quota.ratio.name";
+    public static final String OPENSEARCH_INDEX_QUOTA_RATIO_NAME = "opensearch.index.quota.ratio.name";
+    public static final String OPENSEARCH_ALIAS_READ_QUOTA_RATIO_NAME = "opensearch.alias.read.quota.ratio.name";
+    public static final String OPENSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME = "opensearch.alias.write.quota.ratio.name";
 
     public static final OpenSearchQuotaConfiguration DEFAULT_CONFIGURATION = builder().build();
 
@@ -96,17 +96,17 @@ public class OpenSearchQuotaConfiguration {
     }
 
     public static Optional<IndexName> computeQuotaSearchIndexName(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_INDEX_QUOTA_RATIO_NAME))
             .map(IndexName::new);
     }
 
     public static Optional<WriteAliasName> computeQuotaSearchWriteAlias(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME))
             .map(WriteAliasName::new);
     }
 
     public static Optional<ReadAliasName> computeQuotaSearchReadAlias(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME))
+        return Optional.ofNullable(configuration.getString(OPENSEARCH_ALIAS_READ_QUOTA_RATIO_NAME))
                 .map(ReadAliasName::new);
     }
 

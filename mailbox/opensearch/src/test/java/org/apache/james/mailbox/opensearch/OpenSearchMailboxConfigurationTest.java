@@ -40,8 +40,8 @@ class OpenSearchMailboxConfigurationTest {
     void getIndexMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.index.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -53,9 +53,9 @@ class OpenSearchMailboxConfigurationTest {
     void getIndexMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.index.name", "other");
-        configuration.addProperty("elasticsearch.index.mailbox.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.name", "other");
+        configuration.addProperty("opensearch.index.mailbox.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -67,8 +67,8 @@ class OpenSearchMailboxConfigurationTest {
     void getIndexMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.index.mailbox.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.index.mailbox.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -79,7 +79,7 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getIndexMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -91,8 +91,8 @@ class OpenSearchMailboxConfigurationTest {
     void getReadAliasMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.read.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.read.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -104,8 +104,8 @@ class OpenSearchMailboxConfigurationTest {
     void getReadAliasMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.read.mailbox.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -117,9 +117,9 @@ class OpenSearchMailboxConfigurationTest {
     void getReadAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
-        configuration.addProperty("elasticsearch.alias.read.name", "other");
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.read.mailbox.name", name);
+        configuration.addProperty("opensearch.alias.read.name", "other");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -130,7 +130,7 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getReadAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -142,8 +142,8 @@ class OpenSearchMailboxConfigurationTest {
     void getWriteAliasMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.write.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.write.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -155,8 +155,8 @@ class OpenSearchMailboxConfigurationTest {
     void getWriteAliasMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.write.mailbox.name", name);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -168,9 +168,9 @@ class OpenSearchMailboxConfigurationTest {
     void getWriteAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
-        configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
-        configuration.addProperty("elasticsearch.alias.write.name", "other");
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.alias.write.mailbox.name", name);
+        configuration.addProperty("opensearch.alias.write.name", "other");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -181,7 +181,7 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getWriteAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -192,8 +192,8 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getIndexAttachmentShouldReturnConfiguredValueWhenTrue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.indexAttachments", true);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.indexAttachments", true);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -204,8 +204,8 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getIndexAttachmentShouldReturnConfiguredValueWhenFalse() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.indexAttachments", false);
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.indexAttachments", false);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
@@ -216,7 +216,7 @@ class OpenSearchMailboxConfigurationTest {
     @Test
     void getIndexAttachmentShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
         OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
