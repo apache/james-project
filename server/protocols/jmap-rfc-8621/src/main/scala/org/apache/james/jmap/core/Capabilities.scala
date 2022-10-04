@@ -58,6 +58,7 @@ object DefaultCapabilities {
     CoreCapabilityFactory(configuration.maxUploadSize),
     MailCapabilityFactory,
     QuotaCapabilityFactory,
+    JmapQuotaCapabilityFactory,
     SharesCapabilityFactory,
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,

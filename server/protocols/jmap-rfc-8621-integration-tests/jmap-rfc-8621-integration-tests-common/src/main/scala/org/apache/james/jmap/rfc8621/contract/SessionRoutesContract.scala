@@ -69,6 +69,7 @@ object SessionRoutesContract {
                          |      "url": "ws://domain.com/jmap/ws"
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
+                         |    "urn:ietf:params:jmap:quota": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
                          |    "urn:ietf:params:jmap:vacationresponse":{},
                          |    "urn:ietf:params:jmap:mdn":{}
@@ -106,6 +107,7 @@ object SessionRoutesContract {
                          |          "mayCreateTopLevelMailbox" : true
                          |        },
                          |        "urn:apache:james:params:jmap:mail:quota": {},
+                         |        "urn:ietf:params:jmap:quota": {},
                          |        "urn:apache:james:params:jmap:mail:shares": {},
                          |        "urn:ietf:params:jmap:vacationresponse":{},
                          |        "urn:ietf:params:jmap:mdn":{}
@@ -118,6 +120,7 @@ object SessionRoutesContract {
                          |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:ietf:params:jmap:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
@@ -164,7 +167,7 @@ trait SessionRoutesContract {
         .get("/session")
       .`then`
         .statusCode(SC_OK)
-        .header("Content-Length", "3025")
+        .header("Content-Length", "3185")
         .contentType(JSON)
       .extract()
         .body()
