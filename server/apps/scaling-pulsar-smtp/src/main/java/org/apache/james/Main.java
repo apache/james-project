@@ -19,19 +19,22 @@
 
 package org.apache.james;
 
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
-import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
-import org.apache.james.modules.mailrepository.CassandraMailRepositoryModule;
+import org.apache.james.modules.mailrepository.BlobstoreMailRepositoryModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
@@ -39,6 +42,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
+import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -48,6 +52,7 @@ import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 
 import com.google.inject.Module;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
@@ -86,13 +91,21 @@ public class Main implements JamesServerMain {
     );
 
     public static final Module SERVER_CORE_MODULES = Modules.combine(
-            new MailetProcessingModule(),
             new DefaultProcessorsConfigurationProviderModule(),
             new CassandraSessionModule(),
+            new MailStoreRepositoryModule(),
+            new MailetContainerModule(),
+            new BlobstoreMailRepositoryModule(),
+            binder -> {
+                binder.bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
+            },
+            binder -> {
+                Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder, CassandraModule.class);
+                cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlModule.MODULE);
+            },
             new CassandraDomainListModule(),
             new CassandraRecipientRewriteTableModule(),
             new CassandraUsersRepositoryModule(),
-            new CassandraMailRepositoryModule(),
             new CassandraMetricsModule(),
             new TaskManagerModule()
     );
@@ -110,6 +123,6 @@ public class Main implements JamesServerMain {
 
     public static GuiceJamesServer createServer(SMTPRelayConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(SERVER_CORE_MODULES, BLOB_MODULE, QUEUE_MODULES, PROTOCOLS,WEBADMIN);
+                .combineWith(SERVER_CORE_MODULES, BLOB_MODULE, QUEUE_MODULES, PROTOCOLS, WEBADMIN);
     }
 }
