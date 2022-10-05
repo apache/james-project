@@ -21,9 +21,9 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
+        <mailrepository class="org.apache.james.mailrepository.blob.BlobMailRepository">
             <protocols>
-                <protocol>cassandra</protocol>
+                <protocol>blob</protocol>
             </protocols>
         </mailrepository>
     </mailrepositories>

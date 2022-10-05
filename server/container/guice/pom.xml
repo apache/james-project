@@ -50,6 +50,7 @@
         <module>mailbox-jpa</module>
         <module>mailbox-plugin-deleted-messages-vault</module>
         <module>mailet</module>
+        <module>mailrepository-blob</module>
         <module>mailrepository-cassandra</module>
         <module>mailrepository-loaders</module>
         <module>memory</module>
@@ -249,6 +250,11 @@
                 <artifactId>james-server-jpa-common-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>mailrepository-blob</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
