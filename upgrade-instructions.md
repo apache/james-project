@@ -27,8 +27,22 @@ Change list:
  - [MailDir removal](#maildir-removal)
  - [Change defaults for JPA UsersRepository hash function](#change-defaults-for-jpa-usersrepository-hash-function)
  - [Restrict listening interface to loopback by default for webadmin](#restrict-listening-interface-to-loopback-by-default-for-webadmin)
- - 
- 
+ - [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
+
+### TLS host name verification is now enabled by default
+
+Date: 06/10/2022
+
+When establishing an SMTPS or StartTLS connection during remote mail delivery, James will now check the remote server's host/domain name against its certificate (RFC 2595). If they do not match, the connection fails as a temporary delivery error.
+
+This prevents attackers from spoofing legitimate servers and intercepting mails. However, it may prevent James from connecting to servers that have strange certificates, no DNS entries, are reachable by IP address only, and similar edge cases.
+
+Users requiring such connectivity may disable this check within `mailetcontainer.xml` at the RemoteDelivery mailet configuration:
+
+```
+<verifyServerIdentity>false</verifyServerIdentity>
+```
+
 ### Change in behaviour for Bounce, NotifyPostmaster, NotifySender
 
 Date: 03/02/2022

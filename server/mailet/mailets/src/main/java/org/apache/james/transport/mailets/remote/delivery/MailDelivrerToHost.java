@@ -242,8 +242,10 @@ public class MailDelivrerToHost {
     private void connect(HostAddress outgoingMailServer, SMTPTransport transport) throws MessagingException {
         if (configuration.getAuthUser() != null) {
             transport.connect(outgoingMailServer.getHostName(), configuration.getAuthUser(), configuration.getAuthPass());
+        } else if (configuration.isConnectByHostname()) {
+            transport.connect(outgoingMailServer.getHostName(), null, null);
         } else {
-            transport.connect();
+            transport.connect(); // connect via IP address instead of host name
         }
     }
 
