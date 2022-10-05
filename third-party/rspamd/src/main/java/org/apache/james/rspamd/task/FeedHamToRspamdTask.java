@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.task.Task;
@@ -236,19 +235,18 @@ public class FeedHamToRspamdTask implements Task {
     public Result run() {
         Optional<Date> afterDate = runningOptions.getPeriodInSecond().map(periodInSecond -> Date.from(clock.instant().minusSeconds(periodInSecond)));
         return messagesService.getHamMessagesOfAllUser(afterDate, runningOptions, context)
-            .transform(ReactorUtils.<MessageResult, Result>throttle()
-                .elements(runningOptions.getMessagesPerSecond())
-                .per(Duration.ofSeconds(1))
-                .forOperation(messageResult -> rspamdHttpClient.reportAsHam(Throwing.supplier(() -> messageResult.getFullContent().getInputStream()).get())
-                    .then(Mono.fromCallable(() -> {
-                        context.incrementReportedHamMessageCount(1);
-                        return Result.COMPLETED;
-                    }))
-                    .onErrorResume(error -> {
-                        LOGGER.error("Error when report ham message to Rspamd", error);
-                        context.incrementErrorCount();
-                        return Mono.just(Result.PARTIAL);
-                    })))
+            .window(runningOptions.getMessagesPerSecond())
+            .delaySequence(Duration.ofSeconds(1))
+            .flatMap(window -> window.flatMap(messageResult -> rspamdHttpClient.reportAsHam(Throwing.supplier(() -> messageResult.getFullContent().getInputStream()).get())
+                .then(Mono.fromCallable(() -> {
+                    context.incrementReportedHamMessageCount(1);
+                    return Result.COMPLETED;
+                }))
+                .onErrorResume(error -> {
+                    LOGGER.error("Error when report ham message to Rspamd", error);
+                    context.incrementErrorCount();
+                    return Mono.just(Result.PARTIAL);
+                }), ReactorUtils.DEFAULT_CONCURRENCY))
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED))
             .block();
