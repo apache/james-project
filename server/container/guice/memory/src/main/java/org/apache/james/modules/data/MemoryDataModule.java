@@ -27,10 +27,12 @@ import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryFactory;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
@@ -52,6 +54,7 @@ import org.apache.james.vacation.memory.MemoryVacationRepository;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MemoryDataModule extends AbstractModule {
@@ -99,6 +102,9 @@ public class MemoryDataModule extends AbstractModule {
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
+
+        Multibinder.newSetBinder(binder(), MailRepositoryFactory.class)
+                .addBinding().to(MemoryMailRepositoryFactory.class);
     }
 
     @ProvidesIntoSet
