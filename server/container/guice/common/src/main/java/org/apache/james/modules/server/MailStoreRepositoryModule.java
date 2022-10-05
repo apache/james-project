@@ -28,6 +28,7 @@ import org.apache.james.mailrepository.api.MailRepositoryLoader;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
+import org.apache.james.modules.mailrepository.guice.GuiceMailRepositoryLoader;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
