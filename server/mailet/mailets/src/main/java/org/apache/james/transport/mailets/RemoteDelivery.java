@@ -95,6 +95,10 @@ import com.google.common.collect.ImmutableList;
  * <li><b>sslEnable</b> (optional) - a Boolean (true/false) indicating whether to use SSL to connect and use the SSL port unless
  * explicitly overridden. Default is false. The trust-store if needed can be customized by
  * <strong>-Djavax.net.ssl.trustStore=/root/conf/keystore</strong>.</li>
+ * <li><b>verifyServerIdentity</b> (optional) - a Boolean (true/false) indicating whether to match the remote server name against its
+ * certificate on TLS connections. Default is true. Disabling this runs the risk of someone spoofing a legitimate server and intercepting
+ * mails, but may be necessary to contact servers that have strange certificates, no DNS entries, are reachable by IP address only,
+ * and similar edge cases.</li>
  * <li><b>gateway</b> (optional) - a String containing a comma separated list of patterns defining the gateway servers to be used to
  * deliver mail regardless of the recipient address. If multiple gateway servers are defined, each will be tried in definition order
  * until delivery is successful. If none are successful, the mail is bounced. The pattern is <code>host[:port]</code> where:
@@ -125,14 +129,17 @@ import com.google.common.collect.ImmutableList;
  * </ul>
  * <br/>
  * <b>Security:</b><br/>
- * You can use the <i>mail.smtp.ssl.enable</i> javax property described above to force SMTP outgoing delivery to default to SSL
- * encrypted traffic. <br/>
- * When enabling SSL, you might need to specify <i>mail.smtp.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.trust</i>
- * properties. You can also control ciphersuites and protocols via <i>mail.smtp.ssl.ciphersuites</i> and
- * <i>mail.smtp.ssl.protocols</i> properties.<br/>
- * <b>startTls</b> can alternatively be enabled upon sending a mail. For this, use the <i>startTls</i> configuration property, serving as a shortcut for
+ * You can use the <b>sslEnable</b> parameter described above to force SMTP outgoing delivery to default to SSL encrypted traffic (SMTPS).
+ * This is a shortcut for the <i>mail.smtps.ssl.enable</i> javax property.<br/>
+ * When enabling SSL, you might need to specify the <i>mail.smtps.ssl.trust</i> property as well.
+ * You can also control ciphersuites and protocols via *mail.smtps.ssl.ciphersuites* and 
+ * <b>mail.smtps.ssl.protocols</b> properties.<br/>
+ * StartTLS can alternatively be enabled upon sending a mail. For this, use the <b>startTls</b> parameter, serving as a shortcut for the
  * javax <i>mail.smtp.starttls.enable</i> property. Depending on how strict your security policy is, you might consider
- * <i>mail.smtp.starttls.required</i> as well. Be aware that configuring trust will then be required.<br/>
+ * <i>mail.smtp.starttls.required</i> as well. Be aware that configuring trust will then be required.
+ * You can also use other javax properties for StartTLS, but their property prefix must be <i>mail.smtp.ssl.</i> in this case.<br/> 
+ * James enables server identity verification by default. In certain rare edge cases you might disable it via the <b>verifyServerIdentity</b> parameter,
+ * or use the <i>mail.smtps.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.checkserveridentity</i> javax properties for fine control.<br/>
  * Read <a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html"><code>com.sun.mail.smtp</code></a>
  * for full information.
  */
