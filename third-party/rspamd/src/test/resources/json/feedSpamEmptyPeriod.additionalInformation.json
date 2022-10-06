@@ -3,7 +3,7 @@
   "reportedSpamMessageCount": 2,
   "runningOptions": {
     "messagesPerSecond": 10,
-    "rspamdTimeout": 15,
+    "rspamdTimeoutInSeconds": 15,
     "samplingProbability": 1.0
   },
   "spamMessageCount": 4,

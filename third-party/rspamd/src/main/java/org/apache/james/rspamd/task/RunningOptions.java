@@ -19,6 +19,7 @@
 
 package org.apache.james.rspamd.task;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -62,7 +63,7 @@ public class RunningOptions {
 
     public static final Optional<Long> DEFAULT_PERIOD = Optional.empty();
     public static final int DEFAULT_MESSAGES_PER_SECOND = 10;
-    public static final int DEFAULT_RSPAMD_TIMEOUT = 15;
+    public static final Duration DEFAULT_RSPAMD_TIMEOUT = Duration.ofSeconds(15);
     public static final double DEFAULT_SAMPLING_PROBABILITY = 1;
     public static final Optional<Boolean> ALL_MESSAGES = Optional.empty();
     public static final RunningOptions DEFAULT = new RunningOptions(DEFAULT_PERIOD, DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES, DEFAULT_RSPAMD_TIMEOUT);
@@ -71,7 +72,7 @@ public class RunningOptions {
     private final int messagesPerSecond;
     private final double samplingProbability;
     private final Optional<Boolean> classifiedAsSpam;
-    private final Integer rspamdTimeout;
+    private final Duration rspamdTimeout;
 
     public RunningOptions(Optional<Long> periodInSecond,
                           int messagesPerSecond,
@@ -85,7 +86,7 @@ public class RunningOptions {
                           @JsonProperty("messagesPerSecond") int messagesPerSecond,
                           @JsonProperty("samplingProbability") double samplingProbability,
                           @JsonProperty("classifiedAsSpam") Optional<Boolean> classifiedAsSpam,
-                          @JsonProperty("rspamdTimeout") int rspamdTimeout) {
+                          @JsonProperty("rspamdTimeoutInSeconds") Duration rspamdTimeout) {
         this.periodInSecond = periodInSecond;
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
@@ -109,7 +110,12 @@ public class RunningOptions {
         return samplingProbability;
     }
 
-    public Integer getRspamdTimeout() {
+    public long getRspamdTimeoutInSeconds() {
+        return rspamdTimeout.toSeconds();
+    }
+
+    @JsonIgnore
+    public Duration getRspamdTimeout() {
         return rspamdTimeout;
     }
 

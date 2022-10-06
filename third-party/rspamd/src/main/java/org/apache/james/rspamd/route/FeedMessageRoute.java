@@ -20,6 +20,7 @@
 package org.apache.james.rspamd.route;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -101,7 +102,7 @@ public class FeedMessageRoute implements Routes {
         int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
         double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
         Optional<Boolean> classifiedAsSpam = getClassifiedAsSpam(request);
-        int rspamdTimeout = ParametersExtractor.extractPositiveInteger(request, "rspamdTimeout").orElse(RunningOptions.DEFAULT_RSPAMD_TIMEOUT);
+        Duration rspamdTimeout = ParametersExtractor.extractDuration(request, "rspamdTimeout").orElse(RunningOptions.DEFAULT_RSPAMD_TIMEOUT);
         return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability, classifiedAsSpam, rspamdTimeout);
     }
 

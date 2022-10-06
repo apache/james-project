@@ -177,7 +177,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.reportedSpamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
                 .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
-                .body("additionalInformation.runningOptions.rspamdTimeout", is(RunningOptions.DEFAULT_RSPAMD_TIMEOUT))
+                .body("additionalInformation.runningOptions.rspamdTimeoutInSeconds", is((int) RunningOptions.DEFAULT_RSPAMD_TIMEOUT.toSeconds()))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
@@ -453,7 +453,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
-                .body("additionalInformation.runningOptions.rspamdTimeout", is(RunningOptions.DEFAULT_RSPAMD_TIMEOUT))
+                .body("additionalInformation.runningOptions.rspamdTimeoutInSeconds", is((int) RunningOptions.DEFAULT_RSPAMD_TIMEOUT.toSeconds()))
                 .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
@@ -719,7 +719,7 @@ public class FeedMessageRouteTest {
             .contentType(JSON)
             .body("statusCode", is(BAD_REQUEST_400))
             .body("type", is("InvalidArgument"))
-            .body("message", is("Can not parse rspamdTimeout"));
+            .body("message", is("Invalid arguments supplied in the user request"));
     }
 
     @Test
@@ -742,7 +742,7 @@ public class FeedMessageRouteTest {
             .body("additionalInformation.reportedSpamMessageCount", is(0))
             .body("additionalInformation.errorCount", is(0))
             .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
-            .body("additionalInformation.runningOptions.rspamdTimeout", is(13))
+            .body("additionalInformation.runningOptions.rspamdTimeoutInSeconds", is(13))
             .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
             .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
     }
