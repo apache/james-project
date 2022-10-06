@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
@@ -55,7 +56,7 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
         return Mono.fromRunnable(() -> {
             try (Channel channel = connection.createChannel()) {
                 channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE,
-                    configuration.workQueueArgumentsBuilder(AUTO_DELETE).build());
+                    configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM).build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }
