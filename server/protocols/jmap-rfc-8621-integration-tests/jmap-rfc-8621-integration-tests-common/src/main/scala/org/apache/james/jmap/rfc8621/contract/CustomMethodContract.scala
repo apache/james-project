@@ -37,8 +37,8 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
-import org.apache.james.jmap.api.model.{AccountId, State, TypeName}
 import org.apache.james.jmap.api.model.Size.Size
+import org.apache.james.jmap.api.model.{AccountId, State, TypeName}
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
@@ -107,6 +107,7 @@ object CustomMethodContract {
       |    },
       |    "urn:apache:james:params:jmap:mail:quota": {},
       |    "urn:ietf:params:jmap:quota": {},
+      |    "urn:apache:james:params:jmap:mail:identity:sortorder": {},
       |    "$CUSTOM": {"custom": "property"},
       |    "urn:apache:james:params:jmap:mail:shares": {},
       |    "urn:ietf:params:jmap:vacationresponse":{},
@@ -146,6 +147,7 @@ object CustomMethodContract {
       |        },
       |        "urn:apache:james:params:jmap:mail:quota": {},
       |        "urn:ietf:params:jmap:quota": {},
+      |        "urn:apache:james:params:jmap:mail:identity:sortorder": {},
       |        "urn:apache:james:params:jmap:mail:shares": {},
       |        "$CUSTOM": {"custom": "property"},
       |        "urn:ietf:params:jmap:vacationresponse":{},
@@ -160,6 +162,7 @@ object CustomMethodContract {
       |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "urn:ietf:params:jmap:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:identity:sortorder": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "$CUSTOM": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
