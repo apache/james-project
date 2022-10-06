@@ -44,7 +44,12 @@ case class IdentityId(id: UUID) {
   def serialize: String = id.toString
 }
 
+object Identity {
+  val DEFAULT_SORTORDER: Int = 100
+}
+
 case class Identity(id: IdentityId,
+                    sortOrder: Int = Identity.DEFAULT_SORTORDER,
                     name: IdentityName,
                     email: MailAddress,
                     replyTo: Option[List[EmailAddress]],

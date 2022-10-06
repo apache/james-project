@@ -44,7 +44,7 @@ object IdentitySet {
 
 object IdentityCreation {
   val serverSetProperty: Set[String] = Set("id", "mayDelete")
-  val assignableProperties: Set[String] = Set("name", "email", "replyTo", "bcc", "textSignature", "htmlSignature")
+  val assignableProperties: Set[String] = Set("name", "email", "replyTo", "bcc", "textSignature", "htmlSignature", "sortOrder")
   val knownProperties: Set[String] = assignableProperties ++ serverSetProperty
 }
 

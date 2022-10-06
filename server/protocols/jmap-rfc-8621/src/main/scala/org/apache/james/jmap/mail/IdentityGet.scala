@@ -32,7 +32,7 @@ import scala.util.Try
 
 object IdentityGet {
   val allProperties: Properties = Properties("id", "name", "email", "replyTo", "bcc", "textSignature", "htmlSignature",
-    "mayDelete")
+    "mayDelete", "sortOrder")
   val idProperty: Properties = Properties("id")
 }
 

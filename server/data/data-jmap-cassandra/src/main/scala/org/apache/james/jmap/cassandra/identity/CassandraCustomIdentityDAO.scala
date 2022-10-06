@@ -30,7 +30,7 @@ import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.identity.{CustomIdentityDAO, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable
-import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable.{BCC, EMAIL, HTML_SIGNATURE, ID, MAY_DELETE, NAME, REPLY_TO, TABLE_NAME, TEXT_SIGNATURE, USER}
+import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable.{BCC, EMAIL, HTML_SIGNATURE, ID, MAY_DELETE, NAME, REPLY_TO, SORT_ORDER, TABLE_NAME, TEXT_SIGNATURE, USER}
 import org.apache.james.jmap.cassandra.utils.EmailAddressTupleUtil
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -52,6 +52,7 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
     .value(TEXT_SIGNATURE, bindMarker(TEXT_SIGNATURE))
     .value(HTML_SIGNATURE, bindMarker(HTML_SIGNATURE))
     .value(MAY_DELETE, bindMarker(MAY_DELETE))
+    .value(SORT_ORDER, bindMarker(SORT_ORDER))
     .build())
 
   val selectAllStatement: PreparedStatement = session.prepare(selectFrom(TABLE_NAME)
@@ -116,6 +117,7 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .setString(TEXT_SIGNATURE, identity.textSignature.name)
       .setString(HTML_SIGNATURE, identity.htmlSignature.name)
       .setBoolean(MAY_DELETE, identity.mayDelete.value)
+      .setInt(SORT_ORDER, identity.sortOrder)
       .setSet(REPLY_TO, replyTo, classOf[UdtValue])
       .setSet(BCC, bcc, classOf[UdtValue])
 
@@ -124,14 +126,15 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
   }
 
   private def toIdentity(row: Row): Identity =
-    Identity(IdentityId(row.getUuid(ID)),
-      IdentityName(row.getString(NAME)),
-      new MailAddress(row.getString(EMAIL)),
-      toReplyTo(row),
-      toBcc(row),
-      TextSignature(row.getString(TEXT_SIGNATURE)),
-      HtmlSignature(row.getString(HTML_SIGNATURE)),
-      MayDeleteIdentity(row.getBoolean(MAY_DELETE)))
+    Identity(id = IdentityId(row.getUuid(ID)),
+      name = IdentityName(row.getString(NAME)),
+      email = new MailAddress(row.getString(EMAIL)),
+      replyTo = toReplyTo(row),
+      bcc = toBcc(row),
+      textSignature = TextSignature(row.getString(TEXT_SIGNATURE)),
+      htmlSignature = HtmlSignature(row.getString(HTML_SIGNATURE)),
+      mayDelete = MayDeleteIdentity(row.getBoolean(MAY_DELETE)),
+      sortOrder = Option(row.getInt(SORT_ORDER)).getOrElse(Identity.DEFAULT_SORTORDER))
 
   private def toReplyTo(row: Row): Option[List[EmailAddress]] =
     Option(CollectionConverters.asScala(row.getSet(REPLY_TO, classOf[UdtValue]))

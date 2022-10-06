@@ -1,7 +1,7 @@
 # Identity sort order
 
-> :warning:
-> Not implemented
+> :information_source:
+> Implemented
 
 ### urn:apache:james:params:jmap:mail:identity:sortorder
 

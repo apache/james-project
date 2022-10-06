@@ -26,7 +26,6 @@ import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
-
 import javax.inject.Inject
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
@@ -342,6 +341,82 @@ trait IdentityGetContract {
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
+        |        }
+        |    ]
+        |}""".stripMargin)
+  }
+
+  @Test
+  def getIdentityShouldReturnSortOrder(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping("domain-alias.tld", "domain.tld")
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission", "urn:apache:james:params:jmap:mail:identity:sortorder"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": null
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+      s"""{
+        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "state": "${INSTANCE.value}",
+        |    "list": [
+        |        {
+        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
+        |            "name": "bob@domain.tld",
+        |            "email": "bob@domain.tld",
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":"",
+        |            "sortOrder": 100
+        |        },
+        |        {
+        |            "id": "b025b9f1-95c6-30fb-a9d4-0fddfcc3a92c",
+        |            "name": "bob@domain-alias.tld",
+        |            "email": "bob@domain-alias.tld",
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":"",
+        |            "sortOrder": 100
+        |        },
+        |        {
+        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
+        |            "name": "bob-alias@domain.tld",
+        |            "email": "bob-alias@domain.tld",
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":"",
+        |            "sortOrder": 100
+        |        },
+        |        {
+        |            "id": "d2e1e9d2-78ef-3967-87c6-cdc2e0f1541d",
+        |            "name": "bob-alias@domain-alias.tld",
+        |            "email": "bob-alias@domain-alias.tld",
+        |            "mayDelete": false,
+        |            "textSignature":"",
+        |            "htmlSignature":"",
+        |            "sortOrder": 100
         |        }
         |    ]
         |}""".stripMargin)

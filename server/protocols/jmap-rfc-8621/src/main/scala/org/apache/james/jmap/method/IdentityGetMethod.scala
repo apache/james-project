@@ -48,7 +48,7 @@ class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
         .map(identityGetResponse => Invocation(
           methodName = methodName,
-          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ IdentityGet.idProperty).as[JsObject]),
+          arguments = Arguments(IdentitySerializer.serialize(identityGetResponse, requestedProperties ++ IdentityGet.idProperty, capabilities).as[JsObject]),
           methodCallId = invocation.invocation.methodCallId))
       case invalidProperties: Properties =>
         SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,

@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.cassandra.identity
 
-import com.datastax.oss.driver.api.core.`type`.DataTypes.{BOOLEAN, TEXT, UUID, frozenSetOf}
+import com.datastax.oss.driver.api.core.`type`.DataTypes.{BOOLEAN, INT, TEXT, UUID, frozenSetOf}
 import org.apache.james.backends.cassandra.components.CassandraModule
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable
-import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable.{BCC, EMAIL, EMAIL_ADDRESS, EmailAddress, HTML_SIGNATURE, ID, MAY_DELETE, NAME, REPLY_TO, TEXT_SIGNATURE, USER}
+import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable.{BCC, EMAIL, EMAIL_ADDRESS, EmailAddress, HTML_SIGNATURE, ID, MAY_DELETE, NAME, REPLY_TO, SORT_ORDER, TEXT_SIGNATURE, USER}
 
 object CassandraCustomIdentityModule {
   val MODULE: CassandraModule = CassandraModule.builder()
@@ -42,6 +42,7 @@ object CassandraCustomIdentityModule {
       .withColumn(BCC, frozenSetOf(types.getDefinedUserType(EMAIL_ADDRESS)))
       .withColumn(TEXT_SIGNATURE, TEXT)
       .withColumn(HTML_SIGNATURE, TEXT)
+      .withColumn(SORT_ORDER, INT)
       .withColumn(MAY_DELETE, BOOLEAN))
     .build()
 }

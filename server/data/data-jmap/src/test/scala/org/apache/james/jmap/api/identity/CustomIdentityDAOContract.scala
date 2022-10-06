@@ -207,6 +207,27 @@ trait CustomIdentityDAOContract {
   }
 
   @Test
+  def sortOrderUpdatesShouldBePossible(): Unit = {
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
+      .block()
+
+    SMono(testee().update(bob, identity.id, IdentityUpdateRequest(
+      sortOrder = Some(IdentitySortOrderUpdate(354)))))
+      .block()
+
+    assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
+      .containsExactlyInAnyOrder(Identity(id = identity.id,
+        name = IdentityName("Bob (custom address)"),
+        email = bob.asMailAddress(),
+        replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+        bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+        textSignature = TextSignature("text signature"),
+        htmlSignature = HtmlSignature("html signature"),
+        sortOrder = 354,
+        mayDelete = MayDeleteIdentity(true)))
+  }
+
+  @Test
   def updatingNotFoundIdentitiesShouldThrow(): Unit = {
     assertThatThrownBy(() => SMono(testee().update(bob, IdentityId.generate,
       IdentityUpdateRequest(
