@@ -26,6 +26,11 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 /**
  * A header.
@@ -71,5 +76,11 @@ public final class Header implements Content {
     @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream((name + ": " + value).getBytes(US_ASCII));
+    }
+
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        return Flux.just((name + ": " + value).getBytes(US_ASCII))
+            .map(ByteBuffer::wrap);
     }
 }

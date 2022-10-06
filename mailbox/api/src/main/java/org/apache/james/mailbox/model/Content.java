@@ -21,14 +21,22 @@ package org.apache.james.mailbox.model;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * IMAP needs to know the size of the content before it starts to write it out.
  * This interface allows direct writing whilst exposing total size.
  */
 public interface Content {
+    int BUFFER_SIZE = 16384;
+
     /**
      * Return the content as {@link InputStream}
      */
@@ -40,4 +48,13 @@ public interface Content {
      * @return number of octets to be written
      */
     long size() throws MailboxException;
+
+    default Publisher<ByteBuffer> reactiveBytes() {
+        try {
+            return ReactorUtils.toChunks(getInputStream(), BUFFER_SIZE)
+                .subscribeOn(Schedulers.boundedElastic());
+        } catch (IOException e) {
+            return Flux.error(e);
+        }
+    }
 }

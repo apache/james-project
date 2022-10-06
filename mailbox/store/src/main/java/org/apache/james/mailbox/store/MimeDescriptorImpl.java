@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -44,6 +45,10 @@ import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MimeDescriptorImpl implements MimeDescriptor {
 
@@ -313,6 +318,18 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         }
         sb.append("\r\n");
         return new ByteArrayInputStream(sb.toString().getBytes(US_ASCII));
+    }
+
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        return Mono.fromCallable(() -> {
+            StringBuilder sb = new StringBuilder();
+            for (Header header : headers) {
+                sb.append(header.getName()).append(": ").append(header.getValue()).append("\r\n");
+            }
+            sb.append("\r\n");
+            return sb.toString().getBytes(US_ASCII);
+        }).flatMapMany(bytes -> Flux.just(bytes).map(ByteBuffer::wrap));
     }
 
     @Override

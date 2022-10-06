@@ -19,6 +19,7 @@
 
 package org.apache.james.rspamd.client;
 
+import static org.apache.james.mailbox.model.Content.BUFFER_SIZE;
 import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -37,6 +38,7 @@ import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -170,7 +172,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsSpam(spamMessage.getMessage().getInputStream()).block())
+        assertThatCode(() -> client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block())
             .doesNotThrowAnyException();
     }
 
@@ -179,7 +181,7 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        assertThatCode(() -> client.reportAsHam(hamMessage.getMessage().getInputStream()).block())
+        assertThatCode(() -> client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block())
             .doesNotThrowAnyException();
     }
 
@@ -188,8 +190,8 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsHam(hamMessage.getMessage().getInputStream()).block();
-        assertThatCode(() -> client.reportAsHam(hamMessage.getMessage().getInputStream()).block())
+        client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block();
+        assertThatCode(() -> client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block())
             .doesNotThrowAnyException();
     }
 
@@ -198,8 +200,8 @@ class RspamdHttpClientTest {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
-        client.reportAsSpam(spamMessage.getMessage().getInputStream()).block();
-        assertThatCode(() -> client.reportAsSpam(spamMessage.getMessage().getInputStream()).block())
+        client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block();
+        assertThatCode(() -> client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE)).block())
             .doesNotThrowAnyException();
     }
 
@@ -222,11 +224,11 @@ class RspamdHttpClientTest {
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
-        client.reportAsSpam(inputStream).block();
+        client.reportAsSpam(ReactorUtils.toChunks(inputStream, BUFFER_SIZE)).block();
     }
 
     private void reportAsHam(RspamdHttpClient client, InputStream inputStream) {
-        client.reportAsHam(inputStream).block();
+        client.reportAsHam(ReactorUtils.toChunks(inputStream, BUFFER_SIZE)).block();
     }
 
 }

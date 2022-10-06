@@ -239,7 +239,7 @@ public class FeedHamToRspamdTask implements Task {
             .transform(ReactorUtils.<MessageResult, Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(messageResult -> rspamdHttpClient.reportAsHam(Throwing.supplier(() -> messageResult.getFullContent().getInputStream()).get())
+                .forOperation(messageResult -> rspamdHttpClient.reportAsHam(Throwing.supplier(() -> messageResult.getFullContent().reactiveBytes()).get())
                     .timeout(runningOptions.getRspamdTimeout())
                     .then(Mono.fromCallable(() -> {
                         context.incrementReportedHamMessageCount(1);

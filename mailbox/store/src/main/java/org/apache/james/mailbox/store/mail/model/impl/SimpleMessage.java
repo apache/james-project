@@ -20,14 +20,19 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 public class SimpleMessage implements Message {
 
@@ -120,5 +125,22 @@ public class SimpleMessage implements Message {
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
         return attachments;
+    }
+
+    @Override
+    public Publisher<ByteBuffer> getHeaderContentReactive() {
+        try {
+            if (bodyStartOctet >= content.size()) {
+                return content.reactiveBytes();
+            }
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+        return Message.super.getHeaderContentReactive();
+    }
+
+    @Override
+    public Publisher<ByteBuffer> getFullContentReactive() {
+        return content.reactiveBytes();
     }
 }

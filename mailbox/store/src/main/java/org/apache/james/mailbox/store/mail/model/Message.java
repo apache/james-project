@@ -18,14 +18,22 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.apache.james.mailbox.model.Content.BUFFER_SIZE;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
+import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 public interface Message {
 
@@ -41,6 +49,15 @@ public interface Message {
      * @return body, not null
      */
     InputStream getBodyContent() throws IOException;
+
+    default Publisher<ByteBuffer> getBodyContentReactive() {
+        try {
+            return ReactorUtils.toChunks(getBodyContent(), BUFFER_SIZE)
+                .subscribeOn(Schedulers.boundedElastic());
+        } catch (IOException e) {
+            return Flux.error(e);
+        }
+    }
 
     /**
      * Gets the top level MIME content media type.
@@ -86,6 +103,16 @@ public interface Message {
      */
     InputStream getHeaderContent() throws IOException;
 
+
+    default Publisher<ByteBuffer> getHeaderContentReactive() {
+        try {
+            return ReactorUtils.toChunks(getHeaderContent(), BUFFER_SIZE)
+                .subscribeOn(Schedulers.boundedElastic());
+        } catch (IOException e) {
+            return Flux.error(e);
+        }
+    }
+
     /**
      * Returns the full raw content of the MailboxMessage via an {@link InputStream}.
      *
@@ -93,6 +120,16 @@ public interface Message {
      * on every call
      */
     InputStream getFullContent() throws IOException;
+
+
+    default Publisher<ByteBuffer> getFullContentReactive() {
+        try {
+            return ReactorUtils.toChunks(getFullContent(), BUFFER_SIZE)
+                .subscribeOn(Schedulers.boundedElastic());
+        } catch (IOException e) {
+            return Flux.error(e);
+        }
+    }
 
     /**
      * Gets a read-only list of meta-data properties.
