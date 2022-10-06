@@ -29,8 +29,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -71,6 +71,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -103,8 +104,8 @@ public class FeedHamToRspamdTaskTest {
         }
 
         @Override
-        public Mono<Void> reportAsHam(InputStream content) {
-            return Mono.fromCallable(() -> content)
+        public Mono<Void> reportAsHam(Publisher<ByteBuffer> content) {
+            return Mono.from(content)
                 .doOnNext(e -> hitCounter.incrementAndGet())
                 .then();
         }

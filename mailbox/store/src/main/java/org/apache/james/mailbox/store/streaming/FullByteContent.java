@@ -24,12 +24,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Abstract base class for {@link Content} implementations which hold the headers and 
@@ -82,7 +87,21 @@ public class FullByteContent implements Content {
     public long size() {
         return size;
     }
-    
 
-    
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        Flux<ByteBuffer> headerContent = Mono.fromCallable(() -> {
+                StringBuilder sb = new StringBuilder();
+                for (Header header : headers) {
+                    sb.append(header.getName()).append(NAME_DELIMITER).append(header.getValue()).append(END_OF_LINE);
+                }
+                sb.append(END_OF_LINE);
+                return sb.toString().getBytes(US_ASCII);
+            })
+            .flatMapMany(bytes -> Flux.just(bytes).map(ByteBuffer::wrap));
+
+        Flux<ByteBuffer> bodyContent = Flux.just(body).map(ByteBuffer::wrap);
+
+        return Flux.concat(headerContent, bodyContent);
+    }
 }

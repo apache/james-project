@@ -20,9 +20,11 @@ package org.apache.james.mailbox.store.streaming;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.store.mail.model.Message;
+import org.reactivestreams.Publisher;
 
 /**
  * {@link Content} which is stored in a {@link InputStream}
@@ -65,4 +67,13 @@ public final class InputStreamContent implements Content {
        
     }
 
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        switch (type) {
+            case FULL:
+                return m.getFullContentReactive();
+            default:
+                return m.getBodyContentReactive();
+        }
+    }
 }

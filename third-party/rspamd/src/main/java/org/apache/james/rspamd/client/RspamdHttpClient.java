@@ -21,7 +21,7 @@ package org.apache.james.rspamd.client;
 
 import static org.apache.james.rspamd.client.RspamdClientConfiguration.DEFAULT_TIMEOUT_IN_SECONDS;
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
@@ -36,6 +36,7 @@ import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClient;
@@ -82,11 +84,11 @@ public class RspamdHttpClient {
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 
-    public Mono<Void> reportAsSpam(InputStream content) {
+    public Mono<Void> reportAsSpam(Publisher<ByteBuffer> content) {
         return reportMail(content, LEARN_SPAM_ENDPOINT);
     }
 
-    public Mono<Void> reportAsHam(InputStream content) {
+    public Mono<Void> reportAsHam(Publisher<ByteBuffer> content) {
         return reportMail(content, LEARN_HAM_ENDPOINT);
     }
 
@@ -127,12 +129,10 @@ public class RspamdHttpClient {
             .headers(headers -> headers.add("Password", configuration.getPassword()));
     }
 
-    private Mono<Void> reportMail(InputStream content, String endpoint) {
+    private Mono<Void> reportMail(Publisher<ByteBuffer> content, String endpoint) {
         return httpClient.post()
             .uri(endpoint)
-            .send(ReactorUtils.toChunks(content, BUFFER_SIZE)
-                .map(Unpooled::wrappedBuffer)
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+            .send(Flux.from(content).map(Unpooled::wrappedBuffer))
             .responseSingle(this::reportMailHttpResponseHandler);
     }
 

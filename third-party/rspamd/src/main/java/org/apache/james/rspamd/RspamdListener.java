@@ -20,7 +20,7 @@
 package org.apache.james.rspamd;
 
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
 
@@ -48,7 +48,6 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
@@ -114,18 +113,18 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .map(mailbox -> Pair.of(mailbox, mapperFactory.getMessageMapper(session)))
             .flatMapMany(pair -> Flux.fromIterable(MessageRange.toRanges(addedEvent.getUids()))
                 .flatMap(range -> pair.getRight().findInMailboxReactive(pair.getLeft(), range, MessageMapper.FetchType.FULL, LIMIT)))
-            .map(Throwing.function(MailboxMessage::getFullContent))
+            .map(MailboxMessage::getFullContentReactive)
             .flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
 
-    private Flux<InputStream> mailboxMessagePublisher(MessageMoveEvent messageMoveEvent) {
+    private Flux<ByteBuffer> mailboxMessagePublisher(MessageMoveEvent messageMoveEvent) {
         return Mono.fromCallable(() -> mapperFactory.getMessageIdMapper(mailboxManager.createSystemSession(Username.of(getClass().getCanonicalName()))))
             .flatMapMany(messageIdMapper -> messageIdMapper.findReactive(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.FULL))
-            .map(Throwing.function(MailboxMessage::getFullContent));
+            .flatMap(MailboxMessage::getFullContentReactive);
     }
 
-    private Mono<Void> handleMessageMoved(Flux<InputStream> mailboxMessagesPublisher, MessageMoveEvent messageMoveEvent) {
+    private Mono<Void> handleMessageMoved(Flux<ByteBuffer> mailboxMessagesPublisher, MessageMoveEvent messageMoveEvent) {
         Mono<Boolean> reportHamIfNotSpamDetected = isMessageMovedOutOfSpamMailbox(messageMoveEvent)
             .filter(FunctionalUtils.identityPredicate())
             .doOnNext(isHam -> LOGGER.debug("Ham event detected, EventId = {}", messageMoveEvent.getEventId().getId()));
@@ -134,11 +133,11 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .flatMap(isSpam -> {
                 if (isSpam) {
                     LOGGER.debug("Spam event detected, EventId = {}", messageMoveEvent.getEventId().getId());
-                    return mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsSpam, ReactorUtils.DEFAULT_CONCURRENCY)
+                    return rspamdHttpClient.reportAsSpam(mailboxMessagesPublisher)
                         .then();
                 } else {
                     return reportHamIfNotSpamDetected
-                        .flatMapMany(isHam -> mailboxMessagesPublisher.flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY))
+                        .flatMapMany(isHam -> rspamdHttpClient.reportAsHam(mailboxMessagesPublisher))
                         .then();
                 }
             });

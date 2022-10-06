@@ -21,8 +21,12 @@ package org.apache.james.imap.processor.fetch;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.james.mailbox.model.Content;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 /**
  * Just an Empty {@link Content}
@@ -44,4 +48,9 @@ public class EmptyContent implements Content {
         return new ByteArrayInputStream(EMPTY_ARRAY);
     }
 
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        return Flux.just(EMPTY_ARRAY)
+            .map(ByteBuffer::wrap);
+    }
 }

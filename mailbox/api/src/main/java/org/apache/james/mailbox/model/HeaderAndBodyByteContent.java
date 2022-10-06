@@ -22,6 +22,11 @@ package org.apache.james.mailbox.model;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.ByteBuffer;
+
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 public final class HeaderAndBodyByteContent implements Content {
 
@@ -46,5 +51,10 @@ public final class HeaderAndBodyByteContent implements Content {
         return new SequenceInputStream(
             new ByteArrayInputStream(headers),
             new ByteArrayInputStream(body));
+    }
+
+    @Override
+    public Publisher<ByteBuffer> reactiveBytes() {
+        return Flux.concat(Flux.just(headers).map(ByteBuffer::wrap), Flux.just(body).map(ByteBuffer::wrap));
     }
 }
