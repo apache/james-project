@@ -177,6 +177,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.reportedSpamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
                 .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+                .body("additionalInformation.runningOptions.rspamdTimeout", is(RunningOptions.DEFAULT_RSPAMD_TIMEOUT))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
         }
@@ -452,6 +453,7 @@ public class FeedMessageRouteTest {
                 .body("additionalInformation.hamMessageCount", is(2))
                 .body("additionalInformation.reportedHamMessageCount", is(2))
                 .body("additionalInformation.errorCount", is(0))
+                .body("additionalInformation.runningOptions.rspamdTimeout", is(RunningOptions.DEFAULT_RSPAMD_TIMEOUT))
                 .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
                 .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
                 .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
@@ -703,5 +705,45 @@ public class FeedMessageRouteTest {
                 .body("message", is("Invalid arguments supplied in the user request"))
                 .body("details", containsString("samplingProbability"));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {-1, -0.1, 1.1})
+    void routeShouldReturnErrorWhenRspamdTimeoutInvalid(double rspamdTimeout) {
+        given()
+            .queryParam("action", "reportSpam")
+            .queryParam("rspamdTimeout", rspamdTimeout)
+            .post()
+        .then()
+            .statusCode(BAD_REQUEST_400)
+            .contentType(JSON)
+            .body("statusCode", is(BAD_REQUEST_400))
+            .body("type", is("InvalidArgument"))
+            .body("message", is("Can not parse rspamdTimeout"));
+    }
+
+    @Test
+    void taskShouldDisplayRspamdTimeoutAsSpamRunningOption() {
+        String taskId = given()
+            .queryParam("action", "reportSpam")
+            .queryParam("rspamdTimeout", 13)
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("additionalInformation.type", is(FeedSpamToRspamdTask.TASK_TYPE.asString()))
+            .body("additionalInformation.spamMessageCount", is(0))
+            .body("additionalInformation.reportedSpamMessageCount", is(0))
+            .body("additionalInformation.errorCount", is(0))
+            .body("additionalInformation.runningOptions.messagesPerSecond", is(RunningOptions.DEFAULT_MESSAGES_PER_SECOND))
+            .body("additionalInformation.runningOptions.rspamdTimeout", is(13))
+            .body("additionalInformation.runningOptions.periodInSecond", is(nullValue()))
+            .body("additionalInformation.runningOptions.samplingProbability", is((float) RunningOptions.DEFAULT_SAMPLING_PROBABILITY));
     }
 }

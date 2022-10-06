@@ -241,6 +241,7 @@ public class FeedSpamToRspamdTask implements Task {
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(Duration.ofSeconds(1))
                 .forOperation(messageResult -> rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> messageResult.getFullContent().getInputStream()).get())
+                    .timeout(Duration.ofSeconds(runningOptions.getRspamdTimeout()))
                     .then(Mono.fromCallable(() -> {
                         context.incrementReportedSpamMessageCount(1);
                         return Result.COMPLETED;

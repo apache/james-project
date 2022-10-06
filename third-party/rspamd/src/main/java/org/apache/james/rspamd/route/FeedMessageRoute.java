@@ -40,6 +40,7 @@ import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 
 import com.google.common.base.Preconditions;
 
@@ -100,7 +101,8 @@ public class FeedMessageRoute implements Routes {
         int messagesPerSecond = getMessagesPerSecond(request).orElse(RunningOptions.DEFAULT_MESSAGES_PER_SECOND);
         double samplingProbability = getSamplingProbability(request).orElse(RunningOptions.DEFAULT_SAMPLING_PROBABILITY);
         Optional<Boolean> classifiedAsSpam = getClassifiedAsSpam(request);
-        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability, classifiedAsSpam);
+        int rspamdTimeout = ParametersExtractor.extractPositiveInteger(request, "rspamdTimeout").orElse(RunningOptions.DEFAULT_RSPAMD_TIMEOUT);
+        return new RunningOptions(periodInSecond, messagesPerSecond, samplingProbability, classifiedAsSpam, rspamdTimeout);
     }
 
     private Optional<Long> getPeriod(Request req) {
