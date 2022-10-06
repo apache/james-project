@@ -108,7 +108,10 @@ public interface Store<T, I> {
                 .flatMap(entry -> readByteSource(bucketName, entry.getValue(), entry.getKey().getStoragePolicy())
                     .map(result -> Pair.of(entry.getKey(), result)))
                 .collectMap(Map.Entry::getKey, Pair::getValue)
-                .map(decoder::decode);
+                // Critical to correctly propagate errors.
+                // Replacing by `map` would cause the error not to be catch downstream. No idea why, failed to reproduce with a test.
+                // Impact: unacknowledged messages for RabbitMQ mailQueue that eventually piles up to interruption of service.
+                .flatMap(e -> Mono.fromCallable(() -> decoder.decode(e)));
         }
 
         private Mono<CloseableByteSource> readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
