@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import javax.inject.Inject
 import org.apache.james.jmap.api.identity.{IdentityNotFoundException, IdentityRepository, IdentityUpdateRequest}
 import org.apache.james.jmap.api.model.IdentityId
 import org.apache.james.jmap.core.SetError
@@ -30,8 +31,6 @@ import org.apache.james.jmap.method.IdentitySetUpdatePerformer.{IdentitySetUpdat
 import org.apache.james.mailbox.MailboxSession
 import play.api.libs.json.{JsObject, JsValue}
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.Inject
 
 object IdentitySetUpdatePerformer {
   sealed trait UpdateResult
@@ -69,7 +68,7 @@ object IdentitySetUpdatePerformer {
 
   object IdentityUpdate {
     val serverSetProperty: Set[String] = Set("id", "mayDelete", "email")
-    val assignableProperties: Set[String] = Set("name", "replyTo", "bcc", "textSignature", "htmlSignature")
+    val assignableProperties: Set[String] = Set("name", "replyTo", "bcc", "textSignature", "htmlSignature", "sortOrder")
     val knownProperties: Set[String] = assignableProperties ++ serverSetProperty
   }
 }

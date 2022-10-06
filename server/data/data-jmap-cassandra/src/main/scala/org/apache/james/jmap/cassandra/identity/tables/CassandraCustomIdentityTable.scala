@@ -31,6 +31,7 @@ object CassandraCustomIdentityTable {
   val HTML_SIGNATURE: String = "html_signature"
   val MAY_DELETE: String = "may_delete"
   val EMAIL_ADDRESS: String = "email_address"
+  val SORT_ORDER: String = "sort_order"
 
   object EmailAddress {
     val NAME: String = "name"

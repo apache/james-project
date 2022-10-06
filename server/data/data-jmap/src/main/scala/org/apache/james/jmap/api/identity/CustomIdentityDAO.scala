@@ -38,9 +38,19 @@ case class IdentityCreationRequest(name: Option[IdentityName],
                                    email: MailAddress,
                                    replyTo: Option[List[EmailAddress]],
                                    bcc: Option[List[EmailAddress]],
+                                   sortOrder: Option[Int] = None,
                                    textSignature: Option[TextSignature],
                                    htmlSignature: Option[HtmlSignature]) {
-  def asIdentity(id: IdentityId): Identity = Identity(id, name.getOrElse(IdentityName.DEFAULT), email, replyTo, bcc, textSignature.getOrElse(TextSignature.DEFAULT), htmlSignature.getOrElse(HtmlSignature.DEFAULT), mayDelete = MayDeleteIdentity(true))
+  def asIdentity(id: IdentityId): Identity = Identity(
+    id = id,
+    name = name.getOrElse(IdentityName.DEFAULT),
+    email = email,
+    replyTo = replyTo,
+    bcc = bcc,
+    textSignature = textSignature.getOrElse(TextSignature.DEFAULT),
+    htmlSignature = htmlSignature.getOrElse(HtmlSignature.DEFAULT),
+    mayDelete = MayDeleteIdentity(true),
+    sortOrder = sortOrder.getOrElse(Identity.DEFAULT_SORTORDER))
 }
 
 trait IdentityUpdate {
@@ -55,6 +65,9 @@ case class IdentityReplyToUpdate(replyTo: Option[List[EmailAddress]]) extends Id
 case class IdentityBccUpdate(bcc: Option[List[EmailAddress]]) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(bcc = bcc)
 }
+case class IdentitySortOrderUpdate(sortOrder: Int) extends IdentityUpdate {
+  override def update(identity: Identity): Identity = identity.copy(sortOrder = sortOrder)
+}
 case class IdentityTextSignatureUpdate(textSignature: TextSignature) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(textSignature = textSignature)
 }
@@ -64,11 +77,12 @@ case class IdentityHtmlSignatureUpdate(htmlSignature: HtmlSignature) extends Ide
 
 case class IdentityUpdateRequest(name: Option[IdentityNameUpdate] = None,
                                  replyTo: Option[IdentityReplyToUpdate] = None,
+                                 sortOrder: Option[IdentitySortOrderUpdate] = None,
                                  bcc: Option[IdentityBccUpdate] = None,
                                  textSignature: Option[IdentityTextSignatureUpdate] = None,
                                  htmlSignature: Option[IdentityHtmlSignatureUpdate] = None) extends IdentityUpdate {
   def update(identity: Identity): Identity =
-    List(name, replyTo, bcc, textSignature, htmlSignature)
+    List(name, replyTo, bcc, textSignature, htmlSignature, sortOrder)
       .flatten
       .foldLeft(identity)((acc, update) => update.update(acc))
 
@@ -111,7 +125,8 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepositor
           bcc = None,
           textSignature = TextSignature.DEFAULT,
           htmlSignature = HtmlSignature.DEFAULT,
-          mayDelete = MayDeleteIdentity(false))))
+          mayDelete = MayDeleteIdentity(false),
+          sortOrder = Identity.DEFAULT_SORTORDER)))
 
   def userCanSendFrom(username: Username, mailAddress: MailAddress): SMono[Boolean] =
     SMono.fromPublisher(canSendFrom.userCanSendFromReactive(username, usersRepository.getUsername(mailAddress)))

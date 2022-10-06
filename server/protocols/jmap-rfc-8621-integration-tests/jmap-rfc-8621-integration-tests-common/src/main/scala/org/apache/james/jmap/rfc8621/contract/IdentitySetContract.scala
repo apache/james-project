@@ -173,6 +173,107 @@ trait IdentitySetContract {
   }
 
   @Test
+  def setIdentityShouldSucceedWithSortOrder(): Unit = {
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission", "urn:apache:james:params:jmap:mail:identity:sortorder"],
+         |	"methodCalls": [
+         |		[
+         |			"Identity/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"create": {
+         |					"4f29": {
+         |						"name": "Bob",
+         |						"email": "bob@domain.tld",
+         |						"replyTo": [{
+         |							"name": "Alice",
+         |							"email": "alice@domain.tld"
+         |						}],
+         |						"bcc": [{
+         |							"name": "David",
+         |							"email": "david@domain.tld"
+         |						}],
+         |						"textSignature": "Some text signature",
+         |						"htmlSignature": "<p>Some html signature</p>",
+         |            "sortOrder":354
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		],
+         |		["Identity/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["#4f29"]
+         |			}, "c2"
+         |		]
+         |
+         |	]
+         |}""".stripMargin
+
+    val response =  `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "${SESSION_STATE.value}",
+           |	"methodResponses": [
+           |		[
+           |			"Identity/set",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"created": {
+           |					"4f29": {
+           |						"id": "$${json-unit.ignore}",
+           |						"mayDelete": true
+           |					}
+           |				}
+           |			},
+           |			"c1"
+           |		],
+           |		[
+           |			"Identity/get",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"list": [{
+           |						"id": "$${json-unit.ignore}",
+           |						"name": "Bob",
+           |						"email": "bob@domain.tld",
+           |						"replyTo": [{
+           |							"name": "Alice",
+           |							"email": "alice@domain.tld"
+           |						}],
+           |						"bcc": [{
+           |							"name": "David",
+           |							"email": "david@domain.tld"
+           |						}],
+           |						"textSignature": "Some text signature",
+           |						"htmlSignature": "<p>Some html signature</p>",
+           |						"mayDelete": true,
+           |            "sortOrder": 354
+           |					}
+           |				]
+           |			},
+           |			"c2"
+           |		]
+           |	]
+           |}""".stripMargin)
+  }
+
+  @Test
   def setIdentityAndGetIdentityCombinedShouldSucceed(): Unit = {
     val request =
       s"""{
@@ -917,6 +1018,115 @@ trait IdentitySetContract {
            |                        "textSignature": "Difference text signature",
            |                        "htmlSignature": "<p>Difference html signature</p>",
            |                        "mayDelete": true
+           |                    }
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldModifyIdentityEntryWhenSortOrder(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission",
+           |        "urn:apache:james:params:jmap:mail:identity:sortorder"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": "NewName1",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>",
+           |                        "sortOrder": 125
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "ids": ["$identityId"]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$identityId": { }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "list": [
+           |                    {
+           |                        "id": "$identityId",
+           |                        "name": "NewName1",
+           |                        "email": "bob@domain.tld",
+           |                        "replyTo": [
+           |                            {
+           |                                "name": "Difference Alice",
+           |                                "email": "alice2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "bcc": [
+           |                            {
+           |                                "name": "Difference David",
+           |                                "email": "david2@domain.tld"
+           |                            }
+           |                        ],
+           |                        "textSignature": "Difference text signature",
+           |                        "htmlSignature": "<p>Difference html signature</p>",
+           |                        "mayDelete": true,
+           |                        "sortOrder": 125
            |                    }
            |                ]
            |            },

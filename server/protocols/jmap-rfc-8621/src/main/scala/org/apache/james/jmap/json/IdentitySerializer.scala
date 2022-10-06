@@ -20,11 +20,14 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined
+import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
-import org.apache.james.jmap.api.identity.{IdentityBccUpdate, IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityNameUpdate, IdentityReplyToUpdate, IdentityTextSignatureUpdate, IdentityUpdateRequest}
+import org.apache.james.jmap.api.identity.{IdentityBccUpdate, IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityNameUpdate, IdentityReplyToUpdate, IdentitySortOrderUpdate, IdentityTextSignatureUpdate, IdentityUpdateRequest}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{Properties, SetError, UuidState}
+import org.apache.james.jmap.core.{CapabilityIdentifier, Properties, SetError, UuidState}
+import org.apache.james.jmap.mail.Mailbox.idProperty
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentitySetUpdateResponse
 import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
@@ -83,6 +86,7 @@ object IdentitySerializer {
 
   private implicit val identityReplyToUpdateReads: Reads[IdentityReplyToUpdate] = Json.valueReads[IdentityReplyToUpdate]
   private implicit val identityBccUpdateReads: Reads[IdentityBccUpdate] = Json.valueReads[IdentityBccUpdate]
+  private implicit val identitySortOrderUpdateReads: Reads[IdentitySortOrderUpdate] = Json.valueReads[IdentitySortOrderUpdate]
 
   private implicit val identityTextSignatureUpdateReads: Reads[IdentityTextSignatureUpdate] = Json.valueReads[IdentityTextSignatureUpdate]
   private implicit val identityHtmlSignatureUpdateReads: Reads[IdentityHtmlSignatureUpdate] = Json.valueReads[IdentityHtmlSignatureUpdate]
@@ -91,13 +95,27 @@ object IdentitySerializer {
   private implicit val identityCreationRequest: Reads[IdentityCreationRequest] = Json.reads[IdentityCreationRequest]
   private implicit val identityUpdateRequest: Reads[IdentityUpdateRequest]= Json.reads[IdentityUpdateRequest]
 
-  def serialize(response: IdentityGetResponse, properties: Properties): JsObject = Json.toJsObject(response)
+  def serialize(response: IdentityGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsObject = Json.toJsObject(response)
     .transform((__ \ "list").json.update {
       case JsArray(underlying) => JsSuccess(JsArray(underlying.map {
-        case jsonObject: JsObject => properties.filter(jsonObject)
+        case jsonObject: JsObject => propertiesFiltered(properties, capabilities).filter(jsonObject)
         case jsValue => jsValue
       }))
     }).get
+
+
+  val propertiesForCapabilities: Map[CapabilityIdentifier, Properties] = Map(
+    CapabilityIdentifier.JAMES_IDENTITY_SORTORDER -> Properties.apply("sortOrder"))
+
+  def propertiesFiltered(requestedProperties: Properties, allowedCapabilities : Set[CapabilityIdentifier]) : Properties = {
+    val propertiesToHide: Properties = Properties(propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
+      .values
+      .flatMap(p => p.value)
+      .toSet)
+
+    (idProperty ++ requestedProperties) -- propertiesToHide
+  }
+
   def serialize(response: IdentitySetResponse): JsObject = Json.toJsObject(response)
 
   def deserialize(input: JsValue): JsResult[IdentityGetRequest] = Json.fromJson[IdentityGetRequest](input)

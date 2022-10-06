@@ -20,6 +20,21 @@ Change list:
 - [Migration to Cassandra driver 4](#migration-to-cassandra-driver-4)
 - [Migration to OpenSearch](#migration-to-opensearch)
 - [Deleted message vault is now deactivated by default](#deleted-message-vault-is-now-deactivated-by-default)
+- [SortOrder addition in Identity](#sortorder-addition-in-identity)
+
+### SortOrder addition in Identity
+
+Date: 06/10/2022
+
+Concerned products: Distributed James, Cassandra James
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3831
+
+We added a `sortOrder` field to the identity object. Modification to the underlying Cassandra table is needed:
+
+```
+cqlsh:apache_james> ALTER TABLE custom_identity ADD sort_order int  ;
+```
 
 ### Deleted message vault is now deactivated by default
 
