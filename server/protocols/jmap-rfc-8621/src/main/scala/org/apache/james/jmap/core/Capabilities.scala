@@ -18,47 +18,17 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
-import java.net.URI
-
 import com.google.common.annotations.VisibleForTesting
-import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 
 object DefaultCapabilities {
-  def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
-    properties = CoreCapabilityProperties(
-      maxUploadSize,
-      MaxConcurrentUpload(4L),
-      MaxSizeRequest(10_000_000L),
-      MaxConcurrentRequests(4L),
-      MaxCallsInRequest(16L),
-      MaxObjectsInGet(500L),
-      MaxObjectsInSet(500L),
-      collationAlgorithms = List("i;unicode-casemap")))
-
-  def webSocketCapability(url: URI) = WebSocketCapability(
-    properties = WebSocketCapabilityProperties(SupportsPush(true), url))
-
-  val MAIL_CAPABILITY = MailCapability(
-    properties = MailCapabilityProperties(
-      MaxMailboxesPerEmail(Some(10_000_000L)),
-      MaxMailboxDepth(None),
-      MaxSizeMailboxName(200L),
-      MaxSizeAttachmentsPerEmail(20_000_000L),
-      emailQuerySortOptions = List("receivedAt", "sentAt", "size", "from", "to", "subject"),
-      MayCreateTopLevelMailbox(true)))
-  val QUOTA_CAPABILITY = QuotaCapability()
-  val SHARES_CAPABILITY = SharesCapability()
-  val MDN_CAPABILITY = MDNCapability()
-  val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
-  val SUBMISSION_CAPABILITY = SubmissionCapability()
-
   @VisibleForTesting
   def supported(configuration: JmapRfc8621Configuration): Set[CapabilityFactory] = Set(
     CoreCapabilityFactory(configuration.maxUploadSize),
     MailCapabilityFactory,
     QuotaCapabilityFactory,
     JmapQuotaCapabilityFactory,
+    IdentitySortOrderCapabilityFactory,
     SharesCapabilityFactory,
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,
