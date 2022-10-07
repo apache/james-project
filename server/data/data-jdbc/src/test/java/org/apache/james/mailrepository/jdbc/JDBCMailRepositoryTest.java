@@ -37,7 +37,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
+/**
+ * @Deprecated Will be dropped in 3.9.0. See https://www.mail-archive.com/server-dev@james.apache.org/msg72460.html
+ */
+@Deprecated
 public class JDBCMailRepositoryTest implements MailRepositoryContract {
 
     private JDBCMailRepository mailRepository;

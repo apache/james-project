@@ -76,7 +76,9 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of a MailRepository on a database.
+ * @Deprecated Will be dropped in 3.9.0. See https://www.mail-archive.com/server-dev@james.apache.org/msg72460.html
  */
+@Deprecated
 public class JDBCMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
 
