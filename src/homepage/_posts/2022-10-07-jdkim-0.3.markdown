@@ -1,0 +1,22 @@
+---
+layout: post
+title:  "Apache James JDKIM 0.3"
+date:   2022-10-07  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce the 0.3 release of the JDKIM library.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+This release relocates the DKIM mailet into Apache James, upgrades dependencies, and fixed two bugs:
+
+```
+Fix FWS is not trimmed correctly
+DKIM-38 Support several headers with different cases
+```
+
+The Apache James PMC would like to thanks all contributors who made this release possible!
+
+[tracker]: https://james.apache.org/download.cgi#Apache_jDKIM
+[download]: https://james.apache.org/download.cgi#Apache_Mime4J
