@@ -27,9 +27,12 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.Main;
 import org.apache.james.PulsarExtension;
 import org.apache.james.TestingSmtpRelayJamesServerBuilder;
+import org.apache.james.junit.categories.Unstable;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(Unstable.TAG)
 public class CassandraPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
 
     @Order(1)
