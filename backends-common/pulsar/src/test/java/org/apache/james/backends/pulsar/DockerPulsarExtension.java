@@ -19,9 +19,16 @@
 
 package org.apache.james.backends.pulsar;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.pulsar.client.admin.PulsarAdmin;
+import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.policies.data.TenantInfo;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -43,9 +50,11 @@ public class DockerPulsarExtension implements
         ParameterResolver {
     private static final Logger logger = LoggerFactory.getLogger(DockerPulsarExtension.class);
     private static PulsarContainer container;
+
     private static void displayDockerLog(OutputFrame outputFrame) {
         logger.info(outputFrame.getUtf8String().trim());
     }
+
     private PulsarConfiguration configuration;
     private PulsarAdmin adminClient;
     private DockerPulsar dockerPulsar;
@@ -66,9 +75,9 @@ public class DockerPulsarExtension implements
 
     PulsarConfiguration pulsarConfiguration() {
         return new PulsarConfiguration(
-            container.getPulsarBrokerUrl(),
-            container.getHttpServiceUrl(),
-            new Namespace("public/" + RandomStringUtils.randomAlphabetic(10)));
+                container.getPulsarBrokerUrl(),
+                container.getHttpServiceUrl(),
+                new Namespace("test/" + RandomStringUtils.randomAlphabetic(10)));
     }
 
     public PulsarConfiguration getConfiguration() {
@@ -76,9 +85,11 @@ public class DockerPulsarExtension implements
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws PulsarClientException {
+    public void beforeAll(ExtensionContext context) throws PulsarClientException, PulsarAdminException {
         container.start();
         adminClient = PulsarAdmin.builder().serviceHttpUrl(container.getHttpServiceUrl()).build();
+        Set<String> clusters = new HashSet<>(adminClient.clusters().getClusters());
+        adminClient.tenants().createTenant("test", TenantInfo.builder().allowedClusters(clusters).build());
     }
 
     @Override

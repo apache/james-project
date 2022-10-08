@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
+import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -36,7 +37,7 @@ public class PulsarExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws PulsarClientException {
+    public void beforeAll(ExtensionContext extensionContext) throws PulsarClientException, PulsarAdminException {
         pulsar.beforeAll(extensionContext);
     }
 
