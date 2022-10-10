@@ -39,6 +39,7 @@ import org.apache.james.jmap.Version;
 import org.apache.james.jmap.change.MailboxChangeListener;
 import org.apache.james.jmap.core.CapabilityFactory;
 import org.apache.james.jmap.core.CoreCapabilityFactory;
+import org.apache.james.jmap.core.JmapQuotaCapabilityFactory$;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.core.MDNCapabilityFactory$;
 import org.apache.james.jmap.core.MailCapabilityFactory$;
@@ -144,6 +145,7 @@ public class JMAPModule extends AbstractModule {
         Multibinder<CapabilityFactory> supportedCapabilities = Multibinder.newSetBinder(binder(), CapabilityFactory.class);
         supportedCapabilities.addBinding().toInstance(MailCapabilityFactory$.MODULE$);
         supportedCapabilities.addBinding().toInstance(QuotaCapabilityFactory$.MODULE$);
+        supportedCapabilities.addBinding().toInstance(JmapQuotaCapabilityFactory$.MODULE$);
         supportedCapabilities.addBinding().toInstance(SharesCapabilityFactory$.MODULE$);
         supportedCapabilities.addBinding().toInstance(VacationResponseCapabilityFactory$.MODULE$);
         supportedCapabilities.addBinding().toInstance(SubmissionCapabilityFactory$.MODULE$);
