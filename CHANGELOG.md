@@ -12,6 +12,7 @@ This release brings the following significant changes:
  - Upgrade to Cassandra driver 4
  - Migrate to OpenSearch
  - Review our threading model to cap threads performing blocking tasks
+ - Implement official JMAP quotas specification
 
 ### Added
 
@@ -32,6 +33,7 @@ This release brings the following significant changes:
  - JAMES-3715 Allow disabling graceful shutdown
  - JAMES-3724 Leak detection to prevent temporary file leaks
  - JAMES-3723 Allow to not consume emails upon reprocessing
+ - JAMES-3830 Implement official JMAP quotas specification
 
 ### Changes
 
