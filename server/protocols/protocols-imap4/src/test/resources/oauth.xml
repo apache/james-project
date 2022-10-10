@@ -1,6 +1,6 @@
 <imapserver enabled="true">
     <jmxName>imapserver</jmxName>
-    <bind>0.0.0.0:9993</bind>
+    <bind>0.0.0.0:0</bind>
     <tls socketTLS="false" startTLS="true">
         <privateKey>private.key</privateKey>
         <certificates>certs.self-signed.csr</certificates>
