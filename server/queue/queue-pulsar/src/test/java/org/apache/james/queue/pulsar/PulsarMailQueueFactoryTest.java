@@ -33,6 +33,7 @@ import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -44,9 +45,11 @@ import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+@Tag(Unstable.TAG)
 @ExtendWith(MailQueueMetricExtension.class)
 @ExtendWith(DockerPulsarExtension.class)
 class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQueue>, ManageableMailQueueFactoryContract<PulsarMailQueue> {
