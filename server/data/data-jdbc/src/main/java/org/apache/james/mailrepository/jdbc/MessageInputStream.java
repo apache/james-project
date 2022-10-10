@@ -43,7 +43,9 @@ import org.apache.mailet.Mail;
  * 
  * <strong>Note</strong>: Javamail (or the Activation Framework) already uses a
  * worker thread when asked for an inputstream.
+ * @Deprecated Will be dropped in 3.9.0. See https://www.mail-archive.com/server-dev@james.apache.org/msg72460.html
  */
+@Deprecated
 final class MessageInputStream extends InputStream {
 
     /**

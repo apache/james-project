@@ -38,7 +38,9 @@ import org.apache.james.util.sql.JDBCUtil;
  * This class points to a specific message in a repository. This will return an
  * InputStream to the JDBC field/record, possibly sequenced with the file
  * stream.
+ * @Deprecated Will be dropped in 3.9.0. See https://www.mail-archive.com/server-dev@james.apache.org/msg72460.html
  */
+@Deprecated
 public class MimeMessageJDBCSource implements MimeMessageSource {
 
     /**
