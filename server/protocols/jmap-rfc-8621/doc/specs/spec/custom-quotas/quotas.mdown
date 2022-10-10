@@ -1,7 +1,7 @@
 # Introduction
 
 <aside class="notice">
-  Implemented
+  Implemented, deprecated
 </aside>
 
 This specification defines a data model for handling mail quotas over JMAP, allowing you to read quota information.
