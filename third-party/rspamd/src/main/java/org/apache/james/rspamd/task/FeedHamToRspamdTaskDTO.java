@@ -55,6 +55,7 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
             .toDTOConverter((domain, type) -> new FeedHamToRspamdTaskDTO(type,
                 domain.getRunningOptions().getPeriodInSecond().orElse(null),
                 domain.getRunningOptions().getMessagesPerSecond(),
+                (int) domain.getRunningOptions().getRspamdTimeout().toSeconds(),
                 domain.getRunningOptions().getSamplingProbability(),
                 domain.getRunningOptions().getClassifiedAsSpam()))
             .typeName(FeedHamToRspamdTask.TASK_TYPE.asString())
@@ -68,9 +69,12 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
     private final double samplingProbability;
     private final Optional<Boolean> classifiedAsSpam;
 
+    private final int rspamdTimeoutInSeconds;
+
     public FeedHamToRspamdTaskDTO(@JsonProperty("type") String type,
                                   @JsonProperty("periodInSecond") Long periodInSecond,
                                   @JsonProperty("messagesPerSecond") int messagesPerSecond,
+                                  @JsonProperty("rspamdTimeoutInSeconds") int rspamdTimeoutInSeconds,
                                   @JsonProperty("samplingProbability") double samplingProbability,
                                   @JsonProperty("classifiedAsSpam") Optional<Boolean> classifiedAsSpam) {
         this.type = type;
@@ -78,6 +82,7 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
         this.classifiedAsSpam = classifiedAsSpam;
+        this.rspamdTimeoutInSeconds = rspamdTimeoutInSeconds;
     }
 
     @Override
@@ -99,5 +104,9 @@ public class FeedHamToRspamdTaskDTO implements TaskDTO {
 
     public double getSamplingProbability() {
         return samplingProbability;
+    }
+
+    public int getRspamdTimeoutInSeconds() {
+        return rspamdTimeoutInSeconds;
     }
 }

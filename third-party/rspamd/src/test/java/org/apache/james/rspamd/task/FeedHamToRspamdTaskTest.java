@@ -30,11 +30,13 @@ import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -59,11 +61,16 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.Delay;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -87,6 +94,7 @@ public class FeedHamToRspamdTaskTest {
     public static final long ONE_DAY_IN_SECOND = 86400;
     public static final Instant NOW = ZonedDateTime.now().toInstant();
 
+    static ClientAndServer mockServer = null;
     static class TestRspamdHttpClient extends RspamdHttpClient {
         private final AtomicInteger hitCounter;
         public TestRspamdHttpClient(RspamdClientConfiguration configuration) {
@@ -134,6 +142,13 @@ public class FeedHamToRspamdTaskTest {
         messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         mapperFactory = mailboxManager.getMapperFactory();
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock);
+    }
+
+    @AfterEach
+    void afterEach() {
+        if (mockServer != null) {
+            mockServer.stop();
+        }
     }
 
     @Test
@@ -543,6 +558,34 @@ public class FeedHamToRspamdTaskTest {
                 .errorCount(0)
                 .build());
     }
+
+    @Test
+    void errorCountShouldIncrementWhenRspamdTimeout() throws Exception {
+        mockServer = ClientAndServer.startClientAndServer(0);
+
+        mockServer
+            .when(HttpRequest.request().withPath("/learnham"))
+            .respond(httpRequest -> HttpResponse.response().withStatusCode(200), Delay.delay(TimeUnit.SECONDS, 10));
+
+        RspamdHttpClient httpClient = new RspamdHttpClient(new RspamdClientConfiguration(new URL(String.format("http://localhost:%s", mockServer.getLocalPort())),
+            PASSWORD, Optional.of(3)));
+
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, httpClient, runningOptions, clock);
+
+        appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
+
+        Task.Result result = task.run();
+
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(result).isEqualTo(Task.Result.PARTIAL);
+            assertThat(task.snapshot().getHamMessageCount()).isEqualTo(1);
+            assertThat(task.snapshot().getReportedHamMessageCount()).isEqualTo(0);
+            assertThat(task.snapshot().getErrorCount()).isEqualTo(1);
+        });
+    }
+
 
     private void appendHamMessage(MailboxPath mailboxPath, Date internalDate) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());

@@ -113,7 +113,7 @@ all messages are reported.
 By default, all messages are reported.
 - `classifiedAsSpam` (optional): Boolean, true to only include messages tagged as Spam by Rspamd, false for only
 messages tagged as ham by Rspamd. If omitted all messages are included.
-
+- `rspamdTimeout` (optional): duration, Default is 15 seconds. Provide configuration timeout when HTTP request to rspamd for learning. 
 Will return the task id. E.g:
 ```
 {
@@ -135,6 +135,7 @@ The scheduled task will have the following type `FeedSpamToRspamdTask` and the f
   "reportedSpamMessageCount": 2,
   "runningOptions": {
     "messagesPerSecond": 10,
+    "rspamdTimeoutInSeconds": 15,
     "periodInSecond": 3600,
     "samplingProbability": 1.0
   },
@@ -161,7 +162,7 @@ This endpoint has the following param:
   By default, all messages are reported.
 - `classifiedAsSpam` (optional): Boolean, true to only include messages tagged as Spam by Rspamd, false for only
 messages tagged as ham by Rspamd. If omitted all messages are included.
-
+- `rspamdTimeout` (optional): duration, Default is 15 seconds. Provide configuration timeout when HTTP request to rspamd for learning.
 Will return the task id. E.g:
 ```
 {
@@ -183,6 +184,7 @@ The scheduled task will have the following type `FeedHamToRspamdTask` and the fo
   "reportedHamMessageCount": 2,
   "runningOptions": {
     "messagesPerSecond": 10,
+    "rspamdTimeoutInSeconds": 15,
     "periodInSecond": 3600,
     "samplingProbability": 1.0
   },
