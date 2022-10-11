@@ -169,7 +169,6 @@ trait QuotaGetMethodContract {
          |""".stripMargin)
   }
 
-
   @Test
   def quotaGetShouldReturnEmptyListWhenIdsAreEmpty(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
@@ -458,7 +457,7 @@ trait QuotaGetMethodContract {
          |  "methodCalls": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "unknownAccountId",
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -497,7 +496,7 @@ trait QuotaGetMethodContract {
          |  "methodCalls": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "unknownAccountId",
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "ids": null
          |    },
          |    "c1"]]
