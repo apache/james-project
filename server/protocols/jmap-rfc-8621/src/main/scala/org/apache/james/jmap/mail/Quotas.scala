@@ -80,7 +80,7 @@ case class QuotaGetRequest(accountId: AccountId,
                            properties: Option[Properties]) extends WithAccountId
 
 object JmapQuota {
-
+  val WARN_LIMIT_PERCENTAGE = 0.9
   val allProperties: Properties = Properties("id", "resourceType", "used", "limit", "scope", "name", "dataTypes", "warnLimit", "softLimit", "description")
   val idProperty: Properties = Properties("id")
 
@@ -95,7 +95,8 @@ object JmapQuota {
         limit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
         name = QuotaName.from(AccountScope, CountResourceType, List(MailDataType)),
-        dataTypes = List(MailDataType)))
+        dataTypes = List(MailDataType),
+        warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id): Option[JmapQuota] =
     Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
@@ -106,7 +107,8 @@ object JmapQuota {
         limit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
         name = QuotaName.from(AccountScope, OctetsResourceType, List(MailDataType)),
-        dataTypes = List(MailDataType)))
+        dataTypes = List(MailDataType),
+        warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 }
 
 case class JmapQuota(id: Id,

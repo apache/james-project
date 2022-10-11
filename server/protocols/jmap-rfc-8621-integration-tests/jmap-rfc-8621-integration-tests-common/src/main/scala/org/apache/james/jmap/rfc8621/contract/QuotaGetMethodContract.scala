@@ -146,6 +146,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 100,
+         |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    },
@@ -157,6 +158,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 99,
+         |                        "warnLimit": 89,
          |                        "resourceType": "octets",
          |                        "scope": "account"
          |                    }
@@ -270,6 +272,7 @@ trait QuotaGetMethodContract {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+    quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(900))
 
     val quotaId = QuotaIdFactory.from(bobQuotaRoot, CountResourceType)
 
@@ -315,6 +318,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 100,
+         |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    }
@@ -385,6 +389,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 100,
+         |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    },
@@ -396,6 +401,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 900,
+         |                        "warnLimit": 810,
          |                        "resourceType": "octets",
          |                        "scope": "account"
          |                    }
@@ -809,7 +815,6 @@ trait QuotaGetMethodContract {
          |}""".stripMargin)
   }
 
-
   @Test
   def quotaGetShouldReturnOnlyUserQuota(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
@@ -874,6 +879,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 100,
+         |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    },
@@ -885,6 +891,7 @@ trait QuotaGetMethodContract {
          |                            "Mail"
          |                        ],
          |                        "limit": 101,
+         |                        "warnLimit": 90,
          |                        "resourceType": "octets",
          |                        "scope": "account"
          |                    }
