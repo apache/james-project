@@ -130,7 +130,6 @@ object Scope {
 
 trait Scope {
   def asString(): String
-
 }
 
 case object AccountScope extends Scope {
@@ -151,10 +150,6 @@ trait DataType {
 
 case object MailDataType extends DataType {
   override def asString(): String = "Mail"
-}
-
-case object StorageDataType extends DataType {
-  override def asString(): String = "Storage"
 }
 
 case class QuotaGetResponse(accountId: AccountId,

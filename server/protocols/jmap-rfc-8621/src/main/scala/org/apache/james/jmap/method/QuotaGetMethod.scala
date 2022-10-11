@@ -134,7 +134,7 @@ case class JmapQuotaManagerWrapper(private var quotaManager: QuotaManager,
     val jmapStorageQuotas = ListBuffer[JmapQuota]()
     storageQuota.getLimitByScope.entrySet().forEach(quota => {
 
-      val dataTypes = List(StorageDataType)
+      val dataTypes = List(MailDataType)
       val scope = org.apache.james.jmap.mail.Scope.fromJava(quota.getKey)
       val resourceType = OctetsResourceType
 

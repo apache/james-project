@@ -151,10 +151,10 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 0,
-         |                        "name": "account:octets:Storage",
+         |                        "name": "account:octets:Mail",
          |                        "id": "fbb433deb379b7ba87e2df898887056a0fa645839ee091d13e4da99e52b4c4f6",
          |                        "dataTypes": [
-         |                            "Storage"
+         |                            "Mail"
          |                        ],
          |                        "limit": 99,
          |                        "resourceType": "octets",
@@ -390,10 +390,10 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 85,
-         |                        "name": "account:octets:Storage",
+         |                        "name": "account:octets:Mail",
          |                        "id": "fbb433deb379b7ba87e2df898887056a0fa645839ee091d13e4da99e52b4c4f6",
          |                        "dataTypes": [
-         |                            "Storage"
+         |                            "Mail"
          |                        ],
          |                        "limit": 900,
          |                        "resourceType": "octets",
