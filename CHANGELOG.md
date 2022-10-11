@@ -14,6 +14,10 @@ This release brings the following significant changes:
  - Review our threading model to cap threads performing blocking tasks
  - Implement official JMAP quotas specification
 
+### Deprecations
+
+- Deprecating custom JMAP quotas specification
+
 ### Added
 
  - JAMES-3775 Rspamd extension
