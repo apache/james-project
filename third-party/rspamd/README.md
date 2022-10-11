@@ -42,6 +42,7 @@ might not even be desirable.
         <rewriteSubject>true</rewriteSubject>
         <virusProcessor>virus</virusProcessor>
         <rejectSpamProcessor>spam</rejectSpamProcessor>
+        <onMailetException>ignore</onMailetException>
     </mailet>
     <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
         <targetFolderName>Spam</targetFolderName>

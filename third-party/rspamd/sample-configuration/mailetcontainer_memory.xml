@@ -90,6 +90,7 @@
             <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
                 <rewriteSubject>true</rewriteSubject>
                 <virusProcessor>virus</virusProcessor>
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
                 <targetFolderName>Spam</targetFolderName>
