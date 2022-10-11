@@ -23,9 +23,9 @@ import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties, UnsignedInt}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, MailDataType, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaName, QuotaNotFound, QuotaResponseGetResult, StorageDataType}
+import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaNotFound, QuotaResponseGetResult}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
@@ -35,9 +35,10 @@ import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.util.ReactorUtils
 
 import javax.inject.Inject
-import scala.collection.mutable.ListBuffer
 
 class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier,
@@ -84,7 +85,7 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
           .map(listJmapQuota => QuotaResponseGetResult(jmapQuotaSet = listJmapQuota.toSet))
           .flatMapMany(result => SFlux.just(result))
       case Some(ids) => SFlux.fromIterable(ids.value)
-        .flatMap(id => jmapQuotaManagerWrapper.get(username, id.id.value)
+        .flatMap(id => jmapQuotaManagerWrapper.get(username, id.id)
           .map(jmapQuota => QuotaResponseGetResult(jmapQuotaSet = Set(jmapQuota)))
           .switchIfEmpty(SMono.just(QuotaResponseGetResult(notFound = QuotaNotFound(Set(id))))))
     }
@@ -97,58 +98,34 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
 
 case class JmapQuotaManagerWrapper(private var quotaManager: QuotaManager,
                                    private var quotaRootResolver: UserQuotaRootResolver) {
-  def get(username: Username, quotaId: String): SFlux[JmapQuota] =
+  def get(username: Username, quotaId: Id): SFlux[JmapQuota] =
     SMono.just(quotaRootResolver.forUser(username))
-      .filter(quotaRoot => quotaId.isEmpty || QuotaIdFactory.from(quotaRoot).value.equals(quotaId))
-      .flatMapMany(getJmapQuota)
+      .flatMapMany(quotaRoot => getJmapQuota(quotaRoot, Some(quotaId)))
 
   def list(username: Username): SFlux[JmapQuota] =
     SMono.just(quotaRootResolver.forUser(username))
-      .flatMapMany(getJmapQuota)
+      .flatMapMany(quotaRoot => getJmapQuota(quotaRoot))
 
-  private def getJmapQuota(quotaRoot: QuotaRoot): SFlux[JmapQuota] =
-    SMono(quotaManager.getQuotasReactive(quotaRoot))
-      .flatMapIterable(quotas => convertFromJava(quotas, quotaRoot))
+  private def getJmapQuota(quotaRoot: QuotaRoot, quotaId: Option[Id] = None): SFlux[JmapQuota] =
+    (quotaId match {
+      case None => SMono(quotaManager.getQuotasReactive(quotaRoot))
+        .flatMapMany(quotas => SMono.fromCallable(() => JmapQuota.extractUserMessageCountQuota(quotas.getMessageQuota, QuotaIdFactory.from(quotaRoot, CountResourceType)))
+          .mergeWith(SMono.fromCallable(() => JmapQuota.extractUserMessageSizeQuota(quotas.getStorageQuota, QuotaIdFactory.from(quotaRoot, OctetsResourceType)))))
 
-  private def convertFromJava(quotas: QuotaManager.Quotas, quotaRoot: QuotaRoot): List[JmapQuota] = {
-    val quotaId = QuotaIdFactory.from(quotaRoot)
-    val messageQuota = quotas.getMessageQuota
-    val jmapMessageQuotas = ListBuffer[JmapQuota]()
+      case Some(quotaIdValue) =>
+        val quotaCountPublisher = SMono.fromCallable(() => QuotaIdFactory.from(quotaRoot, CountResourceType))
+          .filter(countQuotaId => countQuotaId.value.equals(quotaIdValue.value))
+          .flatMap(_ => SMono.fromCallable(() => quotaManager.getMessageQuota(quotaRoot))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+          .map(quota => JmapQuota.extractUserMessageCountQuota(quota, quotaIdValue))
 
-    messageQuota.getLimitByScope.entrySet().forEach(quota => {
-      val dataTypes = List(MailDataType)
-      val scope = org.apache.james.jmap.mail.Scope.fromJava(quota.getKey)
-      val resourceType = CountResourceType
+        val quotaSizePublisher = SMono.fromCallable(() => QuotaIdFactory.from(quotaRoot, OctetsResourceType))
+          .filter(sizeQuotaId => sizeQuotaId.value.equals(quotaIdValue.value))
+          .flatMap(_ => SMono.fromCallable(() => quotaManager.getStorageQuota(quotaRoot))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+          .map(quota => JmapQuota.extractUserMessageSizeQuota(quota, quotaIdValue))
 
-      jmapMessageQuotas += JmapQuota(
-        id = quotaId,
-        resourceType = resourceType,
-        used = UnsignedInt.liftOrThrow(messageQuota.getUsed.asLong()),
-        limit = UnsignedInt.liftOrThrow(quota.getValue.asLong()),
-        scope = scope,
-        name = QuotaName.from(scope, resourceType, dataTypes),
-        dataTypes = dataTypes)
-    })
-
-    val storageQuota = quotas.getStorageQuota
-    val jmapStorageQuotas = ListBuffer[JmapQuota]()
-    storageQuota.getLimitByScope.entrySet().forEach(quota => {
-
-      val dataTypes = List(MailDataType)
-      val scope = org.apache.james.jmap.mail.Scope.fromJava(quota.getKey)
-      val resourceType = OctetsResourceType
-
-      jmapStorageQuotas += JmapQuota(
-        id = quotaId,
-        resourceType = resourceType,
-        used = UnsignedInt.liftOrThrow(storageQuota.getUsed.asLong()),
-        limit = UnsignedInt.liftOrThrow(quota.getValue.asLong()),
-        scope = scope,
-        name = QuotaName.from(scope, resourceType, dataTypes),
-        dataTypes = dataTypes)
-    })
-
-    jmapMessageQuotas.addAll(jmapStorageQuotas.toList).toList
-  }
+        quotaCountPublisher.mergeWith(quotaSizePublisher)
+    }).flatMap(SMono.justOrEmpty)
 
 }

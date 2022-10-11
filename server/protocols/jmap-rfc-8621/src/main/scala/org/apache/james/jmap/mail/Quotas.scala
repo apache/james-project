@@ -22,12 +22,13 @@ package org.apache.james.jmap.mail
 import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import org.apache.james.core.Domain
+import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.core.{AccountId, Id, Properties, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, Properties, UnsignedInt, UuidState}
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.mailbox.model.{QuotaRoot => ModelQuotaRoot}
+import org.apache.james.mailbox.model.{Quota => ModelQuota, QuotaRoot => ModelQuotaRoot}
 
 import java.nio.charset.StandardCharsets
 import scala.compat.java8.OptionConverters._
@@ -84,8 +85,29 @@ object JmapQuota {
   val idProperty: Properties = Properties("id")
 
   def propertiesFiltered(requestedProperties: Properties) : Properties = idProperty ++ requestedProperties
-}
 
+  def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id): Option[JmapQuota] =
+    Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+      .map(limit => JmapQuota(
+        id = countQuotaIdPlaceHolder,
+        resourceType = CountResourceType,
+        used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
+        limit = UnsignedInt.liftOrThrow(limit.asLong()),
+        scope = AccountScope,
+        name = QuotaName.from(AccountScope, CountResourceType, List(MailDataType)),
+        dataTypes = List(MailDataType)))
+
+  def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id): Option[JmapQuota] =
+    Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+      .map(limit => JmapQuota(
+        id = sizeQuotaIdPlaceHolder,
+        resourceType = OctetsResourceType,
+        used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
+        limit = UnsignedInt.liftOrThrow(limit.asLong()),
+        scope = AccountScope,
+        name = QuotaName.from(AccountScope, OctetsResourceType, List(MailDataType)),
+        dataTypes = List(MailDataType)))
+}
 
 case class JmapQuota(id: Id,
                      resourceType: ResourceType,
@@ -119,29 +141,12 @@ case object OctetsResourceType extends ResourceType {
   override def asString(): String = "octets"
 }
 
-object Scope {
-  def fromJava(scope: org.apache.james.mailbox.model.Quota.Scope): Scope =
-    scope match {
-      case org.apache.james.mailbox.model.Quota.Scope.Domain => DomainScope
-      case org.apache.james.mailbox.model.Quota.Scope.Global => GlobalScope
-      case org.apache.james.mailbox.model.Quota.Scope.User => AccountScope
-    }
-}
-
 trait Scope {
   def asString(): String
 }
 
 case object AccountScope extends Scope {
   override def asString(): String = "account"
-}
-
-case object DomainScope extends Scope {
-  override def asString(): String = "domain"
-}
-
-case object GlobalScope extends Scope {
-  override def asString(): String = "global"
 }
 
 trait DataType {
@@ -162,8 +167,8 @@ case class QuotaNotFound(value: Set[UnparsedQuotaId]) {
 }
 
 object QuotaIdFactory {
-  def from(quotaRoot: ModelQuotaRoot): Id =
-    Id.validate(Hashing.sha256.hashBytes(quotaRoot.asString().getBytes(StandardCharsets.UTF_8)).toString).toOption.get
+  def from(quotaRoot: ModelQuotaRoot, resourceType: ResourceType): Id =
+    Id.validate(Hashing.sha256.hashBytes((quotaRoot.asString() + resourceType.asString()).getBytes(StandardCharsets.UTF_8)).toString).toOption.get
 }
 
 object QuotaResponseGetResult {

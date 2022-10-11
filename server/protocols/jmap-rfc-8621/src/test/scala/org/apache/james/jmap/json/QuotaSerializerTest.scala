@@ -24,7 +24,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.core.{AccountId, Id, Properties, UnsignedInt, UuidState}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.QuotaSerializerTest.ACCOUNT_ID
-import org.apache.james.jmap.mail.{AccountScope, CountResourceType, DomainScope, JmapQuota, MailDataType, OctetsResourceType, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, UnparsedQuotaId}
+import org.apache.james.jmap.mail.{AccountScope, CountResourceType, JmapQuota, MailDataType, OctetsResourceType, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, UnparsedQuotaId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}
@@ -176,7 +176,7 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
 
       val jmapQuota2 = jmapQuota.copy(id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy9").toOption.get,
         resourceType = OctetsResourceType,
-        scope = DomainScope,
+        scope = AccountScope,
         name = QuotaName("name2"))
 
       val actualValue: QuotaGetResponse = QuotaGetResponse(
@@ -206,7 +206,7 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |            "resourceType": "octets",
           |            "used": 1,
           |            "limit": 2,
-          |            "scope": "domain",
+          |            "scope": "account",
           |            "name": "name2",
           |            "dataTypes": [
           |                "Mail"

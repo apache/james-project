@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -103,5 +104,15 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     @Override
     public void setGlobalMaxStorage(QuotaSizeLimit maxGlobalSize) throws MailboxException {
         maxQuotaManager.setGlobalMaxStorage(maxGlobalSize);
+    }
+
+    @Override
+    public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) throws MailboxException {
+        maxQuotaManager.setDomainMaxMessage(domain, count);
+    }
+
+    @Override
+    public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws MailboxException {
+        maxQuotaManager.setDomainMaxStorage(domain, size);
     }
 }
