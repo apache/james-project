@@ -75,9 +75,7 @@ public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearch
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
 
         return Flux.fromIterable(ImmutableList.copyOf(uidRanges))
-            .concatMap(range -> dao.listMessagesMetadata((CassandraId) mailbox.getMailboxId(),
-                MessageRange.range(range.getLowValue(), range.getHighValue())))
-            .filter(message -> !message.getFlags().contains(Flags.Flag.DELETED))
-            .map(message -> message.getComposedMessageId().getUid());
+            .concatMap(range -> dao.listNotDeletedUids((CassandraId) mailbox.getMailboxId(),
+                MessageRange.range(range.getLowValue(), range.getHighValue())));
     }
 }
