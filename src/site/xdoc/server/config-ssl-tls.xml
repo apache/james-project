@@ -124,6 +124,7 @@
         &lt;truststore&gt;file://conf/truststore&lt;/truststore&gt;
         &lt;truststoreType&gt;JKS&lt;/truststoreType&gt;
         &lt;truststoreSecret&gt;yoursecret&lt;/truststoreSecret&gt;
+        &lt;enableOCSPCRLChecks&gt;false&lt;/enableOCSPCRLChecks&gt;
     &lt;/clientAuth&gt;
 &lt;/tls&gt;
 </source>
@@ -132,6 +133,8 @@
          or an issuer certificate (CA) if you trust all certificates created by it. If you omit the truststore configuration,
          James will use the Java default truststore instead, effectively trusting any known CA.</p>
 
+      <p>James can optionally enable OCSP verifications for client certificates against Certificate Revocation List referenced
+      in the certificate itself.</p>
     </subsection>
 
     <subsection name="Creating your own PEM keys">
