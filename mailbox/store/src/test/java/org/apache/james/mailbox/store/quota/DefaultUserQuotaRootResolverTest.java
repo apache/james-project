@@ -59,10 +59,13 @@ class DefaultUserQuotaRootResolverTest {
     DefaultUserQuotaRootResolver testee;
     MailboxSessionMapperFactory mockedFactory;
 
+    SessionProvider mockSessionProvider;
+
     @BeforeEach
     void setUp() {
         mockedFactory = mock(MailboxSessionMapperFactory.class);
-        testee = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mockedFactory);
+        mockSessionProvider = mock(SessionProvider.class);
+        testee = new DefaultUserQuotaRootResolver(mockSessionProvider, mockedFactory);
     }
 
     @Test
@@ -101,8 +104,8 @@ class DefaultUserQuotaRootResolverTest {
     @Test
     void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() {
         assertThatThrownBy(() -> testee.retrieveAssociatedMailboxes(
-                    QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION)
-                .collectList().block())
+                QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION)
+            .collectList().block())
             .hasCauseInstanceOf(MailboxException.class);
     }
 
@@ -113,6 +116,21 @@ class DefaultUserQuotaRootResolverTest {
         when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.just(MAILBOX));
 
         assertThat(testee.getQuotaRoot(MAILBOX_ID)).isEqualTo(QUOTA_ROOT);
+    }
+
+    @Test
+    void listAllAccessibleQuotaRootsShouldReturnQuotaRootOfDelegatedMailboxes() {
+        MailboxMapper mockedMapper = mock(MailboxMapper.class);
+        MailboxSession mockSession = mock(MailboxSession.class);
+        when(mockSessionProvider.createSystemSession(BENWA)).thenReturn(mockSession);
+        when(mockedFactory.getMailboxMapper(mockSession)).thenReturn(mockedMapper);
+
+        Mailbox delegatedMailbox = new Mailbox(MailboxPath.forUser(Username.of("delegated"), "test"),
+            UidValidity.of(11), TestId.of(1));
+        when(mockedMapper.findNonPersonalMailboxes(any(), any())).thenReturn(Flux.just(delegatedMailbox));
+
+        assertThat(Flux.from(testee.listAllAccessibleQuotaRoots(BENWA)).collectList().block())
+            .containsExactlyInAnyOrder(QUOTA_ROOT, testee.getQuotaRoot(delegatedMailbox));
     }
 
 }
