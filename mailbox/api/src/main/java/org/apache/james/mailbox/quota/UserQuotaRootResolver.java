@@ -20,10 +20,13 @@ package org.apache.james.mailbox.quota;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.reactivestreams.Publisher;
 
 public interface UserQuotaRootResolver extends QuotaRootResolver {
 
     QuotaRoot forUser(Username username);
+
+    Publisher<QuotaRoot> listAllAccessibleQuotaRoots(Username username);
 
     /**
      * When the username might not point to a user entity, and an extra translation step is required
