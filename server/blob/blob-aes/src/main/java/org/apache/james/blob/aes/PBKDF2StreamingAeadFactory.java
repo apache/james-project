@@ -32,7 +32,7 @@ import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 public class PBKDF2StreamingAeadFactory {
     private static final int PBKDF2_ITERATIONS = 65536;
     private static final int KEY_SIZE = 256;
-    private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA1";
+    private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA512";
     private static final String HKDF_ALGO = "HmacSha256";
     private static final int KEY_SIZE_IN_BYTES = 32;
     private static final int SEGMENT_SIZE = 4096;
@@ -52,7 +52,8 @@ public class PBKDF2StreamingAeadFactory {
     private static SecretKey deriveKey(CryptoConfig cryptoConfig)
         throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] saltBytes = cryptoConfig.salt();
-        SecretKeyFactory skf = SecretKeyFactory.getInstance(SECRET_KEY_FACTORY_ALGORITHM);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance(cryptoConfig.getPrivateKeyAlgorithm()
+            .orElse(SECRET_KEY_FACTORY_ALGORITHM));
         PBEKeySpec spec = new PBEKeySpec(cryptoConfig.password(), saltBytes, PBKDF2_ITERATIONS, KEY_SIZE);
         return skf.generateSecret(spec);
     }

@@ -21,6 +21,7 @@ package org.apache.james.blob.aes;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.crypto.tink.subtle.Hex;
 
@@ -32,10 +33,12 @@ public class CryptoConfig {
 
     private final String salt;
     private final char[] password;
+    private final Optional<String> privateKeyAlgorithm;
 
-    public CryptoConfig(String salt, char[] password) {
+    CryptoConfig(String salt, char[] password, Optional<String> privateKeyAlgorithm) {
         this.salt = salt;
         this.password = password;
+        this.privateKeyAlgorithm = privateKeyAlgorithm;
     }
 
     public byte[] salt() {
@@ -46,19 +49,24 @@ public class CryptoConfig {
         return password;
     }
 
+    public Optional<String> getPrivateKeyAlgorithm() {
+        return privateKeyAlgorithm;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CryptoConfig) {
             CryptoConfig that = (CryptoConfig) o;
 
             return Objects.equals(this.salt, that.salt)
-                && Arrays.equals(this.password, that.password);
+                && Arrays.equals(this.password, that.password)
+                && Objects.equals(this.privateKeyAlgorithm, that.privateKeyAlgorithm);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(salt, password);
+        return Objects.hash(salt, password, privateKeyAlgorithm);
     }
 }

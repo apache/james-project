@@ -63,6 +63,11 @@ If AES encryption is enabled, then the following properties MUST be present:
  - *encryption.aes.password* : String
  - *encryption.aes.salt* : Hexadecimal string
 
+The following properties CAN be supplied:
+
+ - *encryption.aes.private.key.algorithm* : String, defaulting to PBKDF2WithHmacSHA512. Previously was
+PBKDF2WithHmacSHA1.
+
 WARNING: Once chosen this choice can not be reverted, all the data is either clear or encrypted. Mixed encryption
 is not supported.
 

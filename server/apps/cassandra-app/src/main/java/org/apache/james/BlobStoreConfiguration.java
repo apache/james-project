@@ -82,6 +82,7 @@ public class BlobStoreConfiguration {
     static final String ENCRYPTION_ENABLE_PROPERTY = "encryption.aes.enable";
     static final String ENCRYPTION_PASSWORD_PROPERTY = "encryption.aes.password";
     static final String ENCRYPTION_SALT_PROPERTY = "encryption.aes.salt";
+    static final String ENCRYPTION_PRIVATE_KEY_ALGORITHM_PROPERTY = "encryption.aes.private.key.algorithm";
     static final String DEDUPLICATION_ENABLE_PROPERTY = "deduplication.enable";
 
     public static BlobStoreConfiguration parse(org.apache.james.server.core.configuration.Configuration configuration) throws ConfigurationException {
@@ -129,6 +130,7 @@ public class BlobStoreConfiguration {
             return Optional.of(CryptoConfig.builder()
                 .password(Optional.ofNullable(configuration.getString(ENCRYPTION_PASSWORD_PROPERTY, null)).map(String::toCharArray).orElse(null))
                 .salt(configuration.getString(ENCRYPTION_SALT_PROPERTY, null))
+                .privateKeyAlgorithm(Optional.ofNullable(configuration.getString(ENCRYPTION_PRIVATE_KEY_ALGORITHM_PROPERTY, null)))
                 .build());
         }
         return Optional.empty();
