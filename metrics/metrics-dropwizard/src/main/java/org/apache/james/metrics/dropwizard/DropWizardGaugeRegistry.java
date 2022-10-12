@@ -19,6 +19,7 @@
 
 package org.apache.james.metrics.dropwizard;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.Gauge;
@@ -38,5 +39,10 @@ public class DropWizardGaugeRegistry implements GaugeRegistry {
     public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
         metricRegistry.gauge(name, () -> gauge::get);
         return this;
+    }
+
+    @PreDestroy
+    public void shutDown() {
+        metricRegistry.getGauges().keySet().forEach(metricRegistry::remove);
     }
 }
