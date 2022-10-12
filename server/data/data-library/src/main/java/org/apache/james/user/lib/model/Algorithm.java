@@ -46,10 +46,13 @@ public class Algorithm {
     public interface Hasher {
         static Hasher from(Algorithm algorithm) {
             return PBKDF2Hasher.from(algorithm)
+                .or(() -> LegacyPBKDF2Hasher.from(algorithm))
                 .orElseGet(() -> new RegularHashingSpec(algorithm));
         }
 
         byte[] digestString(String pass, String salt) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException;
+
+        boolean isPBKDF2();
     }
 
     public static class RegularHashingSpec implements Hasher {
@@ -73,16 +76,21 @@ public class Algorithm {
                 return pass;
             }
         }
+
+        @Override
+        public boolean isPBKDF2() {
+            return false;
+        }
     }
 
-    public static class PBKDF2Hasher implements Hasher {
+    public static class LegacyPBKDF2Hasher implements Hasher {
         public static final int DEFAULT_ITERATION_COUNT = 1000;
         public static final int DEFAULT_KEY_SIZE = 512;
 
         public static Optional<Hasher> from(Algorithm algorithm) {
             if (algorithm.getName().startsWith("PBKDF2")) {
                 List<String> parts = Splitter.on('-').splitToList(algorithm.getName());
-                return Optional.of(new PBKDF2Hasher(parseIterationCount(parts), parseKeySize(parts)));
+                return Optional.of(new LegacyPBKDF2Hasher(parseIterationCount(parts), parseKeySize(parts)));
             } else {
                 return Optional.empty();
             }
@@ -107,7 +115,7 @@ public class Algorithm {
         private final int iterationCount;
         private final int keySize;
 
-        public PBKDF2Hasher(int iterationCount, int keySize) {
+        public LegacyPBKDF2Hasher(int iterationCount, int keySize) {
             Preconditions.checkArgument(iterationCount > 0, "'iterationCount' should be greater than 0");
             Preconditions.checkArgument(keySize > 0, "'keySize' should be greater than 0");
 
@@ -124,8 +132,8 @@ public class Algorithm {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof PBKDF2Hasher) {
-                PBKDF2Hasher that = (PBKDF2Hasher) o;
+            if (o instanceof LegacyPBKDF2Hasher) {
+                LegacyPBKDF2Hasher that = (LegacyPBKDF2Hasher) o;
 
                 return Objects.equals(this.iterationCount, that.iterationCount)
                     && Objects.equals(this.keySize, that.keySize);
@@ -136,6 +144,80 @@ public class Algorithm {
         @Override
         public final int hashCode() {
             return Objects.hash(iterationCount, keySize);
+        }
+
+        @Override
+        public boolean isPBKDF2() {
+            return true;
+        }
+    }
+
+    public static class PBKDF2Hasher implements Hasher {
+        public static final int DEFAULT_ITERATION_COUNT = 1000;
+        public static final int DEFAULT_KEY_SIZE = 512;
+
+        public static Optional<Hasher> from(Algorithm algorithm) {
+            if (algorithm.getName().startsWith("PBKDF2-SHA512")) {
+                List<String> parts = Splitter.on('-').splitToList(algorithm.getName());
+                return Optional.of(new PBKDF2Hasher(parseIterationCount(parts), parseKeySize(parts)));
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        private static int parseKeySize(List<String> parts) {
+            if (parts.size() >= 4) {
+                return Integer.parseInt(parts.get(3));
+            } else {
+                return DEFAULT_KEY_SIZE;
+            }
+        }
+
+        private static int parseIterationCount(List<String> parts) {
+            if (parts.size() >= 3) {
+                return Integer.parseInt(parts.get(2));
+            } else {
+                return DEFAULT_ITERATION_COUNT;
+            }
+        }
+
+        private final int iterationCount;
+        private final int keySize;
+
+        public PBKDF2Hasher(int iterationCount, int keySize) {
+            Preconditions.checkArgument(iterationCount > 0, "'iterationCount' should be greater than 0");
+            Preconditions.checkArgument(keySize > 0, "'keySize' should be greater than 0");
+
+            this.iterationCount = iterationCount;
+            this.keySize = keySize;
+        }
+
+        public byte[] digestString(String pass, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+            KeySpec spec = new PBEKeySpec(pass.toCharArray(), salt.getBytes(ISO_8859_1), iterationCount, keySize);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+
+            return factory.generateSecret(spec).getEncoded();
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof LegacyPBKDF2Hasher) {
+                LegacyPBKDF2Hasher that = (LegacyPBKDF2Hasher) o;
+
+                return Objects.equals(this.iterationCount, that.iterationCount)
+                    && Objects.equals(this.keySize, that.keySize);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(iterationCount, keySize);
+        }
+
+        @Override
+        public boolean isPBKDF2() {
+            return true;
         }
     }
 
@@ -197,7 +279,7 @@ public class Algorithm {
     }
 
     public boolean isPBKDF2() {
-        return hasher instanceof PBKDF2Hasher;
+        return hasher.isPBKDF2();
     }
 
     public boolean isSalted() {
