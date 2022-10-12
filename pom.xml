@@ -652,7 +652,7 @@
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>5.1.0</guice.version>
         <logback.version>1.4.0</logback.version>
-        <tink.version>1.6.1</tink.version>
+        <tink.version>1.7.0</tink.version>
         <lettuce.core.version>6.1.8.RELEASE</lettuce.core.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
