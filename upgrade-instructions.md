@@ -22,10 +22,30 @@ Change list:
 - [Deleted message vault is now deactivated by default](#deleted-message-vault-is-now-deactivated-by-default)
 - [SortOrder addition in Identity](#sortorder-addition-in-identity)
 - [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
+- [Blob Store AES upgraded to PBKDF2WithHmacSHA512](#blob-store-aes-upgraded-to-pbkdf2withhmacsha512)
+
+### Blob Store AES upgraded to PBKDF2WithHmacSHA512
+
+Date: 06/10/2022
+
+PBKDF2WithHmacSHA1 was reported being a weak cryptographic set up. 
+
+As such we decided to rely on PBKDF2WithHmacSHA512 by default.
+
+Users having data encrypted with PBKDF2WithHmacSHA1 can configure it as a private key algorithm to
+access their data, in `blobstore.properties`:
+
+```
+encryption.aes.private.key.algorithm=PBKDF2WithHmacSHA1
+```
+
+We do not have a migration strategy for PBKDF2WithHmacSHA1 users to migrate to PBKDF2WithHmacSHA512.
 
 ### TLS host name verification is now enabled by default
 
 Date: 06/10/2022
+
+JIRA: JAMES-3833
 
 When establishing an SMTPS or StartTLS connection during remote mail delivery, James will now check the remote server's host/domain name against its certificate (RFC 2595). If they do not match, the connection fails as a temporary delivery error.
 

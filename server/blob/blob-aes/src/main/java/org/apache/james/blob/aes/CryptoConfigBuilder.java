@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.aes;
 
+import java.util.Optional;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.crypto.tink.subtle.Hex;
@@ -26,6 +28,7 @@ import com.google.crypto.tink.subtle.Hex;
 public class CryptoConfigBuilder {
     private String salt;
     private char[] password;
+    private Optional<String> privateKeyAlgorithm = Optional.empty();
 
     CryptoConfigBuilder() {
     }
@@ -40,10 +43,15 @@ public class CryptoConfigBuilder {
         return this;
     }
 
+    public CryptoConfigBuilder privateKeyAlgorithm(Optional<String> privateKeyAlgorithm) {
+        this.privateKeyAlgorithm = privateKeyAlgorithm;
+        return this;
+    }
+
     public CryptoConfig build() {
         Preconditions.checkState(!Strings.isNullOrEmpty(salt), "'salt' is mandatory and must not be empty");
         Preconditions.checkState(password != null && password.length > 0, "'password' is mandatory and must not be empty");
 
-        return new CryptoConfig(Hex.encode(Hex.decode(salt)), password);
+        return new CryptoConfig(Hex.encode(Hex.decode(salt)), password, privateKeyAlgorithm);
     }
 }
