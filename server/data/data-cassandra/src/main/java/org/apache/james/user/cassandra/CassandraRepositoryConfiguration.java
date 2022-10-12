@@ -26,7 +26,7 @@ import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.Algorithm.HashingMode;
 
 public class CassandraRepositoryConfiguration {
-    public static final String DEFAULT_ALGORITHM = "PBKDF2";
+    public static final String DEFAULT_ALGORITHM = "PBKDF2-SHA512";
     public static final String DEFAULT_HASHING_MODE = HashingMode.PLAIN.name();
 
     public static final CassandraRepositoryConfiguration DEFAULT = new CassandraRepositoryConfiguration(

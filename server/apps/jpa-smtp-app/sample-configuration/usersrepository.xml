@@ -22,7 +22,7 @@
 
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
     <destination URL="file://users/"/>
-    <algorithm>PBKDF2</algorithm>
+    <algorithm>PBKDF2-SHA512</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>
     <enableForwarding>true</enableForwarding>
 </usersrepository>
