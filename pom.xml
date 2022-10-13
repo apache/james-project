@@ -660,7 +660,7 @@
         <scala.version>${scala.base}.10</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
-        <mockito.version>4.6.0</mockito.version>
+        <mockito.version>4.8.0</mockito.version>
     </properties>
 
     <dependencyManagement>
