@@ -84,9 +84,9 @@ object JmapQuota {
   val allProperties: Properties = Properties("id", "resourceType", "used", "limit", "scope", "name", "dataTypes", "warnLimit", "softLimit", "description")
   val idProperty: Properties = Properties("id")
 
-  def propertiesFiltered(requestedProperties: Properties) : Properties = idProperty ++ requestedProperties
+  def propertiesFiltered(requestedProperties: Properties): Properties = idProperty ++ requestedProperties
 
-  def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id): Option[JmapQuota] =
+  def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
     Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
       .map(limit => JmapQuota(
         id = countQuotaIdPlaceHolder,
@@ -94,11 +94,11 @@ object JmapQuota {
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
         limit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
-        name = QuotaName.from(AccountScope, CountResourceType, List(MailDataType)),
+        name = QuotaName.from(quotaRoot, AccountScope, CountResourceType, List(MailDataType)),
         dataTypes = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
-  def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id): Option[JmapQuota] =
+  def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
     Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
       .map(limit => JmapQuota(
         id = sizeQuotaIdPlaceHolder,
@@ -106,7 +106,7 @@ object JmapQuota {
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
         limit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
-        name = QuotaName.from(AccountScope, OctetsResourceType, List(MailDataType)),
+        name = QuotaName.from(quotaRoot, AccountScope, OctetsResourceType, List(MailDataType)),
         dataTypes = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 }
@@ -123,8 +123,8 @@ case class JmapQuota(id: Id,
                      description: Option[QuotaDescription] = None)
 
 object QuotaName {
-  def from(scope: Scope, resourceType: ResourceType, dataTypes: List[DataType]): QuotaName =
-    QuotaName(s"${scope.asString()}:${resourceType.asString()}:${dataTypes.map(_.asString()).mkString("_")}")
+  def from(quotaRoot: ModelQuotaRoot, scope: Scope, resourceType: ResourceType, dataTypes: List[DataType]): QuotaName =
+    QuotaName(s"${quotaRoot.asString()}:${scope.asString()}:${resourceType.asString()}:${dataTypes.map(_.asString()).mkString("_")}")
 }
 
 case class QuotaName(string: String)

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
@@ -134,7 +135,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
         Flux<QuotaRoot> quotaRootListFromDelegatedMailboxes = factory.getMailboxMapper(session)
             .findNonPersonalMailboxes(username, MailboxACL.Right.Read)
-            .flatMap(this::getQuotaRootReactive)
+            .flatMap(this::getQuotaRootReactive, ReactorUtils.DEFAULT_CONCURRENCY)
             .distinct();
 
         return Flux.concat(quotaRootListFromDelegatedMailboxes, Flux.just(forUser(username)));

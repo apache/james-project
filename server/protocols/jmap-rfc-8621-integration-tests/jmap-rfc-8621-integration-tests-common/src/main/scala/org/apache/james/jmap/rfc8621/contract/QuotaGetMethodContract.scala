@@ -32,14 +32,15 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.mail.{CountResourceType, QuotaIdFactory}
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.model.MailboxPath
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
 import org.apache.james.mime4j.dom.Message
-import org.apache.james.modules.{MailboxProbeImpl, QuotaProbesImpl}
+import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 import java.nio.charset.StandardCharsets
-
+import org.apache.james.mailbox.model.MailboxACL.Right.Read
+import org.apache.james.mailbox.model.MailboxACL.Right.Lookup
 
 trait QuotaGetMethodContract {
 
@@ -140,7 +141,7 @@ trait QuotaGetMethodContract {
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "account:count:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |                        "dataTypes": [
          |                            "Mail"
@@ -152,7 +153,7 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 0,
-         |                        "name": "account:octets:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
          |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
          |                        "dataTypes": [
          |                            "Mail"
@@ -312,7 +313,7 @@ trait QuotaGetMethodContract {
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "account:count:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |                        "dataTypes": [
          |                            "Mail"
@@ -383,7 +384,7 @@ trait QuotaGetMethodContract {
          |                "list": [
          |                    {
          |                        "used": 1,
-         |                        "name": "account:count:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |                        "dataTypes": [
          |                            "Mail"
@@ -395,7 +396,7 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 85,
-         |                        "name": "account:octets:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
          |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
          |                        "dataTypes": [
          |                            "Mail"
@@ -714,7 +715,7 @@ trait QuotaGetMethodContract {
          |        {
          |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |          "used": 0,
-         |          "name": "account:count:Mail",
+         |          "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |          "limit": 100
          |        }
          |      ],
@@ -873,7 +874,7 @@ trait QuotaGetMethodContract {
          |                "list": [
          |                    {
          |                        "used": 1,
-         |                        "name": "account:count:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |                        "dataTypes": [
          |                            "Mail"
@@ -885,7 +886,7 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 85,
-         |                        "name": "account:octets:Mail",
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
          |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
          |                        "dataTypes": [
          |                            "Mail"
@@ -903,4 +904,297 @@ trait QuotaGetMethodContract {
          |}
          |""".stripMargin)
   }
+
+  @Test
+  def quotaGetShouldNotReturnQuotaRootOfDelegatedMailboxWhenNotExtension(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+
+    // setup delegated Mailbox
+    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
+
+
+    val response = `given`
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:quota"],
+           |  "methodCalls": [[
+           |    "Quota/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": null
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+  .when
+      .post
+  .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Quota/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [],
+         |                "state": "${INSTANCE.value}",
+         |                "list": [
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 100,
+         |                        "warnLimit": 90,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}
+         |""".stripMargin)
+  }
+
+  @Test
+  def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenExtension(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+
+    // setup delegated Mailbox
+    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
+
+    val response = `given`
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:quota",
+           |    "urn:apache:james:params:jmap:mail:shares" ],
+           |  "methodCalls": [[
+           |    "Quota/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": null
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Quota/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [],
+         |                "state": "${INSTANCE.value}",
+         |                "list": [
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 100,
+         |                        "warnLimit": 90,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    },
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
+         |                        "warnLimit": 79,
+         |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 88,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}
+         |""".stripMargin)
+  }
+
+  @Test
+  def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenNotHasReadRight(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+
+    // setup delegated Mailbox
+    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Lookup))
+
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
+
+    val response = `given`
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:quota",
+           |    "urn:apache:james:params:jmap:mail:shares" ],
+           |  "methodCalls": [[
+           |    "Quota/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": null
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Quota/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [],
+         |                "state": "${INSTANCE.value}",
+         |                "list": [
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 100,
+         |                        "warnLimit": 90,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}
+         |""".stripMargin)
+  }
+
+  @Test
+  def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenProvideCorrectId(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+
+    // setup delegated Mailbox
+    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
+
+    val response = `given`
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:quota",
+           |    "urn:apache:james:params:jmap:mail:shares" ],
+           |  "methodCalls": [[
+           |    "Quota/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": ["04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca"]
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Quota/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [],
+         |                "state": "${INSTANCE.value}",
+         |                "list": [
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
+         |                        "warnLimit": 79,
+         |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 88,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}
+         |""".stripMargin)
+  }
+
 }
