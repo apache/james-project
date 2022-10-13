@@ -39,7 +39,6 @@
         <module>blob-common</module>
         <module>blob-export-api</module>
         <module>blob-export-file</module>
-        <module>blob-gc</module>
         <module>blob-memory</module>
         <module>blob-s3</module>
         <module>blob-storage-strategy</module>
