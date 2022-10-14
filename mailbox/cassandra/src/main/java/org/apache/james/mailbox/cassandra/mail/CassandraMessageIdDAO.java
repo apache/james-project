@@ -114,6 +114,7 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement selectUidRange;
     private final PreparedStatement selectUidOnlyRange;
     private final PreparedStatement selectMetadataRange;
+    private final PreparedStatement selectNotDeletedRange;
     private final PreparedStatement selectUidRangeLimited;
     private final PreparedStatement update;
     private final PreparedStatement listStatement;
@@ -136,6 +137,7 @@ public class CassandraMessageIdDAO {
         this.selectUidRangeLimited = prepareSelectUidRangeLimited(session);
         this.listStatement = prepareList(session);
         this.selectMetadataRange = prepareSelectMetadataRange(session);
+        this.selectNotDeletedRange = prepareSelectNotDeletedRange(session);
     }
 
     private PreparedStatement prepareDelete(CqlSession session) {
@@ -269,6 +271,17 @@ public class CassandraMessageIdDAO {
                     USER.toLowerCase(Locale.US),
                     USER_FLAGS_LOWERCASE,
                     MOD_SEQ_LOWERCASE)
+                .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                    column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
+                    column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+                .build());
+    }
+
+    private PreparedStatement prepareSelectNotDeletedRange(CqlSession session) {
+        return session.prepare(
+            QueryBuilder.selectFrom(TABLE_NAME)
+                .columns(IMAP_UID,
+                    DELETED.toLowerCase(Locale.US))
                 .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                     column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
                     column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
@@ -432,6 +445,15 @@ public class CassandraMessageIdDAO {
                         MessageUid.of(row.getLong(IMAP_UID))))
                     .build();
             });
+    }
+
+    public Flux<MessageUid> listNotDeletedUids(CassandraId mailboxId, MessageRange range) {
+        return cassandraAsyncExecutor.executeRows(selectNotDeletedRange.bind()
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
+                .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
+            .filter(row -> !row.getBoolean(org.apache.james.mailbox.cassandra.table.Flag.DELETED))
+            .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
     }
 
     private Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {

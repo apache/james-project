@@ -31,8 +31,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
-import com.google.common.collect.ImmutableList;
-
 import reactor.core.publisher.Flux;
 
 public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
@@ -74,10 +72,8 @@ public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearch
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
 
-        return Flux.fromIterable(ImmutableList.copyOf(uidRanges))
-            .concatMap(range -> dao.listMessagesMetadata((CassandraId) mailbox.getMailboxId(),
-                MessageRange.range(range.getLowValue(), range.getHighValue())))
-            .filter(message -> !message.getFlags().contains(Flags.Flag.DELETED))
-            .map(message -> message.getComposedMessageId().getUid());
+        return Flux.fromArray(uidRanges)
+            .concatMap(range -> dao.listNotDeletedUids((CassandraId) mailbox.getMailboxId(),
+                MessageRange.range(range.getLowValue(), range.getHighValue())));
     }
 }
