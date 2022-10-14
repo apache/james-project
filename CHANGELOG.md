@@ -153,6 +153,34 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - [PERF] Allow disabling host information in protocol MDC (#928)
  - JAMES-3433 MimeMessageStore StoragePolicy should be the same on read and writes
 
+## [3.7.2] - 2022-10-06
+
+### Security 
+
+ - [UPGRADE] scala-library 2.13.7 -> 2.13.9
+ - [CONF] Remove vendor URLs from smtpserver.xml default configuration examples (#1205)
+ - [Upgrade] Maven slf4j 1.7.32 -> 2.0.1
+ - [Upgrade] Maven netty4 4.1.72.Final -> 4.1.81.Final
+ - [Upgrade] Maven logback 1.2.10 -> 1.4.0
+ - [Upgrade] Maven org.jsoup:jsoup 1.14.3 -> 1.15.3
+ - [Upgrade] Maven com.fasterxml.jackson.dataformat:jackson-dataformat-cbor 2.13.1 -> 2.13.4
+ - [Upgrade] Maven org.apache.activemq:activemq-broker 5.16.3 -> 5.17.2
+ - [Upgrade] Maven org.apache.commons:commons-configuration2 2.7 -> 2.8.0
+
+### Fixes
+
+ - JAMES-3810 Decrease slice browsing concurrency
+ - JAMES-3810 Dequeuer should nack when fails to see if email was deleted
+ - JAMES-3744 remove redundant hashmaps which lead to OOM
+ - JAMES-3753 Fix FlowedMessageUtils.deflow() (#972)
+ - JAMES-343 Mail: Fix resetting DSN parameters
+ - JAMES-3431 Stricter validation for DSN ENVID (#1002)
+ - JAMES-3803 RemoteDelivery uses different scheduler for dequeuing (#1121)
+ - task/task-distributed - fixing NullPointerException when executeTask
+ - JAMES-3784 WebAdmin: Provide RunningOptions (rateLimit) for Redeliver event task, Reprocessing mail task
+ - JAMES-3784 HealthCheck /var/mail/error repository size
+ - JAMES-3723 Allow to not consume emails upon reprocessing
+
 ## [3.7.1] - 2022-08-26
 
 ### Security

@@ -1,6 +1,6 @@
 name: james-distributed-app
 title: Apache James Distributed Server
-version: '3.7.1'
+version: '3.7.2'
 prerelease: SNAPSHOT
 nav:
 - modules/ROOT/nav.adoc

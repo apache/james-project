@@ -159,6 +159,10 @@ In order to add this `authorized_users` column you need to run the following CQL
 ALTER TABLE james_keyspace.user ADD authorized_users set<text>;
 ```
 
+## 3.7.2 version
+
+No specific operation to conduct from a 3.7.1 version.
+
 ## 3.7.1 version
 
 No specific operation to conduct from a 3.7.0 version.
