@@ -99,12 +99,15 @@ When you enable TLS, you may also configure the server to require a client certi
     <truststore>file://conf/truststore</truststore>
     <truststoreType>JKS</truststoreType>
     <truststoreSecret>yoursecret</truststoreSecret>
+    <enableOCSPCRLChecks>false</enableOCSPCRLChecks>
   </clientAuth>
 </tls>
 ....
 
 James verifies client certificates against the provided truststore. You can fill it with trusted peer certificates directly, or an issuer certificate (CA) if you trust all certificates created by it. If you omit the truststore configuration, James will use the Java default truststore instead, effectively trusting any known CA.
 
+James can optionally enable OCSP verifications for client certificates against Certificate Revocation List referenced
+in the certificate itself.
 
 == Creating your own PEM keys
 

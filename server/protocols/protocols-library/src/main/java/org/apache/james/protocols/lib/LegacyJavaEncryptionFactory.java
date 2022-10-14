@@ -19,15 +19,25 @@
 
 package org.apache.james.protocols.lib;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertPathBuilder;
+import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXRevocationChecker;
+import java.security.cert.X509CertSelector;
+import java.util.EnumSet;
 import java.util.Optional;
 
+import javax.net.ssl.CertPathTrustManagerParameters;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.netty.Encryption;
 
+import com.github.fge.lambdas.Throwing;
+
 import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.trustmanager.TrustStoreTrustOptions;
 import nl.altindag.ssl.util.PemUtils;
 
 public class LegacyJavaEncryptionFactory implements Encryption.Factory {
@@ -64,10 +74,18 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
         }
 
         if (sslConfig.getClientAuth() != null && sslConfig.getTruststore() != null) {
-            sslFactoryBuilder.withTrustMaterial(
-                fileSystem.getFile(sslConfig.getTruststore()).toPath(),
-                sslConfig.getTruststoreSecret(),
-                sslConfig.getKeystoreType());
+            Optional<TrustStoreTrustOptions<? extends CertPathTrustManagerParameters>> maybeTrustOptions = clientAuthTrustOptions(sslConfig);
+
+            maybeTrustOptions.ifPresentOrElse(Throwing.<TrustStoreTrustOptions<? extends CertPathTrustManagerParameters>>consumer(trustOptions ->
+                sslFactoryBuilder.withTrustMaterial(
+                    fileSystem.getFile(sslConfig.getTruststore()).toPath(),
+                    sslConfig.getTruststoreSecret(),
+                    sslConfig.getKeystoreType(),
+                    trustOptions)).sneakyThrow(),
+                Throwing.runnable(() -> sslFactoryBuilder.withTrustMaterial(
+                        fileSystem.getFile(sslConfig.getTruststore()).toPath(),
+                        sslConfig.getTruststoreSecret(),
+                        sslConfig.getKeystoreType())));
         }
 
         SSLContext context = sslFactoryBuilder.build().getSslContext();
@@ -77,5 +95,21 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
         } else {
            return Encryption.createTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getClientAuth());
         }
+    }
+
+    // CF https://github.com/Hakky54/sslcontext-kickstart#loading-trust-material-with-trustmanager-and-ocsp-options
+    private Optional<TrustStoreTrustOptions<? extends CertPathTrustManagerParameters>> clientAuthTrustOptions(SslConfig sslConfig) throws NoSuchAlgorithmException {
+        if (!sslConfig.ocspCRLChecksEnabled()) {
+            return Optional.empty();
+        }
+        CertPathBuilder certPathBuilder = CertPathBuilder.getInstance("PKIX");
+        PKIXRevocationChecker revocationChecker = (PKIXRevocationChecker) certPathBuilder.getRevocationChecker();
+        revocationChecker.setOptions(EnumSet.of(PKIXRevocationChecker.Option.NO_FALLBACK));
+
+        return Optional.of(trustStore -> {
+            PKIXBuilderParameters pkixBuilderParameters = new PKIXBuilderParameters(trustStore, new X509CertSelector());
+            pkixBuilderParameters.addCertPathChecker(revocationChecker);
+            return new CertPathTrustManagerParameters(pkixBuilderParameters);
+        });
     }
 }
