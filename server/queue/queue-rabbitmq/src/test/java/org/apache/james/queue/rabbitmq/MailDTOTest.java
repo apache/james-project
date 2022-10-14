@@ -73,6 +73,12 @@ class MailDTOTest {
     }
 
     @Test
+    void mailDtoShouldBeDeserializedFromTheRightFormatWhenLegacy() throws Exception {
+        assertThat(objectMapper.readValue(getSystemResourceAsString("json/mail1-legacy.json"), MailReferenceDTO.class))
+            .isEqualTo(mailDTO1());
+    }
+
+    @Test
     void mailDtoShouldBeSerializedWhenOnlyNameAndBlob() throws Exception {
         assertThatJson(objectMapper.writeValueAsString(mailDTOMin()))
             .isEqualTo(getSystemResourceAsString("json/mail_min.json"));
