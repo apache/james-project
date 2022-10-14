@@ -415,7 +415,7 @@ public interface MailQueueContract {
 
         Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
-        mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.REJECT);
+        mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name1");
@@ -441,7 +441,7 @@ public interface MailQueueContract {
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
-        mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.REJECT);
+        mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
         MailQueue.MailQueueItem mailQueueItem1bis = items.next();
         MailQueue.MailQueueItem mailQueueItem3 = items.next();
 
@@ -549,7 +549,7 @@ public interface MailQueueContract {
                 }
                 if (step % 3 == 1) {
                     MailQueue.MailQueueItem mailQueueItem = deque.takeLast();
-                    mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.REJECT);
+                    mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
                 }
                 if (step % 3 == 2) {
                     MailQueue.MailQueueItem mailQueueItem = deque.takeLast();
