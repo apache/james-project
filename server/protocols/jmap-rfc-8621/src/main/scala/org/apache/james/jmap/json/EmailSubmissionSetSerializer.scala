@@ -74,7 +74,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
 
   implicit val emailSubmissionCreationRequestReads: Reads[EmailSubmissionCreationRequest] = Json.reads[EmailSubmissionCreationRequest]
 
-  private implicit val emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse] = Json.valueWrites[EmailSubmissionCreationResponse]
+  private implicit val emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse] = Json.writes[EmailSubmissionCreationResponse]
 
   private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit def emailSubmissionSetResponseWrites(implicit emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[EmailSubmissionSetResponse] = Json.writes[EmailSubmissionSetResponse]
