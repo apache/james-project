@@ -21,6 +21,7 @@ package org.apache.james.mailbox.probe;
 
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -53,5 +54,9 @@ public interface QuotaProbe {
     void setGlobalMaxMessageCount(QuotaCountLimit maxGlobalMessageCount) throws MailboxException;
 
     void setGlobalMaxStorage(QuotaSizeLimit maxGlobalSize) throws MailboxException;
+
+    void setDomainMaxMessage(Domain domain, QuotaCountLimit count) throws MailboxException;
+
+    void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws MailboxException;
 
 }
