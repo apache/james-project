@@ -55,9 +55,9 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
 
         Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem item1 = mailQueueItems.next();
-        item1.done(true);
+        item1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem item2 = mailQueueItems.next();
-        item2.done(true);
+        item2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
 
         assertThat(item1.getMail().getName()).isEqualTo("name2");
         assertThat(item2.getMail().getName()).isEqualTo("name1");
@@ -81,9 +81,9 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
 
         Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem item1 = mailQueueItems.next();
-        item1.done(true);
+        item1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem item2 = mailQueueItems.next();
-        item2.done(true);
+        item2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
 
         assertThat(item1.getMail().getName()).isEqualTo("name1");
         assertThat(item2.getMail().getName()).isEqualTo("name2");

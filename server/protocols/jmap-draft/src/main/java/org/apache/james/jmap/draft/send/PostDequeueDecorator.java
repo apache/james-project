@@ -77,9 +77,9 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     }
 
     @Override
-    public void done(boolean success) throws MailQueueException {
+    public void done(CompletionStatus success) throws MailQueueException {
         mailQueueItem.done(success);
-        if (success && mandatoryJmapMetaDataIsPresent()) {
+        if (success == CompletionStatus.SUCCESS && mandatoryJmapMetaDataIsPresent()) {
             Optional<?> optionalRawMessageId = retrieveMessageId();
             MessageId messageId = messageIdFactory.fromString((String) optionalRawMessageId.get());
             Optional<String> username = retrieveUsername();

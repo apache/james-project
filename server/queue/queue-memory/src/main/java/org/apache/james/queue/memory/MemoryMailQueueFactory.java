@@ -313,9 +313,9 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         }
 
         @Override
-        public void done(boolean success) throws MailQueue.MailQueueException {
+        public void done(CompletionStatus success) throws MailQueue.MailQueueException {
             queue.markProcessingAsFinished(this);
-            if (!success) {
+            if (success == CompletionStatus.RETRY) {
                 queue.enQueue(mail);
             }
         }

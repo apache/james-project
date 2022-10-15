@@ -22,19 +22,23 @@ package org.apache.james.queue.pulsar
 import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
+
+import akka.actor.{ActorRef, ActorSystem}
+import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
+import akka.stream.{Attributes, OverflowStrategy}
+import akka.util.Timeout
+import akka.{Done, NotUsed}
+import com.sksamuel.pulsar4s._
+import com.sksamuel.pulsar4s.akka.streams
+import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
 import javax.mail.MessagingException
 import javax.mail.internet.MimeMessage
-import scala.concurrent._
-import scala.concurrent.duration._
-import scala.jdk.CollectionConverters._
-import scala.jdk.DurationConverters._
-import scala.math.Ordered.orderingToOrdered
-
 import org.apache.james.backends.pulsar.PulsarReader
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.core.{MailAddress, MaybeSender}
 import org.apache.james.metrics.api.{GaugeRegistry, MetricFactory}
+import org.apache.james.queue.api.MailQueue.MailQueueItem.CompletionStatus
 import org.apache.james.queue.api.MailQueue._
 import org.apache.james.queue.api._
 import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
@@ -44,17 +48,14 @@ import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
 import org.reactivestreams.Publisher
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
-import akka.stream.{Attributes, OverflowStrategy}
-import akka.util.Timeout
-import akka.{Done, NotUsed}
-import com.sksamuel.pulsar4s._
-import com.sksamuel.pulsar4s.akka.streams
-import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
+import scala.jdk.DurationConverters._
+import scala.math.Ordered.orderingToOrdered
 import scala.util.Failure
 
 private[pulsar] object serializers {
@@ -269,8 +270,8 @@ class PulsarMailQueue(
   class PulsarMailQueueItem(mail: Mail, partsId: MimeMessagePartsId, message: CommittableMessage[String]) extends MailQueueItem {
     override val getMail: Mail = mail
 
-    override def done(success: Boolean): Unit = {
-      if (success) {
+    override def done(success: CompletionStatus): Unit = success match {
+      case CompletionStatus.SUCCESS =>
         dequeueMetrics.increment()
         Await.ready(message.ack(cumulative = false), awaitTimeout)
         val eventualDone = deleteMimeMessage(partsId).run()
@@ -279,9 +280,10 @@ class PulsarMailQueue(
           case Failure(e) => logger.error("Failed to delete parts {} for mail {}", partsId, mail.getName(), e)
           case _ => logger.trace("Deleted parts {} for mail {}", partsId, mail.getName())
         }
-      } else {
+      case CompletionStatus.RETRY =>
         Await.ready(message.nack(), awaitTimeout)
-      }
+      case CompletionStatus.REJECT =>
+        Await.ready(message.nack(), awaitTimeout)
     }
   }
 

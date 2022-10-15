@@ -35,7 +35,7 @@ public class RawMailQueueItem extends MailQueueItemDecorator {
     }
 
     @Override
-    public void done(boolean success) throws MailQueueException {
+    public void done(CompletionStatus success) throws MailQueueException {
         mailQueueItem.done(success);
     }
 }

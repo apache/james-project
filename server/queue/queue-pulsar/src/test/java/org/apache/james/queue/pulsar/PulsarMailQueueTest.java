@@ -102,7 +102,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         mailQueue.close();
         system.terminate();
     }
@@ -241,7 +241,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 .build());
 
         MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
-        mailQueueItem.done(true);
+        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
 
         assertThat(mailQueueItem.getMail().getName())
                 .isEqualTo(expectedName);
@@ -272,7 +272,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 .extracting(Mail::getName)
                 .containsExactly("name1", "name3");
 
-        Flux.from(getMailQueue().deQueue()).take(2).doOnNext(Throwing.consumer(x -> x.done(true))).blockLast();
+        Flux.from(getMailQueue().deQueue()).take(2).doOnNext(Throwing.consumer(x -> x.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))).blockLast();
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
     }
 
@@ -297,7 +297,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 .build());
 
         MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
-        mailQueueItem.done(true);
+        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
 
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);
 

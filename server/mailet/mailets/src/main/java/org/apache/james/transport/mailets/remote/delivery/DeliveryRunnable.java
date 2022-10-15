@@ -120,7 +120,7 @@ public class DeliveryRunnable implements Disposable {
                         .build()) {
                 LOGGER.debug("will process mail {}", mail.getName());
                 attemptDelivery(mail);
-                queueItem.done(true);
+                queueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                 sink.success();
             } catch (Exception e) {
                 try {
@@ -128,7 +128,7 @@ public class DeliveryRunnable implements Disposable {
                     // DO NOT CHANGE THIS to catch Error!
                     // For example, if there were an OutOfMemory condition caused because
                     // something else in the server was abusing memory, we would not want to start purging the retrying spool!
-                    queueItem.done(false);
+                    queueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
                 } catch (Exception ex) {
                     sink.error(ex);
                     return;

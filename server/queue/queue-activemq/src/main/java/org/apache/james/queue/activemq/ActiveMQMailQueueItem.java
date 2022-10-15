@@ -49,9 +49,9 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
     }
 
     @Override
-    public void done(boolean success) throws MailQueueException {
+    public void done(CompletionStatus success) throws MailQueueException {
         super.done(success);
-        if (success) {
+        if (success == CompletionStatus.SUCCESS) {
             if (message instanceof ActiveMQBlobMessage && !getMail().getAttribute(JAMES_REUSE_BLOB_URL).isPresent()) {
 
                 // This should get removed once this jira issue was fixed

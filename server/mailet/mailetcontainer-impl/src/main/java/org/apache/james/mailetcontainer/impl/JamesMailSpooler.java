@@ -132,7 +132,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
                 if (Thread.currentThread().isInterrupted()) {
                     throw new InterruptedException("Thread has been interrupted");
                 }
-                queueItem.done(true);
+                queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
             } catch (Exception e) {
                 handleError(queueItem, mail, originalRecipients, e);
             } finally {
@@ -171,17 +171,17 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             Mail mail = queueItem.getMail();
             mail.setAttribute(new Attribute(MAIL_PROCESSING_ERROR_COUNT, AttributeValue.of(failureCount)));
             queue.enQueue(mail);
-            queueItem.done(true);
+            queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
         }
 
         private void storeInErrorRepository(MailQueueItem queueItem) throws MessagingException {
             errorRepository.store(queueItem.getMail());
-            queueItem.done(true);
+            queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
         }
 
         private void nack(MailQueueItem queueItem, Exception processingException) {
             try {
-                queueItem.done(false);
+                queueItem.done(MailQueueItem.CompletionStatus.REJECT);
             } catch (MailQueue.MailQueueException ex) {
                 throw new RuntimeException(processingException);
             }
