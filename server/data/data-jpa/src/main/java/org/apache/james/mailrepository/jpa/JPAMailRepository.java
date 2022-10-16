@@ -87,6 +87,15 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
         this.entityManagerFactory = entityManagerFactory;
     }
 
+    public JPAMailRepository(EntityManagerFactory entityManagerFactory, MailRepositoryUrl url) throws ConfigurationException {
+        this.entityManagerFactory = entityManagerFactory;
+        this.repositoryName = url.getPath().asString();
+        if (repositoryName.isEmpty()) {
+            throw new ConfigurationException(
+                    "Malformed destinationURL - Must be of the format 'jpa://<repositoryName>'.  Was passed " + url);
+        }
+    }
+
     public String getRepositoryName() {
         return repositoryName;
     }

@@ -20,15 +20,18 @@
 package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.jpa.JPAMailRepository;
+import org.apache.james.mailrepository.jpa.JPAMailRepositoryFactory;
 import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class JPAMailRepositoryModule extends AbstractModule {
 
@@ -43,5 +46,8 @@ public class JPAMailRepositoryModule extends AbstractModule {
                 ImmutableList.of(new Protocol("jpa")),
                 JPAMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
+
+        Multibinder.newSetBinder(binder(), MailRepositoryFactory.class)
+                .addBinding().to(JPAMailRepositoryFactory.class);
     }
 }
