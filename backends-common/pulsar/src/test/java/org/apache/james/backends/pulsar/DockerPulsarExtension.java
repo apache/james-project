@@ -42,6 +42,7 @@ import org.testcontainers.containers.PulsarContainer;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
+import org.testcontainers.utility.DockerImageName;
 
 public class DockerPulsarExtension implements
         AfterAllCallback,
@@ -50,6 +51,7 @@ public class DockerPulsarExtension implements
         ParameterResolver {
     private static final Logger logger = LoggerFactory.getLogger(DockerPulsarExtension.class);
     private static PulsarContainer container;
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("apachepulsar/pulsar");
 
     private static void displayDockerLog(OutputFrame outputFrame) {
         logger.info(outputFrame.getUtf8String().trim());
@@ -60,17 +62,8 @@ public class DockerPulsarExtension implements
     private DockerPulsar dockerPulsar;
 
     public DockerPulsarExtension() {
-        container = new PulsarContainer("2.10.1")
-                .withLogConsumer(DockerPulsarExtension::displayDockerLog)
-                .waitingFor(
-                        new WaitAllStrategy()
-                                .withStrategy(
-                                        Wait.forHttp(PulsarContainer.METRICS_ENDPOINT)
-                                                .forStatusCode(200)
-                                                .forPort(PulsarContainer.BROKER_HTTP_PORT))
-                                .withStrategy(
-                                        Wait.forLogMessage(".*Successfully validated clusters on tenant .public.*\\n", 1))
-                );
+        container = new PulsarContainer(DEFAULT_IMAGE_NAME.withTag("2.10.1"))
+                .withLogConsumer(DockerPulsarExtension::displayDockerLog);
     }
 
     PulsarConfiguration pulsarConfiguration() {
