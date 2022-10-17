@@ -1,5 +1,8 @@
 # Introduction
 
+> :warning:
+> Partially implemented
+
 JMAP ([@!RFC8620] – JSON Meta Application Protocol) is a generic protocol for synchronising data, such as mails,
 calendars or contacts, between a client and a server. It is optimised for mobile and web environments, and aims
 to provide a consistent interface to different data types.
@@ -63,6 +66,9 @@ A resource type is like an unit of measure for the quota usage. Values for the *
 * `octets`: The quota is measured in size (in `octets`). For example, a quota can have a limit of 25000 `octets`.
 
 ## Push
+
+> :warning:
+> Not implemented
 
 Servers MUST support the JMAP push mechanisms, as specified in [@!RFC8620] Section 7, to receive notifications when
 the state changes for the Quota type defined in this specification.

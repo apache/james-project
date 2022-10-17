@@ -1,5 +1,8 @@
 # Quota
 
+> :warning:
+> Partially implemented
+
 The quota is an object that displays the limit set to an account usage as well as the current usage in regard to that limit.
 
 The quota object MUST contain the following fields:
@@ -36,9 +39,15 @@ where the limit comes from and explain the entities and data types this quota ap
 
 ## Quota/get
 
+> :information_source:
+> Implemented
+
 Standard “/get” method as described in [@!RFC8620] section 5.1. The ids argument may be `null` to fetch all at once.
 
 ## Quota/changes
+
+> :warning:
+> Not implemented
 
 Standard “/changes” method as described in [@!RFC8620] section 5.2 but with one extra argument to the response:
 
@@ -54,6 +63,9 @@ so only these properties are returned if nothing else has changed.
 Servers MAY decide to add other properties to the list that they judge changing frequently.
 
 ## Quota/query
+
+> :warning:
+> Not implemented
 
 This is a standard “/query” method as described in [@!RFC8620], Section 5.5.
 
@@ -73,6 +85,9 @@ The following Quota properties MUST be supported for sorting:
 * **used**
 
 ## Quota/queryChanges
+
+> :warning:
+> Not implemented
 
 This is a standard “/queryChanges” method as described in [@!RFC8620], Section 5.6.
 
