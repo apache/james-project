@@ -156,6 +156,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         } catch (Exception e) {
             // Ignored - this exception in parsing will be dealt
             // with in the if clause below
+            LOGGER.info("Invalid syntax in AUTHENTICATE initial client response", e);
             return noDelegation(null, null);
         }
     }
