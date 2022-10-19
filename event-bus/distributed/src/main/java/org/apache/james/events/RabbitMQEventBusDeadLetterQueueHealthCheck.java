@@ -28,6 +28,7 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class RabbitMQEventBusDeadLetterQueueHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQEventBusDeadLetterQueueHealthCheck");
@@ -60,6 +61,7 @@ public class RabbitMQEventBusDeadLetterQueueHealthCheck implements HealthCheck {
                 }
                 return Result.healthy(COMPONENT_NAME);
             })
-            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking RabbitMQEventBusDeadLetterHealthCheck", e)));
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking RabbitMQEventBusDeadLetterHealthCheck", e)))
+            .subscribeOn(Schedulers.boundedElastic()); // Reading the management API is blocking
     }
 }
