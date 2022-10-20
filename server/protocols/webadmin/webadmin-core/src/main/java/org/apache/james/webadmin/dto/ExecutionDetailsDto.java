@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -35,8 +36,8 @@ import com.google.common.collect.ImmutableList;
 
 public class ExecutionDetailsDto {
     public static List<ExecutionDetailsDto> from(DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
-                                                 List<TaskExecutionDetails> tasksDetails) {
-        return tasksDetails.stream()
+                                                 Stream<TaskExecutionDetails> tasksDetails) {
+        return tasksDetails
             .map(details -> ExecutionDetailsDto.from(additionalInformationConverter, details))
             .collect(ImmutableList.toImmutableList());
     }

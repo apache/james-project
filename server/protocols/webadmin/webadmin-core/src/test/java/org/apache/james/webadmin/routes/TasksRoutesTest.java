@@ -34,6 +34,8 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.james.json.DTOConverter;
+import org.apache.james.task.CompletedTask;
+import org.apache.james.task.FailedTask;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.MemoryTaskManager;
@@ -109,6 +111,70 @@ class TasksRoutesTest {
             .body("[0].submittedFrom", is(HOSTNAME))
             .body("[0].executedOn", is(HOSTNAME))
             .body("[0].cancelledFrom", nullValue());
+    }
+
+    @Test
+    void listShouldBeSorted() throws Exception {
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+
+        when()
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(3))
+            .body("[0].taskId", is(taskId3.asString()))
+            .body("[1].taskId", is(taskId2.asString()))
+            .body("[2].taskId", is(taskId1.asString()));
+    }
+
+    @Test
+    void listShouldSupportOffsetAndLimit() throws Exception {
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId4 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId5 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+
+        given()
+            .param("offset", 1)
+            .param("limit", 2)
+        .when()
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("[0].taskId", is(taskId4.asString()))
+            .body("[1].taskId", is(taskId3.asString()));
+    }
+
+    @Test
+    void listShouldFilterByType() throws Exception {
+        TaskId taskId1 = taskManager.submit(new CompletedTask());
+        Thread.sleep(10);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(10);
+        TaskId taskId3 = taskManager.submit(new FailedTask());
+        Thread.sleep(10);
+
+
+        given()
+            .param("type", "failed")
+        .when()
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1))
+            .body("[0].taskId", is(taskId3.asString()));
     }
 
     private void await(CountDownLatch latch) {

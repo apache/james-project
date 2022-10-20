@@ -263,12 +263,21 @@ One can filter the above results by status. For example:
 curl -XGET http://ip:port/tasks?status=inProgress
 ....
 
-Will return a list of Execution reports that are currently in progress.
+Will return a list of Execution reports that are currently in progress. This list is sorted by
+reverse submitted date (recent tasks goes first).
 
 Response codes:
 
 * 200: A list of corresponding tasks is returned
 * 400: Invalid status value
+
+Additionnal optional task parameters are supported:
+
+- `status` one of `waiting`, `inProgress`, `canceledRequested`, `completed`, `canceled`, `failed`. Only
+tasks with the given status are returned.
+- `type`: only tasks with the given type are returned.
+- `offset`: Integer, number of tasks to skip in the response. Useful for paging.
+- `limit`: Integer, maximum number of tasks to return in one call
 
 === Endpoints returning a task
 

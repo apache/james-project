@@ -21,9 +21,12 @@ package org.apache.james.webadmin.routes;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,6 +37,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskNotFoundException;
+import org.apache.james.task.TaskType;
 import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
@@ -52,6 +56,51 @@ import spark.Service;
 public class TasksRoutes implements Routes {
     private static final Duration MAXIMUM_AWAIT_TIMEOUT = Duration.ofDays(365);
     public static final String BASE = "/tasks";
+
+    interface TaskListTransformation extends Function<Stream<TaskExecutionDetails>, Stream<TaskExecutionDetails>> {
+
+    }
+
+    static class TypeTaskListTransformation implements TaskListTransformation {
+        private final TaskType taskType;
+
+        TypeTaskListTransformation(TaskType taskType) {
+            this.taskType = taskType;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getType().equals(taskType));
+        }
+    }
+
+    static class OffsetTaskListTransformation implements TaskListTransformation {
+        private final int offset;
+
+        OffsetTaskListTransformation(int offset) {
+            Preconditions.checkArgument(offset >= 0, "'offset' should be positive");
+            this.offset = offset;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.skip(offset);
+        }
+    }
+
+    static class LimitTaskListTransformation implements TaskListTransformation {
+        private final int limit;
+
+        LimitTaskListTransformation(int limit) {
+            Preconditions.checkArgument(limit >= 0, "'limit' should be positive");
+            this.limit = limit;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.limit(limit);
+        }
+    }
 
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
@@ -83,11 +132,7 @@ public class TasksRoutes implements Routes {
 
     public Object list(Request req, Response response) {
         try {
-            return ExecutionDetailsDto.from(additionalInformationDTOConverter,
-                Optional.ofNullable(req.queryParams("status"))
-                .map(TaskManager.Status::fromString)
-                .map(taskManager::list)
-                .orElse(taskManager.list()));
+            return ExecutionDetailsDto.from(additionalInformationDTOConverter, listTasks(req));
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -96,6 +141,25 @@ public class TasksRoutes implements Routes {
                 .message("Invalid status query parameter")
                 .haltError();
         }
+    }
+
+    private Stream<TaskExecutionDetails> listTasks(Request req) {
+        Stream<TaskExecutionDetails> stream = Optional.ofNullable(req.queryParams("status"))
+            .map(TaskManager.Status::fromString)
+            .map(taskManager::list)
+            .orElse(taskManager.list())
+            .stream()
+            .sorted(Comparator.comparing(TaskExecutionDetails::getSubmittedDate).reversed());
+
+        return taskListTransformations(req)
+            .reduce(stream, (s, tc) -> tc.apply(s), Stream::concat);
+    }
+
+    Stream<TaskListTransformation> taskListTransformations(Request req) {
+        return Stream.of(Optional.ofNullable(req.queryParams("type")).map(TaskType::of).map(TypeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("offset")).map(Integer::valueOf).map(OffsetTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("limit")).map(Integer::valueOf).map(LimitTaskListTransformation::new))
+            .flatMap(Optional::stream);
     }
 
     public Object getStatus(Request req, Response response) {
