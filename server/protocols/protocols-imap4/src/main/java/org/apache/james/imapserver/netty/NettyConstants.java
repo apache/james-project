@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.james.imap.api.process.ImapSession;
 
 import io.netty.util.AttributeKey;
+import reactor.core.Disposable;
 
 
 /**
@@ -40,6 +41,7 @@ public interface NettyConstants {
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
+    AttributeKey<Disposable> REQUEST_IN_FLIGHT_ATTRIBUTE_KEY = AttributeKey.valueOf("requestInFlight");
     AttributeKey<Map<String, Object>> FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY  = AttributeKey.valueOf("FrameDecoderMap");
 
 }
