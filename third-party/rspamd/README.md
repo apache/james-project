@@ -40,7 +40,8 @@ might not even be desirable.
   their own per-user bayes database. This is achieved through the use of Rspamd `Deliver-To` HTTP header. If true, Rspamd
   will be called for each recipient of the mail, which comes at a performance cost. If true, subjects are not rewritten.
   If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the cost of email copies.
-  Defaults to false.
+  Please pay attention that per-user Bayes is only activated when we feed enough (min_learns) spam as well as (min_learns) 
+  ham messages to Rspamd. Defaults to false.
 
 ```xml
 <processor state="local-delivery" enableJmx="true">
