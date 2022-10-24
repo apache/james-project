@@ -221,9 +221,30 @@ public class ICALToJsonAttributeTest {
             .isEmpty();
     }
 
+    @Test
+    void serviceShouldFilterICSWithoutEvents() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/no_event.ics"));
+        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
+        Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(MailAddressFixture.OTHER_AT_JAMES)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(icals)))
+            .build();
+        testee.service(mail);
+
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
+    }
+
     @SuppressWarnings("unchecked")
     @Test
-    void serviceShouldAttachEmptyListWhenNoRecipient() throws Exception {
+    void serviceShouldNotAttachWhenNoRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
@@ -239,8 +260,7 @@ public class ICALToJsonAttributeTest {
         testee.service(mail);
 
         assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, Map.class))
-            .isPresent()
-            .hasValueSatisfying(map -> assertThat(map).isEmpty());
+            .isEmpty();
     }
 
     @Test
