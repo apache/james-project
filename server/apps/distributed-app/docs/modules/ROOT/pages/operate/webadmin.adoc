@@ -271,7 +271,7 @@ Response codes:
 * 200: A list of corresponding tasks is returned
 * 400: Invalid status value
 
-Additionnal optional task parameters are supported:
+Additional optional task parameters are supported:
 
 - `status` one of `waiting`, `inProgress`, `canceledRequested`, `completed`, `canceled`, `failed`. Only
 tasks with the given status are returned.
