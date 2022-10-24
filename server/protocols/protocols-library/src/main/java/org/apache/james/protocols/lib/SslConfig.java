@@ -46,6 +46,7 @@ public class SslConfig {
 
         if (useStartTLS || useSSL) {
             String[] enabledCipherSuites = config.getStringArray("tls.supportedCipherSuites.cipherSuite");
+            String[] enabledProtocols = config.getStringArray("tls.supportedProtocols.protocol");
             String keystore = config.getString("tls.keystore", null);
             String privateKey = config.getString("tls.privateKey", null);
             String certificates = config.getString("tls.certificates", null);
@@ -61,9 +62,9 @@ public class SslConfig {
             boolean enableOCSPCRLChecks = config.getBoolean("tls.enableOCSPCRLChecks", false);
             LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
 
-            return new SslConfig(useStartTLS, useSSL, clientAuth, keystore, keystoreType, privateKey, certificates, secret, truststore, truststoreType, enabledCipherSuites, truststoreSecret, enableOCSPCRLChecks);
+            return new SslConfig(useStartTLS, useSSL, clientAuth, keystore, keystoreType, privateKey, certificates, secret, truststore, truststoreType, enabledCipherSuites, enabledProtocols, truststoreSecret, enableOCSPCRLChecks);
         } else {
-            return new SslConfig(useStartTLS, useSSL, clientAuth, null, null, null, null, null, null, null, null, null, false);
+            return new SslConfig(useStartTLS, useSSL, clientAuth, null, null, null, null, null, null, null, null, null, null, false);
         }
     }
 
@@ -78,12 +79,13 @@ public class SslConfig {
     private final String truststore;
     private final String truststoreType;
     private final String[] enabledCipherSuites;
+    private final String[] enabledProtocols;
     private final char[] truststoreSecret;
     private final boolean enableOCSPCRLChecks;
 
     public SslConfig(boolean useStartTLS, boolean useSSL, ClientAuth clientAuth, String keystore, String keystoreType, String privateKey,
-                     String certificates, String secret, String truststore, String truststoreType, String[] enabledCipherSuites, char[] truststoreSecret,
-                     boolean enableOCSPCRLChecks) {
+                     String certificates, String secret, String truststore, String truststoreType, String[] enabledCipherSuites, String[] enabledProtocols,
+                     char[] truststoreSecret, boolean enableOCSPCRLChecks) {
         this.useStartTLS = useStartTLS;
         this.useSSL = useSSL;
         this.clientAuth = clientAuth;
@@ -95,6 +97,7 @@ public class SslConfig {
         this.truststore = truststore;
         this.truststoreType = truststoreType;
         this.enabledCipherSuites = enabledCipherSuites;
+        this.enabledProtocols = enabledProtocols;
         this.truststoreSecret = truststoreSecret;
         this.enableOCSPCRLChecks = enableOCSPCRLChecks;
     }
@@ -109,6 +112,10 @@ public class SslConfig {
 
     public String[] getEnabledCipherSuites() {
         return enabledCipherSuites;
+    }
+
+    public String[] getEnabledProtocols() {
+        return enabledProtocols;
     }
 
     public boolean useSSL() {
