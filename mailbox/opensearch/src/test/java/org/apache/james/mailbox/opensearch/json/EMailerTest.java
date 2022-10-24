@@ -19,6 +19,10 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -28,5 +32,11 @@ class EMailerTest {
     void eMailerShouldRespectBeanContract() {
         EqualsVerifier.forClass(EMailer.class)
             .verify();
+    }
+
+    @Test
+    void shouldSupportNullDomain() {
+        assertThatCode(() -> new EMailer(Optional.empty(), "localPart", null))
+            .doesNotThrowAnyException();
     }
 }

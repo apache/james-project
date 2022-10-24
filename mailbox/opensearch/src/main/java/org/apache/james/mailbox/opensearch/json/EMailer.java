@@ -39,6 +39,9 @@ public class EMailer implements SerializableMessage {
     }
 
     String removeTopDomain(String s) {
+        if (s == null) {
+            return null;
+        }
         if (s.contains(".")) {
             return s.substring(0, s.lastIndexOf('.'));
         }
