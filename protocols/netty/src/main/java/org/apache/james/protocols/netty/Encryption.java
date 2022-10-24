@@ -40,7 +40,7 @@ public interface Encryption {
 
     @VisibleForTesting
     static Encryption createTls(SSLContext context) {
-        return createTls(context, null, ClientAuth.NONE);
+        return createTls(context, null, null, ClientAuth.NONE);
     }
 
     /**
@@ -52,13 +52,13 @@ public interface Encryption {
      * @param clientAuth
      *            specifies certificate based client authentication mode
      */
-    static Encryption createTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        return new Encryption.LegacyJavaEncryption(context, false, enabledCipherSuites, clientAuth);
+    static Encryption createTls(SSLContext context, String[] enabledCipherSuites, String[] enabledProtocols, ClientAuth clientAuth) {
+        return new Encryption.LegacyJavaEncryption(context, false, enabledCipherSuites, enabledProtocols, clientAuth);
     }
 
     @VisibleForTesting
     static Encryption createStartTls(SSLContext context) {
-        return createStartTls(context, null, ClientAuth.NONE);
+        return createStartTls(context, null, null, ClientAuth.NONE);
     }
 
     /**
@@ -70,8 +70,8 @@ public interface Encryption {
      * @param clientAuth
      *            specifies certificate based client authentication mode
      */
-    static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, ClientAuth clientAuth) {
-        return new Encryption.LegacyJavaEncryption(context, true, enabledCipherSuites, clientAuth);
+    static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites, String[] enabledProtocols, ClientAuth clientAuth) {
+        return new Encryption.LegacyJavaEncryption(context, true, enabledCipherSuites, enabledProtocols, clientAuth);
     }
 
     /**
@@ -105,12 +105,14 @@ public interface Encryption {
         private final SSLContext context;
         private final boolean starttls;
         private final String[] enabledCipherSuites;
+        private final String[] enabledProtocols;
         private final ClientAuth clientAuth;
 
-        private LegacyJavaEncryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, ClientAuth clientAuth) {
+        private LegacyJavaEncryption(SSLContext context, boolean starttls, String[] enabledCipherSuites, String[] enabledProtocols, ClientAuth clientAuth) {
             this.context = context;
             this.starttls = starttls;
             this.enabledCipherSuites = enabledCipherSuites;
+            this.enabledProtocols = enabledProtocols;
             this.clientAuth = clientAuth;
         }
 
@@ -167,9 +169,13 @@ public interface Encryption {
             // We need to copy the String array because of possible security issues.
             // See https://issues.apache.org/jira/browse/PROTOCOLS-18
             String[] cipherSuites = ArrayUtils.clone(enabledCipherSuites);
+            String[] protocols = ArrayUtils.clone(enabledProtocols);
 
             if (cipherSuites != null && cipherSuites.length > 0) {
                 engine.setEnabledCipherSuites(cipherSuites);
+            }
+            if (protocols != null && protocols.length > 0) {
+                engine.setEnabledProtocols(protocols);
             }
             if (ClientAuth.NEED.equals(clientAuth)) {
                 engine.setNeedClientAuth(true);

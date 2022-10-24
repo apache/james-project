@@ -91,9 +91,9 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
         SSLContext context = sslFactoryBuilder.build().getSslContext();
 
         if (sslConfig.useStartTLS()) {
-            return Encryption.createStartTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getClientAuth());
+            return Encryption.createStartTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getEnabledProtocols(), sslConfig.getClientAuth());
         } else {
-           return Encryption.createTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getClientAuth());
+           return Encryption.createTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getEnabledProtocols(), sslConfig.getClientAuth());
         }
     }
 
