@@ -116,11 +116,6 @@ class TasksRoutesTest {
     @Test
     void listShouldBeSorted() throws Exception {
         TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
-        Thread.sleep(10);
-        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
-        Thread.sleep(10);
-        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
-        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         Thread.sleep(10);
