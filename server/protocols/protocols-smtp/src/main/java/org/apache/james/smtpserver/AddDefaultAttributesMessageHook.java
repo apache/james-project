@@ -43,6 +43,9 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
             final MailImpl mailImpl = (MailImpl) mail;
             mailImpl.setRemoteHost(session.getRemoteAddress().getHostName());
             mailImpl.setRemoteAddr(session.getRemoteAddress().getAddress().getHostAddress());
+
+            mail.setAttribute(new Attribute(Mail.SMTP_SESSION_ID, AttributeValue.of(session.getSessionID())));
+
             session.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection)
                 .ifPresent(helo ->  mail.setAttribute(new Attribute(Mail.SMTP_HELO, AttributeValue.of(helo))));
 

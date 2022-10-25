@@ -26,6 +26,8 @@ import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetP
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
@@ -58,11 +60,17 @@ public class ProcessorImpl {
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
         Throwable ex = null;
+        String smtpSessionID = mail.getAttribute(Mail.SMTP_SESSION_ID)
+            .map(Attribute::getValue)
+            .map(AttributeValue::value)
+            .map(String.class::cast)
+            .orElse(null);
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addToContext(MDCBuilder.PROTOCOL, "MAILET")
                      .addToContext(MDCBuilder.ACTION, "MAILET")
                      .addToContext(MDCBuilder.HOST, mail.getRemoteHost())
+                     .addToContext(MDCBuilder.SESSION_ID, smtpSessionID)
                      .addToContext("state", mail.getState())
                      .addToContext("mailet", mailet.getClass().getSimpleName())
                      .addToContext("mail", mail.getName())
