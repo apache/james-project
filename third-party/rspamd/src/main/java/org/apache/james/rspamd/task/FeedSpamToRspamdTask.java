@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -225,14 +226,16 @@ public class FeedSpamToRspamdTask implements Task {
     private final RunningOptions runningOptions;
     private final Context context;
     private final Clock clock;
+    private final RspamdClientConfiguration rspamdConfiguration;
 
     public FeedSpamToRspamdTask(MailboxManager mailboxManager, UsersRepository usersRepository, MessageIdManager messageIdManager, MailboxSessionMapperFactory mapperFactory,
-                                RspamdHttpClient rspamdHttpClient, RunningOptions runningOptions, Clock clock) {
+                                RspamdHttpClient rspamdHttpClient, RunningOptions runningOptions, Clock clock, RspamdClientConfiguration rspamdConfiguration) {
         this.runningOptions = runningOptions;
         this.messagesService = new GetMailboxMessagesService(mailboxManager, usersRepository, mapperFactory, messageIdManager);
         this.rspamdHttpClient = rspamdHttpClient;
         this.context = new Context();
         this.clock = clock;
+        this.rspamdConfiguration = rspamdConfiguration;
     }
 
     @Override
@@ -242,8 +245,7 @@ public class FeedSpamToRspamdTask implements Task {
             .transform(ReactorUtils.<Pair<Username, MessageResult>, Task.Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(userAndMessageResult -> rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> userAndMessageResult.getRight().getFullContent().reactiveBytes()).get(),
-                         RspamdHttpClient.Options.forUser(userAndMessageResult.getLeft()))
+                .forOperation(userAndMessageResult -> reportSpam(userAndMessageResult)
                     .timeout(runningOptions.getRspamdTimeout())
                     .then(Mono.fromCallable(() -> {
                         context.incrementReportedSpamMessageCount(1);
@@ -276,5 +278,13 @@ public class FeedSpamToRspamdTask implements Task {
 
     public RunningOptions getRunningOptions() {
         return runningOptions;
+    }
+
+    private Mono<Void> reportSpam(Pair<Username, MessageResult> userAndMessageResult) {
+        if (rspamdConfiguration.usePerUserBayes()) {
+            return rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> userAndMessageResult.getRight().getFullContent().reactiveBytes()).get(),
+                RspamdHttpClient.Options.forUser(userAndMessageResult.getLeft()));
+        }
+        return rspamdHttpClient.reportAsSpam(Throwing.supplier(() -> userAndMessageResult.getRight().getFullContent().reactiveBytes()).get());
     }
 }

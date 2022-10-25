@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.Configuration;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class RspamdClientConfiguration {
@@ -43,17 +44,28 @@ public class RspamdClientConfiguration {
             });
 
         String rspamdPassword = config.getString("rspamdPassword", "");
-        return new RspamdClientConfiguration(rspamdUrl, rspamdPassword, rspamdTimeoutConfigure);
+        boolean perUserBayes = config.getBoolean("perUserBayes", false);
+        return new RspamdClientConfiguration(rspamdUrl, rspamdPassword, rspamdTimeoutConfigure, perUserBayes);
     }
 
     private final URL url;
     private final String password;
     private final Optional<Integer> timeout;
+    private final boolean perUserBayes;
 
+    @VisibleForTesting
     public RspamdClientConfiguration(URL url, String password, Optional<Integer> timeout) {
         this.url = url;
         this.password = password;
         this.timeout = timeout;
+        this.perUserBayes = false;
+    }
+
+    public RspamdClientConfiguration(URL url, String password, Optional<Integer> timeout, boolean perUserBayes) {
+        this.url = url;
+        this.password = password;
+        this.timeout = timeout;
+        this.perUserBayes = perUserBayes;
     }
 
     public URL getUrl() {
@@ -66,5 +78,9 @@ public class RspamdClientConfiguration {
 
     public Optional<Integer> getTimeout() {
         return timeout;
+    }
+
+    public boolean usePerUserBayes() {
+        return perUserBayes;
     }
 }

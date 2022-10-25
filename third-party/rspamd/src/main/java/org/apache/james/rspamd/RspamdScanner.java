@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.ReactorUtils;
@@ -60,14 +61,15 @@ public class RspamdScanner extends GenericMailet {
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
 
     private final RspamdHttpClient rspamdHttpClient;
+    private final RspamdClientConfiguration configuration;
     private boolean rewriteSubject;
-    private boolean perUserScans;
     private Optional<String> virusProcessor;
     private Optional<String> rejectSpamProcessor;
 
     @Inject
-    public RspamdScanner(RspamdHttpClient rspamdHttpClient) {
+    public RspamdScanner(RspamdHttpClient rspamdHttpClient, RspamdClientConfiguration configuration) {
         this.rspamdHttpClient = rspamdHttpClient;
+        this.configuration = configuration;
     }
 
     @Override
@@ -75,12 +77,11 @@ public class RspamdScanner extends GenericMailet {
         rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
         virusProcessor = getInitParameterAsOptional("virusProcessor");
         rejectSpamProcessor = getInitParameterAsOptional("rejectSpamProcessor");
-        perUserScans = getBooleanParameter(getInitParameter("perUserScans"), false);
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        if (perUserScans) {
+        if (configuration.usePerUserBayes()) {
             scanPerUser(mail);
         } else {
             scanAll(mail);

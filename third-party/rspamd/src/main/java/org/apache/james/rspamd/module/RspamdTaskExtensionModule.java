@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.task.FeedHamToRspamdTask;
 import org.apache.james.rspamd.task.FeedHamToRspamdTaskAdditionalInformationDTO;
@@ -54,9 +55,10 @@ public class RspamdTaskExtensionModule implements TaskExtensionModule {
                                      MessageIdManager messageIdManager,
                                      MailboxSessionMapperFactory mapperFactory,
                                      RspamdHttpClient rspamdHttpClient,
-                                     Clock clock) {
-        this.feedSpamTaskDTOModule = FeedSpamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock);
-        this.feedHamTaskDTOModule = FeedHamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock);
+                                     Clock clock,
+                                     RspamdClientConfiguration rspamdConfiguration) {
+        this.feedSpamTaskDTOModule = FeedSpamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock, rspamdConfiguration);
+        this.feedHamTaskDTOModule = FeedHamToRspamdTaskDTO.module(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, clock, rspamdConfiguration);
     }
 
     @Override

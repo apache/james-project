@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
@@ -59,17 +60,22 @@ class RspamdScannerTest {
 
     private RspamdScanner mailet;
     private RspamdHttpClient rspamdHttpClient;
+    private RspamdClientConfiguration configuration;
 
     @BeforeEach
     void setup() throws MessagingException {
         rspamdHttpClient = mock(RspamdHttpClient.class);
+        configuration = mock(RspamdClientConfiguration.class);
         when(rspamdHttpClient.checkV2(any(Mail.class)))
             .thenReturn(Mono.just(AnalysisResult.builder()
                 .action(AnalysisResult.Action.NO_ACTION)
                 .score(12.1F)
                 .requiredScore(14F)
                 .build()));
-        mailet = new RspamdScanner(rspamdHttpClient);
+        when(configuration.usePerUserBayes())
+            .thenReturn(false);
+
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
     }
 
     @Test
@@ -255,7 +261,7 @@ class RspamdScannerTest {
             .setProperty("rewriteSubject", "true")
             .build();
 
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -287,7 +293,7 @@ class RspamdScannerTest {
             .setProperty("rejectSpamProcessor", "spam")
             .build();
 
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -319,7 +325,7 @@ class RspamdScannerTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .build();
 
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -352,7 +358,7 @@ class RspamdScannerTest {
             .setProperty("rejectSpamProcessor", "spam")
             .build();
         
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -382,7 +388,7 @@ class RspamdScannerTest {
             .desiredRewriteSubject(REWRITE_SUBJECT)
             .build()));
 
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -413,7 +419,7 @@ class RspamdScannerTest {
             .setProperty("rewriteSubject", "true")
             .build();
 
-        mailet = new RspamdScanner(rspamdHttpClient);
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
         Mail mail = FakeMail.builder()
             .name("name")
@@ -505,6 +511,8 @@ class RspamdScannerTest {
         @Test
         void shouldPositionPerUserHeaders() throws Exception {
             RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
+            RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+            when(configuration.usePerUserBayes()).thenReturn(true);
             when(rspamdHttpClient.checkV2(any(Mail.class), eq(RspamdHttpClient.Options.forUser(Username.of("user1@exemple.com")))))
                 .thenReturn(Mono.just(AnalysisResult.builder()
                     .action(AnalysisResult.Action.NO_ACTION)
@@ -518,10 +526,9 @@ class RspamdScannerTest {
                     .requiredScore(14F)
                     .build()));
 
-            mailet = new RspamdScanner(rspamdHttpClient);
+            mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
             mailet.init(FakeMailetConfig.builder()
-                .setProperty("perUserScans", "true")
                 .setProperty("virusProcessor", "virus")
                 .setProperty("rejectSpamProcessor", "spam")
                 .build());
@@ -559,6 +566,8 @@ class RspamdScannerTest {
         @Test
         void shouldPerformPartialRejects() throws Exception {
             RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
+            RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+            when(configuration.usePerUserBayes()).thenReturn(true);
             when(rspamdHttpClient.checkV2(any(Mail.class), eq(RspamdHttpClient.Options.forUser(Username.of("user1@exemple.com")))))
                 .thenReturn(Mono.just(AnalysisResult.builder()
                     .action(AnalysisResult.Action.NO_ACTION)
@@ -572,11 +581,10 @@ class RspamdScannerTest {
                     .requiredScore(14F)
                     .build()));
 
-            mailet = new RspamdScanner(rspamdHttpClient);
+            mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
             FakeMailContext mailetContext = FakeMailContext.defaultContext();
             mailet.init(FakeMailetConfig.builder()
-                .setProperty("perUserScans", "true")
                 .setProperty("virusProcessor", "virus")
                 .setProperty("rejectSpamProcessor", "spam")
                 .mailetContext(mailetContext)
@@ -605,6 +613,8 @@ class RspamdScannerTest {
         @Test
         void shouldPerformPartialVirus() throws Exception {
             RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
+            RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+            when(configuration.usePerUserBayes()).thenReturn(true);
             when(rspamdHttpClient.checkV2(any(Mail.class), eq(RspamdHttpClient.Options.forUser(Username.of("user1@exemple.com")))))
                 .thenReturn(Mono.just(AnalysisResult.builder()
                     .action(AnalysisResult.Action.NO_ACTION)
@@ -619,11 +629,10 @@ class RspamdScannerTest {
                     .hasVirus(true)
                     .build()));
 
-            mailet = new RspamdScanner(rspamdHttpClient);
+            mailet = new RspamdScanner(rspamdHttpClient, configuration);
 
             FakeMailContext mailetContext = FakeMailContext.defaultContext();
             mailet.init(FakeMailetConfig.builder()
-                .setProperty("perUserScans", "true")
                 .setProperty("virusProcessor", "virus")
                 .setProperty("rejectSpamProcessor", "spam")
                 .mailetContext(mailetContext)

@@ -58,6 +58,7 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,16 +84,21 @@ public class RspamdListenerTest {
     private MailboxId spamMailboxId;
     private MailboxId spamCapitalMailboxId;
     private MailboxId trashMailboxId;
+    private StoreMailboxManager mailboxManager;
+    private SystemMailboxesProviderImpl systemMailboxesProvider;
 
     @BeforeEach
     void setup() {
         rspamdHttpClient = mock(RspamdHttpClient.class);
-
+        RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+        when(configuration.usePerUserBayes()).thenReturn(true);
         when(rspamdHttpClient.reportAsHam(any(), any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsHam(any())).thenReturn(Mono.empty());
         when(rspamdHttpClient.reportAsSpam(any(), any())).thenReturn(Mono.empty());
+        when(rspamdHttpClient.reportAsSpam(any())).thenReturn(Mono.empty());
 
-        StoreMailboxManager mailboxManager = spy(InMemoryIntegrationResources.defaultResources().getMailboxManager());
-        SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
+        mailboxManager = spy(InMemoryIntegrationResources.defaultResources().getMailboxManager());
+        systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
         when(mailboxManager.createSystemSession(USER))
             .thenReturn(MAILBOX_SESSION);
         mapperFactory = mailboxManager.getMapperFactory();
@@ -106,7 +112,7 @@ public class RspamdListenerTest {
         spamCapitalMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY).block().getMailboxId();
         trashMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY).block().getMailboxId();
 
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
     }
 
     @Test
@@ -215,7 +221,11 @@ public class RspamdListenerTest {
 
 
     @Test
-    void eventShouldCallReportSpamLearningWhenTheMovedEventMatches() throws Exception {
+    void eventShouldCallReportPerUserSpamLearningWhenTheMovedEventMatchesAndPerUserBayesIsEnabled() throws Exception {
+        RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+        when(configuration.usePerUserBayes()).thenReturn(true);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+
         createMessage(inbox);
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
@@ -229,6 +239,29 @@ public class RspamdListenerTest {
         listener.event(messageMoveEvent);
 
         verify(rspamdHttpClient).reportAsSpam(any(), any());
+        verify(rspamdHttpClient, never()).reportAsSpam(any());
+    }
+
+    @Test
+    void eventShouldCallReportGlobalSpamLearningWhenTheMovedEventMatchesAndPerUserBayesIsDisabled() throws Exception {
+        RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+        when(configuration.usePerUserBayes()).thenReturn(false);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+
+        createMessage(inbox);
+        MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
+            .session(MAILBOX_SESSION)
+            .messageMoves(MessageMoves.builder()
+                .previousMailboxIds(mailboxId1)
+                .targetMailboxIds(spamMailboxId)
+                .build())
+            .messageId(MESSAGE_ID)
+            .build();
+
+        listener.event(messageMoveEvent);
+
+        verify(rspamdHttpClient).reportAsSpam(any());
+        verify(rspamdHttpClient, never()).reportAsSpam(any(), any());
     }
 
     @Test
@@ -250,7 +283,11 @@ public class RspamdListenerTest {
     }
 
     @Test
-    void eventShouldCallReportHamLearningWhenTheMessageIsAddedInInbox() throws Exception {
+    void eventShouldCallReportPerUserHamLearningWhenTheMessageIsAddedInInboxAndPerUserBayesIsEnabled() throws Exception {
+        RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+        when(configuration.usePerUserBayes()).thenReturn(true);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+
         SimpleMailboxMessage message = createMessage(inbox);
 
         MailboxEvents.Added addedEvent = EventFactory.added()
@@ -263,6 +300,28 @@ public class RspamdListenerTest {
         listener.event(addedEvent);
 
         verify(rspamdHttpClient).reportAsHam(any(), any());
+        verify(rspamdHttpClient, never()).reportAsHam(any());
+    }
+
+    @Test
+    void eventShouldCallReportGlobalHamLearningWhenTheMessageIsAddedInInboxAndPerUserBayesIsDisabled() throws Exception {
+        RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
+        when(configuration.usePerUserBayes()).thenReturn(false);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+
+        SimpleMailboxMessage message = createMessage(inbox);
+
+        MailboxEvents.Added addedEvent = EventFactory.added()
+            .randomEventId()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(inbox)
+            .addMetaData(message.metaData())
+            .build();
+
+        listener.event(addedEvent);
+
+        verify(rspamdHttpClient).reportAsHam(any());
+        verify(rspamdHttpClient, never()).reportAsHam(any(), any());
     }
 
     @Test
