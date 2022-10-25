@@ -20,6 +20,7 @@ package org.apache.james.task;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
+import static org.awaitility.Durations.TWO_MINUTES;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -34,6 +35,7 @@ import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.awaitility.Awaitility;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +90,9 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     private Publisher<Void> handleExecutionError(TaskWithId taskWithId, Listener listener, Throwable exception) {
         if (exception instanceof CancellationException) {
-            return listener.cancelled(taskWithId.getId(), taskWithId.getTask().detailsReactive());
+            return Mono.from(listener.cancelled(taskWithId.getId(), taskWithId.getTask().detailsReactive()))
+                .then(Mono.fromCallable(() -> cancelledTasks.remove(taskWithId.getId())))
+                .then();
         } else {
             return listener.failed(taskWithId.getId(), taskWithId.getTask().detailsReactive(), exception);
         }
@@ -173,7 +177,16 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     @Override
     public void close() {
         Optional.ofNullable(runningTask.get())
-            .ifPresent(task -> cancelTask(task.getT1()));
+            .ifPresent(task -> {
+                if (!task.getT2().isDone() && !task.getT2().isCancelled()) {
+                    cancelTask(task.getT1());
+                    Awaitility
+                        .waitAtMost(TWO_MINUTES)
+                        .pollDelay(Duration.ofMillis(500))
+                        .until(() -> !cancelledTasks.contains(task.getT1()));
+                }
+
+            });
         taskExecutor.dispose();
     }
 }

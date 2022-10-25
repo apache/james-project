@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -47,7 +46,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class SerialTaskManagerWorkerTest {
-    private  static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofMillis(100);
+    private static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofMillis(100);
 
     private TaskManagerWorker.Listener listener;
     private SerialTaskManagerWorker worker;
@@ -67,11 +66,6 @@ class SerialTaskManagerWorkerTest {
         when(listener.failed(any(), any(), any())).thenReturn(Mono.empty());
         when(listener.failed(any(), any(), any(), any())).thenReturn(Mono.empty());
         worker = new SerialTaskManagerWorker(listener, UPDATE_INFORMATION_POLLING_DURATION);
-    }
-
-    @AfterEach
-    void tearDown() {
-        worker.close();
     }
 
     @Test
