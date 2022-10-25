@@ -234,7 +234,7 @@ public class ICALToJsonAttributeTest {
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
-            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
             .build();
         testee.service(mail);
 
