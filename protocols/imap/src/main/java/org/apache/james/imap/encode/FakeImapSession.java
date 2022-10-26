@@ -27,6 +27,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLSession;
+
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
@@ -137,6 +139,11 @@ public class FakeImapSession implements ImapSession {
     @Override
     public boolean supportStartTLS() {
         return false;
+    }
+
+    @Override
+    public Optional<SSLSession> getSSLSession() {
+        return Optional.empty();
     }
 
     @Override

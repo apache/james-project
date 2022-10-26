@@ -23,6 +23,8 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.net.ssl.SSLSession;
+
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
@@ -179,6 +181,13 @@ public interface ImapSession extends CommandDetectionSession {
      */
     boolean supportStartTLS();
 
+    /**
+     * Return the {@link SSLSession} of this protocol session. Empty if it does not use SSL/TLS.
+     * 
+     * @return SSLSession
+     */
+    Optional<SSLSession> getSSLSession();
+    
     /**
      * Return true if compression is active
      * 

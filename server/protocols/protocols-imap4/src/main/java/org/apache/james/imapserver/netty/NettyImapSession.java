@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
@@ -43,6 +46,7 @@ import io.netty.handler.codec.compression.JZlibEncoder;
 import io.netty.handler.codec.compression.ZlibDecoder;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
+import io.netty.handler.ssl.SslHandler;
 import reactor.core.publisher.Mono;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
@@ -277,6 +281,14 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public boolean isTLSActive() {
         return channel.pipeline().get(SSL_HANDLER) != null;
+    }
+
+    @Override
+    public Optional<SSLSession> getSSLSession() {
+        return Optional.ofNullable(channel.pipeline().get(SSL_HANDLER))
+            .map(SslHandler.class::cast)
+            .map(SslHandler::engine)
+            .map(SSLEngine::getSession);
     }
 
     @Override
