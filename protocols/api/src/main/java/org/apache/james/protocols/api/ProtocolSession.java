@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.net.ssl.SSLSession;
+
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.handler.LineHandler;
 
@@ -218,6 +220,11 @@ public interface ProtocolSession extends CommandDetectionSession {
      * Return true if the starttls was started
      */
     boolean isTLSStarted();
+    
+    /**
+     * Return the {@link SSLSession} of this protocol session. Empty if it does not use SSL/TLS. 
+     */
+    Optional<SSLSession> getSSLSession();
     
     /**
      * Return the {@link ProtocolConfiguration}

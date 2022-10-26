@@ -33,6 +33,8 @@ import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 
+import javax.net.ssl.SSLSession;
+
 /**
  * Abstract class to simplify the mocks
  */
@@ -124,6 +126,11 @@ public class BaseFakeSMTPSession implements SMTPSession {
 
     @Override
     public boolean isTLSStarted() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public Optional<SSLSession> getSSLSession() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 

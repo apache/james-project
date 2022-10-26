@@ -27,9 +27,12 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
+
+import javax.net.ssl.SSLSession;
 
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.junit.jupiter.api.Test;
@@ -81,6 +84,11 @@ public class AbstractProtocolTransportTest {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
+            public Optional<SSLSession> getSSLSession() {
+                throw new UnsupportedOperationException();
+            }
+
             @Override
             public boolean isReadable() {
                 throw new UnsupportedOperationException();

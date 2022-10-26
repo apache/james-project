@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.net.ssl.SSLSession;
+
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.handler.LineHandler;
 
@@ -118,6 +120,11 @@ public class ProtocolSessionImpl implements ProtocolSession {
     @Override
     public boolean isTLSStarted() {
         return transport.isTLSStarted();
+    }
+
+    @Override
+    public Optional<SSLSession> getSSLSession() {
+        return transport.getSSLSession();
     }
 
     @Override

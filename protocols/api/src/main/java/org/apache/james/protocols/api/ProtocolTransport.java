@@ -20,6 +20,9 @@
 package org.apache.james.protocols.api;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
+
+import javax.net.ssl.SSLSession;
 
 import org.apache.james.protocols.api.handler.LineHandler;
 
@@ -57,6 +60,11 @@ public interface ProtocolTransport {
      * Return <code>true</code> if <code>STARTTLS</code> is supported by this {@link ProtocolTransport}
      */
     boolean isStartTLSSupported();
+
+    /*
+     * Return the {@link SSLSession} of this transport. Empty if it does not use SSL/TLS. 
+     */
+    Optional<SSLSession> getSSLSession();
 
     /**
      * Return <code>true</code> if <code>PROXY</code> is required by this {@link ProtocolTransport}
