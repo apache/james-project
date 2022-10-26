@@ -185,7 +185,9 @@ public class ICALToJsonAttribute extends GenericMailet {
             .stream()
             .flatMap(calendar -> toJson(calendar, rawCalendars, mail, transportSender, replyTo))
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
-        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(jsonsInByteForm)));
+        if (!jsonsInByteForm.isEmpty()) {
+            mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(jsonsInByteForm)));
+        }
     }
 
     private Optional<MailAddress> fetchReplyTo(Mail mail) throws MessagingException {
@@ -250,6 +252,10 @@ public class ICALToJsonAttribute extends GenericMailet {
         Optional<byte[]> rawICal = Optional.ofNullable(rawCalendars.get(entry.getKey())).map(AttributeValue::getValue);
         if (!rawICal.isPresent()) {
             LOGGER.debug("Cannot find matching raw ICAL from key: {}", entry.getKey());
+            return Stream.of();
+        }
+        if (calendar.getComponent("VEVENT") == null) {
+            LOGGER.debug("Calendar {} do not contains VEVENT", entry.getKey());
             return Stream.of();
         }
         try {
