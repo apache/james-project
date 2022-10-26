@@ -42,14 +42,14 @@ public class DockerRspamd {
         this.network = Network.newNetwork();
         this.dockerRedis = new DockerRedis(network);
         this.dockerClamAV = new DockerClamAV(network);
-        this.container = createRspamD();
+        this.container = createRspamd();
     }
 
     public boolean isRunning() {
         return container.isRunning();
     }
 
-    private GenericContainer<?> createRspamD() {
+    private GenericContainer<?> createRspamd() {
         return new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
             .withEnv("REDIS", "redis")
@@ -57,6 +57,8 @@ public class DockerRspamd {
             .withEnv("PASSWORD", PASSWORD)
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/statistic.conf"), "/etc/rspamd/")
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rspamd-test"))
             .withNetwork(network);
     }
 

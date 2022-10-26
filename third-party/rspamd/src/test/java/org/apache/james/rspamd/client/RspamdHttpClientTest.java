@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
@@ -58,6 +59,8 @@ class RspamdHttpClientTest {
     private final static String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
     private final static String VIRUS_MESSAGE_PATH = "mail/attachment/inlineVirusTextAttachment.eml";
     private final static String NON_VIRUS_MESSAGE_PATH = "mail/attachment/inlineNonVirusTextAttachment.eml";
+    private final static Username BOB = Username.of("bob@domain.tld");
+    private final static Username ALICE = Username.of("alice@domain.tld");
 
     @RegisterExtension
     static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
@@ -123,16 +126,17 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws Exception {
+    void checkSpamMailUsingRspamdClientWithExactPasswordShouldReturnAnalysisResultAsSameAsUsingRawClient() throws MessagingException {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(spamMessage).block();
-        assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.REJECT);
+        assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.ADD_HEADER);
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
         rspamdApi
             .header(new Header("Password", PASSWORD))
+            .header(new Header("IP", spamMessage.getRemoteAddr()))
             .body(ClassLoader.getSystemResourceAsStream(SPAM_MESSAGE_PATH))
             .post("checkv2")
         .then()
@@ -221,6 +225,87 @@ class RspamdHttpClientTest {
 
         AnalysisResult analysisResult = client.checkV2(nonVirusMessage).block();
         assertThat(analysisResult.hasVirus()).isFalse();
+    }
+
+    @Test
+    void perUserBayesShouldNotBeActivatedWhenFeedNotEnoughMessages() throws Exception {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        // Before active per-user bayes for Bob
+        AnalysisResult analysisResultBobBefore = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+
+        // Activate per-user bayes for Bob in progress (not enough required messages yet)
+        client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+
+        Thread.sleep(200);
+        AnalysisResult analysisResultBobAfter = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+        assertThat(analysisResultBobBefore.getScore()).isEqualTo(analysisResultBobAfter.getScore());
+    }
+
+    @Test
+    void perUserBayesShouldBeActivatedWhenFeedEnoughMessagesSpamCase() throws Exception {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        // Before active per-user bayes for Bob
+        AnalysisResult spamMessageResultBobBefore = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+        AnalysisResult spamMessageResultAliceBefore = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(ALICE)).block();
+        assertThat(spamMessageResultBobBefore.getScore()).isEqualTo(spamMessageResultAliceBefore.getScore());
+
+        // Activate per-user bayes for Bob: need 2 spam messages + 2 ham messages
+        client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsSpam(ReactorUtils.toChunks(virusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(nonVirusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+
+        Thread.sleep(200);
+        AnalysisResult spamMessageResultBobAfter = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+        AnalysisResult spamMessageResultAliceAfter = client.checkV2(spamMessage, RspamdHttpClient.Options.forUser(ALICE)).block();
+        assertThat(spamMessageResultBobAfter.getScore()).isNotEqualTo(spamMessageResultAliceAfter.getScore());
+    }
+
+    @Test
+    void perUserBayesShouldBeActivatedWhenFeedEnoughMessagesHamCase() throws Exception {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        // Before active per-user bayes for Bob
+        AnalysisResult hamMessageResultBobBefore = client.checkV2(hamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+        AnalysisResult hamMessageResultAliceBefore = client.checkV2(hamMessage, RspamdHttpClient.Options.forUser(ALICE)).block();
+        assertThat(hamMessageResultBobBefore.getScore()).isEqualTo(hamMessageResultAliceBefore.getScore());
+
+        // Activate per-user bayes for Bob: need 2 spam messages + 2 ham messages
+        client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsSpam(ReactorUtils.toChunks(virusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(nonVirusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+
+        Thread.sleep(200);
+        AnalysisResult hamMessageResultBobAfter = client.checkV2(hamMessage, RspamdHttpClient.Options.forUser(BOB)).block();
+        AnalysisResult hamMessageResultAliceAfter = client.checkV2(hamMessage, RspamdHttpClient.Options.forUser(ALICE)).block();
+        assertThat(hamMessageResultBobAfter.getScore()).isNotEqualTo(hamMessageResultAliceAfter.getScore());
+    }
+
+    @Test
+    void globalBayesShouldNotBeChangedAfterPerUserBayesIsActivated() throws Exception {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        // Before active per-user bayes for Bob
+        AnalysisResult globalBefore = client.checkV2(hamMessage, RspamdHttpClient.Options.NONE).block();
+
+        // Activate per-user bayes for Bob
+        client.reportAsSpam(ReactorUtils.toChunks(spamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsSpam(ReactorUtils.toChunks(virusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(hamMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+        client.reportAsHam(ReactorUtils.toChunks(nonVirusMessage.getMessage().getInputStream(), BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
+
+        Thread.sleep(200);
+        AnalysisResult globalAfter = client.checkV2(hamMessage, RspamdHttpClient.Options.NONE).block();
+
+        assertThat(globalBefore.getScore()).isEqualTo(globalAfter.getScore());
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {

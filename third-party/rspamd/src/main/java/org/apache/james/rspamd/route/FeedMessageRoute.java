@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.task.FeedHamToRspamdTask;
 import org.apache.james.rspamd.task.FeedSpamToRspamdTask;
@@ -59,12 +60,14 @@ public class FeedMessageRoute implements Routes {
     private final MailboxSessionMapperFactory mapperFactory;
     private final UsersRepository usersRepository;
     private final RspamdHttpClient rspamdHttpClient;
+    private final RspamdClientConfiguration rspamdConfiguration;
     private final JsonTransformer jsonTransformer;
     private final Clock clock;
 
     @Inject
     public FeedMessageRoute(TaskManager taskManager, MailboxManager mailboxManager, UsersRepository usersRepository, RspamdHttpClient rspamdHttpClient,
-                            JsonTransformer jsonTransformer, Clock clock, MessageIdManager messageIdManager, MailboxSessionMapperFactory mapperFactory) {
+                            JsonTransformer jsonTransformer, Clock clock, MessageIdManager messageIdManager, MailboxSessionMapperFactory mapperFactory,
+                            RspamdClientConfiguration rspamdConfiguration) {
         this.taskManager = taskManager;
         this.mailboxManager = mailboxManager;
         this.usersRepository = usersRepository;
@@ -73,6 +76,7 @@ public class FeedMessageRoute implements Routes {
         this.clock = clock;
         this.messageIdManager = messageIdManager;
         this.mapperFactory = mapperFactory;
+        this.rspamdConfiguration = rspamdConfiguration;
     }
 
     @Override
@@ -93,8 +97,8 @@ public class FeedMessageRoute implements Routes {
 
         return Optional.ofNullable(request.queryParams("action"))
             .filter(action -> action.equals(REPORT_SPAM_PARAM))
-            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock))
-            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock));
+            .map(any -> (Task) new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock, rspamdConfiguration))
+            .orElse(new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, getRunningOptions(request), clock, rspamdConfiguration));
     }
 
     private RunningOptions getRunningOptions(Request request) {

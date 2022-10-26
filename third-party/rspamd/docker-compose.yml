@@ -44,5 +44,6 @@ services:
       - PASSWORD=admin
     volumes:
       - $PWD/sample-configuration/antivirus.conf:/etc/rspamd/override.d/antivirus.conf
+      - $PWD/sample-configuration/statistic.conf:/etc/rspamd/statistic.conf
     ports:
       - 11334:11334

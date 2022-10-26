@@ -26,6 +26,7 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -39,7 +40,8 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
                                                                                       MessageIdManager messageIdManager,
                                                                                       MailboxSessionMapperFactory mapperFactory,
                                                                                       RspamdHttpClient rspamdHttpClient,
-                                                                                      Clock clock) {
+                                                                                      Clock clock,
+                                                                                      RspamdClientConfiguration rspamdConfiguration) {
         return DTOModule.forDomainObject(FeedSpamToRspamdTask.class)
             .convertToDTO(FeedSpamToRspamdTaskDTO.class)
             .toDomainObjectConverter(dto -> new FeedSpamToRspamdTask(mailboxManager,
@@ -51,7 +53,8 @@ public class FeedSpamToRspamdTaskDTO implements TaskDTO {
                     dto.getMessagesPerSecond(),
                     dto.getSamplingProbability(),
                     dto.getClassifiedAsSpam()),
-                clock))
+                clock,
+                rspamdConfiguration))
             .toDTOConverter((domain, type) -> new FeedSpamToRspamdTaskDTO(
                 type,
                 domain.getRunningOptions().getPeriodInSecond().orElse(null),

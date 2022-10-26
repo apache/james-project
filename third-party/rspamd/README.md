@@ -9,6 +9,8 @@ and [ClamAV](https://www.clamav.net/) (the antivirus engine).
 Configuration parameters:
     - `rSpamdUrl` : URL defining the Rspamd's server. Eg: http://rspamd:11334
     - `rSpamdPassword` : Password for pass authentication when request to Rspamd's server. Eg: admin
+    - `rspamdTimeout` : Timeout for HTTP requests called to Rspamd. Default to 15 seconds.
+    - `perUserBayes` : Use per-user Bayes for mail scanning/feedback. Default to false.
   
 - Declare the `extensions.properties` for this module.
 
@@ -25,6 +27,8 @@ guice.extension.task=org.apache.james.rspamd.module.RspamdTaskExtensionModule
 </listener>
 ```
 
+  This listener can report mails to per-user Bayes by configure `perUserBayes` in `rspamd.properties`.
+
 - Declare the Rspamd mailet for custom mail processing. 
 
   You can specify the `virusProcessor` if you want to enable virus scanning for mail. Upon configurable `virusProcessor`
@@ -34,8 +38,12 @@ you can specify how James process mail virus. We provide a sample Rspamd mailet 
 processor. This corresponds to emails with the highest spam score, thus delivering them to users as marked as spam 
 might not even be desirable.
 
-  The `rewriteSubject` option allows to rewritte subjects when asked by Rspamd.
-  
+  The `rewriteSubject` option allows to rewritte subjects when asked by Rspamd.  
+
+  This mailet can scan mails against per-user Bayes by configure `perUserBayes` in `rspamd.properties`. This is achieved 
+through the use of Rspamd `Deliver-To` HTTP header. If true, Rspamd will be called for each recipient of the mail, which comes at a performance cost. If true, subjects are not rewritten.
+If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the cost of email copies. Default to false.
+
 ```xml
 <processor state="local-delivery" enableJmx="true">
     <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
@@ -67,6 +75,7 @@ might not even be desirable.
     <mailet match="All" class="AddSubjectPrefix">
         <subjectPrefix>[VIRUS]</subjectPrefix>
     </mailet>
+    <mailet match="All" class="LocalDelivery"/>
 </processor>
 
 <!--Store rejected spam emails (with a very high score) -->
@@ -99,6 +108,7 @@ then run it: `docker-compose up`
 
 ### Report spam messages to Rspamd
 One can use this route to schedule a task that reports spam messages to Rspamd for its spam classify learning.
+This task can be configured to report spam messages to per-user Bayes via `perUserBayes` in `rspamd.properties`.
 
 ```bash
 curl -XPOST 'http://ip:port/rspamd?action=reportSpam
@@ -148,6 +158,7 @@ The scheduled task will have the following type `FeedSpamToRspamdTask` and the f
 
 ### Report ham messages to Rspamd
 One can use this route to schedule a task that reports ham messages to Rspamd for its spam classify learning.
+This task can be configured to report ham messages to per-user Bayes via `perUserBayes` in `rspamd.properties`.
 
 ```bash
 curl -XPOST 'http://ip:port/rspamd?action=reportHam

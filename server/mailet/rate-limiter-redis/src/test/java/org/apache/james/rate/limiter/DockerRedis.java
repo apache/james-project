@@ -46,6 +46,7 @@ public class DockerRedis {
         this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
             .withExposedPorts(DEFAULT_PORT)
             .withNetwork(network)
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-redis-test"))
             .withNetworkAliases("redis");
     }
 

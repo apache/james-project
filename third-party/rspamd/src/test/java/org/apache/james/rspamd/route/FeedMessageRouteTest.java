@@ -121,14 +121,15 @@ public class FeedMessageRouteTest {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         UpdatableTickingClock clock = new UpdatableTickingClock(NOW);
         JsonTransformer jsonTransformer = new JsonTransformer();
-        RspamdHttpClient client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        RspamdClientConfiguration rspamdConfiguration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(rspamdConfiguration);
         MessageIdManager messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         MailboxSessionMapperFactory mapperFactory = mailboxManager.getMapperFactory();
 
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(FeedSpamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
             FeedHamToRspamdTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
         FeedMessageRoute feedMessageRoute = new FeedMessageRoute(taskManager, mailboxManager, usersRepository, client, jsonTransformer, clock,
-            messageIdManager, mapperFactory);
+            messageIdManager, mapperFactory, rspamdConfiguration);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(feedMessageRoute, tasksRoutes).start();
 

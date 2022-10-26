@@ -104,7 +104,7 @@ public class FeedHamToRspamdTaskTest {
         }
 
         @Override
-        public Mono<Void> reportAsHam(Publisher<ByteBuffer> content) {
+        public Mono<Void> reportAsHam(Publisher<ByteBuffer> content, Options options) {
             return Mono.from(content)
                 .doOnNext(e -> hitCounter.incrementAndGet())
                 .then();
@@ -121,6 +121,7 @@ public class FeedHamToRspamdTaskTest {
     private UsersRepository usersRepository;
     private Clock clock;
     private RspamdHttpClient client;
+    private RspamdClientConfiguration configuration;
     private FeedHamToRspamdTask task;
 
     @BeforeEach
@@ -139,10 +140,11 @@ public class FeedHamToRspamdTaskTest {
         mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE));
 
         clock = new UpdatableTickingClock(NOW);
-        client = new RspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty(), true);
+        client = new RspamdHttpClient(configuration);
         messageIdManager = inMemoryIntegrationResources.getMessageIdManager();
         mapperFactory = mailboxManager.getMapperFactory();
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock, configuration);
     }
 
     @AfterEach
@@ -186,9 +188,11 @@ public class FeedHamToRspamdTaskTest {
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW));
         appendHamMessage(ALICE_INBOX_MAILBOX, Date.from(NOW));
 
-        TestRspamdHttpClient rspamdHttpClient = new TestRspamdHttpClient(new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty()));
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty(), true);
+        TestRspamdHttpClient rspamdHttpClient = new TestRspamdHttpClient(configuration);
 
-        FeedHamToRspamdTask feedHamToRspamdTask = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, rspamdHttpClient, RunningOptions.DEFAULT, clock);
+        FeedHamToRspamdTask feedHamToRspamdTask = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory,
+            rspamdHttpClient, RunningOptions.DEFAULT, clock, configuration);
 
 
         Task.Result result = feedHamToRspamdTask.run();
@@ -201,7 +205,7 @@ public class FeedHamToRspamdTaskTest {
     void taskShouldReportHamMessageInPeriod() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
 
@@ -220,7 +224,7 @@ public class FeedHamToRspamdTaskTest {
     void taskShouldNotReportHamMessageNotInPeriod() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
 
@@ -239,7 +243,7 @@ public class FeedHamToRspamdTaskTest {
     void mixedInternalDateCase() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
         appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
@@ -259,7 +263,7 @@ public class FeedHamToRspamdTaskTest {
     void taskWithSamplingProbabilityIsZeroShouldReportNonHamMessage() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -295,7 +299,7 @@ public class FeedHamToRspamdTaskTest {
     void taskWithVeryLowSamplingProbabilityShouldReportNotAllHamMessages() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.01, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         IntStream.range(0, 10)
                 .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -314,7 +318,7 @@ public class FeedHamToRspamdTaskTest {
     void taskWithVeryHighSamplingProbabilityShouldReportMoreThanZeroMessage() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.99, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -333,7 +337,7 @@ public class FeedHamToRspamdTaskTest {
     void taskWithAverageSamplingProbabilityShouldReportSomeMessages() {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 0.5, ALL_MESSAGES);
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         IntStream.range(0, 10)
             .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
@@ -352,7 +356,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportUnclassifiedWhenClassifiedAsSpamIsTrue() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
 
@@ -370,7 +374,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldNotReportHamWhenClassifiedAsSpamIsTrue() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
 
@@ -388,7 +392,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportSpamWhenClassifiedAsSpamIsTrue() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(true));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
 
@@ -406,7 +410,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportUnclassifiedWhenClassifiedAsSpamIsOmited() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
 
@@ -424,7 +428,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportHamWhenClassifiedAsSpamIsOmited() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
 
@@ -442,7 +446,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldNotReportSpamWhenClassifiedAsSpamIsOmited() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.empty());
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
 
@@ -460,7 +464,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportUnclassifiedWhenClassifiedAsSpamIsFalse() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "Unrelated: at all");
 
@@ -478,7 +482,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldReportHamWhenClassifiedAsSpamIsFalse() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
 
@@ -496,7 +500,7 @@ public class FeedHamToRspamdTaskTest {
     void shouldNotReportSpamWhenClassifiedAsSpamIsFalse() throws Exception {
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: YES");
 
@@ -573,7 +577,7 @@ public class FeedHamToRspamdTaskTest {
 
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),
             DEFAULT_MESSAGES_PER_SECOND, 1.0, Optional.of(false));
-        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, httpClient, runningOptions, clock);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, httpClient, runningOptions, clock, configuration);
 
         appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)), "org.apache.james.rspamd.flag: NO");
 

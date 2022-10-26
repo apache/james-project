@@ -36,6 +36,7 @@ public class DockerClamAV {
             .withEnv("CLAMAV_NO_FRESHCLAMD", "true")
             .withEnv("CLAMAV_NO_MILTERD", "true")
             .withNetwork(network)
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-clamav-test"))
             .withNetworkAliases("clamav");
     }
 

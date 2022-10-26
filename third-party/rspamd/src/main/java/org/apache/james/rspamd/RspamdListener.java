@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.SpamEventListener;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
@@ -64,13 +65,16 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
     private static final Group GROUP = new RspamdListenerGroup();
 
     private final RspamdHttpClient rspamdHttpClient;
+    private final RspamdClientConfiguration configuration;
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory mapperFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
 
     @Inject
-    public RspamdListener(RspamdHttpClient rspamdHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, SystemMailboxesProvider systemMailboxesProvider) {
+    public RspamdListener(RspamdHttpClient rspamdHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, 
+                          SystemMailboxesProvider systemMailboxesProvider, RspamdClientConfiguration configuration) {
         this.rspamdHttpClient = rspamdHttpClient;
+        this.configuration = configuration;
         this.mailboxManager = mailboxManager;
         this.mapperFactory = mapperFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
@@ -114,7 +118,7 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .flatMapMany(pair -> Flux.fromIterable(MessageRange.toRanges(addedEvent.getUids()))
                 .flatMap(range -> pair.getRight().findInMailboxReactive(pair.getLeft(), range, MessageMapper.FetchType.FULL, LIMIT)))
             .map(MailboxMessage::getFullContentReactive)
-            .flatMap(rspamdHttpClient::reportAsHam, ReactorUtils.DEFAULT_CONCURRENCY)
+            .flatMap(content -> reportHam(content, addedEvent), ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
 
@@ -133,14 +137,30 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
             .flatMap(isSpam -> {
                 if (isSpam) {
                     LOGGER.debug("Spam event detected, EventId = {}", messageMoveEvent.getEventId().getId());
-                    return rspamdHttpClient.reportAsSpam(mailboxMessagesPublisher)
+                    return reportSpam(mailboxMessagesPublisher, messageMoveEvent)
                         .then();
                 } else {
                     return reportHamIfNotSpamDetected
-                        .flatMapMany(isHam -> rspamdHttpClient.reportAsHam(mailboxMessagesPublisher))
+                        .flatMapMany(isHam -> reportHam(mailboxMessagesPublisher, messageMoveEvent))
                         .then();
                 }
             });
+    }
+
+    private Mono<Void> reportHam(Publisher<ByteBuffer> content, Event messageMoveEvent) {
+        if (configuration.usePerUserBayes()) {
+            return rspamdHttpClient.reportAsHam(content, RspamdHttpClient.Options.forUser(messageMoveEvent.getUsername()));
+        } else {
+            return rspamdHttpClient.reportAsHam(content);
+        }
+    }
+
+    private Mono<Void> reportSpam(Flux<ByteBuffer> mailboxMessagesPublisher, MessageMoveEvent messageMoveEvent) {
+        if (configuration.usePerUserBayes()) {
+            return rspamdHttpClient.reportAsSpam(mailboxMessagesPublisher, RspamdHttpClient.Options.forUser(messageMoveEvent.getUsername()));
+        } else {
+            return rspamdHttpClient.reportAsSpam(mailboxMessagesPublisher);
+        }
     }
 
     @VisibleForTesting
