@@ -46,8 +46,8 @@ Standard “/get” method as described in [@!RFC8620] section 5.1. The ids argu
 
 ## Quota/changes
 
-> :warning:
-> Not implemented
+> :information_source:
+> Implemented
 
 Standard “/changes” method as described in [@!RFC8620] section 5.2 but with one extra argument to the response:
 

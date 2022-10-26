@@ -23,14 +23,15 @@ import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import org.apache.james.core.Domain
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
+import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
-import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, Id, Properties, UnsignedInt, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.{Quota => ModelQuota, QuotaRoot => ModelQuotaRoot}
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import scala.compat.java8.OptionConverters._
 
 object QuotaRoot {
@@ -109,6 +110,10 @@ object JmapQuota {
         name = QuotaName.from(quotaRoot, AccountScope, OctetsResourceType, List(MailDataType)),
         dataTypes = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
+
+  def correspondingState(quotas: Seq[JmapQuota]): UuidState =
+    UuidState(UUID.nameUUIDFromBytes(s"${quotas.sortBy(_.name.string).map(_.name.string).mkString("_")}:${quotas.map(_.used.value).sum + quotas.map(_.limit.value).sum}"
+      .getBytes(StandardCharsets.UTF_8)))
 }
 
 case class JmapQuota(id: Id,
@@ -174,19 +179,49 @@ object QuotaIdFactory {
 }
 
 object QuotaResponseGetResult {
-  def empty: QuotaResponseGetResult = QuotaResponseGetResult()
-
-  def merge(result1: QuotaResponseGetResult, result2: QuotaResponseGetResult): QuotaResponseGetResult = result1.merge(result2)
+  def from(quotas: Seq[JmapQuota], requestIds: Option[Set[Id]]): QuotaResponseGetResult =
+    requestIds match {
+      case None => QuotaResponseGetResult(quotas.toSet, state = JmapQuota.correspondingState(quotas))
+      case Some(value) => QuotaResponseGetResult(
+        jmapQuotaSet = quotas.filter(quota => value.contains(quota.id)).toSet,
+        notFound = QuotaNotFound(value.diff(quotas.map(_.id).toSet).map(UnparsedQuotaId)),
+        state = JmapQuota.correspondingState(quotas))
+    }
 }
 
-case class QuotaResponseGetResult(jmapQuotaSet: Set[JmapQuota] = Set(), notFound: QuotaNotFound = QuotaNotFound(Set())) {
-  def merge(other: QuotaResponseGetResult): QuotaResponseGetResult =
-    QuotaResponseGetResult(this.jmapQuotaSet ++ other.jmapQuotaSet,
-      this.notFound.merge(other.notFound))
-
+case class QuotaResponseGetResult(jmapQuotaSet: Set[JmapQuota] = Set(),
+                                  notFound: QuotaNotFound = QuotaNotFound(Set()),
+                                  state: UuidState) {
   def asResponse(accountId: AccountId): QuotaGetResponse =
     QuotaGetResponse(accountId = accountId,
-      state = INSTANCE,
+      state = state,
       list = jmapQuotaSet.toList,
       notFound = notFound)
 }
+
+case class QuotaChangesRequest(accountId: AccountId,
+                               sinceState: UuidState,
+                               maxChanges: Option[Limit]) extends WithAccountId
+
+object QuotaChangesResponse {
+  def from(oldState: UuidState, newState: (UuidState, Seq[Id]), accountId: AccountId): QuotaChangesResponse =
+    QuotaChangesResponse(
+      accountId = accountId,
+      oldState = oldState,
+      newState = newState._1,
+      hasMoreChanges = HasMoreChanges(false),
+      updated = if (oldState.value.equals(newState._1.value)) {
+        Set()
+      } else {
+        newState._2.toSet
+      })
+}
+
+case class QuotaChangesResponse(accountId: AccountId,
+                                oldState: UuidState,
+                                newState: UuidState,
+                                hasMoreChanges: HasMoreChanges,
+                                updatedProperties: Option[Properties] = None,
+                                created: Set[Id] = Set(),
+                                updated: Set[Id] = Set(),
+                                destroyed: Set[Id] = Set())
