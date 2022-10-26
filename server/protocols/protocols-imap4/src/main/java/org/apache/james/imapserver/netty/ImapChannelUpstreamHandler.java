@@ -57,6 +57,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
+import io.netty.util.Attribute;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 /**
@@ -210,6 +212,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             // remove the stored attribute for the channel to free up resources
             // See JAMES-1195
             ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
+            Disposable disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null);
 
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
@@ -221,6 +224,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 .subscribe(any -> {
 
                 }, ctx::fireExceptionCaught);
+            Optional.ofNullable(disposableAttribute).ifPresent(Disposable::dispose);
         }
     }
 
@@ -272,6 +276,9 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         // logout on error not sure if that is the best way to handle it
         final ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
 
+        Optional.ofNullable(ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null))
+            .ifPresent(Disposable::dispose);
+
         Optional.ofNullable(imapSession)
             .map(ImapSession::logout)
             .orElse(Mono.empty())
@@ -298,12 +305,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         imapCommandsMetric.increment();
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        Attribute<Disposable> disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY);
         ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
         ImapMessage message = (ImapMessage) msg;
 
         beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
-        reactiveThrottler.throttle(
+        Disposable disposable = reactiveThrottler.throttle(
             processor.processReactive(message, responseEncoder, session)
                 .doOnEach(Throwing.consumer(signal -> {
                     if (session.getState() == ImapSessionState.LOGOUT) {
@@ -335,12 +343,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     if (signal.hasError()) {
                         ctx.fireExceptionCaught(signal.getThrowable());
                     }
+                    disposableAttribute.set(null);
                     ctx.fireChannelReadComplete();
                 }))
                 .contextWrite(ReactorUtils.context("imap", mdc(ctx))), message)
             // Manage throttling errors
             .doOnError(ctx::fireExceptionCaught)
             .subscribe();
+        disposableAttribute.set(disposable);
     }
 
     private void beforeIDLEUponProcessing(ChannelHandlerContext ctx) {
