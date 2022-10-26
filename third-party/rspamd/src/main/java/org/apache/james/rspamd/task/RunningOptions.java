@@ -20,6 +20,7 @@
 package org.apache.james.rspamd.task;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -91,7 +92,7 @@ public class RunningOptions {
         this.messagesPerSecond = messagesPerSecond;
         this.samplingProbability = samplingProbability;
         this.classifiedAsSpam = classifiedAsSpam;
-        this.rspamdTimeout = rspamdTimeout;
+        this.rspamdTimeout = evaluateRspamdTimeout(rspamdTimeout);
     }
 
     public Optional<Boolean> getClassifiedAsSpam() {
@@ -128,5 +129,28 @@ public class RunningOptions {
                 return ClassificationFilter.CLASSIFIED_AS_HAM;
             }
         }).orElse(ClassificationFilter.ALL);
+    }
+
+    private Duration evaluateRspamdTimeout(Duration rspamdTimeout) {
+        return Optional.ofNullable(rspamdTimeout).orElse(DEFAULT_RSPAMD_TIMEOUT);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof RunningOptions) {
+            RunningOptions that = (RunningOptions) o;
+
+            return Objects.equals(this.messagesPerSecond, that.messagesPerSecond)
+                && Objects.equals(this.samplingProbability, that.samplingProbability)
+                && Objects.equals(this.periodInSecond, that.periodInSecond)
+                && Objects.equals(this.classifiedAsSpam, that.classifiedAsSpam)
+                && Objects.equals(this.rspamdTimeout, that.rspamdTimeout);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(periodInSecond, messagesPerSecond, samplingProbability, classifiedAsSpam, rspamdTimeout);
     }
 }

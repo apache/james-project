@@ -93,6 +93,25 @@ public class FeedHamToRspamdTask implements Task {
         public Instant timestamp() {
             return timestamp;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof AdditionalInformation) {
+                AdditionalInformation that = (AdditionalInformation) o;
+
+                return Objects.equals(this.hamMessageCount, that.hamMessageCount)
+                    && Objects.equals(this.reportedHamMessageCount, that.reportedHamMessageCount)
+                    && Objects.equals(this.errorCount, that.errorCount)
+                    && Objects.equals(this.timestamp, that.timestamp)
+                    && Objects.equals(this.runningOptions, that.runningOptions);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(timestamp, hamMessageCount, reportedHamMessageCount, errorCount, runningOptions);
+        }
     }
 
     public static class Context {
