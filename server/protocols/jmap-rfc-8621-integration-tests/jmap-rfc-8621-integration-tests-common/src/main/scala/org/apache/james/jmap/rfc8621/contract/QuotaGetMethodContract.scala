@@ -43,8 +43,17 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import java.nio.charset.StandardCharsets
 import org.apache.james.mailbox.model.MailboxACL.Right.Read
 import org.apache.james.mailbox.model.MailboxACL.Right.Lookup
+import org.awaitility.Awaitility
+
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 trait QuotaGetMethodContract {
+
+  private lazy val awaitAtMostTenSeconds = Awaitility.`with`
+    .await
+    .pollInterval(Duration.ofMillis(100))
+    .atMost(10, TimeUnit.SECONDS)
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
@@ -92,7 +101,7 @@ trait QuotaGetMethodContract {
          |    "Quota/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
+         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -141,7 +150,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "6d7199ed-f1ce-31f3-8f02-c2e824004e55",
          |                "list": [
          |                    {
          |                        "used": 0,
@@ -214,7 +223,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |                "list": []
          |            },
          |            "c1"
@@ -262,7 +271,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [ "notfound123" ],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |                "list": []
          |            },
          |            "c1"
@@ -313,7 +322,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [ "notfound123" ],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "461cef39-0c47-352b-a9e9-052093c20d5d",
          |                "list": [
          |                    {
          |                        "used": 0,
@@ -386,7 +395,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [ ],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "3c51d50a-d766-38b7-9fa4-c9ff12de87a4",
          |                "list": [
          |                    {
          |                        "used": 1,
@@ -576,7 +585,7 @@ trait QuotaGetMethodContract {
          |    "Quota/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
+         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -622,7 +631,7 @@ trait QuotaGetMethodContract {
          |    "Quota/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
+         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
          |      "list": [],
          |      "notFound": [ "${quotaId}" ]
          |    },
@@ -667,7 +676,7 @@ trait QuotaGetMethodContract {
          |    "Quota/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
+         |      "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |      "list": [
          |        {
          |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528"
@@ -716,7 +725,7 @@ trait QuotaGetMethodContract {
          |    "Quota/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
+         |      "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |      "list": [
          |        {
          |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
@@ -844,73 +853,75 @@ trait QuotaGetMethodContract {
         .build))
       .getMessageId.serialize()
 
-    val response = `given`
-      .body(
-        s"""{
-           |  "using": [
-           |    "urn:ietf:params:jmap:core",
-           |    "urn:ietf:params:jmap:quota"],
-           |  "methodCalls": [[
-           |    "Quota/get",
-           |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "ids": null
-           |    },
-           |    "c1"]]
-           |}""".stripMargin)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    awaitAtMostTenSeconds.untilAsserted(() => {
+      val response = `given`
+        .body(
+          s"""{
+             |  "using": [
+             |    "urn:ietf:params:jmap:core",
+             |    "urn:ietf:params:jmap:quota"],
+             |  "methodCalls": [[
+             |    "Quota/get",
+             |    {
+             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "ids": null
+             |    },
+             |    "c1"]]
+             |}""".stripMargin)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
-    assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
-      .isEqualTo(
-      s"""{
-         |    "sessionState": "${SESSION_STATE.value}",
-         |    "methodResponses": [
-         |        [
-         |            "Quota/get",
-         |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
-         |                "list": [
-         |                    {
-         |                        "used": 1,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
-         |                            "Mail"
-         |                        ],
-         |                        "limit": 100,
-         |                        "warnLimit": 90,
-         |                        "resourceType": "count",
-         |                        "scope": "account"
-         |                    },
-         |                    {
-         |                        "used": 85,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-         |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-         |                        "dataTypes": [
-         |                            "Mail"
-         |                        ],
-         |                        "limit": 101,
-         |                        "warnLimit": 90,
-         |                        "resourceType": "octets",
-         |                        "scope": "account"
-         |                    }
-         |                ]
-         |            },
-         |            "c1"
-         |        ]
-         |    ]
-         |}
-         |""".stripMargin)
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |        [
+             |            "Quota/get",
+             |            {
+             |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |                "notFound": [],
+             |                "state": "7d53031b-2819-3584-9e9d-e10ac1067906",
+             |                "list": [
+             |                    {
+             |                        "used": 1,
+             |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+             |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+             |                        "dataTypes": [
+             |                            "Mail"
+             |                        ],
+             |                        "limit": 100,
+             |                        "warnLimit": 90,
+             |                        "resourceType": "count",
+             |                        "scope": "account"
+             |                    },
+             |                    {
+             |                        "used": 85,
+             |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
+             |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+             |                        "dataTypes": [
+             |                            "Mail"
+             |                        ],
+             |                        "limit": 101,
+             |                        "warnLimit": 90,
+             |                        "resourceType": "octets",
+             |                        "scope": "account"
+             |                    }
+             |                ]
+             |            },
+             |            "c1"
+             |        ]
+             |    ]
+             |}
+             |""".stripMargin)
+    })
   }
 
   @Test
@@ -960,7 +971,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |                "list": [
          |                    {
          |                        "used": 0,
@@ -1032,7 +1043,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "5dc809dd-d059-3fab-bc7e-c0f1fcacf2f2",
          |                "list": [
          |                    {
          |                        "used": 0,
@@ -1114,7 +1125,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |                "list": [
          |                    {
          |                        "used": 0,
@@ -1186,7 +1197,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "5dc809dd-d059-3fab-bc7e-c0f1fcacf2f2",
          |                "list": [
          |                    {
          |                        "used": 0,

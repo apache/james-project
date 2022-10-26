@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaNotFound, QuotaResponseGetResult}
+import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaNotFound, QuotaResponseGetResult, UnparsedQuotaId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
@@ -54,7 +54,6 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
 
     (requestedProperties -- JmapQuota.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getQuotaGetResponse(request, mailboxSession.getUser, capabilities)
-        .reduce(QuotaResponseGetResult.empty)(QuotaResponseGetResult.merge)
         .map(result => result.asResponse(accountId = request.accountId))
         .map(response => Invocation(
           methodName = methodName,
@@ -75,18 +74,10 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
     QuotaSerializer.deserializeQuotaGetRequest(invocation.arguments.value)
       .asEither.left.map(ResponseSerializer.asException)
 
-  private def getQuotaGetResponse(quotaGetRequest: QuotaGetRequest, username: Username, capabilities: Set[CapabilityIdentifier]): SFlux[QuotaResponseGetResult] =
-    quotaGetRequest.ids match {
-      case None =>
-        jmapQuotaManagerWrapper.list(username, capabilities)
-          .collectSeq()
-          .map(listJmapQuota => QuotaResponseGetResult(jmapQuotaSet = listJmapQuota.toSet))
-          .flatMapMany(result => SFlux.just(result))
-      case Some(ids) => SFlux.fromIterable(ids.value)
-        .flatMap(id => jmapQuotaManagerWrapper.get(username, id.id, capabilities)
-          .map(jmapQuota => QuotaResponseGetResult(jmapQuotaSet = Set(jmapQuota)))
-          .switchIfEmpty(SMono.just(QuotaResponseGetResult(notFound = QuotaNotFound(Set(id))))))
-    }
+  private def getQuotaGetResponse(request: QuotaGetRequest, username: Username, capabilities: Set[CapabilityIdentifier]): SMono[QuotaResponseGetResult] =
+    jmapQuotaManagerWrapper.list(username, capabilities)
+      .collectSeq()
+      .map(quotas => QuotaResponseGetResult.from(quotas, request.ids.map(_.value.map(_.id).toSet)))
 
   private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {
     case _: MissingCapabilityException => SMono.just(Invocation.error(ErrorCode.UnknownMethod, methodCallId))
@@ -94,15 +85,11 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
   }
 }
 
-case class JmapQuotaManagerWrapper(private var quotaManager: QuotaManager,
-                                   private var quotaRootResolver: UserQuotaRootResolver) {
-  def get(username: Username, quotaId: Id, capabilities: Set[CapabilityIdentifier]): SFlux[JmapQuota] =
-    retrieveQuotaRoot(username, capabilities)
-      .flatMap(quotaRoot => getJmapQuota(quotaRoot, Some(quotaId)))
-
+case class JmapQuotaManagerWrapper(private val quotaManager: QuotaManager,
+                                   private val quotaRootResolver: UserQuotaRootResolver) {
   def list(username: Username, capabilities: Set[CapabilityIdentifier]): SFlux[JmapQuota] =
     retrieveQuotaRoot(username, capabilities)
-      .flatMap(quotaRoot => getJmapQuota(quotaRoot))
+      .flatMap(quotaRoot => getJmapQuota(quotaRoot), ReactorUtils.DEFAULT_CONCURRENCY)
 
   def retrieveQuotaRoot(username: Username, capabilities: Set[CapabilityIdentifier]): SFlux[QuotaRoot] =
     SMono.just(capabilities)
@@ -111,26 +98,10 @@ case class JmapQuotaManagerWrapper(private var quotaManager: QuotaManager,
       .flatMapMany(_ => SFlux(quotaRootResolver.listAllAccessibleQuotaRoots(username)))
       .switchIfEmpty(SFlux.just(quotaRootResolver.forUser(username)))
 
-  private def getJmapQuota(quotaRoot: QuotaRoot, quotaId: Option[Id] = None): SFlux[JmapQuota] =
-    (quotaId match {
-      case None => SMono(quotaManager.getQuotasReactive(quotaRoot))
-        .flatMapMany(quotas => SMono.fromCallable(() => JmapQuota.extractUserMessageCountQuota(quotas.getMessageQuota, QuotaIdFactory.from(quotaRoot, CountResourceType), quotaRoot))
-          .mergeWith(SMono.fromCallable(() => JmapQuota.extractUserMessageSizeQuota(quotas.getStorageQuota, QuotaIdFactory.from(quotaRoot, OctetsResourceType), quotaRoot))))
-
-      case Some(quotaIdValue) =>
-        val quotaCountPublisher = SMono.fromCallable(() => QuotaIdFactory.from(quotaRoot, CountResourceType))
-          .filter(countQuotaId => countQuotaId.value.equals(quotaIdValue.value))
-          .flatMap(_ => SMono.fromCallable(() => quotaManager.getMessageQuota(quotaRoot))
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-          .map(quota => JmapQuota.extractUserMessageCountQuota(quota, quotaIdValue, quotaRoot))
-
-        val quotaSizePublisher = SMono.fromCallable(() => QuotaIdFactory.from(quotaRoot, OctetsResourceType))
-          .filter(sizeQuotaId => sizeQuotaId.value.equals(quotaIdValue.value))
-          .flatMap(_ => SMono.fromCallable(() => quotaManager.getStorageQuota(quotaRoot))
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-          .map(quota => JmapQuota.extractUserMessageSizeQuota(quota, quotaIdValue, quotaRoot))
-
-        quotaCountPublisher.mergeWith(quotaSizePublisher)
-    }).flatMap(SMono.justOrEmpty)
+  private def getJmapQuota(quotaRoot: QuotaRoot): SFlux[JmapQuota] =
+    SMono(quotaManager.getQuotasReactive(quotaRoot))
+      .flatMapMany(quotas => SMono.fromCallable(() => JmapQuota.extractUserMessageCountQuota(quotas.getMessageQuota, QuotaIdFactory.from(quotaRoot, CountResourceType), quotaRoot))
+        .mergeWith(SMono.fromCallable(() => JmapQuota.extractUserMessageSizeQuota(quotas.getStorageQuota, QuotaIdFactory.from(quotaRoot, OctetsResourceType), quotaRoot))))
+      .flatMap(SMono.justOrEmpty)
 
 }

@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, UuidState}
-import org.apache.james.jmap.mail.{DataType, JmapQuota, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, ResourceType, Scope, UnparsedQuotaId}
+import org.apache.james.jmap.mail.{DataType, JmapQuota, QuotaChangesRequest, QuotaChangesResponse, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, ResourceType, Scope, UnparsedQuotaId}
 import play.api.libs.json._
 
 object QuotaSerializer {
@@ -53,9 +53,24 @@ object QuotaSerializer {
     notFound => JsArray(notFound.value.toList.map(id => JsString(id.id.value)))
   private implicit val quotaGetResponseWrites: Writes[QuotaGetResponse] = Json.writes[QuotaGetResponse]
 
+  private implicit val quotaChangesRequestReads: Reads[QuotaChangesRequest] = Json.reads[QuotaChangesRequest]
+
+  private implicit val quotaChangesResponseWrites: Writes[QuotaChangesResponse] = response =>
+    Json.obj(
+      "accountId" -> response.accountId,
+      "oldState" -> response.oldState,
+      "newState" -> response.newState,
+      "hasMoreChanges" -> response.hasMoreChanges,
+      "updatedProperties" -> response.updatedProperties,
+      "created" -> response.created,
+      "updated" -> response.updated,
+      "destroyed" -> response.destroyed)
+
   def deserializeQuotaGetRequest(input: String): JsResult[QuotaGetRequest] = Json.parse(input).validate[QuotaGetRequest]
 
   def deserializeQuotaGetRequest(input: JsValue): JsResult[QuotaGetRequest] = Json.fromJson[QuotaGetRequest](input)
+
+  def deserializeQuotaChangesRequest(input: JsValue): JsResult[QuotaChangesRequest] = Json.fromJson[QuotaChangesRequest](input)
 
   def serialize(quotaGetResponse: QuotaGetResponse, properties: Properties): JsValue =
     Json.toJson(quotaGetResponse)
@@ -69,5 +84,7 @@ object QuotaSerializer {
       }).get
 
   def serialize(response: QuotaGetResponse): JsValue = Json.toJson(response)
+
+  def serializeChanges(changesResponse: QuotaChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 
 }
