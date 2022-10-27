@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -122,7 +123,7 @@ public class VacationMailetTest {
 
         testee.service(mail);
 
-        verify(mailetContext).sendMail(eq(originalRecipient), eq(ImmutableList.of(originalSender)), any());
+        verify(mailetContext).sendMail(eq(MailAddress.nullSender()), eq(ImmutableList.of(originalSender)), any());
         verify(vacationService).retrieveVacation(AccountId.fromString(USERNAME));
         verify(vacationService).isNotificationRegistered(ACCOUNT_ID, recipientId);
         verify(vacationService).registerNotification(ACCOUNT_ID, recipientId, Optional.of(DATE_TIME_2018));
@@ -152,7 +153,7 @@ public class VacationMailetTest {
 
         testee.service(mail);
 
-        verify(mailetContext).sendMail(eq(originalRecipient), eq(ImmutableList.of(originalSender)), any());
+        verify(mailetContext).sendMail(eq(MailAddress.nullSender()), eq(ImmutableList.of(originalSender)), any());
         verifyNoMoreInteractions(mailetContext);
     }
 
@@ -206,8 +207,7 @@ public class VacationMailetTest {
 
         testee.service(mail);
 
-        verify(mailetContext).sendMail(eq(originalRecipient), eq(ImmutableList.of(originalSender)), any());
-        verify(mailetContext).sendMail(eq(secondRecipient), eq(ImmutableList.of(originalSender)), any());
+        verify(mailetContext, times(2)).sendMail(eq(MailAddress.nullSender()), eq(ImmutableList.of(originalSender)), any());
         verifyNoMoreInteractions(mailetContext);
     }
 
@@ -288,7 +288,7 @@ public class VacationMailetTest {
 
         testee.service(mail);
 
-        verify(mailetContext).sendMail(eq(originalRecipient), eq(ImmutableList.of(originalSender)), any());
+        verify(mailetContext).sendMail(eq(MailAddress.nullSender()), eq(ImmutableList.of(originalSender)), any());
         verifyNoMoreInteractions(mailetContext);
     }
 

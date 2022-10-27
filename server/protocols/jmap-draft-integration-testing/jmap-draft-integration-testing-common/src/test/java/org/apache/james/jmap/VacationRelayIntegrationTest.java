@@ -31,6 +31,7 @@ import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.transport.mailets.VacationMailet;
 import org.apache.james.vacation.api.VacationPatch;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
@@ -70,6 +71,7 @@ public abstract class VacationRelayIntegrationTest {
         getInMemoryDns()
             .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
 
+        System.setProperty(VacationMailet.EXPLICIT_SENDER_PROPERTY, "true");
         guiceJamesServer = getJmapServer();
         guiceJamesServer.start();
 
@@ -87,6 +89,7 @@ public abstract class VacationRelayIntegrationTest {
     public void teardown() {
         fakeSmtp.clean();
         guiceJamesServer.stop();
+        System.clearProperty(VacationMailet.EXPLICIT_SENDER_PROPERTY);
     }
 
     @Category(BasicFeature.class)
