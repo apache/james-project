@@ -20,8 +20,6 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-
-import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
@@ -32,10 +30,11 @@ import org.apache.james.jmap.vacation.VacationResponse.UNPARSED_SINGLETON
 import org.apache.james.jmap.vacation.{UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.vacation.api.{AccountId => JavaAccountId}
-import org.apache.james.vacation.api.VacationService
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import org.apache.james.vacation.api.{VacationService, AccountId => JavaAccountId}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import javax.inject.Inject
 
 object VacationResponseGetResult {
   def empty: VacationResponseGetResult = VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set.empty))
@@ -85,10 +84,8 @@ class VacationResponseGetMethod @Inject()(vacationService: VacationService,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseGetRequest] =
-    VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value) match {
-      case JsSuccess(vacationResponseGetRequest, _) => Right(vacationResponseGetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {
     case _: MissingCapabilityException => SMono.just(Invocation.error(ErrorCode.UnknownMethod, methodCallId))

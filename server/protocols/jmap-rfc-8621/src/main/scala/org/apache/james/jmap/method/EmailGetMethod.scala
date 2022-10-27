@@ -92,10 +92,8 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] =
-    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value) match {
-      case JsSuccess(emailGetRequest, _) => Right(emailGetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)

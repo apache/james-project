@@ -19,10 +19,7 @@
 
 package org.apache.james.jmap.method
 
-import java.util.Date
-
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
@@ -44,9 +41,10 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.MimeConfig
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
-import play.api.libs.json.JsError
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import java.util.Date
+import javax.inject.Inject
 import scala.util.{Try, Using}
 
 object EmailImportMethod {
@@ -91,8 +89,8 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailImportRequest] =
-    serializer.deserializeEmailImportRequest(invocation.arguments.value).asEither
-      .left.map(errors => new IllegalArgumentException(ResponseSerializer.serialize(JsError(errors)).toString))
+    serializer.deserializeEmailImportRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailImportRequest): Publisher[InvocationWithContext] =
     for {

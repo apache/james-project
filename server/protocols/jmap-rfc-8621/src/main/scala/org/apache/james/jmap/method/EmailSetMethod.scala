@@ -19,7 +19,6 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
@@ -31,8 +30,9 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
+
+import javax.inject.Inject
 
 case class MessageNotFoundException(messageId: MessageId) extends Exception
 
@@ -77,10 +77,8 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSetRequest] =
-    serializer.deserialize(invocation.arguments.value) match {
-      case JsSuccess(emailSetRequest, _) => Right(emailSetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    serializer.deserialize(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {

@@ -18,12 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
-import java.time.ZonedDateTime
-
 import cats.implicits._
 import eu.timepit.refined.auto._
-import javax.inject.Inject
-import javax.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
@@ -41,9 +37,11 @@ import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearc
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
-import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import java.time.ZonedDateTime
+import javax.inject.Inject
+import javax.mail.Flags.Flag.DELETED
 import scala.jdk.CollectionConverters._
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
@@ -79,10 +77,9 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailQueryRequest] =
-    serializer.deserializeEmailQueryRequest(invocation.arguments.value) match {
-      case JsSuccess(emailQueryRequest, _) => validateRequestParameters(emailQueryRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    serializer.deserializeEmailQueryRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
+      .flatMap(validateRequestParameters)
 
   private def validateRequestParameters(request: EmailQueryRequest): Either[Exception, EmailQueryRequest] =
     (request.anchor, request.anchorOffset) match {
