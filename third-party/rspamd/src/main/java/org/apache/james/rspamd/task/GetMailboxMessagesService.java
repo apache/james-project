@@ -95,8 +95,8 @@ public class GetMailboxMessagesService {
             })
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
-            .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
+            .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
             .filter(runningOptions.correspondingClassificationFilter());
@@ -109,8 +109,8 @@ public class GetMailboxMessagesService {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxMetaData.getId(), mailboxSession))
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
-            .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
+            .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
             .filter(runningOptions.correspondingClassificationFilter());

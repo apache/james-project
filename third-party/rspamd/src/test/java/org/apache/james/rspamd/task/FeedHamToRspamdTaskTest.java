@@ -252,7 +252,26 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(1)
+                .hamMessageCount(0)
+                .reportedHamMessageCount(0)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void taskShouldNotCountHamMessageNotInPeriod() throws MailboxException {
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
+
+        appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
+                .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
                 .build());
@@ -330,7 +349,7 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(3)
+                .hamMessageCount(0) // messages with null internalDate is not in limited period
                 .reportedHamMessageCount(0)
                 .errorCount(0)
                 .build());
@@ -370,7 +389,7 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(3)
+                .hamMessageCount(3) // messages with null internalDate is still in unlimited period
                 .reportedHamMessageCount(3)
                 .errorCount(0)
                 .build());
@@ -419,7 +438,7 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(6) // 2 * 3 ham mailboxes
+                .hamMessageCount(3) // 1 * 3 ham mailboxes. Only count messages complies date condition now
                 .reportedHamMessageCount(3) // only normal messages will be reported
                 .errorCount(0)
                 .build());
@@ -439,7 +458,7 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(2)
+                .hamMessageCount(1)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
                 .build());

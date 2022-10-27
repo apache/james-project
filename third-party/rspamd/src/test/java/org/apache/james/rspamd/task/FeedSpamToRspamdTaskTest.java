@@ -223,7 +223,26 @@ public class FeedSpamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedSpamToRspamdTask.Context.Snapshot.builder()
-                .spamMessageCount(1)
+                .spamMessageCount(0)
+                .reportedSpamMessageCount(0)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void taskShouldNotCountSpamMessageNotInPeriod() throws MailboxException {
+        RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, rspamdConfiguration);
+
+        appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedSpamToRspamdTask.Context.Snapshot.builder()
+                .spamMessageCount(0)
                 .reportedSpamMessageCount(0)
                 .errorCount(0)
                 .build());
@@ -256,7 +275,7 @@ public class FeedSpamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedSpamToRspamdTask.Context.Snapshot.builder()
-                .spamMessageCount(2)
+                .spamMessageCount(1)
                 .reportedSpamMessageCount(1)
                 .errorCount(0)
                 .build());
