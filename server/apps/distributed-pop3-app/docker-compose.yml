@@ -4,7 +4,7 @@ services:
 
   james:
     depends_on:
-      - elasticsearch
+      - opensearch
       - cassandra
       - tika
       - rabbitmq
@@ -22,10 +22,20 @@ services:
       - "993:993"
       - "8000:8000"
 
+  opensearch:
+    image: opensearchproject/opensearch:2.1.0
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+
   cassandra:
     image: cassandra:3.11.10
     ports:
       - "9042:9042"
+
+  tika:
+    image: apache/tika:1.28.2
 
   rabbitmq:
     image: rabbitmq:3.9.18-management
@@ -42,4 +52,3 @@ services:
       - S3BACKEND=mem
       - LOG_LEVEL=trace
       - REMOTE_MANAGEMENT_DISABLE=1
-
