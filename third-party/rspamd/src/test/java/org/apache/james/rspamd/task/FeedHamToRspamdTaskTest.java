@@ -26,11 +26,15 @@ import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_MESSAGES_PER_S
 import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_SAMPLING_PROBABILITY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -51,8 +55,19 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.MessageResultImpl;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.rspamd.DockerRspamdExtension;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
@@ -75,6 +90,7 @@ import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Tag(Unstable.TAG)
@@ -94,6 +110,8 @@ public class FeedHamToRspamdTaskTest {
     public static final long TWO_DAYS_IN_SECOND = 172800;
     public static final long ONE_DAY_IN_SECOND = 86400;
     public static final Instant NOW = ZonedDateTime.now().toInstant();
+    public static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
+    public static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
 
     static ClientAndServer mockServer = null;
     static class TestRspamdHttpClient extends RspamdHttpClient {
@@ -123,6 +141,7 @@ public class FeedHamToRspamdTaskTest {
     private RspamdHttpClient client;
     private RspamdClientConfiguration configuration;
     private FeedHamToRspamdTask task;
+    private MailboxId aliceInboxId;
 
     @BeforeEach
     void setup() throws Exception {
@@ -137,7 +156,7 @@ public class FeedHamToRspamdTaskTest {
         mailboxManager.createMailbox(BOB_CUSTOM_MAILBOX, mailboxManager.createSystemSession(BOB));
         mailboxManager.createMailbox(BOB_TRASH_MAILBOX, mailboxManager.createSystemSession(BOB));
         mailboxManager.createMailbox(BOB_SPAM_MAILBOX, mailboxManager.createSystemSession(BOB));
-        mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE));
+        aliceInboxId = mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE)).get();
 
         clock = new UpdatableTickingClock(NOW);
         configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty(), true);
@@ -235,6 +254,173 @@ public class FeedHamToRspamdTaskTest {
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
                 .hamMessageCount(1)
                 .reportedHamMessageCount(0)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void normalMessagesWithProperInternalDateShouldBeReportedToRspamd() {
+        SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            Date.from(NOW.plusSeconds(THREE_DAYS_IN_SECOND)),
+            10L,
+            10,
+            new ByteContent("hello".getBytes(StandardCharsets.UTF_8)),
+            new Flags(),
+            new PropertyBuilder().build(),
+            aliceInboxId);
+        MessageResultImpl messageResult = new MessageResultImpl(mailboxMessage);
+
+        MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
+        MessageMapper messageMapper = mock(MessageMapper.class);
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        when(mapperFactory.getMessageMapper(any()))
+            .thenReturn(messageMapper);
+        when(messageMapper.findInMailboxReactive(any(Mailbox.class), any(MessageRange.class), any(MessageMapper.FetchType.class), any(Integer.class)))
+            .thenReturn(Flux.just(mailboxMessage));
+        when(messageIdManager.getMessagesReactive(anyList(), any(FetchGroup.class), any(MailboxSession.class)))
+            .thenReturn(Flux.just(messageResult));
+
+        RunningOptions runningOptions = new RunningOptions(Optional.empty(),
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
+                .hamMessageCount(3)
+                .reportedHamMessageCount(3)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void messagesWithNullInternalDateAndLimitedPeriodWouldThrowExceptionAndBeSkipped() {
+        Date internalDate = null;
+        Optional<Long> limitedPeriod = Optional.of(TWO_DAYS_IN_SECOND);
+        SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            internalDate,
+            10L,
+            10,
+            new ByteContent("hello".getBytes(StandardCharsets.UTF_8)),
+            new Flags(),
+            new PropertyBuilder().build(),
+            aliceInboxId);
+        MessageResultImpl messageResult = new MessageResultImpl(mailboxMessage);
+
+        MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
+        MessageMapper messageMapper = mock(MessageMapper.class);
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        when(mapperFactory.getMessageMapper(any()))
+            .thenReturn(messageMapper);
+        when(messageMapper.findInMailboxReactive(any(Mailbox.class), any(MessageRange.class), any(MessageMapper.FetchType.class), any(Integer.class)))
+            .thenReturn(Flux.just(mailboxMessage));
+        when(messageIdManager.getMessagesReactive(anyList(), any(FetchGroup.class), any(MailboxSession.class)))
+            .thenReturn(Flux.just(messageResult));
+
+        RunningOptions runningOptions = new RunningOptions(limitedPeriod,
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
+                .hamMessageCount(3)
+                .reportedHamMessageCount(0)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void messagesWithNullInternalDateAndNullPeriodWouldPassTheInternalDateFilterAndSucceed() {
+        Date internalDate = null;
+        Optional<Long> nullPeriod = Optional.empty();
+        SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            internalDate,
+            10L,
+            10,
+            new ByteContent("hello".getBytes(StandardCharsets.UTF_8)),
+            new Flags(),
+            new PropertyBuilder().build(),
+            aliceInboxId);
+        MessageResultImpl messageResult = new MessageResultImpl(mailboxMessage);
+
+        MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
+        MessageMapper messageMapper = mock(MessageMapper.class);
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        when(mapperFactory.getMessageMapper(any()))
+            .thenReturn(messageMapper);
+        when(messageMapper.findInMailboxReactive(any(Mailbox.class), any(MessageRange.class), any(MessageMapper.FetchType.class), any(Integer.class)))
+            .thenReturn(Flux.just(mailboxMessage));
+        when(messageIdManager.getMessagesReactive(anyList(), any(FetchGroup.class), any(MailboxSession.class)))
+            .thenReturn(Flux.just(messageResult));
+
+        RunningOptions runningOptions = new RunningOptions(nullPeriod,
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
+                .hamMessageCount(3)
+                .reportedHamMessageCount(3)
+                .errorCount(0)
+                .build());
+    }
+
+    @Test
+    void messagesWithNullInternalDateAndLimitedPeriodMixedWithNormalMessagesShouldStillReportNormalMessages() {
+        Date nullInternalDate = null;
+        Optional<Long> limitedPeriod = Optional.of(TWO_DAYS_IN_SECOND);
+        SimpleMailboxMessage nullInternalDateMailboxMessage = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            nullInternalDate,
+            10L,
+            10,
+            new ByteContent("hello".getBytes(StandardCharsets.UTF_8)),
+            new Flags(),
+            new PropertyBuilder().build(),
+            aliceInboxId);
+        SimpleMailboxMessage normalMailboxMessage = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)),
+            10L,
+            10,
+            new ByteContent("hello".getBytes(StandardCharsets.UTF_8)),
+            new Flags(),
+            new PropertyBuilder().build(),
+            aliceInboxId);
+        MessageResultImpl normalMessageResult = new MessageResultImpl(normalMailboxMessage);
+
+        MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
+        MessageMapper messageMapper = mock(MessageMapper.class);
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        when(mapperFactory.getMessageMapper(any()))
+            .thenReturn(messageMapper);
+        when(messageMapper.findInMailboxReactive(any(Mailbox.class), any(MessageRange.class), any(MessageMapper.FetchType.class), any(Integer.class)))
+            .thenReturn(Flux.just(nullInternalDateMailboxMessage, normalMailboxMessage));
+        when(messageIdManager.getMessagesReactive(anyCollection(), any(FetchGroup.class), any(MailboxSession.class)))
+            .thenReturn(Flux.just(normalMessageResult)); // get messageResult is after Date filter, we just care about count the reported messages, not the type/content
+
+        RunningOptions runningOptions = new RunningOptions(limitedPeriod,
+            DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
+        task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
+
+        Task.Result result = task.run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(task.snapshot())
+            .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
+                .hamMessageCount(6) // 2 * 3 ham mailboxes
+                .reportedHamMessageCount(3) // only normal messages will be reported
                 .errorCount(0)
                 .build());
     }
