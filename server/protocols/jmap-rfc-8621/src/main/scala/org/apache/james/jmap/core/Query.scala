@@ -24,6 +24,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.{NonNegative, Positive}
 import eu.timepit.refined.refineV
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
 case class PositionUnparsed(value: Int) extends AnyVal
@@ -66,6 +67,9 @@ object QueryState {
 
   def forMailboxIds(ids: Seq[MailboxId]): QueryState =
     forStrings(ids.map(_.serialize()))
+
+  def forQuotaIds(ids: Seq[Id]): QueryState =
+    forStrings(ids.map(_.value))
 
   def forStrings(strings: Seq[String]): QueryState = QueryState(
     Hashing.murmur3_32()

@@ -23,10 +23,11 @@ import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import org.apache.james.core.Domain
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
-import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Limit.Limit
+import org.apache.james.jmap.core.Position.Position
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
-import org.apache.james.jmap.core.{AccountId, Id, Properties, UnsignedInt, UuidState}
+import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, Id, Properties, QueryState, UnsignedInt, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.{Quota => ModelQuota, QuotaRoot => ModelQuotaRoot}
 
@@ -201,7 +202,7 @@ case class QuotaResponseGetResult(jmapQuotaSet: Set[JmapQuota] = Set(),
 
 case class QuotaChangesRequest(accountId: AccountId,
                                sinceState: UuidState,
-                               maxChanges: Option[Limit]) extends WithAccountId
+                               maxChanges: Option[org.apache.james.jmap.core.Limit.Limit]) extends WithAccountId
 
 object QuotaChangesResponse {
   def from(oldState: UuidState, newState: (UuidState, Seq[Id]), accountId: AccountId): QuotaChangesResponse =
@@ -225,3 +226,21 @@ case class QuotaChangesResponse(accountId: AccountId,
                                 created: Set[Id] = Set(),
                                 updated: Set[Id] = Set(),
                                 destroyed: Set[Id] = Set())
+
+case class QuotaQueryRequest(accountId: AccountId, filter: QuotaQueryFilter) extends WithAccountId
+
+object QuotaQueryFilter {
+  val SUPPORTED: Set[String] = Set("scope", "name", "resourceTypes", "dataTypes")
+}
+
+case class QuotaQueryFilter(scope: Option[Set[Scope]],
+                            name: Option[QuotaName],
+                            resourceTypes: Option[Set[ResourceType]],
+                            dataTypes: Option[Set[DataType]])
+
+case class QuotaQueryResponse(accountId: AccountId,
+                              queryState: QueryState,
+                              canCalculateChanges: CanCalculateChanges,
+                              ids: Seq[Id],
+                              position: Position,
+                              limit: Option[Limit])

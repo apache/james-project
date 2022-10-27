@@ -66,6 +66,7 @@ import org.apache.james.jmap.method.PushSubscriptionGetMethod;
 import org.apache.james.jmap.method.PushSubscriptionSetMethod;
 import org.apache.james.jmap.method.QuotaChangesMethod;
 import org.apache.james.jmap.method.QuotaGetMethod;
+import org.apache.james.jmap.method.QuotaQueryMethod;
 import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.ThreadChangesMethod;
 import org.apache.james.jmap.method.ThreadGetMethod;
@@ -146,6 +147,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(PushSubscriptionSetMethod.class);
         methods.addBinding().to(QuotaChangesMethod.class);
         methods.addBinding().to(QuotaGetMethod.class);
+        methods.addBinding().to(QuotaQueryMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
