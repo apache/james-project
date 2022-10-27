@@ -159,6 +159,8 @@ object ResponseSerializer {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
+  def asException(errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]): IllegalArgumentException = new IllegalArgumentException(serialize(JsError(errors)).toString())
+
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
   def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]

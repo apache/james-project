@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_QUOTA}
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
@@ -32,11 +33,10 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.QuotaRoot
 import org.apache.james.mailbox.quota.{QuotaManager, UserQuotaRootResolver}
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
-import reactor.core.scala.publisher.{SFlux, SMono}
-import org.apache.james.jmap.core.Id.Id
 import org.apache.james.util.ReactorUtils
+import org.reactivestreams.Publisher
+import play.api.libs.json.JsObject
+import reactor.core.scala.publisher.{SFlux, SMono}
 
 import javax.inject.Inject
 
@@ -72,10 +72,8 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, QuotaGetRequest] =
-    QuotaSerializer.deserializeQuotaGetRequest(invocation.arguments.value) match {
-      case JsSuccess(quotaGetRequest, _) => Right(quotaGetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    QuotaSerializer.deserializeQuotaGetRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def getQuotaGetResponse(quotaGetRequest: QuotaGetRequest, username: Username, capabilities: Set[CapabilityIdentifier]): SFlux[QuotaResponseGetResult] =
     quotaGetRequest.ids match {

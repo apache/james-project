@@ -20,26 +20,26 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.{Inject, Named}
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, VacationResponseTypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
-import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
+import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.vacation.api.{VacationPatch, VacationService}
-import org.apache.james.vacation.api.{AccountId => VacationAccountId}
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import org.apache.james.vacation.api.{VacationPatch, VacationService, AccountId => VacationAccountId}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import javax.inject.{Inject, Named}
 
 object VacationResponseUpdateResults {
   def empty(): VacationResponseUpdateResults = VacationResponseUpdateResults(Map(), Map())
@@ -97,10 +97,8 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
-    VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value) match {
-      case JsSuccess(vacationResponseSetRequest, _) => Right(vacationResponseSetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()

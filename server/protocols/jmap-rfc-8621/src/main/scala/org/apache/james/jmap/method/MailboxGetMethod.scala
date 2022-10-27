@@ -20,7 +20,6 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
@@ -36,9 +35,10 @@ import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import javax.inject.Inject
 import scala.util.Try
 
 object MailboxGetResults {
@@ -101,11 +101,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =
-    serializer.deserializeMailboxGetRequest(invocation.arguments.value) match {
-    case JsSuccess(mailboxGetRequest, _) => Right(mailboxGetRequest)
-    case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-  }
-
+    serializer.deserializeMailboxGetRequest(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,

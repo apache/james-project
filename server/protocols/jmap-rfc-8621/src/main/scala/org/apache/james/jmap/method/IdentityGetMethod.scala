@@ -20,7 +20,6 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.identity.IdentityRepository
 import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
@@ -32,8 +31,10 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.ReactorUtils
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import javax.inject.Inject
 
 class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
                                    val metricFactory: MetricFactory,
@@ -58,10 +59,8 @@ class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, IdentityGetRequest] =
-    IdentitySerializer.deserialize(invocation.arguments.value) match {
-      case JsSuccess(request, _) => Right(request)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    IdentitySerializer.deserialize(invocation.arguments.value)
+      .asEither.left.map(ResponseSerializer.asException)
 
   private def getIdentities(request: IdentityGetRequest,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =
