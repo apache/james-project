@@ -20,7 +20,6 @@
 package org.apache.james.util.mime;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -83,7 +82,7 @@ public class MessageContentExtractor {
         }
     }
 
-    private MessageContent parseFirstFoundMultipart(Multipart multipart) throws IOException {
+    private MessageContent parseFirstFoundMultipart(Multipart multipart) {
         ThrowingFunction<Entity, MessageContent> parseMultipart = firstPart -> parseMultipart(firstPart, (Multipart)firstPart.getBody());
         return multipart.getBodyParts()
             .stream()
@@ -94,13 +93,9 @@ public class MessageContentExtractor {
     }
 
     private Optional<String> asString(TextBody textBody) throws IOException {
-        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), charset(Optional.ofNullable(textBody.getMimeCharset()))));
-    }
-
-    private Charset charset(Optional<String> charset) {
-        return charset
-                .map(Charset::forName)
-                .orElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET);
+        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), 
+            Optional.ofNullable(textBody.getCharset())
+                .orElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)));
     }
 
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
@@ -114,7 +109,7 @@ public class MessageContentExtractor {
         return directChildTextBodies;
     }
 
-    private MessageContent retrieveFirstReadablePart(Multipart multipart) throws IOException {
+    private MessageContent retrieveFirstReadablePart(Multipart multipart) {
         return retrieveFirstReadablePartMatching(multipart, this::isNotAttachment)
             .orElseGet(() -> retrieveFirstReadablePartMatching(multipart, this::isInlinedWithoutCid)
                 .orElse(MessageContent.empty()));

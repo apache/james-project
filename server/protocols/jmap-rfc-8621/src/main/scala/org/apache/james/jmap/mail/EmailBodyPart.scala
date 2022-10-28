@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.io.OutputStream
+
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
@@ -31,6 +33,7 @@ import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
+import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
@@ -38,7 +41,6 @@ import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWri
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
-import java.io.OutputStream
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -229,7 +231,7 @@ case class EmailBodyPart(partId: PartId,
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
       for {
-        value <- Try(IOUtils.toString(textBody.getInputStream, charset(Option(textBody.getMimeCharset))))
+        value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(DEFAULT_CHARSET)))
       } yield {
         Some(EmailBodyValue(value = value,
           isEncodingProblem = IsEncodingProblem(false),
@@ -245,10 +247,6 @@ case class EmailBodyPart(partId: PartId,
         content.isTruncated)))
     case _ => bodyContent
   }
-
-  private def charset(charset: Option[String]): java.nio.charset.Charset = charset
-    .map(java.nio.charset.Charset.forName)
-    .getOrElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)
 
   def textBody: List[EmailBodyPart] = selfBody ++ textBodyOfMultipart
 
