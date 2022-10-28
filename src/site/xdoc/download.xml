@@ -273,12 +273,12 @@
   
   <section name="Apache JSieve">
   
-    <p>Apache JSieve 0.7 is the latest stable version.</p>
+    <p>Apache JSieve 0.8 is the latest stable version.</p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-sources-0.7.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.sha1">SHA-1</a>]
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-sources-0.8.zip">(Zip)</a>
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-sources-0.8.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-sources-0.8.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use it with maven:</p>
@@ -288,15 +288,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-jsieve-core&lt;/artifactId&gt;
-    &lt;version&gt;0.7&lt;/version&gt;
+    &lt;version&gt;0.8&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-core-0.7.jar">(Jar)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-core-0.7.jar.sha1">SHA-1</a>]
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-core-0.7.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-core-0.8.jar">(Jar)</a>
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-core-0.8.jar.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-core-0.8.jar.asc">PGP</a>]
     </p>
 
     <p>An aggregator project is also available:</p>
@@ -306,15 +306,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-jsieve-all&lt;/artifactId&gt;
-    &lt;version&gt;0.7&lt;/version&gt;
+    &lt;version&gt;0.8&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz">(Tar Gz)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.sha1">SHA-1</a>]
-      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz">(Tar Gz)</a>
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz.asc">PGP</a>]
     </p>
 
   
