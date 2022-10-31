@@ -23,6 +23,7 @@ import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.task.TaskManager.Status.CANCELLED;
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.EXCHANGE_NAME;
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,6 +92,7 @@ import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetai
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.awaitility.Awaitility;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -249,7 +251,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         taskManager.cancel(id);
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
-            .isEqualTo(TaskManager.Status.CANCELLED);
+            .isEqualTo(CANCELLED);
     }
 
     @Test
@@ -268,7 +270,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         taskManager.cancel(id);
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
-            .isEqualTo(TaskManager.Status.CANCELLED);
+            .isEqualTo(CANCELLED);
     }
 
     @Test
@@ -382,13 +384,13 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         awaitAtMostTwoSeconds.untilAsserted(() ->
             assertThat(taskManager1.getExecutionDetails(id).getStatus())
-                .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
+                .isIn(CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
 
         countDownLatch.countDown();
 
-        awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED, taskManager1);
+        awaitUntilTaskHasStatus(id, CANCELLED, taskManager1);
         assertThat(taskManager1.getExecutionDetails(id).getStatus())
-            .isEqualTo(TaskManager.Status.CANCELLED);
+            .isEqualTo(CANCELLED);
 
         assertThat(taskManager1.getExecutionDetails(id).getCancelRequestedNode())
             .contains(remoteTaskManager.getKey());
@@ -463,8 +465,8 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             EventSourcingTaskManager taskManagerRunningFirstTask = hostNameByTaskManager.inverse().get(nodeRunningFirstTask);
             EventSourcingTaskManager otherTaskManager = hostNameByTaskManager.inverse().get(otherNode);
 
-            TaskId taskToExecuteAfterFirstNodeIsDown = taskManagerRunningFirstTask.submit(new CompletedTask());
             taskManagerRunningFirstTask.close();
+            TaskId taskToExecuteAfterFirstNodeIsDown = taskManagerRunningFirstTask.submit(new CompletedTask());
 
             awaitAtMostTwoSeconds.untilAsserted(() ->
                 assertThat(otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown).getStatus())
@@ -593,7 +595,23 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         awaitAtMostTwoSeconds.untilAsserted(() ->
             assertThat(taskManager.getExecutionDetails(taskId).getStatus())
-                .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
+                .isIn(CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
+    }
+
+    @Test
+    void inProgressTaskShouldBeCanceledWhenCloseTaskManager() {
+        try (EventSourcingTaskManager taskManager = taskManager()) {
+            TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
+                TimeUnit.SECONDS.sleep(5);
+                return Task.Result.COMPLETED;
+            }));
+
+            awaitAtMostTwoSeconds.until(() -> taskManager.getExecutionDetails(taskId).getStatus(), Matchers.equalTo(TaskManager.Status.IN_PROGRESS));
+
+            taskManager.close();
+
+            assertThat(taskManager(HOSTNAME_2).getExecutionDetails(taskId).getStatus()).isEqualTo(CANCELLED);
+        }
     }
 
     static class CassandraExecutingTask implements Task {
