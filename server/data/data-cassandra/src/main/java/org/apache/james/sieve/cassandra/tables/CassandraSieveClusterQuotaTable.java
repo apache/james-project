@@ -19,11 +19,13 @@
 
 package org.apache.james.sieve.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraSieveClusterQuotaTable {
     String TABLE_NAME = "sieve_cluster_quota";
 
-    String NAME = "name";
-    String VALUE = "value";
+    CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+    CqlIdentifier VALUE = CqlIdentifier.fromCql("value");
 
     String DEFAULT_NAME = "cluster_quota";
 }

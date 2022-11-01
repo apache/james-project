@@ -19,12 +19,14 @@
 
 package org.apache.james.user.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraUserTable {
     String TABLE_NAME = "user";
 
-    String ALGORITHM = "algorithm";
-    String NAME = "name";
-    String PASSWORD = "passwd";
-    String REALNAME = "realname";
-    String AUTHORIZED_USERS = "authorized_users";
+    CqlIdentifier ALGORITHM = CqlIdentifier.fromCql("algorithm");
+    CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+    CqlIdentifier PASSWORD = CqlIdentifier.fromCql("passwd");
+    CqlIdentifier REALNAME = CqlIdentifier.fromCql("realname");
+    CqlIdentifier AUTHORIZED_USERS = CqlIdentifier.fromCql("authorized_users");
 }

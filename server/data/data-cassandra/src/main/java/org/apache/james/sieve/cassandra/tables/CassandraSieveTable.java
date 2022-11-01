@@ -19,12 +19,14 @@
 
 package org.apache.james.sieve.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraSieveTable {
     String TABLE_NAME = "sieve";
 
-    String USER_NAME = "user_name";
-    String SCRIPT_NAME = "script_name";
-    String SCRIPT_CONTENT = "script_content";
-    String IS_ACTIVE = "is_active";
-    String SIZE = "size";
+    CqlIdentifier USER_NAME = CqlIdentifier.fromCql("user_name");
+    CqlIdentifier SCRIPT_NAME = CqlIdentifier.fromCql("script_name");
+    CqlIdentifier SCRIPT_CONTENT = CqlIdentifier.fromCql("script_content");
+    CqlIdentifier IS_ACTIVE = CqlIdentifier.fromCql("is_active");
+    CqlIdentifier SIZE = CqlIdentifier.fromCql("size");
 }

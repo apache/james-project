@@ -19,11 +19,13 @@
 
 package org.apache.james.rrt.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMappingsSourcesTable {
 
     String TABLE_NAME = "mappings_sources";
 
-    String MAPPING_TYPE = "mapping_type";
-    String MAPPING_VALUE = "mapping_value";
-    String SOURCE = "source";
+    CqlIdentifier MAPPING_TYPE = CqlIdentifier.fromCql("mapping_type");
+    CqlIdentifier MAPPING_VALUE = CqlIdentifier.fromCql("mapping_value");
+    CqlIdentifier SOURCE = CqlIdentifier.fromCql("source");
 }
