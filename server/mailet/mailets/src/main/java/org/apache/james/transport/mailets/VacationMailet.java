@@ -46,15 +46,12 @@ import reactor.core.publisher.Mono;
 
 public class VacationMailet extends GenericMailet {
 
-    public static final String EXPLICIT_SENDER_PROPERTY = "james.vacation.sender.explicit";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(VacationMailet.class);
 
     private final VacationService vacationService;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
     private final MimeMessageBodyGenerator mimeMessageBodyGenerator;
-    private final boolean explicitSender;
 
     @Inject
     public VacationMailet(VacationService vacationService, ZonedDateTimeProvider zonedDateTimeProvider,
@@ -64,7 +61,6 @@ public class VacationMailet extends GenericMailet {
         this.zonedDateTimeProvider = zonedDateTimeProvider;
         this.automaticallySentMailDetector = automaticallySentMailDetector;
         this.mimeMessageBodyGenerator = mimeMessageBodyGenerator;
-        this.explicitSender = Boolean.parseBoolean(System.getProperty(EXPLICIT_SENDER_PROPERTY, "false"));
     }
 
     @Override
@@ -143,7 +139,7 @@ public class VacationMailet extends GenericMailet {
     }
 
     private void sendNotification(VacationReply vacationReply) throws MessagingException {
-        getMailetContext().sendMail(explicitSender ? vacationReply.getSender() : MailAddress.nullSender(),
+        getMailetContext().sendMail(MailAddress.nullSender(),
             vacationReply.getRecipients(),
             vacationReply.getMimeMessage());
     }
