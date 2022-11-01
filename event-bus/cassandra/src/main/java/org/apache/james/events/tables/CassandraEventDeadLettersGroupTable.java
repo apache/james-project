@@ -19,9 +19,11 @@
 
 package org.apache.james.events.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraEventDeadLettersGroupTable {
 
     String TABLE_NAME = "group_table";
 
-    String GROUP = "group";
+    CqlIdentifier GROUP = CqlIdentifier.fromCql("group");
 }
