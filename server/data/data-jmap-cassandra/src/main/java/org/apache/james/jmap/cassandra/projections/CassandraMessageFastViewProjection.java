@@ -24,9 +24,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.TABLE_NAME;
 
@@ -48,6 +46,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
@@ -83,7 +82,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
         this.retrieveStatement = session.prepare(selectFrom(TABLE_NAME)
             .all()
-            .whereColumn(MESSAGE_ID_LOWERCASE).isEqualTo(bindMarker(MESSAGE_ID_LOWERCASE))
+            .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
             .build());
 
         this.truncateStatement = session.prepare(QueryBuilder.truncate(TABLE_NAME).build());
@@ -110,7 +109,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
-                .setUuid(MESSAGE_ID_LOWERCASE, ((CassandraMessageId) messageId).get())
+                .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.UUID)
                 .setExecutionProfile(cachingProfile))
             .map(this::fromRow)
             .doOnNext(preview -> metricRetrieveHitCount.increment())
@@ -142,8 +141,8 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
     private MessageFastViewPrecomputedProperties fromRow(Row row) {
         return MessageFastViewPrecomputedProperties.builder()
-            .preview(Preview.from(row.getString(PREVIEW)))
-            .hasAttachment(row.getBoolean(HAS_ATTACHMENT_LOWERCASE))
+            .preview(Preview.from(row.get(PREVIEW, TypeCodecs.TEXT)))
+            .hasAttachment(row.getBoolean(HAS_ATTACHMENT))
             .build();
     }
 }

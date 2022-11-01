@@ -25,6 +25,7 @@ import static org.apache.james.backends.cassandra.utils.CassandraConstants.DEFAU
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
@@ -32,12 +33,12 @@ public interface UploadModule {
 
     String TABLE_NAME = "uploads";
 
-    String ID = "id";
-    String CONTENT_TYPE = "content_type";
-    String SIZE = "size";
-    String BUCKET_ID = "bucket_id";
-    String BLOB_ID = "blob_id";
-    String USER = "user";
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier CONTENT_TYPE = CqlIdentifier.fromCql("content_type");
+    CqlIdentifier SIZE = CqlIdentifier.fromCql("size");
+    CqlIdentifier BUCKET_ID = CqlIdentifier.fromCql("bucket_id");
+    CqlIdentifier BLOB_ID = CqlIdentifier.fromCql("blob_id");
+    CqlIdentifier USER = CqlIdentifier.fromCql("user");
 
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Holds JMAP uploads")

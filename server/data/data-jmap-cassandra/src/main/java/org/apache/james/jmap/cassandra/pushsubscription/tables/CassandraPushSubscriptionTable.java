@@ -19,16 +19,19 @@
 
 package org.apache.james.jmap.cassandra.pushsubscription.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraPushSubscriptionTable {
     String TABLE_NAME = "push_subscription";
-    String USER = "user";
-    String DEVICE_CLIENT_ID = "device_client_id";
-    String ID = "id";
-    String EXPIRES = "expires";
-    String TYPES = "types";
-    String URL = "url";
-    String VERIFICATION_CODE = "verification_code";
-    String ENCRYPT_PUBLIC_KEY = "encrypt_public_key";
-    String ENCRYPT_AUTH_SECRET = "encrypt_auth_secret";
-    String VALIDATED = "validated";
+
+    CqlIdentifier USER = CqlIdentifier.fromCql("user");
+    CqlIdentifier DEVICE_CLIENT_ID = CqlIdentifier.fromCql("device_client_id");
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier EXPIRES = CqlIdentifier.fromCql("expires");
+    CqlIdentifier TYPES = CqlIdentifier.fromCql("types");
+    CqlIdentifier URL = CqlIdentifier.fromCql("url");
+    CqlIdentifier VERIFICATION_CODE = CqlIdentifier.fromCql("verification_code");
+    CqlIdentifier ENCRYPT_PUBLIC_KEY = CqlIdentifier.fromCql("encrypt_public_key");
+    CqlIdentifier ENCRYPT_AUTH_SECRET = CqlIdentifier.fromCql("encrypt_auth_secret");
+    CqlIdentifier VALIDATED = CqlIdentifier.fromCql("validated");
 }

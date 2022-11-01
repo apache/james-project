@@ -27,19 +27,18 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.RECEIVED_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_RECEIVED_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_SENT_AT;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -51,6 +50,7 @@ import org.apache.james.util.streams.Limit;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
@@ -81,21 +81,21 @@ public class CassandraEmailQueryView implements EmailQueryView {
         this.executor = new CassandraAsyncExecutor(session);
 
         listMailboxContentBySentAt = session.prepare(selectFrom(TABLE_NAME_SENT_AT)
-            .all()
+            .column(MESSAGE_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .orderBy(SENT_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());
 
         listMailboxContentByReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
-            .all()
+            .column(MESSAGE_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .orderBy(RECEIVED_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());
 
         listMailboxContentSinceSentAt = session.prepare(selectFrom(TABLE_NAME_SENT_AT)
-            .all()
+            .column(MESSAGE_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .whereColumn(SENT_AT).isGreaterThanOrEqualTo(bindMarker(SENT_AT))
             .orderBy(SENT_AT, DESC)
@@ -103,7 +103,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .build());
 
         listMailboxContentSinceReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
-            .all()
+            .columns(MESSAGE_ID, SENT_AT)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .whereColumn(RECEIVED_AT).isGreaterThanOrEqualTo(bindMarker(RECEIVED_AT))
             .orderBy(RECEIVED_AT, DESC)
@@ -171,9 +171,9 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         CassandraId cassandraId = (CassandraId) mailboxId;
         return executor.executeRows(listMailboxContentBySentAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setInt(LIMIT_MARKER, limit.getLimit().get()))
-            .map(row -> CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID)));
+            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
     }
 
     @Override
@@ -182,9 +182,9 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         CassandraId cassandraId = (CassandraId) mailboxId;
         return executor.executeRows(listMailboxContentByReceivedAt.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setInt(LIMIT_MARKER, limit.getLimit().get()))
-            .map(row -> CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID)));
+            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
     }
 
     @Override
@@ -194,19 +194,16 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setInstant(RECEIVED_AT, since.toInstant()))
             .map(row -> {
                 CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
-                Instant receivedAt = row.getInstant(RECEIVED_AT);
                 Instant sentAt = row.getInstant(SENT_AT);
 
-                return new Entry(cassandraId, messageId,
-                    ZonedDateTime.ofInstant(sentAt, ZoneOffset.UTC),
-                    ZonedDateTime.ofInstant(receivedAt, ZoneOffset.UTC));
+                return Pair.of(messageId, sentAt);
             })
-            .sort(Comparator.comparing(Entry::getSentAt).reversed())
-            .map(Entry::getMessageId)
+            .sort(Comparator.<Pair<CassandraMessageId, Instant>, Instant>comparing(Pair::getValue).reversed())
+            .map(pair -> (MessageId) pair.getKey())
             .take(limit.getLimit().get());
     }
 
@@ -217,9 +214,9 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setInstant(RECEIVED_AT, since.toInstant()))
-            .<MessageId>map(row -> CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID)))
+            .<MessageId>map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)))
             .take(limit.getLimit().get());
     }
 
@@ -230,10 +227,10 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeRows(listMailboxContentSinceSentAt.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setInt(LIMIT_MARKER, limit.getLimit().get())
             .setInstant(SENT_AT, since.toInstant()))
-            .map(row -> CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID_LOWERCASE)));
+            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
     }
 
     @Override
@@ -242,7 +239,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeSingleRow(lookupDate.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setUuid(MESSAGE_ID, cassandraMessageId.get()))
             .flatMap(row -> doDelete(cassandraMessageId, cassandraId, row));
     }
@@ -253,15 +250,15 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         return Flux.concat(
             executor.executeVoid(deleteSentAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setUuid(MESSAGE_ID, cassandraMessageId.get())
                 .setInstant(SENT_AT, sentAt)),
             executor.executeVoid(deleteReceivedAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setUuid(MESSAGE_ID, cassandraMessageId.get())
                 .setInstant(RECEIVED_AT, receivedAt)))
             .then(executor.executeVoid(deleteLookupRecord.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setUuid(MESSAGE_ID, cassandraMessageId.get())));
     }
 
@@ -271,9 +268,9 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         return Flux.concat(
             executor.executeVoid(deleteAllSentAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())),
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)),
             executor.executeVoid(deleteAllReceivedAt.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid())))
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)))
             .then(executor.executeVoid(deleteAllLookupRecords.bind()
                 .setUuid(MAILBOX_ID, ((CassandraId) mailboxId).asUuid())));
     }
@@ -285,17 +282,17 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         return executor.executeVoid(insertInLookupTable.bind()
             .setUuid(MESSAGE_ID, cassandraMessageId.get())
-            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setInstant(RECEIVED_AT, receivedAt.toInstant())
             .setInstant(SENT_AT, sentAt.toInstant()))
             .then(Flux.concat(
                 executor.executeVoid(insertSentAt.bind()
                     .setUuid(MESSAGE_ID, cassandraMessageId.get())
-                    .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                    .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                     .setInstant(SENT_AT, sentAt.toInstant())),
                 executor.executeVoid(insertReceivedAt.bind()
                     .setUuid(MESSAGE_ID, cassandraMessageId.get())
-                    .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                    .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                     .setInstant(RECEIVED_AT, receivedAt.toInstant())
                     .setInstant(SENT_AT, sentAt.toInstant())))
                 .then());

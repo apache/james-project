@@ -24,7 +24,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable
 
 case class EmailAddressTupleUtil(typesProvider: CassandraTypesProvider) {
-  val emailAddressType = typesProvider.getDefinedUserType(CassandraCustomIdentityTable.EMAIL_ADDRESS)
+  val emailAddressType = typesProvider.getDefinedUserType(CassandraCustomIdentityTable.EMAIL_ADDRESS.asCql(true))
 
   def createEmailAddressUDT(name: Option[String], email: String): UdtValue = {
     val value = emailAddressType

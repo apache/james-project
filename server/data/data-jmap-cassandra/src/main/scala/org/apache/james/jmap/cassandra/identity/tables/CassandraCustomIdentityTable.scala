@@ -19,22 +19,25 @@
 
 package org.apache.james.jmap.cassandra.identity.tables
 
+import com.datastax.oss.driver.api.core.CqlIdentifier
+
 object CassandraCustomIdentityTable {
   val TABLE_NAME: String = "custom_identity"
-  val USER: String = "user"
-  val ID: String = "id"
-  val NAME: String = "name"
-  val EMAIL: String = "email"
-  val REPLY_TO: String = "reply_to"
-  val BCC: String = "bcc"
-  val TEXT_SIGNATURE: String = "text_signature"
-  val HTML_SIGNATURE: String = "html_signature"
-  val MAY_DELETE: String = "may_delete"
-  val EMAIL_ADDRESS: String = "email_address"
-  val SORT_ORDER: String = "sort_order"
+
+  val USER: CqlIdentifier = CqlIdentifier.fromCql("user")
+  val ID: CqlIdentifier = CqlIdentifier.fromCql("id")
+  val NAME: CqlIdentifier = CqlIdentifier.fromCql("name")
+  val EMAIL: CqlIdentifier = CqlIdentifier.fromCql("email")
+  val REPLY_TO: CqlIdentifier = CqlIdentifier.fromCql("reply_to")
+  val BCC: CqlIdentifier = CqlIdentifier.fromCql("bcc")
+  val TEXT_SIGNATURE: CqlIdentifier = CqlIdentifier.fromCql("text_signature")
+  val HTML_SIGNATURE: CqlIdentifier = CqlIdentifier.fromCql("html_signature")
+  val MAY_DELETE: CqlIdentifier = CqlIdentifier.fromCql("may_delete")
+  val EMAIL_ADDRESS: CqlIdentifier = CqlIdentifier.fromCql("email_address")
+  val SORT_ORDER: CqlIdentifier = CqlIdentifier.fromCql("sort_order")
 
   object EmailAddress {
-    val NAME: String = "name"
-    val EMAIL: String = "email"
+    val NAME: CqlIdentifier = CqlIdentifier.fromCql("name")
+    val EMAIL: CqlIdentifier = CqlIdentifier.fromCql("email")
   }
 }

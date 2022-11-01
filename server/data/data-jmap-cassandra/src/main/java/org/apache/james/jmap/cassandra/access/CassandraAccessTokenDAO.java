@@ -37,6 +37,7 @@ import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.primitives.Ints;
 
 import reactor.core.publisher.Mono;
@@ -67,7 +68,7 @@ public class CassandraAccessTokenDAO {
             .build());
 
         this.selectStatement = session.prepare(selectFrom(CassandraAccessTokenTable.TABLE_NAME)
-            .all()
+            .column(CassandraAccessTokenTable.USERNAME)
             .whereColumn(CassandraAccessTokenTable.TOKEN)
             .isEqualTo(bindMarker(CassandraAccessTokenTable.TOKEN))
             .build());
@@ -87,8 +88,8 @@ public class CassandraAccessTokenDAO {
 
     public Mono<Username> getUsernameFromToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeSingleRow(selectStatement.bind()
-                .setUuid(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
-            .map(row -> row.getString(CassandraAccessTokenTable.USERNAME))
+                .set(CassandraAccessTokenTable.TOKEN, accessToken.asUUID(), TypeCodecs.UUID))
+            .map(row -> row.get(0, TypeCodecs.TEXT))
             .map(Username::of);
     }
 }
