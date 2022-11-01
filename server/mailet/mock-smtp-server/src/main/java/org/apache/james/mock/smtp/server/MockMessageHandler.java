@@ -187,6 +187,9 @@ public class MockMessageHandler implements MessageHandler {
     }
 
     private MailAddress parse(String mailAddress) {
+        if (mailAddress.isEmpty()) {
+            return MailAddress.nullSender();
+        }
         try {
             return new MailAddress(mailAddress);
         } catch (AddressException e) {

@@ -26,6 +26,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.mail.internet.AddressException;
+
 import org.apache.james.core.MailAddress;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -228,6 +230,19 @@ public class Mail {
 
             public Builder from(MailAddress from) {
                 this.from = from;
+                return this;
+            }
+
+            public Builder from(String from) {
+                if (from.equals("<>")) {
+                    this.from = MailAddress.nullSender();
+                } else {
+                    try {
+                        this.from = new MailAddress(from);
+                    } catch (AddressException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 return this;
             }
 
