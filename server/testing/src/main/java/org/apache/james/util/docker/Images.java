@@ -27,5 +27,5 @@ public interface Images {
     String ELASTICSEARCH_7 = "docker.elastic.co/elasticsearch/elasticsearch:7.10.2";
     String OPENSEARCH = "opensearchproject/opensearch:2.1.0";
     String TIKA = "apache/tika:1.28.2";
-    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.4";
+    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.6";
 }
