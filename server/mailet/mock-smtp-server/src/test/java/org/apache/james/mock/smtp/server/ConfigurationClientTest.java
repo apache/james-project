@@ -22,7 +22,9 @@ package org.apache.james.mock.smtp.server;
 import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.Fixture.MailsFixutre;
+import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.junit.jupiter.api.AfterEach;
@@ -131,6 +133,35 @@ class ConfigurationClientTest {
 
         assertThat(testee.listMails())
             .containsExactly(MailsFixutre.MAIL_1, MailsFixutre.MAIL_2);
+    }
+
+    @Test
+    void listMailsShouldReturnMailWithNullSender() throws Exception {
+        final Mail mail = new Mail(
+            Mail.Envelope.builder()
+                .from(MailAddress.nullSender())
+                .addRecipientMailAddress(new MailAddress(Fixture.ALICE))
+                .addRecipient(Mail.Recipient.builder()
+                    .address(new MailAddress(Fixture.JACK))
+                    .addParameter(Mail.Parameter.builder()
+                        .name("param1")
+                        .value("value1")
+                        .build())
+                    .addParameter(Mail.Parameter.builder()
+                        .name("param2")
+                        .value("value2")
+                        .build())
+                    .build())
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("param3")
+                    .value("value3")
+                    .build())
+                .build(),
+            "bob to alice and jack");
+        mailRepository.store(mail);
+
+        assertThat(testee.listMails())
+            .containsExactly(mail);
     }
 
     @Test
