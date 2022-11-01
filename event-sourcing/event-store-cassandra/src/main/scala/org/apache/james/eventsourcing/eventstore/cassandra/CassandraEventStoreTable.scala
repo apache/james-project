@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
+import com.datastax.oss.driver.api.core.CqlIdentifier
+
 object CassandraEventStoreTable {
   val EVENTS_TABLE = "eventStore"
-  val AGGREGATE_ID = "aggregateId"
-  val EVENT = "event"
-  val EVENT_ID = "eventId"
+  val AGGREGATE_ID = CqlIdentifier.fromCql("aggregateId")
+  val EVENT = CqlIdentifier.fromCql("event")
+  val EVENT_ID = CqlIdentifier.fromCql("eventId")
 }
