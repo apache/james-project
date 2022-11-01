@@ -19,8 +19,10 @@
 
 package org.apache.james.domainlist.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraDomainsTable {
     String TABLE_NAME = "domains";
 
-    String DOMAIN = "domain";
+    CqlIdentifier DOMAIN = CqlIdentifier.fromCql("domain");
 }

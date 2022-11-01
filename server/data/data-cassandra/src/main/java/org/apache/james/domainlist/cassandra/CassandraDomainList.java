@@ -38,6 +38,7 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 public class CassandraDomainList extends AbstractDomainList {
     private final CassandraAsyncExecutor executor;
@@ -73,7 +74,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     protected List<Domain> getDomainListInternal() throws DomainListException {
         return executor.executeRows(readAllStatement.bind())
-            .map(row -> Domain.of(row.getString(DOMAIN)))
+            .map(row -> Domain.of(row.get(0, TypeCodecs.TEXT)))
             .collectList()
             .block();
     }
@@ -81,7 +82,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     protected boolean containsDomainInternal(Domain domain) throws DomainListException {
         return executor.executeSingleRowOptional(readStatement.bind()
-                .setString(DOMAIN, domain.asString()))
+                .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block()
             .isPresent();
     }
@@ -89,7 +90,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     public void addDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(insertStatement.bind()
-                .setString(DOMAIN, domain.asString()))
+                .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " already exists.");
@@ -99,7 +100,7 @@ public class CassandraDomainList extends AbstractDomainList {
     @Override
     public void doRemoveDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
-                .setString(DOMAIN, domain.asString()))
+                .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " was not found");

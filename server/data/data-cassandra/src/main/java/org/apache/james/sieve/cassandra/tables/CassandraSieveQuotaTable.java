@@ -19,9 +19,11 @@
 
 package org.apache.james.sieve.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraSieveQuotaTable {
     String TABLE_NAME = "sieve_quota";
 
-    String USER_NAME = "user_name";
-    String QUOTA = "quota";
+    CqlIdentifier USER_NAME = CqlIdentifier.fromCql("user_name");
+    CqlIdentifier QUOTA = CqlIdentifier.fromCql("quota");
 }

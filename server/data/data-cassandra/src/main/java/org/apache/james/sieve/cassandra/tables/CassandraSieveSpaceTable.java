@@ -19,9 +19,11 @@
 
 package org.apache.james.sieve.cassandra.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraSieveSpaceTable {
     String TABLE_NAME = "sieve_space";
 
-    String USER_NAME = "user_name";
-    String SPACE_USED = "space_used";
+    CqlIdentifier USER_NAME = CqlIdentifier.fromCql("user_name");
+    CqlIdentifier SPACE_USED = CqlIdentifier.fromCql("space_used");
 }
