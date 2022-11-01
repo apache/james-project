@@ -157,10 +157,8 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
             })
       }
 
-  private def generateUniqueMessageId(fromAddress: Option[List[Mailbox]]): String = {
-    val noDomain = null
-    MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).getOrElse(noDomain))
-  }
+  private def generateUniqueMessageId(fromAddress: Option[List[Mailbox]]): String = 
+    MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).orNull)
 
   private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor) = {
     val alternativeBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
