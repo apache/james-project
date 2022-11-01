@@ -20,6 +20,7 @@
 package org.apache.james.eventsourcing.eventstore.cassandra
 
 import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.core.`type`.codec.TypeCodecs
 import com.datastax.oss.driver.api.core.cql.{BatchStatementBuilder, BatchType, BoundStatement, PreparedStatement, Row, Statement}
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, insertInto}
@@ -52,7 +53,7 @@ class EventStoreDao @Inject() (val session: CqlSession,
   private def prepareSelect(session: CqlSession): PreparedStatement =
     session.prepare(QueryBuilder
       .selectFrom(EVENTS_TABLE)
-      .all()
+      .column(EVENT)
       .whereColumn(AGGREGATE_ID).isEqualTo(bindMarker(AGGREGATE_ID))
       .build())
 
@@ -83,7 +84,7 @@ class EventStoreDao @Inject() (val session: CqlSession,
 
   private[cassandra] def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
     val preparedStatement = select.bind()
-      .setString(AGGREGATE_ID, aggregateId.asAggregateKey)
+      .set(AGGREGATE_ID, aggregateId.asAggregateKey, TypeCodecs.TEXT)
       .setExecutionProfile(executionProfile)
     val rows: SFlux[Row] = SFlux[Row](cassandraAsyncExecutor.executeRows(preparedStatement))
 
@@ -100,6 +101,6 @@ class EventStoreDao @Inject() (val session: CqlSession,
       .setString(AGGREGATE_ID, aggregateId.asAggregateKey)))
       .`then`()
 
-  private def toEvent(row: Row): SMono[Event] = SMono.fromCallable(() => jsonEventSerializer.deserialize(row.getString(EVENT)))
+  private def toEvent(row: Row): SMono[Event] = SMono.fromCallable(() => jsonEventSerializer.deserialize(row.get(0, TypeCodecs.TEXT)))
     .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }
