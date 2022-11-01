@@ -22,32 +22,36 @@ package org.apache.james.jmap;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
-import static org.hamcrest.Matchers.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.transport.mailets.VacationMailet;
-import org.apache.james.vacation.api.VacationPatch;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
+import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.FakeSmtp;
+import org.apache.james.vacation.api.VacationPatch;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import com.github.fge.lambdas.Throwing;
 
 public abstract class VacationRelayIntegrationTest {
 
@@ -57,7 +61,7 @@ public abstract class VacationRelayIntegrationTest {
     private static final String REASON = "Message explaining my wonderful vacations";
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
+    public static MockSmtpTestRule fakeSmtp = new MockSmtpTestRule();
 
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
@@ -69,9 +73,8 @@ public abstract class VacationRelayIntegrationTest {
     @Before
     public void setUp() throws Exception {
         getInMemoryDns()
-            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
+            .registerMxRecord("yopmail.com", fakeSmtp.getDockerMockSmtp().getIPAddress());
 
-        System.setProperty(VacationMailet.EXPLICIT_SENDER_PROPERTY, "true");
         guiceJamesServer = getJmapServer();
         guiceJamesServer.start();
 
@@ -87,9 +90,9 @@ public abstract class VacationRelayIntegrationTest {
 
     @After
     public void teardown() {
-        fakeSmtp.clean();
+        fakeSmtp.getDockerMockSmtp().getConfigurationClient().clearMails();
+        fakeSmtp.getDockerMockSmtp().getConfigurationClient().clearBehaviors();
         guiceJamesServer.stop();
-        System.clearProperty(VacationMailet.EXPLICIT_SENDER_PROPERTY);
     }
 
     @Category(BasicFeature.class)
@@ -111,10 +114,19 @@ public abstract class VacationRelayIntegrationTest {
         smtpClient.sendShortMessageData("Reply-To: <" + externalMail + ">\r\n\r\ncontent");
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
-            .untilAsserted(() ->
-                fakeSmtp.assertEmailReceived(response -> response
-                    .body("[0].from", equalTo(USER_WITH_DOMAIN))
-                    .body("[0].to[0]", equalTo(externalMail))
-                    .body("[0].text", equalTo(REASON))));
+            .untilAsserted(() -> {
+                List<Mail> mails = fakeSmtp.getDockerMockSmtp().getConfigurationClient()
+                    .listMails();
+
+                assertThat(mails).hasSize(1);
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(mails.get(0).getEnvelope().getFrom()).isEqualTo(MailAddress.nullSender());
+                    softly.assertThat(mails.get(0).getEnvelope().getRecipients())
+                        .containsOnly(Mail.Recipient.builder()
+                            .address(new MailAddress(externalMail))
+                            .build());
+                    softly.assertThat(mails.get(0).getMessage()).contains(REASON);
+                }));
+            });
     }
 }
