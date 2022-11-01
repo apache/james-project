@@ -19,13 +19,16 @@
 
 package org.apache.james.jmap.cassandra.change.tables;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraEmailChangeTable {
     String TABLE_NAME = "email_change";
-    String ACCOUNT_ID = "account_id";
-    String STATE = "state";
-    String DATE = "date";
-    String IS_DELEGATED = "is_delegated";
-    String CREATED = "created";
-    String UPDATED = "updated";
-    String DESTROYED = "destroyed";
+
+    CqlIdentifier ACCOUNT_ID = CqlIdentifier.fromCql("account_id");
+    CqlIdentifier STATE = CqlIdentifier.fromCql("state");
+    CqlIdentifier DATE = CqlIdentifier.fromCql("date");
+    CqlIdentifier IS_DELEGATED = CqlIdentifier.fromCql("is_delegated");
+    CqlIdentifier CREATED = CqlIdentifier.fromCql("created");
+    CqlIdentifier UPDATED = CqlIdentifier.fromCql("updated");
+    CqlIdentifier DESTROYED = CqlIdentifier.fromCql("destroyed");
 }

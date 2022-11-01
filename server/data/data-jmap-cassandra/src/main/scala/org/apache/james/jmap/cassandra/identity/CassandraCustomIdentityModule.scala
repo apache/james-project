@@ -26,7 +26,7 @@ import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTa
 
 object CassandraCustomIdentityModule {
   val MODULE: CassandraModule = CassandraModule.builder()
-    .`type`(EMAIL_ADDRESS)
+    .`type`(EMAIL_ADDRESS.asCql(true))
     .statement(statement => statement
       .withField(EmailAddress.NAME, TEXT)
       .withField(EmailAddress.EMAIL, TEXT))
@@ -38,8 +38,8 @@ object CassandraCustomIdentityModule {
       .withClusteringColumn(ID, UUID)
       .withColumn(NAME, TEXT)
       .withColumn(EMAIL, TEXT)
-      .withColumn(REPLY_TO, frozenSetOf(types.getDefinedUserType(EMAIL_ADDRESS)))
-      .withColumn(BCC, frozenSetOf(types.getDefinedUserType(EMAIL_ADDRESS)))
+      .withColumn(REPLY_TO, frozenSetOf(types.getDefinedUserType(EMAIL_ADDRESS.asCql(true))))
+      .withColumn(BCC, frozenSetOf(types.getDefinedUserType(EMAIL_ADDRESS.asCql(true))))
       .withColumn(TEXT_SIGNATURE, TEXT)
       .withColumn(HTML_SIGNATURE, TEXT)
       .withColumn(SORT_ORDER, INT)

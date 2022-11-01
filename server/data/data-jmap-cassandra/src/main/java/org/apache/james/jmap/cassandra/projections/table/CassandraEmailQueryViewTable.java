@@ -19,16 +19,15 @@
 
 package org.apache.james.jmap.cassandra.projections.table;
 
-import java.util.Locale;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraEmailQueryViewTable {
     String TABLE_NAME_SENT_AT = "email_query_view_sent_at";
     String TABLE_NAME_RECEIVED_AT = "email_query_view_received_at";
     String DATE_LOOKUP_TABLE = "email_query_view_date_lookup";
 
-    String MAILBOX_ID = "mailboxId";
-    String MESSAGE_ID = "messageId";
-    String MESSAGE_ID_LOWERCASE = MESSAGE_ID.toLowerCase(Locale.US);
-    String RECEIVED_AT = "receivedAt";
-    String SENT_AT = "sentAt";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier MESSAGE_ID = CqlIdentifier.fromCql("messageId");
+    CqlIdentifier RECEIVED_AT = CqlIdentifier.fromCql("receivedAt");
+    CqlIdentifier SENT_AT = CqlIdentifier.fromCql("sentAt");
 }

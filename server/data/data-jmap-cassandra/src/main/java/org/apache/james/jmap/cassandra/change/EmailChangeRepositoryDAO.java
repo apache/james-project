@@ -55,6 +55,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import com.google.common.collect.ImmutableList;
@@ -140,32 +141,32 @@ public class EmailChangeRepositoryDAO {
 
     Flux<EmailChange> getAllChanges(AccountId accountId) {
         return executor.executeRows(selectAllStatement.bind()
-            .setString(ACCOUNT_ID, accountId.getIdentifier()))
-            .map(this::readRow);
+            .set(ACCOUNT_ID, accountId.getIdentifier(), TypeCodecs.TEXT))
+            .map(row -> readRow(row, accountId));
     }
 
     Flux<EmailChange> getChangesSince(AccountId accountId, State state) {
         return executor.executeRows(selectFromStatement.bind()
-            .setString(ACCOUNT_ID, accountId.getIdentifier())
+            .set(ACCOUNT_ID, accountId.getIdentifier(), TypeCodecs.TEXT)
             .setUuid(STATE, state.getValue()))
-            .map(this::readRow);
+            .map(row -> readRow(row, accountId));
     }
 
     Mono<State> latestState(AccountId accountId) {
         return executor.executeSingleRow(selectLatestStatement.bind()
-            .setString(ACCOUNT_ID, accountId.getIdentifier()))
-            .map(row -> State.of(row.getUuid(STATE)));
+            .set(ACCOUNT_ID, accountId.getIdentifier(), TypeCodecs.TEXT))
+            .map(row -> State.of(row.getUuid(0)));
     }
 
     Mono<State> latestStateNotDelegated(AccountId accountId) {
         return executor.executeSingleRow(selectLatestNotDelegatedStatement.bind()
-            .setString(ACCOUNT_ID, accountId.getIdentifier()))
-            .map(row -> State.of(row.getUuid(STATE)));
+            .set(ACCOUNT_ID, accountId.getIdentifier(), TypeCodecs.TEXT))
+            .map(row -> State.of(row.getUuid(0)));
     }
 
-    private EmailChange readRow(Row row) {
+    private EmailChange readRow(Row row, AccountId accountId) {
         return EmailChange.builder()
-            .accountId(AccountId.fromString(row.getString(ACCOUNT_ID)))
+            .accountId(accountId)
             .state(State.of(row.getUuid(STATE)))
             .date(CassandraZonedDateTimeModule.fromUDT(row.getUdtValue(DATE)))
             .isDelegated(row.getBoolean(IS_DELEGATED))

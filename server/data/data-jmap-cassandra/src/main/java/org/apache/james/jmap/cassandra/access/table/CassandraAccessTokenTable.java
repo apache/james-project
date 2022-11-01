@@ -19,11 +19,13 @@
 
 package org.apache.james.jmap.cassandra.access.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraAccessTokenTable {
 
     String TABLE_NAME = "access_token";
 
-    String TOKEN = "access_token";
-    String USERNAME = "username";
+    CqlIdentifier TOKEN = CqlIdentifier.fromCql("access_token");
+    CqlIdentifier USERNAME = CqlIdentifier.fromCql("username");
 
 }
