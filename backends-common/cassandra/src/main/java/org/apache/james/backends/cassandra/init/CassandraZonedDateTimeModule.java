@@ -25,14 +25,15 @@ import java.util.Optional;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.ZonedDateTimeRepresentation;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 
 public interface CassandraZonedDateTimeModule {
     String ZONED_DATE_TIME = "zonedDateTime";
-    String DATE = "date";
-    String TIME_ZONE = "timeZone";
+    CqlIdentifier DATE = CqlIdentifier.fromCql("date");
+    CqlIdentifier TIME_ZONE = CqlIdentifier.fromCql("timeZone");
 
     CassandraModule MODULE = CassandraModule.type(ZONED_DATE_TIME)
         .statement(statement -> statement

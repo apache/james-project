@@ -19,11 +19,11 @@
 
 package org.apache.james.backends.cassandra.versions.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraSchemaVersionTable {
     String TABLE_NAME = "schemaversion";
 
-    String KEY = "key";
-    String VALUE = "value";
-
-    int KEY_FOR_VERSION = 0;
+    CqlIdentifier KEY = CqlIdentifier.fromCql("key");
+    CqlIdentifier VALUE = CqlIdentifier.fromCql("value");
 }
