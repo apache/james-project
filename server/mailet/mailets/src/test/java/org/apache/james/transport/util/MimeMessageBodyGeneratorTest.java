@@ -91,6 +91,22 @@ public class MimeMessageBodyGeneratorTest {
     }
 
     @Test
+    public void fromShouldProvideAPlainTextVersionWhenHtmlAndEmptyText() throws Exception {
+        String htmlText = "<p>HTML text</p>";
+        String plainText = "Plain text";
+        when(htmlTextExtractor.toPlainText(htmlText)).thenReturn(plainText);
+
+        String rowContent = IOUtils.toString(
+            mimeMessageBodyGenerator.from(original,
+                    Optional.of(""),
+                    Optional.of(htmlText))
+                .getInputStream(), StandardCharsets.UTF_8);
+
+        assertThat(rowContent).containsSequence(htmlText);
+        assertThat(rowContent).containsSequence(plainText);
+    }
+
+    @Test
     public void fromShouldCombinePlainTextAndHtml() throws Exception {
         String htmlText = "<p>HTML text</p>";
         String plainText = "Plain text";
