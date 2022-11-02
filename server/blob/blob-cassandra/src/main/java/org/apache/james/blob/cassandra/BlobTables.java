@@ -19,40 +19,42 @@
 
 package org.apache.james.blob.cassandra;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface BlobTables {
 
     interface DefaultBucketBlobTable {
         String TABLE_NAME = "blobs";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier NUMBER_OF_CHUNK = CqlIdentifier.fromCql("position");
     }
 
     interface DefaultBucketBlobParts {
         String TABLE_NAME = "blobParts";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier CHUNK_NUMBER = CqlIdentifier.fromCql("chunkNumber");
+        CqlIdentifier DATA = CqlIdentifier.fromCql("data");
     }
 
     interface BucketBlobTable {
         String TABLE_NAME = "blobsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
+        CqlIdentifier BUCKET = CqlIdentifier.fromCql("bucket");
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier NUMBER_OF_CHUNK = CqlIdentifier.fromCql("position");
     }
 
     interface BucketBlobParts {
         String TABLE_NAME = "blobPartsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
+        CqlIdentifier BUCKET = CqlIdentifier.fromCql("bucket");
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier CHUNK_NUMBER = CqlIdentifier.fromCql("chunkNumber");
+        CqlIdentifier DATA = CqlIdentifier.fromCql("data");
     }
 
     interface BlobStoreCache {
         String TABLE_NAME = "blob_cache";
-        String ID = "id";
-        String DATA = "data";
-        String TTL_FOR_ROW = "ttl";
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier DATA = CqlIdentifier.fromCql("data");
+        CqlIdentifier TTL_FOR_ROW = CqlIdentifier.fromCql("ttl");
     }
 }

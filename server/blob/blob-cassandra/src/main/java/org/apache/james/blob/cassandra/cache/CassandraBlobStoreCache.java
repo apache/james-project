@@ -45,6 +45,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
@@ -75,7 +76,7 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
             .build());
 
         this.selectStatement = session.prepare(selectFrom(TABLE_NAME)
-            .all()
+            .column(DATA)
             .whereColumn(ID).isEqualTo(bindMarker(ID))
             .build());
 
@@ -130,7 +131,7 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
     }
 
     private byte[] toByteArray(Row row) {
-        ByteBuffer byteBuffer = row.getByteBuffer(DATA);
+        ByteBuffer byteBuffer = row.get(0, TypeCodecs.BLOB);
         assert byteBuffer != null;
         byte[] data = new byte[byteBuffer.remaining()];
         byteBuffer.get(data);
