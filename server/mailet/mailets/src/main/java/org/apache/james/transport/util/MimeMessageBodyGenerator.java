@@ -38,7 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class MimeMessageBodyGenerator {
-    public static final String MIXED = "mixed";
+    public static final String ALTERNATIVE = "alternative";
     public static final String EMPTY_TEXT = "";
 
     private final HtmlTextExtractor htmlTextExtractor;
@@ -63,7 +63,7 @@ public class MimeMessageBodyGenerator {
 
     private Multipart generateMultipart(String htmlText, Optional<String> plainText) throws MessagingException {
         try {
-            Multipart multipart = new MimeMultipart(MIXED);
+            Multipart multipart = new MimeMultipart(ALTERNATIVE);
             addTextPart(multipart, htmlText, "text/html");
             addTextPart(multipart, retrievePlainTextMessage(plainText, htmlText), ContentTypeField.TYPE_TEXT_PLAIN);
             return multipart;
@@ -84,7 +84,7 @@ public class MimeMessageBodyGenerator {
     }
 
     private String retrievePlainTextMessage(Optional<String> plainText, String htmlText) {
-        return plainText.orElseGet(() -> htmlTextExtractor.toPlainText(htmlText));
+        return plainText.filter(text -> !text.isBlank()).orElseGet(() -> htmlTextExtractor.toPlainText(htmlText));
     }
 
 }
