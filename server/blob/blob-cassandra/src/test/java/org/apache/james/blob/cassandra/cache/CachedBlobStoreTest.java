@@ -354,6 +354,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     @Test
     public void cachedBlobStoreShouldOnlyBeQueriedForHeaders(CassandraCluster cassandra) throws Exception {
+        cassandra.getConf().printStatements();
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader("Date", "Thu, 6 Sep 2018 13:29:13 +0700 (ICT)")
             .addHeader("Message-ID", "<84739718.0.1536215353507@localhost.localdomain>")
@@ -374,7 +375,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         mimeMessageStore.read(partsId).block();
 
-        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith("SELECT * FROM blob_cache")))
+        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith("SELECT data FROM blob_cache")))
             .hasSize(1);
     }
 
