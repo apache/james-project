@@ -24,6 +24,8 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.james.imap.api.message.SectionType;
 import org.junit.jupiter.api.BeforeEach;
@@ -179,6 +181,14 @@ class FetchPartPathDecoderTest {
     @Test
     void testShouldReadManyFieldNotNames() throws Exception {
         String[] names = { "ONE", "TWO", "THREE", "FOUR", "FIVE", "345345" };
+        checkReadNames("1.8.HEADER.FIELDS.NOT", names);
+    }
+
+    @Test
+    void manyHeadersShouldNotLeadToStackOverFlow() throws Exception {
+        String[] names = IntStream.range(0, 3000)
+            .mapToObj(Integer::toString)
+            .toArray(String[]::new);
         checkReadNames("1.8.HEADER.FIELDS.NOT", names);
     }
 
