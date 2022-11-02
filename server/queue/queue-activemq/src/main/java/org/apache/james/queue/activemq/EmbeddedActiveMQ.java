@@ -109,6 +109,7 @@ public class EmbeddedActiveMQ {
         brokerService.setPersistenceAdapter(persistenceAdapter);
         BrokerPlugin[] brokerPlugins = {new StatisticsBrokerPlugin()};
         brokerService.setPlugins(brokerPlugins);
+        brokerService.setEnableStatistics(true);
         String[] transportConnectorsURIs = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(transportConnectorsURIs);
         brokerService.start();
