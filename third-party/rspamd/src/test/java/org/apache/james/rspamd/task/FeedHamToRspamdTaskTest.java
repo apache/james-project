@@ -233,14 +233,14 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(1)
+                .hamMessageCount(0)
                 .reportedHamMessageCount(0)
                 .errorCount(0)
                 .build());
     }
 
     @Test
-    void mixedInternalDateCase() throws MailboxException {
+    void taskShouldCountAndReportOnlyHamMessagesInPeriod() throws MailboxException {
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
@@ -253,7 +253,7 @@ public class FeedHamToRspamdTaskTest {
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(task.snapshot())
             .isEqualTo(FeedHamToRspamdTask.Context.Snapshot.builder()
-                .hamMessageCount(2)
+                .hamMessageCount(1)
                 .reportedHamMessageCount(1)
                 .errorCount(0)
                 .build());
