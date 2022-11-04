@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -39,7 +41,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
-public class SPFHandlerTest {
+class SPFHandlerTest {
 
     private DNSService mockedDnsService;
     private SMTPSession mockedSMTPSession;
@@ -87,6 +89,15 @@ public class SPFHandlerTest {
             @Override
             public void setRecordLimit(int arg0) {
                 throw new UnsupportedOperationException("Unimplemented mock service");
+            }
+
+            @Override
+            public CompletionStage<List<String>> getRecordsAsync(DNSRequest request) {
+                try {
+                    return CompletableFuture.completedFuture(getRecords(request));
+                } catch (TimeoutException e) {
+                    return CompletableFuture.failedFuture(e);
+                }
             }
 
             @Override

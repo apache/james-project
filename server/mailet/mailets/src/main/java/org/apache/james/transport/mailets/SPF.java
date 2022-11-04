@@ -27,7 +27,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
-import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
 import org.apache.mailet.Attribute;
@@ -39,7 +38,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 /**
@@ -85,15 +83,19 @@ public class SPF extends GenericMailet {
         this.dnsService = dnsService;
     }
 
+    public void setSPFDnsService(org.apache.james.jspf.core.DNSService spfDnsService) {
+        this.spfDnsService = spfDnsService;
+    }
+
     @Override
     public void init() {
         debug = Boolean.parseBoolean(getInitParameter("debug", "false"));
         addHeader = Boolean.parseBoolean(getInitParameter("addHeader", "false"));
 
         if (spfDnsService == null) {
-            spf = new DefaultSPF(new SPFLoggerAdapter(debug));
+            spf = new DefaultSPF();
         } else {
-            spf = new org.apache.james.jspf.impl.SPF(spfDnsService, new SPFLoggerAdapter(debug));
+            spf = new org.apache.james.jspf.impl.SPF(spfDnsService);
         }
 
         Collection<String> ignoredNetworks = Splitter.on(',')
@@ -130,110 +132,4 @@ public class SPF extends GenericMailet {
             }
         }
     }
-
-    private static class SPFLoggerAdapter implements Logger {
-        private boolean debug = false;
-        private String name = "SPFLogger";
-
-        public SPFLoggerAdapter(boolean debug) {
-            this.debug = debug;
-        }
-
-        public SPFLoggerAdapter(String name, boolean debug) {
-            this.name = name;
-            this.debug = debug;
-        }
-
-        @Override
-        public void debug(String arg0) {
-            if (debug) {
-                LOGGER.debug(arg0);
-            }
-        }
-
-        @Override
-        public void debug(String arg0, Throwable arg1) {
-            if (debug) {
-                LOGGER.debug(arg0, arg1);
-            }
-        }
-
-        @Override
-        public void error(String arg0) {
-            LOGGER.error(arg0);
-        }
-
-        @Override
-        public void error(String arg0, Throwable arg1) {
-            LOGGER.error(arg0, arg1);
-        }
-
-        @Override
-        public void fatalError(String arg0) {
-            LOGGER.error(arg0);
-        }
-
-        @Override
-        public void fatalError(String arg0, Throwable arg1) {
-            LOGGER.error(arg0, arg1);
-        }
-
-        @Override
-        public Logger getChildLogger(String childName) {
-            return new SPFLoggerAdapter(name + "." + childName, debug);
-        }
-
-        @Override
-        public void info(String arg0) {
-            LOGGER.info(arg0);
-        }
-
-        @Override
-        public void info(String arg0, Throwable arg1) {
-            LOGGER.info(arg0, arg1);
-        }
-
-        @Override
-        public boolean isDebugEnabled() {
-            return LOGGER.isDebugEnabled();
-        }
-
-        @Override
-        public boolean isErrorEnabled() {
-            return LOGGER.isErrorEnabled();
-        }
-
-        @Override
-        public boolean isFatalErrorEnabled() {
-            return LOGGER.isErrorEnabled();
-        }
-
-        @Override
-        public boolean isInfoEnabled() {
-            return LOGGER.isInfoEnabled();
-        }
-
-        @Override
-        public boolean isWarnEnabled() {
-            return LOGGER.isWarnEnabled();
-        }
-
-        @Override
-        public void warn(String arg0) {
-            LOGGER.warn(arg0);
-        }
-
-        @Override
-        public void warn(String arg0, Throwable arg1) {
-            LOGGER.warn(arg0, arg1);
-        }
-
-    }
-
-    @VisibleForTesting
-    void setSPFDnsService(org.apache.james.jspf.core.DNSService dnsService) {
-        spfDnsService = dnsService;
-    }
-
-
 }
