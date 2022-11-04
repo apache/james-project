@@ -76,7 +76,7 @@ public class SessionProviderImpl implements SessionProvider {
 
     @Override
     public MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException {
-        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(givenUserid, otherUserId);
+        Authorizator.AuthorizationState authorizationState = authorizator.user(givenUserid).canLoginAs(otherUserId);
         switch (authorizationState) {
             case ALLOWED:
                 return createSystemSession(otherUserId);

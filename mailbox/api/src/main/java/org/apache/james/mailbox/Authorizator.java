@@ -27,6 +27,10 @@ import org.apache.james.mailbox.exception.MailboxException;
  */
 public interface Authorizator {
 
+    interface FluentAuthorizator {
+        AuthorizationState canLoginAs(Username otherUserId) throws MailboxException;
+    }
+
     enum AuthorizationState {
         ALLOWED,
         FORBIDDEN,
@@ -34,5 +38,9 @@ public interface Authorizator {
     }
 
     AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;
+
+    default FluentAuthorizator user(Username userId) {
+        return otherUserId -> canLoginAsOtherUser(userId, otherUserId);
+    }
 }
 

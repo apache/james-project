@@ -99,10 +99,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             return;
         }
         Username otherUser = authenticationAttempt.getDelegateUserName().orElseThrow();
-        doAuthWithDelegation(() -> getMailboxManager().loginAsOtherUser(
-                givenUser,
-                authenticationAttempt.getPassword(),
-                otherUser),
+        doAuthWithDelegation(() -> getMailboxManager()
+                .authenticate(givenUser, authenticationAttempt.getPassword())
+                .as(otherUser),
             session,
             request, responder);
     }

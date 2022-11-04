@@ -23,6 +23,10 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SessionProvider {
+    interface DelegationLogin {
+        MailboxSession as(Username other) throws MailboxException;
+    }
+
     /**
      * Return the delimiter to use for folders
      *
@@ -75,6 +79,10 @@ public interface SessionProvider {
      */
     MailboxSession loginAsOtherUser(Username givenUserid, String passwd, Username otherUserId) throws MailboxException;
 
+    default DelegationLogin authenticate(Username givenUserid, String passwd) {
+        return otherUserId -> loginAsOtherUser(givenUserid, passwd, otherUserId);
+    }
+
     /**
      * Checking given user can log in as another user
      * When delegated and authorized, a session for the other user will be supplied
@@ -89,6 +97,10 @@ public interface SessionProvider {
      *             when the creation fails for other reasons
      */
     MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException;
+
+    default DelegationLogin authenticate(Username givenUserid) {
+        return otherUserId -> loginAsOtherUser(givenUserid, otherUserId);
+    }
 
     /**
      * <p>
