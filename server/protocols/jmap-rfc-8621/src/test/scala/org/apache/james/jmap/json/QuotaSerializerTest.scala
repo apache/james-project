@@ -21,10 +21,10 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.james.jmap.core.{AccountId, Id, Properties, UnsignedInt, UuidState}
+import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, Id, Limit, Position, Properties, QueryState, UnsignedInt, UuidState}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.QuotaSerializerTest.ACCOUNT_ID
-import org.apache.james.jmap.mail.{AccountScope, CountResourceType, JmapQuota, MailDataType, OctetsResourceType, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, UnparsedQuotaId}
+import org.apache.james.jmap.mail.{AccountScope, CountResourceType, JmapQuota, MailDataType, OctetsResourceType, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, QuotaQueryResponse, UnparsedQuotaId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}
@@ -217,6 +217,31 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |}""".stripMargin
 
       assertThatJson(Json.stringify(QuotaSerializer.serialize(actualValue))).isEqualTo(expectedJson)
+    }
+  }
+
+  "Serialize QuotaQueryResponse" should {
+    "succeed" in {
+      val quotaQueryResponse: QuotaQueryResponse = QuotaQueryResponse(accountId = ACCOUNT_ID,
+        queryState = QueryState.forStrings(Seq()),
+        canCalculateChanges = CanCalculateChanges(false),
+        ids = Id.validate("id1").toSeq,
+        position = Position.zero,
+        limit = Some(Limit.default))
+
+      val expectedJson: String =
+        """{
+          |    "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
+          |    "queryState": "00000000",
+          |    "canCalculateChanges": false,
+          |    "ids": [
+          |        "id1"
+          |    ],
+          |    "position": 0,
+          |    "limit": 256
+          |}""".stripMargin
+
+      assertThatJson(Json.stringify(QuotaSerializer.serializeQuery(quotaQueryResponse))).isEqualTo(expectedJson)
     }
   }
 }

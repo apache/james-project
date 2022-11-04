@@ -64,8 +64,8 @@ Servers MAY decide to add other properties to the list that they judge changing 
 
 ## Quota/query
 
-> :warning:
-> Not implemented
+> :information_source:
+> Implemented
 
 This is a standard “/query” method as described in [@!RFC8620], Section 5.5.
 
@@ -83,6 +83,11 @@ The following Quota properties MUST be supported for sorting:
 
 * **name**
 * **used**
+
+> :warning:
+> Not implemented
+> The following properties are not supported: sort, position, anchor, anchorOffset, limit, calculateTotal.
+FilterOperators (AND/OR/NOT) are not supported.
 
 ## Quota/queryChanges
 

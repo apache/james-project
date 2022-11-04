@@ -21,8 +21,9 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{Properties, UuidState}
-import org.apache.james.jmap.mail.{DataType, JmapQuota, QuotaChangesRequest, QuotaChangesResponse, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, ResourceType, Scope, UnparsedQuotaId}
+import org.apache.james.jmap.core.{CanCalculateChanges, Properties, QueryState, UuidState}
+import org.apache.james.jmap.mail.{AccountScope, CountResourceType, DataType, JmapQuota, MailDataType, OctetsResourceType, QuotaChangesRequest, QuotaChangesResponse, QuotaDescription, QuotaGetRequest, QuotaGetResponse, QuotaIds, QuotaName, QuotaNotFound, QuotaQueryFilter, QuotaQueryRequest, QuotaQueryResponse, ResourceType, Scope, UnparsedQuotaId}
+import play.api.libs.json
 import play.api.libs.json._
 
 object QuotaSerializer {
@@ -42,6 +43,26 @@ object QuotaSerializer {
   private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
 
   private implicit val resourceTypeWrite: Writes[ResourceType] = resourceType => JsString(resourceType.asString())
+  private implicit val scopeReads: Reads[Scope] = {
+    case JsString("account") => json.JsSuccess(AccountScope)
+    case JsString(any) => JsError(s"Unexpected value $any, only 'account' is managed")
+    case _ => JsError(s"Expecting a JsString to represent a scope property")
+  }
+
+  private implicit val optionReads: Reads[QuotaName] = Json.valueReads[QuotaName]
+
+  private implicit val resourceTypeReads: Reads[ResourceType] = {
+    case JsString("count") => json.JsSuccess(CountResourceType)
+    case JsString("octets") => json.JsSuccess(OctetsResourceType)
+    case JsString(any) => JsError(s"Unexpected value $any, only 'count' and 'octets' are managed")
+    case _ => JsError(s"Expecting a JsString to represent a resourceType property")
+  }
+  private implicit val dataTypeReads: Reads[DataType] = {
+    case JsString("Mail") => json.JsSuccess(MailDataType)
+    case JsString(any) => JsError(s"Unexpected value $any, only 'Mail' are managed")
+    case _ => JsError(s"Expecting a JsString to represent a dataType property")
+  }
+
   private implicit val scopeWrites: Writes[Scope] = scope => JsString(scope.asString())
   private implicit val dataTypeWrites: Writes[DataType] = dataType => JsString(dataType.asString())
   private implicit val quotaNameWrites: Writes[QuotaName] = Json.valueWrites[QuotaName]
@@ -66,11 +87,33 @@ object QuotaSerializer {
       "updated" -> response.updated,
       "destroyed" -> response.destroyed)
 
+
+  private implicit val filterReads: Reads[QuotaQueryFilter] = {
+    case jsObject: JsObject =>
+      val unsupported: collection.Set[String] = jsObject.keys.diff(QuotaQueryFilter.SUPPORTED)
+      if (unsupported.nonEmpty) {
+        JsError(s"These '${unsupported.mkString("[", ", ", "]")}' was unsupported filter options")
+      } else {
+        Json.reads[QuotaQueryFilter].reads(jsObject)
+      }
+    case jsValue: JsValue => Json.reads[QuotaQueryFilter].reads(jsValue)
+  }
+
+  private implicit val quotaQueryRequestReads: Reads[QuotaQueryRequest] = Json.reads[QuotaQueryRequest]
+
+  private implicit val canCalculateChangesWrites: Writes[CanCalculateChanges] = Json.valueWrites[CanCalculateChanges]
+
+  private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
+
+  private implicit val quotaQueryResponseWrites: OWrites[QuotaQueryResponse] = Json.writes[QuotaQueryResponse]
+
   def deserializeQuotaGetRequest(input: String): JsResult[QuotaGetRequest] = Json.parse(input).validate[QuotaGetRequest]
 
   def deserializeQuotaGetRequest(input: JsValue): JsResult[QuotaGetRequest] = Json.fromJson[QuotaGetRequest](input)
 
   def deserializeQuotaChangesRequest(input: JsValue): JsResult[QuotaChangesRequest] = Json.fromJson[QuotaChangesRequest](input)
+
+  def deserializeQuotaQueryRequest(input: JsValue) : JsResult[QuotaQueryRequest] = Json.fromJson[QuotaQueryRequest](input)
 
   def serialize(quotaGetResponse: QuotaGetResponse, properties: Properties): JsValue =
     Json.toJson(quotaGetResponse)
@@ -87,4 +130,5 @@ object QuotaSerializer {
 
   def serializeChanges(changesResponse: QuotaChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 
+  def serializeQuery(quotaQueryResponse: QuotaQueryResponse) : JsObject = Json.toJsObject(quotaQueryResponse)
 }
