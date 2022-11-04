@@ -262,16 +262,13 @@ class UserRoutesTest {
             }
 
             @Test
-            default void addDelegatedUserShouldReturn400BadRequestWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
+            default void addDelegatedUserShouldReturnOkWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
                 when(usersRepository.contains(ALICE)).thenReturn(true);
 
                 when()
                     .put(String.format(ADD_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
                 .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(String.format("Delegated user '%s' does not exist", BOB.asString())));
+                    .statusCode(HttpStatus.OK_200);
             }
 
             @Test
@@ -318,16 +315,13 @@ class UserRoutesTest {
             }
 
             @Test
-            default void removeDelegatedUserShouldReturn400BadRequestWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
+            default void removeDelegatedUserShouldReturnOkWhenDelegatedUserIsNotExisted(UsersRepository usersRepository) throws UsersRepositoryException {
                 when(usersRepository.contains(ALICE)).thenReturn(true);
 
                 when()
                     .delete(String.format(REMOVE_DELEGATED_USER_PATH, ALICE.asString(), BOB.asString()))
                 .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(String.format("Delegated user '%s' does not exist", BOB.asString())));
+                    .statusCode(HttpStatus.OK_200);
             }
 
 
