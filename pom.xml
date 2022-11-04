@@ -605,7 +605,7 @@
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
-        <jsieve.version>0.7</jsieve.version>
+        <jsieve.version>0.8</jsieve.version>
         <spring.version>4.3.25.RELEASE</spring.version>
         <activmq-artemis.version>2.26.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.1</apache-jspf-resolver.version>
