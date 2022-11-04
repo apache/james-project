@@ -93,7 +93,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
 
     private HookResult doAuthWithDelegation(SMTPSession session, Username authenticatedUser, Username associatedUser) {
         try {
-            if (Authorizator.AuthorizationState.ALLOWED.equals(authorizator.canLoginAsOtherUser(authenticatedUser, associatedUser))) {
+            if (Authorizator.AuthorizationState.ALLOWED.equals(authorizator.user(authenticatedUser).canLoginAs(associatedUser))) {
                 return saslSuccess(session, associatedUser);
             }
         } catch (MailboxException e) {

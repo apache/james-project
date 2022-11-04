@@ -204,9 +204,9 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             .ifPresentOrElse(authenticatedUser -> {
                 Username associatedUser = Username.of(oidcInitialResponse.getAssociatedUser());
                 if (!associatedUser.equals(authenticatedUser)) {
-                    doAuthWithDelegation(() -> getMailboxManager().loginAsOtherUser(
-                            authenticatedUser,
-                            associatedUser),
+                    doAuthWithDelegation(() -> getMailboxManager()
+                            .authenticate(authenticatedUser)
+                            .as(associatedUser),
                         session, request, responder);
                 } else {
                     authSuccess(authenticatedUser, session, request, responder);

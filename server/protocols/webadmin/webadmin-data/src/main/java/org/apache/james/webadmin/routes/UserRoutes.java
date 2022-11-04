@@ -324,7 +324,10 @@ public class UserRoutes implements Routes {
                     .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
                     .haltError();
             } else {
-                Mono.from(delegationStore.addAuthorizedUser(baseUser, delegatedUser)).block();
+                Mono.from(delegationStore
+                    .addAuthorizedUser(delegatedUser)
+                    .forUser(baseUser))
+                    .block();
                 return Constants.EMPTY_BODY;
             }
         } catch (NotImplementedException e) {
@@ -355,7 +358,9 @@ public class UserRoutes implements Routes {
                     .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
                     .haltError();
             } else {
-                Mono.from(delegationStore.removeAuthorizedUser(baseUser, delegatedUser)).block();
+                Mono.from(delegationStore.removeAuthorizedUser(delegatedUser)
+                    .forUser(baseUser))
+                    .block();
                 return Constants.EMPTY_BODY;
             }
         } catch (NotImplementedException e) {
