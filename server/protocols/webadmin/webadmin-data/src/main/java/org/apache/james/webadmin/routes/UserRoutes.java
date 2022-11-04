@@ -317,12 +317,6 @@ public class UserRoutes implements Routes {
                     .type(ErrorType.NOT_FOUND)
                     .message(String.format("User '%s' does not exist", baseUser.asString()))
                     .haltError();
-            } else if (!userService.userExists(delegatedUser)) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
-                    .haltError();
             } else {
                 Mono.from(delegationStore
                     .addAuthorizedUser(delegatedUser)
@@ -350,12 +344,6 @@ public class UserRoutes implements Routes {
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorType.NOT_FOUND)
                     .message(String.format("User '%s' does not exist", baseUser.asString()))
-                    .haltError();
-            } else if (!userService.userExists(delegatedUser)) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message(String.format("Delegated user '%s' does not exist", delegatedUser.asString()))
                     .haltError();
             } else {
                 Mono.from(delegationStore.removeAuthorizedUser(delegatedUser)
