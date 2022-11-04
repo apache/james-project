@@ -186,6 +186,70 @@ trait QuotaGetMethodContract {
   }
 
   @Test
+  def quotaGetShouldFilterOutUnlimitedQuota(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
+    quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.unlimited())
+
+    val response = `given`
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:quota"],
+           |  "methodCalls": [[
+           |    "Quota/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": null
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Quota/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "notFound": [],
+         |                "state": "${INSTANCE.value}",
+         |                "list": [
+         |                    {
+         |                        "used": 0,
+         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "dataTypes": [
+         |                            "Mail"
+         |                        ],
+         |                        "limit": 100,
+         |                        "warnLimit": 90,
+         |                        "resourceType": "count",
+         |                        "scope": "account"
+         |                    }
+         |                ]
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}
+         |""".stripMargin)
+  }
+
+  @Test
   def quotaGetShouldReturnEmptyListWhenIdsAreEmpty(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
