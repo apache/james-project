@@ -217,7 +217,7 @@
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jspf/1.0.2/apache-jspf-sources-1.0.2.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-sources-1.0.2.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-sources-1.0.2.zip.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-sources-1.0.2.zip.asc">PGP</a>]
     </p>
 
@@ -235,7 +235,7 @@
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jspf/1.0.2/apache-jspf-1.0.2-bin.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-1.0.2-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-1.0.2-bin.zip.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jspf/1.0.2/apache-jspf-1.0.2-bin.zip.asc">PGP</a>]
     </p>
   
@@ -247,7 +247,7 @@
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-project-0.3-source-release.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.3-source-release.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.3-source-release.zip.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.3-source-release.zip.asc">PGP</a>]
     </p>
 
@@ -265,7 +265,7 @@
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-0.3-bin.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.3-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.3-bin.zip.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.3-bin.zip.asc">PGP</a>]
     </p>
   
@@ -277,7 +277,7 @@
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-sources-0.8.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-sources-0.8.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-sources-0.8.zip.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-sources-0.8.zip.asc">PGP</a>]
     </p>
 
@@ -295,7 +295,7 @@
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-core-0.8.jar">(Jar)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-core-0.8.jar.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-core-0.8.jar.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-core-0.8.jar.asc">PGP</a>]
     </p>
 
@@ -313,7 +313,7 @@
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz">(Tar Gz)</a>
-      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz.sha512">SHA-512</a>]
       [<a href="https://downloads.apache.org/james/jsieve/0.8/apache-jsieve-0.8-all.tar.gz.asc">PGP</a>]
     </p>
 
