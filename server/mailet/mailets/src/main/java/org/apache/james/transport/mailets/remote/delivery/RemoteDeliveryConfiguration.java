@@ -64,6 +64,8 @@ public class RemoteDeliveryConfiguration {
     public static final String DELAY_TIME = "delayTime";
     public static final String DEBUG = "debug";
     public static final String ON_SUCCESS = "onSuccess";
+    public static final String SOCKS_HOST = "sockHost";
+    public static final String SOCKS_PORT = "socksPort";
     public static final int DEFAULT_SMTP_TIMEOUT = 180000;
     public static final MailQueueName DEFAULT_OUTGOING_QUEUE_NAME = MailQueueName.of("outgoing");
     public static final int DEFAULT_CONNECTION_TIMEOUT = 60000;
@@ -91,6 +93,8 @@ public class RemoteDeliveryConfiguration {
     private final String authPass;
     private final Properties javaxAdditionalProperties;
     private final Optional<ProcessingState> onSuccess;
+    private final Optional<String> socksHost;
+    private final int socksPort;
 
     public RemoteDeliveryConfiguration(MailetConfig mailetConfig, DomainList domainList) {
         isDebug = MailetUtil.getInitParameter(mailetConfig, DEBUG).orElse(false);
@@ -127,6 +131,11 @@ public class RemoteDeliveryConfiguration {
         javaxAdditionalProperties = computeJavaxProperties(mailetConfig);
         onSuccess = Optional.ofNullable(mailetConfig.getInitParameter(ON_SUCCESS))
             .map(ProcessingState::new);
+        socksHost = Optional.ofNullable(mailetConfig.getInitParameter(SOCKS_HOST));
+        try {
+            socksPort = Integer.parseInt(mailetConfig.getInitParameter(SOCKS_PORT));
+        } catch (Exception e) {
+        }
     }
 
     private Properties computeJavaxProperties(MailetConfig mailetConfig) {
@@ -245,6 +254,12 @@ public class RemoteDeliveryConfiguration {
         if (authUser != null) {
             props.put("mail." + protocol + ".auth", "true");
         }
+
+        socksHost.ifPresent(s -> {
+            props.put("mail." + protocol + ".socks.host", s);
+            props.put("mail." + protocol + ".socks.port", socksPort);
+        });
+
         props.putAll(javaxAdditionalProperties);
         return props;
     }
