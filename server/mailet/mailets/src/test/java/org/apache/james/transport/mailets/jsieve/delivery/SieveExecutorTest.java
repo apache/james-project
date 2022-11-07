@@ -24,7 +24,6 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import org.apache.commons.logging.Log;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
@@ -43,7 +42,6 @@ class SieveExecutorTest {
             .mailetContext(mailetContext)
             .sievePoster(mock(SievePoster.class))
             .resourceLocator(mock(ResourceLocator.class))
-            .log(mock(Log.class))
             .build();
     }
 
