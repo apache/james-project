@@ -331,23 +331,23 @@ public class FetchPartPathDecoder {
     }
 
     private void readHeaderNames(int at, int lastWordStart, CharSequence sectionSpecification) throws DecodingException {
-        if (at < sectionSpecification.length()) {
+        while (at < sectionSpecification.length()) {
             final char next = sectionSpecification.charAt(at);
             switch (next) {
-            case ' ':
-                readName(lastWordStart, at, sectionSpecification);
-                int nextWord = skipSpaces(at, sectionSpecification);
-                readHeaderNames(nextWord, nextWord, sectionSpecification);
-                break;
-            case ')':
-                readName(lastWordStart, at, sectionSpecification);
-                break;
-            default:
-                readHeaderNames(at + 1, lastWordStart, sectionSpecification);
+                case ' ':
+                    readName(lastWordStart, at, sectionSpecification);
+                    int nextWord = skipSpaces(at, sectionSpecification);
+                    at = nextWord;
+                    lastWordStart = nextWord;
+                    break;
+                case ')':
+                    readName(lastWordStart, at, sectionSpecification);
+                    return;
+                default:
+                    at = at + 1;
             }
-        } else {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Closing parenthesis missing.");
         }
+        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Closing parenthesis missing.");
     }
 
     private void readName(int wordStart, int wordFinish, CharSequence sectionSpecification) {
