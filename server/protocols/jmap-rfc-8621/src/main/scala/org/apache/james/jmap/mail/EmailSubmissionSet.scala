@@ -23,13 +23,12 @@ import java.util.UUID
 
 import cats.implicits._
 import eu.timepit.refined.auto.autoUnwrap
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
-import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
+import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, SetError, UuidState}
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
@@ -138,12 +137,6 @@ object EmailSubmissionCreationRequest {
           Some(toProperties(unknownProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
-
-  private def toProperties(strings: Set[String]): Properties = Properties(strings
-    .flatMap(string => {
-      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
-      refinedValue.fold(_ => None,  Some(_))
-    }))
 }
 
 case class EmailSubmissionCreationRequest(emailId: MessageId,

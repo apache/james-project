@@ -27,6 +27,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, UuidState}
 import org.apache.james.jmap.json.MailboxSerializer
@@ -65,12 +66,6 @@ object MailboxCreationRequest {
           Some(toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
-
-  private def toProperties(strings: Set[String]): Properties = Properties(strings
-    .flatMap(string => {
-      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
-      refinedValue.fold(_ => None,  Some(_))
-    }))
 }
 
 case class MailboxCreationRequest(name: MailboxName,

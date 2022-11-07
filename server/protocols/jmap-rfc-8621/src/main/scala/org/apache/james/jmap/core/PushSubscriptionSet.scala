@@ -31,6 +31,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{PushSubscriptionExpiredTime, PushSubscriptionId, TypeName, VerificationCode}
 import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, PatchUpdateValidationException, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.method.WithoutAccountId
@@ -191,12 +192,6 @@ object PushSubscriptionCreation {
           Some(toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
-
-  private def toProperties(strings: Set[String]): Properties = Properties(strings
-    .flatMap(string => {
-      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
-      refinedValue.fold(_ => None,  Some(_))
-    }))
 }
 
 case class PushSubscriptionCreationParseException(setError: SetError) extends Exception
