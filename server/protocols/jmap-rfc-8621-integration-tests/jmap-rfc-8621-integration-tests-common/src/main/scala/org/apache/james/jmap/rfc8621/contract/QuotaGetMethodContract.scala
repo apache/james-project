@@ -226,7 +226,7 @@ trait QuotaGetMethodContract {
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "notFound": [],
-         |                "state": "${INSTANCE.value}",
+         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
          |                "list": [
          |                    {
          |                        "used": 0,
