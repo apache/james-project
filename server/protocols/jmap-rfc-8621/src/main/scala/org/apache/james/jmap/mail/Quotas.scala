@@ -90,6 +90,7 @@ object JmapQuota {
 
   def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
     Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+      .filter(_.isLimited)
       .map(limit => JmapQuota(
         id = countQuotaIdPlaceHolder,
         resourceType = CountResourceType,
@@ -102,6 +103,7 @@ object JmapQuota {
 
   def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
     Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+      .filter(_.isLimited)
       .map(limit => JmapQuota(
         id = sizeQuotaIdPlaceHolder,
         resourceType = OctetsResourceType,
