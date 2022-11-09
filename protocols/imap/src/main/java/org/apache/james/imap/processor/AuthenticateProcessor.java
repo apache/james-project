@@ -26,10 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -221,15 +218,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 oidcSASLConfiguration.getIntrospectionEndpoint()
                     .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))))
             .blockOptional()
-            .flatMap(this::extractUserFromClaim);
-    }
-
-    private Optional<Username> extractUserFromClaim(String claimValue) {
-        try {
-            return Optional.of(Username.fromMailAddress(new MailAddress(claimValue)));
-        } catch (AddressException e) {
-            return Optional.empty();
-        }
+            .map(Username::of);
     }
 
     private static String extractInitialClientResponse(byte[] data) {
