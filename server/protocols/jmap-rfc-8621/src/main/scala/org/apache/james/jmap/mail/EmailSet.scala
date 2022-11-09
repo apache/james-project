@@ -35,11 +35,13 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
+import org.apache.james.mime4j.dom.address.Mailbox
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}
 import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
 import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
+import org.apache.james.mime4j.util.MimeUtil
 import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
 
@@ -129,15 +131,16 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           val builder = Message.Builder.of
           references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
           inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
-          messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
           subject.foreach(value => builder.setSubject(value.value))
-          from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
+          val maybeFrom: Option[List[Mailbox]] = from.flatMap(_.asMime4JMailboxList)
+          maybeFrom.map(_.asJava).foreach(builder.setFrom)
           to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
           cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
           bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
           sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
           replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
-          sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
+          builder.setDate( sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).getOrElse(new Date()))
+          builder.setField(new RawField(FieldName.MESSAGE_ID, messageId.flatMap(_.asString).getOrElse(generateUniqueMessageId(maybeFrom))))
           validateSpecificHeaders(builder)
             .flatMap(_ => {
               specificHeaders.map(_.asField).foreach(builder.addField)
@@ -154,8 +157,11 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
             })
       }
 
-  private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
-    val alternativeBuilder: MultipartBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
+  private def generateUniqueMessageId(fromAddress: Option[List[Mailbox]]): String = 
+    MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).orNull)
+
+  private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor) = {
+    val alternativeBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
     addBodypart(alternativeBuilder, textBody.getOrElse(htmlTextExtractor.toPlainText(htmlBody.getOrElse(""))), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
     htmlBody.foreach(text => addBodypart(alternativeBuilder, text, HTML_UTF_8, StandardCharsets.UTF_8))
 
