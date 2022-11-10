@@ -63,7 +63,7 @@ public class DsnParameters {
         private static CharMatcher HEX_VALIDATOR = CharMatcher.inRange('0', '9')
             .or(CharMatcher.inRange('A', 'F'));
 
-        static String encode(String text) {
+        public static String encode(String text) {
             if (isOnlyXChar(text)) {
                 return text;
             }
@@ -81,7 +81,7 @@ public class DsnParameters {
             return result.append((char) i);
         }
 
-        static String decode(String text) {
+        public static String decode(String text) {
             Preconditions.checkArgument(isValid(text), "Decoding invalid xtext '%s'", text);
             if (XCHAR_VALIDATOR.matchesAllOf(text)) {
                 return text;
@@ -106,7 +106,7 @@ public class DsnParameters {
             return result.toString();
         }
 
-        static boolean isValid(String text) {
+        public static boolean isValid(String text) {
             if (isOnlyXChar(text)) {
                 return true;
             }
