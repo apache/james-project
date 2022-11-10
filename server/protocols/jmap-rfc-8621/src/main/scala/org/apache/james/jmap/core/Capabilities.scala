@@ -25,7 +25,7 @@ object DefaultCapabilities {
   @VisibleForTesting
   def supported(configuration: JmapRfc8621Configuration): Set[CapabilityFactory] = Set(
     CoreCapabilityFactory(configuration.maxUploadSize),
-    MailCapabilityFactory,
+    MailCapabilityFactory(configuration),
     QuotaCapabilityFactory,
     JmapQuotaCapabilityFactory,
     IdentitySortOrderCapabilityFactory,
