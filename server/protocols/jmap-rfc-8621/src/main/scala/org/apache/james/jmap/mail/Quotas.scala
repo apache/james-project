@@ -89,7 +89,7 @@ object JmapQuota {
   def propertiesFiltered(requestedProperties: Properties): Properties = idProperty ++ requestedProperties
 
   def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
-    Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+    Option(quota.getLimit)
       .filter(_.isLimited)
       .map(limit => JmapQuota(
         id = countQuotaIdPlaceHolder,
@@ -102,7 +102,7 @@ object JmapQuota {
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
-    Option(quota.getLimitByScope.get(ModelQuota.Scope.User))
+    Option(quota.getLimit)
       .filter(_.isLimited)
       .map(limit => JmapQuota(
         id = sizeQuotaIdPlaceHolder,
