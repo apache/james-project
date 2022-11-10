@@ -22,8 +22,6 @@ package org.apache.james.transport.mailets;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -60,11 +58,9 @@ public class Sieve extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        Log log = LogFactory.getLog(Sieve.class);
         sieveExecutor = SieveExecutor.builder()
             .resourceLocator(resourceLocator)
             .mailetContext(getMailetContext())
-            .log(log)
             .sievePoster(new SievePoster(usersRepository, MailboxConstants.INBOX))
             .build();
     }

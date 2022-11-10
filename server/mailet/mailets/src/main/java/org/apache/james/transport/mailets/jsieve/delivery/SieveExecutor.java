@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets.jsieve.delivery;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
 import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
@@ -59,7 +58,6 @@ public class SieveExecutor {
         private MailetContext mailetContext;
         private SievePoster sievePoster;
         private ResourceLocator resourceLocator;
-        private Log log;
 
         public Builder sievePoster(SievePoster sievePoster) {
             this.sievePoster = sievePoster;
@@ -76,17 +74,11 @@ public class SieveExecutor {
             return this;
         }
 
-        public Builder log(Log log) {
-            this.log = log;
-            return this;
-        }
-
         public SieveExecutor build() throws MessagingException {
             Preconditions.checkNotNull(mailetContext);
             Preconditions.checkNotNull(resourceLocator);
-            Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(sievePoster);
-            return new SieveExecutor(mailetContext, sievePoster, resourceLocator, log);
+            return new SieveExecutor(mailetContext, sievePoster, resourceLocator);
         }
     }
 
@@ -97,19 +89,17 @@ public class SieveExecutor {
     private final ActionDispatcher actionDispatcher;
 
     public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
-                         ResourceLocator resourceLocator, Log log) throws MessagingException {
+                         ResourceLocator resourceLocator) throws MessagingException {
         this.mailetContext = mailetContext;
         this.sievePoster = sievePoster;
         this.resourceLocator = resourceLocator;
-        factory = createFactory(log);
+        this.factory = createFactory();
         this.actionDispatcher = new ActionDispatcher();
     }
 
-    private SieveFactory createFactory(Log log) throws MessagingException {
+    private SieveFactory createFactory() throws MessagingException {
         try {
-            final ConfigurationManager configurationManager = new ConfigurationManager();
-            configurationManager.setLog(log);
-            return configurationManager.build();
+            return new ConfigurationManager().build();
         } catch (SieveConfigurationException e) {
             throw new MessagingException("Failed to load standard Sieve configuration.", e);
         }
