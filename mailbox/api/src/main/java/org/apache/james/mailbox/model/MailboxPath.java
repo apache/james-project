@@ -21,11 +21,13 @@ package org.apache.james.mailbox.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.translate.LookupTranslator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
@@ -34,6 +36,7 @@ import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +46,12 @@ import com.google.common.collect.Iterables;
  * The path to a mailbox.
  */
 public class MailboxPath {
+
+    private static final Splitter PART_SPLITTER = Splitter.on(':');
+    private static final Joiner PARTS_JOINER = Joiner.on(':');
+    private static final LookupTranslator USERNAME_ESCAPER = new LookupTranslator(Map.of(":", "/;", "/", "//"));
+    private static final LookupTranslator USERNAME_UNESCAPER = new LookupTranslator(Map.of("/;", ":", "//", "/"));
+
     /**
      * Return a {@link MailboxPath} which represent the INBOX of the given
      * session
@@ -60,6 +69,29 @@ public class MailboxPath {
      */
     public static MailboxPath forUser(Username username, String mailboxName) {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+    }
+
+    /**
+     * Parses a MailboxPath from the result of MailboxPath::asEscapedString thus supporting the use of ':' character
+     * in the serialized form, in the user part.
+     */
+    public static Optional<MailboxPath> parseEscaped(String asEscapedString) {
+        List<String> parts = PART_SPLITTER.splitToList(asEscapedString);
+        if (parts.size() == 2) {
+            return Optional.of(new MailboxPath(parts.get(0), getUsername(parts), ""));
+        }
+        if (parts.size() == 3) {
+            return Optional.of(new MailboxPath(parts.get(0), getUsername(parts), parts.get(2)));
+        }
+        if (parts.size() > 3) {
+            return Optional.of(new MailboxPath(parts.get(0), getUsername(parts),
+                PARTS_JOINER.join(Iterables.skip(parts, 2))));
+        }
+        return Optional.empty();
+    }
+
+    private static Username getUsername(List<String> parts) {
+        return Username.of(USERNAME_UNESCAPER.translate(parts.get(1)));
     }
 
     private static final String INVALID_CHARS = "%*";
@@ -212,6 +244,10 @@ public class MailboxPath {
 
     public String asString() {
         return namespace + ":" + user.asString() + ":" + name;
+    }
+
+    public String asEscapedString() {
+        return namespace + ":" + USERNAME_ESCAPER.translate(user.asString()) + ":" + name;
     }
 
     public boolean isInbox() {

@@ -24,12 +24,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.stream.Stream;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
 import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.base.Strings;
 
@@ -37,12 +42,48 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxPathTest {
     private static final Username USER = Username.of("user");
+    private static final Username BUGGY_USER = Username.of("buggy:bob");
 
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxPath.class)
             .withNonnullFields("namespace")
             .verify();
+    }
+
+    static Stream<Arguments> parseShouldYieldCorrectResults() {
+        return Stream.of(
+            Arguments.of(MailboxPath.forUser(USER, "test")),
+            Arguments.of(MailboxPath.forUser(USER, "a:b")),
+            Arguments.of(MailboxPath.forUser(USER, "a;b")),
+            Arguments.of(MailboxPath.forUser(USER, "a;;b")),
+            Arguments.of(MailboxPath.forUser(USER, "a:b:c:")),
+            Arguments.of(MailboxPath.forUser(USER, "a:b:c:")),
+            Arguments.of(MailboxPath.forUser(USER, ":")),
+            Arguments.of(MailboxPath.forUser(USER, ";")),
+            Arguments.of(MailboxPath.forUser(USER, "")),
+            Arguments.of(MailboxPath.inbox(USER)),
+            Arguments.of(MailboxPath.inbox(Username.of("a;b"))),
+            Arguments.of(MailboxPath.inbox(Username.of(";"))),
+            Arguments.of(MailboxPath.inbox(Username.of(":"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a;;a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a:::;:::;:;;;a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a::a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a/a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a//a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a/:a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a/;a"))),
+            Arguments.of(MailboxPath.inbox(Username.of("a/:::;;/:://:;//:/a"))),
+            Arguments.of(MailboxPath.inbox(BUGGY_USER)),
+            Arguments.of(new MailboxPath("#whatever", USER, "whatever")),
+            Arguments.of(new MailboxPath(null, USER, "whatever")));
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void parseShouldYieldCorrectResults(MailboxPath mailboxPath) {
+        assertThat(MailboxPath.parseEscaped(mailboxPath.asEscapedString()))
+            .contains(mailboxPath);
     }
 
     @Test
