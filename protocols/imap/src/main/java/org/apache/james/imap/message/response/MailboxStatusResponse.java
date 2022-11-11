@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.UidValidity;
  * Represents a <code>STATUS</code> response. See <code>RFC3501 7.2.4</code>.
  */
 public class MailboxStatusResponse implements ImapResponseMessage {
+    private final Long size;
     private final Long messages;
     private final Long recent;
     private final MessageUid uidNext;
@@ -36,8 +37,8 @@ public class MailboxStatusResponse implements ImapResponseMessage {
     private final String mailbox;
     private final ModSeq highestModSeq;
 
-    public MailboxStatusResponse(Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
-        super();
+    public MailboxStatusResponse(Long size, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
+        this.size = size;
         this.messages = messages;
         this.recent = recent;
         this.uidNext = uidNext;
@@ -46,7 +47,10 @@ public class MailboxStatusResponse implements ImapResponseMessage {
         this.mailbox = mailbox;
         this.highestModSeq = highestModSeq;
     }
-    
+
+    public Long getSize() {
+        return size;
+    }
 
     /**
      * Gets the <code>MESSAGES</code> count for the mailbox.
