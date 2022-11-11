@@ -85,4 +85,11 @@ public abstract class Listing implements ImapTestConstants {
             .withLocale(Locale.ITALY)
             .run("ListPercentWildcard");
     }
+
+    @Test
+    public void testXList() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("XList");
+    }
 }
