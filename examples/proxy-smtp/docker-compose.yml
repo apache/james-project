@@ -8,6 +8,8 @@ services:
     ports:
       - 25:25
       - 143:143
+      - 993:993
+      - 465:465
     depends_on:
       - james
 

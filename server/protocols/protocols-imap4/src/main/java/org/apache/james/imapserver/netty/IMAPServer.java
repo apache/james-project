@@ -255,7 +255,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
-                    pipeline.addFirst(SSL_HANDLER, secure.sslHandler());
+                    if (proxyRequired) {
+                        channel.pipeline().addAfter("proxyInformationHandler", SSL_HANDLER, secure.sslHandler());
+                    } else {
+                        channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
+                    }
                 }
 
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());

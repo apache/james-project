@@ -33,6 +33,12 @@ docker-compose up helo
 
 If you expose HAProxy's port 25 you can also send a HELO using telnet.
 
+Similarly, one can test a setup mixing SSL and SMTP (with James responsible for SSL termination):
+
+```
+openssl s_client -host 127.0.0.1 -port 465
+```
+
 ## IMAP
 
 This docker example uses HAProxy exposes port 143 (SMTP)
@@ -48,6 +54,12 @@ Will generate the following logs:
 ```
 james      | 02:30:48.927 [INFO ] o.a.j.i.n.ImapChannelUpstreamHandler - Connection established from 192.168.208.3
 james      | 02:30:48.963 [INFO ] o.a.j.i.n.HAProxyMessageHandler - Connection from 192.168.208.1 runs through 192.168.208.3 proxy
+```
+
+Similarly, one can test a setup mixing SSL and IMAP (with James responsible for SSL termination):
+
+```
+openssl s_client -host 127.0.0.1 -port 993
 ```
 
 ## Limitations

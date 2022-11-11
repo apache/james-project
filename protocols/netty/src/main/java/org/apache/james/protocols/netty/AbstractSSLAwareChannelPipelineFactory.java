@@ -29,7 +29,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
  */
 @ChannelHandler.Sharable
 public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketChannel> extends AbstractChannelPipelineFactory<C> {
-
+    private final boolean proxyRequired;
     private Encryption secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
@@ -38,6 +38,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
                                                   ChannelHandlerFactory frameHandlerFactory,
                                                   EventExecutorGroup eventExecutorGroup) {
         super(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
+        this.proxyRequired = proxyRequired;
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
@@ -53,7 +54,11 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
         super.initChannel(channel);
 
         if (isSSLSocket()) {
-            channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.sslHandler());
+            if (proxyRequired) {
+                channel.pipeline().addAfter("proxyInformationHandler", HandlerConstants.SSL_HANDLER, secure.sslHandler());
+            } else {
+                channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.sslHandler());
+            }
         }
     }
 
