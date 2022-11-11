@@ -4638,7 +4638,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Disabled("JAMES-3359 The storage layer should rely on the mailbox path and not the name to allow handling of this case")
   @Test
   def updateShouldAllowDifferentIsSubscribedValuesWhenMailboxHaveTheSameName(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.forUser(ANDRE, "mailbox")
@@ -4669,9 +4668,43 @@ trait MailboxSetMethodContract {
          |         {
          |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |           "properties": ["id", "isSubscribed"],
-         |           "ids": ["${andreId.serialize}", "${bobId.serialize}"]
+         |           "ids": ["${andreId.serialize}"]
          |          },
-         |       "c4"]
+         |       "c3"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "isSubscribed"],
+         |           "ids": ["${bobId.serialize}"]
+         |          },
+         |       "c4"],
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${andreId.serialize}" : {
+         |                   "isSubscribed": false
+         |                 },
+         |                 "${bobId.serialize}" : {
+         |                   "isSubscribed": true
+         |                 }
+         |               }
+         |          },
+         |   "c5"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "isSubscribed"],
+         |           "ids": ["${andreId.serialize}"]
+         |          },
+         |       "c6"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "isSubscribed"],
+         |           "ids": ["${bobId.serialize}"]
+         |          },
+         |       "c7"]
          |   ]
          |}
          |""".stripMargin
@@ -4689,7 +4722,17 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths(
+        "methodResponses[0][1].newState",
+        "methodResponses[0][1].oldState",
+        "methodResponses[2][1].state",
+        "methodResponses[1][1].state",
+        "methodResponses[3][1].newState",
+        "methodResponses[3][1].oldState",
+        "methodResponses[4][1].state",
+        "methodResponses[5][1].state")
+      .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
@@ -4702,16 +4745,43 @@ trait MailboxSetMethodContract {
          |    }, "c2"],
          |    ["Mailbox/get", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "${INSTANCE.value}",
          |      "list": [{
          |        "id": "${andreId.serialize}",
          |        "isSubscribed": true
-         |      }, {
+         |      }],
+         |      "notFound": []
+         |    }, "c3"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "list": [{
          |        "id": "${bobId.serialize}",
          |        "isSubscribed": false
          |      }],
          |      "notFound": []
-         |    }, "c4"]
+         |    }, "c4"],
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "updated": {
+         |        "${andreId.serialize}": {},
+         |        "${bobId.serialize}": {}
+         |      }
+         |    }, "c5"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "list": [{
+         |        "id": "${andreId.serialize}",
+         |        "isSubscribed": false
+         |      }],
+         |      "notFound": []
+         |    }, "c6"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "list": [{
+         |        "id": "${bobId.serialize}",
+         |        "isSubscribed": true
+         |      }],
+         |      "notFound": []
+         |    }, "c7"]
          |  ]
          |}""".stripMargin)
   }
