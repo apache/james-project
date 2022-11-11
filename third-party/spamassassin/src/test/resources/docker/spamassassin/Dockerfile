@@ -1,6 +1,6 @@
-FROM postgres:10.3
+FROM postgres:15.1
 
-ENV SPAMASSASSIN_VERSION 3.4.2
+ENV SPAMASSASSIN_VERSION 3.4.6
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
