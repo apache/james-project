@@ -179,16 +179,24 @@ object MailCapability {
 final case class MailCapability(properties: MailCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_MAIL) extends Capability
 
-case object MailCapabilityFactory extends CapabilityFactory {
+case class MailCapabilityFactory(configuration: JmapRfc8621Configuration) extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_MAIL
 
   override def create(urlPrefixes: UrlPrefixes): Capability = MailCapability(MailCapabilityProperties(
     MaxMailboxesPerEmail(Some(10_000_000L)),
     MaxMailboxDepth(None),
     MaxSizeMailboxName(200L),
-    MaxSizeAttachmentsPerEmail(20_000_000L),
+    configuration.maxSizeAttachmentsPerEmail,
     emailQuerySortOptions = List("receivedAt", "sentAt", "size", "from", "to", "subject"),
     MayCreateTopLevelMailbox(true)))
+}
+
+
+object MaxSizeAttachmentsPerEmail {
+  def of(size: Size): Try[MaxSizeAttachmentsPerEmail] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
+    case Right(value) => Success(MaxSizeAttachmentsPerEmail(value))
+    case Left(error) => Failure(new NumberFormatException(error))
+  }
 }
 
 case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
