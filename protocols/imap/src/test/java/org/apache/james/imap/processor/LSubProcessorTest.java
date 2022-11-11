@@ -45,6 +45,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,27 +55,24 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class LSubProcessorTest {
+    public static final Username USER = Username.of("test");
 
-    private static final String ROOT = "ROOT";
+    private static final MailboxPath ROOT = MailboxPath.forUser(USER, "ROOT");
     
     private static final char HIERARCHY_DELIMITER = '.';
 
-    private static final String PARENT = ROOT
-            + HIERARCHY_DELIMITER + "PARENT";
+    private static final MailboxPath PARENT = ROOT.child("PARENT", HIERARCHY_DELIMITER);
 
-    private static final String CHILD_ONE = PARENT
-            + HIERARCHY_DELIMITER + "CHILD_ONE";
+    private static final MailboxPath CHILD_ONE = PARENT.child("CHILD_ONE", HIERARCHY_DELIMITER);
 
-    private static final String CHILD_TWO = PARENT
-            + HIERARCHY_DELIMITER + "CHILD_TWO";
+    private static final MailboxPath CHILD_TWO = PARENT.child("CHILD_TWO", HIERARCHY_DELIMITER);
 
-    private static final String MAILBOX_C = "C.MAILBOX";
+    private static final MailboxPath MAILBOX_C = MailboxPath.forUser(USER, "C.MAILBOX");
 
-    private static final String MAILBOX_B = "B.MAILBOX";
+    private static final MailboxPath MAILBOX_B = MailboxPath.forUser(USER, "B.MAILBOX");
 
-    private static final String MAILBOX_A = "A.MAILBOX";
+    private static final MailboxPath MAILBOX_A = MailboxPath.forUser(USER, "A.MAILBOX");
 
-    public static final Username USER = Username.of("test");
 
     LSubProcessor processor;
     SubscriptionManager manager;
@@ -84,7 +82,7 @@ class LSubProcessorTest {
     MailboxSession mailboxSession;
     StatusResponseFactory serverResponseFactory;
     StatusResponse statusResponse;
-    Collection<String> subscriptions;
+    Collection<MailboxPath> subscriptions;
     private ImapProcessor.Responder responderImpl;
 
     @BeforeEach
@@ -120,12 +118,12 @@ class LSubProcessorTest {
         when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest("", PARENT
+        LsubRequest request = new LsubRequest("", PARENT.getName()
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.processRequest(request, session, responderImpl);
 
-        verify(responder).respond(new LSubResponse(CHILD_ONE, false, HIERARCHY_DELIMITER));
-        verify(responder).respond(new LSubResponse(CHILD_TWO, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(CHILD_ONE.getName(), false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(CHILD_TWO.getName(), false, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
     }
 
@@ -142,11 +140,11 @@ class LSubProcessorTest {
         when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest("", ROOT
+        LsubRequest request = new LsubRequest("", ROOT.getName()
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.processRequest(request, session, responderImpl);
 
-        verify(responder).respond(new LSubResponse(PARENT, true, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(PARENT.getName(), true, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
     }
 
@@ -164,11 +162,11 @@ class LSubProcessorTest {
         when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest("", ROOT
+        LsubRequest request = new LsubRequest("", ROOT.getName()
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.processRequest(request, session, responderImpl);
 
-        verify(responder).respond(new LSubResponse(PARENT, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(PARENT.getName(), false, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
     }
 
@@ -184,9 +182,9 @@ class LSubProcessorTest {
         LsubRequest request = new LsubRequest("", "*", TAG);
         processor.processRequest(request, session, responderImpl);
 
-        verify(responder).respond(new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER));
-        verify(responder).respond(new LSubResponse(MAILBOX_B, false, HIERARCHY_DELIMITER));
-        verify(responder).respond(new LSubResponse(MAILBOX_C, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(MAILBOX_A.getName(), false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(MAILBOX_B.getName(), false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(MAILBOX_C.getName(), false, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
     }
 

@@ -22,6 +22,7 @@ package org.apache.james.mailbox;
 import java.util.Collection;
 
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.reactivestreams.Publisher;
 
 /**
@@ -30,10 +31,13 @@ import org.reactivestreams.Publisher;
  * 
  */
 public interface SubscriptionManager extends RequestAware {
-
     /**
      * Subscribes the user in the session to the given mailbox.
-     * 
+     *
+     * This mailbox may be shared or belong to another user.
+     *
+     * The corresponding path do NOT need to exist.
+     *
      * @param session
      *            not null
      * @param mailbox
@@ -41,9 +45,9 @@ public interface SubscriptionManager extends RequestAware {
      * @throws SubscriptionException
      *             when subscription fails
      */
-    void subscribe(MailboxSession session, String mailbox) throws SubscriptionException;
+    void subscribe(MailboxSession session, MailboxPath mailbox) throws SubscriptionException;
 
-    Publisher<Void> subscribeReactive(String mailbox, MailboxSession session);
+    Publisher<Void> subscribeReactive(MailboxPath mailbox, MailboxSession session);
 
     /**
      * Finds all subscriptions for the user in the session.
@@ -54,21 +58,11 @@ public interface SubscriptionManager extends RequestAware {
      * @throws SubscriptionException
      *             when subscriptions cannot be read
      */
-    Collection<String> subscriptions(MailboxSession session) throws SubscriptionException;
+    Collection<MailboxPath> subscriptions(MailboxSession session) throws SubscriptionException;
 
-    Publisher<String> subscriptionsReactive(MailboxSession session) throws SubscriptionException;
+    Publisher<MailboxPath> subscriptionsReactive(MailboxSession session) throws SubscriptionException;
 
-    /**
-     * Unsubscribes the user in the session from the given mailbox.
-     * 
-     * @param session
-     *            not null
-     * @param mailbox
-     *            not null
-     * @throws SubscriptionException
-     *             when subscriptions cannot be read
-     */
-    void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException;
+    void unsubscribe(MailboxSession session, MailboxPath mailbox) throws SubscriptionException;
 
-    Publisher<Void> unsubscribeReactive(String mailbox, MailboxSession session);
+    Publisher<Void> unsubscribeReactive(MailboxPath mailbox, MailboxSession session);
 }

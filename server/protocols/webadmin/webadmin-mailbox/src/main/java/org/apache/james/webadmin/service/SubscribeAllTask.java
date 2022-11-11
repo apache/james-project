@@ -31,6 +31,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -93,9 +95,9 @@ public class SubscribeAllTask implements Task {
     public Result run() {
         final MailboxSession session = mailboxManager.createSystemSession(username);
         try {
-            Collection<String> subscriptions = subscriptionManager.subscriptions(session);
-            List<String> names = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
-                .map(mailbox -> mailbox.getPath().getName())
+            Collection<MailboxPath> subscriptions = subscriptionManager.subscriptions(session);
+            List<MailboxPath> names = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
+                .map(MailboxMetaData::getPath)
                 .collectList()
                 .block();
 

@@ -20,7 +20,9 @@ package org.apache.james.mailbox;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 
 import com.google.common.collect.ImmutableList;
 
@@ -37,4 +39,10 @@ public interface DefaultMailboxes {
     String RESTORED_MESSAGES = "Restored-Messages";
 
     List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS, SPAM);
+
+    static List<MailboxPath> defaultMailboxesAsPath(Username username) {
+        return DEFAULT_MAILBOXES.stream()
+            .map(s -> MailboxPath.forUser(username, s))
+            .collect(ImmutableList.toImmutableList());
+    }
 }

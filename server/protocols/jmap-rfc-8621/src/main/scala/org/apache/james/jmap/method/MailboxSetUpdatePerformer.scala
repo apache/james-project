@@ -116,9 +116,9 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
         val shouldSubscribe = isSubscribedUpdate.isSubscribed.map(_.value).getOrElse(isOwner)
 
         if (shouldSubscribe) {
-          subscriptionManager.subscribe(mailboxSession, mailbox.getMailboxPath.getName)
+          subscriptionManager.subscribe(mailboxSession, mailbox.getMailboxPath)
         } else {
-          subscriptionManager.unsubscribe(mailboxSession, mailbox.getMailboxPath.getName)
+          subscriptionManager.unsubscribe(mailboxSession, mailbox.getMailboxPath)
         }
       }).`then`(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)

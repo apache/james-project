@@ -22,13 +22,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.jupiter.api.Test;
 
 public interface SubscriptionManagerContract {
 
     Username USER1 = Username.of("test");
-    String MAILBOX1 = "test1";
-    String MAILBOX2 = "test2";
+    MailboxPath MAILBOX1 = MailboxPath.forUser(USER1, "test1");
+    MailboxPath MAILBOX2 = MailboxPath.forUser(USER1, "test2");
     MailboxSession SESSION = MailboxSessionUtil.create(USER1);
 
     SubscriptionManager getSubscriptionManager();

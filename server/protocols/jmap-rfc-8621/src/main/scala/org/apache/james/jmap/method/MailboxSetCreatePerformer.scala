@@ -171,7 +171,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
 
       val defaultSubscribed = IsSubscribed(true)
       if (mailboxCreationRequest.isSubscribed.getOrElse(defaultSubscribed).value) {
-        subscriptionManager.subscribe(mailboxSession, path.getName)
+        subscriptionManager.subscribe(mailboxSession, path)
       }
 
       mailboxCreationRequest.rights

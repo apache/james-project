@@ -249,12 +249,12 @@ class SubscribeAllRequestToTaskTest {
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
 
-        assertThat(subscriptionManager.subscriptions(session)).containsOnly("INBOX");
+        assertThat(subscriptionManager.subscriptions(session)).containsOnly(MailboxPath.inbox(BOB));
     }
 
     @Test
     void subscribeAllMailboxesShouldUnregisterAdditionalMailbox() throws Exception {
-        subscriptionManager.subscribe(session, "any");
+        subscriptionManager.subscribe(session, MailboxPath.forUser(BOB, "any"));
 
         String taskId = with()
             .queryParam("action", "subscribeAll")

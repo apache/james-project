@@ -24,11 +24,13 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.UnsubscribeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -46,13 +48,13 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
 
     @Override
     protected Mono<Void> doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder) {
-        String mailboxName = request.getMailboxName();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxName, mailboxSession))
+        return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxPath, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .doOnEach(logOnError(SubscriptionException.class, e -> LOGGER.info("Unsubscribe failed for mailbox {}", mailboxName, e)))
+            .doOnEach(logOnError(SubscriptionException.class, e -> LOGGER.info("Unsubscribe failed for mailbox {}", request.getMailboxName(), e)))
             .onErrorResume(SubscriptionException.class, e ->
                 unsolicitedResponses(session, responder, false)
                 .then(Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE)))).then();

@@ -64,7 +64,7 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
 
   private def createMailbox(mailboxPath: MailboxPath, session: MailboxSession): SMono[Unit] = {
     SMono(mailboxManager.createMailboxReactive(mailboxPath, session))
-      .flatMap(id => SMono(subscriptionManager.subscribeReactive(mailboxPath.getName, session)))
+      .flatMap(id => SMono(subscriptionManager.subscribeReactive(mailboxPath, session)))
       .onErrorResume {
         case _: MailboxExistsException => LOGGER.info("Mailbox {} have been created concurrently", mailboxPath)
           SMono.empty

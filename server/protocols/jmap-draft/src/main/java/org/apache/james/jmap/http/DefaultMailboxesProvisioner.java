@@ -80,7 +80,7 @@ public class DefaultMailboxesProvisioner {
     
     private Mono<Void> createMailbox(MailboxPath mailboxPath, MailboxSession session) {
         return Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session))
-            .flatMap(id -> Mono.from(subscriptionManager.subscribeReactive(mailboxPath.getName(), session)))
+            .flatMap(id -> Mono.from(subscriptionManager.subscribeReactive(mailboxPath, session)))
             .onErrorResume(MailboxExistsException.class, e -> {
                 LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
                 return Mono.empty();

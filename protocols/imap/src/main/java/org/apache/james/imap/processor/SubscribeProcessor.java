@@ -22,11 +22,13 @@ package org.apache.james.imap.processor;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SubscribeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -45,15 +47,15 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
 
     @Override
     protected Mono<Void> doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
-        String mailboxName = request.getMailboxName();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        return Mono.from(getSubscriptionManager().subscribeReactive(mailboxName, mailboxSession))
+        return Mono.from(getSubscriptionManager().subscribeReactive(mailboxPath, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(SubscriptionException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
-                return ReactorUtils.logAsMono(() -> LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e));
+                return ReactorUtils.logAsMono(() -> LOGGER.info("Subscribe failed for mailbox {}", request.getMailboxName(), e));
             })
             .then();
     }
