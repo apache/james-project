@@ -44,7 +44,6 @@ import org.apache.james.jmap.core.JmapQuotaCapabilityFactory$;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.core.MDNCapabilityFactory$;
 import org.apache.james.jmap.core.MailCapabilityFactory;
-import org.apache.james.jmap.core.MailCapabilityFactory$;
 import org.apache.james.jmap.core.QuotaCapabilityFactory$;
 import org.apache.james.jmap.core.SharesCapabilityFactory$;
 import org.apache.james.jmap.core.SubmissionCapabilityFactory$;
