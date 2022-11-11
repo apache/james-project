@@ -124,7 +124,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                     .build()
                     .blockOptional());
             if (mailbox.isPresent()) {
-                subscriptionManager.subscribe(mailboxSession, mailboxPath.getName());
+                subscriptionManager.subscribe(mailboxSession, mailboxPath);
                 builder.created(mailboxCreationId, mailbox.get());
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {

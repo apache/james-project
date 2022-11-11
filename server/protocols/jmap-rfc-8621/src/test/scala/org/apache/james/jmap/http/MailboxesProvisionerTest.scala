@@ -84,7 +84,7 @@ class MailboxesProvisionerTest {
     testee.createMailboxesIfNeeded(session).block()
 
     assertThat(subscriptionManager.subscriptions(session))
-      .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES)
+      .containsOnlyElementsOf(DefaultMailboxes.defaultMailboxesAsPath(USERNAME))
   }
 
   @Test
@@ -95,9 +95,6 @@ class MailboxesProvisionerTest {
       .runSuccessfullyWithin(Duration.ofSeconds(10))
 
     assertThat(mailboxManager.list(session))
-      .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
-        .stream
-        .map((mailboxName: String) => MailboxPath.forUser(USERNAME, mailboxName))
-        .collect(ImmutableList.toImmutableList()))
+      .containsOnlyElementsOf(DefaultMailboxes.defaultMailboxesAsPath(USERNAME))
   }
 }

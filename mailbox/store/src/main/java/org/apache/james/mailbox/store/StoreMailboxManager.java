@@ -565,10 +565,15 @@ public class StoreMailboxManager implements MailboxManager {
                 .collectList()
                 .flatMap(subscriptions -> Flux.fromIterable(renamedResults)
                     .flatMap(renamedResult -> {
-                        Subscription subscription = new Subscription(session.getUser(), renamedResult.getOriginPath().getName());
+                        Subscription legacySubscription = new Subscription(session.getUser(), renamedResult.getOriginPath().getName());
+                        if (subscriptions.contains(legacySubscription)) {
+                            return subscriptionMapper.deleteReactive(legacySubscription)
+                                .then(subscriptionMapper.saveReactive(new Subscription(session.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                        }
+                        Subscription subscription = new Subscription(session.getUser(), renamedResult.getOriginPath().asEscapedString());
                         if (subscriptions.contains(subscription)) {
                             return subscriptionMapper.deleteReactive(subscription)
-                                .then(subscriptionMapper.saveReactive(new Subscription(session.getUser(), renamedResult.getDestinationPath().getName())));
+                                .then(subscriptionMapper.saveReactive(new Subscription(session.getUser(), renamedResult.getDestinationPath().asEscapedString())));
                         }
                         return Mono.empty();
                     })

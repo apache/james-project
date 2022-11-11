@@ -29,6 +29,10 @@ import com.google.common.base.Objects;
  */
 public class Subscription {
     private final Username user;
+    /**
+     * Mailbox needs to be a mailbox path in its escaped form.
+     * Legacy versions might only include mailbox name.
+     */
     private final String mailbox;
 
     public Subscription(Username user, String mailbox) {

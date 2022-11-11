@@ -34,6 +34,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.metrics.api.MetricFactory;
@@ -73,6 +74,7 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
         MailboxSession mailboxSession = session.getMailboxSession();
         try {
             Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
+                .map(MailboxPath::getName)
                 .collectList();
 
             String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);

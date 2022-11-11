@@ -29,6 +29,7 @@ import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
@@ -51,11 +52,11 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public void subscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+    public void subscribe(MailboxSession session, MailboxPath mailbox) throws SubscriptionException {
         SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription newSubscription = new Subscription(session.getUser(), mailbox);
+                Subscription newSubscription = new Subscription(session.getUser(), mailbox.asEscapedString());
                 mapper.save(newSubscription);
             }));
         } catch (MailboxException e) {
@@ -64,10 +65,10 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public Publisher<Void> subscribeReactive(String mailbox, MailboxSession session) {
+    public Publisher<Void> subscribeReactive(MailboxPath mailbox, MailboxSession session) {
         try {
             SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
-            Subscription newSubscription = new Subscription(session.getUser(), mailbox);
+            Subscription newSubscription = new Subscription(session.getUser(), mailbox.asEscapedString());
             return mapper.executeReactive(mapper.saveReactive(newSubscription));
         } catch (SubscriptionException e) {
             return Mono.error(e);
@@ -75,10 +76,10 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public Publisher<Void> unsubscribeReactive(String mailbox, MailboxSession session) {
+    public Publisher<Void> unsubscribeReactive(MailboxPath mailbox, MailboxSession session) {
         try {
             SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
-            Subscription oldSubscription = new Subscription(session.getUser(), mailbox);
+            Subscription oldSubscription = new Subscription(session.getUser(), mailbox.asEscapedString());
             return mapper.executeReactive(mapper.deleteReactive(oldSubscription));
         } catch (SubscriptionException e) {
             return Mono.error(e);
@@ -86,26 +87,30 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
+    public Collection<MailboxPath> subscriptions(MailboxSession session) throws SubscriptionException {
         return mapperFactory.getSubscriptionMapper(session)
             .findSubscriptionsForUser(session.getUser())
             .stream()
             .map(Subscription::getMailbox)
+            .map(s -> MailboxPath.parseEscaped(s).orElse(MailboxPath.forUser(session.getUser(), s)))
             .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
     }
 
     @Override
-    public Publisher<String> subscriptionsReactive(MailboxSession session) throws SubscriptionException {
+    public Publisher<MailboxPath> subscriptionsReactive(MailboxSession session) throws SubscriptionException {
         return mapperFactory.getSubscriptionMapper(session)
             .findSubscriptionsForUserReactive(session.getUser())
-            .map(Subscription::getMailbox);
+            .map(Subscription::getMailbox)
+            .map(s -> MailboxPath.parseEscaped(s).orElse(MailboxPath.forUser(session.getUser(), s)));
     }
 
     @Override
-    public void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+    public void unsubscribe(MailboxSession session, MailboxPath mailbox) throws SubscriptionException {
         SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
-            mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox))));
+            mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox.asEscapedString()))));
+            // Legacy purposes, remove subscriptions created prior to the MailboxPath migration. Noops for those created after.
+            mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox.getName()))));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }

@@ -68,10 +68,10 @@ case class MailboxValidation(mailboxName: MailboxName,
                              totalEmails: TotalEmails,
                              totalThreads: TotalThreads)
 
-case class Subscriptions(subscribedNames: Set[String]) {
-  def isSubscribed(name: String): IsSubscribed = IsSubscribed(subscribedNames.contains(name))
+case class Subscriptions(subscribedNames: Set[MailboxPath]) {
+  def isSubscribed(name: MailboxPath): IsSubscribed = IsSubscribed(subscribedNames.contains(name))
 
-  def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath.getName)
+  def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath)
 }
 
 class MailboxFactory @Inject() (mailboxManager: MailboxManager,
@@ -187,7 +187,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
               val rights: Rights = getRights(resolvedACL)
               val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
               val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
-              val isSubscribed: IsSubscribed = subscriptions.isSubscribed(messageManager.getMailboxPath.getName)
+              val isSubscribed: IsSubscribed = subscriptions.isSubscribed(messageManager.getMailboxPath)
 
               Mailbox(
                 id = id,

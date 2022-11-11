@@ -1684,19 +1684,18 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.createMailbox(originalPath, session);
             mailboxManager.createMailbox(mailboxPath2, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
-            subscriptionManager.subscribe(session, mailboxPath2.getName());
+            subscriptionManager.subscribe(session, originalPath);
+            subscriptionManager.subscribe(session, mailboxPath2);
 
             mailboxManager.createMailbox(mailboxPath3, session);
-            subscriptionManager.subscribe(session, mailboxPath3.getName());
+            subscriptionManager.subscribe(session, mailboxPath3);
 
             mailboxManager.renameMailbox(originalPath, newMailboxPath, RENAME_SUBSCRIPTIONS, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(
-                newMailboxPath.getName(),
-                "mbx9.mbx2",
-                "mbx9.mbx2.mbx3"
-            );
+            assertThat(subscriptionManager.subscriptions(session)).containsOnly(
+                newMailboxPath,
+                MailboxPath.forUser(USER_1, "mbx9.mbx2"),
+                MailboxPath.forUser(USER_1, "mbx9.mbx2.mbx3"));
         }
 
         @Test
@@ -1707,11 +1706,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
 
             mailboxManager.createMailbox(originalPath, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, originalPath);
 
             mailboxManager.renameMailbox(originalPath, newMailboxPath, RENAME_SUBSCRIPTIONS, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath.getName());
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath);
         }
 
         @Test
@@ -1736,11 +1735,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
 
             mailboxManager.createMailbox(originalPath, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, originalPath);
 
             mailboxManager.renameMailbox(originalPath, newMailboxPath, MailboxManager.RenameOption.NONE, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath.getName());
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath);
         }
 
         @Test
@@ -1754,19 +1753,18 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
             mailboxManager.createMailbox(mailboxPath2, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
-            subscriptionManager.subscribe(session, mailboxPath2.getName());
+            subscriptionManager.subscribe(session, originalPath);
+            subscriptionManager.subscribe(session, mailboxPath2);
 
             mailboxManager.createMailbox(mailboxPath3, session);
-            subscriptionManager.subscribe(session, mailboxPath3.getName());
+            subscriptionManager.subscribe(session, mailboxPath3);
 
             mailboxManager.renameMailbox(id.get(), newMailboxPath, RENAME_SUBSCRIPTIONS, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(
-                newMailboxPath.getName(),
-                "mbx9.mbx2",
-                "mbx9.mbx2.mbx3"
-            );
+            assertThat(subscriptionManager.subscriptions(session)).containsOnly(
+                newMailboxPath,
+                MailboxPath.forUser(USER_1, "mbx9.mbx2"),
+                MailboxPath.forUser(USER_1, "mbx9.mbx2.mbx3"));
         }
 
         @Test
@@ -1777,11 +1775,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
 
             Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, originalPath);
 
             mailboxManager.renameMailbox(id.get(), newMailboxPath, RENAME_SUBSCRIPTIONS, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath.getName());
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath);
         }
 
         @Test
@@ -1806,11 +1804,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
 
             Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
-            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, originalPath);
 
             mailboxManager.renameMailbox(id.get(), newMailboxPath, MailboxManager.RenameOption.NONE, session);
 
-            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath.getName());
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath);
         }
 
         @Test

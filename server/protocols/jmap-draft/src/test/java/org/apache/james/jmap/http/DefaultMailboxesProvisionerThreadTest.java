@@ -62,7 +62,7 @@ public class DefaultMailboxesProvisionerThreadTest {
 
     @Test
     public void testConcurrentAccessToFilterShouldNotThrow() throws Exception {
-        doNothing().when(subscriptionManager).subscribe(eq(session), anyString());
+        doNothing().when(subscriptionManager).subscribe(eq(session), any(MailboxPath.class));
 
         when(mailboxManager.createMailbox(any(MailboxPath.class), eq(session))).thenReturn(Optional.of(TestId.of(18L)));
         when(mailboxManager.mailboxExists(any(MailboxPath.class), eq(session))).thenReturn(Mono.just(false));
