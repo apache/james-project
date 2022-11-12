@@ -104,7 +104,8 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
           message =>
             asAppendCommand(request, message)
               .fold(e => SMono.error(e),
-              appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds))))
+              appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds))
+            .doFinally(any => message.dispose())))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     }

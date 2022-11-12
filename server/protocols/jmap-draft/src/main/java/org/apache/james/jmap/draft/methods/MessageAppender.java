@@ -50,8 +50,6 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.ReactorUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -62,8 +60,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MessageAppender {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageAppender.class);
-
     private static class NewMessage {
         private final byte[] messageContent;
         private final Message message;
@@ -116,6 +112,7 @@ public class MessageAppender {
                         .withParsedMessage(newMessage.message)
                         .build(new ByteContent(newMessage.messageContent)),
                     session))
+                    .doFinally(any -> newMessage.message.dispose())
                     .flatMap(appendResult -> {
                         ComposedMessageId ids = appendResult.getId();
                         if (targetMailboxes.size() > 1) {
