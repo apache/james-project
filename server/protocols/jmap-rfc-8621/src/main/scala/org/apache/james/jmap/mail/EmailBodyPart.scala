@@ -78,7 +78,9 @@ object EmailBodyPart {
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
 
     val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
-    mime4JMessage.flatMap(of(messageId, _))
+    val result = mime4JMessage.flatMap(of(messageId, _))
+    mime4JMessage.toOption.foreach(_.dispose())
+    result
   }
 
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =

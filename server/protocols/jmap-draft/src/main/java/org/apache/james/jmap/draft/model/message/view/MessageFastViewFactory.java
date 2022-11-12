@@ -77,7 +77,9 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
 
                 Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
 
-                return instanciateFastView(messageResults, firstMessageResult, messageProjection, mailboxIds, mimeMessage);
+                MessageFastView result = instanciateFastView(messageResults, firstMessageResult, messageProjection, mailboxIds, mimeMessage);
+                mimeMessage.dispose();
+                return result;
             });
         }
 

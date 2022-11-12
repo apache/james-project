@@ -73,7 +73,7 @@ case class MDNNotParsable(value: Set[UnparsedBlobId]) {
 object MDNParsed {
   def fromMDN(mdn: MDN, message: Message, originalMessageId: Option[MessageId]): MDNParsed = {
     val report = mdn.getReport
-    MDNParsed(forEmailId = originalMessageId.map(ForEmailIdField(_)),
+    val result = MDNParsed(forEmailId = originalMessageId.map(ForEmailIdField(_)),
       subject = Option(message.getSubject).map(SubjectField),
       textBody = Some(TextBodyField(mdn.getHumanReadableText)),
       reportingUA = report.getReportingUserAgentField
@@ -89,12 +89,14 @@ object MDNParsed {
       includeOriginalMessage = IncludeOriginalMessageField(mdn.getOriginalMessage.isPresent),
       disposition = MDNDisposition.fromJava(report.getDispositionField),
       error = Option(report.getErrorFields.asScala
-          .map(error => ErrorField(error.getText.formatted()))
-          .toSeq)
+        .map(error => ErrorField(error.getText.formatted()))
+        .toSeq)
         .filter(error => error.nonEmpty),
       extensionFields = Option(report.getExtensionFields.asScala
         .map(extension => (extension.getFieldName, extension.getRawValue))
         .toMap).filter(_.nonEmpty))
+    message.dispose()
+    result
   }
 }
 

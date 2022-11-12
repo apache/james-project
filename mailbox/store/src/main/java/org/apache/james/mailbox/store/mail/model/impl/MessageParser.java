@@ -54,6 +54,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
 public class MessageParser {
+    public static class ParsingResult {
+        public static final ParsingResult EMPTY = new ParsingResult(ImmutableList.of(), () -> {
+
+        });
+
+        private final List<ParsedAttachment> attachments;
+        private final Runnable dispose;
+
+        public ParsingResult(List<ParsedAttachment> attachments, Runnable dispose) {
+            this.attachments = attachments;
+            this.dispose = dispose;
+        }
+
+        public List<ParsedAttachment> getAttachments() {
+            return attachments;
+        }
+
+        public void dispose() {
+
+        }
+    }
 
     private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";
@@ -81,29 +102,25 @@ public class MessageParser {
             .unwrap();
     }
 
-    public List<ParsedAttachment> retrieveAttachments(InputStream fullContent) throws IOException {
+    public ParsingResult retrieveAttachments(InputStream fullContent) throws IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         Message message = defaultMessageBuilder.parseMessage(fullContent);
-        return retrieveAttachments(message);
+        return new ParsingResult(retrieveAttachments(message), message::dispose);
     }
 
     public List<ParsedAttachment> retrieveAttachments(Message message) throws IOException {
         Body body = message.getBody();
-        try {
-            if (body instanceof Multipart) {
-                Multipart multipartBody = (Multipart) body;
-                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
-                    .collect(ImmutableList.toImmutableList());
-            } else {
-                if (isAttachment(message, Context.BODY)) {
-                    return ImmutableList.of(retrieveAttachment(message));
-                }
-                return ImmutableList.of();
+        if (body instanceof Multipart) {
+            Multipart multipartBody = (Multipart) body;
+            return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
+                .collect(ImmutableList.toImmutableList());
+        } else {
+            if (isAttachment(message, Context.BODY)) {
+                return ImmutableList.of(retrieveAttachment(message));
             }
-        } finally {
-            body.dispose();
+            return ImmutableList.of();
         }
     }
 

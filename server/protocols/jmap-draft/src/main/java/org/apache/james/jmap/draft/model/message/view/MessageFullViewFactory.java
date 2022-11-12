@@ -107,7 +107,8 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
 
         return retrieveProjection(messageContent, message.getMessageId(),
                 () -> MessageFullView.hasAttachment(getAttachments(message.getAttachments())))
-            .map(messageProjection -> instanciateMessageFullView(message, mimeMessage, htmlBody, textBody, messageProjection));
+            .map(messageProjection -> instanciateMessageFullView(message, mimeMessage, htmlBody, textBody, messageProjection))
+            .doFinally(any -> mimeMessage.dispose());
     }
 
     private MessageFullView instanciateMessageFullView(MetaDataWithContent message, Message mimeMessage, Optional<String> htmlBody, Optional<String> textBody, MessageFastViewPrecomputedProperties messageProjection) {

@@ -139,7 +139,10 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
       validatedRequest <- emailImport.request.validate
       message <- asMessage(emailImport.blob)
       response <- append(validatedRequest, message, mailboxSession)
-    } yield response
+    } yield {
+      message.dispose()
+      response
+    }
 
     either.fold(e => ImportFailure(emailImport.id, e),
       response => ImportSuccess(emailImport.id, response))

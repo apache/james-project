@@ -63,7 +63,12 @@ public class Preview {
         }
 
         public Preview fromInputStream(InputStream inputStream) throws IOException {
-            return fromMime4JMessage(parse(inputStream));
+            Message message = parse(inputStream);
+            try {
+                return fromMime4JMessage(message);
+            } finally {
+                message.dispose();
+            }
         }
 
         public Preview fromMime4JMessage(Message mimeMessage) throws IOException {

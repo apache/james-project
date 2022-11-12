@@ -64,16 +64,18 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
 
 
         return Mono.fromCallable(() -> messageResults.iterator().next())
-            .flatMap(Throwing.function(firstMessageResult -> {
+            .map(Throwing.function(firstMessageResult -> {
                 Collection<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
                 Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
-                return instanciateHeaderView(messageResults, firstMessageResult, mailboxIds, mimeMessage);
+                MessageHeaderView result = instanciateHeaderView(messageResults, firstMessageResult, mailboxIds, mimeMessage);
+                mimeMessage.dispose();
+                return result;
             }));
     }
 
-    private Mono<MessageHeaderView> instanciateHeaderView(Collection<MessageResult> messageResults, MessageResult firstMessageResult,
+    private MessageHeaderView instanciateHeaderView(Collection<MessageResult> messageResults, MessageResult firstMessageResult,
                                                           Collection<MailboxId> mailboxIds, Message mimeMessage) {
-        return Mono.just(MessageHeaderView.messageHeaderBuilder()
+        return MessageHeaderView.messageHeaderBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
             .blobId(BlobId.of(firstMessageResult.getMessageId()))
@@ -89,6 +91,6 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
             .bcc(Emailer.fromAddressList(mimeMessage.getBcc()))
             .replyTo(Emailer.fromAddressList(mimeMessage.getReplyTo()))
             .date(Helpers.getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
-            .build());
+            .build();
     }
 }

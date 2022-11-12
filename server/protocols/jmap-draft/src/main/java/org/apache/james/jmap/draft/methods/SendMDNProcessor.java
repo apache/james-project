@@ -145,6 +145,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         Message originalMessage = retrieveOriginalMessage(mdn, mailboxSession);
 
         Message mdnAnswer = mdn.generateMDNMessage(originalMessage, mailboxSession);
+        originalMessage.dispose();
 
         Flags seen = new Flags(Flags.Flag.SEEN);
         MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,

@@ -150,6 +150,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       mailAndResponseAndId <- buildMailAndResponse(identity, session.getUser.asString(), requestEntry, messageRelated)
       _ <- Try(enqueue(mailAndResponseAndId._1)).toEither
     } yield {
+      messageRelated.dispose()
       MDNSendCreateSuccess(
         mdnCreationId = mdnSendCreationId,
         createResponse = mailAndResponseAndId._2,

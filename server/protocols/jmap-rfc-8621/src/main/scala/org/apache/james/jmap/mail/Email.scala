@@ -450,6 +450,10 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
       blobId <- BlobId.of(messageId)
       keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
     } yield {
+      val headers = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage)
+      val specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage)
+      mime4JMessage.dispose()
+
       EmailHeaderView(
         metadata = EmailMetadata(
           id = messageId,
@@ -459,8 +463,8 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           size = sanitizeSize(firstMessage.getSize),
           keywords = keywords),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        header = headers,
+        specificHeaders = specificHeaders)
     }
   }
 }
@@ -485,6 +489,10 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
       preview <- Try(previewFactory.fromMime4JMessage(mime4JMessage))
       keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
     } yield {
+      val headers = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage)
+      val specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage)
+      mime4JMessage.dispose()
+
       EmailFullView(
         metadata = EmailMetadata(
           id = messageId,
@@ -494,7 +502,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           keywords = keywords,
           size = sanitizeSize(firstMessage.getSize)),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        header = headers,
         bodyMetadata = EmailBodyMetadata(
           hasAttachment = HasAttachment(!firstMessage.getLoadedAttachments.isEmpty),
           preview = preview),
@@ -504,7 +512,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           htmlBody = bodyStructure.htmlBody,
           attachments = bodyStructure.attachments,
           bodyValues = bodyValues),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        specificHeaders = specificHeaders)
     }
   }
 
@@ -650,6 +658,9 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
       blobId <- BlobId.of(messageId)
       keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
     } yield {
+      val headers = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage)
+      val specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage)
+      mime4JMessage.dispose()
       EmailFastView(
         metadata = EmailMetadata(
           id = messageId,
@@ -662,8 +673,8 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
         bodyMetadata = EmailBodyMetadata(
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        header = headers,
+        specificHeaders = specificHeaders)
     }
   }
 }
