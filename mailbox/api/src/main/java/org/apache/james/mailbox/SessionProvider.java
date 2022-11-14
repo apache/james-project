@@ -37,6 +37,7 @@ public interface SessionProvider {
     /**
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
+     *
      * Use {@link #login(Username, String)} when accessing this API from a
      * protocol.
      *
@@ -45,6 +46,13 @@ public interface SessionProvider {
      * @return <code>MailboxSession</code>, not null
      */
     MailboxSession createSystemSession(Username userName);
+
+    /**
+     * Creates a session for the given user.
+     *
+     * Use {@link #createSystemSession(Username)} for interactions not done by the user himself.
+     */
+    MailboxSession login(Username userName);
 
     /**
      * Autenticates the given user against the given password.<br>

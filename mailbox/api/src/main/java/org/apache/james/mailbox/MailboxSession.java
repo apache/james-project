@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -98,18 +99,19 @@ public class MailboxSession {
     private final String personalSpace;
     private final SessionId sessionId;
     private final Username userName;
+    private final Optional<Username> loggedInUser;
     private boolean open = true;
     private final List<Locale> localePreferences;
     private final Map<Object, Object> attributes;
     private final char pathSeparator;
     private final SessionType type;
 
-    public MailboxSession(SessionId sessionId, Username userName,
+    public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
                                 List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, localePreferences, new ArrayList<>(), null, pathSeparator, type);
+        this(sessionId, userName, loggedInUser, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
-    public MailboxSession(SessionId sessionId, Username userName,
+    public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
                           List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
@@ -125,6 +127,7 @@ public class MailboxSession {
         this.localePreferences = localePreferences;
         this.attributes = new HashMap<>();
         this.pathSeparator = pathSeparator;
+        this.loggedInUser = loggedInUser;
     }
 
     /**
@@ -164,6 +167,10 @@ public class MailboxSession {
      */
     public Username getUser() {
         return userName;
+    }
+
+    public Optional<Username> getLoggedInUser() {
+        return loggedInUser;
     }
 
     /**

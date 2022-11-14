@@ -30,7 +30,7 @@ import reactor.netty.http.server.HttpServerRequest
 
 case class AllowAuthenticationStrategy @Inject() (mailboxManager: MailboxManager) extends AuthenticationStrategy {
   override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] =
-    SMono.fromCallable(() => mailboxManager.createSystemSession(Fixture.BOB))
+    SMono.fromCallable(() => mailboxManager.login(Fixture.BOB))
       .asJava()
 
   override def correspondingChallenge(): AuthenticationChallenge =
