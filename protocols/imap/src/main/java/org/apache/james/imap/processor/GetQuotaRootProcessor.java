@@ -54,8 +54,8 @@ import reactor.core.publisher.Mono;
  * GETQUOTAROOT Processor
  */
 public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRootRequest> implements CapabilityImplementingProcessor {
+    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA, ImapConstants.SUPPORTS_QUOTA_RES_MESSAGE, ImapConstants.SUPPORTS_QUOTA_RES_STORAGE);
 
-    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaManager quotaManager;
 

@@ -75,6 +75,9 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         if (c == 'm' || c == 'M') {
             return readMessages(request);
         }
+        if (c == 'd' || c == 'D') {
+            return readDeleted(request);
+        }
         if (c == 'r' || c == 'R') {
             return readRecent(request);
         }
@@ -180,6 +183,29 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         assertChar(request, 'e', 'E');
         assertChar(request, 's', 'S');
         return StatusDataItems.StatusItem.MESSAGES;
+    }
+
+    private StatusDataItems.StatusItem readDeleted(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'd', 'D');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'l', 'L');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 't', 'T');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'd', 'D');
+        char c = request.nextWordChar();
+        if (c == '-') {
+            assertChar(request, '-', '-');
+            assertChar(request, 's', 'S');
+            assertChar(request, 't', 'T');
+            assertChar(request, 'o', 'O');
+            assertChar(request, 'r', 'R');
+            assertChar(request, 'a', 'A');
+            assertChar(request, 'g', 'G');
+            assertChar(request, 'e', 'E');
+            return StatusDataItems.StatusItem.DELETED_STORAGE;
+        }
+        return StatusDataItems.StatusItem.DELETED;
     }
 
     private void assertChar(ImapRequestLineReader reader, char low, char up) throws DecodingException {

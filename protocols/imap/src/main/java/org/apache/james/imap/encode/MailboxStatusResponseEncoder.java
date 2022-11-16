@@ -41,6 +41,8 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         Long messages = response.getMessages();
         Long recent = response.getRecent();
         Long size = response.getSize();
+        Long deleted = response.getDeleted();
+        Long deletedStorage = response.getDeletedStorage();
         MessageUid uidNext = response.getUidNext();
         ModSeq highestModSeq = response.getHighestModSeq();
         UidValidity uidValidity = response.getUidValidity();
@@ -60,6 +62,16 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         if (size != null) {
             composer.message(STATUS_SIZE);
             composer.message(size);
+        }
+
+        if (deleted != null) {
+            composer.message(STATUS_DELETED);
+            composer.message(deleted);
+        }
+
+        if (deletedStorage != null) {
+            composer.message(STATUS_DELETED_STORAGE);
+            composer.message(deletedStorage);
         }
 
         if (recent != null) {

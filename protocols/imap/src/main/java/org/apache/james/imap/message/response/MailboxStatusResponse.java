@@ -29,6 +29,8 @@ import org.apache.james.mailbox.model.UidValidity;
  */
 public class MailboxStatusResponse implements ImapResponseMessage {
     private final Long size;
+    private final Long deleted;
+    private final Long deletedStorage;
     private final Long messages;
     private final Long recent;
     private final MessageUid uidNext;
@@ -37,8 +39,10 @@ public class MailboxStatusResponse implements ImapResponseMessage {
     private final String mailbox;
     private final ModSeq highestModSeq;
 
-    public MailboxStatusResponse(Long size, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
+    public MailboxStatusResponse(Long size, Long deleted, Long deletedStorage, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
         this.size = size;
+        this.deleted = deleted;
+        this.deletedStorage = deletedStorage;
         this.messages = messages;
         this.recent = recent;
         this.uidNext = uidNext;
@@ -50,6 +54,14 @@ public class MailboxStatusResponse implements ImapResponseMessage {
 
     public Long getSize() {
         return size;
+    }
+
+    public Long getDeleted() {
+        return deleted;
+    }
+
+    public Long getDeletedStorage() {
+        return deletedStorage;
     }
 
     /**

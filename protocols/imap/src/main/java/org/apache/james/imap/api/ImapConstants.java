@@ -92,6 +92,8 @@ public interface ImapConstants {
     Capability SUPPORTS_ACL = Capability.of("ACL");
 
     Capability SUPPORTS_QUOTA = Capability.of("QUOTA");
+    Capability SUPPORTS_QUOTA_RES_STORAGE = Capability.of("QUOTA=RES-STORAGE");
+    Capability SUPPORTS_QUOTA_RES_MESSAGE = Capability.of("QUOTA=RES-MESSAGE");
 
     Capability SUPPORTS_MOVE = Capability.of("MOVE");
 
@@ -151,6 +153,10 @@ public interface ImapConstants {
     String STATUS_MESSAGES = "MESSAGES";
 
     String STATUS_SIZE = "SIZE";
+
+    String STATUS_DELETED = "DELETED";
+
+    String STATUS_DELETED_STORAGE = "DELETED-STORAGE";
 
     String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
 
