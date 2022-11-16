@@ -28,11 +28,11 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
-public class AnnotationResponse implements ImapResponseMessage {
+public class MetadataResponse implements ImapResponseMessage {
     private final String mailboxName;
     private final List<MailboxAnnotation> mailboxAnnotations;
 
-    public AnnotationResponse(String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
+    public MetadataResponse(String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
         this.mailboxName = mailboxName;
         this.mailboxAnnotations = ImmutableList.copyOf(mailboxAnnotations);
     }
@@ -52,8 +52,8 @@ public class AnnotationResponse implements ImapResponseMessage {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof AnnotationResponse) {
-            AnnotationResponse o = (AnnotationResponse) obj;
+        if (obj instanceof MetadataResponse) {
+            MetadataResponse o = (MetadataResponse) obj;
             return Objects.equal(mailboxName, o.getMailboxName()) && Objects.equal(mailboxAnnotations, o.getMailboxAnnotations());
         }
 
@@ -61,7 +61,7 @@ public class AnnotationResponse implements ImapResponseMessage {
     }
 
     public String toString() {
-        return MoreObjects.toStringHelper(AnnotationResponse.class)
+        return MoreObjects.toStringHelper(MetadataResponse.class)
                 .add("mailboxName", mailboxName)
                 .add("mailboxAnnotation", mailboxAnnotations)
                 .toString();

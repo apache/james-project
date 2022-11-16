@@ -40,7 +40,7 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.FakeImapSession;
-import org.apache.james.imap.message.request.SetAnnotationRequest;
+import org.apache.james.imap.message.request.SetMetadataRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -61,10 +61,10 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-class SetAnnotationProcessorTest {
+class SetMetadataProcessorTest {
     private static final int FIRST_ELEMENT_INDEX = 0;
 
-    private SetAnnotationProcessor processor;
+    private SetMetadataProcessor processor;
     private MailboxManager mockMailboxManager;
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
@@ -73,7 +73,7 @@ class SetAnnotationProcessorTest {
     private List<MailboxAnnotation> mailboxAnnotations;
     private StatusResponse okResponse;
     private MailboxPath inbox;
-    private SetAnnotationRequest request;
+    private SetMetadataRequest request;
     private ArgumentCaptor<HumanReadableText> humanTextCaptor;
     
     private void initAndMockData() {
@@ -91,7 +91,7 @@ class SetAnnotationProcessorTest {
         mockMailboxSession = MailboxSessionUtil.create(username);
         inbox = MailboxPath.inbox(username);
         mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
-        request = new SetAnnotationRequest(TAG, ImapConstants.INBOX_NAME, mailboxAnnotations);
+        request = new SetMetadataRequest(TAG, ImapConstants.INBOX_NAME, mailboxAnnotations);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);
 
         imapSession.authenticated();
@@ -102,7 +102,7 @@ class SetAnnotationProcessorTest {
     void setUp() {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
-        processor = new SetAnnotationProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        processor = new SetMetadataProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
     }
 
     @Test

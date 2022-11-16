@@ -30,7 +30,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-public class GetAnnotationRequest extends AbstractImapRequest {
+public class GetMetadataRequest extends AbstractImapRequest {
     public static class Builder {
         private Tag tag;
         private String mailboxName;
@@ -70,10 +70,10 @@ public class GetAnnotationRequest extends AbstractImapRequest {
             return this;
         }
 
-        public GetAnnotationRequest build() {
+        public GetMetadataRequest build() {
             Preconditions.checkState(isNoDepth() || isDepthAndKeysNotEmpty());
             Preconditions.checkArgument(isNoMaxsize() || maxsize.get() > 0);
-            return new GetAnnotationRequest(this);
+            return new GetMetadataRequest(this);
         }
 
         private boolean isDepthAndKeysNotEmpty() {
@@ -98,8 +98,8 @@ public class GetAnnotationRequest extends AbstractImapRequest {
     private final Optional<Integer> maxsize;
     private final Depth depth;
 
-    private GetAnnotationRequest(Builder builder) {
-        super(builder.tag, ImapConstants.GETANNOTATION_COMMAND);
+    private GetMetadataRequest(Builder builder) {
+        super(builder.tag, ImapConstants.GETMETDATA_COMMAND);
         this.mailboxName = builder.mailboxName;
         this.depth = builder.depth;
         this.maxsize = builder.maxsize;

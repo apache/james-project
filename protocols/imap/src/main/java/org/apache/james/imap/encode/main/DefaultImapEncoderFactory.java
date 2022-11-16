@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.encode.ACLResponseEncoder;
-import org.apache.james.imap.encode.AnnotationResponseEncoder;
 import org.apache.james.imap.encode.AuthenticateResponseEncoder;
 import org.apache.james.imap.encode.CapabilityResponseEncoder;
 import org.apache.james.imap.encode.ContinuationResponseEncoder;
@@ -45,6 +44,7 @@ import org.apache.james.imap.encode.LSubResponseEncoder;
 import org.apache.james.imap.encode.ListResponseEncoder;
 import org.apache.james.imap.encode.ListRightsResponseEncoder;
 import org.apache.james.imap.encode.MailboxStatusResponseEncoder;
+import org.apache.james.imap.encode.MetadataResponseEncoder;
 import org.apache.james.imap.encode.MyRightsResponseEncoder;
 import org.apache.james.imap.encode.NamespaceResponseEncoder;
 import org.apache.james.imap.encode.QuotaResponseEncoder;
@@ -98,7 +98,7 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
      */
     public static ImapEncoder createDefaultEncoder(Localizer localizer, boolean neverAddBodyStructureExtensions) {
         return new DefaultImapEncoder(Stream.of(
-            new AnnotationResponseEncoder(),
+            new MetadataResponseEncoder(),
             new MyRightsResponseEncoder(),
             new ListRightsResponseEncoder(),
             new ListResponseEncoder(),
