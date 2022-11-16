@@ -152,6 +152,8 @@ public interface ImapConstants {
 
     String STATUS_MESSAGES = "MESSAGES";
 
+    String STATUS_APPENDLIMIT = "APPENDLIMIT";
+
     String STATUS_SIZE = "SIZE";
 
     String STATUS_DELETED = "DELETED";

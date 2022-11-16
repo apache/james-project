@@ -70,6 +70,7 @@ import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.apache.james.imap.processor.AppendProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
@@ -302,6 +303,25 @@ class IMAPServerTest {
             assertThat(testIMAPClient.select("INBOX")
                     .readFirstMessage())
                 .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
+        }
+
+        @Test
+        void capabilityAdvertizeAppendLimit() throws Exception {
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .capability())
+                .contains("APPENDLIMIT")
+                .doesNotContain("APPENDLIMIT=");
+        }
+
+        @Test
+        void statusAdvertizeAppendLimit() throws Exception {
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
+                .contains("* STATUS \"INBOX\" (APPENDLIMIT NIL)");
         }
 
         @Test
@@ -836,6 +856,24 @@ class IMAPServerTest {
                     .append("INBOX", _129K_MESSAGE))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("BAD APPEND failed.");
+        }
+
+        @Test
+        void capabilityAdvertizeAppendLimit() throws Exception {
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .capability())
+                .contains("APPENDLIMIT=131072");
+        }
+
+        @Test
+        void statusAdvertizeAppendLimit() throws Exception {
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
+                .contains("* STATUS \"INBOX\" (APPENDLIMIT 131072)");
         }
     }
 

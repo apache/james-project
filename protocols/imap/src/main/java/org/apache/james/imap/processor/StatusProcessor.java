@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.StatusDataItems;
@@ -62,13 +63,24 @@ import reactor.core.publisher.Mono;
  * STATUS command initial definition: https://www.rfc-editor.org/rfc/rfc3501#section-6.3.10
  *
  * STATUS=SIZE extension: https://www.rfc-editor.org/rfc/rfc8438.html
+ * DELETED extension: https://datatracker.ietf.org/doc/html/rfc9051#section-6.3.11
+ *     and https://datatracker.ietf.org/doc/html/rfc9208#section-4.1.4
+ * DELETED-STORAGE extension: https://datatracker.ietf.org/doc/html/rfc9208#section-4.1.4
  */
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
 
+    private ImapConfiguration imapConfiguration;
+
     public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(StatusRequest.class, mailboxManager, factory, metricFactory);
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+        this.imapConfiguration = imapConfiguration;
     }
 
     @Override
@@ -134,13 +146,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
         StatusDataItems statusDataItems = request.getStatusDataItems();
         return iterateMailbox(statusDataItems, mailbox, session)
             .map(maybeIterationResult -> {
+                Optional<Long> appendLimit = appendLimit(statusDataItems);
                 Long messages = messages(statusDataItems, metaData);
                 Long recent = recent(statusDataItems, metaData);
                 MessageUid uidNext = uidNext(statusDataItems, metaData);
                 UidValidity uidValidity = uidValidity(statusDataItems, metaData);
                 Long unseen = unseen(statusDataItems, metaData);
                 ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
-                return new MailboxStatusResponse(
+                return new MailboxStatusResponse(appendLimit,
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
@@ -159,6 +172,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     private Long unseen(StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
         if (statusDataItems.isUnseen()) {
             return metaData.getUnseenCount();
+        } else {
+            return null;
+        }
+    }
+
+    private Optional<Long> appendLimit(StatusDataItems statusDataItems) {
+        if (statusDataItems.isAppendLimit()) {
+            return imapConfiguration.getAppendLimit();
         } else {
             return null;
         }

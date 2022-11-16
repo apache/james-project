@@ -22,10 +22,13 @@ package org.apache.james.imap.processor;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -50,15 +53,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
+public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);
 
-    public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
-            MetricFactory metricFactory) {
+    private ImmutableList<Capability> capabilities = ImmutableList.of();
+
+    public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory) {
         super(AppendRequest.class, mailboxManager, statusResponseFactory, metricFactory);
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+
+        capabilities = ImmutableList.of(imapConfiguration.getAppendLimit()
+            .map(value -> Capability.of("APPENDLIMIT=" + value))
+            .orElse(Capability.of("APPENDLIMIT")));
+    }
+
+    @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return capabilities;
     }
 
     @Override

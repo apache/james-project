@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.Optional;
+
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -28,6 +30,7 @@ import org.apache.james.mailbox.model.UidValidity;
  * Represents a <code>STATUS</code> response. See <code>RFC3501 7.2.4</code>.
  */
 public class MailboxStatusResponse implements ImapResponseMessage {
+    private final Optional<Long> appendLimit;
     private final Long size;
     private final Long deleted;
     private final Long deletedStorage;
@@ -39,7 +42,8 @@ public class MailboxStatusResponse implements ImapResponseMessage {
     private final String mailbox;
     private final ModSeq highestModSeq;
 
-    public MailboxStatusResponse(Long size, Long deleted, Long deletedStorage, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
+    public MailboxStatusResponse(Optional<Long> appendLimit, Long size, Long deleted, Long deletedStorage, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
+        this.appendLimit = appendLimit;
         this.size = size;
         this.deleted = deleted;
         this.deletedStorage = deletedStorage;
@@ -50,6 +54,10 @@ public class MailboxStatusResponse implements ImapResponseMessage {
         this.unseen = unseen;
         this.mailbox = mailbox;
         this.highestModSeq = highestModSeq;
+    }
+
+    public Optional<Long> getAppendLimit() {
+        return appendLimit;
     }
 
     public Long getSize() {

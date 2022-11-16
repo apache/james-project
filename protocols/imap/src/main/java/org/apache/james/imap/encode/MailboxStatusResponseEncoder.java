@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
@@ -43,6 +44,7 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         Long size = response.getSize();
         Long deleted = response.getDeleted();
         Long deletedStorage = response.getDeletedStorage();
+        Optional<Long> appendLimit = response.getAppendLimit();
         MessageUid uidNext = response.getUidNext();
         ModSeq highestModSeq = response.getHighestModSeq();
         UidValidity uidValidity = response.getUidValidity();
@@ -53,6 +55,11 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         composer.message(STATUS_COMMAND.getNameAsBytes());
         composer.mailbox(mailboxName);
         composer.openParen();
+
+        if (appendLimit != null) {
+            composer.message(STATUS_APPENDLIMIT);
+            composer.message(appendLimit.map(l -> Long.toString(l)).orElse("NIL"));
+        }
 
         if (messages != null) {
             composer.message(STATUS_MESSAGES);

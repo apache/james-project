@@ -72,6 +72,9 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         // All the matching must be done in a case-insensitive fashion.
         // See rfc3501 9. Formal Syntax and IMAP-282
         char c = request.nextWordChar();
+        if (c == 'a' || c == 'A') {
+            return readAppendLimit(request);
+        }
         if (c == 'm' || c == 'M') {
             return readMessages(request);
         }
@@ -119,6 +122,21 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         assertChar(request, 'i', 'I');
         assertChar(request, 't', 'T');
         assertChar(request, 'y', 'Y');
+    }
+
+    private StatusDataItems.StatusItem readAppendLimit(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'a', 'A');
+        assertChar(request, 'p', 'P');
+        assertChar(request, 'p', 'P');
+        assertChar(request, 'e', 'E');
+        assertChar(request, 'n', 'N');
+        assertChar(request, 'd', 'D');
+        assertChar(request, 'l', 'L');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'm', 'M');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 't', 'T');
+        return StatusDataItems.StatusItem.APPENDLIMIT;
     }
 
     private StatusDataItems.StatusItem readSize(ImapRequestLineReader request) throws DecodingException {

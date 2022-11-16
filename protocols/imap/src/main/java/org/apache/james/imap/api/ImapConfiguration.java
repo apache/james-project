@@ -51,6 +51,7 @@ public class ImapConfiguration {
         private static final boolean DEFAULT_CONDSTORE_DISABLE = false;
 
         private Optional<Long> idleTimeInterval;
+        private Optional<Long> appendLimit;
         private Optional<Integer> concurrentRequests;
         private Optional<Integer> maxQueueSize;
         private Optional<TimeUnit> idleTimeIntervalUnit;
@@ -59,6 +60,7 @@ public class ImapConfiguration {
         private Optional<Boolean> isCondstoreEnable;
 
         private Builder() {
+            this.appendLimit = Optional.empty();
             this.concurrentRequests = Optional.empty();
             this.maxQueueSize = Optional.empty();
             this.idleTimeInterval = Optional.empty();
@@ -115,6 +117,16 @@ public class ImapConfiguration {
             return this;
         }
 
+        public Builder appendLimit(long appendLimit) {
+            this.appendLimit = Optional.of(appendLimit);
+            return this;
+        }
+
+        public Builder appendLimit(Optional<Integer> appendLimit) {
+            this.appendLimit = appendLimit.map(Integer::longValue);
+            return this;
+        }
+
         public ImapConfiguration build() {
             ImmutableSet<Capability> normalizeDisableCaps = disabledCaps.stream()
                     .filter(Builder::noBlankString)
@@ -122,6 +134,7 @@ public class ImapConfiguration {
                     .map(Capability::of)
                     .collect(ImmutableSet.toImmutableSet());
             return new ImapConfiguration(
+                    appendLimit,
                     enableIdle.orElse(DEFAULT_ENABLE_IDLE),
                     idleTimeInterval.orElse(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
                     concurrentRequests.orElse(DEFAULT_CONCURRENT_REQUESTS),
@@ -132,6 +145,7 @@ public class ImapConfiguration {
         }
     }
 
+    private final Optional<Long> appendLimit;
     private final long idleTimeInterval;
     private final int concurrentRequests;
     private final int maxQueueSize;
@@ -140,7 +154,8 @@ public class ImapConfiguration {
     private final boolean enableIdle;
     private final boolean isCondstoreEnable;
 
-    private ImapConfiguration(boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
+    private ImapConfiguration(Optional<Long> appendLimit, boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
+        this.appendLimit = appendLimit;
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
         this.concurrentRequests = concurrentRequests;
@@ -148,6 +163,10 @@ public class ImapConfiguration {
         this.idleTimeIntervalUnit = idleTimeIntervalUnit;
         this.disabledCaps = disabledCaps;
         this.isCondstoreEnable = isCondstoreEnable;
+    }
+
+    public Optional<Long> getAppendLimit() {
+        return appendLimit;
     }
 
     public int getConcurrentRequests() {
@@ -188,6 +207,7 @@ public class ImapConfiguration {
             ImapConfiguration that = (ImapConfiguration)obj;
             return Objects.equal(that.isEnableIdle(), enableIdle)
                 && Objects.equal(that.getIdleTimeInterval(), idleTimeInterval)
+                && Objects.equal(that.getAppendLimit(), appendLimit)
                 && Objects.equal(that.getIdleTimeIntervalUnit(), idleTimeIntervalUnit)
                 && Objects.equal(that.getConcurrentRequests(), concurrentRequests)
                 && Objects.equal(that.getMaxQueueSize(), maxQueueSize)
@@ -200,12 +220,13 @@ public class ImapConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable,
-            concurrentRequests, maxQueueSize);
+            concurrentRequests, maxQueueSize, appendLimit);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+                .add("appendLimit", appendLimit)
                 .add("enabledIdle", enableIdle)
                 .add("idleTimeInterval", idleTimeInterval)
                 .add("idleTimeIntervalUnit", idleTimeIntervalUnit)
