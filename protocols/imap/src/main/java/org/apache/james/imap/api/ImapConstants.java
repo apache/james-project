@@ -97,7 +97,7 @@ public interface ImapConstants {
 
     Capability SUPPORTS_UIDPLUS = Capability.of("UIDPLUS");
 
-    Capability SUPPORTS_ANNOTATION = Capability.of("ANNOTATION");
+    Capability SUPPORTS_ANNOTATION = Capability.of("ANNOTATE-EXPERIMENT-1");
     
     String INBOX_NAME = "INBOX";
 
