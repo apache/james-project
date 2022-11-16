@@ -21,6 +21,7 @@ package org.apache.james.imap.processor.main;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.api.process.DefaultMailboxTyper;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -36,7 +37,7 @@ public class DefaultImapProcessorFactory {
 
     public static ImapProcessor createDefaultProcessor(MailboxManager mailboxManager, EventBus eventBus, SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
             MetricFactory metricFactory) {
-        return createXListSupportingProcessor(mailboxManager, eventBus, subscriptionManager, null, quotaManager, quotaRootResolver, metricFactory);
+        return createXListSupportingProcessor(mailboxManager, eventBus, subscriptionManager, new DefaultMailboxTyper(), quotaManager, quotaRootResolver, metricFactory);
     }
 
     public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,

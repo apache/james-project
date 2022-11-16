@@ -16,41 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.Tag;
+package org.apache.james.imap.api.process;
 
-import com.google.common.base.MoreObjects;
+import java.util.Optional;
 
-public class ListRequest extends AbstractImapRequest {
-    private final String baseReferenceName;
-    private final String mailboxPattern;
+import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.model.MailboxPath;
 
-    public ListRequest(String referenceName, String mailboxPattern, Tag tag) {
-        this(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag);
-    }
+import com.google.common.collect.ImmutableMap;
 
-    public ListRequest(ImapCommand imapCommand, String referenceName, String mailboxPattern, Tag tag) {
-        super(tag, imapCommand);
-        this.baseReferenceName = referenceName;
-        this.mailboxPattern = mailboxPattern;
-    }
-
-    public final String getBaseReferenceName() {
-        return baseReferenceName;
-    }
-
-    public final String getMailboxPattern() {
-        return mailboxPattern;
-    }
+public class DefaultMailboxTyper implements MailboxTyper {
+    private static final ImmutableMap<Role, MailboxType> ROLES_TO_MAILBOX_TYPE = ImmutableMap.of(
+        Role.INBOX, MailboxType.INBOX,
+        Role.SENT, MailboxType.SENT,
+        Role.SPAM, MailboxType.SPAM,
+        Role.DRAFTS, MailboxType.DRAFTS,
+        Role.TRASH, MailboxType.TRASH);
 
     @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("baseReferenceName", baseReferenceName)
-            .add("mailboxPattern", mailboxPattern)
-            .toString();
+    public MailboxType getMailboxType(ImapSession session, MailboxPath path) {
+        return Role.from(path.getName())
+            .flatMap(this::asMailboxType)
+            .orElse(MailboxType.OTHER);
+    }
+
+    private Optional<MailboxType> asMailboxType(Role role) {
+        return Optional.ofNullable(ROLES_TO_MAILBOX_TYPE.get(role));
     }
 }
