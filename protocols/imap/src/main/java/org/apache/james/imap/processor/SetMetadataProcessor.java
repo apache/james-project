@@ -28,7 +28,7 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
-import org.apache.james.imap.message.request.SetAnnotationRequest;
+import org.apache.james.imap.message.request.SetMetadataRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AnnotationException;
@@ -42,12 +42,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotationRequest> implements CapabilityImplementingProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SetAnnotationProcessor.class);
+public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetMetadataProcessor.class);
 
-    public SetAnnotationProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(SetAnnotationRequest.class, mailboxManager, factory, metricFactory);
+    public SetMetadataProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
+                                MetricFactory metricFactory) {
+        super(SetMetadataRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected void processRequest(SetAnnotationRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(SetMetadataRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
@@ -79,7 +79,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected MDCBuilder mdc(SetAnnotationRequest request) {
+    protected MDCBuilder mdc(SetMetadataRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SET_ANNOTATION")
             .addToContext("mailbox", request.getMailboxName())

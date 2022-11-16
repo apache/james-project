@@ -28,12 +28,12 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
-public class SetAnnotationRequest extends AbstractImapRequest {
+public class SetMetadataRequest extends AbstractImapRequest {
     private final String mailboxName;
     private final List<MailboxAnnotation> mailboxAnnotations;
 
-    public SetAnnotationRequest(Tag tag, String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
-        super(tag, ImapConstants.SETANNOTATION_COMMAND);
+    public SetMetadataRequest(Tag tag, String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
+        super(tag, ImapConstants.SETMETADATA_COMMAND);
         this.mailboxName = mailboxName;
         this.mailboxAnnotations = ImmutableList.copyOf(mailboxAnnotations);
     }

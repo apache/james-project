@@ -105,8 +105,8 @@ public class DefaultProcessor implements ImapProcessor {
             builder.add(new MoveProcessor(mailboxManager, statusResponseFactory, metricFactory));
         }
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Annotation)) {
-            builder.add(new SetAnnotationProcessor(mailboxManager, statusResponseFactory, metricFactory));
-            builder.add(new GetAnnotationProcessor(mailboxManager, statusResponseFactory, metricFactory));
+            builder.add(new SetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory));
+            builder.add(new GetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory));
         }
 
         ImmutableList<AbstractProcessor> processors = builder.build();

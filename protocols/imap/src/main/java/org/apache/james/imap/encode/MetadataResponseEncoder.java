@@ -24,21 +24,21 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.message.response.AnnotationResponse;
+import org.apache.james.imap.message.response.MetadataResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnnotationResponseEncoder implements ImapResponseEncoder<AnnotationResponse> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResponseEncoder.class);
+public class MetadataResponseEncoder implements ImapResponseEncoder<MetadataResponse> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataResponseEncoder.class);
 
     @Override
-    public Class<AnnotationResponse> acceptableMessages() {
-        return AnnotationResponse.class;
+    public Class<MetadataResponse> acceptableMessages() {
+        return MetadataResponse.class;
     }
 
     @Override
-    public void encode(AnnotationResponse response, ImapResponseComposer composer) throws IOException {
+    public void encode(MetadataResponse response, ImapResponseComposer composer) throws IOException {
         composer.untagged();
         composer.message(ImapConstants.ANNOTATION_RESPONSE_NAME);
 

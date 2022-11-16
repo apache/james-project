@@ -34,8 +34,8 @@ import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
-import org.apache.james.imap.message.request.GetAnnotationRequest;
-import org.apache.james.imap.message.response.AnnotationResponse;
+import org.apache.james.imap.message.request.GetMetadataRequest;
+import org.apache.james.imap.message.response.MetadataResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -51,12 +51,12 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotationRequest> implements CapabilityImplementingProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetAnnotationProcessor.class);
+public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetMetadataProcessor.class);
 
-    public GetAnnotationProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(GetAnnotationRequest.class, mailboxManager, factory, metricFactory);
+    public GetMetadataProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
+                                MetricFactory metricFactory) {
+        super(GetMetadataRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected void processRequest(GetAnnotationRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(GetMetadataRequest request, ImapSession session, Responder responder) {
         try {
             proceed(request, session, responder);
         } catch (MailboxNotFoundException e) {
@@ -77,7 +77,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         }
     }
 
-    private void proceed(GetAnnotationRequest message, ImapSession session, Responder responder) throws MailboxException {
+    private void proceed(GetMetadataRequest message, ImapSession session, Responder responder) throws MailboxException {
         String mailboxName = message.getMailboxName();
         Optional<Integer> maxsize = message.getMaxsize();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -91,10 +91,10 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     private void respond(ImapRequest request, Responder responder, String mailboxName,
                          List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize, Optional<Integer> maximumOversizedSize) {
         if (maximumOversizedSize.isPresent()) {
-            responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));
+            responder.respond(new MetadataResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));
             okComplete(request, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
         } else {
-            responder.respond(new AnnotationResponse(mailboxName, mailboxAnnotations));
+            responder.respond(new MetadataResponse(mailboxName, mailboxAnnotations));
             okComplete(request, responder);
         }
     }
@@ -116,7 +116,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
             .collect(ImmutableList.toImmutableList());
     }
 
-    private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetAnnotationRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
+    private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetMetadataRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
         MailboxSession mailboxSession = session.getMailboxSession();
         switch (depth) {
             case ZERO:
@@ -153,7 +153,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected MDCBuilder mdc(GetAnnotationRequest request) {
+    protected MDCBuilder mdc(GetMetadataRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "GET_ANNOTATION")
             .addToContext("mailbox", request.getMailboxName())

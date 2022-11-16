@@ -109,7 +109,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
             //RFC5464
             //SETMETADATA, GETMETADATA
             new SetAnnotationCommandParser(statusResponseFactory),
-            new GetAnnotationCommandParser(statusResponseFactory));
+            new GetMetadataCommandParser(statusResponseFactory));
 
         imapCommands = parsers.collect(ImmutableMap.toImmutableMap(
                 parser -> parser.getCommand().getName(),

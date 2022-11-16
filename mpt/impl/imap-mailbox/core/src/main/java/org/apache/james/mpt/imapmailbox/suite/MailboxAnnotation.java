@@ -34,13 +34,12 @@ import org.junit.jupiter.api.Test;
 public abstract class MailboxAnnotation implements ImapTestConstants {
 
     protected abstract ImapHostSystem createImapHostSystem();
-    
-    private ImapHostSystem system;
+
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @BeforeEach
     public void setUp() throws Exception {
-        system = createImapHostSystem();
+        ImapHostSystem system = createImapHostSystem();
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
@@ -51,23 +50,23 @@ public abstract class MailboxAnnotation implements ImapTestConstants {
     }
     
     @Test
-    public void testAnnotationUS() throws Exception {
+    public void testMetadataUS() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
-            .run("Annotation");
+            .run("Metadata");
     }
 
     @Test
-    public void testAnnotationWithLimitationUS() throws Exception {
+    public void testMetadataWithLimitationUS() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
-            .run("AnnotationWithLimitation");
+            .run("MetadataWithLimitation");
     }
 
     @Test
-    public void testAnnotationWithBinaryValue() throws Exception {
+    public void testMetadataWithBinaryValue() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
-            .run("AnnotationWithBinaryData");
+            .run("MetadataWithBinaryData");
     }
 }

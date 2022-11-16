@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.message.response.AnnotationResponse;
+import org.apache.james.imap.message.response.MetadataResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-class AnnotationResponseEncoderTest {
+class MetadataResponseEncoderTest {
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
 
@@ -40,19 +40,19 @@ class AnnotationResponseEncoderTest {
 
     private ByteImapResponseWriter byteImapResponseWriter;
     private ImapResponseComposer composer;
-    private AnnotationResponseEncoder encoder;
+    private MetadataResponseEncoder encoder;
 
     @BeforeEach
     void setUp() throws Exception {
         byteImapResponseWriter = new ByteImapResponseWriter();
 
         composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
-        encoder = new AnnotationResponseEncoder();
+        encoder = new MetadataResponseEncoder();
     }
 
     @Test
     void encodingShouldWellFormEmptyRequest() throws Exception {
-        AnnotationResponse response = new AnnotationResponse(null, ImmutableList.of());
+        MetadataResponse response = new MetadataResponse(null, ImmutableList.of());
 
         encoder.encode(response, composer);
 
@@ -61,7 +61,7 @@ class AnnotationResponseEncoderTest {
 
     @Test
     void encodingShouldWellFormWhenEmptyReturnedAnnotation() throws Exception {
-        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of());
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of());
 
         encoder.encode(response, composer);
 
@@ -70,7 +70,7 @@ class AnnotationResponseEncoderTest {
 
     @Test
     void encodingShouldWellFormWhenOnlyOneReturnedAnnotation() throws Exception {
-        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION));
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION));
 
         encoder.encode(response, composer);
 
@@ -79,7 +79,7 @@ class AnnotationResponseEncoderTest {
 
     @Test
     void encodingShouldWellFormWhenManyReturnedAnnotations() throws Exception {
-        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
         encoder.encode(response, composer);
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" (/private/comment \"My own comment\" /shared/comment \"Shared comment\")\r\n");
@@ -87,7 +87,7 @@ class AnnotationResponseEncoderTest {
 
     @Test
     void encodingShouldWellFormWhenNilReturnedAnnotation() throws Exception {
-        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
 
         encoder.encode(response, composer);
 
