@@ -27,6 +27,8 @@ public class StatusDataItems {
     public static final String SIMPLE_NAME = StatusDataItems.class.getSimpleName();
 
     public enum StatusItem {
+        // See https://www.rfc-editor.org/rfc/rfc7889.html
+        APPENDLIMIT,
         MESSAGES,
         RECENT,
         UID_NEXT,
@@ -45,6 +47,10 @@ public class StatusDataItems {
 
     public StatusDataItems(EnumSet<StatusItem> statusItems) {
         this.statusItems = statusItems;
+    }
+
+    public boolean isAppendLimit() {
+        return statusItems.contains(StatusItem.APPENDLIMIT);
     }
 
     public boolean isMessages() {
