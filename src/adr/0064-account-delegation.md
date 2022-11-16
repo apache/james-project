@@ -10,39 +10,39 @@ Not yet implemented.
 
 ## Context
 
-The account delegation is a feature that gives another permission to access your account and vice versa.
-The user has been delegated can begin accessing that account from your own account,
-then read, send, respond to, and delete email messages... on their behalf.
-This feature will be helpful for teamwork, family, collaboration, or company department... 
+The account delegation is a feature that gives another permission to access your account.
+The user that had been granted access begin accessing that account then read, send, respond to, and delete email messages... on your behalf.
+This feature is useful for VIP (who have secretaries), admins, etc...
+James currently supports account delegation in IMAP / SMTP through SASL OIDC as well as SASL AUTH PLAIN (https://github.com/apache/james-project/blob/master/src/adr/0061-delegation.md)
 
-The account delegation will help James to have more benefits:
-
-- Shared the mailbox resources
-- Multi-users can use a shared account
-- Can give different limited access to each user
-
-The popular email provider also provide same feature, eg: [Google](https://support.google.com/mail/answer/138350?hl=en)
+Current now James support `urn:apache:james:params:jmap:mail:shares extension`, but it only affects the mailbox scope.
 
 ## Decision
 
-Based on DelegationStore API, provide the jmap interface (jmap rfc-8621) for the user.
+Based on DelegationStore API, provide a James specific JMAP extension for managing delegation.
 
 - Provide JMAP methods:
-  - Delegate/get: list accountIds can the user access
-  - Delegate/set (create/delete): 
-    + Delegate my account to other people (please note that only the owner of the account should be able to interact with the delegation settings)
+  - Delegate/get: list email addresses can the user access
+  - Delegate/set (create/delete): please note that only the owner of the account should be able to interact with the delegation settings
+    + Delegate my account to other people
     + Revoke delegation of my account on another person's account (revoke a right given to me)
     + Revoke delegation of another people's account on my account (revoke a right given to others)
 
-- Delegation on JMAP endpoints (API, eventsource, websocket, download, uploads, etc.. all of them). Use of accountIds of delegated accounts
+JMAP endpoints should support being called with accountIds of delegated accounts and needs to proceed authorization logic according to delegations.
 
 ## Consequences
+The account delegation will help owner and delegated account:
+
+- Multi-users can use a shared account
+- Can give different limited access to each user
+- Bring some commonly expected collaborative features
+- We would need a way to "list accounts delegated to me" in the delegation store. We could use Cassandra LOGGED batch to keep this eventually consistent
+- The mailboxSession needs to cary over information regarding logged-in user to allow restricting access to the delegation JMAP methods to only the account owner.
 
 ## Alternatives
-
-- If you only want to share a mailbox, you can set rights in the `Mailbox/set` method
 
 ## References
 
 - [JIRA](https://issues.apache.org/jira/browse/JAMES-xxx)
 - [JMAP Sharing](https://datatracker.ietf.org/doc/draft-ietf-jmap-sharing/)
+- [James Delegation](https://github.com/apache/james-project/blob/master/src/adr/0061-delegation.md)
