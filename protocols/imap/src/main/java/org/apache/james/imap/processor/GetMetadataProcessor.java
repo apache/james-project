@@ -51,6 +51,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+/**
+ * Support for RFC-5464 IMAP METADATA (GETMETADATA command)
+ *
+ * CF https://www.rfc-editor.org/rfc/rfc5464.html
+ */
 public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMetadataProcessor.class);
 
