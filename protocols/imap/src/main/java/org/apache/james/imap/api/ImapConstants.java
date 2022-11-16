@@ -97,7 +97,7 @@ public interface ImapConstants {
 
     Capability SUPPORTS_UIDPLUS = Capability.of("UIDPLUS");
 
-    Capability SUPPORTS_ANNOTATION = Capability.of("ANNOTATION");
+    Capability SUPPORTS_ANNOTATION = Capability.of("METADATA");
     
     String INBOX_NAME = "INBOX";
 
@@ -190,8 +190,8 @@ public interface ImapConstants {
     ImapCommand GETQUOTAROOT_COMMAND = ImapCommand.authenticatedStateCommand("GETQUOTAROOT");
     ImapCommand SETQUOTA_COMMAND = ImapCommand.authenticatedStateCommand("SETQUOTA");
     // RFC-5464 IMAP Metadata (mailbox annotations)
-    ImapCommand GETANNOTATION_COMMAND = ImapCommand.authenticatedStateCommand("GETMETADATA");
-    ImapCommand SETANNOTATION_COMMAND = ImapCommand.authenticatedStateCommand("SETMETADATA");
+    ImapCommand GETMETDATA_COMMAND = ImapCommand.authenticatedStateCommand("GETMETADATA");
+    ImapCommand SETMETADATA_COMMAND = ImapCommand.authenticatedStateCommand("SETMETADATA");
 
     ImapCommand CHECK_COMMAND = ImapCommand.selectedStateCommand("CHECK");
     ImapCommand CLOSE_COMMAND = ImapCommand.selectedStateCommand("CLOSE");
