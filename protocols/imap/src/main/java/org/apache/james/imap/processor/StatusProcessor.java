@@ -22,7 +22,12 @@ package org.apache.james.imap.processor;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -36,7 +41,10 @@ import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -44,11 +52,17 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
+/**
+ * STATUS command initial definition: https://www.rfc-editor.org/rfc/rfc3501#section-6.3.10
+ *
+ * STATUS=SIZE extension: https://www.rfc-editor.org/rfc/rfc8438.html
+ */
+public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
 
     public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -57,22 +71,26 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return ImmutableList.of(Capability.of("STATUS=SIZE"));
+    }
+
+    @Override
     protected Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder) {
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
-        StatusDataItems statusDataItems = request.getStatusDataItems();
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return logInitialRequest(mailboxPath)
-            .then(retrieveMetadata(mailboxPath, statusDataItems, mailboxSession))
-            .doOnNext(metaData -> {
-                MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
-
-                // Enable CONDSTORE as this is a CONDSTORE enabling command
-                if (response.getHighestModSeq() != null) {
-                    condstoreEnablingCommand(session, responder, metaData, false);
-                }
-                responder.respond(response);
-            })
+            .then(Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession)))
+            .flatMap(mailbox -> retrieveMetadata(mailbox, request.getStatusDataItems(), mailboxSession)
+                .flatMap(metaData -> computeStatusResponse(mailbox, request, metaData, mailboxSession)
+                    .doOnNext(response -> {
+                        // Enable CONDSTORE as this is a CONDSTORE enabling command
+                        if (response.getHighestModSeq() != null) {
+                            condstoreEnablingCommand(session, responder, metaData, false);
+                        }
+                        responder.respond(response);
+                    })))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
@@ -90,12 +108,15 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-    private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
+    private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MessageManager mailbox, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
         MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
         RecentMode recentMode = computeRecentMode(statusDataItems);
 
-        return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
-            .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(recentMode, mailboxSession, fetchGroup)));
+        try {
+            return mailbox.getMetaDataReactive(recentMode, mailboxSession, fetchGroup);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private RecentMode computeRecentMode(StatusDataItems statusDataItems) {
@@ -105,14 +126,22 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         return IGNORE;
     }
 
-    private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
-        Long messages = messages(statusDataItems, metaData);
-        Long recent = recent(statusDataItems, metaData);
-        MessageUid uidNext = uidNext(statusDataItems, metaData);
-        UidValidity uidValidity = uidValidity(statusDataItems, metaData);
-        Long unseen = unseen(statusDataItems, metaData);
-        ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
-        return new MailboxStatusResponse(messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
+    private Mono<MailboxStatusResponse> computeStatusResponse(MessageManager mailbox,
+                                                              StatusRequest request,
+                                                              MessageManager.MailboxMetaData metaData,
+                                                              MailboxSession session) {
+        StatusDataItems statusDataItems = request.getStatusDataItems();
+        return size(statusDataItems, mailbox, session)
+            .map(maybeSize -> {
+                Long messages = messages(statusDataItems, metaData);
+                Long recent = recent(statusDataItems, metaData);
+                MessageUid uidNext = uidNext(statusDataItems, metaData);
+                UidValidity uidValidity = uidValidity(statusDataItems, metaData);
+                Long unseen = unseen(statusDataItems, metaData);
+                ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
+                return new MailboxStatusResponse(maybeSize.orElse(null),
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
+            });
     }
 
     private MessageManager.MailboxMetaData.FetchGroup computeFetchGroup(StatusDataItems statusDataItems) {
@@ -168,6 +197,16 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
            return metaData.getMessageCount();
         } else {
             return null;
+        }
+    }
+
+    private Mono<Optional<Long>> size(StatusDataItems statusDataItems, MessageManager messageManager, MailboxSession session) {
+        if (statusDataItems.isSize()) {
+            return Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.MINIMAL, session))
+                .collect(Collectors.summingLong(MessageResult::getSize))
+                .map(Optional::of);
+        } else {
+            return Mono.just(Optional.empty());
         }
     }
 

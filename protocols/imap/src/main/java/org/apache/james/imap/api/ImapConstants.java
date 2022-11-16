@@ -150,6 +150,8 @@ public interface ImapConstants {
 
     String STATUS_MESSAGES = "MESSAGES";
 
+    String STATUS_SIZE = "SIZE";
+
     String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
 
     ImapCommand CAPABILITY_COMMAND = ImapCommand.anyStateCommand("CAPABILITY");

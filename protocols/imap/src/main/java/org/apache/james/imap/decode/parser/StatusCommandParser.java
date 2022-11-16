@@ -84,6 +84,9 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         if (c == 'u' || c == 'U') {
             return readU(request);
         }
+        if (c == 's' || c == 'S') {
+            return readSize(request);
+        }
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
     }
 
@@ -113,6 +116,14 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         assertChar(request, 'i', 'I');
         assertChar(request, 't', 'T');
         assertChar(request, 'y', 'Y');
+    }
+
+    private StatusDataItems.StatusItem readSize(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 's', 'S');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'z', 'Z');
+        assertChar(request, 'e', 'E');
+        return StatusDataItems.StatusItem.SIZE;
     }
 
     private StatusDataItems.StatusItem readUidNext(ImapRequestLineReader request) throws DecodingException {

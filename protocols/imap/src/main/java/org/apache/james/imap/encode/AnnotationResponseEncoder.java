@@ -42,7 +42,7 @@ public class AnnotationResponseEncoder implements ImapResponseEncoder<Annotation
         composer.untagged();
         composer.message(ImapConstants.ANNOTATION_RESPONSE_NAME);
 
-        composer.quote(Optional.ofNullable(response.getMailboxName()).orElse(""));
+        composer.mailbox(Optional.ofNullable(response.getMailboxName()).orElse(""));
         composeAnnotations(composer, response.getMailboxAnnotations());
 
         composer.end();

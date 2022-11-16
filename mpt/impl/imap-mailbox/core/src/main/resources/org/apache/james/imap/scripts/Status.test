@@ -58,6 +58,10 @@ C: a007 STATUS statustest (UNSEEN RECENT )
 S: \* STATUS \"statustest\" \(RECENT 1 UNSEEN 1\)
 S: a007 OK STATUS completed.
 
+C: a008 STATUS statustest (UNSEEN SIZE MESSAGES )
+S: \* STATUS \"statustest\" \(MESSAGES 1 SIZE 254 UNSEEN 1\)
+S: a008 OK STATUS completed.
+
 # Cleanup
 C: a1 DELETE statustest
 S: a1 OK DELETE completed.

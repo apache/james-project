@@ -30,6 +30,7 @@ public class StatusDataItems {
         MESSAGES,
         RECENT,
         UID_NEXT,
+        SIZE,
         UID_VALIDITY,
         UNSEEN,
         HIGHEST_MODSEQ
@@ -63,6 +64,10 @@ public class StatusDataItems {
     
     public boolean isHighestModSeq() {
         return statusItems.contains(StatusItem.HIGHEST_MODSEQ);
+    }
+
+    public boolean isSize() {
+        return statusItems.contains(StatusItem.SIZE);
     }
 
     @Override

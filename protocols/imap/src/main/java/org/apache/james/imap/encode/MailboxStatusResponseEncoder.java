@@ -40,6 +40,7 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
     public void encode(MailboxStatusResponse response, ImapResponseComposer composer) throws IOException {
         Long messages = response.getMessages();
         Long recent = response.getRecent();
+        Long size = response.getSize();
         MessageUid uidNext = response.getUidNext();
         ModSeq highestModSeq = response.getHighestModSeq();
         UidValidity uidValidity = response.getUidValidity();
@@ -48,25 +49,27 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
 
         composer.untagged();
         composer.message(STATUS_COMMAND.getNameAsBytes());
-        composer.quote(mailboxName);
+        composer.mailbox(mailboxName);
         composer.openParen();
 
         if (messages != null) {
             composer.message(STATUS_MESSAGES);
-            final long messagesValue = messages;
-            composer.message(messagesValue);
+            composer.message(messages);
+        }
+
+        if (size != null) {
+            composer.message(STATUS_SIZE);
+            composer.message(size);
         }
 
         if (recent != null) {
             composer.message(STATUS_RECENT);
-            final long recentValue = recent;
-            composer.message(recentValue);
+            composer.message(recent);
         }
 
         if (uidNext != null) {
             composer.message(STATUS_UIDNEXT);
-            final long uidNextValue = uidNext.asLong();
-            composer.message(uidNextValue);
+            composer.message(uidNext.asLong());
         }
         
         if (highestModSeq != null) {
@@ -76,14 +79,12 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
 
         if (uidValidity != null) {
             composer.message(STATUS_UIDVALIDITY);
-            final UidValidity uidValidityValue = uidValidity;
-            composer.message(uidValidityValue.asLong());
+            composer.message(uidValidity.asLong());
         }
 
         if (unseen != null) {
             composer.message(STATUS_UNSEEN);
-            final long unseenValue = unseen;
-            composer.message(unseenValue);
+            composer.message(unseen);
         }
 
         composer.closeParen();

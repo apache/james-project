@@ -62,9 +62,10 @@ The following IMAP specifications are implemented:
  - link:https://datatracker.ietf.org/doc/html/rfc5161.html[RFC-5161] IMAP ENABLE
  - link:https://datatracker.ietf.org/doc/html/rfc6851.html[RFC-6851] IMAP MOVE command
  - link:https://datatracker.ietf.org/doc/html/rfc5182.html[RFC-5182] IMAP Extension for Referencing the Last SEARCH Result
- - link:https://datatracker.ietf.org/doc/html/rfc5032[RFC-5032] IMAP WITHIN (for relative date search semantic)
- - link:https://datatracker.ietf.org/doc/html/rfc4731[RFC-4731] IMAP ESEARCH: extentions for IMAP search: new options like min, max, count.
+ - link:https://datatracker.ietf.org/doc/html/rfc5032.html[RFC-5032] IMAP WITHIN (for relative date search semantic)
+ - link:https://datatracker.ietf.org/doc/html/rfc4731.html[RFC-4731] IMAP ESEARCH: extentions for IMAP search: new options like min, max, count.
  - link:https://datatracker.ietf.org/doc/html/rfc3348.html[RFC-3348] IMAP Child Mailbox Extension
+ - link:https://datatracker.ietf.org/doc/html/rfc8438.html[RFC-8438] IMAP Extension for STATUS=SIZE
 
 Partially implemented specifications:
 
