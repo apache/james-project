@@ -375,6 +375,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             return SearchQuery.or(SearchQuery.modSeqEquals(modSeq), SearchQuery.modSeqGreaterThan(modSeq));
         case TYPE_THREADID:
             return SearchQuery.threadId(ThreadId.fromBaseMessageId(getMailboxManager().getMessageIdFactory().fromString(key.getThreadId())));
+        case TYPE_EMAILID:
+            return SearchQuery.hasMessageId(getMailboxManager().getMessageIdFactory().fromString(key.getMessageId()));
         default:
             LOGGER.warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();

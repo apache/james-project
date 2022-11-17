@@ -28,6 +28,7 @@ import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_BODY
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_CC;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_DELETED;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_DRAFT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_EMAILID;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_FLAGGED;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_FROM;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_HEADER;
@@ -119,44 +120,45 @@ public final class SearchKey {
         TYPE_YOUNGER,
         TYPE_OLDER,
         TYPE_MODSEQ,
-        TYPE_THREADID
+        TYPE_THREADID,
+        TYPE_EMAILID
     }
 
-    private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey UNFLAGGED = new SearchKey(TYPE_UNFLAGGED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey UNFLAGGED = new SearchKey(TYPE_UNFLAGGED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey UNDRAFT = new SearchKey(TYPE_UNDRAFT, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey UNDRAFT = new SearchKey(TYPE_UNDRAFT, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey UNDELETED = new SearchKey(TYPE_UNDELETED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey UNDELETED = new SearchKey(TYPE_UNDELETED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey UNANSWERED = new SearchKey(TYPE_UNANSWERED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey UNANSWERED = new SearchKey(TYPE_UNANSWERED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey SEEN = new SearchKey(TYPE_SEEN, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey SEEN = new SearchKey(TYPE_SEEN, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey RECENT = new SearchKey(TYPE_RECENT, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey RECENT = new SearchKey(TYPE_RECENT, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey OLD = new SearchKey(TYPE_OLD, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey OLD = new SearchKey(TYPE_OLD, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey NEW = new SearchKey(TYPE_NEW, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey NEW = new SearchKey(TYPE_NEW, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey FLAGGED = new SearchKey(TYPE_FLAGGED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey FLAGGED = new SearchKey(TYPE_FLAGGED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey DRAFT = new SearchKey(TYPE_DRAFT, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey DRAFT = new SearchKey(TYPE_DRAFT, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey DELETED = new SearchKey(TYPE_DELETED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey DELETED = new SearchKey(TYPE_DELETED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey ANSWERED = new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey ANSWERED = new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, null, -1, -1, null, null);
 
-    private static final SearchKey ALL = new SearchKey(TYPE_ALL, null, null, 0, null, null, null, null, -1, -1, null);
+    private static final SearchKey ALL = new SearchKey(TYPE_ALL, null, null, 0, null, null, null, null, -1, -1, null, null);
 
     // NUMBERS
     public static SearchKey buildSequenceSet(IdRange[] ids) {
-        return new SearchKey(TYPE_SEQUENCE_SET, null, null, 0, null, null, null, ids, -1, -1, null);
+        return new SearchKey(TYPE_SEQUENCE_SET, null, null, 0, null, null, null, ids, -1, -1, null, null);
     }
 
     public static SearchKey buildUidSet(UidRange[] ids) {
-        return new SearchKey(TYPE_UID, null, null, 0, null, null, ids, null, -1, -1, null);
+        return new SearchKey(TYPE_UID, null, null, 0, null, null, ids, null, -1, -1, null, null);
     }
 
     // NO PARAMETERS
@@ -218,99 +220,103 @@ public final class SearchKey {
 
     // ONE VALUE
     public static SearchKey buildBcc(String value) {
-        return new SearchKey(TYPE_BCC, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_BCC, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildBody(String value) {
-        return new SearchKey(TYPE_BODY, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_BODY, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildCc(String value) {
-        return new SearchKey(TYPE_CC, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_CC, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildFrom(String value) {
-        return new SearchKey(TYPE_FROM, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_FROM, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildKeyword(String value) {
-        return new SearchKey(TYPE_KEYWORD, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_KEYWORD, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSubject(String value) {
-        return new SearchKey(TYPE_SUBJECT, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SUBJECT, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildText(String value) {
-        return new SearchKey(TYPE_TEXT, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_TEXT, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildTo(String value) {
-        return new SearchKey(TYPE_TO, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_TO, null, null, 0, null, value, null, null, -1, -1, null, null);
     }  
     
     public static SearchKey buildThreadId(String value) {
-        return new SearchKey(TYPE_THREADID, null, null, 0, null, null, null, null, -1, -1, value);
+        return new SearchKey(TYPE_THREADID, null, null, 0, null, null, null, null, -1, -1, value, null);
+    }
+
+    public static SearchKey buildMessageId(String value) {
+        return new SearchKey(TYPE_EMAILID, null, null, 0, null, null, null, null, -1, -1, null, value);
     }
 
     public static SearchKey buildUnkeyword(String value) {
-        return new SearchKey(TYPE_UNKEYWORD, null, null, 0, null, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_UNKEYWORD, null, null, 0, null, value, null, null, -1, -1, null, null);
     }
     
     // ONE DATE
     public static SearchKey buildYounger(long seconds) {
-        return new SearchKey(TYPE_YOUNGER, null, null, 0, null, null, null, null, seconds, -1, null);
+        return new SearchKey(TYPE_YOUNGER, null, null, 0, null, null, null, null, seconds, -1, null, null);
     }
 
     public static SearchKey buildOlder(long seconds) {
-        return new SearchKey(TYPE_OLDER, null, null, 0, null, null, null, null, seconds, -1, null);
+        return new SearchKey(TYPE_OLDER, null, null, 0, null, null, null, null, seconds, -1, null, null);
     }
 
     
     // ONE DATE
     public static SearchKey buildBefore(DayMonthYear date) {
-        return new SearchKey(TYPE_BEFORE, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_BEFORE, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildOn(DayMonthYear date) {
-        return new SearchKey(TYPE_ON, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_ON, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSentBefore(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTBEFORE, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SENTBEFORE, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSentOn(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTON, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SENTON, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSentSince(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTSINCE, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SENTSINCE, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSince(DayMonthYear date) {
-        return new SearchKey(TYPE_SINCE, date, null, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SINCE, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     // FIELD VALUE
     public static SearchKey buildHeader(String name, String value) {
-        return new SearchKey(TYPE_HEADER, null, null, 0, name, value, null, null, -1, -1, null);
+        return new SearchKey(TYPE_HEADER, null, null, 0, name, value, null, null, -1, -1, null, null);
     }
 
     // ONE NUMBER
     public static SearchKey buildLarger(long size) {
-        return new SearchKey(TYPE_LARGER, null, null, size, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_LARGER, null, null, size, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSmaller(long size) {
-        return new SearchKey(TYPE_SMALLER, null, null, size, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_SMALLER, null, null, size, null, null, null, null, -1, -1, null, null);
     }
 
     // NOT
     public static SearchKey buildNot(SearchKey key) {
         final List<SearchKey> keys = new ArrayList<>();
         keys.add(key);
-        return new SearchKey(TYPE_NOT, null, keys, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_NOT, null, keys, 0, null, null, null, null, -1, -1, null, null);
     }
 
     // OR
@@ -318,7 +324,7 @@ public final class SearchKey {
         final List<SearchKey> keys = new ArrayList<>();
         keys.add(keyOne);
         keys.add(keyTwo);
-        return new SearchKey(TYPE_OR, null, keys, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_OR, null, keys, 0, null, null, null, null, -1, -1, null, null);
     }
 
     /**
@@ -329,11 +335,11 @@ public final class SearchKey {
      * @return <code>SearchKey</code>, not null
      */
     public static SearchKey buildAnd(List<SearchKey> keys) {
-        return new SearchKey(TYPE_AND, null, keys, 0, null, null, null, null, -1, -1, null);
+        return new SearchKey(TYPE_AND, null, keys, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildModSeq(long modSeq) {
-        return new SearchKey(TYPE_MODSEQ, null, null, 0, null, null, null, null, -1, modSeq, null);
+        return new SearchKey(TYPE_MODSEQ, null, null, 0, null, null, null, null, -1, modSeq, null, null);
     }
     
     private final Type type;
@@ -357,8 +363,10 @@ public final class SearchKey {
     private final long modSeq;
 
     private final String threadId;
-    
-    private SearchKey(Type type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, UidRange[] uids, IdRange[] sequence, long seconds, long modSeq, String threadId) {
+
+    private final String messageId;
+
+    private SearchKey(Type type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, UidRange[] uids, IdRange[] sequence, long seconds, long modSeq, String threadId, String messageId) {
         this.type = type;
         this.date = date;
         this.keys = keys;
@@ -370,12 +378,17 @@ public final class SearchKey {
         this.uids = uids;
         this.sequence = sequence;
         this.threadId = threadId;
+        this.messageId = messageId;
     }
 
     public String getThreadId() {
         return threadId;
     }
-    
+
+    public String getMessageId() {
+        return messageId;
+    }
+
     /**
      * Gets a date value to be search upon.
      * 
@@ -482,7 +495,8 @@ public final class SearchKey {
                 && Objects.equals(this.value, searchKey.value)
                 && Arrays.equals(this.sequence, searchKey.sequence)
                 && Arrays.equals(this.uids, searchKey.uids)
-                && Objects.equals(this.threadId, searchKey.threadId);
+                && Objects.equals(this.threadId, searchKey.threadId)
+                && Objects.equals(this.messageId, searchKey.messageId);
         }
         return false;
     }
@@ -490,7 +504,7 @@ public final class SearchKey {
     @Override
     public final int hashCode() {
         return Objects.hash(type, date, keys, size, name, value,
-            Arrays.hashCode(sequence), Arrays.hashCode(uids), seconds, modSeq, threadId);
+            Arrays.hashCode(sequence), Arrays.hashCode(uids), seconds, modSeq, threadId, messageId);
     }
 
     @Override
@@ -514,6 +528,7 @@ public final class SearchKey {
             .add("sequences", Optional.ofNullable(sequence).map(ImmutableList::copyOf).orElse(null))
             .add("keys", Optional.ofNullable(keys).map(ImmutableList::copyOf).orElse(null))
             .add("threadId", threadId)
+            .add("messageId", messageId)
             .toString();
     }
 }
