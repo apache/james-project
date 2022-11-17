@@ -146,6 +146,8 @@ public interface ImapConstants {
 
     String STATUS_UNSEEN = "UNSEEN";
 
+    String STATUS_MAILBOXID = "MAILBOXID";
+
     String STATUS_UIDVALIDITY = "UIDVALIDITY";
 
     String STATUS_UIDNEXT = "UIDNEXT";

@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.UidValidity;
 
 /**
@@ -49,6 +50,7 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         ModSeq highestModSeq = response.getHighestModSeq();
         UidValidity uidValidity = response.getUidValidity();
         Long unseen = response.getUnseen();
+        MailboxId mailboxId = response.getMailboxId();
         String mailboxName = response.getMailbox();
 
         composer.untagged();
@@ -104,6 +106,13 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
         if (unseen != null) {
             composer.message(STATUS_UNSEEN);
             composer.message(unseen);
+        }
+
+        if (mailboxId != null) {
+            composer.message(STATUS_MAILBOXID);
+            composer.openParen();
+            composer.message(mailboxId.serialize());
+            composer.closeParen();
         }
 
         composer.closeParen();

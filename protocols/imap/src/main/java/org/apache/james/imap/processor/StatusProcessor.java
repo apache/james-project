@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
@@ -153,11 +154,13 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                 UidValidity uidValidity = uidValidity(statusDataItems, metaData);
                 Long unseen = unseen(statusDataItems, metaData);
                 ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
-                return new MailboxStatusResponse(appendLimit,
+                MailboxId mailboxId = mailboxId(statusDataItems, mailbox);
+                return new MailboxStatusResponse(
+                    appendLimit,
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
-                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName(), mailboxId);
             });
     }
 
@@ -172,6 +175,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     private Long unseen(StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {
         if (statusDataItems.isUnseen()) {
             return metaData.getUnseenCount();
+        } else {
+            return null;
+        }
+    }
+    
+    private MailboxId mailboxId(StatusDataItems statusDataItems, MessageManager mailbox) {
+        if (statusDataItems.isMailboxId()) {
+            return mailbox.getId();
         } else {
             return null;
         }

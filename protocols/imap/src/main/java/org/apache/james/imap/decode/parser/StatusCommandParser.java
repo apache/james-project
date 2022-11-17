@@ -76,7 +76,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
             return readAppendLimit(request);
         }
         if (c == 'm' || c == 'M') {
-            return readMessages(request);
+            return readM(request);
         }
         if (c == 'd' || c == 'D') {
             return readDeleted(request);
@@ -94,6 +94,16 @@ public class StatusCommandParser extends AbstractImapCommandParser {
             return readSize(request);
         }
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
+    }
+
+    private StatusDataItems.StatusItem readM(ImapRequestLineReader request) throws DecodingException {
+        request.consume();
+        char c2 = request.nextChar();
+        if (c2 == 'e' || c2 == 'E') {
+            return readMessages(request);
+        } else {
+            return readMailboxId(request);
+        }
     }
 
     private StatusDataItems.StatusItem readU(ImapRequestLineReader request) throws DecodingException {
@@ -192,7 +202,6 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     }
 
     private StatusDataItems.StatusItem readMessages(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'm', 'M');
         assertChar(request, 'e', 'E');
         assertChar(request, 's', 'S');
         assertChar(request, 's', 'S');
@@ -224,6 +233,18 @@ public class StatusCommandParser extends AbstractImapCommandParser {
             return StatusDataItems.StatusItem.DELETED_STORAGE;
         }
         return StatusDataItems.StatusItem.DELETED;
+    }
+
+    private StatusDataItems.StatusItem readMailboxId(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'a', 'A');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'l', 'L');
+        assertChar(request, 'b', 'B');
+        assertChar(request, 'o', 'O');
+        assertChar(request, 'x', 'X');
+        assertChar(request, 'i', 'I');
+        assertChar(request, 'd', 'D');
+        return StatusDataItems.StatusItem.MAILBOXID;
     }
 
     private void assertChar(ImapRequestLineReader reader, char low, char up) throws DecodingException {

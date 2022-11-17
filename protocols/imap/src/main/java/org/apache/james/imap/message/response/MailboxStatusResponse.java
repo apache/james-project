@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.UidValidity;
 
 /**
@@ -41,8 +42,9 @@ public class MailboxStatusResponse implements ImapResponseMessage {
     private final Long unseen;
     private final String mailbox;
     private final ModSeq highestModSeq;
+    private final MailboxId mailboxId;
 
-    public MailboxStatusResponse(Optional<Long> appendLimit, Long size, Long deleted, Long deletedStorage, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
+    public MailboxStatusResponse(Optional<Long> appendLimit, Long size, Long deleted, Long deletedStorage, Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox, MailboxId mailboxId) {
         this.appendLimit = appendLimit;
         this.size = size;
         this.deleted = deleted;
@@ -54,6 +56,7 @@ public class MailboxStatusResponse implements ImapResponseMessage {
         this.unseen = unseen;
         this.mailbox = mailbox;
         this.highestModSeq = highestModSeq;
+        this.mailboxId = mailboxId;
     }
 
     public Optional<Long> getAppendLimit() {
@@ -133,6 +136,10 @@ public class MailboxStatusResponse implements ImapResponseMessage {
      */
     public final ModSeq getHighestModSeq() {
         return highestModSeq;
+    }
+
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
 
     public String toString() {
