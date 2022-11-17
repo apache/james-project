@@ -71,6 +71,8 @@ public interface ImapConstants {
 
     Capability SUPPORTS_RFC3348 = Capability.of("CHILDREN");
 
+    Capability SUPPORTS_OBJECTID = Capability.of("OBJECTID");
+
     Capability SUPPORTS_I18NLEVEL_1 = Capability.of("I18NLEVEL=1");
 
     Capability SUPPORTS_NAMESPACES = Capability.of("NAMESPACE");
