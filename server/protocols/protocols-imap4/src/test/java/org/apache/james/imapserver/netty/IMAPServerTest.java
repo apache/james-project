@@ -1359,16 +1359,52 @@ class IMAPServerTest {
     class Search {
         IMAPServer imapServer;
         private int port;
+        private SocketChannel clientConnection;
 
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServer.xml");
             port = imapServer.getListenAddresses().get(0).getPort();
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
         }
 
         @AfterEach
-        void tearDown() {
+        void tearDown() throws Exception {
+            clientConnection.close();
             imapServer.destroy();
+        }
+
+        // Not an MPT test as ThreadId is a variable server-set and implementation specific
+        @Test
+        void imapSearchShouldSupportThreadId() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            MessageManager.AppendResult appendResult = memoryIntegrationResources.getMailboxManager()
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Transfer-Encoding: quoted-printable\r\n" +
+                    "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Reply-To: b@linagora.com\r\n" +
+                    "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Subject: Test utf-8 charset\r\n" +
+                    "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
+                    "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
+                    "\r\n" +
+                    "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+            clientConnection.write(ByteBuffer.wrap("a1 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+            clientConnection.write(ByteBuffer.wrap(String.format("a2 UID SEARCH THREADID %s\r\n", appendResult.getThreadId().serialize()).getBytes(StandardCharsets.UTF_8)));
+
+            readStringUntil(clientConnection, s -> s.contains(("* SEARCH " + appendResult.getId().getUid().asLong())));
         }
 
         @Test

@@ -164,6 +164,7 @@ public class StoreMailboxManager implements MailboxManager {
         return quotaComponents;
     }
 
+    @Override
     public Factory getMessageIdFactory() {
         return messageIdFactory;
     }

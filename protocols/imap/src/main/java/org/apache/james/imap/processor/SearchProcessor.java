@@ -61,6 +61,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -372,6 +373,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             session.setAttribute(SEARCH_MODSEQ, true);
             long modSeq = key.getModSeq();
             return SearchQuery.or(SearchQuery.modSeqEquals(modSeq), SearchQuery.modSeqGreaterThan(modSeq));
+        case TYPE_THREADID:
+            return SearchQuery.threadId(ThreadId.fromBaseMessageId(getMailboxManager().getMessageIdFactory().fromString(key.getThreadId())));
         default:
             LOGGER.warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();
