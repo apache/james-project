@@ -23,6 +23,7 @@ import static org.apache.james.imap.api.ImapConstants.BASIC_CAPABILITIES;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_CONDSTORE;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_OBJECTID;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 
 import java.util.ArrayList;
@@ -47,11 +48,12 @@ import reactor.core.publisher.Mono;
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
     private static final List<Capability> CAPS = ImmutableList.of(
-            BASIC_CAPABILITIES,
-            SUPPORTS_LITERAL_PLUS,
-            SUPPORTS_RFC3348,
-            SUPPORTS_I18NLEVEL_1,
-            SUPPORTS_CONDSTORE);
+        BASIC_CAPABILITIES,
+        SUPPORTS_LITERAL_PLUS,
+        SUPPORTS_RFC3348,
+        SUPPORTS_I18NLEVEL_1,
+        SUPPORTS_CONDSTORE,
+        SUPPORTS_OBJECTID);
 
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<Capability> disabledCaps = new HashSet<>();
