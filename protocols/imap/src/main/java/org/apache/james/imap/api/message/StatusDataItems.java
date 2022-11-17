@@ -30,6 +30,8 @@ public class StatusDataItems {
         // See https://www.rfc-editor.org/rfc/rfc7889.html
         APPENDLIMIT,
         MESSAGES,
+        // https://www.rfc-editor.org/rfc/rfc8474.html#section-4.3
+        MAILBOXID,
         RECENT,
         UID_NEXT,
         UID_VALIDITY,
@@ -71,6 +73,10 @@ public class StatusDataItems {
 
     public boolean isUnseen() {
         return statusItems.contains(StatusItem.UNSEEN);
+    }
+
+    public boolean isMailboxId() {
+        return statusItems.contains(StatusItem.MAILBOXID);
     }
     
     public boolean isHighestModSeq() {

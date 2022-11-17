@@ -121,6 +121,10 @@ C: A013 STATUS statustest (UNSEEN SIZE MESSAGES DELETED DELETED-STORAGE)
 S: \* STATUS \"statustest\" \(MESSAGES 4 SIZE 1016 DELETED 2 DELETED-STORAGE 508 UNSEEN 4\)
 S: A013 OK STATUS completed.
 
+C: a014 STATUS statustest (MAILBOXID)
+S: \* STATUS \"statustest\" \(MAILBOXID \(.+\)\)
+S: a014 OK STATUS completed.
+
 # Cleanup
 C: a1 DELETE statustest
 S: a1 OK DELETE completed.
