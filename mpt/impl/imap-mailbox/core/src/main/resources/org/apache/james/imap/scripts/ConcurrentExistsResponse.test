@@ -20,7 +20,7 @@
 # in a concurrent session on the same mailbox
 SESSION: 1
 C: 1a CREATE existsresponse
-S: 1a OK CREATE completed.
+S: 1a OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 1b STATUS existsresponse (MESSAGES)
 S: \* STATUS \"existsresponse\" \(MESSAGES 0\)
@@ -103,7 +103,7 @@ C: 4b CREATE another
 S: \* 1 EXISTS
 S: \* 1 RECENT
 S: \* 1 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
-S: 4b OK CREATE completed.
+S: 4b OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 4c DELETE another
 S: 4c OK DELETE completed.

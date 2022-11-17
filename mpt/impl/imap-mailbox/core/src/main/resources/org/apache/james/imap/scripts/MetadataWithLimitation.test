@@ -33,7 +33,7 @@ C: a2 SETMETADATA INBOX (/private/comment1 "Comment" /private/comment2 "Comment"
 S: a2 OK SETMETADATA completed.
 
 C: 10 CREATE TRASK
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a3 SETMETADATA TRASK (/private/comment "My comment")
 S: a3 OK SETMETADATA completed.

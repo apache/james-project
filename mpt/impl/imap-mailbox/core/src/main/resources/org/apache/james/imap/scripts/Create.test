@@ -18,19 +18,19 @@
 ################################################################
 # Create a simple name
 C: 10 CREATE test
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 # Create a subfolder with simple name
 C: 11 CREATE test.subfolder
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 # Create a fully qualified folder
 C: 12 CREATE test1
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 # Create a fully qualified sub folder
 C: 13 CREATE test1.subfolder1
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 # Create quoted
 C: 14 CREATE "Pepe juan"
-S: 14 OK CREATE completed.
+S: 14 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 15 CREATE ..
 S: 15 BAD CREATE failed. Illegal arguments.
@@ -40,7 +40,7 @@ S: 15 BAD CREATE failed. Illegal arguments.
 # When mailbox name is suffixed with hierarchy separator
 # name created must remove tailing delimiter
 C: 15 CREATE another.test.
-S: 15 OK CREATE completed.
+S: 15 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 16 LIST "" another*
 S: \* LIST \(\\HasChildren\) "." "another"
 S: \* LIST \(\\HasNoChildren\) "." "another.test"
@@ -49,7 +49,7 @@ S: 16 OK LIST completed.
 # RFC3501@6.3.3p2
 # Intermediary mailboxes which don't exist should be created
 C: 17 CREATE alpha.beta.gamma
-S: 17 OK CREATE completed.
+S: 17 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 18 LIST "" alpha*
 S: \* LIST \(\\HasChildren\) "." "alpha"
 S: \* LIST \(\\HasChildren\) "." "alpha.beta"
@@ -67,7 +67,7 @@ S: 19 NO CREATE failed. Mailbox already exists.
 # The creation should succeed as if trying to create a folder and its subfolder
 #
 C: 20 CREATE "one&AC4-two"
-S: 20 OK CREATE completed.
+S: 20 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 21 LIST "" one*
 S: \* LIST \(\\HasChildren\) "." "one"
 S: \* LIST \(\\HasNoChildren\) "." "one.two"

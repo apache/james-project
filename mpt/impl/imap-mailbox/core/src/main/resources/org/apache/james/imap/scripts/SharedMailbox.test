@@ -23,13 +23,13 @@ C: a001 LOGIN imapuser password
 S: a001 OK LOGIN completed.
 
 C: a002 CREATE test
-S: a002 OK CREATE completed.
+S: a002 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a003 CREATE #private.test2
-S: a003 OK CREATE completed.
+S: a003 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a004 CREATE #private.other.test3
-S: a004 OK CREATE completed.
+S: a004 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a005 CREATE #any.hello
 S: a005 NO CREATE You can not access a mailbox that does not belong to you

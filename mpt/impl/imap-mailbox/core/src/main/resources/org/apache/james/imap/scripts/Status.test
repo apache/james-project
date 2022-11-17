@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: a1 CREATE statustest
-S: a1 OK CREATE completed.
+S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 # Tests for the STATUS command
 C: a001 STATUS statustest (MESSAGES)

@@ -18,13 +18,13 @@
 ################################################################
 # Create a few folders
 C: 10 CREATE deletetest
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 11 CREATE deletetest.subfolder
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 12 CREATE deletetest1
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE deletetest1.subfolder1
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 # Delete subfolder, then folder
 C: 10 DELETE deletetest.subfolder

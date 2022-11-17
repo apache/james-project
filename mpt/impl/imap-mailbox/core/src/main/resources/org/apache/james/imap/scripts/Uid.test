@@ -57,7 +57,7 @@ S: a2 OK FETCH completed.
 
 # CREATE and do a UID COPY
 C: a3 CREATE copied
-S: a3 OK CREATE completed.
+S: a3 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a4 UID COPY 2 copied
 S: a4 OK (\[.+\] )?COPY completed.

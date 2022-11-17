@@ -18,7 +18,7 @@
 ################################################################
 
 C: A2 CREATE testmailbox
-S: A2 OK Create completed\.
+S: A2 OK \[MAILBOXID \(.+\)\] Create completed\.
 C: A3 SELECT testmailbox
 S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.

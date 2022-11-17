@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: 10 CREATE selectappend
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 10 SELECT selectappend
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)

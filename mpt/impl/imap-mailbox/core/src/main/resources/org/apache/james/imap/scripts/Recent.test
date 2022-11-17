@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: A2 CREATE testmailbox
-S: A2 OK CREATE completed\.
+S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 
 C: A5 SELECT testmailbox
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)

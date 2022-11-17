@@ -18,7 +18,7 @@
 ################################################################
 
 C: 10 CREATE #private.imapuser.test
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: A002 SELECT #private.imapuser.test
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)

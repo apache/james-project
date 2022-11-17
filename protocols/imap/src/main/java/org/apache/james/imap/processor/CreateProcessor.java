@@ -20,6 +20,8 @@
 package org.apache.james.imap.processor;
 
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
@@ -49,21 +51,21 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
 
         return Mono.fromCallable(() -> PathConverter.forSession(session).buildFullPath(request.getMailboxName()))
             .flatMap(mailboxPath -> Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session.getMailboxSession()))
-            .then(unsolicitedResponses(session, responder, false))
-            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-            .onErrorResume(MailboxExistsException.class, e -> {
-                no(request, responder, HumanReadableText.MAILBOX_EXISTS);
-                return ReactorUtils.logAsMono(() -> LOGGER.debug("Create failed for mailbox {} as it already exists", mailboxPath, e));
-            })
-            .onErrorResume(TooLongMailboxNameException.class, e -> {
-                taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
-                return ReactorUtils.logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e));
-            })
-            .onErrorResume(TooLongMailboxNameException.class, e -> {
-                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("Create failed for mailbox {}", mailboxPath, e));
-            })
-            .then());
+                .flatMap(mailboxId -> unsolicitedResponses(session, responder, false)
+                    .then(Mono.fromRunnable(() -> okComplete(request, StatusResponse.ResponseCode.mailboxId(mailboxId), responder))))
+                .onErrorResume(MailboxExistsException.class, e -> {
+                    no(request, responder, HumanReadableText.MAILBOX_EXISTS);
+                    return ReactorUtils.logAsMono(() -> LOGGER.debug("Create failed for mailbox {} as it already exists", mailboxPath, e));
+                })
+                .onErrorResume(TooLongMailboxNameException.class, e -> {
+                    taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
+                    return ReactorUtils.logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e));
+                })
+                .onErrorResume(TooLongMailboxNameException.class, e -> {
+                    no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                    return ReactorUtils.logAsMono(() -> LOGGER.error("Create failed for mailbox {}", mailboxPath, e));
+                })
+                .then());
     }
 
     @Override

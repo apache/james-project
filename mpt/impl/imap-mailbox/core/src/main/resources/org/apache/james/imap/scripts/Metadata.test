@@ -160,7 +160,7 @@ S: a24 OK SETMETADATA completed.
 
 ######Delete mailbox should delete its annotation#######
 C: m01 CREATE mailboxTest
-S: m01 OK CREATE completed.
+S: m01 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: m02 SETMETADATA mailboxTest (/private/comment "The mailboxTest private comment")
 S: m02 OK SETMETADATA completed.
@@ -179,7 +179,7 @@ C: m06 GETMETADATA "mailboxTest"
 S: m06 NO \[TRYCREATE\] GETMETADATA failed. No such mailbox.
 
 C: m07 CREATE mailboxTest
-S: m07 OK CREATE completed.
+S: m07 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: m08 GETMETADATA "mailboxTest"
 S: \* METADATA "mailboxTest"

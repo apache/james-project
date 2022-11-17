@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: f CREATE anothermailbox
-S: f OK CREATE completed\.
+S: f OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: g APPEND anothermailbox {704+}
 C: Received: by 10.114.81.13 with HTTP; Sat, 2 Feb 2008 05:14:19 -0800 (PST)
 C: Message-ID: <f470f68e0802020514m6eaba233u96a9021a2697a48d@mail.gmail.com>

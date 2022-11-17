@@ -22,7 +22,7 @@ S: \* CAPABILITY .* MOVE .*
 S: a0 OK CAPABILITY completed.
 
 C: a1 CREATE moved
-S: a1 OK CREATE completed.
+S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a2 STATUS moved (MESSAGES)
 S: \* STATUS "moved" \(MESSAGES 0\)
