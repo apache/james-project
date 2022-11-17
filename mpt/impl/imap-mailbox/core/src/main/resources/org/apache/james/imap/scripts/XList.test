@@ -18,13 +18,13 @@
 ################################################################
 # Create a few folders
 C: 10 CREATE Spam
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 11 CREATE Trash
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 12 CREATE Sent
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE Drafts
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 10 XLIST "" *
 SUB {

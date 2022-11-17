@@ -17,13 +17,13 @@
 # under the License.                                           #
 ################################################################
 C: A2 CREATE one
-S: A2 OK CREATE completed\.
+S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A3 CREATE one.two
-S: A3 OK CREATE completed\.
+S: A3 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A4 CREATE one.two.three
-S: A4 OK CREATE completed\.
+S: A4 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A5 CREATE one.two.three.four
-S: A5 OK CREATE completed\.
+S: A5 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A6 LIST "" "*"
 S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
 S: \* LIST \(\\HasChildren\) "\." "one"

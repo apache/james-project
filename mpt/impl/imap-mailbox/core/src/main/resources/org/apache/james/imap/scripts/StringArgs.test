@@ -39,7 +39,7 @@ S: a1 NO CREATE failed. Mailbox already exists.
 
 # Tests with an atomic mailbox name.
 C: a1 CREATE atomMailbox
-S: a1 OK CREATE completed.
+S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 # atom
 C: a001 STATUS atomMailbox (MESSAGES)

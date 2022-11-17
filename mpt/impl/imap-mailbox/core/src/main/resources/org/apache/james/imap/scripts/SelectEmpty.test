@@ -18,13 +18,13 @@
 ################################################################
 # Create a few folders
 C: 10 CREATE test
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 11 CREATE test.subfolder
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 12 CREATE test1
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE test1.subfolder1
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: abcd SELECT test
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)

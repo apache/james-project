@@ -17,7 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: A2 CREATE testmailbox
-S: A2 OK CREATE completed\.
+S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A3 SELECT testmailbox
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
@@ -2072,7 +2072,7 @@ S:
 S: \)
 S: A101 OK FETCH completed\.
 C: A102 CREATE other
-S: A102 OK CREATE completed\.
+S: A102 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A103 SELECT other
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
@@ -2337,7 +2337,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A104 OK (\[.+\] )?APPEND completed\.
 C: A105 CREATE base
-S: A105 OK CREATE completed\.
+S: A105 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A106 SELECT base
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS

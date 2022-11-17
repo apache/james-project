@@ -17,15 +17,15 @@
 # under the License.                                           #
 ################################################################
 C: A01 CREATE one
-S: A01 OK CREATE completed.
+S: A01 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: A02 CREATE two
-S: A02 OK CREATE completed.
+S: A02 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: A03 CREATE three.sub
-S: A03 OK CREATE completed.
+S: A03 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: A04 CREATE four.sub.sub
-S: A04 OK CREATE completed.
+S: A04 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: A05 CREATE five
-S: A05 OK CREATE completed.
+S: A05 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: A06 LIST "" %
 SUB {

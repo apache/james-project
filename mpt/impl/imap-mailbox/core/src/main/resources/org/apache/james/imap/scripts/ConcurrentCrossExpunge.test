@@ -18,7 +18,7 @@
 ################################################################
 SESSION: 1
 C: 1a CREATE alpha
-S: 1a OK CREATE completed.
+S: 1a OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 1b APPEND alpha (\Deleted) {254+}
 C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)

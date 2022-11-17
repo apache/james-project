@@ -18,13 +18,13 @@
 ################################################################
 # Create a few folders
 C: 10 CREATE listtest
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 11 CREATE listtest.subfolder
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 12 CREATE listtest1
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE listtest1.subfolder1
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 # Empty 1st arg searches default context (#mail)
 C: 10 LIST "" listtest

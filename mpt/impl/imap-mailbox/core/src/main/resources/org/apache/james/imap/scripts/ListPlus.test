@@ -18,21 +18,21 @@
 ################################################################
 # Create a few folders
 C: 10 CREATE listtest
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 11 CREATE listtest.subfolder
-S: 11 OK CREATE completed.
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 12 CREATE listtest1
-S: 12 OK CREATE completed.
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE listtest1.subfolder1
-S: 13 OK CREATE completed.
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 14 CREATE funny
-S: 14 OK CREATE completed.
+S: 14 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 15 CREATE "funny.name with gaps"
-S: 15 OK CREATE completed.
+S: 15 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 16 CREATE "funny.name"
-S: 16 OK CREATE completed.
+S: 16 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 17 CREATE "funny.name with gaps.more"
-S: 17 OK CREATE completed.
+S: 17 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 # Empty 1st arg searches default context (#mail)
 C: 10 LIST "" listtest
