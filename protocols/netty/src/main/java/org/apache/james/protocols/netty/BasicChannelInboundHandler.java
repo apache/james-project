@@ -204,7 +204,6 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
         try (Closeable closeable = mdc(ctx).build()) {
             Channel channel = ctx.channel();
             ProtocolSession session = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
