@@ -43,6 +43,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.message.request.SearchRequest;
+import org.apache.james.mailbox.model.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -270,6 +271,8 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             return text(request, charset);
         case 'O':
             return to(request, charset);
+        case 'H':
+            return threadId(request, charset);
         default:
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown search key");
         }
@@ -746,6 +749,18 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final String value = request.astring(charset);
         result = SearchKey.buildTo(value);
         return result;
+    }
+
+    private SearchKey threadId(ImapRequestLineReader request, Charset charset) throws DecodingException {
+        nextIsR(request);
+        nextIsE(request);
+        nextIsA(request);
+        nextIsD(request);
+        nextIsI(request);
+        nextIsD(request);
+        nextIsSpace(request);
+        String astring = request.astring(charset);
+        return SearchKey.buildThreadId(astring);
     }
 
     private SearchKey subject(ImapRequestLineReader request, Charset charset) throws DecodingException {

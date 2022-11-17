@@ -423,4 +423,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
             c -> toBeWrapped,
             Runnable::run);
     }
+
+    MessageId.Factory getMessageIdFactory();
+
 }
