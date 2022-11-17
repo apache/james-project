@@ -1143,6 +1143,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.SizeCriterion) {
             SearchQuery.SizeCriterion crit = (SearchQuery.SizeCriterion) criterion;
             return createSizeQuery(crit);
+        }  else if (criterion instanceof SearchQuery.MessageIdCriterion) {
+            SearchQuery.MessageIdCriterion crit = (SearchQuery.MessageIdCriterion) criterion;
+            return createTermQuery(MESSAGE_ID_FIELD, crit.getMessageId().serialize());
         } else if (criterion instanceof SearchQuery.HeaderCriterion) {
             HeaderCriterion crit = (HeaderCriterion) criterion;
             return createHeaderQuery(crit);

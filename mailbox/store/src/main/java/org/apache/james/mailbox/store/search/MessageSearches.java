@@ -169,6 +169,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             }
         } else if (criterion instanceof SearchQuery.UidCriterion) {
             return matches((SearchQuery.UidCriterion) criterion, message);
+        } else if (criterion instanceof SearchQuery.MessageIdCriterion) {
+            return ((SearchQuery.MessageIdCriterion) criterion).getMessageId().equals(message.getMessageId());
         } else if (criterion instanceof SearchQuery.FlagCriterion) {
             return matches((SearchQuery.FlagCriterion) criterion, message, recentMessageUids);
         } else if (criterion instanceof SearchQuery.CustomFlagCriterion) {
