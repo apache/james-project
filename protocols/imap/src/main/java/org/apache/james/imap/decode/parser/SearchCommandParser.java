@@ -99,7 +99,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             case 'D':
                 return d(request);
             case 'E':
-                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown search key");
+                return emailId(request);
             case 'F':
                 return f(request, context.getCharset());
             case 'G':
@@ -727,6 +727,18 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final String value = request.astring(charset);
         result = SearchKey.buildText(value);
         return result;
+    }
+
+    private SearchKey emailId(ImapRequestLineReader request) throws DecodingException {
+        nextIsM(request);
+        nextIsA(request);
+        nextIsI(request);
+        nextIsL(request);
+        nextIsI(request);
+        nextIsD(request);
+        nextIsSpace(request);
+
+        return SearchKey.buildMessageId(request.astring());
     }
 
     private SearchKey uid(ImapRequestLineReader request) throws DecodingException {
