@@ -265,9 +265,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                     // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
                     // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
                     if (condstoreEnabled || qresyncEnabled) {
-                        response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
+                        response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null, null, null);
                     } else {
-                        response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
+                        response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null, null, null);
                     }
                     responder.respond(response);
                     return null;
