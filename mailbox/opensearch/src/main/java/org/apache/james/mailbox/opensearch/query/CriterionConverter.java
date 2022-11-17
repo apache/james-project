@@ -65,6 +65,7 @@ public class CriterionConverter {
     private void registerCriterionConverters() {
         registerCriterionConverter(SearchQuery.FlagCriterion.class, this::convertFlag);
         registerCriterionConverter(SearchQuery.UidCriterion.class, this::convertUid);
+        registerCriterionConverter(SearchQuery.MessageIdCriterion.class, this::convertMessageId);
         registerCriterionConverter(SearchQuery.ConjunctionCriterion.class, this::convertConjunction);
         registerCriterionConverter(SearchQuery.HeaderCriterion.class, this::convertHeader);
         registerCriterionConverter(SearchQuery.TextCriterion.class, this::convertTextCriterion);
@@ -256,6 +257,10 @@ public class CriterionConverter {
             convertToBoolQuery(
                 Arrays.stream(uidCriterion.getOperator().getRange())
                     .map(this::uidRangeFilter), BoolQueryBuilder::should));
+    }
+
+    private QueryBuilder convertMessageId(SearchQuery.MessageIdCriterion messageIdCriterion) {
+        return termQuery(JsonMessageConstants.MESSAGE_ID, messageIdCriterion.getMessageId().serialize());
     }
 
     private QueryBuilder uidRangeFilter(SearchQuery.UidRange numericRange) {

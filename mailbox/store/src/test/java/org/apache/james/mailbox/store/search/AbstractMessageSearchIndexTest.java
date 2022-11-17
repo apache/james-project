@@ -420,6 +420,14 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void searchShouldReturnCorrectResultWhenByMessageId() throws MailboxException {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.hasMessageId(m4.getMessageId()));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m4.getUid());
+    }
+
+    @Test
     void allShouldReturnAllUids() throws MailboxException {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
 

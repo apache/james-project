@@ -264,6 +264,10 @@ public class SearchQuery {
         return new ModSeqCriterion(new NumericOperator(value, NumericComparator.EQUALS));
     }
 
+    public static Criterion hasMessageId(MessageId messageId) {
+        return new MessageIdCriterion(messageId);
+    }
+
     /**
      * Creates a filter matching messages with internal date after the given
      * date.
@@ -1562,6 +1566,41 @@ public class SearchQuery {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("operator", operator)
+                .toString();
+        }
+    }
+
+    public static class MessageIdCriterion extends Criterion {
+        private final MessageId messageId;
+
+        public MessageIdCriterion(MessageId messageId) {
+            this.messageId = messageId;
+        }
+
+        public MessageId getMessageId() {
+            return messageId;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(messageId);
+        }
+
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof MessageIdCriterion) {
+                MessageIdCriterion that = (MessageIdCriterion) obj;
+
+                return Objects.equal(this.messageId, that.messageId);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("messageId", messageId)
                 .toString();
         }
     }
