@@ -312,14 +312,14 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
             if (silent) {
                 // We need to return an FETCH response which contains the mod-sequence of the message even if FLAGS.SILENT was used
-                return new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
+                return new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null, null, null);
             } else {
                 // Use a FETCH response which contains the mod-sequence and the flags
-                return new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
+                return new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null, null, null);
             }
         } else {
             // Use a FETCH response which only contains the flags as no CONDSTORE was used
-            return new FetchResponse(msn, resultFlags, resultUid, null, null, null, null, null, null, null);
+            return new FetchResponse(msn, resultFlags, resultUid, null, null, null, null, null, null, null, null, null);
         }
     }
 

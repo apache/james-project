@@ -37,6 +37,8 @@ import org.apache.james.imap.message.response.FetchResponse.Structure;
 import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +83,8 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
         encodeBodyStructure(composer, fetchResponse.getBodyStructure());
         encodeUid(composer, fetchResponse);
         encodeBodyElements(composer, fetchResponse.getElements());
-
+        encodeEmailId(composer, fetchResponse);
+        encodeThreadId(composer, fetchResponse);
         composer.closeParen().end();
     }
 
@@ -294,6 +297,26 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
             composer.message(uid.asLong());
         }
     }
+
+    private void encodeEmailId(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
+        final MessageId emailId = fetchResponse.getEmailId();
+        if (emailId != null) {
+            composer.message(ImapConstants.EMAILID);
+            composer.openParen();
+            composer.message(emailId.serialize());
+            composer.closeParen();
+        }
+    }
+    private void encodeThreadId(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
+        final ThreadId threadId = fetchResponse.getThreadId();
+        if (threadId != null) {
+            composer.message(ImapConstants.THREADID);
+            composer.openParen();
+            composer.message(threadId.serialize());
+            composer.closeParen();
+        }
+    }
+
 
     private void encodeFlags(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
         final Flags flags = fetchResponse.getFlags();

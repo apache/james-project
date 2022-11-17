@@ -253,4 +253,6 @@ public interface ImapConstants {
     String STORAGE_QUOTA_RESOURCE = "STORAGE";
 
     String MESSAGE_QUOTA_RESOURCE = "MESSAGE";
+    String EMAILID = "EMAILID";
+    String THREADID = "THREADID";
 }

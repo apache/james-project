@@ -48,9 +48,11 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
+import org.apache.james.mailbox.model.ThreadId;
 
 import reactor.core.publisher.Mono;
 
@@ -58,6 +60,8 @@ public final class FetchResponseBuilder {
     private final EnvelopeBuilder envelopeBuilder;
 
     private MessageSequenceNumber msn;
+    private MessageId messageId;
+    private ThreadId threadId;
     private MessageUid uid;
     private Flags flags;
     private Date internalDate;
@@ -74,6 +78,8 @@ public final class FetchResponseBuilder {
 
     public void reset(MessageSequenceNumber msn) {
         this.msn = msn;
+        messageId = null;
+        threadId = null;
         uid = null;
         flags = null;
         internalDate = null;
@@ -82,6 +88,14 @@ public final class FetchResponseBuilder {
         bodystructure = null;
         elements = null;
         modSeq = null;
+    }
+
+    public void setMessageId(MessageId messageId) {
+        this.messageId = messageId;
+    }
+
+    public void setThreadId(ThreadId threadId) {
+        this.threadId = threadId;
     }
 
     public void setUid(MessageUid resultUid) {
@@ -98,7 +112,7 @@ public final class FetchResponseBuilder {
     }
 
     public FetchResponse build() {
-        return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
+        return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements, messageId, threadId);
     }
 
     public Mono<FetchResponse> build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
@@ -152,6 +166,9 @@ public final class FetchResponseBuilder {
 
             addUid(fetch, resultUid);
 
+            addThreadId(fetch, result.getThreadId());
+            addMessageId(fetch, result.getMessageId());
+
             addModSeq(fetch, result.getModSeq());
 
             // FLAGS response
@@ -167,6 +184,20 @@ public final class FetchResponseBuilder {
         // UID response
         if (fetch.contains(Item.UID)) {
             setUid(resultUid);
+        }
+    }
+
+    private void addMessageId(FetchData fetch, MessageId messageId) {
+        // EMAILID response
+        if (fetch.contains(Item.EMAILID)) {
+            setMessageId(messageId);
+        }
+    }
+
+    private void addThreadId(FetchData fetch, ThreadId threadId) {
+        // THREADID response
+        if (fetch.contains(Item.THREADID)) {
+            setThreadId(threadId);
         }
     }
 

@@ -97,7 +97,7 @@ public class FetchResponseEncoderEnvelopeTest {
         subject = null;
         to = null;
 
-        message = new FetchResponse(MSN, null, null, null, null, null, envelope, null, null, null);
+        message = new FetchResponse(MSN, null, null, null, null, null, envelope, null, null, null, null, null);
         encoder = new FetchResponseEncoder(false);
     }
 
