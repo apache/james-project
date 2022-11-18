@@ -19,7 +19,14 @@
 
 package org.apache.james.utils;
 
+import java.util.Arrays;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.apache.james.lifecycle.api.Startable;
+
+import com.google.common.collect.ImmutableList;
 
 public class InitilizationOperationBuilder {
 
@@ -30,21 +37,33 @@ public class InitilizationOperationBuilder {
 
     @FunctionalInterface
     public interface RequireInit {
-        InitializationOperation init(Init init);
+        PrivateImpl init(Init init);
     }
 
     public static RequireInit forClass(Class<? extends Startable> type) {
         return init -> new PrivateImpl(init, type);
     }
 
-    private static class PrivateImpl implements InitializationOperation {
-
+    public static class PrivateImpl implements InitializationOperation {
         private final Init init;
         private final Class<? extends Startable> type;
+        private List<Class<?>> requires;
 
         private PrivateImpl(Init init, Class<? extends Startable> type) {
             this.init = init;
             this.type = type;
+            /*
+            Class requirements are by default infered from the parameters of the first @Inject annotated constructor.
+
+            If it does not exist, use the first constructor (case in a @Provides).
+             */
+            this.requires = Arrays.stream(type.getDeclaredConstructors())
+                .filter(c -> c.isAnnotationPresent(Inject.class))
+                .findFirst()
+                .or(() -> Arrays.stream(type.getDeclaredConstructors()).findFirst())
+                .stream()
+                .flatMap(c -> Arrays.stream(c.getParameterTypes()))
+                .collect(ImmutableList.toImmutableList());
         }
 
         @Override
@@ -55,6 +74,16 @@ public class InitilizationOperationBuilder {
         @Override
         public Class<? extends Startable> forClass() {
             return type;
+        }
+
+        public PrivateImpl requires(List<Class<?>> requires) {
+            this.requires = requires;
+            return this;
+        }
+
+        @Override
+        public List<Class<?>> requires() {
+            return requires;
         }
     }
 }
