@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class Startables {
-
     private final Set<Class<? extends Startable>> startables;
 
     public Startables() {

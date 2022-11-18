@@ -23,8 +23,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.james.lifecycle.api.Startable;
-
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.Inject;
 
@@ -53,9 +51,16 @@ public class InitializationOperations {
             .collect(Collectors.toSet());
     }
 
-    private Stream<InitializationOperation> configurationPerformerFor(Class<? extends Startable> startable) {
+    /**
+     * Locate configuration performer for this class.
+     *
+     * We reorder the performer so that one class requirements are always satisfied (startable order is wrong for
+     * provisioned instances...)
+     */
+    private Stream<InitializationOperation> configurationPerformerFor(Class<?> startable) {
         return initializationOperations.stream()
-                .filter(x -> x.forClass().equals(startable));
+                .filter(x -> startable.isAssignableFrom(x.forClass()))
+                .flatMap(x -> Stream.concat(x.requires().stream().flatMap(this::configurationPerformerFor), Stream.of(x)));
     }
 
     private void processOthers(Set<InitializationOperation> processed) {
