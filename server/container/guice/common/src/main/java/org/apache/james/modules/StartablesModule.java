@@ -23,13 +23,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.Startables;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.ProvisionListener;
 import com.google.inject.spi.TypeEncounter;
 
 public class StartablesModule extends AbstractModule {
@@ -45,6 +49,28 @@ public class StartablesModule extends AbstractModule {
         bind(Startables.class).toInstance(startables);
 
         bindListener(new SubclassesOf(Startable.class), this::hear);
+        bindListener(new Matcher<Binding<?>>() {
+            @Override
+            public boolean matches(Binding<?> binding) {
+                return Startable.class.isAssignableFrom(binding.getKey().getTypeLiteral().getRawType());
+            }
+
+            @Override
+            public Matcher<Binding<?>> and(Matcher<? super Binding<?>> matcher) {
+                throw new NotImplementedException();
+            }
+
+            @Override
+            public Matcher<Binding<?>> or(Matcher<? super Binding<?>> matcher) {
+                throw new NotImplementedException();
+            }
+        }, new ProvisionListener() {
+            @Override
+            public <T> void onProvision(ProvisionInvocation<T> invokation) {
+                startables.add(invokation.getBinding().getKey().getTypeLiteral().getRawType().asSubclass(Startable.class));
+            }
+        });
+
     }
 
     private <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {

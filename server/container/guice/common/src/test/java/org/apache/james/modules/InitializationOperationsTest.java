@@ -30,12 +30,14 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitializationOperations;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.junit.jupiter.api.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 class InitializationOperationsTest {
     @Test
@@ -56,55 +58,21 @@ class InitializationOperationsTest {
             bind(B.class).in(Scopes.SINGLETON);
             bind(A.class).in(Scopes.SINGLETON);
             bind(C.class).in(Scopes.SINGLETON);
-    
-            Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(BInitializationOperation.class);
-            Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(AInitializationOperation.class);
-        }
-    }
-
-    private static class AInitializationOperation implements InitializationOperation {
-        private final A a;
-
-        @Inject
-        private AInitializationOperation(A a) {
-            this.a = a;
         }
 
-        @Override
-        public void initModule() {
-            try {
-                a.configure(null);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        @ProvidesIntoSet
+        InitializationOperation initA(A a) {
+            return InitilizationOperationBuilder
+                .forClass(A.class)
+                .init(() -> a.configure(null));
         }
 
-        @Override
-        public Class<? extends Startable> forClass() {
-            return A.class;
-        }
-    }
 
-    private static class BInitializationOperation implements InitializationOperation {
-        private final B b;
-
-        @Inject
-        private BInitializationOperation(B b) {
-            this.b = b;
-        }
-
-        @Override
-        public void initModule() {
-            try {
-                b.configure(null);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return B.class;
+        @ProvidesIntoSet
+        InitializationOperation initB(B b) {
+            return InitilizationOperationBuilder
+                .forClass(B.class)
+                .init(() -> b.configure(null));
         }
     }
 
