@@ -19,7 +19,11 @@
 
 package org.apache.james.utils;
 
+import java.util.List;
+
 import org.apache.james.lifecycle.api.Startable;
+
+import com.google.common.collect.ImmutableList;
 
 public interface InitializationOperation {
 
@@ -33,4 +37,8 @@ public interface InitializationOperation {
      * @return the Class that this object will initialize.
      */
     Class<? extends Startable> forClass();
+
+    default List<Class<?>> requires() {
+        return ImmutableList.of();
+    }
 }
