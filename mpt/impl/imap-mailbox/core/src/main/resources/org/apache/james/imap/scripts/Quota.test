@@ -63,6 +63,10 @@ S: \* 2 EXISTS
 S: \* 2 RECENT
 S: A004 OK (\[.+\] )?APPEND completed.
 
+LOG INFO awaiting commands
+# RabbitMQ do not process events straight away
+AWAIT
+
 C: A006 GETQUOTAROOT #private.imapuser.test
 S: \* QUOTAROOT "#private\.imapuser\.test" #private&imapuser
 S: \* QUOTA #private&imapuser \(MESSAGE 6 7\)
