@@ -84,6 +84,8 @@ public class HumanReadableText {
 
     public static final HumanReadableText FAILURE_NO_SUCH_MAILBOX = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_MAILBOX", "failed. No such mailbox.");
 
+    public static final HumanReadableText FAILURE_OVERQUOTA = new HumanReadableText("org.apache.james.imap.OVERQUOTA", "failed. Over quota.");
+
     public static final HumanReadableText FAILURE_NO_QUOTA_RESOURCE = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_QUOTA_RESOURCE", "failed. No such quota resource.");
 
     public static final HumanReadableText START_TRANSACTION_FAILED = new HumanReadableText("org.apache.james.imap.START_TRANSACTION_FAILED", "failed. Cannot start transaction.");

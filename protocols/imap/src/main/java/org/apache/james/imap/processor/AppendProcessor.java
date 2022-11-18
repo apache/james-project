@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -77,6 +78,13 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
                 // Indicates that the mailbox does not exist
                 // So TRY CREATE
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+                return Mono.empty();
+            })
+            .doOnEach(logOnError(OverQuotaException.class, e -> LOGGER.info("Append failed for mailbox {} because overquota", mailboxPath)))
+            .onErrorResume(OverQuotaException.class, e -> {
+                // Indicates that the mailbox does not exist
+                // So TRY CREATE
+                no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
                 return Mono.empty();
             })
             .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Append failed for mailbox {}", mailboxPath, e)))

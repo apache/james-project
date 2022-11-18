@@ -53,10 +53,13 @@ class MailboxStatusResponseEncoderTest  {
         final MessageUid uidNext = MessageUid.of(5);
         final UidValidity uidValidity = UidValidity.of(7L);
         final Long unseen = 11L;
+        final Long size = 42L;
+        final Long deleted = 23L;
+        final Long deletedStorage = 13L;
         final String mailbox = "A mailbox named desire";
 
-        encoder.encode(new MailboxStatusResponse(null, messages, recent, uidNext,
+        encoder.encode(new MailboxStatusResponse(null, null, deletedStorage, messages, recent, uidNext,
                 null, uidValidity, unseen, mailbox), composer);
-        assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
+        assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 DELETED-STORAGE 13 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
     }
 }

@@ -30,10 +30,15 @@ public class StatusDataItems {
         MESSAGES,
         RECENT,
         UID_NEXT,
-        SIZE,
         UID_VALIDITY,
         UNSEEN,
-        HIGHEST_MODSEQ
+        HIGHEST_MODSEQ,
+        // See https://www.iana.org/go/rfc8438
+        SIZE,
+        // See https://www.rfc-editor.org/rfc/rfc9208.html
+        DELETED,
+        // See https://www.rfc-editor.org/rfc/rfc9208.html
+        DELETED_STORAGE
     }
 
     private final EnumSet<StatusItem> statusItems;
@@ -68,6 +73,14 @@ public class StatusDataItems {
 
     public boolean isSize() {
         return statusItems.contains(StatusItem.SIZE);
+    }
+
+    public boolean isDeleted() {
+        return statusItems.contains(StatusItem.DELETED);
+    }
+
+    public boolean isDeletedStorage() {
+        return statusItems.contains(StatusItem.DELETED_STORAGE);
     }
 
     @Override

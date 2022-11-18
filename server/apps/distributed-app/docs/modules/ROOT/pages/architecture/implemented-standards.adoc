@@ -50,7 +50,7 @@ The following IMAP specifications are implemented:
 
  - link:https://datatracker.ietf.org/doc/html/rfc3501.html[RFC-3501] INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1
  - link:https://datatracker.ietf.org/doc/html/rfc2177.html[RFC-2177] IMAP IDLE (mailbox scoped push notifications)
- - link:https://datatracker.ietf.org/doc/html/rfc2087.html[RFC-2087] IMAP Quota
+ - link:https://www.rfc-editor.org/rfc/rfc9208.html[RFC-9208] IMAP QUOTA Extension
  - link:https://datatracker.ietf.org/doc/html/rfc2342.html[RFC-2342] IMAP namespace
  - link:https://datatracker.ietf.org/doc/html/rfc2088.html[RFC-2088] IMAP non synchronized literals
  - link:https://datatracker.ietf.org/doc/html/rfc4315.html[RFC-4315] IMAP UIDPLUS

@@ -62,6 +62,65 @@ C: a008 STATUS statustest (UNSEEN SIZE MESSAGES )
 S: \* STATUS \"statustest\" \(MESSAGES 1 SIZE 254 UNSEEN 1\)
 S: a008 OK STATUS completed.
 
+C: A009 APPEND statustest {254+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: Test 01
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Test 01
+C:
+S: A009 OK (\[.+\] )?APPEND completed.
+
+C: A010 APPEND statustest {254+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: Test 01
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Test 01
+C:
+S: A010 OK (\[.+\] )?APPEND completed.
+
+C: A011 APPEND statustest {254+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: Test 01
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Test 01
+C:
+S: A011 OK (\[.+\] )?APPEND completed.
+
+C: 10 SELECT statustest
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\] .*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 5\].*
+S: 10 OK \[READ-WRITE\] SELECT completed.
+
+C: A012 STORE 1:2 FLAGS (\Deleted)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: \* 2 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: A012 OK STORE completed.
+
+C: A013 STATUS statustest (UNSEEN SIZE MESSAGES DELETED DELETED-STORAGE)
+S: \* STATUS \"statustest\" \(MESSAGES 4 SIZE 1016 DELETED 2 DELETED-STORAGE 508 UNSEEN 4\)
+S: A013 OK STATUS completed.
+
 # Cleanup
 C: a1 DELETE statustest
 S: a1 OK DELETE completed.

@@ -24,7 +24,8 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
+import javax.mail.Flags;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -131,15 +132,18 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                                                               MessageManager.MailboxMetaData metaData,
                                                               MailboxSession session) {
         StatusDataItems statusDataItems = request.getStatusDataItems();
-        return size(statusDataItems, mailbox, session)
-            .map(maybeSize -> {
+        return iterateMailbox(statusDataItems, mailbox, session)
+            .map(maybeIterationResult -> {
                 Long messages = messages(statusDataItems, metaData);
                 Long recent = recent(statusDataItems, metaData);
                 MessageUid uidNext = uidNext(statusDataItems, metaData);
                 UidValidity uidValidity = uidValidity(statusDataItems, metaData);
                 Long unseen = unseen(statusDataItems, metaData);
                 ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
-                return new MailboxStatusResponse(maybeSize.orElse(null),
+                return new MailboxStatusResponse(
+                    maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
+                    maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
+                    maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
                     messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
             });
     }
@@ -200,15 +204,52 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
         }
     }
 
-    private Mono<Optional<Long>> size(StatusDataItems statusDataItems, MessageManager messageManager, MailboxSession session) {
+    private Mono<Optional<MailboxIterationResult>> iterateMailbox(StatusDataItems statusDataItems, MessageManager messageManager, MailboxSession session) {
         if (statusDataItems.isSize()) {
             return Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.MINIMAL, session))
-                .collect(Collectors.summingLong(MessageResult::getSize))
+                .reduce(new MailboxIterationResult(), MailboxIterationResult::accumulate)
                 .map(Optional::of);
         } else {
             return Mono.just(Optional.empty());
         }
     }
+
+    public static class MailboxIterationResult {
+        private long size = 0;
+        private long deleted = 0;
+        private long deletedStorage = 0;
+
+        public MailboxIterationResult accumulate(MessageResult messageResult) {
+            if (messageResult.getFlags().contains(Flags.Flag.DELETED)) {
+                deleted++;
+                deletedStorage += messageResult.getSize();
+            }
+            size += messageResult.getSize();
+            return this;
+        }
+
+        public Optional<Long> getSize(StatusDataItems items) {
+            if (items.isSize()) {
+                return Optional.of(size);
+            }
+            return Optional.empty();
+        }
+
+        public Optional<Long> getDeleted(StatusDataItems items) {
+            if (items.isDeleted()) {
+                return Optional.of(deleted);
+            }
+            return Optional.empty();
+        }
+
+        public Optional<Long> getDeletedStorage(StatusDataItems items) {
+            if (items.isDeletedStorage()) {
+                return Optional.of(deletedStorage);
+            }
+            return Optional.empty();
+        }
+    }
+
 
     @Override
     protected MDCBuilder mdc(StatusRequest request) {

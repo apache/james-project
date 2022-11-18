@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 public abstract class QuotaTest implements ImapTestConstants {
 
-    private static final QuotaCountLimit MAX_MESSAGE_QUOTA = QuotaCountLimit.count(4096);
+    private static final QuotaCountLimit MAX_MESSAGE_QUOTA = QuotaCountLimit.count(7);
     private static final QuotaSizeLimit MAX_STORAGE_QUOTA = QuotaSizeLimit.size(5 * 1024L * 1024L * 1024L);
 
     protected abstract ImapHostSystem createImapHostSystem();

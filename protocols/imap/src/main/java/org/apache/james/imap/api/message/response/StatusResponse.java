@@ -153,6 +153,7 @@ public interface StatusResponse extends ImapResponseMessage {
 
         /** RFC2060 <code>TRYCREATE</code> response code */
         private static final ResponseCode TRYCREATE = new ResponseCode("TRYCREATE");
+        private static final ResponseCode OVERQUOTA = new ResponseCode("OVERQUOTA");
 
         /** RFC5162 <code>CLOSED</code> response code */
         private static final ResponseCode CLOSED = new ResponseCode("CLOSED");
@@ -287,6 +288,10 @@ public interface StatusResponse extends ImapResponseMessage {
          */
         public static ResponseCode tryCreate() {
             return TRYCREATE;
+        }
+
+        public static ResponseCode overQuota() {
+            return OVERQUOTA;
         }
 
         /**
