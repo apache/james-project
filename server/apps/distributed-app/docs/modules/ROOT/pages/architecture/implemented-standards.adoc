@@ -38,7 +38,6 @@ This page details standards implemented by the distributed server.
 - link:https://datatracker.ietf.org/doc/html/rfc2197[RFC-2197] SMTP Service Extension for Command Pipelining
 - link:https://datatracker.ietf.org/doc/html/rfc2554[RFC-2554] ESMTP Service Extension for Authentication
 - link:https://datatracker.ietf.org/doc/html/rfc1893[RFC-1893] Enhanced Mail System Status Codes
-- link:https://datatracker.ietf.org/doc/html/rfc1893[RFC-1893] Enhanced Mail System Status Codes
 
 == LMTP
 
@@ -66,6 +65,7 @@ The following IMAP specifications are implemented:
  - link:https://datatracker.ietf.org/doc/html/rfc4731.html[RFC-4731] IMAP ESEARCH: extentions for IMAP search: new options like min, max, count.
  - link:https://datatracker.ietf.org/doc/html/rfc3348.html[RFC-3348] IMAP Child Mailbox Extension
  - link:https://www.rfc-editor.org/rfc/rfc7889.html[RFC-7889] IMAP Extension for APPENDLIMIT
+ - link:https://www.rfc-editor.org/rfc/rfc8474.html[RFC-8474] IMAP Extension for Object Identifiers
  - link:https://datatracker.ietf.org/doc/html/rfc8438.html[RFC-8438] IMAP Extension for STATUS=SIZE
 
 Partially implemented specifications:

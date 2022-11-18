@@ -59,6 +59,7 @@
        <li>MOVE (RFC 6851 https://tools.ietf.org/html/rfc6851 on master). This is enabled only if you use a MailboxManager exposing the Move capability</li>
        <li>METADATA Extension (RFC 5464 http://www.ietf.org/rfc/rfc5464.txt on master). This is enabled only if you use a MailboxManager exposing the Annotation capability</li>
        <li>IMAP Extension for APPENDLIMIT (RFC 7889 - https://www.rfc-editor.org/rfc/rfc7889.html)</li>
+       <li>IMAP Extension for OBJECTID (https://www.rfc-editor.org/rfc/rfc8474.html)</li>
        <li>IMAP Extension for STATUS=SIZE (https://www.rfc-editor.org/rfc/rfc8438.html)</li>
        <li>IMAP QUOTA (https://www.rfc-editor.org/rfc/rfc9208.html)</li>
      </ul>
