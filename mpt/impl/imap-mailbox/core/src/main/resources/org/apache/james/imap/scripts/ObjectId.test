@@ -16,9 +16,11 @@
 # specific language governing permissions and limitations      #
 # under the License.                                           #
 ################################################################
-C: abcd CAPABILITY
-S: \* CAPABILITY .+
-S: abcd OK CAPABILITY completed.
 
-C: hijk CAPABILITY extra stuff
-S: hijk BAD CAPABILITY failed. Illegal arguments.
+C: defg CAPABILITY
+S: \* CAPABILITY .*OBJECTID.*
+S: defg OK CAPABILITY completed.
+
+C: 22 fetch 1 (emailid threadid)
+S: \* 1 FETCH \(EMAILID \(.*\) THREADID \(.*\)\)
+S: 22 OK FETCH completed.
