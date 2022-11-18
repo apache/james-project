@@ -44,6 +44,7 @@ C:
 S: A003 OK (\[.+\] )?APPEND completed.
 
 C: abcd EXAMINE inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 2 RECENT
@@ -56,6 +57,7 @@ S: abcd OK \[READ-ONLY\] EXAMINE completed.
 
 # Try again to ensure that no changes to flags were made.
 C: abcd EXAMINE inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 2 RECENT

@@ -79,6 +79,7 @@ C:
 S: 1e OK (\[.+\] )?APPEND completed.
 
 C: 1f SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 4 RECENT
@@ -94,6 +95,7 @@ S: 1f OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 2
 C: 2a SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 0 RECENT

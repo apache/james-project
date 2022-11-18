@@ -21,6 +21,7 @@ C: 10 CREATE #private.imapuser.test
 S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: A002 SELECT #private.imapuser.test
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT

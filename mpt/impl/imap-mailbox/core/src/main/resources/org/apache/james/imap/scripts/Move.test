@@ -55,6 +55,7 @@ S: \* STATUS "selected" \(MESSAGES 2\)
 S: a5 OK STATUS completed.
 
 C: a7 SELECT moved
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* \d+ RECENT

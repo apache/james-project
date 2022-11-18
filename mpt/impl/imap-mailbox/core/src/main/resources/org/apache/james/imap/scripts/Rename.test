@@ -19,6 +19,7 @@
 C: A2 CREATE testmailbox
 S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -1946,6 +1947,7 @@ S: \* 2 FETCH \(FLAGS \(\\Answered \\Deleted \\Flagged \\Recent \\Seen\)\)
 S: \* 3 FETCH \(FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Recent\)\)
 S: A99 OK STORE completed\.
 C: A100 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 19 EXISTS
 S: \* 19 RECENT
@@ -2074,6 +2076,7 @@ S: A101 OK FETCH completed\.
 C: A102 CREATE other
 S: A102 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A103 SELECT other
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -2339,6 +2342,7 @@ S: A104 OK (\[.+\] )?APPEND completed\.
 C: A105 CREATE base
 S: A105 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A106 SELECT base
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -2350,6 +2354,7 @@ S: A106 OK \[READ-WRITE\] SELECT completed\.
 C: A107 RENAME testmailbox moved
 S: A107 OK RENAME completed\.
 C: A108 SELECT moved
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 19 EXISTS
 S: \* 0 RECENT
@@ -2482,6 +2487,7 @@ S: A111 NO (.)*
 C: A112 SELECT testmailbox
 S: A112 NO (.)*
 C: A113 SELECT moved
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 19 EXISTS
 S: \* 0 RECENT
@@ -2492,6 +2498,7 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 40\].*
 S: A113 OK \[READ-WRITE\] SELECT completed\.
 C: A114 SELECT other
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 0 RECENT
@@ -2502,6 +2509,7 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 2\].*
 S: A114 OK \[READ-WRITE\] SELECT completed\.
 C: A115 SELECT base
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -2517,6 +2525,7 @@ S: A117 NO (.)*
 C: A118 RENAME other testmailbox
 S: A118 OK RENAME completed\.
 C: A119 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 0 RECENT
@@ -2527,6 +2536,7 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 2\].*
 S: A119 OK \[READ-WRITE\] SELECT completed\.
 C: A120 SELECT moved
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 19 EXISTS
 S: \* 0 RECENT
@@ -2539,6 +2549,7 @@ S: A120 OK \[READ-WRITE\] SELECT completed\.
 C: A121 SELECT other
 S: A121 NO (.)*
 C: A122 SELECT base
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -2560,6 +2571,7 @@ S: A127 NO (.)*
 C: A128 RENAME testmailbox Inbox
 S: A128 NO (.)*
 C: A129 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 0 RECENT
@@ -2570,6 +2582,7 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 2\].*
 S: A129 OK \[READ-WRITE\] SELECT completed\.
 C: A130 SELECT moved
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 19 EXISTS
 S: \* 0 RECENT
@@ -2582,6 +2595,7 @@ S: A130 OK \[READ-WRITE\] SELECT completed\.
 C: A131 SELECT other
 S: A131 (.)*
 C: A132 SELECT base
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT

@@ -20,6 +20,7 @@ C: A2 CREATE testmailbox
 S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -2294,6 +2295,7 @@ C: A200 CREATE secondmailbox
 S: A200 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 
 C: A201 SELECT secondmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT

@@ -20,6 +20,7 @@ C: 10 CREATE selectappend
 S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 10 SELECT selectappend
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT

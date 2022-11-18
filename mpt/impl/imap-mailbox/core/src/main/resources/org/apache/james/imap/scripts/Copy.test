@@ -43,6 +43,7 @@ S: \* 2 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
 S: a6 OK STORE completed.
 
 C: a7 SELECT copied
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 3 EXISTS
 S: \* 3 RECENT

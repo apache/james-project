@@ -17,6 +17,7 @@
 # under the License.                                           #
 ################################################################
 C: abcd SELECT inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* \d+ EXISTS
 S: \* \d+ RECENT

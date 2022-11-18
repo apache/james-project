@@ -102,6 +102,7 @@ C:
 S: A011 OK (\[.+\] )?APPEND completed.
 
 C: 10 SELECT statustest
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 4 RECENT

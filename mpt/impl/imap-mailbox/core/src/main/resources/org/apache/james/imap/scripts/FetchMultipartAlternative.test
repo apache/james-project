@@ -20,6 +20,7 @@
 C: A2 CREATE testmailbox
 S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -60,6 +61,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A4 OK (\[.+\] )?APPEND completed\.
 C: A5 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT
@@ -151,6 +153,7 @@ S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
 S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>\)
 S: A11 OK FETCH completed\.
 C: A12 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT

@@ -67,6 +67,7 @@ S: \* STATUS "appendexpunge" \(MESSAGES 3\)
 S: A005 OK STATUS completed.
 
 C: A006 SELECT appendexpunge
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 3 EXISTS
 S: \* \d+ RECENT

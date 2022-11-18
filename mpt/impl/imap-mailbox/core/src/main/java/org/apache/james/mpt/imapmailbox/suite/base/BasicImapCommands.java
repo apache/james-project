@@ -45,6 +45,7 @@ public class BasicImapCommands implements ImapTestConstants {
         ProtocolInteractor preElements = scriptedTestProtocol.preElements();
         
         preElements.cl("abcd SELECT inbox");
+        preElements.sl("\\* OK \\[MAILBOXID \\(.+\\)\\] Ok", "BasicImapCommands");
         preElements.sl("\\* FLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\Seen\\)", "BasicImapCommands");
         preElements.sl("\\* \\d+ EXISTS", "BasicImapCommands");
         preElements.sl("\\* \\d+ RECENT", "BasicImapCommands");

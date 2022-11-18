@@ -40,6 +40,7 @@ C:
 S: 1b OK (\[.+\] )?APPEND completed.
 
 C: 1c SELECT deleteconcurrent
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT

@@ -20,6 +20,7 @@
 C: A2 CREATE testmailbox
 S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed\.
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -67,6 +68,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A4 OK (\[.+\] )?APPEND completed\.
 C: A5 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT
@@ -178,6 +180,7 @@ S: 1234567890ABCDEFGHIJKLMNOPQ
 S: \)
 S: A12 OK FETCH completed\.
 C: A13 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT

@@ -73,6 +73,7 @@ C:
 S: 1d OK (\[.+\] )?APPEND completed.
 
 C: 1e SELECT alpha
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 4 RECENT
@@ -92,6 +93,7 @@ S: 1h OK STORE completed.
 
 SESSION: 2
 C: 2e SELECT alpha
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 0 RECENT
