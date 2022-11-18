@@ -31,31 +31,31 @@ import com.google.inject.Inject;
 public class InitializationOperations {
 
     private final Set<InitializationOperation> initializationOperations;
-    private final Startables configurables;
+    private final Startables startables;
 
     @Inject
-    public InitializationOperations(Set<InitializationOperation> initializationOperations, Startables configurables) {
+    public InitializationOperations(Set<InitializationOperation> initializationOperations, Startables startables) {
         this.initializationOperations = initializationOperations;
-        this.configurables = configurables;
+        this.startables = startables;
     }
 
     public void initModules() {
-        Set<InitializationOperation> processed = processConfigurables();
+        Set<InitializationOperation> processed = processStartables();
         
         processOthers(processed);
     }
 
-    private Set<InitializationOperation> processConfigurables() {
-        return configurables.get().stream()
+    private Set<InitializationOperation> processStartables() {
+        return startables.get().stream()
             .flatMap(this::configurationPerformerFor)
             .distinct()
             .peek(Throwing.consumer(InitializationOperation::initModule).sneakyThrow())
             .collect(Collectors.toSet());
     }
 
-    private Stream<InitializationOperation> configurationPerformerFor(Class<? extends Startable> configurable) {
+    private Stream<InitializationOperation> configurationPerformerFor(Class<? extends Startable> startable) {
         return initializationOperations.stream()
-                .filter(x -> x.forClass().equals(configurable));
+                .filter(x -> x.forClass().equals(startable));
     }
 
     private void processOthers(Set<InitializationOperation> processed) {
