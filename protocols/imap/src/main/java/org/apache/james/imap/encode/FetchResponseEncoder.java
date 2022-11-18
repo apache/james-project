@@ -307,6 +307,7 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
             composer.closeParen();
         }
     }
+
     private void encodeThreadId(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
         final ThreadId threadId = fetchResponse.getThreadId();
         if (threadId != null) {
