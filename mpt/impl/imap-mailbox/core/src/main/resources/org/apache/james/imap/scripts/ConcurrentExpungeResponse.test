@@ -73,6 +73,7 @@ C:
 S: 1d OK (\[.+\] )?APPEND completed.
 
 C: 1e SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 4 RECENT
@@ -85,6 +86,7 @@ S: 1e OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 2
 C: 2a SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 0 RECENT
@@ -97,6 +99,7 @@ S: 2a OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 3
 C: 3a SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 0 RECENT
@@ -125,6 +128,7 @@ S: 2b OK NOOP completed.
 # Now select with a new session - we have sessions 2,3 and 4 in different states
 SESSION: 4
 C: 4a SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT

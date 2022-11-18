@@ -28,6 +28,7 @@ S: 1b OK STATUS completed.
 
 SESSION: 2
 C: 2a SELECT existsresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -39,6 +40,7 @@ S: 2a OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 3
 C: 3a SELECT existsresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -50,6 +52,7 @@ S: 3a OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 4
 C: 4a SELECT existsresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT

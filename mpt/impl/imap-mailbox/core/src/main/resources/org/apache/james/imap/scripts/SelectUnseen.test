@@ -23,6 +23,7 @@ C: 10 CREATE another
 S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: 10 SELECT selectappend
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -67,6 +68,7 @@ S: \* 2 RECENT
 S: A009 OK (\[.+\] )?APPEND completed.
 
 C: 20 SELECT another
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -77,6 +79,7 @@ S: \* OK \[UIDNEXT 1\].*
 S: 20 OK \[READ-WRITE\] SELECT completed.
 
 C: 21 SELECT selectappend
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT
@@ -102,6 +105,7 @@ S: \)
 S: 30 OK FETCH completed.
 
 C: 30 SELECT another
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -112,6 +116,7 @@ S: \* OK \[UIDNEXT 1\].*
 S: 30 OK \[READ-WRITE\] SELECT completed.
 
 C: 40 SELECT selectappend
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT

@@ -83,6 +83,7 @@ S: 1e OK (\[.+\] )?APPEND completed.
 
 SESSION: 2
 C: 2a SELECT expungeresponse
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 4 EXISTS
 S: \* 4 RECENT

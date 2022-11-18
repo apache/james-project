@@ -35,6 +35,7 @@ C:
 S: A003 OK (\[.+\] )?APPEND completed.
 
 C: a7 select appendBox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 1 EXISTS
 S: \* 1 RECENT

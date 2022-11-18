@@ -20,6 +20,7 @@
 C: A2 CREATE testmailbox
 S: A2 OK \[MAILBOXID \(.+\)\] Create completed\.
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
 S: \* 0 EXISTS
@@ -60,6 +61,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A4 OK Append completed\.
 C: A5 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
 S: \* 1 EXISTS
@@ -151,6 +153,7 @@ S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
 S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>\)
 S: A11 OK Fetch completed\.
 C: A12 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
 S: \* 1 EXISTS

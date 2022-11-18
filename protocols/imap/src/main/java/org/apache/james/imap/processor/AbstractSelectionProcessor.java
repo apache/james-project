@@ -60,6 +60,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
@@ -132,6 +133,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             .doOnNext(metaData -> {
                     SelectedMailbox selected = session.getSelected();
 
+                    mailboxId(responder, selected.getMailboxId());
                     flags(responder, selected);
                     exists(responder, metaData);
                     recent(responder, selected);
@@ -381,6 +383,11 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         final long messageCount = metaData.getMessageCount();
         final ExistsResponse existsResponse = new ExistsResponse(messageCount);
         responder.respond(existsResponse);
+    }
+
+    private void mailboxId(Responder responder, MailboxId mailboxId) {
+        StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.OK, ResponseCode.mailboxId(mailboxId));
+        responder.respond(untaggedOk);
     }
 
     private Mono<MailboxMetaData> selectMailbox(MailboxPath mailboxPath, ImapSession session, Responder responder) {

@@ -53,6 +53,7 @@ C:
 S: 1c OK (\[.+\] )?APPEND completed.
 
 C: 1d SELECT multibox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 2 RECENT
@@ -65,6 +66,7 @@ S: 1d OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 2
 C: 2a SELECT multibox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT
@@ -77,6 +79,7 @@ S: 2a OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 3
 C: 3a SELECT multibox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT
@@ -89,6 +92,7 @@ S: 3a OK \[READ-WRITE\] SELECT completed.
 
 SESSION: 4
 C: 4a SELECT multibox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 2 EXISTS
 S: \* 0 RECENT
