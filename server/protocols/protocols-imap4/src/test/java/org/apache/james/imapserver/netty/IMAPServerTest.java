@@ -154,7 +154,9 @@ class IMAPServerTest {
             DefaultImapProcessorFactory.createXListSupportingProcessor(
                 memoryIntegrationResources.getMailboxManager(),
                 memoryIntegrationResources.getEventBus(),
-                new StoreSubscriptionManager(memoryIntegrationResources.getMailboxManager().getMapperFactory()),
+                new StoreSubscriptionManager(memoryIntegrationResources.getMailboxManager().getMapperFactory(),
+                    memoryIntegrationResources.getMailboxManager().getMapperFactory(),
+                    memoryIntegrationResources.getMailboxManager().getEventBus()),
                 null,
                 memoryIntegrationResources.getQuotaManager(),
                 memoryIntegrationResources.getQuotaRootResolver(),

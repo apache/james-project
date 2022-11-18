@@ -587,4 +587,66 @@ public interface MailboxEvents {
         }
     }
 
+    class MailboxSubscribedEvent extends MailboxEvent {
+
+        public MailboxSubscribedEvent(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
+        }
+
+        @Override
+        public boolean isNoop() {
+            return false;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxACLUpdated) {
+                MailboxACLUpdated that = (MailboxACLUpdated) o;
+
+                return Objects.equals(this.eventId, that.eventId)
+                    && Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.username, that.username)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(eventId, sessionId, username, path,  mailboxId);
+        }
+    }
+
+    class MailboxUnsubscribedEvent extends MailboxEvent {
+
+        public MailboxUnsubscribedEvent(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
+        }
+
+        @Override
+        public boolean isNoop() {
+            return false;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxACLUpdated) {
+                MailboxACLUpdated that = (MailboxACLUpdated) o;
+
+                return Objects.equals(this.eventId, that.eventId)
+                    && Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.username, that.username)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(eventId, sessionId, username, path,  mailboxId);
+        }
+    }
+
 }

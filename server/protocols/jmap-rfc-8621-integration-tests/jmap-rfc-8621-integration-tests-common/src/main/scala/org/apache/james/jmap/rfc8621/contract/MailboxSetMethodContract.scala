@@ -19,9 +19,6 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -32,9 +29,9 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.draft.MessageIdProbe
+import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
@@ -45,11 +42,33 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{Assertions, SoftAssertions}
+import org.awaitility.Awaitility
 import org.hamcrest.Matchers.{equalTo, hasSize, not}
-import org.junit.jupiter.api.{BeforeEach, Disabled, RepeatedTest, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Tag, Test}
 import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scheduler.Schedulers
+import reactor.netty.http.client.HttpClient
+import sttp.capabilities.WebSockets
+import sttp.client3.monad.IdMonad
+import sttp.client3.okhttp.OkHttpSyncBackend
+import sttp.client3.{Identity, SttpBackend, asWebSocket, basicRequest}
+import sttp.model.Uri
+import sttp.monad.MonadError
+import sttp.monad.syntax.MonadErrorOps
+import sttp.ws.WebSocketFrame
+import sttp.ws.WebSocketFrame.Text
+
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
+
 
 trait MailboxSetMethodContract {
+
+  private lazy val backend: SttpBackend[Identity, WebSockets] = OkHttpSyncBackend()
+  private lazy implicit val monadError: MonadError[Identity] = IdMonad
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
@@ -7981,4 +8000,101 @@ trait MailboxSetMethodContract {
       .statusCode(SC_OK)
       .body("methodResponses[0][1].oldState", not(equalTo(state)))
   }
+
+  @Test
+  def webSocketShouldPushNewMessageWhenChangeSubscriptionOfMailbox(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    Thread.sleep(100)
+
+    val socketPort = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+
+    val response: Either[String, List[String]] =
+      basicRequest.get(Uri.apply(new URI(s"ws://127.0.0.1:$socketPort/jmap/ws")))
+        .header("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        .header("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "id": "req-36",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Mailbox/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "update": {
+                 |        "${mailboxId.serialize}" : {
+                 |           "isSubscribed": true
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            List(ws.receive()
+              .map { case t: Text =>
+                t.payload
+              })
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(200)
+    assertThat(response.toOption.get.asJava)
+      .hasSize(1)
+    assertThat(response.toOption.get.head)
+      .startsWith("{\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+  }
+
+  @Test
+  def sseShouldHasNewEventWhenChangeSubscribeOfMailbox(server: GuiceJamesServer): Unit = {
+    val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox12"))
+    Thread.sleep(500)
+
+    val seq = new ListBuffer[String]()
+    HttpClient.create
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=no")
+      .headers(builder => {
+        builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+      })
+      .get()
+      .responseContent()
+      .map(buffer => {
+        val bytes = new Array[Byte](buffer.readableBytes)
+        buffer.readBytes(bytes)
+        new String(bytes, StandardCharsets.UTF_8)
+      })
+      .doOnNext(seq.addOne)
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+    Thread.sleep(200)
+    // change subscription
+    JmapRequests.subscribe(mailboxId.serialize())
+
+    Awaitility.`with`
+      .pollInterval(Duration.ofMillis(100))
+      .atMost(Duration.ofSeconds(100))
+      .await
+      .untilAsserted { () =>
+        assertThat(seq.asJava)
+          .hasSize(1)
+        assertThat(seq.head)
+          .startsWith("event: state\ndata: {\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+        assertThat(seq.head).endsWith("\n\n")
+      }
+  }
+
 }

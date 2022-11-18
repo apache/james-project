@@ -24,8 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.Username;
+import org.apache.james.events.EventBusTestFixture;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -49,11 +54,13 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.user.model.Subscription;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,7 +76,9 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraSubscriptionModule.MODULE,
-        CassandraAnnotationModule.MODULE));
+        CassandraAnnotationModule.MODULE,
+        CassandraSchemaVersionModule.MODULE,
+        CassandraMailboxModule.MODULE));
 
     private SubscriptionManager subscriptionManager;
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
@@ -90,7 +99,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraMailboxCounterDAO mailboxCounterDAO = null;
         CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
         CassandraMailboxDAO mailboxDAO = null;
-        CassandraMailboxPathV3DAO mailboxPathV3DAO = null;
+        CassandraMailboxPathV3DAO mailboxPathV3DAO = new CassandraMailboxPathV3DAO(cassandraCluster.getCassandraCluster().getConf());
         CassandraFirstUnseenDAO firstUnseenDAO = null;
         CassandraApplicableFlagDAO applicableFlagDAO = null;
         CassandraDeletedMessageDAO deletedMessageDAO = null;
@@ -103,7 +112,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraModSeqProvider modSeqProvider = null;
         RecomputeMailboxCountersService recomputeMailboxCountersService = null;
 
-        mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
+        mailboxSessionMapperFactory =  new CassandraMailboxSessionMapperFactory(
             uidProvider,
             modSeqProvider,
             cassandraCluster.getCassandraCluster().getConf(),
@@ -128,7 +137,13 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
             recomputeMailboxCountersService,
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             BatchSizes.defaultValues());
-        subscriptionManager = new StoreSubscriptionManager(mailboxSessionMapperFactory);
+
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
+
+        subscriptionManager = new StoreSubscriptionManager(
+            mailboxSessionMapperFactory,
+            mailboxSessionMapperFactory,
+            eventBus);
     }
 
     @Test

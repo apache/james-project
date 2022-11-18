@@ -121,7 +121,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
 
-        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
+        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
         
         ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(

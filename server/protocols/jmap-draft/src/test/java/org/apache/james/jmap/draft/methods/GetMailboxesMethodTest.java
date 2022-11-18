@@ -86,7 +86,7 @@ public class GetMailboxesMethodTest {
         quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
-        provisioner = new DefaultMailboxesProvisioner(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()), new DefaultMetricFactory());
+        provisioner = new DefaultMailboxesProvisioner(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus()), new DefaultMetricFactory());
 
         getMailboxesMethod = new GetMailboxesMethod(mailboxManager, quotaRootResolver, quotaManager,  mailboxFactory, new DefaultMetricFactory(), provisioner);
     }

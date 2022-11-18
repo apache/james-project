@@ -33,7 +33,7 @@ class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager
 
     @Override
     protected SubscriptionManager provideSubscriptionManager() {
-        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory(), provideMailboxManager().getMapperFactory(), provideMailboxManager().getEventBus());
     }
 
     @Override

@@ -99,7 +99,9 @@ class SubscribeAllRequestToTaskTest {
     void setUp() throws Exception {
         InMemoryIntegrationResources inMemoryIntegrationResources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = inMemoryIntegrationResources.getMailboxManager();
-        subscriptionManager = new StoreSubscriptionManager(inMemoryIntegrationResources.getMailboxManager().getMapperFactory());
+        subscriptionManager = new StoreSubscriptionManager(inMemoryIntegrationResources.getMailboxManager().getMapperFactory(),
+            inMemoryIntegrationResources.getMailboxManager().getMapperFactory(),
+            inMemoryIntegrationResources.getMailboxManager().getEventBus());
         DomainList domainList = mock(DomainList.class);
         Mockito.when(domainList.containsDomain(any())).thenReturn(true);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
