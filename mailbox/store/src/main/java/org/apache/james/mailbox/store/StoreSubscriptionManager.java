@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -80,7 +81,12 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         try {
             SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
             Subscription oldSubscription = new Subscription(session.getUser(), mailbox.asEscapedString());
-            return mapper.executeReactive(mapper.deleteReactive(oldSubscription));
+            Optional<Subscription> legacyOldSubscription = Optional.of(new Subscription(session.getUser(), mailbox.getName()))
+                .filter(any -> mailbox.belongsTo(session));
+            return mapper.executeReactive(mapper.deleteReactive(oldSubscription))
+                .then(legacyOldSubscription
+                    .map(subscription -> mapper.executeReactive(mapper.deleteReactive(subscription)))
+                    .orElse(Mono.empty()));
         } catch (SubscriptionException e) {
             return Mono.error(e);
         }
@@ -109,8 +115,10 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox.asEscapedString()))));
-            // Legacy purposes, remove subscriptions created prior to the MailboxPath migration. Noops for those created after.
-            mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox.getName()))));
+            if (mailbox.belongsTo(session)) {
+                // Legacy purposes, remove subscriptions created prior to the MailboxPath migration. Noops for those created after.
+                mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox.getName()))));
+            }
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }

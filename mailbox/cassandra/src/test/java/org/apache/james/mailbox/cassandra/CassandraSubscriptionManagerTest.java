@@ -19,10 +19,13 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -47,10 +50,16 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.user.model.Subscription;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
@@ -63,6 +72,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraAnnotationModule.MODULE));
 
     private SubscriptionManager subscriptionManager;
+    private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Override
     public SubscriptionManager getSubscriptionManager() {
@@ -93,31 +103,86 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraModSeqProvider modSeqProvider = null;
         RecomputeMailboxCountersService recomputeMailboxCountersService = null;
 
-        subscriptionManager = new StoreSubscriptionManager(
-            new CassandraMailboxSessionMapperFactory(
-                uidProvider,
-                modSeqProvider,
-                cassandraCluster.getCassandraCluster().getConf(),
-                threadDAO,
-                threadLookupDAO,
-                messageDAO,
-                messageDAOV3,
-                messageIdDAO,
-                imapUidDAO,
-                mailboxCounterDAO,
-                mailboxRecentsDAO,
-                mailboxDAO,
-                mailboxPathV3DAO,
-                firstUnseenDAO,
-                applicableFlagDAO,
-                attachmentDAOV2,
-                deletedMessageDAO,
-                blobStore,
-                attachmentMessageIdDAO,
-                aclMapper,
-                userMailboxRightsDAO,
-                recomputeMailboxCountersService,
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
-                BatchSizes.defaultValues()));
+        mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
+            uidProvider,
+            modSeqProvider,
+            cassandraCluster.getCassandraCluster().getConf(),
+            threadDAO,
+            threadLookupDAO,
+            messageDAO,
+            messageDAOV3,
+            messageIdDAO,
+            imapUidDAO,
+            mailboxCounterDAO,
+            mailboxRecentsDAO,
+            mailboxDAO,
+            mailboxPathV3DAO,
+            firstUnseenDAO,
+            applicableFlagDAO,
+            attachmentDAOV2,
+            deletedMessageDAO,
+            blobStore,
+            attachmentMessageIdDAO,
+            aclMapper,
+            userMailboxRightsDAO,
+            recomputeMailboxCountersService,
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            BatchSizes.defaultValues());
+        subscriptionManager = new StoreSubscriptionManager(mailboxSessionMapperFactory);
+    }
+
+    @Test
+    void legacySubscriptionsCanBeListed() throws Exception {
+        mailboxSessionMapperFactory.createSubscriptionMapper(SESSION)
+            .save(new Subscription(SESSION.getUser(), "whatever"));
+
+        assertThat(Flux.from(subscriptionManager.subscriptionsReactive(SESSION)).collectList().block())
+            .containsOnly(MailboxPath.forUser(SESSION.getUser(), "whatever"));
+    }
+
+    @Test
+    void legacySubscriptionsCanBeRemovedReactive() throws Exception {
+        mailboxSessionMapperFactory.createSubscriptionMapper(SESSION)
+            .save(new Subscription(SESSION.getUser(), "whatever"));
+
+        Mono.from(subscriptionManager.unsubscribeReactive(MailboxPath.forUser(SESSION.getUser(), "whatever"), SESSION))
+            .block();
+
+        assertThat(Flux.from(subscriptionManager.subscriptionsReactive(SESSION)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void removingADelegatedSubscriptionShouldNotUnsubscribeLegacySubscriptionReactive() throws Exception {
+        mailboxSessionMapperFactory.createSubscriptionMapper(SESSION)
+            .save(new Subscription(SESSION.getUser(), "whatever"));
+
+        Mono.from(subscriptionManager.unsubscribeReactive(MailboxPath.forUser(Username.of("alice"), "whatever"), SESSION))
+            .block();
+
+        assertThat(Flux.from(subscriptionManager.subscriptionsReactive(SESSION)).collectList().block())
+            .containsOnly(MailboxPath.forUser(SESSION.getUser(), "whatever"));
+    }
+
+    @Test
+    void legacySubscriptionsCanBeRemoved() throws Exception {
+        mailboxSessionMapperFactory.createSubscriptionMapper(SESSION)
+            .save(new Subscription(SESSION.getUser(), "whatever"));
+
+        subscriptionManager.unsubscribe(SESSION, MailboxPath.forUser(SESSION.getUser(), "whatever"));
+
+        assertThat(Flux.from(subscriptionManager.subscriptionsReactive(SESSION)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void removingADelegatedSubscriptionShouldNotUnsubscribeLegacySubscription() throws Exception {
+        mailboxSessionMapperFactory.createSubscriptionMapper(SESSION)
+            .save(new Subscription(SESSION.getUser(), "whatever"));
+
+        subscriptionManager.unsubscribe(SESSION, MailboxPath.forUser(Username.of("alice"), "whatever"));
+
+        assertThat(Flux.from(subscriptionManager.subscriptionsReactive(SESSION)).collectList().block())
+            .containsOnly(MailboxPath.forUser(SESSION.getUser(), "whatever"));
     }
 }
