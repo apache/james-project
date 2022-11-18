@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
