@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 import org.apache.james.imap.api.ImapConfiguration;
@@ -48,6 +49,7 @@ class CapabilityProcessorTest {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];
         });
+        when(mailboxManager.getSupportedMessageCapabilities()).thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         MetricFactory metricFactory = null;
         testee = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
     }
