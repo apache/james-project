@@ -31,7 +31,6 @@ import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
-import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
@@ -61,7 +60,6 @@ public class JPAJamesServerMain implements JamesServerMain {
         new JPADataModule(),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
-        new ElasticSearchMetricReporterModule(),
         new JPAAuthorizatorModule());
 
     public static void main(String[] args) throws Exception {

@@ -80,7 +80,6 @@ public class JPAJamesServerMain implements JamesServerMain {
     private static final Module JPA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new DefaultProcessorsConfigurationProviderModule(),
-        new ElasticSearchMetricReporterModule(),
         new JPADataModule(),
         new JPAMailboxModule(),
         new MailboxModule(),
