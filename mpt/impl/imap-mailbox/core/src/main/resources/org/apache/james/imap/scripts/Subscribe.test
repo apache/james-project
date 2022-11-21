@@ -51,6 +51,23 @@ S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
 }
 S: a06 OK LSUB completed.
 
+#  Subscription for not existing mailboxes is supported
+C: b05 SUBSCRIBE whatever
+S: b05 OK SUBSCRIBE completed.
+
+# LIST All subscribed
+C: b06 LSUB "" "*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"whatever\"
+S: \* LSUB \(\) \"\.\" \"subscribetest\"
+S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
+S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
+}
+S: b06 OK LSUB completed.
+
+C: b08 UNSUBSCRIBE whatever
+S: b08 OK UNSUBSCRIBE completed.
+
 # LIST A subset of subscribed
 C: a07 LSUB "" "subscribetest.sub*"
 S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
