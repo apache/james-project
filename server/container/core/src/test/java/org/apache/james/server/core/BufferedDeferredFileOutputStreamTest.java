@@ -245,9 +245,8 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final String prefix = "commons-io-test";
         final String suffix = ".out";
-        final File tempDir  = new File(".");
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length + 42,  prefix, suffix, tempDir);
+            new BufferedDeferredFileOutputStream(testBytes.length + 42,  prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
         try
         {
@@ -269,9 +268,8 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final String prefix = "commons-io-test";
         final String suffix = ".out";
-        final File tempDir  = new File(".");
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix, tempDir);
+            new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
         try
         {
@@ -287,7 +285,6 @@ public class BufferedDeferredFileOutputStreamTest {
         assertTrue("Check file exists", dfos.getFile().exists());
         assertTrue("Check prefix", dfos.getFile().getName().startsWith(prefix));
         assertTrue("Check suffix", dfos.getFile().getName().endsWith(suffix));
-        assertEquals("Check dir", tempDir.getPath(), dfos.getFile().getParent());
 
         verifyResultFile(dfos.getFile());
 
@@ -303,9 +300,8 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final String prefix = "commons-io-test";
         final String suffix = null;
-        final File tempDir  = null;
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix, tempDir);
+            new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
         try
         {
@@ -337,10 +333,9 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final String prefix = null;
         final String suffix = ".out";
-        final File tempDir  = new File(".");
         try
         {
-            (new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix, tempDir)).close();
+            (new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix)).close();
             fail("Expected IllegalArgumentException ");
         }
         catch (final IllegalArgumentException e) {

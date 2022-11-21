@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -79,11 +80,6 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
      */
     private final String suffix;
 
-    /**
-     * The directory to use for temporary files.
-     */
-    private final File directory;
-
 
     /**
      * True when close() has been called successfully.
@@ -98,7 +94,7 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
      * @param outputFile The file to which data is saved beyond the threshold.
      */
     public BufferedDeferredFileOutputStream(final int threshold, final File outputFile) {
-        this(threshold,  outputFile, null, null, null);
+        this(threshold,  outputFile, null, null);
     }
 
 
@@ -109,10 +105,9 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
      * @param threshold  The number of bytes at which to trigger an event.
      * @param prefix Prefix to use for the temporary file.
      * @param suffix Suffix to use for the temporary file.
-     * @param directory Temporary file directory.
      */
-    public BufferedDeferredFileOutputStream(final int threshold, final String prefix, final String suffix, final File directory) {
-        this(threshold, null, prefix, suffix, directory);
+    public BufferedDeferredFileOutputStream(final int threshold, final String prefix, final String suffix) {
+        this(threshold, null, prefix, suffix);
         if (prefix == null) {
             throw new IllegalArgumentException("Temporary file prefix is missing");
         }
@@ -129,7 +124,7 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
      * @param directory Temporary file directory.
      */
     private BufferedDeferredFileOutputStream(final int threshold, final File outputFile, final String prefix,
-                                             final String suffix, final File directory) {
+                                             final String suffix) {
         super(threshold);
         this.outputFile = outputFile;
 
@@ -137,7 +132,6 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
         currentOutputStream = memoryOutputStream;
         this.prefix = prefix;
         this.suffix = suffix;
-        this.directory = directory;
     }
 
     /**
@@ -164,7 +158,7 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream i
     @Override
     protected void thresholdReached() throws IOException {
         if (prefix != null) {
-            outputFile = File.createTempFile(prefix, suffix, directory);
+            outputFile = Files.createTempFile(prefix, suffix).toFile();
         }
         final FileOutputStream fos = new FileOutputStream(outputFile);
         try {
