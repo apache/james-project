@@ -64,11 +64,6 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
      */
     private final String sourceId;
 
-    /**
-     * Temporary directory to use
-     */
-    private static final File TMPDIR = new File(System.getProperty("java.io.tmpdir"));
-
     static class Resource extends LeakAware.Resource {
         private final BufferedDeferredFileOutputStream out;
         private final Set<InputStream> streams;
@@ -111,7 +106,7 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
 
     public static MimeMessageInputStreamSource create(String key, InputStream in) throws MessagingException {
         Disposable.LeakAware.track();
-        BufferedDeferredFileOutputStream out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64", TMPDIR);
+        BufferedDeferredFileOutputStream out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64");
         Resource resource = new Resource(out, new HashSet<>());
 
         return new MimeMessageInputStreamSource(resource, key, in);
@@ -119,7 +114,7 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
 
     public static MimeMessageInputStreamSource create(String key) {
         Disposable.LeakAware.track();
-        BufferedDeferredFileOutputStream out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64", TMPDIR);
+        BufferedDeferredFileOutputStream out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64");
         Resource resource = new Resource(out, new HashSet<>());
 
         return new MimeMessageInputStreamSource(resource, key);
