@@ -72,11 +72,6 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
     private final String sourceId;
 
     /**
-     * Temporary directory to use
-     */
-    private static final File TMPDIR = new File(System.getProperty("java.io.tmpdir"));
-
-    /**
      * Construct a new MimeMessageInputStreamSource from an
      * <code>InputStream</code> that contains the bytes of a MimeMessage.
      *
@@ -89,7 +84,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
         // We want to immediately read this into a temporary file
         // Create a temp file and channel the input stream into it
         try {
-            out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64", TMPDIR);
+            out = new BufferedDeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64");
             IOUtils.copy(in, out);
             sourceId = key;
         } catch (IOException ioe) {
@@ -120,7 +115,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
 
     public MimeMessageInputStreamSource(String key) {
         super();
-        out = new BufferedDeferredFileOutputStream(THRESHOLD, key, ".m64", TMPDIR);
+        out = new BufferedDeferredFileOutputStream(THRESHOLD, key, ".m64");
         sourceId = key;
     }
 

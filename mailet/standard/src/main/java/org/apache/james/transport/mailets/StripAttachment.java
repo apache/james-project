@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -462,7 +463,7 @@ public class StripAttachment extends GenericMailet {
 
     private File createTempFile(String originalFileName) throws IOException {
         OutputFileName outputFileName = OutputFileName.from(originalFileName);
-        return File.createTempFile(outputFileName.getPrefix(), outputFileName.getSuffix(), new File(directoryName));
+        return Files.createTempFile(new File(directoryName).toPath(), outputFileName.getPrefix(), outputFileName.getSuffix()).toFile();
     }
 
     @VisibleForTesting static class OutputFileName {

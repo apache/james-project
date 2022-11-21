@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,7 +103,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                         written = (Integer) attachment.get(WRITTEN_DATA);
                         out = (OutputStream) attachment.get(OUTPUT_STREAM);
                     } else {
-                        f = File.createTempFile("imap-literal", ".tmp");
+                        f = Files.createTempFile("imap-literal", ".tmp").toFile();
                         attachment.put(STORED_DATA, f);
                         written = 0;
                         attachment.put(WRITTEN_DATA, written);
