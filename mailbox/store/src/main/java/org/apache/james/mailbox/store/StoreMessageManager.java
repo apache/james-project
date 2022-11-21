@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
@@ -351,7 +352,7 @@ public class StoreMessageManager implements MessageManager {
             // Create a temporary file and copy the message to it. We will work
             // with the file as
             // source for the InputStream
-            file = File.createTempFile("imap", ".msg");
+            file = Files.createTempFile("imap", ".msg").toFile();
             try (FileOutputStream out = new FileOutputStream(file);
                 BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
                 BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
