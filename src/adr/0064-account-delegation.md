@@ -41,8 +41,6 @@ The account delegation will help owner and delegated account:
 - We would need a way to "list accounts delegated to me" in the delegation store. We could use Cassandra LOGGED batch to keep this eventually consistent
 - The mailboxSession needs to cary over information regarding logged-in user to allow restricting access to the delegation JMAP methods to only the account owner.
 
-## Alternatives
-
 ## References
 
 - [JIRA](https://issues.apache.org/jira/browse/JAMES-xxx)
