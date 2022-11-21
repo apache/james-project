@@ -27,6 +27,8 @@ Based on DelegationStore API, provide a James specific JMAP extension for managi
     + Delegate my account to other people
     + Revoke delegation of my account on another person's account (revoke a right given to me)
     + Revoke delegation of another people's account on my account (revoke a right given to others)
+  - DelegatedAccount/get: the method for getting delegated accounts
+  - DelegatedAccount/set-delete: the method for delete delegated account
 
 JMAP endpoints should support being called with accountIds of delegated accounts and needs to proceed authorization logic according to delegations.
 
