@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -92,6 +94,7 @@ public class MessageIdManagerTestSystem {
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .addMetaData(message.metaData())
+                .isDelivery(!IS_DELIVERY)
                 .build(),
                 new MailboxIdRegistrationKey(mailboxId))
             .block();

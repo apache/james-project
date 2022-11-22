@@ -20,6 +20,7 @@
 
 package org.apache.james.mailbox.store.search;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
@@ -1623,6 +1624,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .mailboxSession(quanSession)
                 .mailbox(quanMailbox)
                 .addMetaData(messageMetaData)
+                .isDelivery(!IS_DELIVERY)
                 .build(),
             new MailboxIdRegistrationKey(quanMailbox.getMailboxId())).block();
     }

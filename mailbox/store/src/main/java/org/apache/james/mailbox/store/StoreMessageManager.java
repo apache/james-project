@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
@@ -524,6 +525,7 @@ public class StoreMessageManager implements MessageManager {
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
                             .addMetaData(data.getLeft())
+                            .isDelivery(!IS_DELIVERY)
                             .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                         .thenReturn(computeAppendResult(data, mailbox))),
@@ -905,6 +907,7 @@ public class StoreMessageManager implements MessageManager {
                             .mailboxSession(session)
                             .mailbox(to.getMailboxEntity())
                             .metaData(copiedUids)
+                            .isDelivery(!IS_DELIVERY)
                             .build(),
                         new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
                     eventBus.dispatch(EventFactory.moved()
@@ -939,6 +942,7 @@ public class StoreMessageManager implements MessageManager {
                             .mailboxSession(session)
                             .mailbox(to.getMailboxEntity())
                             .metaData(moveUids)
+                            .isDelivery(!IS_DELIVERY)
                             .build(),
                         new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
                     eventBus.dispatch(EventFactory.expunged()

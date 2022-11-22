@@ -69,14 +69,15 @@ private object DTO {
   }
 
   case class Added(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
-                   added: Map[MessageUid, DTOs.MessageMetaData]) extends Event {
+                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: IsDelivery) extends Event {
     override def toJava: JavaEvent = new JavaAdded(
       sessionId,
       user,
       path.toJava,
       mailboxId,
       new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
-      eventId)
+      eventId,
+      isDelivery.value)
   }
 
   case class Expunged(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
@@ -164,7 +165,8 @@ private object ScalaConverter {
     user = event.getUsername,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap,
+    isDelivery = IsDelivery(event.isDelivery))
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
@@ -226,6 +228,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
   implicit val modSeqWrites: Writes[ModSeq] = value => JsNumber(value.asLong())
   implicit val userFlagWrites: Writes[UserFlag] = value => JsString(value.value)
+  implicit val isDeliveryWrites: Writes[IsDelivery] = value => JsBoolean(value.value)
   implicit val flagWrites: Writes[Flags] = Json.writes[Flags]
   implicit val eventIdWrites: Writes[EventId] = value => JsString(value.getId.toString)
 
@@ -298,6 +301,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val userFlagsReads: Reads[UserFlag] = {
     case JsString(x) => JsSuccess(UserFlag(x))
+    case _ => JsError()
+  }
+  implicit val isDeliveryReads: Reads[IsDelivery] = {
+    case JsBoolean(x) => JsSuccess(IsDelivery(x))
     case _ => JsError()
   }
   implicit val eventIdReads: Reads[EventId] = {

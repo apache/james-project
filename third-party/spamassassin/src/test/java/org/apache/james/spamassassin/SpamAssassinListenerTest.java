@@ -20,6 +20,7 @@
 package org.apache.james.spamassassin;
 
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -248,6 +249,7 @@ class SpamAssassinListenerTest {
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(inbox)
             .addMetaData(message.metaData())
+            .isDelivery(!IS_DELIVERY)
             .build();
 
         listener.event(addedEvent);
@@ -264,6 +266,7 @@ class SpamAssassinListenerTest {
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(mailbox1)
             .addMetaData(message.metaData())
+            .isDelivery(!IS_DELIVERY)
             .build();
 
         listener.event(addedEvent);

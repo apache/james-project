@@ -145,6 +145,11 @@ public class EventFactory {
     }
 
     @FunctionalInterface
+    public interface RequireIsDelivery<T> {
+        T isDelivery(boolean isDelivery);
+    }
+
+    @FunctionalInterface
     public interface RequireAclDiff<T> {
         T aclDiff(ACLDiff aclDiff);
     }
@@ -227,14 +232,16 @@ public class EventFactory {
         private final Username username;
         private final MailboxSession.SessionId sessionId;
         private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
+        private final boolean isDelivery;
 
-        AddedFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
+        AddedFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData, boolean isDelivery) {
             this.eventId = eventId;
             this.path = path;
             this.mailboxId = mailboxId;
             this.username = username;
             this.sessionId = sessionId;
             this.metaData = ImmutableSortedMap.copyOf(metaData);
+            this.isDelivery = isDelivery;
         }
 
         public Added build() {
@@ -244,7 +251,7 @@ public class EventFactory {
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(metaData);
 
-            return new Added(sessionId, username, path, mailboxId, metaData, eventId);
+            return new Added(sessionId, username, path, mailboxId, metaData, eventId, isDelivery);
         }
     }
 
@@ -420,8 +427,8 @@ public class EventFactory {
         }
     }
 
-    public static RequireMailboxEvent<RequireMetadata<AddedFinalStage>> added() {
-        return eventId -> user -> sessionId -> mailboxId -> path -> metaData -> new AddedFinalStage(eventId, path, mailboxId, user, sessionId, metaData);
+    public static RequireMailboxEvent<RequireMetadata<RequireIsDelivery<AddedFinalStage>>> added() {
+        return eventId -> user -> sessionId -> mailboxId -> path -> metaData -> isDelivery -> new AddedFinalStage(eventId, path, mailboxId, user, sessionId, metaData, isDelivery);
     }
 
     public static RequireMailboxEvent<RequireMetadata<ExpungedFinalStage>> expunged() {

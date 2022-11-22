@@ -21,6 +21,7 @@ package org.apache.james.examples.custom.listeners;
 
 import static org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages.BIG_MESSAGE;
 import static org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages.ONE_MB;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -136,6 +137,7 @@ class SetCustomFlagOnBigMessagesTest {
             .mailboxId(inboxId)
             .mailboxPath(INBOX_PATH)
             .addMetaData(oneMBMetaData)
+            .isDelivery(!IS_DELIVERY)
             .build();
 
         testee.event(eventWithAFakeMessageSize);

@@ -526,12 +526,16 @@ public interface MailboxEvents {
      * A mailbox event related to added message
      */
     class Added extends MetaDataHoldingEvent {
+        public static boolean IS_DELIVERY = true;
+
         private final Map<MessageUid, MessageMetaData> added;
+        private final boolean isDelivery;
 
         public Added(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId,
-                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId) {
+                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId, boolean isDelivery) {
             super(sessionId, username, path, mailboxId, eventId);
             this.added = ImmutableMap.copyOf(uids);
+            this.isDelivery = isDelivery;
         }
 
         /**
@@ -552,6 +556,10 @@ public interface MailboxEvents {
             return added;
         }
 
+        public boolean isDelivery() {
+            return isDelivery;
+        }
+
         @Override
         public boolean isNoop() {
             return added.isEmpty();
@@ -567,14 +575,15 @@ public interface MailboxEvents {
                     && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
-                    && Objects.equals(this.added, that.added);
+                    && Objects.equals(this.added, that.added)
+                    && Objects.equals(this.isDelivery, that.isDelivery);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, added);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, added, isDelivery);
         }
     }
 

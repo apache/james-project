@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -338,6 +339,7 @@ public abstract class ThreadIdGuessingAlgorithmContract {
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .addMetaData(messageMetaData)
+                .isDelivery(!IS_DELIVERY)
                 .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId())).block();
     }
