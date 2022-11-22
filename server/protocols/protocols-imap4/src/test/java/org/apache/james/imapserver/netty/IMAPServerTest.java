@@ -414,6 +414,37 @@ class IMAPServerTest {
         }
 
         @Test
+        void fetchShouldNotFailWhenMixedWithUnselect() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            String msg = "Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+            clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
+                msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
+
+
+            for (int i = 0; i < 1000; i++) {
+                clientConnection.write(ByteBuffer.wrap(("A005 SELECT INBOX\r\n")
+                    .getBytes(StandardCharsets.UTF_8)));
+                readStringUntil(clientConnection, s -> s.contains("A005 OK"));
+                clientConnection.write(ByteBuffer.wrap(("A006 UID FETCH 1:1 FLAGS\r\nA007 UNSELECT\r\n")
+                    .getBytes(StandardCharsets.UTF_8)));
+                readStringUntil(clientConnection, s -> s.contains("FETCH completed."));
+            }
+
+        }
+
+        @Test
         void partialCommandAfterNonSynchronizedLiteralShouldNotFail() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
