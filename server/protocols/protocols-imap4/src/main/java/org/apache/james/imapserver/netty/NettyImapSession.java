@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
@@ -61,7 +62,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final Optional<OidcSASLConfiguration> oidcSASLConfiguration;
 
     private volatile ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
-    private volatile SelectedMailbox selectedMailbox;
+    private final AtomicReference<SelectedMailbox> selectedMailbox = new AtomicReference<>();
     private volatile boolean needsCommandInjectionDetection;
     private volatile MailboxSession mailboxSession = null;
 
@@ -122,6 +123,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public Mono<Void> deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
+        this.selectedMailbox.set(null);
         return closeMailbox();
     }
 
@@ -129,7 +131,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     public Mono<Void> selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
         return closeMailbox()
-            .then(Mono.fromRunnable(() -> selectedMailbox = mailbox));
+            .then(Mono.fromRunnable(() -> selectedMailbox.set(mailbox)));
     }
 
     @Override
@@ -144,7 +146,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     @Override
     public SelectedMailbox getSelected() {
-        return this.selectedMailbox;
+        return this.selectedMailbox.get();
     }
 
     @Override
@@ -153,9 +155,9 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     private Mono<Void> closeMailbox() {
-        if (selectedMailbox != null) {
-            return selectedMailbox.deselect()
-                .then(Mono.fromRunnable(() -> selectedMailbox = null));
+        if (selectedMailbox.get() != null) {
+            return selectedMailbox.get().deselect()
+                .then(Mono.fromRunnable(() -> selectedMailbox.set(null)));
         }
         return Mono.empty();
     }
