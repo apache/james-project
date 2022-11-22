@@ -255,12 +255,14 @@ public interface MessageManager {
         public static class Builder {
             private Optional<Date> internalDate;
             private Optional<Boolean> isRecent;
+            private Optional<Boolean> isDelivery;
             private Optional<Flags> flags;
             private Optional<Message> maybeParsedMessage;
 
             private Builder() {
                 this.internalDate = Optional.empty();
                 this.isRecent = Optional.empty();
+                this.isDelivery = Optional.empty();
                 this.flags = Optional.empty();
                 this.maybeParsedMessage = Optional.empty();
             }
@@ -293,6 +295,19 @@ public interface MessageManager {
                 return isRecent(false);
             }
 
+            public Builder isDelivery(boolean isDelivery) {
+                this.isDelivery = Optional.of(isDelivery);
+                return this;
+            }
+
+            public Builder delivery() {
+                return isDelivery(true);
+            }
+
+            public Builder notDelivery() {
+                return isDelivery(false);
+            }
+
             public Builder withParsedMessage(Message message) {
                 this.maybeParsedMessage = Optional.of(message);
                 return this;
@@ -303,6 +318,7 @@ public interface MessageManager {
                     msgIn,
                     internalDate.orElse(new Date()),
                     isRecent.orElse(true),
+                    isDelivery.orElse(false),
                     flags.orElse(new Flags()),
                     maybeParsedMessage);
             }
@@ -350,13 +366,15 @@ public interface MessageManager {
         private final Content msgIn;
         private final Date internalDate;
         private final boolean isRecent;
+        private final boolean isDelivery;
         private final Flags flags;
         private final Optional<Message> maybeParsedMessage;
 
-        private AppendCommand(Content msgIn, Date internalDate, boolean isRecent, Flags flags, Optional<Message> maybeParsedMessage) {
+        private AppendCommand(Content msgIn, Date internalDate, boolean isRecent, boolean isDelivery, Flags flags, Optional<Message> maybeParsedMessage) {
             this.msgIn = msgIn;
             this.internalDate = internalDate;
             this.isRecent = isRecent;
+            this.isDelivery = isDelivery;
             this.flags = flags;
             this.maybeParsedMessage = maybeParsedMessage;
         }
@@ -371,6 +389,10 @@ public interface MessageManager {
 
         public boolean isRecent() {
             return isRecent;
+        }
+
+        public boolean isDelivery() {
+            return isDelivery;
         }
 
         public Flags getFlags() {
