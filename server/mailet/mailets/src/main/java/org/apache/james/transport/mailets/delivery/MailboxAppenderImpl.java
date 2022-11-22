@@ -88,6 +88,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
             .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(
                 MessageManager.AppendCommand.builder()
                     .recent()
+                    .delivery()
                     .build(extractContent(mail)),
                 session)));
     }
