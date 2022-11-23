@@ -139,7 +139,7 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
   private def emailStateMap(emailChange: EmailChange): Map[TypeName, State] =
     (Map(EmailTypeName -> UuidState.fromJava(emailChange.getState)) ++
       Some(UuidState.fromJava(emailChange.getState))
-        .filter(_ => !emailChange.getCreated.isEmpty)
+        .filter(_ => emailChange.isDelivery && !emailChange.getCreated.isEmpty)
         .map(emailDeliveryState => Map(EmailDeliveryTypeName -> emailDeliveryState))
         .getOrElse(Map())).toMap
 }

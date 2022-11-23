@@ -61,6 +61,7 @@ public class MailboxAndEmailChange implements JmapChange {
                 .state(state)
                 .date(now)
                 .isDelegated(false)
+                .isDelivery(messageAdded.isDelivery())
                 .created(messageAdded.getMessageIds())
                 .build();
 
@@ -82,6 +83,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .state(state)
                             .date(now)
                             .isDelegated(true)
+                            .isDelivery(messageAdded.isDelivery())
                             .created(messageAdded.getMessageIds())
                             .build(),
                         MailboxChange.builder()
