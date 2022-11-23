@@ -154,7 +154,6 @@ class AddedSerializationTest {
             "      }" +
             "    }," +
             "    \"sessionId\": 42," +
-            "    \"isDelivery\": false," +
             "    \"user\": \"user\"" +
             "  }" +
             "}";
