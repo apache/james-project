@@ -20,6 +20,7 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.net.{ProtocolException, URI}
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.TimeUnit
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.GuiceJamesServer
@@ -32,9 +33,13 @@ import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.modules.protocols.SmtpGuiceProbe
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, SMTPMessageSender, SpoolerProbe}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+import org.awaitility.Awaitility
+import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
+import org.awaitility.core.ConditionFactory
 import org.junit.jupiter.api.{BeforeEach, Test, Timeout}
 import play.api.libs.json.{JsString, Json}
 import reactor.core.scala.publisher.SMono
@@ -52,6 +57,11 @@ import sttp.ws.{WebSocket, WebSocketFrame}
 import scala.jdk.CollectionConverters._
 
 trait WebSocketContract {
+  private lazy val awaitAtMostTenSeconds: ConditionFactory = Awaitility.`with`
+    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+    .and.`with`.pollDelay(ONE_HUNDRED_MILLISECONDS)
+    .await
+    .atMost(10, TimeUnit.SECONDS)
   private lazy val backend: SttpBackend[Identity, WebSockets] = OkHttpSyncBackend()
   private lazy implicit val monadError: MonadError[Identity] = IdMonad
 
@@ -645,7 +655,7 @@ trait WebSocketContract {
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
 
     val globalState: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), Some(UuidState.fromJava(emailState))).get.value
-    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","EmailDelivery":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
+    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
 
     assertThat(response.toOption.get.asJava)
       .hasSize(2) // state change notification + API response
@@ -829,11 +839,99 @@ trait WebSocketContract {
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
 
     val globalState: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), Some(UuidState.fromJava(emailState))).get.value
-    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","EmailDelivery":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
+    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
 
     assertThat(response.toOption.get.asJava)
       .hasSize(2) // state change notification + API response
       .contains(stateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  def shouldPushEmailDeliveryChangeWhenUserReceivesEmail(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": null
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            // Andre send mail to Bob
+            sendEmailToBob(server)
+
+            List(
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                })
+        })
+        .send(backend)
+        .body
+
+    // Bob should receive EmailDelivery state change
+    assertThat(response.toOption.get.asJava)
+      .hasSize(1) // state change notification
+      .allMatch(s => s.contains("EmailDelivery"))
+  }
+
+  @Test
+  @Timeout(180)
+  def shouldNotPushEmailDeliveryChangeWhenCreateDraftMail(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": null
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "id": "req-36",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "create": {
+                 |        "aaaaaa":{
+                 |          "mailboxIds": {
+                 |             "${mailboxId.serialize}": true
+                 |          }
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            List(
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                },
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                })
+        })
+        .send(backend)
+        .body
+
+    assertThat(response.toOption.get.asJava)
+      .hasSize(2) // state change notification + API response
+      .noneMatch(s => s.contains("EmailDelivery"))
   }
 
   @Test
@@ -1123,5 +1221,15 @@ trait WebSocketContract {
 
     basicRequest.get(Uri.apply(new URI(s"ws://127.0.0.1:$port/jmap/ws")))
       .header("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+  }
+
+  private def sendEmailToBob(server: GuiceJamesServer): Unit = {
+    val smtpMessageSender: SMTPMessageSender = new SMTPMessageSender(DOMAIN.asString())
+    smtpMessageSender.connect("127.0.0.1", server.getProbe(classOf[SmtpGuiceProbe]).getSmtpPort)
+      .authenticate(ANDRE.asString, ANDRE_PASSWORD)
+      .sendMessage(ANDRE.asString, BOB.asString())
+    smtpMessageSender.close()
+
+    awaitAtMostTenSeconds.until(() => server.getProbe(classOf[SpoolerProbe]).processingFinished())
   }
 }

@@ -19,6 +19,14 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.security.KeyPair
+import java.security.interfaces.{ECPrivateKey, ECPublicKey}
+import java.time.temporal.ChronoUnit
+import java.util.Base64
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
 import com.google.crypto.tink.subtle.EllipticCurves
 import com.google.crypto.tink.subtle.EllipticCurves.CurveType
@@ -33,7 +41,10 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
-import org.apache.james.mailbox.model.MailboxPath
+import org.apache.james.mailbox.DefaultMailboxes
+import org.apache.james.mailbox.MessageManager.AppendCommand
+import org.apache.james.mailbox.model.{MailboxConstants, MailboxPath, MessageId}
+import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.modules.protocols.SmtpGuiceProbe
 import org.apache.james.utils.{DataProbeImpl, SMTPMessageSender, SpoolerProbe, UpdatableTickingClock}
@@ -50,14 +61,6 @@ import org.mockserver.model.Not.not
 import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.mockserver.verify.VerificationTimes
 import play.api.libs.json.{JsObject, JsString, Json}
-
-import java.nio.charset.StandardCharsets
-import java.security.KeyPair
-import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.time.temporal.ChronoUnit
-import java.util.Base64
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 trait WebPushContract {
   private lazy val awaitAtMostTenSeconds: ConditionFactory = Awaitility.`with`
@@ -236,6 +239,128 @@ trait WebPushContract {
              |    }
              |}""".stripMargin)),
         VerificationTimes.atLeast(1))
+    }
+  }
+
+  @Test
+  def shouldPushEmailDeliveryChangeWhenUserReceivesEmail(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
+    setupPushSubscriptionForBob(pushServer)
+
+    // WHEN bob receives a mail
+    sendEmailToBob(server)
+
+    // THEN bob has a EmailDelivery stateChange on the push gateway
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      pushServer.verify(HttpRequest.request()
+        .withPath(PUSH_URL_PATH)
+        .withBody(json(
+          s"""{
+             |    "@type": "StateChange",
+             |    "changed": {
+             |        "$ACCOUNT_ID": {
+             |          "EmailDelivery": "$${json-unit.any-string}"
+             |        }
+             |    }
+             |}""".stripMargin)),
+        VerificationTimes.atLeast(1))
+    }
+  }
+
+  @Test
+  def shouldNotPushEmailDeliveryChangeWhenUserCreatesDraftEmail(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
+    setupPushSubscriptionForBob(pushServer)
+
+    // WHEN bob create a draft mail
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", BOB.asString(), MailboxConstants.INBOX)
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
+         |          "from": [{"email": "${BOB.asString}"}]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    // THEN bob should not have a EmailDelivery stateChange on the push gateway
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      pushServer.verify(HttpRequest.request()
+        .withPath(PUSH_URL_PATH)
+        .withBody(json(
+          s"""{
+             |    "@type": "StateChange",
+             |    "changed": {
+             |        "$ACCOUNT_ID": {
+             |          "EmailDelivery": "$${json-unit.any-string}"
+             |        }
+             |    }
+             |}""".stripMargin)),
+        VerificationTimes.never())
+    }
+  }
+
+  @Test
+  def shouldNotPushEmailDeliveryChangeWhenUserSendsEmail(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
+    val messageId: MessageId = prepareDraftMessage(server)
+    setupPushSubscriptionForBob(pushServer)
+
+    // WHEN Bob sends an email to Andre
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    // THEN bob should not have a EmailDelivery stateChange on the push gateway
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      pushServer.verify(HttpRequest.request()
+        .withPath(PUSH_URL_PATH)
+        .withBody(json(
+          s"""{
+             |    "@type": "StateChange",
+             |    "changed": {
+             |        "$ACCOUNT_ID": {
+             |          "EmailDelivery": "$${json-unit.any-string}"
+             |        }
+             |    }
+             |}""".stripMargin)),
+        VerificationTimes.never())
     }
   }
 
@@ -532,6 +657,97 @@ trait WebPushContract {
            |          "Mailbox": "$${json-unit.ignore}"
            |        }
            |    }
+           |}""".stripMargin)
+  }
+
+  private def prepareDraftMessage(server: GuiceJamesServer) = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString)
+      .setFrom(BOB.asString)
+      .setTo(ANDRE.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+    messageId
+  }
+
+  private def setupPushSubscriptionForBob(pushServer: ClientAndServer) = {
+    // Setup mock-server for callback
+    val bodyRequestOnPushServer: AtomicReference[String] = setupPushServerCallback(pushServer)
+
+    // WHEN bob creates a push subscription
+    val pushSubscriptionId: String = `given`
+      .body(
+        s"""{
+           |    "using": ["urn:ietf:params:jmap:core"],
+           |    "methodCalls": [
+           |      [
+           |        "PushSubscription/set",
+           |        {
+           |            "create": {
+           |                "4f29": {
+           |                  "deviceClientId": "a889-ffea-910",
+           |                  "url": "${getPushServerUrl(pushServer)}",
+           |                  "types": ["EmailDelivery"]
+           |                }
+           |              }
+           |        },
+           |        "c1"
+           |      ]
+           |    ]
+           |  }""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].created.4f29.id")
+
+    // THEN a validation code is sent
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      pushServer.verify(HttpRequest.request()
+        .withPath(PUSH_URL_PATH)
+        .withBody(json(
+          s"""{
+             |    "@type": "PushVerification",
+             |    "pushSubscriptionId": "$pushSubscriptionId",
+             |    "verificationCode": "$${json-unit.any-string}"
+             |}""".stripMargin)),
+        VerificationTimes.atLeast(1))
+    }
+
+    // GIVEN bob retrieves the validation code from the mock server
+    val verificationCode: String = Json.parse(bodyRequestOnPushServer.get()).asInstanceOf[JsObject]
+      .value("verificationCode")
+      .asInstanceOf[JsString]
+      .value
+
+    // WHEN bob updates the validation code via JMAP
+    val updateVerificationCodeResponse: String = updateValidateVerificationCode(pushSubscriptionId, verificationCode)
+
+    // THEN it succeed
+    assertThatJson(updateVerificationCodeResponse)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "PushSubscription/set",
+           |            {
+           |                "updated": {
+           |                    "$pushSubscriptionId": {}
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
            |}""".stripMargin)
   }
 }

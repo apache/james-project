@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.model.MessageId;
@@ -60,6 +61,7 @@ public class EmailChange implements JmapChange {
         private final ImmutableList.Builder<MessageId> created;
         private final ImmutableList.Builder<MessageId> updated;
         private final ImmutableList.Builder<MessageId> destroyed;
+        private Optional<Boolean> isDelivery;
 
         private Builder(AccountId accountId, State state, ZonedDateTime date, boolean isDelegated) {
             Preconditions.checkNotNull(accountId, "'accountId' should not be null");
@@ -73,6 +75,7 @@ public class EmailChange implements JmapChange {
             this.destroyed = ImmutableList.builder();
             this.updated = ImmutableList.builder();
             this.created = ImmutableList.builder();
+            this.isDelivery = Optional.empty();
         }
 
         public Builder updated(MessageId... messageId) {
@@ -105,8 +108,13 @@ public class EmailChange implements JmapChange {
             return this;
         }
 
+        public Builder isDelivery(boolean isDelivery) {
+            this.isDelivery = Optional.of(isDelivery);
+            return this;
+        }
+
         public EmailChange build() {
-            return new EmailChange(accountId, state, date, isDelegated, created.build(), updated.build(), destroyed.build());
+            return new EmailChange(accountId, state, date, isDelegated, created.build(), updated.build(), destroyed.build(), isDelivery.orElse(false));
         }
     }
 
@@ -121,8 +129,9 @@ public class EmailChange implements JmapChange {
     private final ImmutableList<MessageId> created;
     private final ImmutableList<MessageId> updated;
     private final ImmutableList<MessageId> destroyed;
+    private final boolean isDelivery;
 
-    private EmailChange(AccountId accountId, State state, ZonedDateTime date, boolean isDelegated, ImmutableList<MessageId> created, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed) {
+    private EmailChange(AccountId accountId, State state, ZonedDateTime date, boolean isDelegated, ImmutableList<MessageId> created, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed, boolean isDelivery) {
         this.accountId = accountId;
         this.state = state;
         this.date = date;
@@ -130,6 +139,7 @@ public class EmailChange implements JmapChange {
         this.created = created;
         this.updated = updated;
         this.destroyed = destroyed;
+        this.isDelivery = isDelivery;
     }
 
     public AccountId getAccountId() {
@@ -160,6 +170,10 @@ public class EmailChange implements JmapChange {
         return isDelegated;
     }
 
+    public boolean isDelivery() {
+        return isDelivery;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof EmailChange) {
@@ -170,14 +184,15 @@ public class EmailChange implements JmapChange {
                 && Objects.equals(isDelegated, that.isDelegated)
                 && Objects.equals(created, that.created)
                 && Objects.equals(updated, that.updated)
-                && Objects.equals(destroyed, that.destroyed);
+                && Objects.equals(destroyed, that.destroyed)
+                && Objects.equals(isDelivery, that.isDelivery);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(accountId, state, date, isDelegated, created, updated, destroyed);
+        return Objects.hash(accountId, state, date, isDelegated, created, updated, destroyed, isDelivery);
     }
 
     @Override
@@ -190,6 +205,7 @@ public class EmailChange implements JmapChange {
             .add("created", created)
             .add("updated", updated)
             .add("destroyed", destroyed)
+            .add("isDelivery", isDelivery)
             .toString();
     }
 }
