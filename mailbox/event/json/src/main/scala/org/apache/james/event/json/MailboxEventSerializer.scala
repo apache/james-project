@@ -69,7 +69,7 @@ private object DTO {
   }
 
   case class Added(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
-                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: IsDelivery) extends Event {
+                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: Option[IsDelivery]) extends Event {
     override def toJava: JavaEvent = new JavaAdded(
       sessionId,
       user,
@@ -77,7 +77,9 @@ private object DTO {
       mailboxId,
       new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
       eventId,
-      isDelivery.value)
+      fallbackIsDelivery())
+
+    def fallbackIsDelivery(): Boolean = isDelivery.exists(_.value)
   }
 
   case class Expunged(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
@@ -166,7 +168,7 @@ private object ScalaConverter {
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
     added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap,
-    isDelivery = IsDelivery(event.isDelivery))
+    isDelivery = Option(IsDelivery(event.isDelivery)))
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
