@@ -19,9 +19,12 @@
 
 package org.apache.james.server.blob.deduplication;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
@@ -37,9 +40,28 @@ class BlobGCTaskAdditionalInformationDTOTest {
                 4,
                 5,
                 0.8,
-                Instant.parse("2007-12-03T10:15:30.00Z")
-            ))
+                Instant.parse("2007-12-03T10:15:30.00Z"),
+                100))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/blobGC.additionalInformation.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacyData() throws Exception {
+        BlobGCTask.AdditionalInformation gcTask = JsonGenericSerializer
+            .forModules(BlobGCTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/blobGC-legacy.additionalInformation.json"));
+
+        assertThat(gcTask)
+            .isEqualToComparingFieldByFieldRecursively(new BlobGCTask.AdditionalInformation(
+                1,
+                2,
+                3,
+                4,
+                5,
+                0.8,
+                Instant.parse("2007-12-03T10:15:30.00Z"),
+                1000));
     }
 }

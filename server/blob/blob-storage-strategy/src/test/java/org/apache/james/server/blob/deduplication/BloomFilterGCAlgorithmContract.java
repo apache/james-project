@@ -62,6 +62,8 @@ public interface BloomFilterGCAlgorithmContract {
     BucketName DEFAULT_BUCKET = BucketName.of("default");
     GenerationAwareBlobId.Configuration GENERATION_AWARE_BLOB_ID_CONFIGURATION = GenerationAwareBlobId.Configuration.DEFAULT;
     int EXPECTED_BLOB_COUNT = 100;
+    int DELETION_WINDOW_SIZE = 10;
+
     double ASSOCIATED_PROBABILITY = 0.01;
 
     ConditionFactory CALMLY_AWAIT = Awaitility
@@ -102,7 +104,7 @@ public interface BloomFilterGCAlgorithmContract {
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -126,7 +128,7 @@ public interface BloomFilterGCAlgorithmContract {
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -151,7 +153,7 @@ public interface BloomFilterGCAlgorithmContract {
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -182,7 +184,7 @@ public interface BloomFilterGCAlgorithmContract {
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         Context.Snapshot snapshot = context.snapshot();
@@ -217,6 +219,7 @@ public interface BloomFilterGCAlgorithmContract {
         CALMLY_AWAIT.untilAsserted(() -> {
             Mono.from(bloomFilterGCAlgorithm().gc(
                     EXPECTED_BLOB_COUNT,
+                    DELETION_WINDOW_SIZE,
                     ASSOCIATED_PROBABILITY,
                     DEFAULT_BUCKET,
                     new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY)))
@@ -245,7 +248,7 @@ public interface BloomFilterGCAlgorithmContract {
             GENERATION_AWARE_BLOB_ID_FACTORY,
             GENERATION_AWARE_BLOB_ID_CONFIGURATION,
             CLOCK);
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.PARTIAL);
         assertThat(context.snapshot())

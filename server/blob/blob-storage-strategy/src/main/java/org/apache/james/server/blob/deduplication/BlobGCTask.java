@@ -37,7 +37,7 @@ public class BlobGCTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
-        private static AdditionalInformation from(Context context) {
+        private static AdditionalInformation from(Context context, int deletionWindowSize) {
             Context.Snapshot snapshot = context.snapshot();
             return new AdditionalInformation(
                 snapshot.getReferenceSourceCount(),
@@ -46,7 +46,7 @@ public class BlobGCTask implements Task {
                 snapshot.getErrorCount(),
                 snapshot.getBloomFilterExpectedBlobCount(),
                 snapshot.getBloomFilterAssociatedProbability(),
-                Clock.systemUTC().instant());
+                Clock.systemUTC().instant(), deletionWindowSize);
         }
 
         private final Instant timestamp;
@@ -56,6 +56,7 @@ public class BlobGCTask implements Task {
         private final long errorCount;
         private final long bloomFilterExpectedBlobCount;
         private final double bloomFilterAssociatedProbability;
+        private final int deletionWindowSize;
 
         AdditionalInformation(long referenceSourceCount,
                               long blobCount,
@@ -63,7 +64,8 @@ public class BlobGCTask implements Task {
                               long errorCount,
                               long bloomFilterExpectedBlobCount,
                               double bloomFilterAssociatedProbability,
-                              Instant timestamp) {
+                              Instant timestamp,
+                              int deletionWindowSize) {
             this.referenceSourceCount = referenceSourceCount;
             this.blobCount = blobCount;
             this.gcedBlobCount = gcedBlobCount;
@@ -71,6 +73,7 @@ public class BlobGCTask implements Task {
             this.bloomFilterExpectedBlobCount = bloomFilterExpectedBlobCount;
             this.bloomFilterAssociatedProbability = bloomFilterAssociatedProbability;
             this.timestamp = timestamp;
+            this.deletionWindowSize = deletionWindowSize;
         }
 
         @Override
@@ -105,64 +108,117 @@ public class BlobGCTask implements Task {
         public double getBloomFilterAssociatedProbability() {
             return bloomFilterAssociatedProbability;
         }
+
+        public int getDeletionWindowSize() {
+            return deletionWindowSize;
+        }
     }
 
-    interface Builder {
+    public static class Builder {
+
+        public static final int DEFAULT_DELETION_WINDOW_SIZE = 1000;
 
         @FunctionalInterface
-        interface RequireAssociatedProbability {
-            BlobGCTask associatedProbability(double associatedProbability);
+        public interface RequireAssociatedProbability {
+            Builder associatedProbability(double associatedProbability);
         }
 
         @FunctionalInterface
-        interface RequireExpectedBlobCount {
+        public interface RequireExpectedBlobCount {
             RequireAssociatedProbability expectedBlobCount(int expectedBlobCount);
         }
 
         @FunctionalInterface
-        interface RequireClock {
+        public interface RequireClock {
             RequireExpectedBlobCount clock(Clock clock);
         }
 
         @FunctionalInterface
-        interface RequireBucketName {
+        public interface RequireBucketName {
             RequireClock bucketName(BucketName bucketName);
         }
 
         @FunctionalInterface
-        interface RequireBlobReferenceSources {
+        public interface RequireBlobReferenceSources {
             RequireBucketName blobReferenceSource(Set<BlobReferenceSource> blobReferenceSources);
         }
 
         @FunctionalInterface
-        interface RequireGenerationAwareBlobIdConfiguration {
+        public interface RequireGenerationAwareBlobIdConfiguration {
             RequireBlobReferenceSources generationAwareBlobIdConfiguration(GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration);
         }
 
         @FunctionalInterface
-        interface RequireGenerationAwareBlobIdFactory {
+        public interface RequireGenerationAwareBlobIdFactory {
             RequireGenerationAwareBlobIdConfiguration generationAwareBlobIdFactory(GenerationAwareBlobId.Factory generationAwareBlobIdFactory);
         }
 
         @FunctionalInterface
-        interface RequireBlobStoreDAO {
+        public interface RequireBlobStoreDAO {
             RequireGenerationAwareBlobIdFactory blobStoreDAO(BlobStoreDAO blobStoreDAO);
+        }
+
+        private final BlobStoreDAO blobStoreDAO;
+        private final GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
+        private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
+        private final Set<BlobReferenceSource> blobReferenceSources;
+        private final Clock clock;
+        private final BucketName bucketName;
+        private final int expectedBlobCount;
+        private final double associatedProbability;
+        private Optional<Integer> deletionWindowSize;
+
+        public Builder(BlobStoreDAO blobStoreDAO, GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+                       GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
+                       Set<BlobReferenceSource> blobReferenceSources, Clock clock, BucketName bucketName,
+                       int expectedBlobCount, double associatedProbability) {
+            this.blobStoreDAO = blobStoreDAO;
+            this.generationAwareBlobIdFactory = generationAwareBlobIdFactory;
+            this.generationAwareBlobIdConfiguration = generationAwareBlobIdConfiguration;
+            this.blobReferenceSources = blobReferenceSources;
+            this.clock = clock;
+            this.bucketName = bucketName;
+            this.expectedBlobCount = expectedBlobCount;
+            this.deletionWindowSize = Optional.empty();
+            this.associatedProbability = associatedProbability;
+        }
+
+        public Builder deletionWindowSize(int deletionWindowSize) {
+            this.deletionWindowSize = Optional.of(deletionWindowSize);
+            return this;
+        }
+
+        public Builder deletionWindowSize(Optional<Integer> deletionWindowSize) {
+            this.deletionWindowSize = deletionWindowSize;
+            return this;
+        }
+
+        public BlobGCTask build() {
+            return new BlobGCTask(
+                blobStoreDAO,
+                generationAwareBlobIdFactory,
+                generationAwareBlobIdConfiguration,
+                blobReferenceSources,
+                bucketName,
+                clock,
+                expectedBlobCount,
+                deletionWindowSize.orElse(DEFAULT_DELETION_WINDOW_SIZE),
+                associatedProbability);
         }
     }
 
     public static Builder.RequireBlobStoreDAO builder() {
         return blobStoreDao -> generationAwareBlobIdFactory -> generationAwareBlobIdConfiguration
             -> blobReferenceSources -> bucketName -> clock -> expectedBlobCount
-            -> associatedProbability
-            -> new BlobGCTask(
-            blobStoreDao,
-            generationAwareBlobIdFactory,
-            generationAwareBlobIdConfiguration,
-            blobReferenceSources,
-            bucketName,
-            clock,
-            expectedBlobCount,
-            associatedProbability);
+            -> associatedProbability -> new Builder(
+                blobStoreDao,
+                generationAwareBlobIdFactory,
+                generationAwareBlobIdConfiguration,
+                blobReferenceSources,
+                clock,
+                bucketName,
+                expectedBlobCount,
+                associatedProbability);
     }
 
 
@@ -173,6 +229,7 @@ public class BlobGCTask implements Task {
     private final Clock clock;
     private final BucketName bucketName;
     private final int expectedBlobCount;
+    private final int deletionWindowSize;
     private final double associatedProbability;
     private final Context context;
 
@@ -184,7 +241,7 @@ public class BlobGCTask implements Task {
                       BucketName bucketName,
                       Clock clock,
                       int expectedBlobCount,
-                      double associatedProbability) {
+                      int deletionWindowSize, double associatedProbability) {
         this.blobStoreDAO = blobStoreDAO;
         this.generationAwareBlobIdFactory = generationAwareBlobIdFactory;
         this.generationAwareBlobIdConfiguration = generationAwareBlobIdConfiguration;
@@ -192,6 +249,7 @@ public class BlobGCTask implements Task {
         this.clock = clock;
         this.bucketName = bucketName;
         this.expectedBlobCount = expectedBlobCount;
+        this.deletionWindowSize = deletionWindowSize;
         this.associatedProbability = associatedProbability;
         this.context = new Context(expectedBlobCount, associatedProbability);
     }
@@ -205,7 +263,7 @@ public class BlobGCTask implements Task {
             generationAwareBlobIdConfiguration,
             clock);
 
-        return gcAlgorithm.gc(expectedBlobCount, associatedProbability, bucketName, context)
+        return gcAlgorithm.gc(expectedBlobCount, deletionWindowSize, associatedProbability, bucketName, context)
             .block();
     }
 
@@ -216,7 +274,7 @@ public class BlobGCTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(AdditionalInformation.from(context));
+        return Optional.of(AdditionalInformation.from(context, deletionWindowSize));
     }
 
     public Clock getClock() {
@@ -233,5 +291,9 @@ public class BlobGCTask implements Task {
 
     public double getAssociatedProbability() {
         return associatedProbability;
+    }
+
+    public int getDeletionWindowSize() {
+        return deletionWindowSize;
     }
 }
