@@ -32,4 +32,8 @@ public class XListResponse extends AbstractListingResponse implements ImapRespon
         super(children, selectability, name, hierarchyDelimiter, type);
     }
 
+    @Override
+    public String getTypeAsString() {
+        return getType().getAttributeName();
+    }
 }

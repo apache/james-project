@@ -24,22 +24,29 @@ package org.apache.james.imap.api.process;
  */
 public enum MailboxType {
 
-    INBOX("\\Inbox"),
-    DRAFTS("\\Drafts"),
-    TRASH("\\Trash"),
-    SPAM("\\Spam"),
-    SENT("\\Sent"),
-    STARRED("\\Starred"),
-    ALLMAIL("\\AllMail"),
-    OTHER(null);
+    INBOX("\\Inbox", null),
+    DRAFTS("\\Drafts", "\\Drafts"),
+    TRASH("\\Trash", "\\Trash"),
+    SPAM("\\Spam", "\\Junk"),
+    SENT("\\Sent", "\\Sent"),
+    STARRED("\\Starred", "\\Flagged"),
+    ALLMAIL("\\AllMail", "\\All"),
+    ARCHIVE(null, "\\Archive"),
+    OTHER(null, null);
 
     private final String attributeName;
+    private final String rfc6154attributeName;
 
-    MailboxType(String attributeName) {
+    MailboxType(String attributeName, String rfc6154attributeName) {
         this.attributeName = attributeName;
+        this.rfc6154attributeName = rfc6154attributeName;
     }
 
     public String getAttributeName() {
         return attributeName;
+    }
+
+    public String getRfc6154attributeName() {
+        return rfc6154attributeName;
     }
 }

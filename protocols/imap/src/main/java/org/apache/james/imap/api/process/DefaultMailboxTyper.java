@@ -30,6 +30,7 @@ public class DefaultMailboxTyper implements MailboxTyper {
     private static final ImmutableMap<Role, MailboxType> ROLES_TO_MAILBOX_TYPE = ImmutableMap.of(
         Role.INBOX, MailboxType.INBOX,
         Role.SENT, MailboxType.SENT,
+        Role.ARCHIVE, MailboxType.ARCHIVE,
         Role.SPAM, MailboxType.SPAM,
         Role.DRAFTS, MailboxType.DRAFTS,
         Role.TRASH, MailboxType.TRASH);

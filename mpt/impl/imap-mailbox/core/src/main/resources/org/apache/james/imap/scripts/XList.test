@@ -35,3 +35,20 @@ S: \* XLIST \(\\HasNoChildren \\Spam\) \"\.\" "Spam"
 S: \* XLIST \(\\HasNoChildren \\Trash\) \"\.\" "Trash"
 }
 S: 10 OK XLIST completed.
+
+C: 13 CREATE Archive
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: 13 CREATE Other
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: 10 LIST "" * RETURN (SPECIAL-USE)
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" "INBOX"
+S: \* LIST \(\\HasNoChildren\) \"\.\" "Other"
+S: \* LIST \(\\HasNoChildren \\Drafts\) \"\.\" "Drafts"
+S: \* LIST \(\\HasNoChildren \\Sent\) \"\.\" "Sent"
+S: \* LIST \(\\HasNoChildren \\Junk\) \"\.\" "Spam"
+S: \* LIST \(\\HasNoChildren \\Trash\) \"\.\" "Trash"
+S: \* LIST \(\\HasNoChildren \\Archive\) \"\.\" "Archive"
+}
+S: 10 OK LIST completed.

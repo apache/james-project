@@ -29,7 +29,6 @@ import java.util.EnumSet;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.message.response.AbstractListingResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -83,7 +82,7 @@ public class ListingEncodingUtils {
 
         selectabilityAsString(response.getSelectability(), builder);
         childrenAsString(response.getChildren(), builder);
-        mailboxAttributeAsString(response.getType(), builder);
+        mailboxAttributeAsString(response.getTypeAsString(), builder);
 
         if (response instanceof ListResponse) {
             ListResponse listResponse = (ListResponse) response;
@@ -121,8 +120,7 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static ImmutableList.Builder<byte[]> mailboxAttributeAsString(MailboxType type, ImmutableList.Builder<byte[]> builder) {
-        String attributeName = type.getAttributeName();
+    private static ImmutableList.Builder<byte[]> mailboxAttributeAsString(String attributeName, ImmutableList.Builder<byte[]> builder) {
         if (attributeName != null) {
             return builder.add(attributeName.getBytes(StandardCharsets.US_ASCII));
         }

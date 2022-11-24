@@ -36,4 +36,9 @@ public final class LSubResponse extends AbstractListingResponse implements ImapR
         }
         return MailboxMetaData.Selectability.NONE;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return getType().getRfc6154attributeName();
+    }
 }

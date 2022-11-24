@@ -65,6 +65,8 @@ public abstract class AbstractListingResponse {
         return type;
     }
 
+    public abstract String getTypeAsString();
+
     public MailboxMetaData.Children getChildren() {
         return children;
     }

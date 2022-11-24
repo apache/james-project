@@ -48,6 +48,7 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
         private char hierarchyDelimiter;
         private boolean returnSubscribed;
         private boolean returnNonExistent;
+        private MailboxType mailboxType;
         private ImmutableSet.Builder<ChildInfo> childInfos;
 
         public Builder() {
@@ -89,6 +90,11 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
             return this;
         }
 
+        public Builder mailboxType(MailboxType mailboxType) {
+            this.mailboxType = mailboxType;
+            return this;
+        }
+
         public Builder forMetaData(MailboxMetaData mailboxMetaData) {
             return children(mailboxMetaData.inferiors())
                 .selectability(mailboxMetaData.getSelectability())
@@ -102,7 +108,8 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
                 .selectability(MailboxMetaData.Selectability.NONE)
                 .hierarchyDelimiter(MailboxConstants.DEFAULT_DELIMITER)
                 .returnSubscribed(RETURN_SUBSCRIBED)
-                .returnNonExistent(RETURN_NON_EXISTENT);
+                .returnNonExistent(RETURN_NON_EXISTENT)
+                .mailboxType(MailboxType.OTHER);
         }
 
         private EnumSet<ChildInfo> buildChildInfos() {
@@ -117,7 +124,7 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
         public ListResponse build() {
 
             return new ListResponse(children, selectability, name, hierarchyDelimiter, returnSubscribed,
-                returnNonExistent, buildChildInfos());
+                returnNonExistent, buildChildInfos(), mailboxType);
         }
     }
 
@@ -134,8 +141,8 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
 
     public ListResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
                         String name, char hierarchyDelimiter, boolean returnSubscribed, boolean returnNonExistent,
-                        EnumSet<ChildInfo> childInfos) {
-        super(children, selectability, name, hierarchyDelimiter, MailboxType.OTHER);
+                        EnumSet<ChildInfo> childInfos, MailboxType mailboxType) {
+        super(children, selectability, name, hierarchyDelimiter, mailboxType);
         this.returnSubscribed = returnSubscribed;
         this.returnNonExistent = returnNonExistent;
         this.childInfos = childInfos;
@@ -153,4 +160,8 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
         return childInfos;
     }
 
+    @Override
+    public String getTypeAsString() {
+        return getType().getRfc6154attributeName();
+    }
 }
