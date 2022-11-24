@@ -141,6 +141,9 @@ public interface ImapConstants {
 
     byte[] NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren".getBytes(US_ASCII);
 
+    byte[] NAME_ATTRIBUTE_SUBSCRIBED = "\\Subscribed".getBytes(US_ASCII);
+
+    byte[] NAME_ATTRIBUTE_NON_EXISTENT = "\\NonExistent".getBytes(US_ASCII);
 
     char BACK_SLASH = '\\';
 

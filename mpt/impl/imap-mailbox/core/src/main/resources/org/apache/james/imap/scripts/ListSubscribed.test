@@ -1,0 +1,132 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Create a few folders
+C: 10 CREATE listtest
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: 11 CREATE listtest.subfolder
+S: 11 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: 12 CREATE listtest1
+S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: 13 CREATE listtest1.subfolder1
+S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+# List select option: SUBSCRIBE
+C: a02 SUBSCRIBE listtest
+S: a02 OK SUBSCRIBE completed.
+C: A01 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+}
+S: A01 OK LIST completed.
+
+# SUBSCRIBE attribute should work on child
+C: a022 SUBSCRIBE listtest.subfolder
+S: a022 OK SUBSCRIBE completed.
+C: A012 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "listtest.subfolder"
+}
+S: A012 OK LIST completed.
+C: A013 UNSUBSCRIBE listtest.subfolder
+S: A013 OK UNSUBSCRIBE completed.
+
+# SUBSCRIBE should work when parent search
+C: A10 LIST (SUBSCRIBED) "" "%"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+}
+S: A10 OK LIST completed.
+
+C: A12 SUBSCRIBE listtest.subfolder
+S: A12 OK SUBSCRIBE completed.
+C: A13 LIST (SUBSCRIBED) "" "%"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+}
+S: A13 OK LIST completed.
+
+C: A14 UNSUBSCRIBE listtest.subfolder
+S: A14 OK UNSUBSCRIBE completed.
+C: A15 UNSUBSCRIBE listtest
+S: A15 OK UNSUBSCRIBE completed.
+C: A16 LIST (SUBSCRIBED) "" "%"
+S: A16 OK LIST completed.
+
+# RECURSIVEMATCH should work with SUBSCRIBED
+C: A21 SUBSCRIBE listtest.subfolder
+S: A21 OK SUBSCRIBE completed.
+C: A22 LIST (SUBSCRIBED RECURSIVEMATCH) "" "%"
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" "listtest" \(\"CHILDINFO\" \(\"SUBSCRIBED\"\)\)
+}
+S: A22 OK LIST completed.
+
+C: A231 CREATE another1
+S: A231 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: A232 SUBSCRIBE listtest1.subfolder1
+S: A232 OK SUBSCRIBE completed.
+C: A233 SUBSCRIBE another1
+S: A233 OK SUBSCRIBE completed.
+
+C: A24 LIST (RECURSIVEMATCH SUBSCRIBED) "" "*1"
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" "listtest1" \(\"CHILDINFO\" \(\"SUBSCRIBED\"\)\)
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "listtest1.subfolder1"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "another1"
+}
+S: A24 OK LIST completed.
+
+C: A25 UNSUBSCRIBE listtest1.subfolder1
+S: A25 OK UNSUBSCRIBE completed.
+C: A14 UNSUBSCRIBE listtest.subfolder
+S: A14 OK UNSUBSCRIBE completed.
+C: A15 UNSUBSCRIBE another1
+S: A15 OK UNSUBSCRIBE completed.
+C: A16 DELETE another1
+S: A16 OK DELETE completed.
+
+# Response should has `NonExistent` attribute when the subscribed mailbox is not exist
+C: a03 SUBSCRIBE subscribeNonExistent
+S: a03 OK SUBSCRIBE completed.
+C: A04 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
+}
+S: A04 OK LIST completed.
+
+# Response should has `NonExistent` attribute when subscribed on children
+C: a05 SUBSCRIBE subscribeNonExistent.child1
+S: a05 OK SUBSCRIBE completed.
+C: A06 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent.child1"
+}
+S: A06 OK LIST completed.
+
+C: a07 SUBSCRIBE subscribeNonExistent2.child2
+S: a07 OK SUBSCRIBE completed.
+C: A08 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent.child1"
+S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent2.child2"
+}
+S: A08 OK LIST completed.

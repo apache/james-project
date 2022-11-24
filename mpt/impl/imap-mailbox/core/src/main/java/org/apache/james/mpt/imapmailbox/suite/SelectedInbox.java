@@ -110,6 +110,13 @@ public abstract class SelectedInbox implements ImapTestConstants {
     }
 
     @Test
+    public void testListSubscribed() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ListSubscribed");
+    }
+
+    @Test
     public void testStatusUS() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
