@@ -30,6 +30,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
+import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
@@ -59,22 +60,27 @@ import reactor.core.publisher.Mono;
 
 public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
-    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"), Capability.of("LIST-MYRIGHTS"));
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"),
+        Capability.of("LIST-STATUS"),
+        Capability.of("LIST-MYRIGHTS"),
+        Capability.of("SPECIAL-USE"));
 
     private final SubscriptionManager subscriptionManager;
     private final StatusProcessor statusProcessor;
+    protected final MailboxTyper mailboxTyper;
 
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor);
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor) {
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
         super(clazz, mailboxManager, factory, metricFactory);
 
         this.subscriptionManager = subscriptionManager;
         this.statusProcessor = statusProcessor;
+        this.mailboxTyper = mailboxTyper;
     }
 
     @Override
@@ -119,7 +125,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name,
                                                  char hierarchyDelimiter, MailboxType type, boolean returnSubscribed) {
-        return new ListResponse(children, selectability, name, hierarchyDelimiter, returnSubscribed);
+        return new ListResponse(children, selectability, name, hierarchyDelimiter, returnSubscribed, type);
     }
 
     private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
@@ -171,13 +177,13 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 .collectList()
                 .flatMapMany(litSubscribed -> getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
                     .filter(metaData -> litSubscribed.contains(metaData.getPath()))
-                    .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), true))
+                    .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(request, session, metaData.getPath()), true))
                     .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
                     .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty())))
                 .then();
         } else {
             return getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
-                .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), false))
+                .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(request, session, metaData.getPath()), false))
                 .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
                 .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
                 .then();
@@ -251,7 +257,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
      * @param path    mailbox's path
      * @return MailboxType value
      */
-    protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {
+    protected MailboxType getMailboxType(ListRequest listRequest, ImapSession session, MailboxPath path) {
+        if (listRequest.getReturnOptions().contains(ListRequest.ListReturnOption.SPECIAL_USE)) {
+            return mailboxTyper.getMailboxType(session, path);
+        }
         return MailboxType.OTHER;
     }
 

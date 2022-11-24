@@ -61,7 +61,7 @@ public class ListingEncodingUtils {
 
         selectabilityAsString(response.getSelectability(), builder);
         childrenAsString(response.getChildren(), builder);
-        mailboxAttributeAsString(response.getType(), builder);
+        mailboxAttributeAsString(response.getTypeAsString(), builder);
 
         if (response instanceof ListResponse) {
             returnSubscribedAsString(((ListResponse) response).returnSubscribed(), builder);
@@ -97,8 +97,7 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static ImmutableList.Builder<byte[]> mailboxAttributeAsString(MailboxType type, ImmutableList.Builder<byte[]> builder) {
-        String attributeName = type.getAttributeName();
+    private static ImmutableList.Builder<byte[]> mailboxAttributeAsString(String attributeName, ImmutableList.Builder<byte[]> builder) {
         if (attributeName != null) {
             return builder.add(attributeName.getBytes(StandardCharsets.US_ASCII));
         }

@@ -134,6 +134,8 @@ public class ListCommandParser extends AbstractUidCommandParser {
         char c = request.nextWordChar();
         if (c == 'T' || c == 't') {
             return readStatus(request);
+        } else if (c == 'P' || c == 'p') {
+            return Pair.of(readSpecialUse(request), Optional.empty());
         } else {
             return Pair.of(readReturnSubscribed(request), Optional.empty());
         }
@@ -147,6 +149,21 @@ public class ListCommandParser extends AbstractUidCommandParser {
         assertChar(request, 'U', 'u');
         assertChar(request, 'S', 's');
         return Pair.of(ListReturnOption.STATUS, Optional.of(StatusCommandParser.statusDataItems(request)));
+    }
+
+    private ListReturnOption readSpecialUse(ImapRequestLineReader request) throws DecodingException {
+        // 'S' is already consummed
+        assertChar(request, 'P', 'p');
+        assertChar(request, 'E', 'e');
+        assertChar(request, 'C','c');
+        assertChar(request, 'I', 'i');
+        assertChar(request, 'A', 'a');
+        assertChar(request, 'L', 'l');
+        assertChar(request, '-', '-');
+        assertChar(request, 'U', 'u');
+        assertChar(request, 'S', 's');
+        assertChar(request, 'E', 'e');
+        return ListReturnOption.SPECIAL_USE;
     }
 
     private ListSelectOption readSubscribed(ImapRequestLineReader request) throws DecodingException {

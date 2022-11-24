@@ -82,7 +82,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(statusProcessor);
         builder.add(new LSubProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory));
         builder.add(new XListProcessor(mailboxManager, statusResponseFactory, mailboxTyper, metricFactory));
-        builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor));
+        builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper));
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         SelectProcessor selectProcessor = new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory);
         builder.add(selectProcessor);

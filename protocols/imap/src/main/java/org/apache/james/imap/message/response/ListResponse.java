@@ -37,12 +37,17 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
     }
 
     public ListResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
-                        String name, char hierarchyDelimiter, boolean subscribed) {
-        super(children, selectability, name, hierarchyDelimiter, MailboxType.OTHER);
+                        String name, char hierarchyDelimiter, boolean subscribed, MailboxType type) {
+        super(children, selectability, name, hierarchyDelimiter, type);
         this.returnSubscribed = subscribed;
     }
 
     public boolean returnSubscribed() {
         return returnSubscribed;
+    }
+
+    @Override
+    public String getTypeAsString() {
+        return getType().getRfc6154attributeName();
     }
 }

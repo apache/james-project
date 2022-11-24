@@ -29,6 +29,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
+import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.request.XListRequest;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -44,12 +45,10 @@ import com.google.common.collect.ImmutableList;
 public class XListProcessor extends ListProcessor<XListRequest> implements CapabilityImplementingProcessor {
 
     private static final List<Capability> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
-    private final MailboxTyper mailboxTyper;
 
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
             MetricFactory metricFactory) {
-        super(XListRequest.class, mailboxManager, factory, metricFactory, null, null);
-        this.mailboxTyper = mailboxTyper;
+        super(XListRequest.class, mailboxManager, factory, metricFactory, null, null, mailboxTyper);
     }
 
     @Override
@@ -69,7 +68,7 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
     }
 
     @Override
-    protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {
+    protected MailboxType getMailboxType(ListRequest request, ImapSession session, MailboxPath path) {
         return mailboxTyper.getMailboxType(session, path);
     }
 }
