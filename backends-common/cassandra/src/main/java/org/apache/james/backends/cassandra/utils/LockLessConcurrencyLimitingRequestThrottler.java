@@ -69,18 +69,14 @@ public class LockLessConcurrencyLimitingRequestThrottler implements RequestThrot
     public void register(Throttled request) {
         int requestNumber = concurrentRequests.incrementAndGet();
         if (closed) {
-            LOG.trace("[{}] Rejecting request after shutdown", logPrefix);
             fail(request, "The session is shutting down");
         } else if (requestNumber < maxConcurrentRequests) {
             // We have capacity for one more concurrent request
-            LOG.trace("[{}] Starting newly registered request", logPrefix);
             request.onThrottleReady(false);
         } else if (requestNumber < maxQueueSize + maxConcurrentRequests) {
-            LOG.trace("[{}] Enqueuing request", logPrefix);
             queue.add(request);
         } else {
             concurrentRequests.decrementAndGet();
-            LOG.trace("[{}] Rejecting request because of full queue", logPrefix);
             fail(
                 request,
                 String.format(
@@ -105,7 +101,6 @@ public class LockLessConcurrencyLimitingRequestThrottler implements RequestThrot
         if (!closed) {
             if (queue.remove(request)) { // The request timed out before it was active
                 concurrentRequests.decrementAndGet();
-                LOG.trace("[{}] Removing timed out request from the queue", logPrefix);
             } else {
                 onRequestDone();
             }
@@ -117,7 +112,6 @@ public class LockLessConcurrencyLimitingRequestThrottler implements RequestThrot
             concurrentRequests.decrementAndGet();
             Throttled throttled = queue.poll();
             if (throttled != null) {
-                LOG.trace("[{}] Starting dequeued request", logPrefix);
                 throttled.onThrottleReady(true);
                 // don't touch concurrentRequests since we finished one but started another
             }
