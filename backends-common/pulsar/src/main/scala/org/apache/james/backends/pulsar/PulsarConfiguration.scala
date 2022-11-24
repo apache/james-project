@@ -21,6 +21,11 @@ package org.apache.james.backends.pulsar
 import java.net.{URI, URISyntaxException}
 import org.apache.commons.configuration2.Configuration
 import com.google.common.base.Strings
+import com.sksamuel.pulsar4s.{PulsarAsyncClient, PulsarClient, PulsarClientConfig}
+import org.apache.pulsar.client.admin.PulsarAdmin
+import org.apache.pulsar.client.impl.auth.{AuthenticationBasic, AuthenticationDisabled, AuthenticationToken}
+
+import scala.jdk.CollectionConverters.MapHasAsJava
 
 object PulsarConfiguration {
   val BROKER_URI_PROPERTY_NAME = "broker.uri"
@@ -99,4 +104,27 @@ object Auth {
   case class Basic(userId: String, password: String) extends Auth
 }
 
-case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth = Auth.NoAuth)
+case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth = Auth.NoAuth) {
+  private val pulsarAuth = auth match {
+    case Auth.NoAuth => new AuthenticationDisabled()
+    case Auth.Token(value) => new AuthenticationToken(value)
+    case Auth.Basic(userId, password) =>
+      val basic = new AuthenticationBasic()
+      basic.configure(Map("userId" -> userId, "password" -> password).asJava)
+      basic
+  }
+
+  lazy val adminClient: PulsarAdmin =
+    PulsarAdmin.builder()
+      .serviceHttpUrl(adminUri)
+      .authentication(pulsarAuth)
+      .build()
+
+  lazy val asyncClient: PulsarAsyncClient =
+    PulsarClient(
+      PulsarClientConfig(
+        serviceUrl = brokerUri,
+        authentication = Some(pulsarAuth)
+      )
+    )
+}

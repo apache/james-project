@@ -1,4 +1,4 @@
-/****************************************************************
+/** **************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,22 +6,18 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
- *                                                              *
+ * *
+ * http://www.apache.org/licenses/LICENSE-2.0                 *
+ * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ************************************************************** */
 
 package org.apache.james.queue.pulsar
-
-import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
-import java.util.concurrent.TimeUnit
-import java.util.{Date, UUID}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
@@ -31,8 +27,6 @@ import akka.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
 import com.sksamuel.pulsar4s.akka.streams
 import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
-import javax.mail.MessagingException
-import javax.mail.internet.MimeMessage
 import org.apache.james.backends.pulsar.PulsarReader
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
@@ -44,13 +38,17 @@ import org.apache.james.queue.api._
 import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.james.server.core.MailImpl
 import org.apache.mailet._
-import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
+import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
+import java.util.concurrent.TimeUnit
+import java.util.{Date, UUID}
+import javax.mail.MessagingException
+import javax.mail.internet.MimeMessage
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -85,14 +83,14 @@ private[pulsar] object schemas {
  * A filter cannot remove messages that are enqueued after the call to the `remove` method.
  */
 class PulsarMailQueue(
-  config: PulsarMailQueueConfiguration,
-  blobIdFactory: BlobId.Factory,
-  mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
-  mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
-  metricFactory: MetricFactory,
-  gaugeRegistry: GaugeRegistry,
-  system: ActorSystem
-) extends MailQueue with ManageableMailQueue {
+                       config: PulsarMailQueueConfiguration,
+                       blobIdFactory: BlobId.Factory,
+                       mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
+                       mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
+                       metricFactory: MetricFactory,
+                       gaugeRegistry: GaugeRegistry,
+                       system: ActorSystem
+                     ) extends MailQueue with ManageableMailQueue {
 
   import schemas._
   import serializers._
@@ -110,11 +108,8 @@ class PulsarMailQueue(
   private implicit val implicitSystem: ActorSystem = system
   private implicit val ec: ExecutionContextExecutor = system.dispatcher
   private implicit val implicitBlobIdFactory: BlobId.Factory = blobIdFactory
-  private implicit val client: PulsarAsyncClient = PulsarClient(config.pulsar.brokerUri)
-  private val admin = {
-    val builder = PulsarAdmin.builder()
-    builder.serviceHttpUrl(config.pulsar.adminUri).build()
-  }
+  private implicit val client: PulsarAsyncClient = config.pulsar.asyncClient
+  private val admin = config.pulsar.adminClient
 
   private val outTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/James-${config.name.asString()}")
   private val scheduledTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/${config.name.asString()}-scheduled")
@@ -212,7 +207,7 @@ class PulsarMailQueue(
   private val filterScheduledStage: ActorRef = system.actorOf(FilterStage.props)
   private val requeueMessage = Flow.apply[CommittableMessage[String]]
     .via(filteringFlow(filterScheduledStage))
-    .flatMapConcat{case (_,_,message) => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message))}
+    .flatMapConcat { case (_, _, message) => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message)) }
     .flatMapConcat(message => Source.future(message.ack(cumulative = false)))
     .toMat(Sink.ignore)(Keep.none)
 
@@ -244,7 +239,7 @@ class PulsarMailQueue(
       .toMat(Sink.asPublisher[MailQueue.MailQueueItem](true).withAttributes(Attributes.inputBuffer(initial = 1, max = 1)))(Keep.both)
   }
 
-  private def filteringFlow(filterActor:ActorRef) = {
+  private def filteringFlow(filterActor: ActorRef) = {
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
     Flow.apply[CommittableMessage[String]].map(message =>
       (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
@@ -261,7 +256,7 @@ class PulsarMailQueue(
           val partsId = metadata.partsId
           Source
             .fromPublisher(readMimeMessage(partsId))
-            .collect{ case Some(message) => message }
+            .collect { case Some(message) => message }
             .map(message => (readMail(metadata, message), partsId, committableMessage))
       }
   }
@@ -325,7 +320,7 @@ class PulsarMailQueue(
    *
    * @see [[FilterStage]]
    */
-  private def filtersCommandFlow(topic:Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
+  private def filtersCommandFlow(topic: Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
     val logInvalidFilterPayload = Flow.apply[JsResult[Filter]]
       .collectType[JsError]
       .map(error => "unable to parse filter" + Json.prettyPrint(JsError.toJson(error)))
@@ -543,11 +538,12 @@ class PulsarMailQueue(
    * This is reliant on the FilterStage implementation being able to deduplicate
    * filters. The current implementation defined filters as value objects and stores
    * them in a Set which will effectively dedpulicate them.
+   *
    * @see org.apache.james.queue.pulsar.FilterStage.filters
    * @param producer
    * @param filter
    */
-  private def publishFilter(producer:Producer[String])(filter:Filter): Unit ={
+  private def publishFilter(producer: Producer[String])(filter: Filter): Unit = {
     import Filter._
     // Optimizes for the local/single instance case, the duplicated filter
     // received through pulsar will be eliminated by the filter stage as
@@ -586,13 +582,14 @@ class PulsarMailQueue(
           .bodyBlobId(blobIdFactory.from(metadata.bodyBlobId))
           .build()
         Source.fromPublisher(readMimeMessage(partsId))
-          .collect{ case Some(message) => message }
+          .collect { case Some(message) => message }
           .map(message => readMail(metadata, message))
       })
 
     new ManageableMailQueue.MailQueueIterator() {
       private val javaStream = browseableMails.runWith(StreamConverters.asJavaStream[Mail]())
       private val iterator = javaStream.iterator()
+
       /**
        * @inheritdoc
        */
