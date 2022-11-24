@@ -18,24 +18,52 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.StatusDataItems;
 
 import com.google.common.base.MoreObjects;
 
 public class ListRequest extends AbstractImapRequest {
-    private final String baseReferenceName;
-    private final String mailboxPattern;
 
-    public ListRequest(String referenceName, String mailboxPattern, Tag tag) {
-        this(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag);
+    // https://www.rfc-editor.org/rfc/rfc5258.html
+    public enum ListSelectOption {
+        REMOTE,
+        RECURSIVEMATCH,
+        SUBSCRIBED
     }
 
-    public ListRequest(ImapCommand imapCommand, String referenceName, String mailboxPattern, Tag tag) {
+    // https://www.rfc-editor.org/rfc/rfc5258.html
+    public enum ListReturnOption {
+        CHILDREN,
+        SUBSCRIBED,
+        // https://www.rfc-editor.org/rfc/rfc5819.html LIST STATUS
+        STATUS
+    }
+
+    private final String baseReferenceName;
+    private final String mailboxPattern;
+    private final EnumSet<ListSelectOption> selectOptions;
+    private final EnumSet<ListReturnOption> returnOptions;
+    private final Optional<StatusDataItems> statusDataItems;
+
+    public ListRequest(String referenceName, String mailboxPattern, Tag tag) {
+        this(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, EnumSet.noneOf(ListSelectOption.class), EnumSet.noneOf(ListReturnOption.class), Optional.empty());
+    }
+
+    public ListRequest(ImapCommand imapCommand, String referenceName, String mailboxPattern, Tag tag,
+                       EnumSet<ListSelectOption> selectOptions, EnumSet<ListReturnOption> returnOptions, Optional<StatusDataItems> statusDataItems) {
         super(tag, imapCommand);
         this.baseReferenceName = referenceName;
         this.mailboxPattern = mailboxPattern;
+        this.selectOptions = selectOptions;
+        this.returnOptions = returnOptions;
+        this.statusDataItems = statusDataItems;
     }
 
     public final String getBaseReferenceName() {
@@ -46,11 +74,30 @@ public class ListRequest extends AbstractImapRequest {
         return mailboxPattern;
     }
 
+    public EnumSet<ListSelectOption> getSelectOptions() {
+        return selectOptions;
+    }
+
+    public EnumSet<ListReturnOption> getReturnOptions() {
+        return returnOptions;
+    }
+
+    public boolean selectSubscribed() {
+        return getSelectOptions().contains(ListSelectOption.SUBSCRIBED);
+    }
+
+    public Optional<StatusDataItems> getStatusDataItems() {
+        return statusDataItems;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("baseReferenceName", baseReferenceName)
             .add("mailboxPattern", mailboxPattern)
+            .add("selectOptions", selectOptions)
+            .add("returnOptions", returnOptions)
+            .add("statusDataItem", statusDataItems.orElse(null))
             .toString();
     }
 }

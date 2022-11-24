@@ -19,10 +19,21 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.message.request.ListRequest.ListSelectOption.RECURSIVEMATCH;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -32,6 +43,7 @@ import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -45,17 +57,34 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> {
+public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> implements CapabilityImplementingProcessor {
+    public static final boolean RETURN_SUBSCRIBED = true;
+    public static final boolean RETURN_NON_EXISTENT = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"));
 
-    public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory);
+    private final SubscriptionManager subscriptionManager;
+
+    public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
     }
 
-    public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
         super(clazz, mailboxManager, factory, metricFactory);
+        this.subscriptionManager = subscriptionManager;
+    }
+
+    @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return CAPA;
     }
 
     /**
@@ -73,29 +102,29 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     @Override
     protected Mono<Void> processRequestReactive(T request, ImapSession session, Responder responder) {
-        String baseReferenceName = request.getBaseReferenceName();
-        String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = session.getMailboxSession();
 
-        return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession)
+        return respond(session, responder, request, mailboxSession)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e));
+                return ReactorUtils.logAsMono(() -> LOGGER.error("List failed for mailboxName {}", request.getMailboxPattern(), e));
             })
             .then();
     }
 
-    private Mono<Void> respond(ImapSession session, Responder responder, String baseReferenceName, String mailboxPatternString, MailboxSession mailboxSession) {
-        if (mailboxPatternString.length() == 0) {
-            return Mono.fromRunnable(() -> respondNamespace(baseReferenceName, responder, mailboxSession));
+    private Mono<Void> respond(ImapSession session, Responder responder, T request, MailboxSession mailboxSession) {
+        if (request.getMailboxPattern().length() == 0) {
+            return Mono.fromRunnable(() -> respondNamespace(request.getBaseReferenceName(), responder, mailboxSession));
         } else {
-            return respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession);
+            return respondMailboxList(request, session, responder, mailboxSession);
         }
     }
 
-    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
-        return new ListResponse(children, selectability, name, hierarchyDelimiter);
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name,
+                                                 char hierarchyDelimiter, MailboxType type) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter, !RETURN_SUBSCRIBED,
+            !RETURN_NON_EXISTENT, EnumSet.noneOf(ListResponse.ChildInfo.class));
     }
 
     private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
@@ -116,7 +145,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             // A qualified reference name - get the root element
             int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
             if (firstDelimiter == -1) {
-                 return referenceName;
+                return referenceName;
             } else {
                 return referenceName.substring(0, firstDelimiter);
             }
@@ -127,22 +156,100 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         }
     }
 
-    private Mono<Void> respondMailboxList(String referenceName, String mailboxName, ImapSession session, Responder responder, MailboxSession mailboxSession) {
+    private Mono<Void> respondMailboxList(T request, ImapSession session,
+                                          Responder responder, MailboxSession mailboxSession) {
         // If the mailboxPattern is fully qualified, ignore the
         // reference name.
-        String finalReferencename = referenceName;
-        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+        String finalReferencename = request.getBaseReferenceName();
+        if (request.getMailboxPattern().charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
             finalReferencename = "";
         }
         // Is the interpreted (combined) pattern relative?
         // Should the namespace section be returned or not?
-        boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+        boolean isRelative = ((finalReferencename + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
-        MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
+        MailboxQuery mailboxQuery = mailboxQuery(computeBasePath(session, finalReferencename, isRelative),
+            request.getMailboxPattern(), mailboxSession);
 
-        return getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
-            .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath())))
+        if (request.selectSubscribed()) {
+            return processWithSubscribed(request, responder, mailboxSession, isRelative, mailboxQuery);
+        } else {
+            return processWithoutSubscribed(session, responder, mailboxSession, isRelative, mailboxQuery);
+        }
+    }
+
+    private Mono<Void> processWithoutSubscribed(ImapSession session, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
+        return getMailboxManager().search(mailboxQuery, Minimal, mailboxSession)
+            .doOnNext(metaData -> responder.respond(
+                createResponse(metaData.inferiors(),
+                    metaData.getSelectability(),
+                    mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
+                    metaData.getHierarchyDelimiter(),
+                    getMailboxType(session, metaData.getPath()))))
             .then();
+    }
+
+    private Mono<Void> processWithSubscribed(T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
+        return Mono.zip(getMailboxManager().search(mailboxQuery, Minimal, mailboxSession).collectList()
+                    .map(searchedResultList -> searchedResultList.stream().collect(Collectors.toMap(MailboxMetaData::getPath, Function.identity()))),
+                Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get()).collectList())
+            .map(tuple -> getListResponseForSelectSubscribed(tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
+            .flatMapIterable(list -> list)
+            .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getRight()))
+            .then();
+    }
+
+    private List<Pair<MailboxPath, ListResponse>> getListResponseForSelectSubscribed(Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
+                                                                                     ListRequest listRequest, MailboxSession mailboxSession, boolean relative, MailboxQuery mailboxQuery) {
+        ImmutableList.Builder<Pair<MailboxPath, ListResponse>> responseBuilders = ImmutableList.builder();
+        List<Pair<MailboxPath, ListResponse>> listRecursiveMatch = listRecursiveMatch(searchedResultMap, allSubscribedSearch, mailboxSession, relative, listRequest);
+        responseBuilders.addAll(listRecursiveMatch);
+        Set<MailboxPath> listRecursiveMatchPath = listRecursiveMatch.stream().map(Pair::getKey).collect(Collectors.toUnmodifiableSet());
+
+        allSubscribedSearch.stream()
+            .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
+            .filter(mailboxQuery::isPathMatch)
+            .map(subscribed -> buildListResponse(searchedResultMap, mailboxSession, relative, subscribed))
+            .forEach(responseBuilders::add);
+
+        return responseBuilders.build();
+    }
+
+    private Pair<MailboxPath, ListResponse> buildListResponse(Map<MailboxPath, MailboxMetaData> searchedResultMap, MailboxSession mailboxSession, boolean relative, MailboxPath subscribed) {
+        return Pair.of(subscribed, Optional.ofNullable(searchedResultMap.get(subscribed))
+            .map(mailboxMetaData -> ListResponse.builder()
+                .returnSubscribed(RETURN_SUBSCRIBED)
+                .forMetaData(mailboxMetaData)
+                .name(mailboxName(relative, subscribed, mailboxMetaData.getHierarchyDelimiter()))
+                .returnNonExistent(!RETURN_NON_EXISTENT))
+            .orElseGet(() -> ListResponse.builder().nonExitingSubscribedMailbox(subscribed))
+            .build());
+    }
+
+    private List<Pair<MailboxPath, ListResponse>> listRecursiveMatch(Map<MailboxPath, MailboxMetaData> searchedResultMap,
+                                                                     List<MailboxPath> allSubscribedSearch, MailboxSession mailboxSession,
+                                                                     boolean relative, ListRequest listRequest) {
+        if (!listRequest.getSelectOptions().contains(RECURSIVEMATCH)) {
+            return List.of();
+        }
+
+        Set<MailboxPath> allSubscribedSearchParent = allSubscribedSearch.stream()
+            .flatMap(mailboxPath -> mailboxPath.getParents(mailboxSession.getPathDelimiter()).stream())
+            .collect(Collectors.toSet());
+
+        return searchedResultMap.entrySet().stream()
+            .filter(pair -> allSubscribedSearchParent.contains(pair.getKey()))
+            .map(pair -> {
+                MailboxMetaData metaData = pair.getValue();
+                ListResponse listResponse = ListResponse.builder()
+                    .forMetaData(metaData)
+                    .name(mailboxName(relative, metaData.getPath(), metaData.getHierarchyDelimiter()))
+                    .childInfos(ListResponse.ChildInfo.SUBSCRIBED)
+                    .returnSubscribed(allSubscribedSearch.contains(pair.getKey()))
+                    .build();
+                return Pair.of(pair.getKey(), listResponse);
+            })
+            .collect(Collectors.toList());
     }
 
     private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
@@ -175,27 +282,13 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         }
     }
 
-    private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
-        String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
-
-        ImapResponseMessage response =
-            createResponse(
-                listResult.inferiors(),
-                listResult.getSelectability(),
-                mailboxName,
-                listResult.getHierarchyDelimiter(),
-                mailboxType);
-        responder.respond(response);
-    }
 
     /**
      * retrieve mailboxType for specified mailboxPath using provided
      * MailboxTyper
-     * 
-     * @param session
-     *            current imap session
-     * @param path
-     *            mailbox's path
+     *
+     * @param session current imap session
+     * @param path    mailbox's path
      * @return MailboxType value
      */
     protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {

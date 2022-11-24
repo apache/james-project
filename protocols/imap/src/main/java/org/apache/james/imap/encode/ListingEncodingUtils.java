@@ -19,18 +19,26 @@
 
 package org.apache.james.imap.encode;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static org.apache.james.imap.api.ImapConstants.NAME_ATTRIBUTE_NON_EXISTENT;
+import static org.apache.james.imap.api.ImapConstants.NAME_ATTRIBUTE_SUBSCRIBED;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.message.response.AbstractListingResponse;
+import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 
 import com.google.common.collect.ImmutableList;
 
 public class ListingEncodingUtils {
+    public static final byte[] NAME_CHILDINFO_EXTENDED = "\"CHILDINFO\"".getBytes(US_ASCII);
+    public static final byte[] NAME_CHILDINFO_SUBSCRIBED = "\"SUBSCRIBED\"".getBytes(US_ASCII);
 
     public static void encodeListingResponse(ImapCommand command, ImapResponseComposer composer, AbstractListingResponse response) throws IOException {
         composer.untagged();
@@ -42,6 +50,10 @@ public class ListingEncodingUtils {
         composer.closeParen();
         writeDelimiter(composer, response.getHierarchyDelimiter());
         composer.mailbox(response.getName());
+
+        if (response instanceof ListResponse) {
+            writeChildInfos(returnChildInfosAsString(((ListResponse) response).getChildInfos()), composer);
+        }
         composer.end();
     }
 
@@ -53,12 +65,31 @@ public class ListingEncodingUtils {
         }
     }
 
+    private static void writeChildInfos(ImmutableList<byte[]> childInfos, ImapResponseComposer composer) throws IOException {
+        if (!childInfos.isEmpty()) {
+            composer.openParen();
+            composer.message(NAME_CHILDINFO_EXTENDED);
+            composer.openParen();
+            for (byte[] childInfo : childInfos) {
+                composer.message(childInfo);
+            }
+            composer.closeParen();
+            composer.closeParen();
+        }
+    }
+
     private static ImmutableList<byte[]> getNameAttributes(AbstractListingResponse response) {
         ImmutableList.Builder<byte[]> builder = ImmutableList.builder();
 
         selectabilityAsString(response.getSelectability(), builder);
         childrenAsString(response.getChildren(), builder);
         mailboxAttributeAsString(response.getType(), builder);
+
+        if (response instanceof ListResponse) {
+            ListResponse listResponse = (ListResponse) response;
+            returnSubscribedAsString(listResponse.isReturnSubscribed(), builder);
+            returnNonExistentAsString(listResponse.isReturnNonExistent(), builder);
+        }
 
         return builder.build();
     }
@@ -96,5 +127,31 @@ public class ListingEncodingUtils {
             return builder.add(attributeName.getBytes(StandardCharsets.US_ASCII));
         }
         return builder;
+    }
+
+    private static ImmutableList.Builder<byte[]> returnSubscribedAsString(boolean returnSubscribed, ImmutableList.Builder<byte[]> builder) {
+        if (returnSubscribed) {
+            return builder.add(NAME_ATTRIBUTE_SUBSCRIBED);
+        }
+        return builder;
+    }
+
+    private static ImmutableList.Builder<byte[]> returnNonExistentAsString(boolean returnNonExistent, ImmutableList.Builder<byte[]> builder) {
+        if (returnNonExistent) {
+            return builder.add(NAME_ATTRIBUTE_NON_EXISTENT);
+        }
+        return builder;
+    }
+
+    private static ImmutableList<byte[]> returnChildInfosAsString(EnumSet<ListResponse.ChildInfo> childInfos) {
+        ImmutableList.Builder<byte[]> builder = ImmutableList.builder();
+        if (childInfos != null && !childInfos.isEmpty()) {
+            childInfos.forEach(childInfo -> {
+                if (childInfo == ListResponse.ChildInfo.SUBSCRIBED) {
+                    builder.add(NAME_CHILDINFO_SUBSCRIBED);
+                }
+            });
+        }
+        return builder.build();
     }
 }

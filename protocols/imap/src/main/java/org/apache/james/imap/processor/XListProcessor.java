@@ -32,6 +32,7 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.message.request.XListRequest;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -47,8 +48,8 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
     private final MailboxTyper mailboxTyper;
 
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
-            MetricFactory metricFactory) {
-        super(XListRequest.class, mailboxManager, factory, metricFactory);
+                          MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
+        super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
         this.mailboxTyper = mailboxTyper;
     }
 
@@ -63,7 +64,8 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
     }
 
     @Override
-    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
+                                                 String name, char hierarchyDelimiter, MailboxType type) {
         return new XListResponse(children, selectability, name, hierarchyDelimiter, type);
     }
 
