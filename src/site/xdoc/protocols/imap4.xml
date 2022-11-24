@@ -62,6 +62,8 @@
        <li>IMAP Extension for OBJECTID (https://www.rfc-editor.org/rfc/rfc8474.html)</li>
        <li>IMAP Extension for STATUS=SIZE (https://www.rfc-editor.org/rfc/rfc8438.html)</li>
        <li>IMAP QUOTA (https://www.rfc-editor.org/rfc/rfc9208.html)</li>
+       <li>IMAP LIST Command Extensions (link:https://www.rfc-editor.org/rfc/rfc5258.html)</li>
+       <li>IMAP4 Extension for Returning STATUS Information in Extended LIST (https://www.rfc-editor.org/rfc/rfc5819.html)</li>
      </ul>
      <p>We follow RFC2683 recommendations for our implementations:</p>
      <ul>
