@@ -49,7 +49,7 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
 
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
                           MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
-        super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
+        super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, null);
         this.mailboxTyper = mailboxTyper;
     }
 

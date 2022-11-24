@@ -49,11 +49,11 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return new StatusRequest(mailboxName, statusDataItems, tag);
     }
 
-    private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
+    static StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
         return new StatusDataItems(splitWords(request));
     }
 
-    private EnumSet<StatusDataItems.StatusItem> splitWords(ImapRequestLineReader request) throws DecodingException {
+    private static EnumSet<StatusDataItems.StatusItem> splitWords(ImapRequestLineReader request) throws DecodingException {
         EnumSet<StatusDataItems.StatusItem> words = EnumSet.noneOf(StatusDataItems.StatusItem.class);
 
         request.nextWordChar();
@@ -68,7 +68,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return words;
     }
 
-    private StatusDataItems.StatusItem parseStatus(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem parseStatus(ImapRequestLineReader request) throws DecodingException {
         // All the matching must be done in a case-insensitive fashion.
         // See rfc3501 9. Formal Syntax and IMAP-282
         char c = request.nextWordChar();
@@ -96,7 +96,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
     }
 
-    private StatusDataItems.StatusItem readM(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readM(ImapRequestLineReader request) throws DecodingException {
         request.consume();
         char c2 = request.nextChar();
         if (c2 == 'e' || c2 == 'E') {
@@ -106,7 +106,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         }
     }
 
-    private StatusDataItems.StatusItem readU(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readU(ImapRequestLineReader request) throws DecodingException {
         char c;
         assertChar(request, 'u', 'U');
         c = request.nextWordChar();
@@ -123,7 +123,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.UID_VALIDITY;
     }
 
-    private void readValidity(ImapRequestLineReader request) throws DecodingException {
+    private static void readValidity(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'v', 'V');
         assertChar(request, 'a', 'A');
         assertChar(request, 'l', 'L');
@@ -134,7 +134,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         assertChar(request, 'y', 'Y');
     }
 
-    private StatusDataItems.StatusItem readAppendLimit(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readAppendLimit(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'a', 'A');
         assertChar(request, 'p', 'P');
         assertChar(request, 'p', 'P');
@@ -149,7 +149,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.APPENDLIMIT;
     }
 
-    private StatusDataItems.StatusItem readSize(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readSize(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 's', 'S');
         assertChar(request, 'i', 'I');
         assertChar(request, 'z', 'Z');
@@ -157,7 +157,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.SIZE;
     }
 
-    private StatusDataItems.StatusItem readUidNext(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readUidNext(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'n', 'N');
         assertChar(request, 'e', 'E');
         assertChar(request, 'x', 'X');
@@ -165,7 +165,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.UID_NEXT;
     }
 
-    private StatusDataItems.StatusItem readUnseen(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readUnseen(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'n', 'N');
         assertChar(request, 's', 'S');
         assertChar(request, 'e', 'E');
@@ -174,7 +174,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.UNSEEN;
     }
 
-    private StatusDataItems.StatusItem readHighestModseq(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readHighestModseq(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'h', 'H');
         assertChar(request, 'i', 'I');
         assertChar(request, 'g', 'G');
@@ -191,7 +191,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.HIGHEST_MODSEQ;
     }
 
-    private StatusDataItems.StatusItem readRecent(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readRecent(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'r', 'R');
         assertChar(request, 'e', 'E');
         assertChar(request, 'c', 'C');
@@ -201,7 +201,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.RECENT;
     }
 
-    private StatusDataItems.StatusItem readMessages(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readMessages(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'e', 'E');
         assertChar(request, 's', 'S');
         assertChar(request, 's', 'S');
@@ -212,7 +212,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.MESSAGES;
     }
 
-    private StatusDataItems.StatusItem readDeleted(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readDeleted(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'd', 'D');
         assertChar(request, 'e', 'E');
         assertChar(request, 'l', 'L');
@@ -235,7 +235,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.DELETED;
     }
 
-    private StatusDataItems.StatusItem readMailboxId(ImapRequestLineReader request) throws DecodingException {
+    private static StatusDataItems.StatusItem readMailboxId(ImapRequestLineReader request) throws DecodingException {
         assertChar(request, 'a', 'A');
         assertChar(request, 'i', 'I');
         assertChar(request, 'l', 'L');
@@ -247,7 +247,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         return StatusDataItems.StatusItem.MAILBOXID;
     }
 
-    private void assertChar(ImapRequestLineReader reader, char low, char up) throws DecodingException {
+    private static void assertChar(ImapRequestLineReader reader, char low, char up) throws DecodingException {
         char c = reader.consume();
         if (c != low && c != up) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unexpected token in Status item. Expecting " + up + " got " + c);
