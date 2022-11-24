@@ -20,7 +20,10 @@
 package org.apache.james.backends.pulsar;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.james.backends.pulsar.Auth.NoAuth$;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.org.apache.commons.lang3.NotImplementedException;
+import scala.NotImplementedError;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -155,8 +158,130 @@ class PulsarConfigurationTest {
 
         configuration.addProperty("namespace", namespace);
         assertThat(PulsarConfiguration.from(configuration))
-                .isEqualTo(new PulsarConfiguration(brokerUri, adminUri, new Namespace(namespace)));
+                .isEqualTo(new PulsarConfiguration(brokerUri, adminUri, new Namespace(namespace), Auth.noAuth()));
     }
 
+    @Test
+    void fromShouldThrowWithTokenAuthenticationWhenTokenIsMissing() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+        String authenticationType = "token";
 
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", authenticationType);
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+        assertThatThrownBy(() -> PulsarConfiguration.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify a non-empty value for " + PulsarConfiguration.AUTHENTICATION_TOKEN_PROPERTY_NAME());
+    }
+
+    @Test
+    void fromShouldReturnTheConfigurationWithTokenAuthenticationWhenRequiredParametersAreGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+        String authenticationType = "token";
+        String authenticationToken = "anArbitraryToken";
+
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", authenticationType);
+        configuration.addProperty("authentication.token", authenticationToken);
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+        assertThat(PulsarConfiguration.from(configuration))
+                .isEqualTo(new PulsarConfiguration(brokerUri, adminUri, new Namespace(namespace), Auth.token(authenticationToken)));
+    }
+
+    @Test
+    void fromShouldReturnTheConfigurationWithBasicAuthenticationWhenRequiredParametersAreGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+        String authenticationType = "basic";
+        String authenticationUserId = "userId";
+        String authenticationPassword = "password";
+
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", authenticationType);
+        configuration.addProperty("authentication.basic.userId", authenticationUserId);
+        configuration.addProperty("authentication.basic.password", authenticationPassword);
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+        assertThat(PulsarConfiguration.from(configuration))
+                .isEqualTo(new PulsarConfiguration(brokerUri, adminUri, new Namespace(namespace), Auth.basic(authenticationUserId, authenticationPassword)));
+    }
+
+    @Test
+    void fromShouldThrowWithBasicAuthenticationWhenUserIdIsMissing() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+        String authenticationType = "basic";
+        String authenticationUserId = "userId";
+        String authenticationPassword = "password";
+
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", authenticationType);
+        configuration.addProperty("authentication.basic.password", authenticationPassword);
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+        assertThatThrownBy(() -> PulsarConfiguration.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify a non-empty value for " + PulsarConfiguration.AUTHENTICATION_BASIC_USERID_PROPERTY_NAME());
+    }
+
+    @Test
+    void fromShouldThrowWithBasicAuthenticationWhenPasswordIsMissing() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+        String authenticationType = "basic";
+        String authenticationUserId = "userId";
+        String authenticationPassword = "password";
+
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", authenticationType);
+        configuration.addProperty("authentication.basic.userId", authenticationUserId);
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+
+        assertThatThrownBy(() -> PulsarConfiguration.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify a non-empty value for " + PulsarConfiguration.AUTHENTICATION_BASIC_PASSWORD_PROPERTY_NAME());
+    }
+
+    @Test
+    void fromShouldThrowWithUnknownAuthenticationType() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String brokerUri = "pulsar://localhost.test:6650/";
+        String adminUri = "http://localhost:8090";
+
+        configuration.addProperty("broker.uri", brokerUri);
+        configuration.addProperty("admin.uri", adminUri);
+        configuration.addProperty("authentication.type", "biscuit");
+
+        String namespace = "namespace";
+
+        configuration.addProperty("namespace", namespace);
+        assertThatThrownBy(() -> PulsarConfiguration.from(configuration))
+                .isInstanceOf(NotImplementedError.class)
+                .hasMessage("Authentication type biscuit is not implemented");
+    }
 }

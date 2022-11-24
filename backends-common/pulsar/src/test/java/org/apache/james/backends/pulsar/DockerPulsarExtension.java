@@ -70,7 +70,9 @@ public class DockerPulsarExtension implements
         return new PulsarConfiguration(
                 container.getPulsarBrokerUrl(),
                 container.getHttpServiceUrl(),
-                new Namespace("test/" + RandomStringUtils.randomAlphabetic(10)));
+                new Namespace("test/" + RandomStringUtils.randomAlphabetic(10)),
+                Auth.noAuth()
+        );
     }
 
     public PulsarConfiguration getConfiguration() {
