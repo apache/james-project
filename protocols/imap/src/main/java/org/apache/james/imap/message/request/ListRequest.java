@@ -42,7 +42,9 @@ public class ListRequest extends AbstractImapRequest {
         CHILDREN,
         SUBSCRIBED,
         // https://www.rfc-editor.org/rfc/rfc5819.html LIST STATUS
-        STATUS
+        STATUS,
+        // https://www.rfc-editor.org/rfc/rfc8440.html
+        MYRIGHTS
     }
 
     private final String baseReferenceName;

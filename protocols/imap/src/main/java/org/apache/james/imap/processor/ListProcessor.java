@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.Capability;
@@ -41,10 +42,12 @@ import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -67,7 +70,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     public static final boolean RETURN_SUBSCRIBED = true;
     public static final boolean RETURN_NON_EXISTENT = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
-    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"));
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"), Capability.of("LIST-MYRIGHTS"));
 
     private final SubscriptionManager subscriptionManager;
     private final StatusProcessor statusProcessor;
@@ -195,6 +198,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
                     metaData.getHierarchyDelimiter(),
                     getMailboxType(session, metaData.getPath()))))
+            .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
             .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
@@ -205,23 +209,25 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get()).collectList())
             .map(tuple -> getListResponseForSelectSubscribed(tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
             .flatMapIterable(list -> list)
-            .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getRight()))
+            .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
+            .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
             .flatMap(pathAndResponse -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(pathAndResponse.getLeft(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
 
-    private List<Pair<MailboxPath, ListResponse>> getListResponseForSelectSubscribed(Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
+    private List<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> getListResponseForSelectSubscribed(Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
                                                                                      ListRequest listRequest, MailboxSession mailboxSession, boolean relative, MailboxQuery mailboxQuery) {
-        ImmutableList.Builder<Pair<MailboxPath, ListResponse>> responseBuilders = ImmutableList.builder();
+        ImmutableList.Builder<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> responseBuilders = ImmutableList.builder();
         List<Pair<MailboxPath, ListResponse>> listRecursiveMatch = listRecursiveMatch(searchedResultMap, allSubscribedSearch, mailboxSession, relative, listRequest);
-        responseBuilders.addAll(listRecursiveMatch);
+
+        listRecursiveMatch.forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
         Set<MailboxPath> listRecursiveMatchPath = listRecursiveMatch.stream().map(Pair::getKey).collect(Collectors.toUnmodifiableSet());
 
         allSubscribedSearch.stream()
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
             .filter(mailboxQuery::isPathMatch)
             .map(subscribed -> buildListResponse(searchedResultMap, mailboxSession, relative, subscribed))
-            .forEach(responseBuilders::add);
+            .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
 
         return responseBuilders.build();
     }
@@ -261,6 +267,21 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 return Pair.of(pair.getKey(), listResponse);
             })
             .collect(Collectors.toList());
+    }
+
+    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData) {
+        if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
+            MyRightsResponse myRightsResponse = new MyRightsResponse(metaData.getPath().getName(), getRfc4314Rights(mailboxSession, metaData));
+            responder.respond(myRightsResponse);
+        }
+    }
+
+    private MailboxACL.Rfc4314Rights getRfc4314Rights(MailboxSession mailboxSession, MailboxMetaData metaData) {
+        if (metaData.getPath().belongsTo(mailboxSession)) {
+            return MailboxACL.FULL_RIGHTS;
+        }
+        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
+        return metaData.getResolvedAcls().getEntries().get(entryKey);
     }
 
     private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {

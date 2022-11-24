@@ -229,6 +229,9 @@ public class ListCommandParser extends AbstractUidCommandParser {
         if (c == 's' || c == 'S') {
             return readS(request);
         }
+        if (c == 'm' || c == 'M') {
+            return Pair.of(readMyRight(request), Optional.empty());
+        }
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
             "Unknown return option: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
     }
@@ -243,6 +246,18 @@ public class ListCommandParser extends AbstractUidCommandParser {
         assertChar(request, 'E', 'e');
         assertChar(request, 'N', 'n');
         return ListReturnOption.CHILDREN;
+    }
+
+    private ListReturnOption readMyRight(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'M', 'm');
+        assertChar(request, 'Y', 'y');
+        assertChar(request, 'R', 'r');
+        assertChar(request, 'I', 'i');
+        assertChar(request, 'G', 'g');
+        assertChar(request, 'H', 'h');
+        assertChar(request, 'T', 't');
+        assertChar(request, 'S', 's');
+        return ListReturnOption.MYRIGHTS;
     }
 
     private ListReturnOption readReturnSubscribed(ImapRequestLineReader request) throws DecodingException {

@@ -49,6 +49,13 @@ S: \* LIST \(\\HasChildren\) \"\.\" \"funny\"
 }
 S: a1 OK LIST completed.
 
+C: a1 LIST "" "listtest" RETURN (MYRIGHTS)
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" "listtest"
+S: \* MYRIGHTS "listtest" "aeiklprstwx"
+}
+S: a1 OK LIST completed.
+
 C: a2 list "" funny.%
 SUB {
 S: \* LIST \(\\HasChildren\) \"\.\" \"funny.name with gaps\"
