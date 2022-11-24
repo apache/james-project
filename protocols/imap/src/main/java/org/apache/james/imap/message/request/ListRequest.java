@@ -20,7 +20,6 @@ package org.apache.james.imap.message.request;
 
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
