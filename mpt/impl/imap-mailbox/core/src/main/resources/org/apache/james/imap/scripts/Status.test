@@ -126,6 +126,15 @@ C: a014 STATUS statustest (MAILBOXID)
 S: \* STATUS \"statustest\" \(MAILBOXID \(.+\)\)
 S: a014 OK STATUS completed.
 
+C: a015 LIST "" * RETURN (STATUS (UNSEEN SIZE MESSAGES DELETED DELETED-STORAGE MAILBOXID))
+SUB {
+S: \* LIST \(\\HasNoChildren\) "." "INBOX"
+S: \* STATUS \"INBOX\" \(MESSAGES 0 SIZE 0 DELETED 0 DELETED-STORAGE 0 UNSEEN 0 MAILBOXID \(.+\)\)
+S: \* LIST \(\\HasNoChildren\) "." "statustest"
+S: \* STATUS "statustest" \(MESSAGES 4 SIZE 1016 DELETED 2 DELETED-STORAGE 508 UNSEEN 4 MAILBOXID \(.+\)\)
+}
+S: a015 OK LIST completed.
+
 # Cleanup
 C: a1 DELETE statustest
 S: a1 OK DELETE completed.

@@ -19,12 +19,15 @@
 package org.apache.james.imap.decode.parser;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -40,7 +43,7 @@ import org.apache.james.imap.message.request.ListRequest.ListSelectOption;
 public class ListCommandParser extends AbstractUidCommandParser {
 
     private static class ListCharValidator extends AtomCharValidator {
-        public static ImapRequestLineReader.CharacterValidator INSTANCE = new ListCharValidator();
+        public static final ImapRequestLineReader.CharacterValidator INSTANCE = new ListCharValidator();
 
         @Override
         public boolean isValid(char chr) {
@@ -84,13 +87,13 @@ public class ListCommandParser extends AbstractUidCommandParser {
         String referenceName = request.mailbox();
         String mailboxPattern = listMailbox(request);
 
-        EnumSet<ListReturnOption> listReturnOptions = parseReturnOptions(request);
+        Pair<EnumSet<ListReturnOption>, Optional<StatusDataItems>> listReturnOptions = parseReturnOptions(request);
         request.eol();
 
-        if (listOptions.isEmpty() && listReturnOptions.isEmpty()) {
+        if (listOptions.isEmpty() && listReturnOptions.getLeft().isEmpty()) {
             return createMessage(referenceName, mailboxPattern, tag);
         }
-        return new ListRequest(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, listOptions, listReturnOptions);
+        return new ListRequest(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, listOptions, listReturnOptions.getLeft(), listReturnOptions.getRight());
     }
 
     protected ImapMessage createMessage(String referenceName, String mailboxPattern, Tag tag) {
@@ -126,17 +129,29 @@ public class ListCommandParser extends AbstractUidCommandParser {
             "Unknown select option: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
     }
 
+    private Pair<ListReturnOption, Optional<StatusDataItems>> readS(ImapRequestLineReader request) throws DecodingException {
+        request.consume();
+        char c = request.nextWordChar();
+        if (c == 'T' || c == 't') {
+            return readStatus(request);
+        } else {
+            return Pair.of(readReturnSubscribed(request), Optional.empty());
+        }
+    }
+
+    private Pair<ListReturnOption, Optional<StatusDataItems>> readStatus(ImapRequestLineReader request) throws DecodingException {
+        // 'S' is already consummed
+        assertChar(request, 'T', 't');
+        assertChar(request, 'A', 'a');
+        assertChar(request, 'T','t');
+        assertChar(request, 'U', 'u');
+        assertChar(request, 'S', 's');
+        return Pair.of(ListReturnOption.STATUS, Optional.of(StatusCommandParser.statusDataItems(request)));
+    }
+
     private ListSelectOption readSubscribed(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'S');
-        assertChar(request, 'U');
-        assertChar(request, 'B');
-        assertChar(request, 'S');
-        assertChar(request, 'C');
-        assertChar(request, 'R');
-        assertChar(request, 'I');
-        assertChar(request, 'B');
-        assertChar(request, 'E');
-        assertChar(request, 'D');
+        assertChar(request, 'S', 's');
+        consumeUbscribed(request);
         return ListSelectOption.SUBSCRIBED;
     }
 
@@ -157,30 +172,30 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     private ListSelectOption readRemote(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'M');
-        assertChar(request, 'O');
-        assertChar(request, 'T');
-        assertChar(request, 'E');
+        assertChar(request, 'M', 'm');
+        assertChar(request, 'O', 'o');
+        assertChar(request, 'T', 'y');
+        assertChar(request, 'E', 'e');
         return ListSelectOption.REMOTE;
     }
 
     private ListSelectOption readRecursivematch(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'C');
-        assertChar(request, 'U');
-        assertChar(request, 'R');
-        assertChar(request, 'S');
-        assertChar(request, 'I');
-        assertChar(request, 'V');
-        assertChar(request, 'E');
-        assertChar(request, 'M');
-        assertChar(request, 'A');
-        assertChar(request, 'T');
-        assertChar(request, 'C');
-        assertChar(request, 'H');
+        assertChar(request, 'C', 'c');
+        assertChar(request, 'U', 'u');
+        assertChar(request, 'R', 'r');
+        assertChar(request, 'S', 's');
+        assertChar(request, 'I', 'i');
+        assertChar(request, 'V', 'v');
+        assertChar(request, 'E', 'e');
+        assertChar(request, 'M', 'm');
+        assertChar(request, 'A', 'a');
+        assertChar(request, 'T', 't');
+        assertChar(request, 'C', 'c');
+        assertChar(request, 'H', 'h');
         return ListSelectOption.RECURSIVEMATCH;
     }
 
-    private EnumSet<ListReturnOption> parseReturnOptions(ImapRequestLineReader request) throws DecodingException {
+    private Pair<EnumSet<ListReturnOption>, Optional<StatusDataItems>> parseReturnOptions(ImapRequestLineReader request) throws DecodingException {
         if (request.nextWordCharLenient().isPresent()) {
             String returnKey = request.consumeWord(AtomCharValidator.INSTANCE);
             if ("RETURN".equalsIgnoreCase(returnKey)) {
@@ -189,60 +204,69 @@ public class ListCommandParser extends AbstractUidCommandParser {
                 request.consumeChar('(');
                 request.nextWordChar();
 
+                Optional<StatusDataItems> statusDataItems = Optional.empty();
                 while (request.nextChar() != ')') {
-                    listReturnOptions.add(parseListReturnOption(request));
+                    Pair<ListReturnOption, Optional<StatusDataItems>> listReturnOption = parseListReturnOption(request);
+                    listReturnOptions.add(listReturnOption.getLeft());
+                    if (listReturnOption.getRight().isPresent()) {
+                        statusDataItems = listReturnOption.getRight();
+                    }
                     request.nextWordChar();
                 }
                 request.consumeChar(')');
-                return listReturnOptions;
+                return Pair.of(listReturnOptions, statusDataItems);
             } else {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown '" + returnKey + "' option'");
             }
         }
-        return EnumSet.noneOf(ListReturnOption.class);
+        return Pair.of(EnumSet.noneOf(ListReturnOption.class), Optional.empty());
     }
 
-    private ListReturnOption parseListReturnOption(ImapRequestLineReader request) throws DecodingException {
+    private Pair<ListReturnOption, Optional<StatusDataItems>> parseListReturnOption(ImapRequestLineReader request) throws DecodingException {
         char c = request.nextWordChar();
         if (c == 'c' || c == 'C') {
-            return readChildren(request);
+            return Pair.of(readChildren(request), Optional.empty());
         }
         if (c == 's' || c == 'S') {
-            return readReturnSubscribed(request);
+            return readS(request);
         }
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
             "Unknown return option: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
     }
 
     private ListReturnOption readChildren(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'C');
-        assertChar(request, 'H');
-        assertChar(request, 'I');
-        assertChar(request, 'L');
-        assertChar(request, 'D');
-        assertChar(request, 'R');
-        assertChar(request, 'E');
-        assertChar(request, 'N');
+        assertChar(request, 'C', 'c');
+        assertChar(request, 'H', 'h');
+        assertChar(request, 'I', 'i');
+        assertChar(request, 'L', 'l');
+        assertChar(request, 'D', 'd');
+        assertChar(request, 'R', 'r');
+        assertChar(request, 'E', 'e');
+        assertChar(request, 'N', 'n');
         return ListReturnOption.CHILDREN;
     }
 
     private ListReturnOption readReturnSubscribed(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'S');
-        assertChar(request, 'U');
-        assertChar(request, 'B');
-        assertChar(request, 'S');
-        assertChar(request, 'C');
-        assertChar(request, 'R');
-        assertChar(request, 'I');
-        assertChar(request, 'B');
-        assertChar(request, 'E');
-        assertChar(request, 'D');
+        assertChar(request, 'S', 's');
+        consumeUbscribed(request);
         return ListReturnOption.SUBSCRIBED;
     }
 
-    private void assertChar(ImapRequestLineReader reader, char c) throws DecodingException {
+    private void consumeUbscribed(ImapRequestLineReader request) throws DecodingException {
+        assertChar(request, 'U', 'u');
+        assertChar(request, 'B', 'b');
+        assertChar(request, 'S', 's');
+        assertChar(request, 'C', 'c');
+        assertChar(request, 'R', 'r');
+        assertChar(request, 'I', 'i');
+        assertChar(request, 'B', 'b');
+        assertChar(request, 'E', 'e');
+        assertChar(request, 'D', 'd');
+    }
+
+    private void assertChar(ImapRequestLineReader reader, char c, char cUp) throws DecodingException {
         char c2 = reader.consume();
-        if (Character.toUpperCase(c) != Character.toUpperCase(c2)) {
+        if (c2 != c && c2 != cUp) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unexpected token in select option. Expecting " + c + " got " + c2);
         }
     }

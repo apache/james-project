@@ -21,6 +21,7 @@ package org.apache.james.imap.message.request;
 import static org.apache.james.imap.api.ImapConstants.XLIST_COMMAND;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 import org.apache.james.imap.api.Tag;
 
@@ -29,6 +30,6 @@ import org.apache.james.imap.api.Tag;
  */
 public class XListRequest extends ListRequest {
     public XListRequest(String referenceName, String mailboxPattern, Tag tag) {
-        super(XLIST_COMMAND, referenceName, mailboxPattern, tag, EnumSet.noneOf(ListSelectOption.class), EnumSet.noneOf(ListReturnOption.class));
+        super(XLIST_COMMAND, referenceName, mailboxPattern, tag, EnumSet.noneOf(ListSelectOption.class), EnumSet.noneOf(ListReturnOption.class), Optional.empty());
     }
 }

@@ -21,8 +21,11 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
+import java.util.List;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -47,23 +50,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> {
+public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"));
+
     private final SubscriptionManager subscriptionManager;
+    private final StatusProcessor statusProcessor;
 
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager, StatusProcessor statusProcessor) {
         super(clazz, mailboxManager, factory, metricFactory);
+
         this.subscriptionManager = subscriptionManager;
+        this.statusProcessor = statusProcessor;
+    }
+
+    @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return CAPA;
     }
 
     /**
@@ -81,26 +95,23 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     @Override
     protected Mono<Void> processRequestReactive(T request, ImapSession session, Responder responder) {
-        String baseReferenceName = request.getBaseReferenceName();
-        String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = session.getMailboxSession();
         boolean selectSubscribed = request.selectSubscribed();
 
-        return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession, selectSubscribed)
+        return respond(session, responder, request, mailboxSession, selectSubscribed)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e));
+                return ReactorUtils.logAsMono(() -> LOGGER.error("List failed for mailboxName {}", request.getMailboxPattern(), e));
             })
             .then();
     }
 
-    private Mono<Void> respond(ImapSession session, Responder responder, String baseReferenceName,
-                               String mailboxPatternString, MailboxSession mailboxSession, boolean selectSubscribed) {
-        if (mailboxPatternString.length() == 0) {
-            return Mono.fromRunnable(() -> respondNamespace(baseReferenceName, responder, mailboxSession));
+    private Mono<Void> respond(ImapSession session, Responder responder, T request, MailboxSession mailboxSession, boolean selectSubscribed) {
+        if (request.getMailboxPattern().length() == 0) {
+            return Mono.fromRunnable(() -> respondNamespace(request.getBaseReferenceName(), responder, mailboxSession));
         } else {
-            return respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession, selectSubscribed);
+            return respondMailboxList(request, session, responder, mailboxSession, selectSubscribed);
         }
     }
 
@@ -139,30 +150,32 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         }
     }
 
-    private Mono<Void> respondMailboxList(String referenceName, String mailboxName, ImapSession session,
+    private Mono<Void> respondMailboxList(T request, ImapSession session,
                                           Responder responder, MailboxSession mailboxSession, boolean selectSubscribed) {
         // If the mailboxPattern is fully qualified, ignore the
         // reference name.
-        String finalReferencename = referenceName;
-        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+        String finalReferencename = request.getBaseReferenceName();
+        if (request.getMailboxPattern().charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
             finalReferencename = "";
         }
         // Is the interpreted (combined) pattern relative?
         // Should the namespace section be returned or not?
-        boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+        boolean isRelative = ((finalReferencename + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
         MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
 
         if (selectSubscribed) {
             return Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get())
                 .collectList()
-                .flatMapMany(litSubscribed -> getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
+                .flatMapMany(litSubscribed -> getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
                     .filter(metaData -> litSubscribed.contains(metaData.getPath()))
-                    .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), true)))
+                    .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), true))
+                    .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty())))
                 .then();
         } else {
-            return getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
+            return getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
                 .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), false))
+                .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
                 .then();
         }
     }
