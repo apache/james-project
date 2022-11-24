@@ -26,7 +26,23 @@ import org.apache.james.mailbox.model.MailboxMetaData;
  * Values an IMAP4rev1 <code>LIST</code> response.
  */
 public final class ListResponse extends AbstractListingResponse implements ImapResponseMessage {
-    public ListResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter) {
+
+    // https://www.rfc-editor.org/rfc/rfc5258.html
+    private final boolean returnSubscribed;
+
+    public ListResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
+                        String name, char hierarchyDelimiter) {
         super(children, selectability, name, hierarchyDelimiter, MailboxType.OTHER);
+        this.returnSubscribed = false;
+    }
+
+    public ListResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
+                        String name, char hierarchyDelimiter, boolean subscribed) {
+        super(children, selectability, name, hierarchyDelimiter, MailboxType.OTHER);
+        this.returnSubscribed = subscribed;
+    }
+
+    public boolean returnSubscribed() {
+        return returnSubscribed;
     }
 }

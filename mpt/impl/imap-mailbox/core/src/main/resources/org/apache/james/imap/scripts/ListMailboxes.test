@@ -26,6 +26,15 @@ S: 12 OK \[MAILBOXID \(.+\)\] CREATE completed.
 C: 13 CREATE listtest1.subfolder1
 S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
+# List select option: SUBSCRIBE
+C: a02 SUBSCRIBE listtest
+S: a02 OK SUBSCRIBE completed.
+C: A01 LIST (SUBSCRIBED) "" "*"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+}
+S: A01 OK LIST completed.
+
 # Empty 1st arg searches default context (#mail)
 C: 10 LIST "" listtest
 S: \* LIST \(\\HasChildren\) \"\.\" "listtest"

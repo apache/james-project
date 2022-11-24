@@ -32,6 +32,7 @@ import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -45,17 +46,24 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
+    private final SubscriptionManager subscriptionManager;
 
-    public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory);
+    public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
     }
 
-    public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
         super(clazz, mailboxManager, factory, metricFactory);
+        this.subscriptionManager = subscriptionManager;
     }
 
     /**
@@ -76,8 +84,9 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = session.getMailboxSession();
+        boolean selectSubscribed = request.selectSubscribed();
 
-        return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession)
+        return respond(session, responder, baseReferenceName, mailboxPatternString, mailboxSession, selectSubscribed)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
@@ -86,16 +95,18 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .then();
     }
 
-    private Mono<Void> respond(ImapSession session, Responder responder, String baseReferenceName, String mailboxPatternString, MailboxSession mailboxSession) {
+    private Mono<Void> respond(ImapSession session, Responder responder, String baseReferenceName,
+                               String mailboxPatternString, MailboxSession mailboxSession, boolean selectSubscribed) {
         if (mailboxPatternString.length() == 0) {
             return Mono.fromRunnable(() -> respondNamespace(baseReferenceName, responder, mailboxSession));
         } else {
-            return respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession);
+            return respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession, selectSubscribed);
         }
     }
 
-    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
-        return new ListResponse(children, selectability, name, hierarchyDelimiter);
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name,
+                                                 char hierarchyDelimiter, MailboxType type, boolean returnSubscribed) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter, returnSubscribed);
     }
 
     private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
@@ -108,7 +119,8 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             MailboxMetaData.Selectability.NOSELECT,
             referenceRoot,
             mailboxSession.getPathDelimiter(),
-            MailboxType.OTHER));
+            MailboxType.OTHER,
+            false));
     }
 
     private String computeReferenceRoot(String referenceName, MailboxSession mailboxSession) {
@@ -127,7 +139,8 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         }
     }
 
-    private Mono<Void> respondMailboxList(String referenceName, String mailboxName, ImapSession session, Responder responder, MailboxSession mailboxSession) {
+    private Mono<Void> respondMailboxList(String referenceName, String mailboxName, ImapSession session,
+                                          Responder responder, MailboxSession mailboxSession, boolean selectSubscribed) {
         // If the mailboxPattern is fully qualified, ignore the
         // reference name.
         String finalReferencename = referenceName;
@@ -140,9 +153,18 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
 
-        return getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
-            .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath())))
-            .then();
+        if (selectSubscribed) {
+            return Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get())
+                .collectList()
+                .flatMapMany(litSubscribed -> getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
+                    .filter(metaData -> litSubscribed.contains(metaData.getPath()))
+                    .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), true)))
+                .then();
+        } else {
+            return getMailboxManager().search(mailboxQuery(basePath, mailboxName, mailboxSession), Minimal, mailboxSession)
+                .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), false))
+                .then();
+        }
     }
 
     private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
@@ -175,7 +197,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         }
     }
 
-    private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
+    private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType, boolean returnSubscribed) {
         String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
 
         ImapResponseMessage response =
@@ -184,18 +206,17 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 listResult.getSelectability(),
                 mailboxName,
                 listResult.getHierarchyDelimiter(),
-                mailboxType);
+                mailboxType,
+                returnSubscribed);
         responder.respond(response);
     }
 
     /**
      * retrieve mailboxType for specified mailboxPath using provided
      * MailboxTyper
-     * 
-     * @param session
-     *            current imap session
-     * @param path
-     *            mailbox's path
+     *
+     * @param session current imap session
+     * @param path    mailbox's path
      * @return MailboxType value
      */
     protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {

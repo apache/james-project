@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
+import java.util.EnumSet;
+import java.util.stream.Collectors;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
@@ -25,17 +28,36 @@ import org.apache.james.imap.api.Tag;
 import com.google.common.base.MoreObjects;
 
 public class ListRequest extends AbstractImapRequest {
-    private final String baseReferenceName;
-    private final String mailboxPattern;
 
-    public ListRequest(String referenceName, String mailboxPattern, Tag tag) {
-        this(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag);
+    // https://www.rfc-editor.org/rfc/rfc5258.html
+    public enum ListSelectOption {
+        REMOTE,
+        RECURSIVEMATCH,
+        SUBSCRIBED
     }
 
-    public ListRequest(ImapCommand imapCommand, String referenceName, String mailboxPattern, Tag tag) {
+    // https://www.rfc-editor.org/rfc/rfc5258.html
+    public enum ListReturnOption {
+        CHILDREN,
+        SUBSCRIBED
+    }
+
+    private final String baseReferenceName;
+    private final String mailboxPattern;
+    private final EnumSet<ListSelectOption> selectOptions;
+    private final EnumSet<ListReturnOption> returnOptions;
+
+    public ListRequest(String referenceName, String mailboxPattern, Tag tag) {
+        this(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, EnumSet.noneOf(ListSelectOption.class), EnumSet.noneOf(ListReturnOption.class));
+    }
+
+    public ListRequest(ImapCommand imapCommand, String referenceName, String mailboxPattern, Tag tag,
+                       EnumSet<ListSelectOption> selectOptions, EnumSet<ListReturnOption> returnOptions) {
         super(tag, imapCommand);
         this.baseReferenceName = referenceName;
         this.mailboxPattern = mailboxPattern;
+        this.selectOptions = selectOptions;
+        this.returnOptions = returnOptions;
     }
 
     public final String getBaseReferenceName() {
@@ -46,11 +68,25 @@ public class ListRequest extends AbstractImapRequest {
         return mailboxPattern;
     }
 
+    public EnumSet<ListSelectOption> getSelectOptions() {
+        return selectOptions;
+    }
+
+    public EnumSet<ListReturnOption> getReturnOptions() {
+        return returnOptions;
+    }
+
+    public final boolean selectSubscribed() {
+        return getSelectOptions().contains(ListSelectOption.SUBSCRIBED);
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("baseReferenceName", baseReferenceName)
             .add("mailboxPattern", mailboxPattern)
+            .add("selectOptions", selectOptions.stream().map(Enum::toString).collect(Collectors.joining(",")))
+            .add("returnOptions", returnOptions.stream().map(Enum::toString).collect(Collectors.joining(",")))
             .toString();
     }
 }

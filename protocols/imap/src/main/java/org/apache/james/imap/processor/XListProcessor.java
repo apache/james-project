@@ -48,7 +48,7 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
 
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
             MetricFactory metricFactory) {
-        super(XListRequest.class, mailboxManager, factory, metricFactory);
+        super(XListRequest.class, mailboxManager, factory, metricFactory, null);
         this.mailboxTyper = mailboxTyper;
     }
 
@@ -63,7 +63,8 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
     }
 
     @Override
-    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
+                                                 String name, char hierarchyDelimiter, MailboxType type, boolean returnSubscribed) {
         return new XListResponse(children, selectability, name, hierarchyDelimiter, type);
     }
 

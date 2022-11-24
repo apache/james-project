@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.encode;
 
+import static org.apache.james.imap.api.ImapConstants.NAME_ATTRIBUTE_SUBSCRIBED;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -26,6 +28,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.message.response.AbstractListingResponse;
+import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 
 import com.google.common.collect.ImmutableList;
@@ -59,6 +62,10 @@ public class ListingEncodingUtils {
         selectabilityAsString(response.getSelectability(), builder);
         childrenAsString(response.getChildren(), builder);
         mailboxAttributeAsString(response.getType(), builder);
+
+        if (response instanceof ListResponse) {
+            returnSubscribedAsString(((ListResponse) response).returnSubscribed(), builder);
+        }
 
         return builder.build();
     }
@@ -94,6 +101,13 @@ public class ListingEncodingUtils {
         String attributeName = type.getAttributeName();
         if (attributeName != null) {
             return builder.add(attributeName.getBytes(StandardCharsets.US_ASCII));
+        }
+        return builder;
+    }
+
+    private static ImmutableList.Builder<byte[]> returnSubscribedAsString(boolean returnSubscribed, ImmutableList.Builder<byte[]> builder) {
+        if (returnSubscribed) {
+            return builder.add(NAME_ATTRIBUTE_SUBSCRIBED);
         }
         return builder;
     }
