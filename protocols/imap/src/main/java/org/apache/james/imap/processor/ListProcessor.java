@@ -33,10 +33,12 @@ import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -57,7 +59,7 @@ import reactor.core.publisher.Mono;
 
 public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcessor<T> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
-    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"));
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"), Capability.of("LIST-MYRIGHTS"));
 
     private final SubscriptionManager subscriptionManager;
     private final StatusProcessor statusProcessor;
@@ -170,14 +172,31 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 .flatMapMany(litSubscribed -> getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
                     .filter(metaData -> litSubscribed.contains(metaData.getPath()))
                     .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), true))
+                    .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
                     .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty())))
                 .then();
         } else {
             return getMailboxManager().search(mailboxQuery(basePath, request.getMailboxPattern(), mailboxSession), Minimal, mailboxSession)
                 .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()), false))
+                .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
                 .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
                 .then();
         }
+    }
+
+    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData) {
+        if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
+            MyRightsResponse myRightsResponse = new MyRightsResponse(metaData.getPath().getName(), getRfc4314Rights(mailboxSession, metaData));
+            responder.respond(myRightsResponse);
+        }
+    }
+
+    private MailboxACL.Rfc4314Rights getRfc4314Rights(MailboxSession mailboxSession, MailboxMetaData metaData) {
+        if (metaData.getPath().belongsTo(mailboxSession)) {
+            return MailboxACL.FULL_RIGHTS;
+        }
+        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
+        return metaData.getResolvedAcls().getEntries().get(entryKey);
     }
 
     private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
