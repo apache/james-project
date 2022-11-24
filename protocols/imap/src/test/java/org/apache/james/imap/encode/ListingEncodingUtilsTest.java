@@ -43,7 +43,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldWriteNilDelimiterWhenUnassigned() throws Exception {
-        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, ((char) Character.UNASSIGNED), false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, ((char) Character.UNASSIGNED), false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) NIL \"mailbox\"\r\n");
@@ -51,7 +51,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldWriteAnyDelimiter() throws Exception {
-        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '#', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '#', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) \"#\" \"mailbox\"\r\n");
@@ -59,7 +59,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldNotIncludeAttributeWhenNone() throws Exception {
-        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST () \".\" \"mailbox\"\r\n");
@@ -67,7 +67,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldAddHasChildrenToAttributes() throws Exception {
-        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) \".\" \"mailbox\"\r\n");
@@ -75,7 +75,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldAddHasNoChildrenToAttributes() throws Exception {
-        ListResponse input = new ListResponse(Children.HAS_NO_CHILDREN, Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.HAS_NO_CHILDREN, Selectability.NONE, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\HasNoChildren) \".\" \"mailbox\"\r\n");
@@ -83,7 +83,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldAddSeveralAttributes() throws Exception {
-        ListResponse input = new ListResponse(Children.NO_INFERIORS, Selectability.NOSELECT, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.NO_INFERIORS, Selectability.NOSELECT, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\Noselect \\Noinferiors) \".\" \"mailbox\"\r\n");
@@ -91,7 +91,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldAddMarkedAttribute() throws Exception {
-        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.MARKED, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.MARKED, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\Marked) \".\" \"mailbox\"\r\n");
@@ -99,7 +99,7 @@ public class ListingEncodingUtilsTest  {
 
     @Test
     void encodeShouldAddUnmarkedAttribute() throws Exception {
-        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.UNMARKED, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class));
+        ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.UNMARKED, nameParameter, '.', false, false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER);
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
         assertThat(writer.getString()).isEqualTo("* LIST (\\Unmarked) \".\" \"mailbox\"\r\n");

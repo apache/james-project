@@ -39,6 +39,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
+import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
@@ -70,23 +71,29 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     public static final boolean RETURN_SUBSCRIBED = true;
     public static final boolean RETURN_NON_EXISTENT = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
-    private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"), Capability.of("LIST-MYRIGHTS"));
+    private static final List<Capability> CAPA = ImmutableList.of(
+        Capability.of("LIST-EXTENDED"),
+        Capability.of("LIST-STATUS"),
+        Capability.of("LIST-MYRIGHTS"),
+        Capability.of("SPECIAL-USE"));
 
     private final SubscriptionManager subscriptionManager;
     private final StatusProcessor statusProcessor;
+    protected final MailboxTyper mailboxTyper;
 
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor);
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor) {
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
         super(clazz, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
         this.statusProcessor = statusProcessor;
+        this.mailboxTyper = mailboxTyper;
     }
 
     @Override
@@ -131,7 +138,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name,
                                                  char hierarchyDelimiter, MailboxType type) {
         return new ListResponse(children, selectability, name, hierarchyDelimiter, !RETURN_SUBSCRIBED,
-            !RETURN_NON_EXISTENT, EnumSet.noneOf(ListResponse.ChildInfo.class));
+            !RETURN_NON_EXISTENT, EnumSet.noneOf(ListResponse.ChildInfo.class), type);
     }
 
     private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
@@ -197,7 +204,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     metaData.getSelectability(),
                     mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
                     metaData.getHierarchyDelimiter(),
-                    getMailboxType(session, metaData.getPath()))))
+                    getMailboxType(request, session, metaData.getPath()))))
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
             .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
@@ -207,7 +214,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         return Mono.zip(getMailboxManager().search(mailboxQuery, Minimal, mailboxSession).collectList()
                     .map(searchedResultList -> searchedResultList.stream().collect(Collectors.toMap(MailboxMetaData::getPath, Function.identity()))),
                 Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get()).collectList())
-            .map(tuple -> getListResponseForSelectSubscribed(tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
+            .map(tuple -> getListResponseForSelectSubscribed(session, tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
             .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
@@ -215,10 +222,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .then();
     }
 
-    private List<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> getListResponseForSelectSubscribed(Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
+    private List<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> getListResponseForSelectSubscribed(ImapSession session, Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
                                                                                      ListRequest listRequest, MailboxSession mailboxSession, boolean relative, MailboxQuery mailboxQuery) {
         ImmutableList.Builder<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> responseBuilders = ImmutableList.builder();
-        List<Pair<MailboxPath, ListResponse>> listRecursiveMatch = listRecursiveMatch(searchedResultMap, allSubscribedSearch, mailboxSession, relative, listRequest);
+        List<Pair<MailboxPath, ListResponse>> listRecursiveMatch = listRecursiveMatch(session, searchedResultMap, allSubscribedSearch, mailboxSession, relative, listRequest);
 
         listRecursiveMatch.forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
         Set<MailboxPath> listRecursiveMatchPath = listRecursiveMatch.stream().map(Pair::getKey).collect(Collectors.toUnmodifiableSet());
@@ -226,24 +233,25 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         allSubscribedSearch.stream()
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
             .filter(mailboxQuery::isPathMatch)
-            .map(subscribed -> buildListResponse(searchedResultMap, mailboxSession, relative, subscribed))
+            .map(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed))
             .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
 
         return responseBuilders.build();
     }
 
-    private Pair<MailboxPath, ListResponse> buildListResponse(Map<MailboxPath, MailboxMetaData> searchedResultMap, MailboxSession mailboxSession, boolean relative, MailboxPath subscribed) {
+    private Pair<MailboxPath, ListResponse> buildListResponse(ListRequest listRequest, Map<MailboxPath, MailboxMetaData> searchedResultMap, ImapSession session, boolean relative, MailboxPath subscribed) {
         return Pair.of(subscribed, Optional.ofNullable(searchedResultMap.get(subscribed))
             .map(mailboxMetaData -> ListResponse.builder()
                 .returnSubscribed(RETURN_SUBSCRIBED)
                 .forMetaData(mailboxMetaData)
                 .name(mailboxName(relative, subscribed, mailboxMetaData.getHierarchyDelimiter()))
-                .returnNonExistent(!RETURN_NON_EXISTENT))
+                .returnNonExistent(!RETURN_NON_EXISTENT)
+                .mailboxType(getMailboxType(listRequest, session, mailboxMetaData.getPath())))
             .orElseGet(() -> ListResponse.builder().nonExitingSubscribedMailbox(subscribed))
             .build());
     }
 
-    private List<Pair<MailboxPath, ListResponse>> listRecursiveMatch(Map<MailboxPath, MailboxMetaData> searchedResultMap,
+    private List<Pair<MailboxPath, ListResponse>> listRecursiveMatch(ImapSession session, Map<MailboxPath, MailboxMetaData> searchedResultMap,
                                                                      List<MailboxPath> allSubscribedSearch, MailboxSession mailboxSession,
                                                                      boolean relative, ListRequest listRequest) {
         if (!listRequest.getSelectOptions().contains(RECURSIVEMATCH)) {
@@ -263,6 +271,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     .name(mailboxName(relative, metaData.getPath(), metaData.getHierarchyDelimiter()))
                     .childInfos(ListResponse.ChildInfo.SUBSCRIBED)
                     .returnSubscribed(allSubscribedSearch.contains(pair.getKey()))
+                    .mailboxType(getMailboxType(listRequest, session, metaData.getPath()))
                     .build();
                 return Pair.of(pair.getKey(), listResponse);
             })
@@ -323,7 +332,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
      * @param path    mailbox's path
      * @return MailboxType value
      */
-    protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {
+    protected MailboxType getMailboxType(ListRequest listRequest, ImapSession session, MailboxPath path) {
+        if (listRequest.getReturnOptions().contains(ListRequest.ListReturnOption.SPECIAL_USE)) {
+            return mailboxTyper.getMailboxType(session, path);
+        }
         return MailboxType.OTHER;
     }
 
