@@ -93,18 +93,10 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     protected Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder) {
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
+        StatusDataItems statusDataItems = request.getStatusDataItems();
 
         return logInitialRequest(mailboxPath)
-            .then(Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession)))
-            .flatMap(mailbox -> retrieveMetadata(mailbox, request.getStatusDataItems(), mailboxSession)
-                .flatMap(metaData -> computeStatusResponse(mailbox, request, metaData, mailboxSession)
-                    .doOnNext(response -> {
-                        // Enable CONDSTORE as this is a CONDSTORE enabling command
-                        if (response.getHighestModSeq() != null) {
-                            condstoreEnablingCommand(session, responder, metaData, false);
-                        }
-                        responder.respond(response);
-                    })))
+            .then(sendStatus(mailboxPath, statusDataItems, responder, session, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
@@ -112,6 +104,19 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                 return ReactorUtils.logAsMono(() -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e));
             })
             .then();
+    }
+
+    Mono<MailboxStatusResponse> sendStatus(MailboxPath mailboxPath, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
+        return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(mailbox -> retrieveMetadata(mailbox, statusDataItems, mailboxSession)
+                .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession)
+                    .doOnNext(response -> {
+                        // Enable CONDSTORE as this is a CONDSTORE enabling command
+                        if (response.getHighestModSeq() != null) {
+                            condstoreEnablingCommand(session, responder, metaData, false);
+                        }
+                        responder.respond(response);
+                    })));
     }
 
     private Mono<Void> logInitialRequest(MailboxPath mailboxPath) {
@@ -141,10 +146,9 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     }
 
     private Mono<MailboxStatusResponse> computeStatusResponse(MessageManager mailbox,
-                                                              StatusRequest request,
+                                                              StatusDataItems statusDataItems,
                                                               MessageManager.MailboxMetaData metaData,
                                                               MailboxSession session) {
-        StatusDataItems statusDataItems = request.getStatusDataItems();
         return iterateMailbox(statusDataItems, mailbox, session)
             .map(maybeIterationResult -> {
                 Optional<Long> appendLimit = appendLimit(statusDataItems);
@@ -160,7 +164,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
-                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName(), mailboxId);
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, mailbox.getMailboxPath().getName(), mailboxId);
             });
     }
 

@@ -451,7 +451,7 @@ public interface MessageManager {
     /**
      * Gets the path of the referenced mailbox
      */
-    MailboxPath getMailboxPath() throws MailboxException;
+    MailboxPath getMailboxPath();
 
     Flags getApplicableFlags(MailboxSession session) throws MailboxException;
 

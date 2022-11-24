@@ -146,7 +146,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         assertChar(request, 'T', 't');
         assertChar(request, 'U', 'u');
         assertChar(request, 'S', 's');
-        return Pair.of(ListReturnOption.STATUS, Optional.empty());
+        return Pair.of(ListReturnOption.STATUS, Optional.of(StatusCommandParser.statusDataItems(request)));
     }
 
     private ListSelectOption readSubscribed(ImapRequestLineReader request) throws DecodingException {

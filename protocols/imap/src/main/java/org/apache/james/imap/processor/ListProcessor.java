@@ -70,16 +70,20 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     private static final List<Capability> CAPA = ImmutableList.of(Capability.of("LIST-EXTENDED"), Capability.of("LIST-STATUS"));
 
     private final SubscriptionManager subscriptionManager;
+    private final StatusProcessor statusProcessor;
 
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager);
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager,
+                         StatusProcessor statusProcessor) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
+                         MetricFactory metricFactory, SubscriptionManager subscriptionManager,
+                         StatusProcessor statusProcessor) {
         super(clazz, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
+        this.statusProcessor = statusProcessor;
     }
 
     @Override
@@ -177,13 +181,13 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             request.getMailboxPattern(), mailboxSession);
 
         if (request.selectSubscribed()) {
-            return processWithSubscribed(request, responder, mailboxSession, isRelative, mailboxQuery);
+            return processWithSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
         } else {
-            return processWithoutSubscribed(session, responder, mailboxSession, isRelative, mailboxQuery);
+            return processWithoutSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
         }
     }
 
-    private Mono<Void> processWithoutSubscribed(ImapSession session, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
+    private Mono<Void> processWithoutSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
         return getMailboxManager().search(mailboxQuery, Minimal, mailboxSession)
             .doOnNext(metaData -> responder.respond(
                 createResponse(metaData.inferiors(),
@@ -191,16 +195,18 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
                     metaData.getHierarchyDelimiter(),
                     getMailboxType(session, metaData.getPath()))))
+            .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
 
-    private Mono<Void> processWithSubscribed(T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
+    private Mono<Void> processWithSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
         return Mono.zip(getMailboxManager().search(mailboxQuery, Minimal, mailboxSession).collectList()
                     .map(searchedResultList -> searchedResultList.stream().collect(Collectors.toMap(MailboxMetaData::getPath, Function.identity()))),
                 Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get()).collectList())
             .map(tuple -> getListResponseForSelectSubscribed(tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getRight()))
+            .flatMap(pathAndResponse -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(pathAndResponse.getLeft(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
 
