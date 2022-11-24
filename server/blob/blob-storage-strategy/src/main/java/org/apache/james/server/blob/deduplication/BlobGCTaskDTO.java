@@ -20,6 +20,7 @@
 package org.apache.james.server.blob.deduplication;
 
 import java.time.Clock;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.blob.api.BlobReferenceSource;
@@ -35,15 +36,18 @@ public class BlobGCTaskDTO implements TaskDTO {
 
     private final String bucketName;
     private final int expectedBlobCount;
+    private final Optional<Integer> deletionWindowSize;
     private final double associatedProbability;
     private final String type;
 
     public BlobGCTaskDTO(@JsonProperty("bucketName") String bucketName,
                          @JsonProperty("expectedBlobCount") int expectedBlobCount,
+                         @JsonProperty("deletionWindowSize") Optional<Integer> deletionWindowSize,
                          @JsonProperty("associatedProbability") double associatedProbability,
                          @JsonProperty("type") String type) {
         this.bucketName = bucketName;
         this.expectedBlobCount = expectedBlobCount;
+        this.deletionWindowSize = deletionWindowSize;
         this.associatedProbability = associatedProbability;
         this.type = type;
     }
@@ -64,11 +68,14 @@ public class BlobGCTaskDTO implements TaskDTO {
                     .bucketName(BucketName.of(dto.bucketName))
                     .clock(clock)
                     .expectedBlobCount(dto.expectedBlobCount)
-                    .associatedProbability(dto.associatedProbability))
+                    .associatedProbability(dto.associatedProbability)
+                    .deletionWindowSize(dto.deletionWindowSize)
+                    .build())
             .toDTOConverter((domain, type) ->
                 new BlobGCTaskDTO(
                     domain.getBucketName().asString(),
                     domain.getExpectedBlobCount(),
+                    Optional.of(domain.getDeletionWindowSize()),
                     domain.getAssociatedProbability(),
                     type))
             .typeName(BlobGCTask.TASK_TYPE.asString())
@@ -90,5 +97,9 @@ public class BlobGCTaskDTO implements TaskDTO {
 
     public double getAssociatedProbability() {
         return associatedProbability;
+    }
+
+    public Optional<Integer> getDeletionWindowSize() {
+        return deletionWindowSize;
     }
 }

@@ -20,6 +20,7 @@
 package org.apache.james.server.blob.deduplication;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -40,8 +41,8 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
                     dto.errorCount,
                     dto.bloomFilterExpectedBlobCount,
                     dto.bloomFilterAssociatedProbability,
-                    dto.timestamp
-                ))
+                    dto.timestamp,
+                    dto.deletionWindowSize.orElse(BlobGCTask.Builder.DEFAULT_DELETION_WINDOW_SIZE)))
             .toDTOConverter((domain, type) ->
                 new BlobGCTaskAdditionalInformationDTO(
                     type,
@@ -51,7 +52,8 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
                     domain.getGcedBlobCount(),
                     domain.getErrorCount(),
                     domain.getBloomFilterExpectedBlobCount(),
-                    domain.getBloomFilterAssociatedProbability()
+                    domain.getBloomFilterAssociatedProbability(),
+                    Optional.of(domain.getDeletionWindowSize())
                 ))
             .typeName(BlobGCTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
@@ -64,6 +66,7 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
     private final long errorCount;
     private final long bloomFilterExpectedBlobCount;
     private final double bloomFilterAssociatedProbability;
+    private final Optional<Integer> deletionWindowSize;
 
     public BlobGCTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                               @JsonProperty("timestamp") Instant timestamp,
@@ -72,7 +75,8 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
                                               @JsonProperty("gcedBlobCount") long gcedBlobCount,
                                               @JsonProperty("errorCount") long errorCount,
                                               @JsonProperty("bloomFilterExpectedBlobCount") long bloomFilterExpectedBlobCount,
-                                              @JsonProperty("bloomFilterAssociatedProbability") double bloomFilterAssociatedProbability) {
+                                              @JsonProperty("bloomFilterAssociatedProbability") double bloomFilterAssociatedProbability,
+                                              @JsonProperty("deletionWindowSize") Optional<Integer> deletionWindowSize) {
         this.type = type;
         this.timestamp = timestamp;
         this.referenceSourceCount = referenceSourceCount;
@@ -81,6 +85,7 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
         this.errorCount = errorCount;
         this.bloomFilterExpectedBlobCount = bloomFilterExpectedBlobCount;
         this.bloomFilterAssociatedProbability = bloomFilterAssociatedProbability;
+        this.deletionWindowSize = deletionWindowSize;
     }
 
 
@@ -116,5 +121,9 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
 
     public double getBloomFilterAssociatedProbability() {
         return bloomFilterAssociatedProbability;
+    }
+
+    public Optional<Integer> getDeletionWindowSize() {
+        return deletionWindowSize;
     }
 }

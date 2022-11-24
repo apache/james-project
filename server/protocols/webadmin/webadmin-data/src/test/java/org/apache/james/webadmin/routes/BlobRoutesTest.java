@@ -189,6 +189,7 @@ class BlobRoutesTest {
             .body("additionalInformation.blobCount", is(0))
             .body("additionalInformation.gcedBlobCount", is(0))
             .body("additionalInformation.errorCount", is(0))
+            .body("additionalInformation.deletionWindowSize", is(1000))
             .body("additionalInformation.bloomFilterExpectedBlobCount", is(1_000_000))
             .body("additionalInformation.bloomFilterAssociatedProbability", is(0.01F));
     }
@@ -208,6 +209,23 @@ class BlobRoutesTest {
             .get(taskId + "/await")
         .then()
             .body("additionalInformation.bloomFilterExpectedBlobCount", is(99));
+    }
+
+    @Test
+    void deleteUnReferencedShouldAcceptDeletionWindowSizeParam() {
+        String taskId = given()
+            .queryParam("scope", "unreferenced")
+            .queryParam("deletionWindowSize", 99)
+            .delete()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("additionalInformation.deletionWindowSize", is(99));
     }
 
     @ParameterizedTest

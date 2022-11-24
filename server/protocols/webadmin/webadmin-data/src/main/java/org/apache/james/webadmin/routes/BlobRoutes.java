@@ -95,6 +95,7 @@ public class BlobRoutes implements Routes {
             "'scope' is missing or must be 'unreferenced'");
 
         int expectedBlobCount = getExpectedBlobCount(request).orElse(EXPECTED_BLOB_COUNT_DEFAULT);
+        Optional<Integer> deletionWindowSize = getDeletionWindowSize(request);
         double associatedProbability = getAssociatedProbability(request).orElse(ASSOCIATED_PROBABILITY_DEFAULT);
 
         return BlobGCTask.builder()
@@ -105,7 +106,9 @@ public class BlobRoutes implements Routes {
             .bucketName(bucketName)
             .clock(clock)
             .expectedBlobCount(expectedBlobCount)
-            .associatedProbability(associatedProbability);
+            .associatedProbability(associatedProbability)
+            .deletionWindowSize(deletionWindowSize)
+            .build();
     }
 
     private static Optional<Integer> getExpectedBlobCount(Request req) {
@@ -119,6 +122,20 @@ public class BlobRoutes implements Routes {
                 });
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("'expectedBlobCount' must be numeric");
+        }
+    }
+
+    private static Optional<Integer> getDeletionWindowSize(Request req) {
+        try {
+            return Optional.ofNullable(req.queryParams("deletionWindowSize"))
+                .map(Integer::parseInt)
+                .map(expectedBlobCount -> {
+                    Preconditions.checkArgument(expectedBlobCount > 0,
+                        "'deletionWindowSize' must be strictly positive");
+                    return expectedBlobCount;
+                });
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("'deletionWindowSize' must be numeric");
         }
     }
 

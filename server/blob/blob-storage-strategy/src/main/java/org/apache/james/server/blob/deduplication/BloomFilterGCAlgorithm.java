@@ -262,22 +262,22 @@ public class BloomFilterGCAlgorithm {
         this.now = clock.instant();
     }
 
-    public Mono<Result> gc(int expectedBlobCount, double associatedProbability, BucketName bucketName, Context context) {
+    public Mono<Result> gc(int expectedBlobCount, int deletionWindowSize, double associatedProbability, BucketName bucketName, Context context) {
         return populatedBloomFilter(expectedBlobCount, associatedProbability, context)
-            .flatMap(bloomFilter -> gc(bloomFilter, bucketName, context))
+            .flatMap(bloomFilter -> gc(bloomFilter, bucketName, context, deletionWindowSize))
             .onErrorResume(error -> {
                 LOGGER.error("Error when running blob deduplicate garbage collection", error);
                 return Mono.just(Result.PARTIAL);
             });
     }
 
-    private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context) {
+    private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
             .flatMap(blobId -> Mono.fromCallable(() -> generationAwareBlobIdFactory.from(blobId.asString())))
             .filter(blobId -> !blobId.inActiveGeneration(generationAwareBlobIdConfiguration, now))
             .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
-            .window(DELETION_BATCH_SIZE)
+            .window(deletionWindowSize)
             .flatMap(blobIdFlux -> handlePagedDeletion(bucketName, context, blobIdFlux), DEFAULT_CONCURRENCY)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));

@@ -19,6 +19,7 @@
 
 package org.apache.james.server.blob.deduplication;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Clock;
@@ -30,6 +31,7 @@ import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,9 +71,36 @@ class BlobGCTaskSerializationTest {
                 BucketName.DEFAULT,
                 clock,
                 99,
+                100,
                 0.8
             ))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/blobGC.task.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacyData() throws Exception {
+        BlobGCTask gcTask = JsonGenericSerializer
+            .forModules(BlobGCTaskDTO.module(
+                blobStoreDAO,
+                generationAwareBlobIdFactory,
+                generationAwareBlobIdConfiguration,
+                blobReferenceSources,
+                clock))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/blobGC-legacy.task.json"));
+
+        assertThat(gcTask)
+            .isEqualToComparingFieldByFieldRecursively(new BlobGCTask(
+                blobStoreDAO,
+                generationAwareBlobIdFactory,
+                generationAwareBlobIdConfiguration,
+                blobReferenceSources,
+                BucketName.DEFAULT,
+                clock,
+                99,
+                1000,
+                0.8
+            ));
     }
 }
