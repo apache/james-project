@@ -50,6 +50,7 @@ import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -83,8 +84,33 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
+    private static class FileBackedOutputStreamByteSource extends ByteSource {
+        private final FileBackedOutputStream stream;
+        private final long size;
 
-    private static final int CHUNK_SIZE = 1024 * 1024;
+        private FileBackedOutputStreamByteSource(FileBackedOutputStream stream, long size) {
+            Preconditions.checkArgument(size >= 0, "'size' must be positive");
+            this.stream = stream;
+            this.size = size;
+        }
+
+        @Override
+        public InputStream openStream() throws IOException {
+            return stream.asByteSource().openStream();
+        }
+
+        @Override
+        public Optional<Long> sizeIfKnown() {
+            return super.sizeIfKnown();
+        }
+
+        @Override
+        public long size() throws IOException {
+            return super.size();
+        }
+    }
+
+    private static final int CHUNK_SIZE = 1024 * 100;
     private static final int EMPTY_BUCKET_BATCH_SIZE = 1000;
     private static final int FILE_THRESHOLD = 1024 * 100;
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
@@ -266,7 +292,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             () -> new FileBackedOutputStream(FILE_THRESHOLD),
             fileBackedOutputStream ->
                 Mono.fromCallable(() -> IOUtils.copy(inputStream, fileBackedOutputStream))
-                    .flatMap(ignore -> save(bucketName, blobId, fileBackedOutputStream.asByteSource())),
+                    .flatMap(size -> save(bucketName, blobId, new FileBackedOutputStreamByteSource(fileBackedOutputStream, size))),
             Throwing.consumer(FileBackedOutputStream::reset),
             LAZY)
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
@@ -276,22 +302,28 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        try {
+            long contentLength = content.size();
+            int chunkSize = Math.min((int) contentLength, CHUNK_SIZE);
 
-        return Mono.using(content::openStream,
-            stream -> Mono.fromFuture(() ->
+            return Mono.using(content::openStream,
+                stream -> Mono.fromFuture(() ->
                     client.putObject(
                         Throwing.<PutObjectRequest.Builder>consumer(
-                            builder -> builder.bucket(resolvedBucketName.asString()).contentLength(content.size()).key(blobId.asString()))
-                        .sneakyThrow(),
+                            builder -> builder.bucket(resolvedBucketName.asString()).contentLength(contentLength).key(blobId.asString()))
+                            .sneakyThrow(),
                         AsyncRequestBody.fromPublisher(
-                            DataChunker.chunkStream(stream, CHUNK_SIZE)))),
-            Throwing.consumer(InputStream::close),
-            LAZY)
-            .retryWhen(createBucketOnRetry(resolvedBucketName))
-            .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
-            .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
-            .publishOn(Schedulers.parallel())
-            .then();
+                            DataChunker.chunkStream(stream, chunkSize)))),
+                Throwing.consumer(InputStream::close),
+                LAZY)
+                .retryWhen(createBucketOnRetry(resolvedBucketName))
+                .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+                .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+                .publishOn(Schedulers.parallel())
+                .then();
+        } catch (IOException e) {
+            return Mono.error(new ObjectStoreIOException("Error saving blob", e));
+        }
     }
 
     private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {
