@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -47,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class AppendCommandParser extends AbstractImapCommandParser {
     private final Clock clock;
 
+    @Inject
     public AppendCommandParser(StatusResponseFactory statusResponseFactory, Clock clock) {
         super(ImapConstants.APPEND_COMMAND, statusResponseFactory);
             this.clock = clock;

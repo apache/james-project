@@ -21,6 +21,8 @@ package org.apache.james.imap.decode.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,7 +35,8 @@ import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.EnableRequest;
 
 public class EnableCommandParser extends AbstractImapCommandParser {
-    
+
+    @Inject
     public EnableCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.ENABLE_COMMAND, statusResponseFactory);
     }

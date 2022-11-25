@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor.base;
 
+import java.util.List;
+
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -27,6 +29,8 @@ import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
@@ -64,8 +68,12 @@ public abstract class AbstractProcessor<M extends ImapMessage> implements ImapPr
 
     }
 
-    public Class<M> acceptableClass() {
+    protected Class<M> acceptableClass() {
         return acceptableClass;
+    }
+
+    public List<Class<? extends M>> acceptableClasses() {
+        return ImmutableList.of(acceptableClass);
     }
 
     /**

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -34,8 +36,9 @@ import reactor.core.publisher.Flux;
 
 public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
 
+    @Inject
     public CopyProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                         MetricFactory metricFactory) {
         super(CopyRequest.class, mailboxManager, factory, metricFactory);
     }
 

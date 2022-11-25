@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -41,8 +43,9 @@ import reactor.core.publisher.Mono;
 public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
 
+    @Inject
     public SetQuotaProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                             MetricFactory metricFactory) {
         super(SetQuotaRequest.class, mailboxManager, factory, metricFactory);
     }
 

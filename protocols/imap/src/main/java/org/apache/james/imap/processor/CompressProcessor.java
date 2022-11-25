@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -41,6 +43,7 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
     private final StatusResponseFactory factory;
     private static final String COMPRESSED = "COMPRESSED";
 
+    @Inject
     public CompressProcessor(StatusResponseFactory factory) {
         super(CompressRequest.class);
         this.factory = factory;

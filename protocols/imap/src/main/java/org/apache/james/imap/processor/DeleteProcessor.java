@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -41,6 +43,7 @@ import reactor.core.publisher.Mono;
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteProcessor.class);
 
+    @Inject
     public DeleteProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(DeleteRequest.class, mailboxManager, factory, metricFactory);
     }

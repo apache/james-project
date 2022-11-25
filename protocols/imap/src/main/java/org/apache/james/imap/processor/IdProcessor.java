@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -41,6 +43,7 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
     private static final Logger LOGGER = LoggerFactory.getLogger(IdProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("ID"));
 
+    @Inject
     public IdProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(IDRequest.class, mailboxManager, factory, metricFactory);
     }

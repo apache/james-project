@@ -26,6 +26,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConfiguration;
@@ -74,8 +75,9 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     private ImapConfiguration imapConfiguration;
 
+    @Inject
     public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                           MetricFactory metricFactory) {
         super(StatusRequest.class, mailboxManager, factory, metricFactory);
     }
 

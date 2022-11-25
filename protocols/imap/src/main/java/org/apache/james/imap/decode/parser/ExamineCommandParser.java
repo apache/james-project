@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
@@ -32,6 +34,7 @@ import org.apache.james.imap.message.request.ExamineRequest;
  */
 public class ExamineCommandParser extends AbstractSelectionCommandParser {
 
+    @Inject
     public ExamineCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.EXAMINE_COMMAND, statusResponseFactory);
     }

@@ -21,6 +21,8 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -44,6 +46,7 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
     private static final String DEPTH = "DEPTH";
     private static final boolean STOP_ON_PAREN = true;
 
+    @Inject
     public GetMetadataCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.GETMETDATA_COMMAND, statusResponseFactory);
     }

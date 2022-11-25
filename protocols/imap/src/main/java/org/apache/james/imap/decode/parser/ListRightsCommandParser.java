@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,6 +35,8 @@ import org.apache.james.imap.message.request.ListRightsRequest;
  * LISTRIGHTS Parser
  */
 public class ListRightsCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public ListRightsCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.LISTRIGHTS_COMMAND, statusResponseFactory);
     }

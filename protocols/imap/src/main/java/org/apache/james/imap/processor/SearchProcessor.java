@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -82,9 +83,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
     protected static final String SEARCH_MODSEQ = "SEARCH_MODSEQ";
     private static final List<Capability> CAPS = ImmutableList.of(Capability.of("WITHIN"), Capability.of("ESEARCH"), Capability.of("SEARCHRES"));
-    
+
+    @Inject
     public SearchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                           MetricFactory metricFactory) {
         super(SearchRequest.class, mailboxManager, factory, metricFactory);
     }
 

@@ -22,6 +22,8 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UNSELECT;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -43,8 +45,9 @@ import reactor.core.publisher.Mono;
 public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> UNSELECT = ImmutableList.of(SUPPORTS_UNSELECT);
 
+    @Inject
     public UnselectProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                             MetricFactory metricFactory) {
         super(UnselectRequest.class, mailboxManager, factory, metricFactory);
     }
 

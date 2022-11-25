@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.util.ReactorUtils.logAsMono;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -43,8 +45,9 @@ import reactor.core.publisher.Mono;
 public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameProcessor.class);
 
+    @Inject
     public RenameProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                           MetricFactory metricFactory) {
         super(RenameRequest.class, mailboxManager, factory, metricFactory);
     }
 

@@ -22,6 +22,8 @@ package org.apache.james.imap.processor;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -38,7 +40,8 @@ import com.google.common.collect.ImmutableList;
  */
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> LOGINDISABLED_CAPS = ImmutableList.of(Capability.of("LOGINDISABLED"));
-    
+
+    @Inject
     public LoginProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(LoginRequest.class, mailboxManager, factory, metricFactory);
     }

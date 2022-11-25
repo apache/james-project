@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -43,7 +45,8 @@ import reactor.core.publisher.Mono;
  */
 public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_NAMESPACES);
-    
+
+    @Inject
     public NamespaceProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(NamespaceRequest.class, mailboxManager, factory, metricFactory);
     }

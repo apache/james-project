@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,6 +35,8 @@ import org.apache.james.imap.message.request.SetQuotaRequest;
  * SETQUOTA command parser
  */
 public class SetQuotaCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public SetQuotaCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.SETQUOTA_COMMAND, statusResponseFactory);
     }

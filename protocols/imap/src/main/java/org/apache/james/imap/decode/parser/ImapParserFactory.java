@@ -117,6 +117,10 @@ public class ImapParserFactory implements ImapCommandParserFactory {
                 Function.identity()));
     }
 
+    public ImapParserFactory(Map<String, ImapCommandParser> imapCommands) {
+        this.imapCommands = imapCommands;
+    }
+
     @Override
     public ImapCommandParser getParser(String commandName) {
         return imapCommands.get(commandName.toUpperCase(Locale.US));

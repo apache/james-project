@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.NoopRequest;
@@ -29,6 +31,8 @@ import org.apache.james.util.MDCBuilder;
 import reactor.core.publisher.Mono;
 
 public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
+
+    @Inject
     public NoopProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(NoopRequest.class, mailboxManager, factory, metricFactory);
     }

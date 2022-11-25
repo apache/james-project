@@ -63,11 +63,11 @@ import com.google.common.collect.ImmutableMap;
  * TODO: perhaps a POJO would be better
  */
 public class DefaultImapEncoderFactory implements ImapEncoderFactory {
-    static class DefaultImapEncoder implements ImapEncoder {
+    public static class DefaultImapEncoder implements ImapEncoder {
         private final Map<Class<? extends ImapMessage>, ImapResponseEncoder> encoders;
         private final EndImapEncoder endImapEncoder;
 
-        DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
+        public DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
             this.encoders = encoders
                 .collect(ImmutableMap.toImmutableMap(
                     ImapResponseEncoder::acceptableMessages,

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -39,8 +41,9 @@ import reactor.core.publisher.Mono;
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateProcessor.class);
 
+    @Inject
     public CreateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                           MetricFactory metricFactory) {
         super(CreateRequest.class, mailboxManager, factory, metricFactory);
     }
 

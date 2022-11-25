@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
@@ -43,8 +45,9 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
 
     private final boolean moveCapabilitySupported;
 
+    @Inject
     public MoveProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                         MetricFactory metricFactory) {
         super(MoveRequest.class, mailboxManager, factory, metricFactory);
         moveCapabilitySupported = mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move);
     }

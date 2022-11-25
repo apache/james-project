@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -41,6 +43,7 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     private static final List<Capability> STARTTLS_CAP = ImmutableList.of(ImapConstants.SUPPORTS_STARTTLS);
     private final StatusResponseFactory factory;
 
+    @Inject
     public StartTLSProcessor(StatusResponseFactory factory) {
         super(StartTLSRequest.class);
         this.factory = factory;

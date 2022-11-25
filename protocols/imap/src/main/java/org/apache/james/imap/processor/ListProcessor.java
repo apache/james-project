@@ -32,6 +32,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -86,6 +88,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     private final StatusProcessor statusProcessor;
     protected final MailboxTyper mailboxTyper;
 
+    @Inject
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
                          StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {

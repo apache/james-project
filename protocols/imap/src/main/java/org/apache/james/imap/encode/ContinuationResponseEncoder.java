@@ -21,6 +21,8 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.Locales;
 import org.apache.james.imap.api.display.Localizer;
@@ -30,6 +32,7 @@ public class ContinuationResponseEncoder implements ImapResponseEncoder<Continua
 
     private final Localizer localizer;
 
+    @Inject
     public ContinuationResponseEncoder(Localizer localizer) {
         this.localizer = localizer;
     }

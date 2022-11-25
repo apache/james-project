@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
@@ -59,11 +61,11 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
         this(mailboxManager, factory, metricFactory, capabilityProcessor);
         EnableProcessor.capabilities.addAll(capabilities);
-
     }
 
+    @Inject
     public EnableProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
+                           MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
         super(EnableRequest.class, mailboxManager, factory, metricFactory);
         this.capabilityProcessor = capabilityProcessor;
     }

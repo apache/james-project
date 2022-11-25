@@ -22,6 +22,8 @@ package org.apache.james.imap.decode.parser;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -38,6 +40,8 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public SetAnnotationCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.SETMETADATA_COMMAND, statusResponseFactory);
     }

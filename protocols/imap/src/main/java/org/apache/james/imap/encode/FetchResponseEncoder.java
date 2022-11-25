@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -51,6 +52,11 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
 
     /** Disables all optional BODYSTRUCTURE extensions */
     private final boolean neverAddBodyStructureExtensions;
+
+    @Inject
+    public FetchResponseEncoder() {
+        this(false);
+    }
 
     /**
      * Constructs an encoder for FETCH messages.

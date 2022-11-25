@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -33,6 +35,8 @@ import org.apache.james.imap.message.request.LoginRequest;
  * Parse LOGIN commands
  */
 public class LoginCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public LoginCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.LOGIN_COMMAND, statusResponseFactory);
     }

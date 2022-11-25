@@ -24,6 +24,8 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -58,8 +60,9 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
+    @Inject
     public GetACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                           MetricFactory metricFactory) {
         super(GetACLRequest.class, mailboxManager, factory, metricFactory);
     }
 
