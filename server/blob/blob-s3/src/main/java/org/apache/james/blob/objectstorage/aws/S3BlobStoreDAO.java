@@ -101,12 +101,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
         @Override
         public Optional<Long> sizeIfKnown() {
-            return super.sizeIfKnown();
+            return Optional.of(size);
         }
 
         @Override
-        public long size() throws IOException {
-            return super.size();
+        public long size() {
+            return size;
         }
     }
 
@@ -313,7 +313,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                             builder -> builder.bucket(resolvedBucketName.asString()).contentLength(contentLength).key(blobId.asString()))
                             .sneakyThrow(),
                         AsyncRequestBody.fromPublisher(
-                            DataChunker.chunkStream(stream, chunkSize)))),
+                            chunkStream(chunkSize, stream)))),
                 Throwing.consumer(InputStream::close),
                 LAZY)
                 .retryWhen(createBucketOnRetry(resolvedBucketName))
@@ -324,6 +324,13 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         } catch (IOException e) {
             return Mono.error(new ObjectStoreIOException("Error saving blob", e));
         }
+    }
+
+    private Flux<ByteBuffer> chunkStream(int chunkSize, InputStream stream) {
+        if (chunkSize == 0L) {
+            return Flux.empty();
+        }
+        return DataChunker.chunkStream(stream, chunkSize);
     }
 
     private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {
