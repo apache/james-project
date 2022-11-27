@@ -27,15 +27,20 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.queue.activemq.ActiveMQHealthCheck;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
 import org.apache.james.queue.activemq.EmbeddedActiveMQ;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollector;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorImpl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class ActiveMQQueueModule extends AbstractModule {
 
@@ -45,6 +50,8 @@ public class ActiveMQQueueModule extends AbstractModule {
         bind(KahaDBPersistenceAdapter.class).in(Scopes.SINGLETON);
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
         bind(ActiveMQMailQueueFactory.class).in(Scopes.SINGLETON);
+        bind(ActiveMQMetricCollector.class).to(ActiveMQMetricCollectorImpl.class);
+        bind(ActiveMQMetricCollectorImpl.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ActiveMQHealthCheck.class);
     }
@@ -73,5 +80,12 @@ public class ActiveMQQueueModule extends AbstractModule {
     @Singleton
     public MailQueueFactory<? extends MailQueue> provideMailQueueFactoryGenerics(ActiveMQMailQueueFactory queueFactory) {
         return queueFactory;
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation configureMetricCollector(ActiveMQMetricCollector metricCollector) {
+        return InitilizationOperationBuilder
+            .forClass(ActiveMQMetricCollector.class)
+            .init(metricCollector::start);
     }
 }

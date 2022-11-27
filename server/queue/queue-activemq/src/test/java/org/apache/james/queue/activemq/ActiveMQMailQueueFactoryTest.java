@@ -25,6 +25,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollector;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorNoop;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -49,7 +51,8 @@ public class ActiveMQMailQueueFactoryTest {
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
             RecordingMetricFactory metricFactory = new RecordingMetricFactory();
             NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
-            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
+            ActiveMQMetricCollector metricCollector = new ActiveMQMetricCollectorNoop();
+            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, metricCollector);
             mailQueueFactory.setUseJMX(false);
             mailQueueFactory.setUseBlobMessages(false);
         }
@@ -88,7 +91,8 @@ public class ActiveMQMailQueueFactoryTest {
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
             RecordingMetricFactory metricFactory = new RecordingMetricFactory();
             NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
-            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
+            ActiveMQMetricCollector metricCollector = new ActiveMQMetricCollectorNoop();
+            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, metricCollector);
             mailQueueFactory.setUseJMX(false);
             mailQueueFactory.setUseBlobMessages(true);
         }

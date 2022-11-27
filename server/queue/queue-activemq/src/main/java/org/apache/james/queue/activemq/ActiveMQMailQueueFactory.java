@@ -23,6 +23,7 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollector;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
@@ -37,14 +38,18 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     private boolean useBlob = true;
 
+    private final ActiveMQMetricCollector activeMQMetricCollector;
+
     public ActiveMQMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory,
-                                    GaugeRegistry gaugeRegistry) {
+                                    GaugeRegistry gaugeRegistry, ActiveMQMetricCollector activeMQMetricCollector) {
         super(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
+        this.activeMQMetricCollector = activeMQMetricCollector;
     }
 
     @Inject
-    public ActiveMQMailQueueFactory(EmbeddedActiveMQ embeddedActiveMQ, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
-        this(embeddedActiveMQ.getConnectionFactory(), mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
+    public ActiveMQMailQueueFactory(EmbeddedActiveMQ embeddedActiveMQ, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory,
+                                    GaugeRegistry gaugeRegistry, ActiveMQMetricCollector activeMQMetricCollector) {
+        this(embeddedActiveMQ.getConnectionFactory(), mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, activeMQMetricCollector);
     }
 
     public void setUseBlobMessages(boolean useBlob) {
@@ -53,6 +58,7 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     @Override
     protected ManageableMailQueue createCacheableMailQueue(MailQueueName name) {
+        activeMQMetricCollector.collectQueueStatistics(name);
         return new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, gaugeRegistry);
     }
 }

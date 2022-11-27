@@ -26,16 +26,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.james.core.healthcheck.Result;
-import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import reactor.core.publisher.Mono;
 
-@Tag(BrokerExtension.STATISTICS)
 @ExtendWith(BrokerExtension.class)
 class ActiveMQHealthCheckTest {
 
@@ -50,7 +47,7 @@ class ActiveMQHealthCheckTest {
         prefetchPolicy.setQueuePrefetch(0);
         connectionFactory.setPrefetchPolicy(prefetchPolicy);
 
-        testee = new ActiveMQHealthCheck(connectionFactory, new NoopGaugeRegistry());
+        testee = new ActiveMQHealthCheck(connectionFactory);
     }
 
     @Test
