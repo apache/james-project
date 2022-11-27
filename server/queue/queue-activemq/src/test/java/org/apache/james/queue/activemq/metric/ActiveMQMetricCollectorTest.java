@@ -1,0 +1,131 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.queue.activemq.metric;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import javax.jms.JMSException;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.james.metrics.api.Gauge;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.queue.api.MailQueueName;
+import org.apache.james.queue.jms.BrokerExtension;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+@ExtendWith(BrokerExtension.class)
+@Tag(BrokerExtension.STATISTICS)
+class ActiveMQMetricCollectorTest {
+
+    private static ActiveMQConnectionFactory connectionFactory;
+    //private BrokerService broker;
+
+    @BeforeAll
+    static void setup(BrokerService broker) {
+        //this.broker = broker;
+        connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setQueuePrefetch(0);
+        connectionFactory.setPrefetchPolicy(prefetchPolicy);
+    }
+
+    @Test
+    void shouldFailToFetchAndUpdateStatisticsForUnknownQueue() {
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        ActiveMQQueueStatistics queueStatistics = new ActiveMQQueueStatistics("UNKNOWN");
+
+        assertThatThrownBy(() -> testee.fetchAndUpdate(queueStatistics))
+            .isInstanceOf(JMSException.class);
+        assertThat(queueStatistics.getLastUpdate())
+            .isEqualTo(0);
+    }
+
+    @Test
+    void shouldFetchAndUpdateBrokerStatistics() throws Exception {
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        ActiveMQBrokerStatistics brokerStatistics = new ActiveMQBrokerStatistics();
+
+        long notBefore = System.currentTimeMillis();
+        testee.fetchAndUpdate(brokerStatistics);
+        assertThat(brokerStatistics.getLastUpdate())
+            .isGreaterThanOrEqualTo(notBefore);
+    }
+
+    @Test
+    void shouldFetchAndUpdateBrokerStatisticsInGaugeRegistry() throws Exception {
+        SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQBrokerStatistics brokerStatistics = new ActiveMQBrokerStatistics();
+        brokerStatistics.registerMetrics(gaugeRegistry);
+
+        testee.fetchAndUpdate(brokerStatistics);
+
+        Supplier<?> supplier = gaugeRegistry.getGauge("ActiveMQ.Statistics.Broker.storeLimit");
+        assertThat(supplier.get()).isInstanceOf(Long.class);
+        assertThat((Long) supplier.get()).isGreaterThan(0);
+    }
+
+    @Test
+    void hasExecutionTimeMetrics() {
+        RecordingMetricFactory metricFactory = new RecordingMetricFactory();
+        NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
+        ActiveMQMetricCollector testee = new ActiveMQMetricCollectorImpl(connectionFactory, metricFactory, gaugeRegistry);
+        testee.start();
+        testee.collectBrokerStatistics();
+        testee.collectQueueStatistics(MailQueueName.of("UNKNOWN"));
+
+        Integer executionTimeCount = Flux.interval(ActiveMQMetricCollectorImpl.REFRESH_DELAY, Duration.ofSeconds(1))
+            .take(3,true)
+            .flatMap(n -> Mono.fromCallable(() -> metricFactory.executionTimesForPrefixName("ActiveMQ.").size()))
+            .blockLast();
+        assertThat(executionTimeCount).isNotNull().isNotZero();
+
+        testee.stop();
+    }
+
+    private class SimpleGaugeRegistry implements GaugeRegistry {
+        private final Map<String, Gauge<?>> gauges = new ConcurrentHashMap<>();
+
+        @Override
+        public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
+            gauges.put(name, gauge);
+            return this;
+        }
+
+        public Gauge<?> getGauge(String name) {
+            return gauges.get(name);
+        }
+    }
+}
+
