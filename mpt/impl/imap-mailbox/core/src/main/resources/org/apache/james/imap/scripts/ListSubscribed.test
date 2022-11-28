@@ -102,6 +102,10 @@ S: A15 OK UNSUBSCRIBE completed.
 C: A16 DELETE another1
 S: A16 OK DELETE completed.
 
+# REMOTE should return empty (not yet support)
+C: A31 LIST (REMOTE) "" "*"
+S: A31 OK LIST completed.
+
 # Response should has `NonExistent` attribute when the subscribed mailbox is not exist
 C: a03 SUBSCRIBE subscribeNonExistent
 S: a03 OK SUBSCRIBE completed.

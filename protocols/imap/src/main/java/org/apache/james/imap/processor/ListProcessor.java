@@ -158,6 +158,11 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     private Mono<Void> respondMailboxList(T request, ImapSession session,
                                           Responder responder, MailboxSession mailboxSession) {
+        if (request.selectRemote()) {
+            // https://www.rfc-editor.org/rfc/rfc5258.html. NOT YET SUPPORT `REMOTE`
+            return Mono.empty();
+        }
+
         // If the mailboxPattern is fully qualified, ignore the
         // reference name.
         String finalReferencename = request.getBaseReferenceName();

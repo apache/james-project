@@ -20,7 +20,6 @@ package org.apache.james.imap.message.request;
 
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -84,6 +83,10 @@ public class ListRequest extends AbstractImapRequest {
 
     public boolean selectSubscribed() {
         return getSelectOptions().contains(ListSelectOption.SUBSCRIBED);
+    }
+
+    public boolean selectRemote() {
+        return getSelectOptions().contains(ListSelectOption.REMOTE);
     }
 
     public Optional<StatusDataItems> getStatusDataItems() {
