@@ -501,6 +501,7 @@ public class DownloadStepdefs {
         assertThat(response.getFirstHeader("Access-Control-Allow-Origin").getValue()).isEqualTo("*");
         assertThat(response.getFirstHeader("Access-Control-Allow-Methods").getValue()).isEqualTo("GET, POST, DELETE, PUT");
         assertThat(response.getFirstHeader("Access-Control-Allow-Headers").getValue()).isEqualTo("Content-Type, Authorization, Accept");
+        assertThat(response.getFirstHeader("Access-Control-Max-Age").getValue()).isEqualTo("86400");
     }
 
     @Then("^the Content-Type is \"([^\"]*)\"$")
