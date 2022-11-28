@@ -81,6 +81,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
@@ -302,32 +303,32 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
-        try {
-            long contentLength = content.size();
-            int chunkSize = Math.min((int) contentLength, CHUNK_SIZE);
 
-            return Mono.using(content::openStream,
-                stream -> Mono.fromFuture(() ->
-                    client.putObject(
-                        Throwing.<PutObjectRequest.Builder>consumer(
-                            builder -> builder.bucket(resolvedBucketName.asString()).contentLength(contentLength).key(blobId.asString()))
-                            .sneakyThrow(),
-                        AsyncRequestBody.fromPublisher(
-                            chunkStream(chunkSize, stream)))),
-                Throwing.consumer(InputStream::close),
-                LAZY)
-                .retryWhen(createBucketOnRetry(resolvedBucketName))
-                .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
-                .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
-                .publishOn(Schedulers.parallel())
-                .then();
-        } catch (IOException e) {
-            return Mono.error(new ObjectStoreIOException("Error saving blob", e));
-        }
+        return Mono.fromCallable(content::size)
+            .flatMap(contentLength ->
+                Mono.using(content::openStream,
+                    stream -> save(resolvedBucketName, blobId, stream, contentLength),
+                    Throwing.consumer(InputStream::close),
+                    LAZY))
+            .retryWhen(createBucketOnRetry(resolvedBucketName))
+            .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            .publishOn(Schedulers.parallel())
+            .then();
+    }
+
+    private Mono<PutObjectResponse> save(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
+        int chunkSize = Math.min((int) contentLength, CHUNK_SIZE);
+
+        return Mono.fromFuture(() -> client.putObject(builder -> builder
+                .bucket(resolvedBucketName.asString())
+                .contentLength(contentLength)
+                .key(blobId.asString()),
+            AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream))));
     }
 
     private Flux<ByteBuffer> chunkStream(int chunkSize, InputStream stream) {
-        if (chunkSize == 0L) {
+        if (chunkSize == 0) {
             return Flux.empty();
         }
         return DataChunker.chunkStream(stream, chunkSize);
