@@ -37,7 +37,7 @@ services:
       - redis
       - clamav
     container_name: rspamd
-    image: a16bitsysop/rspamd:3.2-r2-alpine3.16.0-r0
+    image: a16bitsysop/rspamd:3.3-r0-alpine3.16.2-r0
     environment:
       - REDIS=redis
       - CLAMAV=clamav
