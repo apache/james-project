@@ -162,7 +162,7 @@ This represents support for the Delegation data type and associated API methods.
 
 This extension is specific to the Apache James server and enables to:
 
-* manage accounts that a user delegates to access his account, and manage accounts that a user is delegated to access.
+* manage accounts that a user delegates access to, and accounts that a user is allowed to access.
 
 ## Data Type Support in Different Accounts
 
