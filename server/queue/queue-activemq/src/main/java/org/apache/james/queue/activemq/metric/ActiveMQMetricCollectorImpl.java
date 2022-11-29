@@ -19,7 +19,6 @@
 
 package org.apache.james.queue.activemq.metric;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +37,7 @@ import javax.jms.TemporaryQueue;
 
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.queue.activemq.ActiveMQConfiguration;
 import org.apache.james.queue.api.MailQueueName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +53,7 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQMetricCollectorImpl.class);
 
-    public static final Duration REFRESH_DELAY = Duration.ofSeconds(2);
-    public static final Duration REFRESH_INTERVAL = Duration.ofSeconds(5);
-    public static final Duration RECEIVE_TIMEOUT = Duration.ofSeconds(1);
-    public static final Duration REFRESH_TIMEOUT = RECEIVE_TIMEOUT.multipliedBy(2);
-
+    private final ActiveMQMetricConfiguration config;
     private final ConnectionFactory connectionFactory;
     private final MetricFactory metricFactory;
     private final GaugeRegistry gaugeRegistry;
@@ -67,7 +63,8 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
     private Disposable disposable;
 
     @Inject
-    public ActiveMQMetricCollectorImpl(ConnectionFactory connectionFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+    public ActiveMQMetricCollectorImpl(ActiveMQConfiguration activeMQConfiguration, ConnectionFactory connectionFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+        this.config = activeMQConfiguration.getMetricConfiguration();
         this.connectionFactory = connectionFactory;
         this.metricFactory = metricFactory;
         this.gaugeRegistry = gaugeRegistry;
@@ -84,7 +81,7 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
     }
 
     private void collectStatistics(ActiveMQMetrics statistics) {
-        if (!registeredStatistics.containsKey(statistics.getName())) {
+        if (config.isEnabled() && !registeredStatistics.containsKey(statistics.getName())) {
             LOGGER.info("collecting statistics for {}", statistics.getName());
             registeredStatistics.put(statistics.getName(), statistics);
         }
@@ -92,13 +89,20 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
 
     @Override
     public void start() {
+        if (!config.isEnabled()) {
+            LOGGER.info("collecting statistics disabled");
+            return;
+        }
+
         collectBrokerStatistics();
 
-        LOGGER.info("start delay={} interval={}", REFRESH_DELAY, REFRESH_INTERVAL);
-        disposable = Flux.interval(REFRESH_DELAY, REFRESH_INTERVAL)
+        LOGGER.info("start delay={} interval={} timeout={} aqmp_timeout={}",
+            config.getStartDelay(), config.getInterval(), config.getTimeout(), config.getAqmpTimeout());
+
+        disposable = Flux.interval(config.getStartDelay(), config.getInterval())
             .flatMap(any -> Flux.fromStream(() -> registeredStatistics.values().stream())
                 .flatMap((s) -> {
-                    Mono<Void> task = Mono.fromCallable(() -> fetchAndUpdate(s)).timeout(REFRESH_TIMEOUT);
+                    Mono<Void> task = Mono.fromCallable(() -> fetchAndUpdate(s)).timeout(config.getTimeout());
                     return metricFactory.decoratePublisherWithTimerMetric(s.getName() + "._time", task);
                 })
             )
@@ -139,9 +143,10 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
             msg.setJMSReplyTo(replyTo);
             producer.send(msg);
 
-            Message reply = consumer.receive(RECEIVE_TIMEOUT.toMillis());
+            long timeoutMs = config.getAqmpTimeout().toMillis();
+            Message reply = consumer.receive(timeoutMs);
             if (reply == null) {
-                throw new JMSException("no message received, timed out after " + RECEIVE_TIMEOUT);
+                throw new JMSException("no message received, timed out after " + timeoutMs + " ms");
             } else if (!(reply instanceof MapMessage)) {
                 throw new JMSException("expected MapMessage but got " + reply.getClass());
             }
