@@ -62,7 +62,7 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
     private final MetricFactory metricFactory;
     private final GaugeRegistry gaugeRegistry;
 
-    private final Map<String, ActiveMQStatistics> registeredStatistics = new HashMap<>();
+    private final Map<String, ActiveMQMetrics> registeredStatistics = new HashMap<>();
 
     private Disposable disposable;
 
@@ -75,19 +75,18 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
 
     @Override
     public void collectBrokerStatistics() {
-        collectStatistics(new ActiveMQBrokerStatistics());
+        collectStatistics(ActiveMQMetrics.forBroker(gaugeRegistry));
     }
 
     @Override
     public void collectQueueStatistics(MailQueueName name) {
-        collectStatistics(ActiveMQQueueStatistics.from(name.asString()));
+        collectStatistics(ActiveMQMetrics.forQueue(name.asString(), gaugeRegistry));
     }
 
-    private void collectStatistics(ActiveMQStatistics statistics) {
+    private void collectStatistics(ActiveMQMetrics statistics) {
         if (!registeredStatistics.containsKey(statistics.getName())) {
             LOGGER.info("collecting statistics for {}", statistics.getName());
             registeredStatistics.put(statistics.getName(), statistics);
-            statistics.registerMetrics(gaugeRegistry);
         }
     }
 
@@ -120,7 +119,7 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
     }
 
     @VisibleForTesting
-    Void fetchAndUpdate(ActiveMQStatistics stats) throws JMSException {
+    Void fetchAndUpdate(ActiveMQMetrics stats) throws JMSException {
         Connection connection = null;
         Session session = null;
         TemporaryQueue replyTo = null;
@@ -146,7 +145,7 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
             } else if (!(reply instanceof MapMessage)) {
                 throw new JMSException("expected MapMessage but got " + reply.getClass());
             }
-            stats.update((MapMessage)reply);
+            stats.updateMetrics((MapMessage)reply);
         } finally {
             if (producer != null) {
                 producer.close();
