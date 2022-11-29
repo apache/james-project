@@ -87,6 +87,22 @@ public class OidcTokenFixture {
         "    \"email\": \"user1@example.com\"" +
         "}";
 
+    public static final String INTROSPECTION_RESPONSE = "{" +
+        "    \"exp\": 1669719841," +
+        "    \"iat\": 1669719541," +
+        "    \"aud\": \"account\"," +
+        "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
+        "    \"typ\": \"Bearer\"," +
+        "    \"session_state\": \"42799d76-be33-4f24-bcec-fc0dbb5d126d\"," +
+        "    \"preferred_username\": \"user1\"," +
+        "    \"email\": \"user1@example.com\"," +
+        "    \"scope\": \"profile email\"," +
+        "    \"sid\": \"42799d76-be33-4f24-bcec-fc0dbb5d126d\"," +
+        "    \"client_id\": \"james-thunderbird\"," +
+        "    \"username\": \"user1\"," +
+        "    \"active\": true" +
+        "}";
+
     public static final String CLAIM = "email_address";
     //  "email_address": "user@domain.org"
     public static final String VALID_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Inc4MFBzNUlhc24tYUdXbXcyVHJ4RGlOY2FocEgyc1h6NXBxZGhBbDlIWGMifQ.eyJleHAiOjM5Mzk1MDYxNjcsImlhdCI6MTYzOTUwNTg2NywiYXV0aF90aW1lIjozNjM5NTA1ODQxLCJqdGkiOiJjMjQ5ZTBkNi1jY2JiLTRmZDAtODI5Yi04OTM1MjczN2YzZGIiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvcmVhbG0xIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjIwNDUyNzFiLWMxYmItNDJiOC1hMTkwLThlYWI1MmYzYmEwOSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImFjY291bnQtY29uc29sZSIsIm5vbmNlIjoiNWUyOGJjNTAtODE5NS00NjM3LThmMWEtYWUzNWFlYTk0NTc1Iiwic2Vzc2lvbl9zdGF0ZSI6ImMxYzI3MmYwLWMwMjAtNGZmMC1hMzYwLTQ3MGJlYWVlNWUwMCIsImFjciI6IjAiLCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIl19fSwic2NvcGUiOiJvcGVuaWQgZW1haWwgcHJvZmlsZSIsInNpZCI6ImMxYzI3MmYwLWMwMjAtNGZmMC1hMzYwLTQ3MGJlYWVlNWUwMCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamFtZXMiLCJlbWFpbF9hZGRyZXNzIjoidXNlckBkb21haW4ub3JnIn0.bqHsX3yngXwXyVW7LenKzHbdqZy1AmCjE3QWrp7Y1sd_zcQEu5WABwLIOAzrXiNFeGwyww8taGJBdYa0KTBCY6MYkAHAEa1vyyO1LfJgr3cIfQT6WCf3g2BJqHRjUsqNgT_Sit9druMRke01m1V0EmzqIdLLHp8Vl-u4R3JSDx1bsQ1w3WCRlcgr_k3EJ7jNiuNnklCH8_o59y4c7Rzdpl-Y8tcA07nGjeJ_7qPgNZX6lgwvr0EhpQpbVDHXwQlp2NDzkWwBLJR0-V50Q0a-L0QD69wqeEaqi1xaRAfx2Gwn2FgCgMUWzKeW_qkEBP0tnN-pzl7j31EOnmKhshlOtw";
