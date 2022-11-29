@@ -24,4 +24,9 @@ public class NoopGaugeRegistry implements GaugeRegistry {
     public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
         return this;
     }
+
+    @Override
+    public <T> SettableGauge<T> settableGauge(String name) {
+        return t -> { };
+    }
 }

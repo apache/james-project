@@ -20,5 +20,11 @@
 package org.apache.james.metrics.api;
 
 public interface GaugeRegistry {
+    interface SettableGauge<T> {
+        void setValue(T t);
+    }
+
     <T> GaugeRegistry register(String name, Gauge<T> gauge);
+
+    <T> SettableGauge<T> settableGauge(String name);
 }

@@ -49,11 +49,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class ActiveMQMetricCollectorTest {
 
     private static ActiveMQConnectionFactory connectionFactory;
-    //private BrokerService broker;
 
     @BeforeAll
     static void setup(BrokerService broker) {
-        //this.broker = broker;
         connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setQueuePrefetch(0);
@@ -62,38 +60,40 @@ class ActiveMQMetricCollectorTest {
 
     @Test
     void shouldFailToFetchAndUpdateStatisticsForUnknownQueue() {
-        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        ActiveMQQueueStatistics queueStatistics = new ActiveMQQueueStatistics("UNKNOWN");
+        SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQMetrics queueStatistics = ActiveMQMetrics.forQueue("UNKNOWN", gaugeRegistry);
 
         assertThatThrownBy(() -> testee.fetchAndUpdate(queueStatistics))
             .isInstanceOf(JMSException.class);
-        assertThat(queueStatistics.getLastUpdate())
-            .isEqualTo(0);
+
+        assertThat(gaugeRegistry.getGauge("ActiveMQ.Statistics.Destination.UNKNOWN")).isNull();
     }
 
     @Test
     void shouldFetchAndUpdateBrokerStatistics() throws Exception {
-        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        ActiveMQBrokerStatistics brokerStatistics = new ActiveMQBrokerStatistics();
+        SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQMetrics brokerStatistics = ActiveMQMetrics.forBroker(gaugeRegistry);
 
         long notBefore = System.currentTimeMillis();
         testee.fetchAndUpdate(brokerStatistics);
-        assertThat(brokerStatistics.getLastUpdate())
-            .isGreaterThanOrEqualTo(notBefore);
+        Number n = gaugeRegistry.getGauge("ActiveMQ.Statistics.Broker.lastUpdate");
+        assertThat(n).isInstanceOf(Long.class);
+        assertThat((Long) n).isGreaterThanOrEqualTo(notBefore);
     }
 
     @Test
     void shouldFetchAndUpdateBrokerStatisticsInGaugeRegistry() throws Exception {
         SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
         ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
-        ActiveMQBrokerStatistics brokerStatistics = new ActiveMQBrokerStatistics();
-        brokerStatistics.registerMetrics(gaugeRegistry);
+        ActiveMQMetrics brokerStatistics = ActiveMQMetrics.forBroker(gaugeRegistry);
 
         testee.fetchAndUpdate(brokerStatistics);
 
-        Supplier<?> supplier = gaugeRegistry.getGauge("ActiveMQ.Statistics.Broker.storeLimit");
-        assertThat(supplier.get()).isInstanceOf(Long.class);
-        assertThat((Long) supplier.get()).isGreaterThan(0);
+        Number n = gaugeRegistry.getGauge("ActiveMQ.Statistics.Broker.storeLimit");
+        assertThat(n).isInstanceOf(Long.class);
+        assertThat((Long) n).isGreaterThan(0);
     }
 
     @Test
@@ -123,8 +123,17 @@ class ActiveMQMetricCollectorTest {
             return this;
         }
 
-        public Gauge<?> getGauge(String name) {
-            return gauges.get(name);
+        @Override
+        public <T> SettableGauge<T> settableGauge(String name) {
+            return t -> gauges.put(name, () -> t);
+        }
+
+        public Number getGauge(String name) {
+            Gauge<?> g = gauges.get(name);
+            if (g == null) {
+                return null;
+            }
+            return (Number) g.get();
         }
     }
 }
