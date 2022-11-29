@@ -19,13 +19,16 @@
 
 package org.apache.james.jwt;
 
+import static org.apache.james.jwt.OidcTokenFixture.USERINFO_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.apache.james.jwt.userinfo.UserInfoCheckException;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,9 +36,12 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import reactor.core.publisher.Mono;
+
 class OidcJwtTokenVerifierTest {
 
     private static final String JWKS_URI_PATH = "/auth/realms/realm1/protocol/openid-connect/certs";
+    private static final String USERINFO_PATH = "/auth/realms/oidc/protocol/openid-connect/userinfo";
 
     ClientAndServer mockServer;
     @BeforeEach
@@ -85,9 +91,90 @@ class OidcJwtTokenVerifierTest {
             .isEmpty();
     }
 
+    @Test
+    void verifyWithUserinfoShouldFailWhenUserInfoEndpointNotReturnOKHttpStatus() {
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(201));
+
+        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isInstanceOf(UserInfoCheckException.class)
+            .hasMessageContaining("Error when check token by userInfo");
+    }
+
+    @Test
+    void verifyWithUserinfoShouldFailWhenUserInfoEndpointReturnBadResponse() {
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("badResponse1", StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isInstanceOf(UserInfoCheckException.class)
+            .hasMessageContaining("Error when check token by userInfo");
+    }
+
+    @Test
+    void verifyWithUserinfoShouldFailWhenPreferredUsernameIsAbsent() {
+        String userInfoResponse = "{" +
+            "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
+            "    \"email_verified\": false," +
+            "    \"name\": \"User name 1\"," +
+            "    \"email\": \"user1@example.com\"" +
+            "}";
+
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(userInfoResponse, StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isInstanceOf(UserInfoCheckException.class)
+            .hasMessageContaining("Error when check token by userInfo");
+    }
+
+    @Test
+    void verifyWithUserinfoShouldReturnClaimValueWhenPassCheckToken() {
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isEqualTo("user@domain.org");
+    }
+
+    @Test
+    void verifyWithUserinfoShouldReturnEmptyWhenINVALIDToken(){
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isNull();
+    }
+
     private URL getJwksURL() {
         try {
             return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), JWKS_URI_PATH));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private URL getUserInfoEndpoint() {
+        try {
+            return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), USERINFO_PATH));
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

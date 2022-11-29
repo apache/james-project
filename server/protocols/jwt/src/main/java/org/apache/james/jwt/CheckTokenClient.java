@@ -17,13 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jwt.introspection;
+package org.apache.james.jwt;
 
+import java.net.URL;
+
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
+import org.apache.james.jwt.userinfo.UserinfoResponse;
 import org.reactivestreams.Publisher;
 
-public interface IntrospectionClient {
+public interface CheckTokenClient {
 
     Publisher<TokenIntrospectionResponse> introspect(IntrospectionEndpoint introspectionEndpoint, String token);
+
+    Publisher<UserinfoResponse> useInfo(URL userinfoEndpoint, String bearerToken);
 
 }
 

@@ -116,11 +116,32 @@ public class UsersRepositoryAuthHook implements AuthHook {
     }
 
     private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithMaybeIntrospection(token,
+        if (oidcSASLConfiguration.isCheckTokenByIntrospectionEndpoint()) {
+            return validTokenWithIntrospection(oidcSASLConfiguration, token);
+        } else if (oidcSASLConfiguration.isCheckTokenByUserinfoEndpoint()) {
+            return validTokenWithUserInfo(oidcSASLConfiguration, token);
+        } else {
+            return OidcJwtTokenVerifier.verifySignatureAndExtractClaim(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())
+                .map(Username::of);
+        }
+    }
+
+    private Optional<Username> validTokenWithUserInfo(OidcSASLConfiguration oidcSASLConfiguration, String token) {
+        return Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(token,
+                oidcSASLConfiguration.getJwksURL(),
+                oidcSASLConfiguration.getClaim(),
+                oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
+            .blockOptional()
+            .map(Username::of);
+    }
+
+    private static Optional<Username> validTokenWithIntrospection(OidcSASLConfiguration oidcSASLConfiguration, String token) {
+        return Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(token,
                 oidcSASLConfiguration.getJwksURL(),
                 oidcSASLConfiguration.getClaim(),
                 oidcSASLConfiguration.getIntrospectionEndpoint()
-                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))))
+                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))
+                    .orElseThrow()))
             .blockOptional()
             .map(Username::of);
     }
