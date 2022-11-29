@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.time.Clock;
+
 import javax.mail.Flags;
 
 import org.apache.james.events.EventBus;
@@ -49,10 +51,11 @@ public class CassandraMessageManager extends StoreMessageManager {
                             BatchSizes batchSizes,
                             StoreRightManager storeRightManager,
                             PreDeletionHooks preDeletionHooks,
-                            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                            Clock clock) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager,
-            preDeletionHooks, new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm));
+            preDeletionHooks, new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock));
     }
 
     /**

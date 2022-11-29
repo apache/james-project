@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.time.Clock;
+import java.time.Instant;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.events.EventBusTestFixture;
@@ -56,6 +59,7 @@ import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.utils.UpdatableTickingClock;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 
@@ -81,6 +85,7 @@ public class CassandraMailboxManagerProvider {
                                                                 MailboxManagerConfiguration mailboxManagerConfiguration) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithm();
+        UpdatableTickingClock clock = new UpdatableTickingClock(Instant.now());
 
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra,
@@ -88,7 +93,7 @@ public class CassandraMailboxManagerProvider {
             cassandraConfiguration);
 
         return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory,
-            mailboxManagerConfiguration, messageIdFactory, threadIdGuessingAlgorithm);
+            mailboxManagerConfiguration, messageIdFactory, threadIdGuessingAlgorithm, clock);
     }
 
     private static CassandraMailboxManager provideMailboxManager(CqlSession session,
@@ -96,7 +101,8 @@ public class CassandraMailboxManagerProvider {
                                                                  CassandraMailboxSessionMapperFactory mapperFactory,
                                                                  MailboxManagerConfiguration mailboxManagerConfiguration,
                                                                  MessageId.Factory messageIdFactory,
-                                                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                                                 Clock clock) {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
@@ -122,7 +128,7 @@ public class CassandraMailboxManagerProvider {
 
         CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, eventBus, annotationManager, storeRightManager,
-            quotaComponents, index, mailboxManagerConfiguration, preDeletionHooks, threadIdGuessingAlgorithm);
+            quotaComponents, index, mailboxManagerConfiguration, preDeletionHooks, threadIdGuessingAlgorithm, clock);
 
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));

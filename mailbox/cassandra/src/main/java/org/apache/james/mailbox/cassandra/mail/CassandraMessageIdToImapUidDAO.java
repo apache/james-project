@@ -26,6 +26,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColumn;
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.SAVE_DATE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
@@ -144,6 +145,7 @@ public class CassandraMessageIdToImapUidDAO {
             .value(USER, bindMarker(USER))
             .value(USER_FLAGS, bindMarker(USER_FLAGS))
             .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
+            .value(SAVE_DATE, bindMarker(SAVE_DATE))
             .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
             .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
             .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT));
@@ -161,6 +163,7 @@ public class CassandraMessageIdToImapUidDAO {
                     setColumn(SEEN, bindMarker(SEEN)),
                     setColumn(USER, bindMarker(USER)),
                     setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
+                    setColumn(SAVE_DATE, bindMarker(SAVE_DATE)),
                     setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
                     setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
                     setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
@@ -187,6 +190,7 @@ public class CassandraMessageIdToImapUidDAO {
             .value(USER, bindMarker(USER))
             .value(USER_FLAGS, bindMarker(USER_FLAGS))
             .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
+            .value(SAVE_DATE, bindMarker(SAVE_DATE))
             .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
             .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
             .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT));
@@ -267,6 +271,7 @@ public class CassandraMessageIdToImapUidDAO {
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
             .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
+            .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
             .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
             .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString())
@@ -290,6 +295,7 @@ public class CassandraMessageIdToImapUidDAO {
             .setBoolean(USER, flags.contains(Flag.USER))
             .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class)
             .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
+            .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
             .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
             .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
@@ -397,6 +403,8 @@ public class CassandraMessageIdToImapUidDAO {
                 .build())
             .bodyStartOctet(row.get(BODY_START_OCTET, Integer.class))
             .internalDate(Optional.ofNullable(row.get(INTERNAL_DATE, TypeCodecs.TIMESTAMP))
+                .map(Date::from))
+            .saveDate(Optional.ofNullable(row.get(SAVE_DATE, TypeCodecs.TIMESTAMP))
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))

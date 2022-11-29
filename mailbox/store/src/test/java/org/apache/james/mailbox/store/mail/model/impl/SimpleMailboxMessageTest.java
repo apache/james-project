@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
@@ -26,6 +27,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -43,6 +46,7 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,13 +117,16 @@ class SimpleMailboxMessageTest {
         propertyBuilder.setSubType(plain);
         MessageId messageId = new TestMessageId.Factory().generate();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+        Optional<Date> saveDate = Optional.of(new Date());
         SimpleMailboxMessage original = new SimpleMailboxMessage(messageId, threadId, new Date(),
             MESSAGE_CONTENT.length(),
             BODY_START_OCTET,
             CONTENT_STREAM,
             new Flags(),
             propertyBuilder.build(),
-            TEST_ID);
+            TEST_ID,
+            List.of(),
+            saveDate);
 
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
 
@@ -132,7 +139,7 @@ class SimpleMailboxMessageTest {
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getTextualLineCount()).isEqualTo(textualLineCount);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getMediaType()).isEqualTo(text);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSubType()).isEqualTo(plain);
-
+        assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSaveDate()).isEqualTo(saveDate);
     }
 
     private static SimpleMailboxMessage buildMessage(String content) {
@@ -255,6 +262,22 @@ class SimpleMailboxMessageTest {
     }
 
     @Test
+    void buildShouldNotThrowOnMissingSaveDate() {
+        assertThatCode(() -> SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .threadId(THREAD_ID)
+            .internalDate(new Date())
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .properties(new PropertyBuilder())
+            .build())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void buildShouldThrowOnMissingMailboxId() {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
@@ -368,6 +391,42 @@ class SimpleMailboxMessageTest {
     @Test
     void simpleMessageShouldReturnThreadIdWhichWrapsMessageId() {
         assertThat(message.getThreadId().getBaseMessageId()).isInstanceOf(MessageId.class);
+    }
+
+    @Test
+    void simpleMessageShouldReturnSaveDateWhenEmpty() {
+        MailboxMessage mailboxMessage = SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .threadId(THREAD_ID)
+            .internalDate(new Date())
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .properties(new PropertyBuilder())
+            .build();
+
+        assertThat(mailboxMessage.getSaveDate()).isEmpty();
+    }
+
+    @Test
+    void simpleMessageShouldReturnSaveDate() {
+        Optional<Date> saveDate = Optional.of(new Date());
+        MailboxMessage mailboxMessage = SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .threadId(THREAD_ID)
+            .internalDate(new Date())
+            .saveDate(saveDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .properties(new PropertyBuilder())
+            .build();
+
+        assertThat(mailboxMessage.getSaveDate()).isEqualTo(saveDate);
     }
 
 }

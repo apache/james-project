@@ -27,4 +27,6 @@ public interface CassandraMessageIdTable {
     CqlIdentifier MOD_SEQ = CqlIdentifier.fromCql("modSeq");
 
     CqlIdentifier THREAD_ID = CqlIdentifier.fromCql("threadId");
+
+    CqlIdentifier SAVE_DATE = CqlIdentifier.fromCql("save_date");
 }

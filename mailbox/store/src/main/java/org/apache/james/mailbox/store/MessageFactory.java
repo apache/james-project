@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -35,17 +36,17 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public interface MessageFactory<T extends MailboxMessage> {
-    T createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet,
+    T createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet,
                     Content content, Flags flags, PropertyBuilder propertyBuilder,
                     List<MessageAttachmentMetadata> attachments) throws MailboxException;
 
     class StoreMessageFactory implements MessageFactory<SimpleMailboxMessage> {
         @Override
-        public SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size,
+        public SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size,
                                                   int bodyStartOctet, Content content, Flags flags,
                                                   PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
             return new SimpleMailboxMessage(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
-                mailbox.getMailboxId(), attachments);
+                mailbox.getMailboxId(), attachments, Optional.of(saveDate));
         }
     }
 }

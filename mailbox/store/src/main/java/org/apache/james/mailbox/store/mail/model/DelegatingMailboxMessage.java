@@ -113,6 +113,7 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
         return message.getMessageId();
     }
 
+    @Override
     public ThreadId getThreadId() {
         return new ThreadId(message.getMessageId());
     }

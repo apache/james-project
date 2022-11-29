@@ -2874,6 +2874,26 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     }
 
     @Nested
+    class SaveDateTests {
+        private MessageManager inboxManager;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session).get();
+            inboxManager = mailboxManager.getMailbox(inbox, session);
+        }
+
+        @Test
+        void shouldSetSaveDateWhenAppendMessage() throws Exception {
+            ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
+            MessageResult messageResult = inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroup.MINIMAL, session).next();
+            assertThat(messageResult.getSaveDate()).isPresent();
+        }
+    }
+
+    @Nested
     class RightTests {
 
         private MailboxSession session2;

@@ -67,6 +67,12 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
     }
 
+    @Nested
+    @Disabled("JPA does not support saveDate.")
+    class SaveDateTests {
+
+    }
+
     @Override
     protected EventBus retrieveEventBus(OpenJPAMailboxManager mailboxManager) {
         return mailboxManager.getEventBus();

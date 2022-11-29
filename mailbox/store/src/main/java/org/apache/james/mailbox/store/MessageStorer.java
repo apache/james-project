@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import java.io.InputStream;
+import java.time.Clock;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -60,14 +61,14 @@ public interface MessageStorer {
     /**
      * If supported by the underlying implementation, this method will parse the messageContent to retrieve associated
      * attachments and will store them.
-     *
+     * <p>
      * Otherwize an empty optional will be returned on the right side of the pair.
      */
     Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException;
 
     /**
      * MessageStorer parsing, storing and returning AttachmentMetadata
-     *
+     * <p>
      * To be used with implementation that supports attachment content storage
      */
     class WithAttachment implements MessageStorer {
@@ -79,16 +80,18 @@ public interface MessageStorer {
         private final AttachmentMapperFactory attachmentMapperFactory;
         private final MessageParser messageParser;
         private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
+        private final Clock clock;
 
         public WithAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory,
                               MessageFactory messageFactory, AttachmentMapperFactory attachmentMapperFactory,
-                              MessageParser messageParser, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                              MessageParser messageParser, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
             this.mapperFactory = mapperFactory;
             this.messageIdFactory = messageIdFactory;
             this.messageFactory = messageFactory;
             this.attachmentMapperFactory = attachmentMapperFactory;
             this.messageParser = messageParser;
             this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
+            this.clock = clock;
         }
 
         @Override
@@ -105,13 +108,14 @@ public interface MessageStorer {
                     storeAttachments(messageId, content, maybeMessage, session)
                         .zipWith(threadIdGuessingAlgorithm.guessThreadIdReactive(messageId, mimeMessageId, inReplyTo, references, subject, session))
                         .flatMap(Throwing.function((Tuple2<List<MessageAttachmentMetadata>, ThreadId> pair) -> {
-                                List<MessageAttachmentMetadata> attachments = pair.getT1();
-                                ThreadId threadId = pair.getT2();
+                            List<MessageAttachmentMetadata> attachments = pair.getT1();
+                            ThreadId threadId = pair.getT2();
+                            Date saveDate = Date.from(clock.instant());
 
-                                MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
-                                return Mono.from(messageMapper.addReactive(mailbox, message))
-                                    .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
-                            }).sneakyThrow()));
+                            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+                            return Mono.from(messageMapper.addReactive(mailbox, message))
+                                .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
+                        }).sneakyThrow()));
         }
 
         private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) {
@@ -141,7 +145,7 @@ public interface MessageStorer {
 
     /**
      * MessageStorer that does not parse, store, nor return Attachment metadata
-     *
+     * <p>
      * To be used when the underlying implementation does not support attachment storage.
      */
     class WithoutAttachment implements MessageStorer {
@@ -149,12 +153,14 @@ public interface MessageStorer {
         private final MessageId.Factory messageIdFactory;
         private final MessageFactory messageFactory;
         private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
+        private final Clock clock;
 
-        public WithoutAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory, MessageFactory messageFactory, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+        public WithoutAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory, MessageFactory messageFactory, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
             this.mapperFactory = mapperFactory;
             this.messageIdFactory = messageIdFactory;
             this.messageFactory = messageFactory;
             this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
+            this.clock = clock;
         }
 
         @Override
@@ -169,7 +175,9 @@ public interface MessageStorer {
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(threadIdGuessingAlgorithm.guessThreadIdReactive(messageId, mimeMessageId, inReplyTo, references, subject, session)
                     .flatMap(Throwing.function((ThreadId threadId) -> {
-                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
+                        Date saveDate = Date.from(clock.instant());
+
+                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
                         return Mono.from(messageMapper.addReactive(mailbox, message))
                             .map(metadata -> Pair.of(metadata, Optional.empty()));
                     })));

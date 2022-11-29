@@ -52,7 +52,7 @@ public class OpenJPAMessageFactory implements MessageFactory<AbstractJPAMailboxM
     }
 
     @Override
-    public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
+    public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
         switch (feature) {
             case Streaming:
                 return new JPAStreamingMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,

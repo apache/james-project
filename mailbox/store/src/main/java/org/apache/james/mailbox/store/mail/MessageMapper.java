@@ -289,6 +289,7 @@ public interface MessageMapper extends Mapper {
          *  {@link MailboxMessage#getBodyOctets()}
          *  {@link MailboxMessage#getFullContentOctets()}
          *  {@link MailboxMessage#getInternalDate()}
+         *  {@link MailboxMessage#getSaveDate()}
          *  {@link MailboxMessage#getMailboxId()}
          *  {@link MailboxMessage#getMediaType()}
          *  {@link MailboxMessage#getModSeq()}

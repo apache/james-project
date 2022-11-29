@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -59,6 +60,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private MessageId messageId;
         private ThreadId threadId;
         private Date internalDate;
+        private Optional<Date> saveDate = Optional.empty();
         private Long size;
         private Integer bodyStartOctet;
         private Content content;
@@ -91,6 +93,16 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
         public Builder internalDate(Date internalDate) {
             this.internalDate = internalDate;
+            return this;
+        }
+
+        public Builder saveDate(Date saveDate) {
+            this.saveDate = Optional.ofNullable(saveDate);
+            return this;
+        }
+
+        public Builder saveDate(Optional<Date> saveDate) {
+            this.saveDate = saveDate;
             return this;
         }
 
@@ -149,7 +161,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
             ImmutableList<MessageAttachmentMetadata> attachments = this.attachments.build();
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size,
-                bodyStartOctet, content, flags, properties, mailboxId, attachments);
+                bodyStartOctet, content, flags, properties, mailboxId, attachments, saveDate);
 
             uid.ifPresent(simpleMailboxMessage::setUid);
             modseq.ifPresent(simpleMailboxMessage::setModSeq);
@@ -174,6 +186,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .content(copyFullContent(original))
             .messageId(original.getMessageId())
             .internalDate(original.getInternalDate())
+            .saveDate(original.getSaveDate())
             .size(original.getFullContentOctets())
             .flags(original.createFlags())
             .properties(original.getProperties());
@@ -195,6 +208,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     private MessageUid uid;
     private final MailboxId mailboxId;
     private final ThreadId threadId;
+    private final Optional<Date> saveDate;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -206,7 +220,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
-                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
+                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate,
@@ -215,17 +229,19 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                 properties,
                 attachments));
 
-            setFlags(flags);
-            this.mailboxId = mailboxId;
-            this.threadId = threadId;
+        setFlags(flags);
+        this.mailboxId = mailboxId;
+        this.threadId = threadId;
+        this.saveDate = saveDate;
     }
 
+    @VisibleForTesting
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
                                 Properties properties, MailboxId mailboxId) {
         this(messageId, threadId, internalDate, size, bodyStartOctet,
                 content, flags,
-                properties, mailboxId, ImmutableList.of());
+                properties, mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE);
     }
 
     @Override
@@ -304,6 +320,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     }
 
     @Override
+    public Optional<Date> getSaveDate() {
+        return saveDate;
+    }
+
+    @Override
     public synchronized void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);
@@ -333,6 +354,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .add("uid", this.uid)
             .add("mailboxId", this.mailboxId)
             .add("threadId", this.threadId)
+            .add("saveDate", this.saveDate)
             .add("answered", this.answered)
             .add("deleted", this.deleted)
             .add("draft", this.draft)

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.apache.james.mailbox.store.mail.model.MailboxMessage.EMPTY_SAVE_DATE;
 import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -181,7 +182,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments);
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments, EMPTY_SAVE_DATE);
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {

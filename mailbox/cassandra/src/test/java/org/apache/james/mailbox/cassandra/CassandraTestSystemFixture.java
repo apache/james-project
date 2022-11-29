@@ -21,6 +21,8 @@ package org.apache.james.mailbox.cassandra;
 
 import static org.mockito.Mockito.mock;
 
+import java.time.Instant;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusTestFixture;
@@ -56,6 +58,7 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.utils.UpdatableTickingClock;
 
 public class CassandraTestSystemFixture {
 
@@ -78,7 +81,7 @@ public class CassandraTestSystemFixture {
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new NaiveThreadIdGuessingAlgorithm());
+            new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
 
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
         eventBus.register(mapperFactory.deleteMessageListener());

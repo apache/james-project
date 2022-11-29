@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.openjpa;
 
+import java.time.Clock;
 import java.util.EnumSet;
 
 import javax.inject.Inject;
@@ -61,11 +62,12 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
                                  StoreRightManager storeRightManager,
                                  QuotaComponents quotaComponents,
                                  MessageSearchIndex index,
-                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                 Clock clock) {
         super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
-            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
     }
 
     @Override
@@ -80,7 +82,8 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
             getMessageIdFactory(),
             configuration.getBatchSizes(),
             getStoreRightManager(),
-            getThreadIdGuessingAlgorithm());
+            getThreadIdGuessingAlgorithm(),
+            getClock());
     }
 
     @Override

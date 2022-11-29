@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.inmemory;
 
+import java.time.Clock;
 import java.util.EnumSet;
 
 import javax.inject.Inject;
@@ -60,10 +61,11 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   QuotaComponents quotaComponents,
                                   MessageSearchIndex searchIndex,
                                   PreDeletionHooks preDeletionHooks,
-                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
             annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT,
-            preDeletionHooks, threadIdGuessingAlgorithm);
+            preDeletionHooks, threadIdGuessingAlgorithm, clock);
     }
 
     @Override
@@ -90,6 +92,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             configuration.getBatchSizes(),
             getStoreRightManager(),
             getPreDeletionHooks(),
-            getThreadIdGuessingAlgorithm());
+            getThreadIdGuessingAlgorithm(),
+            getClock());
     }
 }

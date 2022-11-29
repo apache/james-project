@@ -26,6 +26,7 @@ import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static com.datastax.oss.driver.api.querybuilder.update.Assignment.append;
 import static com.datastax.oss.driver.api.querybuilder.update.Assignment.remove;
 import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColumn;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.SAVE_DATE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
@@ -171,6 +172,7 @@ public class CassandraMessageIdDAO {
                 setColumn(SEEN, bindMarker(SEEN)),
                 setColumn(USER, bindMarker(USER)),
                 setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
+                setColumn(SAVE_DATE, bindMarker(SAVE_DATE)),
                 setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
                 setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
                 setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)),
@@ -342,6 +344,7 @@ public class CassandraMessageIdDAO {
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
             .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
+            .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
             .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
             .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString())
@@ -565,6 +568,8 @@ public class CassandraMessageIdDAO {
                 .build())
             .bodyStartOctet(row.get(BODY_START_OCTET, Integer.class))
             .internalDate(Optional.ofNullable(row.get(INTERNAL_DATE, TypeCodecs.TIMESTAMP))
+                .map(Date::from))
+            .saveDate(Optional.ofNullable(row.get(SAVE_DATE, TypeCodecs.TIMESTAMP))
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.get(HEADER_CONTENT, TypeCodecs.TEXT))

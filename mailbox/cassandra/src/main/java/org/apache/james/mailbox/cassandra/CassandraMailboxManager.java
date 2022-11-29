@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.time.Clock;
 import java.util.EnumSet;
 
 import javax.inject.Inject;
@@ -66,7 +67,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
                                    QuotaComponents quotaComponents, MessageSearchIndex index,
                                    MailboxManagerConfiguration configuration,
-                                   PreDeletionHooks preDeletionHooks, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                   PreDeletionHooks preDeletionHooks, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
         super(mapperFactory,
             sessionProvider,
             locker,
@@ -79,7 +80,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             index,
             configuration,
             preDeletionHooks,
-            threadIdGuessingAlgorithm);
+            threadIdGuessingAlgorithm,
+            clock);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
@@ -108,7 +110,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             configuration.getBatchSizes(),
             getStoreRightManager(),
             getPreDeletionHooks(),
-            getThreadIdGuessingAlgorithm());
+            getThreadIdGuessingAlgorithm(),
+            getClock());
     }
 
     @Override
