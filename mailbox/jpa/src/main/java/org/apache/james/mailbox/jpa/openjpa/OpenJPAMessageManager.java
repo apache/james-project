@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa.openjpa;
 
+import java.time.Clock;
+
 import javax.mail.Flags;
 
 import org.apache.james.events.EventBus;
@@ -48,10 +50,10 @@ public class OpenJPAMessageManager extends StoreMessageManager {
                                  MailboxPathLocker locker, Mailbox mailbox,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                 StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None), threadIdGuessingAlgorithm));
+            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None), threadIdGuessingAlgorithm, clock));
     }
 
     /**

@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -50,6 +51,7 @@ public class MessageBuilder {
     private TestId mailboxId = TestId.of(113);
     private MessageUid uid = MessageUid.of(776);
     private Date internalDate = new Date();
+    private Optional<Date> saveDate = Optional.of(new Date());
     private int size = 8867;
     private Flags flags = new Flags();
     private byte[] body = {};
@@ -83,7 +85,7 @@ public class MessageBuilder {
         byte[] headerContent = getHeaderContent();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
         SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size, headerContent.length,
-            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS);
+            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS, saveDate);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
     }

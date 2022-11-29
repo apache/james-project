@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
@@ -132,14 +133,15 @@ public class StoreMailboxManager implements MailboxManager {
     private final PreDeletionHooks preDeletionHooks;
     protected final MailboxManagerConfiguration configuration;
     private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
+    private final Clock clock;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
-                               MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
+                               Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                EventBus eventBus, StoreRightManager storeRightManager,
                                QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration,
-                               PreDeletionHooks preDeletionHooks, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                               PreDeletionHooks preDeletionHooks, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
         Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -158,6 +160,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.configuration = configuration;
         this.preDeletionHooks = preDeletionHooks;
         this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
+        this.clock = clock;
     }
 
     public QuotaComponents getQuotaComponents() {
@@ -231,6 +234,10 @@ public class StoreMailboxManager implements MailboxManager {
         return threadIdGuessingAlgorithm;
     }
 
+    public Clock getClock() {
+        return clock;
+    }
+
     @Override
     public MailboxSession createSystemSession(Username userName) {
         return sessionProvider.createSystemSession(userName);
@@ -271,7 +278,7 @@ public class StoreMailboxManager implements MailboxManager {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
             getLocker(), mailbox, quotaManager,
             getQuotaComponents().getQuotaRootResolver(), configuration.getBatchSizes(),
-            getStoreRightManager(), preDeletionHooks, new MessageStorer.WithoutAttachment(mailboxSessionMapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm));
+            getStoreRightManager(), preDeletionHooks, new MessageStorer.WithoutAttachment(mailboxSessionMapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock));
     }
 
     @Override

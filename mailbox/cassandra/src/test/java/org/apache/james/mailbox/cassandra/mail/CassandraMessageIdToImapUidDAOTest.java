@@ -182,6 +182,57 @@ class CassandraMessageIdToImapUidDAOTest {
     }
 
     @Test
+    void shouldHandleNullSaveDateWell() {
+        CassandraMessageId messageId = CassandraMessageId.Factory.of(Uuids.timeBased());
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+
+        testee.insert(CassandraMessageMetadata.builder()
+                .ids(ComposedMessageIdWithMetaData.builder()
+                    .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                    .flags(new Flags())
+                    .modSeq(ModSeq.of(1))
+                    .threadId(ThreadId.fromBaseMessageId(messageId))
+                    .build())
+                .internalDate(new Date())
+                .saveDate(Optional.empty())
+                .bodyStartOctet(18L)
+                .size(36L)
+                .headerContent(Optional.of(HEADER_BLOB_ID_1))
+                .build())
+            .block();
+
+        List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
+        assertThat(messages.get(0).getSaveDate()).isEmpty();
+    }
+
+    @Test
+    void shouldHandleSaveDateWell() {
+        CassandraMessageId messageId = CassandraMessageId.Factory.of(Uuids.timeBased());
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        Optional<Date> saveDate = Optional.of(new Date());
+
+        testee.insert(CassandraMessageMetadata.builder()
+                .ids(ComposedMessageIdWithMetaData.builder()
+                    .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                    .flags(new Flags())
+                    .modSeq(ModSeq.of(1))
+                    .threadId(ThreadId.fromBaseMessageId(messageId))
+                    .build())
+                .internalDate(new Date())
+                .saveDate(saveDate)
+                .bodyStartOctet(18L)
+                .size(36L)
+                .headerContent(Optional.of(HEADER_BLOB_ID_1))
+                .build())
+            .block();
+
+        List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
+        assertThat(messages.get(0).getSaveDate()).isEqualTo(saveDate);
+    }
+
+    @Test
     void updateShouldReturnTrueWhenOldModSeqMatches() {
         CassandraMessageId messageId = CassandraMessageId.Factory.of(Uuids.timeBased());
         CassandraId mailboxId = CassandraId.timeBased();

@@ -1,5 +1,7 @@
 package org.apache.james.mailbox.inmemory;
 
+import java.time.Clock;
+
 import javax.mail.Flags;
 
 import org.apache.james.events.EventBus;
@@ -33,12 +35,13 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   BatchSizes batchSizes,
                                   StoreRightManager storeRightManager,
                                   PreDeletionHooks preDeletionHooks,
-                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock) {
 
         super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
             batchSizes, storeRightManager, preDeletionHooks,
             new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), (InMemoryMailboxSessionMapperFactory) mapperFactory, messageParser,
-                threadIdGuessingAlgorithm));
+                threadIdGuessingAlgorithm, clock));
     }
 
     @Override

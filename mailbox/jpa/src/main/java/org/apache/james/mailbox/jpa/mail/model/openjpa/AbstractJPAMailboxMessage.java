@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.Flags;
@@ -498,6 +499,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public ThreadId getThreadId() {
         return new ThreadId(getMessageId());
+    }
+
+    @Override
+    public Optional<Date> getSaveDate() {
+        return Optional.empty();
     }
 
     public String toString() {

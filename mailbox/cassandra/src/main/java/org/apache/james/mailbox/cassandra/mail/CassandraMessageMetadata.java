@@ -53,12 +53,14 @@ public class CassandraMessageMetadata {
     public static class Builder {
         private ComposedMessageIdWithMetaData composedMessageId;
         private Optional<Date> internalDate;
+        private Optional<Date> saveDate;
         private Optional<Long> bodyStartOctet;
         private Optional<Long> size;
         private Optional<BlobId> headerContent;
 
         public Builder() {
             this.internalDate = Optional.empty();
+            this.saveDate = Optional.empty();
             this.size = Optional.empty();
             this.headerContent = Optional.empty();
             this.bodyStartOctet = Optional.empty();
@@ -76,6 +78,16 @@ public class CassandraMessageMetadata {
 
         public Builder internalDate(Optional<Date> date) {
             this.internalDate = date;
+            return this;
+        }
+
+        public Builder saveDate(Date date) {
+            this.saveDate = Optional.ofNullable(date);
+            return this;
+        }
+
+        public Builder saveDate(Optional<Date> date) {
+            this.saveDate = date;
             return this;
         }
 
@@ -113,7 +125,7 @@ public class CassandraMessageMetadata {
         public CassandraMessageMetadata build() {
             Preconditions.checkState(composedMessageId != null, "'composedMessageId' is compulsory");
 
-            return new CassandraMessageMetadata(composedMessageId, internalDate, bodyStartOctet, size, headerContent);
+            return new CassandraMessageMetadata(composedMessageId, internalDate, saveDate, bodyStartOctet, size, headerContent);
         }
     }
 
@@ -266,6 +278,11 @@ public class CassandraMessageMetadata {
             return delegate.getAttachments();
         }
 
+        @Override
+        public Optional<Date> getSaveDate() {
+            return delegate.getSaveDate();
+        }
+
         public BlobId getHeaderBlobId() {
             return headerBlobId;
         }
@@ -289,6 +306,7 @@ public class CassandraMessageMetadata {
                 .threadId(mailboxMessage.getThreadId())
                 .build(),
             Optional.of(mailboxMessage.getInternalDate()),
+            mailboxMessage.getSaveDate(),
             Optional.of(mailboxMessage.getHeaderOctets()),
             Optional.of(mailboxMessage.getFullContentOctets()),
             Optional.of(headerBlobId));
@@ -303,13 +321,15 @@ public class CassandraMessageMetadata {
 
     private final ComposedMessageIdWithMetaData composedMessageId;
     private final Optional<Date> internalDate;
+    private final Optional<Date> saveDate;
     private final Optional<Long> bodyStartOctet;
     private final Optional<Long> size;
     private final Optional<BlobId> headerContent;
 
-    public CassandraMessageMetadata(ComposedMessageIdWithMetaData composedMessageId, Optional<Date> internalDate, Optional<Long> bodyStartOctet, Optional<Long> size, Optional<BlobId> headerContent) {
+    public CassandraMessageMetadata(ComposedMessageIdWithMetaData composedMessageId, Optional<Date> internalDate, Optional<Date> saveDate, Optional<Long> bodyStartOctet, Optional<Long> size, Optional<BlobId> headerContent) {
         this.composedMessageId = composedMessageId;
         this.internalDate = internalDate;
+        this.saveDate = saveDate;
         this.bodyStartOctet = bodyStartOctet;
         this.size = size;
         this.headerContent = headerContent;
@@ -337,6 +357,7 @@ public class CassandraMessageMetadata {
                 .size(size.get())
                 .bodyStartOctet(Math.toIntExact(bodyStartOctet.get()))
                 .internalDate(internalDate.get())
+                .saveDate(saveDate)
                 .properties(new PropertyBuilder())
                 .build(),
             getHeaderContent().get());
@@ -362,9 +383,14 @@ public class CassandraMessageMetadata {
         return size;
     }
 
+    public Optional<Date> getSaveDate() {
+        return saveDate;
+    }
+
     public CassandraMessageMetadata withMailboxId(MailboxId mailboxId) {
         return builder()
             .internalDate(internalDate)
+            .saveDate(saveDate)
             .size(size)
             .bodyStartOctet(bodyStartOctet)
             .headerContent(headerContent)
@@ -385,6 +411,7 @@ public class CassandraMessageMetadata {
             CassandraMessageMetadata other = (CassandraMessageMetadata) obj;
             return Objects.equal(this.composedMessageId, other.composedMessageId)
                 && Objects.equal(this.internalDate, other.internalDate)
+                && Objects.equal(this.saveDate, other.saveDate)
                 && Objects.equal(this.bodyStartOctet, other.bodyStartOctet)
                 && Objects.equal(this.size, other.size)
                 && Objects.equal(this.headerContent, other.headerContent);
@@ -394,7 +421,7 @@ public class CassandraMessageMetadata {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(composedMessageId, internalDate, bodyStartOctet, size, headerContent);
+        return Objects.hashCode(composedMessageId, internalDate, saveDate, bodyStartOctet, size, headerContent);
     }
 
     @Override
@@ -403,6 +430,7 @@ public class CassandraMessageMetadata {
             .toStringHelper(this)
             .add("composedMessageId", composedMessageId)
             .add("internalDate", internalDate)
+            .add("saveDate", saveDate)
             .add("bodyStartOctet", bodyStartOctet)
             .add("size", size)
             .add("headerContent", headerContent)

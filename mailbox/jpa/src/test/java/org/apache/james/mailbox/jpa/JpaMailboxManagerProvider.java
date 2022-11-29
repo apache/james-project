@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa;
 
+import java.time.Instant;
+
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
@@ -44,6 +46,7 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.utils.UpdatableTickingClock;
 
 public class JpaMailboxManagerProvider {
 
@@ -71,6 +74,6 @@ public class JpaMailboxManagerProvider {
         return new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm());
+            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
     }
 }

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
+import java.time.Instant;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -65,6 +67,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.apache.james.utils.UpdatableTickingClock;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 
@@ -95,6 +98,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CqlSession session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithm();
+        UpdatableTickingClock clock = new UpdatableTickingClock(Instant.now());
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra, messageIdFactory);
 
@@ -123,7 +127,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
-            PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
 
         eventBus.register(quotaUpdater);
 
