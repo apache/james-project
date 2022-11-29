@@ -22,7 +22,6 @@ package org.apache.james.queue.activemq.metric;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +36,7 @@ import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.queue.activemq.ActiveMQConfiguration;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,6 +49,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class ActiveMQMetricCollectorTest {
 
     private static ActiveMQConnectionFactory connectionFactory;
+    private static final ActiveMQConfiguration EMPTY_CONFIGURATION = ActiveMQConfiguration.getDefault();
 
     @BeforeAll
     static void setup(BrokerService broker) {
@@ -61,7 +62,7 @@ class ActiveMQMetricCollectorTest {
     @Test
     void shouldFailToFetchAndUpdateStatisticsForUnknownQueue() {
         SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
-        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(EMPTY_CONFIGURATION, connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
         ActiveMQMetrics queueStatistics = ActiveMQMetrics.forQueue("UNKNOWN", gaugeRegistry);
 
         assertThatThrownBy(() -> testee.fetchAndUpdate(queueStatistics))
@@ -73,7 +74,7 @@ class ActiveMQMetricCollectorTest {
     @Test
     void shouldFetchAndUpdateBrokerStatistics() throws Exception {
         SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
-        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(EMPTY_CONFIGURATION, connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
         ActiveMQMetrics brokerStatistics = ActiveMQMetrics.forBroker(gaugeRegistry);
 
         long notBefore = System.currentTimeMillis();
@@ -86,7 +87,7 @@ class ActiveMQMetricCollectorTest {
     @Test
     void shouldFetchAndUpdateBrokerStatisticsInGaugeRegistry() throws Exception {
         SimpleGaugeRegistry gaugeRegistry = new SimpleGaugeRegistry();
-        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
+        ActiveMQMetricCollectorImpl testee = new ActiveMQMetricCollectorImpl(EMPTY_CONFIGURATION, connectionFactory, new RecordingMetricFactory(), gaugeRegistry);
         ActiveMQMetrics brokerStatistics = ActiveMQMetrics.forBroker(gaugeRegistry);
 
         testee.fetchAndUpdate(brokerStatistics);
@@ -100,12 +101,13 @@ class ActiveMQMetricCollectorTest {
     void hasExecutionTimeMetrics() {
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
         NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
-        ActiveMQMetricCollector testee = new ActiveMQMetricCollectorImpl(connectionFactory, metricFactory, gaugeRegistry);
+        ActiveMQMetricCollector testee = new ActiveMQMetricCollectorImpl(EMPTY_CONFIGURATION, connectionFactory, metricFactory, gaugeRegistry);
         testee.start();
         testee.collectBrokerStatistics();
         testee.collectQueueStatistics(MailQueueName.of("UNKNOWN"));
 
-        Integer executionTimeCount = Flux.interval(ActiveMQMetricCollectorImpl.REFRESH_DELAY, Duration.ofSeconds(1))
+        Duration startDelay = EMPTY_CONFIGURATION.getMetricConfiguration().getStartDelay();
+        Integer executionTimeCount = Flux.interval(startDelay, Duration.ofSeconds(1))
             .take(3,true)
             .flatMap(n -> Mono.fromCallable(() -> metricFactory.executionTimesForPrefixName("ActiveMQ.").size()))
             .blockLast();
