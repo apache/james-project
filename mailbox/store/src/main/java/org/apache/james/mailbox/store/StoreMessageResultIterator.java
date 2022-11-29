@@ -180,7 +180,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
         @Override
         public ThreadId getThreadId() {
-            return new ThreadId(messageMetaData.getMessageId());
+            return messageMetaData.getThreadId();
         }
 
         @Override
