@@ -36,6 +36,7 @@ import org.apache.james.imap.encode.ExistsResponseEncoder;
 import org.apache.james.imap.encode.ExpungeResponseEncoder;
 import org.apache.james.imap.encode.FetchResponseEncoder;
 import org.apache.james.imap.encode.FlagsResponseEncoder;
+import org.apache.james.imap.encode.IdResponseEncoder;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapEncoderFactory;
 import org.apache.james.imap.encode.ImapResponseComposer;
@@ -109,6 +110,7 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
             new FetchResponseEncoder(neverAddBodyStructureExtensions),
             new ExpungeResponseEncoder(),
             new ExistsResponseEncoder(),
+            new IdResponseEncoder(),
             new MailboxStatusResponseEncoder(),
             new SearchResponseEncoder(),
             new LSubResponseEncoder(),

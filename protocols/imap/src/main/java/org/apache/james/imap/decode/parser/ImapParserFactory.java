@@ -90,6 +90,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
             new StoreCommandParser(statusResponseFactory),
             new UidCommandParser(this, statusResponseFactory),
             new IdleCommandParser(statusResponseFactory),
+            new IDCommandParser(statusResponseFactory),
             new StartTLSCommandParser(statusResponseFactory),
 
             // RFC3691
