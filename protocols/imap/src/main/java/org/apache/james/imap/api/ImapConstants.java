@@ -173,6 +173,7 @@ public interface ImapConstants {
     ImapCommand COMPRESS_COMMAND = ImapCommand.anyStateCommand("COMPRESS");
     ImapCommand LOGOUT_COMMAND = ImapCommand.anyStateCommand("LOGOUT");
     ImapCommand NOOP_COMMAND = ImapCommand.anyStateCommand("NOOP");
+    ImapCommand ID_COMMAND = ImapCommand.anyStateCommand("ID");
 
     ImapCommand AUTHENTICATE_COMMAND = ImapCommand.nonAuthenticatedStateCommand("AUTHENTICATE");
     ImapCommand LOGIN_COMMAND = ImapCommand.nonAuthenticatedStateCommand("LOGIN");

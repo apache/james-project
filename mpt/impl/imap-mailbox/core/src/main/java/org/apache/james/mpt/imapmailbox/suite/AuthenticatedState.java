@@ -50,6 +50,11 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     }
     
     @Test
+    public void testId() throws Exception {
+        simpleScriptedTestProtocol.run("Id");
+    }
+
+    @Test
     public void testNoopUS() throws Exception {
         simpleScriptedTestProtocol.run("Noop");
     }

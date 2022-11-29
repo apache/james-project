@@ -61,6 +61,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new SystemMessageProcessor(mailboxManager));
         builder.add(new LogoutProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(capabilityProcessor);
+        builder.add(new IdProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CheckProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new LoginProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new RenameProcessor(mailboxManager, statusResponseFactory, metricFactory));
