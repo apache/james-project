@@ -32,39 +32,43 @@ The delegation object MUST have the following properties:
   The id of the Delegation.
 - **username**: `String` (immutable)
   The email address of the user that either delegates or is delegated to this user account.
+  
+The **Delegate** object follows the structure of **Delegation** and represents delegations accessing this account (allowing the listed user to connect as the current account owner).
+
+The **DelegatedAccount** object follows the structure of **Delegation** and represents delegations active for this account (allowing the current account owner to connect as the listed user).
 
 A user can delegate his account to multiple users as well as be allowed to access other accounts.
 
-A user can manage his delegations to other users to access his account by creating, deleting and retrieving delegation objects.
-Meanwhile, a user can only retrieve and delete the accesses delegated to him.
+A user can manage his delegations to other users to access his account by creating, deleting and retrieving **Delegate** objects.
+Meanwhile, a user can only retrieve and delete **DelegatedAccount** objects.
 
 A server MUST not allow a delegated user to access and manage the owner user's delegation setting to avoid privilege escalation.
 
 The following JMAP methods are supported:
 
 ### Delegate/get
-This method returns accounts that the user delegates access to.
+This method returns **Delegate** objects of the user.
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
 
 A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
 
 ### Delegate/set
-This method allows the user to manage (create and delete) accounts that he delegates access to.
+This method allows the user to manage (create and delete) his **Delegate** objects.
 
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3, except the update part because of its limited usage.
 
 A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
 
 ### DelegatedAccount/get
-This method returns accounts that the user has access to.
+This method returns **DelegatedAccount** objects of the user.
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
 
 A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
 
 ### DelegatedAccount/set
-This method allows the user to delete accounts that he has access to.
+This method allows the user to delete his **DelegatedAccount** objects.
 
 This method implements only destroy part of the standard "/set" method as described in [@!RFC8620], Section 5.3.
 
