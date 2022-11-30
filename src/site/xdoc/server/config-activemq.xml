@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<document>
+
+  <properties>
+    <title>Apache James Server 3 - ActiveMQ Configuration</title>
+  </properties>
+
+  <body>
+    <section name="ActiveMQ Configuration">
+
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/sample-configuration/activemq.properties">activemq.properties</a> in GIT to get some examples and hints.</p>
+
+      <p>
+        Use this configuration to configure ActiveMQ AQMP. It is only applicable with Guice products.
+      </p>
+
+    </section>
+
+
+    <section name="ActiveMQ Metrics Configuration">
+      <p>
+        ActiveMQ offers some metrics that are available via statistics plugin
+        (see https://activemq.apache.org/statisticsplugin.html):
+      </p>
+      <ul>
+        <li>
+          Broker statistics: metrics about the broker itself such as <em>memoryUsage</em>,
+          <em>maxEnqueueTime</em>, <em>consumerCount</em> etc. Those metrics can be used for
+          monitoring and alerting (e.g. Prometheus).
+        </li>
+        <li>
+          Queue statistics: For each created queue statistics will be collected, too. Usually,
+          the queues <em>spool</em> and <em>outgoing</em> are available, but are not limited to.
+          Having multiple RemoteDelivery mailets in place, then multiple <em>outgoing-*</em> queues
+          can be available.
+        </li>
+      </ul>
+      <p>
+        Basically, the metric collector sends an AQMP message to ActiveMQ requesting the statistics
+        mentioned above. ActiveMQ responds with a message containing those statistics.
+      </p>
+
+      <p>
+        Metrics Configuration
+      </p>
+      <dl>
+        <dt><strong>metrics.enabled</strong></dt>
+        <dd>Enable collecting metrics (default: true)</dd>
+
+        <dt><strong>metrics.start_delay (default: 1s, minimum: 1s)</strong></dt>
+        <dd>Add a delay before starting collecting metrics on James' startup. You may increase this
+          value if the embedded ActiveMQ takes long to start.</dd>
+
+        <dt><strong>metrics.interval (default: 5s, minimum: 5s)</strong></dt>
+        <dd>Define the interval how often the metrics should be collected.</dd>
+
+        <dt><strong>metrics.timeout (default: 2s, minimum: 2s)</strong></dt>
+        <dd>Timeout used by the collector to wait for an ActiveMQ response to arrive. This timeout is
+        useful if the AQMP timeout (i.e. receive timeout) is not considered (see below).</dd>
+
+        <dt><strong>metrics.aqmp_timeout (default: 1s, minimum: 1s)</strong></dt>
+        <dd>AQMP timeout (i.e. receive timeout) used by the collector when sending an AQMP message.
+          If the prefetch policy (ActiveMQ connection option) is zero, then the receive timeout is
+          indefinite. Thus, the option <em>metrics.timeout</em> helps to have an additional timeout
+          in place.
+          <br />
+          When James is not under heavy requesting and receiving statistics takes 50-80ms (mean).
+        </dd>
+      </dl>
+    </section>
+
+  </body>
+</document>
