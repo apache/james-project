@@ -48,6 +48,8 @@
 
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
+        <constructor-arg index="1" ref="jpa-sessionMapperFactory"/>
+        <constructor-arg index="2" ref="event-bus"/>
     </bean>
     <bean id="jpa-sessionMapperFactory" class="org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory">
         <constructor-arg index="0" ref="entityManagerFactory"/>
