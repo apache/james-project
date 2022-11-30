@@ -23,17 +23,17 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-// TODO find rfc document
 public class UserinfoResponse {
     private final String sub;
-    private final String preferredUsername;
+    private final Optional<String> preferredUsername;
     private final Optional<String> email;
 
+    private final JsonNode json;
+
     public UserinfoResponse(JsonNode json) {
-        this.preferredUsername =
-            Optional.ofNullable(json.get("preferred_username"))
-                .map(JsonNode::asText)
-                .orElseThrow(() -> new IllegalArgumentException("Missing 'preferred_username' property"));
+        this.json = json;
+        this.preferredUsername = Optional.ofNullable(json.get("preferred_username"))
+            .map(JsonNode::asText);
 
         this.sub = Optional.ofNullable(json.get("sub"))
             .map(JsonNode::asText).orElse(null);
@@ -46,11 +46,16 @@ public class UserinfoResponse {
         return sub;
     }
 
-    public String getPreferredUsername() {
+    public Optional<String> getPreferredUsername() {
         return preferredUsername;
     }
 
     public Optional<String> getEmail() {
         return email;
+    }
+
+    public Optional<String> claimByPropertyName(String propertyName) {
+        return Optional.ofNullable(json.get(propertyName))
+            .map(JsonNode::asText);
     }
 }

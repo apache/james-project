@@ -68,6 +68,9 @@ public class OidcJwtTokenVerifier {
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
                 .filter(TokenIntrospectionResponse::active)
+                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(claimName)
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
                 .map(activeResponse -> claimResult));
     }
 
@@ -75,7 +78,9 @@ public class OidcJwtTokenVerifier {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.useInfo(userinfoEndpoint, jwtToken))
-                // .filter(userinfoResponse -> userinfoResponse.getPreferredUsername().equals(claimResult))
+                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(claimName)
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
                 .map(userinfoResponse -> claimResult));
     }
 }

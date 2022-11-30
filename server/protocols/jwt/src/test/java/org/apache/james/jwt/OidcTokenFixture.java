@@ -83,8 +83,9 @@ public class OidcTokenFixture {
         "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
         "    \"email_verified\": false," +
         "    \"name\": \"User name 1\"," +
-        "    \"preferred_username\": \"user1\"," +
-        "    \"email\": \"user1@example.com\"" +
+        "    \"preferred_username\": \"james\"," +
+        "    \"email_address\": \"user@domain.org\"," +
+        "    \"email\": \"user@domain.org\"" +
         "}";
 
     public static final String INTROSPECTION_RESPONSE = "{" +
@@ -94,8 +95,9 @@ public class OidcTokenFixture {
         "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
         "    \"typ\": \"Bearer\"," +
         "    \"session_state\": \"42799d76-be33-4f24-bcec-fc0dbb5d126d\"," +
-        "    \"preferred_username\": \"user1\"," +
-        "    \"email\": \"user1@example.com\"," +
+        "    \"preferred_username\": \"james\"," +
+        "    \"email_address\": \"user@domain.org\"," +
+        "    \"email\": \"user@domain.org\"," +
         "    \"scope\": \"profile email\"," +
         "    \"sid\": \"42799d76-be33-4f24-bcec-fc0dbb5d126d\"," +
         "    \"client_id\": \"james-thunderbird\"," +

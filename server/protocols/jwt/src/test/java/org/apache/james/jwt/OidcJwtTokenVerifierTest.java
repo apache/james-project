@@ -132,7 +132,7 @@ class OidcJwtTokenVerifierTest {
     }
 
     @Test
-    void verifyWithUserinfoShouldFailWhenPreferredUsernameIsAbsent() {
+    void verifyWithUserinfoShouldReturnEmptyWhenClaimValueIsEmpty() {
         String userInfoResponse = "{" +
             "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
             "    \"email_verified\": false," +
@@ -146,10 +146,9 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(userInfoResponse, StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username", getUserInfoEndpoint()))
             .block())
-            .isInstanceOf(UserInfoCheckException.class)
-            .hasMessageContaining("Error when check token by userInfo");
+            .isNull();
     }
 
     @Test
@@ -174,6 +173,27 @@ class OidcJwtTokenVerifierTest {
                 .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
 
         assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+            .block())
+            .isNull();
+    }
+
+    @Test
+    void verifyWithUserinfoShouldReturnEmptyWhenClaimValueIsNotMatch() {
+        String userInfoResponse = "{" +
+            "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
+            "    \"email_verified\": false," +
+            "    \"name\": \"User name 1\"," +
+            "    \"preferred_username\": \"different1\"," +
+            "    \"email\": \"user1@example.com\"" +
+            "}";
+
+        mockServer
+            .when(HttpRequest.request().withPath(USERINFO_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(userInfoResponse, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "preferred_username", getUserInfoEndpoint()))
             .block())
             .isNull();
     }
@@ -279,6 +299,50 @@ class OidcJwtTokenVerifierTest {
                 new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isEqualTo("user@domain.org");
+    }
+
+    @Test
+    void verifyWithIntrospectionShouldReturnEmptyWhenClaimValueIsNotMatch() {
+        String introspectionResponse = "{" +
+            "    \"exp\": 1669719841," +
+            "    \"iat\": 1669719541," +
+            "    \"aud\": \"account\"," +
+            "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
+            "    \"preferred_username\": \"difference1\"," +
+            "    \"active\": true" +
+            "}";
+        mockServer
+            .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(introspectionResponse, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username",
+                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+            .block())
+            .isNull();
+    }
+
+    @Test
+    void verifyWithIntrospectionShouldReturnEmptyWhenClaimValueIsAbsent() {
+        String introspectionResponse = "{" +
+            "    \"exp\": 1669719841," +
+            "    \"iat\": 1669719541," +
+            "    \"aud\": \"account\"," +
+            "    \"sub\": \"a0d03864-12f7-4f0b-b732-699c27eff3e7\"," +
+            "    \"typ\": \"Bearer\"," +
+            "    \"active\": true" +
+            "}";
+        mockServer
+            .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(introspectionResponse, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username",
+                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+            .block())
+            .isNull();
     }
 
     @Test
