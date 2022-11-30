@@ -110,6 +110,7 @@
 
                     </item>
                     <item name="4. Configure James" href="/server/config.html" collapse="true" >
+                        <item name="ActiveMQ" href="/server/config-activemq.html" />
                         <item name="Additional mailbox listeners" href="/server/config-listeners.html" />
                         <item name="Anti Spam" href="/server/config-antispam.html" />
                         <item name="Blob Export" href="/server/config-blob-export.html" />

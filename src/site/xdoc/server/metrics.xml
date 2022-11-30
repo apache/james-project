@@ -82,6 +82,7 @@
                     <li>Per mailet and per matcher Response time percentiles</li>
                     <li>Diverse Response time percentiles, counts and rates for DNS</li>
                     <li>Cassandra Java driver metrics</li>
+                    <li>ActiveMQ broker/queue statistics</li>
                     <li>Tika HTTP client statistics</li>
                     <li>SpamAssassin TCP client statistics</li>
                     <li>Mailbox listeners statistics time percentiles</li>
