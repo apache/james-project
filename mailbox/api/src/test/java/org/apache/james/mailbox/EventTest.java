@@ -23,6 +23,7 @@ import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.mail.Flags;
@@ -69,8 +70,8 @@ class EventTest {
         MessageUid uid2 = MessageUid.of(37);
         TestMessageId messageId1 = TestMessageId.of(45);
         TestMessageId messageId2 = TestMessageId.of(46);
-        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId1, ThreadId.fromBaseMessageId(messageId1));
-        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId2, ThreadId.fromBaseMessageId(messageId2));
+        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), Optional.empty(), messageId1, ThreadId.fromBaseMessageId(messageId1));
+        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), Optional.empty(), messageId2, ThreadId.fromBaseMessageId(messageId2));
 
         Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(
@@ -86,8 +87,8 @@ class EventTest {
         MessageUid uid1 = MessageUid.of(36);
         MessageUid uid2 = MessageUid.of(37);
         TestMessageId messageId = TestMessageId.of(45);
-        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId, ThreadId.fromBaseMessageId(messageId));
-        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId, ThreadId.fromBaseMessageId(messageId));
+        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), Optional.empty(), messageId, ThreadId.fromBaseMessageId(messageId));
+        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), Optional.empty(), messageId, ThreadId.fromBaseMessageId(messageId));
 
         Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(

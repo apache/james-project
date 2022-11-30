@@ -22,6 +22,7 @@ package org.apache.james.event.json;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
+import static org.apache.james.mailbox.store.mail.model.MailboxMessage.EMPTY_SAVE_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -29,6 +30,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -67,12 +69,14 @@ class ExpungedSerializationTest {
         .add("User Custom Flag")
         .build();
     private static final Map<MessageUid, MessageMetaData> EXPUNGED = ImmutableMap.of(
-        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), Optional.of(Date.from(INSTANT)), MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
+    private static final Map<MessageUid, MessageMetaData> BACKWARD_EXPUNGED = ImmutableMap.of(
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), EMPTY_SAVE_DATE, MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
     private static final Map<MessageUid, MessageMetaData> EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableMap.of(
-        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), Optional.of(Date.from(INSTANT)), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
-    private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME,
-        MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID);
+    private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID);
+    private static final Expunged BACKWARD_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_EXPUNGED, EVENT_ID);
     private static final Expunged EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Expunged(
         SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID);
     private static final String DEFAULT_EXPUNGED_EVENT_JSON =
@@ -94,6 +98,7 @@ class ExpungedSerializationTest {
         "          \"userFlags\":[\"User Custom Flag\"]}," +
         "        \"size\": 45,  " +
         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+        "        \"saveDate\": \"2018-12-14T09:41:51.541Z\"," +
         "        \"messageId\": \"42\"," +
         "        \"threadId\": \"42\"" +
         "      }" +
@@ -121,6 +126,7 @@ class ExpungedSerializationTest {
             "          \"userFlags\":[\"User Custom Flag\"]}," +
             "        \"size\": 45,  " +
             "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"saveDate\": \"2018-12-14T09:41:51.541Z\"," +
             "        \"messageId\": \"42\"," +
             "        \"threadId\": \"100\"" +
             "      }" +
@@ -177,7 +183,7 @@ class ExpungedSerializationTest {
     @Test
     void previousExpungedFormatShouldBeWellDeserialized() {
         assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_BACKWARD_EXPUNGED_EVENT_JSON).get())
-            .isEqualTo(DEFAULT_EXPUNGED_EVENT);
+            .isEqualTo(BACKWARD_EXPUNGED_EVENT);
     }
 
     @Nested

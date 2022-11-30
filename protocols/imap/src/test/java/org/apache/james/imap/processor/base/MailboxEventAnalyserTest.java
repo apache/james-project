@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -132,7 +133,7 @@ class MailboxEventAnalyserTest {
         .randomEventId()
         .mailboxSession(MAILBOX_SESSION)
         .mailbox(DEFAULT_MAILBOX)
-        .addMetaData(new MessageMetaData(MessageUid.of(11), ModSeq.first(), new Flags(), 45, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
+        .addMetaData(new MessageMetaData(MessageUid.of(11), ModSeq.first(), new Flags(), 45, new Date(), Optional.empty(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
         .isDelivery(!IS_DELIVERY)
         .build();
 

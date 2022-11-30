@@ -25,6 +25,7 @@ import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -129,7 +130,7 @@ class SetCustomFlagOnBigMessagesTest {
             .getMessages(MessageRange.one(composedIdOfSmallMessage.getUid()), FetchGroup.MINIMAL, mailboxSession)
             .next();
         MessageMetaData oneMBMetaData = new MessageMetaData(addedMessage.getUid(), addedMessage.getModSeq(),
-            addedMessage.getFlags(), ONE_MB, addedMessage.getInternalDate(), addedMessage.getMessageId(), addedMessage.getThreadId());
+            addedMessage.getFlags(), ONE_MB, addedMessage.getInternalDate(), Optional.empty(), addedMessage.getMessageId(), addedMessage.getThreadId());
 
         Event eventWithAFakeMessageSize = EventFactory.added()
             .eventId(RANDOM_EVENT_ID)

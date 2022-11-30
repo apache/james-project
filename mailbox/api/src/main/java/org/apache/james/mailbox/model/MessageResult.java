@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -63,6 +64,8 @@ public interface MessageResult extends Comparable<MessageResult> {
     MessageId getMessageId();
 
     ThreadId getThreadId();
+
+    Optional<Date> getSaveDate();
 
     Date getInternalDate();
 

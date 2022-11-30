@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -32,16 +33,18 @@ public class MessageMetaData {
     private final Flags flags;
     private final long size;
     private final Date internalDate;
+    private final Optional<Date> saveDate;
     private final ModSeq modSeq;
     private final MessageId messageId;
     private final ThreadId threadId;
 
-    public MessageMetaData(MessageUid uid, ModSeq modSeq, Flags flags, long size, Date internalDate, MessageId messageId, ThreadId threadId) {
+    public MessageMetaData(MessageUid uid, ModSeq modSeq, Flags flags, long size, Date internalDate, Optional<Date> saveDate, MessageId messageId, ThreadId threadId) {
         this.uid = uid;
         this.flags = flags;
         this.size = size;
         this.modSeq = modSeq;
         this.internalDate = internalDate;
+        this.saveDate = saveDate;
         this.messageId = messageId;
         this.threadId = threadId;
     }
@@ -65,6 +68,10 @@ public class MessageMetaData {
      */
     public Date getInternalDate() {
         return internalDate;
+    }
+
+    public Optional<Date> getSaveDate() {
+        return saveDate;
     }
 
     public MessageUid getUid() {
