@@ -19,14 +19,13 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-
-import com.google.common.base.Objects;
 
 public class MessageMetaData {
     private final MessageUid uid;
@@ -95,16 +94,24 @@ public class MessageMetaData {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof MessageMetaData) {
-            return uid.equals(((MessageMetaData) obj).getUid());
+    public final boolean equals(Object o) {
+        if (o instanceof MessageMetaData) {
+            MessageMetaData that = (MessageMetaData) o;
+
+            return Objects.equals(this.uid, that.uid)
+                && Objects.equals(this.size, that.size)
+                && Objects.equals(this.flags, that.flags)
+                && Objects.equals(this.internalDate, that.internalDate)
+                && Objects.equals(this.saveDate, that.saveDate)
+                && Objects.equals(this.modSeq, that.modSeq)
+                && Objects.equals(this.messageId, that.messageId)
+                && Objects.equals(this.threadId, that.threadId);
         }
         return false;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(uid);
+    public final int hashCode() {
+        return Objects.hash(uid, flags, size, internalDate, saveDate, modSeq, messageId, threadId);
     }
-
 }
