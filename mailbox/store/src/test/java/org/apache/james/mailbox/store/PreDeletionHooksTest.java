@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.mail.Flags;
@@ -59,7 +60,7 @@ class PreDeletionHooksTest {
     private static final TestId MAILBOX_ID = TestId.of(45);
     private static final ModSeq MOD_SEQ = ModSeq.of(18);
     private static final int SIZE = 12;
-    private static final MessageMetaData MESSAGE_META_DATA = new MessageMetaData(MessageUid.of(1), MOD_SEQ, new Flags(), SIZE, new Date(), TestMessageId.of(42), ThreadId.fromBaseMessageId(TestMessageId.of(42)));
+    private static final MessageMetaData MESSAGE_META_DATA = new MessageMetaData(MessageUid.of(1), MOD_SEQ, new Flags(), SIZE, new Date(), Optional.empty(), TestMessageId.of(42), ThreadId.fromBaseMessageId(TestMessageId.of(42)));
     private static final PreDeletionHook.DeleteOperation DELETE_OPERATION = PreDeletionHook.DeleteOperation.from(ImmutableList.of(MetadataWithMailboxId.from(
         MESSAGE_META_DATA,
         MAILBOX_ID)));

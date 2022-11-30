@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -94,6 +95,11 @@ public class MessageResultImpl implements MessageResult {
     @Override
     public ThreadId getThreadId() {
         return message.getThreadId();
+    }
+
+    @Override
+    public Optional<Date> getSaveDate() {
+        return message.getSaveDate();
     }
 
     @Override

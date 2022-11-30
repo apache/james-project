@@ -90,12 +90,13 @@ object DTOs {
       Flags.fromJavaFlags(javaMessageMetaData.getFlags),
       javaMessageMetaData.getSize,
       javaMessageMetaData.getInternalDate.toInstant,
+      javaMessageMetaData.getSaveDate.map(_.toInstant).toScala,
       javaMessageMetaData.getMessageId,
       Option(javaMessageMetaData.getThreadId))
   }
 
-  case class MessageMetaData(uid: MessageUid, modSeq: ModSeq, flags: Flags, size: Long, internalDate: Instant, messageId: MessageId, threadId: Option[ThreadId]) {
-    def toJava: JavaMessageMetaData = new JavaMessageMetaData(uid, modSeq, Flags.toJavaFlags(flags), size, Date.from(internalDate), messageId, retrieveThreadId)
+  case class MessageMetaData(uid: MessageUid, modSeq: ModSeq, flags: Flags, size: Long, internalDate: Instant, saveDate: Option[Instant], messageId: MessageId, threadId: Option[ThreadId]) {
+    def toJava: JavaMessageMetaData = new JavaMessageMetaData(uid, modSeq, Flags.toJavaFlags(flags), size, Date.from(internalDate), saveDate.map(Date.from).toJava, messageId, retrieveThreadId)
     def retrieveThreadId: ThreadId = threadId.getOrElse(ThreadId.fromBaseMessageId(messageId))
   }
 

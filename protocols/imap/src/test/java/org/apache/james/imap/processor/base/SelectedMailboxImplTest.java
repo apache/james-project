@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -222,7 +223,7 @@ class SelectedMailboxImplTest {
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
             .mailbox(mailbox)
-            .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
+            .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), Optional.empty(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
             .isDelivery(!IS_DELIVERY)
             .build();
     }
