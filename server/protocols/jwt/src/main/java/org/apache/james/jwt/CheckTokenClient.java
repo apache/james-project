@@ -30,7 +30,7 @@ public interface CheckTokenClient {
 
     Publisher<TokenIntrospectionResponse> introspect(IntrospectionEndpoint introspectionEndpoint, String token);
 
-    Publisher<UserinfoResponse> useInfo(URL userinfoEndpoint, String bearerToken);
+    Publisher<UserinfoResponse> userInfo(URL userinfoEndpoint, String bearerToken);
 
 }
 

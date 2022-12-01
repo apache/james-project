@@ -77,7 +77,7 @@ public class OidcJwtTokenVerifier {
     public static Publisher<String> verifyWithUserinfo(String jwtToken, URL jwksURL, String claimName, URL userinfoEndpoint) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
-            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.useInfo(userinfoEndpoint, jwtToken))
+            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))
                 .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(claimName)
                     .map(claim -> claim.equals(claimResult))
                     .orElse(false))

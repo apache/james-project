@@ -69,7 +69,7 @@ public class DefaultCheckTokenClient implements CheckTokenClient {
     }
 
     @Override
-    public Publisher<UserinfoResponse> useInfo(URL userinfoEndpoint, String bearerToken) {
+    public Publisher<UserinfoResponse> userInfo(URL userinfoEndpoint, String bearerToken) {
         return httpClient
             .headers(builder -> builder.add("Authorization", "Bearer " + bearerToken))
             .get()
