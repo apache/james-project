@@ -208,7 +208,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     private MessageUid uid;
     private final MailboxId mailboxId;
     private final ThreadId threadId;
-    private final Optional<Date> saveDate;
+    private Optional<Date> saveDate;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -317,6 +317,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     @Override
     public void setUid(MessageUid uid) {
         this.uid = uid;
+    }
+
+    @Override
+    public void setSaveDate(Date saveDate) {
+        this.saveDate = Optional.of(saveDate);
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -54,7 +55,7 @@ public class MessageRepresentation {
         this.bodyId = bodyId;
     }
 
-    public SimpleMailboxMessage toMailboxMessage(ComposedMessageIdWithMetaData metadata, List<MessageAttachmentMetadata> attachments) {
+    public SimpleMailboxMessage toMailboxMessage(ComposedMessageIdWithMetaData metadata, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
             .threadId(metadata.getThreadId())
@@ -62,6 +63,7 @@ public class MessageRepresentation {
             .uid(metadata.getComposedMessageId().getUid())
             .modseq(metadata.getModSeq())
             .internalDate(internalDate)
+            .saveDate(saveDate)
             .bodyStartOctet(bodyStartOctet)
             .size(size)
             .content(content)

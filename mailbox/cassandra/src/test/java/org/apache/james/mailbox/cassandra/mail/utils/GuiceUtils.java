@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.utils;
 
+import java.time.Clock;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -94,6 +95,7 @@ public class GuiceUtils {
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {}),
             binder -> binder.bind(EventStore.class).to(CassandraEventStore.class),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
-            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration));
+            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
+            binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()));
     }
 }

@@ -21,11 +21,18 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
+import org.apache.james.utils.UpdatableTickingClock;
 
 class InMemoryMessageIdMapperTest extends MessageIdMapperTest {
+    private final InMemoryMapperProvider mapperProvider = new InMemoryMapperProvider();
 
     @Override
     protected MapperProvider provideMapper() {
-        return new InMemoryMapperProvider();
+        return mapperProvider;
+    }
+
+    @Override
+    protected UpdatableTickingClock updatableTickingClock() {
+        return mapperProvider.getClock();
     }
 }

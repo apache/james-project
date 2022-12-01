@@ -204,6 +204,11 @@ public class CassandraMessageMetadata {
         }
 
         @Override
+        public void setSaveDate(Date saveDate) {
+            delegate.setSaveDate(saveDate);
+        }
+
+        @Override
         public Flags createFlags() {
             return delegate.createFlags();
         }

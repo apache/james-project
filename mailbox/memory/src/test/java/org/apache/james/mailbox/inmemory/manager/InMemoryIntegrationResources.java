@@ -294,7 +294,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             Preconditions.checkState(searchIndexFactory.isPresent());
             Preconditions.checkState(messageParser.isPresent());
 
-            InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+            UpdatableTickingClock clock = new UpdatableTickingClock(Instant.now());
+            InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory(clock);
 
             EventBus eventBus = this.eventBus.get();
             StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), eventBus);
@@ -314,7 +315,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
             ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithm();
-            UpdatableTickingClock clock = new UpdatableTickingClock(Instant.now());
 
             MailboxManagerPreInstanciationStage preInstanciationStage = new MailboxManagerPreInstanciationStage(mailboxSessionMapperFactory, sessionProvider);
             PreDeletionHooks hooks = createHooks(preInstanciationStage);

@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +56,8 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     private static final int INITIAL_SIZE = 256;
 
     public InMemoryMessageMapper(MailboxSession session, UidProvider uidProvider,
-            ModSeqProvider modSeqProvider) {
-        super(session, uidProvider, modSeqProvider);
+            ModSeqProvider modSeqProvider, Clock clock) {
+        super(session, uidProvider, modSeqProvider, clock);
         this.mailboxByUid = new ConcurrentHashMap<>(INITIAL_SIZE);
     }
 
@@ -200,6 +202,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(mailbox.getMailboxId(), message);
         copy.setUid(message.getUid());
         copy.setModSeq(message.getModSeq());
+        copy.setSaveDate(Date.from(clock.instant()));
         getMembershipByUidForMailbox(mailbox).put(message.getUid(), copy);
 
         return copy.metaData();

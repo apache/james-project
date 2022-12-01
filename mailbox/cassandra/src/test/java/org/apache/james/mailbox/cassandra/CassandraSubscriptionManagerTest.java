@@ -21,6 +21,8 @@ package org.apache.james.mailbox.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
+
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -136,7 +138,8 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
             userMailboxRightsDAO,
             recomputeMailboxCountersService,
             CassandraConfiguration.DEFAULT_CONFIGURATION,
-            BatchSizes.defaultValues());
+            BatchSizes.defaultValues(),
+            Clock.systemUTC());
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
 

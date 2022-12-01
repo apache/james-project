@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,27 +33,41 @@ class CassandraMessageIdMapperRelaxedConsistencyTest {
 
     @Nested
     class WeakReadConsistency extends MessageIdMapperTest {
+        private final CassandraMapperProvider mapperProvider = new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            CassandraConfiguration.builder()
+                .messageReadStrongConsistency(false)
+                .messageWriteStrongConsistency(true)
+                .build());
+
         @Override
         protected CassandraMapperProvider provideMapper() {
-            return new CassandraMapperProvider(
-                cassandraCluster.getCassandraCluster(),
-                CassandraConfiguration.builder()
-                    .messageReadStrongConsistency(false)
-                    .messageWriteStrongConsistency(true)
-                    .build());
+            return mapperProvider;
+        }
+
+        @Override
+        protected UpdatableTickingClock updatableTickingClock() {
+            return mapperProvider.getUpdatableTickingClock();
         }
     }
 
     @Nested
     class WeakWriteConsistency extends MessageIdMapperTest {
+        private final CassandraMapperProvider mapperProvider = new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            CassandraConfiguration.builder()
+                .messageReadStrongConsistency(false)
+                .messageWriteStrongConsistency(false)
+                .build());
+
         @Override
         protected CassandraMapperProvider provideMapper() {
-            return new CassandraMapperProvider(
-                cassandraCluster.getCassandraCluster(),
-                CassandraConfiguration.builder()
-                    .messageReadStrongConsistency(false)
-                    .messageWriteStrongConsistency(false)
-                    .build());
+            return mapperProvider;
+        }
+
+        @Override
+        protected UpdatableTickingClock updatableTickingClock() {
+            return mapperProvider.getUpdatableTickingClock();
         }
 
         @Disabled("JAMES-3435 Without strong consistency flags update is not thread safe as long as it follows a read-before-write pattern")

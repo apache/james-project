@@ -26,6 +26,7 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -77,6 +78,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
@@ -166,13 +168,15 @@ class OpenSearchListeningMessageSearchIndexTest {
     OpenSearchIndexer openSearchIndexer;
     OpenSearchSearcher openSearchSearcher;
     SessionProviderImpl sessionProvider;
+    UpdatableTickingClock clock;
 
     @RegisterExtension
     DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     @BeforeEach
     void setup() throws Exception {
-        mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        clock = new UpdatableTickingClock(Instant.now());
+        mapperFactory = new InMemoryMailboxSessionMapperFactory(clock);
 
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),

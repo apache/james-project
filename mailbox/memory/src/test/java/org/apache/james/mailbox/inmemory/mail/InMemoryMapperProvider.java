@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -39,6 +40,7 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
+import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.collect.ImmutableList;
 
@@ -50,12 +52,14 @@ public class InMemoryMapperProvider implements MapperProvider {
     private final MessageId.Factory messageIdFactory;
     private final MessageUidProvider messageUidProvider;
     private final InMemoryMailboxSessionMapperFactory inMemoryMailboxSessionMapperFactory;
+    private final UpdatableTickingClock clock;
 
 
     public InMemoryMapperProvider() {
         messageIdFactory = new InMemoryMessageId.Factory();
         messageUidProvider = new MessageUidProvider();
-        inMemoryMailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        clock = new UpdatableTickingClock(Instant.now());
+        inMemoryMailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory(clock);
     }
 
     @Override
@@ -124,4 +128,7 @@ public class InMemoryMapperProvider implements MapperProvider {
             .highestModSeq(mailbox);
     }
 
+    public UpdatableTickingClock getClock() {
+        return clock;
+    }
 }

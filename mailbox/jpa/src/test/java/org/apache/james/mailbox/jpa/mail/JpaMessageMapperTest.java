@@ -35,7 +35,10 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class JpaMessageMapperTest extends MessageMapperTest {
@@ -46,7 +49,12 @@ class JpaMessageMapperTest extends MessageMapperTest {
     protected MapperProvider createMapperProvider() {
         return new JPAMapperProvider(JPA_TEST_CLUSTER);
     }
-    
+
+    @Override
+    protected UpdatableTickingClock updatableTickingClock() {
+        return null;
+    }
+
     @AfterEach
     void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
@@ -138,5 +146,11 @@ class JpaMessageMapperTest extends MessageMapperTest {
                     .oldFlags(new Flags())
                     .newFlags(new Flags())
                     .build());
+    }
+
+    @Nested
+    @Disabled("JPA does not support saveDate.")
+    class SaveDateTests {
+
     }
 }
