@@ -41,9 +41,6 @@ This is a standard "/changes" method as described in [@!RFC8620], Section 5.2.
 
 ## Identity/set
 
-> :warning:
-> Not implemented.
-
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3. The following extra *SetError* types are defined:
 
 For **create**:

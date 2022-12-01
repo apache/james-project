@@ -153,6 +153,17 @@ This extension is specific to the Apache James server and enables to:
 
 * read quotas usage and limits on mailboxes.
 
+### urn:apache:james:params:jmap:delegation
+
+> :information_source:
+> Not implemented
+
+This represents support for the Delegation data type and associated API methods. Servers supporting this specification MUST add this property to the capabilities object.
+
+This extension is specific to the Apache James server and enables to:
+
+* manage accounts that a user delegates access to, and accounts that a user is allowed to access.
+
 ## Data Type Support in Different Accounts
 
 The server MUST include the appropriate capability strings as keys in the *accountCapabilities* property of any account with which the user may use the data types represented by that URI. Supported data types may differ between accounts the user has access to. For example, in the user's personal account, they may have access to all three sets of data, but in a shared account, they may only have data for `urn:ietf:params:jmap:mail`. This means they can access Mailbox/Thread/Email data in the shared account but are not allowed to send as that account (and so do not have access to Identity/EmailSubmission objects) or view/set its VacationResponse.

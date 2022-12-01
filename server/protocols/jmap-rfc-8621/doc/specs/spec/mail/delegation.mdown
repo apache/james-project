@@ -1,0 +1,167 @@
+# Delegations extension
+
+> :information_source:
+> Not Implemented
+
+## Context
+This extension is specific to the Apache James server which defines methods to manage users' JMAP delegation settings.
+
+This extension to the JMAP specification enables to:
+
+- Manage accounts that a user delegates access to.
+- Manage accounts that a user is allowed access.
+
+## Addition capability
+The URN `urn:apache:james:params:jmap:delegation` represents support for the Delegation data type and associated API methods.
+
+Servers supporting this specification MUST add this property to the capabilities object.
+
+## Addition to the Session object
+Servers supporting this specification MUST add the delegated accounts to the `accounts` property of the Session object.
+
+## Behavioral changes
+When `urn:apache:james:params:jmap:delegation` is specified, access to a delegated account is enabled through standard JMAP API calls
+but MUST except API calls to manage delegated account's delegation setting to avoid privilege escalation.
+
+## Delegation methods
+A **Delegation** object stores information about an email address that either has access to the user's account or delegates access
+to the user. The semantics for this object depends on the context of usage methods: either manage delegate accounts or delegated accounts.
+
+The delegation object MUST have the following properties:
+- **id**: `Id` (immutable; server-set)
+  The id of the Delegation.
+- **username**: `String` (immutable)
+  The email address of the user that either delegates or is delegated to this user account.
+  
+The **Delegate** object follows the structure of **Delegation** and represents delegations accessing this account (allowing the listed user to connect as the current account owner).
+
+The **DelegatedAccount** object follows the structure of **Delegation** and represents delegations active for this account (allowing the current account owner to connect as the listed user).
+
+A user can delegate his account to multiple users as well as be allowed to access other accounts.
+
+A user can manage his delegations to other users to access his account by creating, deleting and retrieving **Delegate** objects.
+Meanwhile, a user can only retrieve and delete **DelegatedAccount** objects.
+
+A server MUST not allow a delegated user to access and manage the owner user's delegation setting to avoid privilege escalation.
+
+The following JMAP methods are supported:
+
+### Delegate/get
+This method returns **Delegate** objects of the user.
+
+This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
+
+A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
+
+### Delegate/set
+This method allows the user to manage (create and delete) his **Delegate** objects.
+
+This is a standard "/set" method as described in [@!RFC8620], Section 5.3, except the update part because of its limited usage.
+
+A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
+
+### DelegatedAccount/get
+This method returns **DelegatedAccount** objects of the user.
+
+This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
+
+A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
+
+### DelegatedAccount/set
+This method allows the user to delete his **DelegatedAccount** objects.
+
+This method implements only destroy part of the standard "/set" method as described in [@!RFC8620], Section 5.3.
+
+A server MUST return the *SetError* type `forbidden` when a delegated user accesses the owner user's delegation setting.
+
+## Examples
+
+### Fetching delegate accounts
+Request fetching all delegate accounts of the account:
+
+    [[ "Delegate/get", {
+         "accountId": "u33084183",
+         "ids": null
+       }, "0" ]]
+
+Response:
+
+    [[ "Delegate/get", {
+          "accountId": "u33084183",
+          "list": [{
+              "id": "e50b2c1d-9553-41a3-b0a7-a7d26b599ee1",
+              "username": "bob@test.org"
+          }, {
+              "id": "f2d0aab5-e976-4e8b-ad4b-b380a5b987e4",
+               "username": "alice@test.org"
+          }],
+          "notFound": []
+        }, "0" ]]
+
+### Create a delegate account
+Request creating a delegate account of the account:
+
+    [[ "Delegate/set", {
+         "accountId": "u33084183",
+         "create": {
+           "4f29": {
+             "username": "bob@test.org"
+           }
+        }
+      }, "0" ]]
+
+Response:
+
+    [[ "Delegate/set", {
+         "created": {
+           "4f29": {
+             "id": "abdfe762l"
+           }
+         }
+       }, "0" ]]
+
+### Delete a delegate account
+Request deleting a delegate account of the account:
+
+    [[ "Delegate/set", {
+         "destroy": ["P43dcfa4-1dd4-41ef-9156-2c89b3b19c60"]
+       }, "0" ]]
+
+Response:
+
+    [[ "DelegatedAccount/set", {
+         "destroyed":["P43dcfa4-1dd4-41ef-9156-2c89b3b19c60"]
+       }, "0" ]]
+
+
+### Fetching delegated accounts
+Request fetching all delegated accounts of the account:
+
+    [[ "DelegatedAccount/get", {
+          "accountId": "u33084183",
+          "ids": null
+       }, "0" ]]
+
+Response:
+
+    [[ "DelegatedAccount/get", {
+          "accountId": "u33084183",
+          "list": [{
+              "id": "e50b2c1d-9553-41a3-b0a7-a7d26b599ee1",
+              "username": "andre@test.org"
+          }],
+          "notFound": []
+       }, "0" ]]
+
+### Delete a delegated account
+Request deleting a delegated account of the account:
+
+    [[ "DelegatedAccount/set", {
+         "destroy": ["P43dcfa4-1dd4-41ef-9156-2c89b3b19c60"]
+       }, "0" ]]
+
+Response:
+
+    [[ "DelegatedAccount/set", {
+         "destroyed":["P43dcfa4-1dd4-41ef-9156-2c89b3b19c60"]
+       }, "0" ]]
