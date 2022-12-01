@@ -47,6 +47,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
 import org.apache.james.util.streams.Limit;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -61,12 +62,19 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
-    
+
+    private final CassandraMapperProvider mapperProvider = new CassandraMapperProvider(
+        cassandraCluster.getCassandraCluster(),
+        CassandraConfiguration.DEFAULT_CONFIGURATION);
+
     @Override
     protected CassandraMapperProvider provideMapper() {
-        return new CassandraMapperProvider(
-            cassandraCluster.getCassandraCluster(),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+        return mapperProvider;
+    }
+
+    @Override
+    protected UpdatableTickingClock updatableTickingClock() {
+        return mapperProvider.getUpdatableTickingClock();
     }
 
     @Test

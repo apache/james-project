@@ -436,6 +436,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     @Override
+    public void setSaveDate(Date saveDate) {
+
+    }
+
+    @Override
     public long getHeaderOctets() {
         return bodyStartOctet;
     }

@@ -23,8 +23,10 @@ import static org.apache.james.backends.cassandra.init.configuration.JamesExecut
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -90,11 +92,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final BlobStore blobStore;
     private final CassandraConfiguration cassandraConfiguration;
     private final BatchSizes batchSizes;
+    private final Clock clock;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                     CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
-                                    ModSeqProvider modSeqProvider, BlobStore blobStore, CassandraConfiguration cassandraConfiguration, BatchSizes batchSizes) {
+                                    ModSeqProvider modSeqProvider, BlobStore blobStore, CassandraConfiguration cassandraConfiguration, BatchSizes batchSizes, Clock clock) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -108,6 +111,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.blobStore = blobStore;
         this.cassandraConfiguration = cassandraConfiguration;
         this.batchSizes = batchSizes;
+        this.clock = clock;
     }
 
     @Override
@@ -138,7 +142,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
             .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
-            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
+            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }
 
     @Override
@@ -187,6 +191,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
+        mailboxMessage.setSaveDate(Date.from(clock.instant()));
         MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxId)
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
             .then(messageDAOV3.save(mailboxMessage))
@@ -200,6 +205,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
+        mailboxMessage.setSaveDate(Date.from(clock.instant()));
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return insertMetadata(mailboxMessage, mailboxId, CassandraMessageMetadata.from(mailboxMessage)
             .withMailboxId(mailboxId));

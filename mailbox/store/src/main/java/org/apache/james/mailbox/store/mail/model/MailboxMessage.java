@@ -108,6 +108,8 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
      */
     void setFlags(Flags flags);
 
+    void setSaveDate(Date saveDate);
+
     /**
      * Creates a new flags instance populated
      * with the current flag data.

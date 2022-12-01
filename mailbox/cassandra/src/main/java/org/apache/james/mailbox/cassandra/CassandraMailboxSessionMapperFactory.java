@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.time.Clock;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -106,7 +108,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 RecomputeMailboxCountersService recomputeMailboxCountersService,
                                                 CassandraConfiguration cassandraConfiguration,
-                                                BatchSizes batchSizes) {
+                                                BatchSizes batchSizes,
+                                                Clock clock) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.threadDAO = threadDAO;
@@ -150,10 +153,10 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             firstUnseenDAO,
             deletedMessageDAO,
             blobStore,
-            cassandraConfiguration, batchSizes, recomputeMailboxCountersService);
+            cassandraConfiguration, batchSizes, recomputeMailboxCountersService, clock);
         this.cassandraMessageIdMapper = new CassandraMessageIdMapper(cassandraMailboxMapper, mailboxDAO,
             cassandraAttachmentMapper, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, indexTableHandler,
-            modSeqProvider, blobStore, cassandraConfiguration, batchSizes);
+            modSeqProvider, blobStore, cassandraConfiguration, batchSizes, clock);
         this.cassandraAnnotationMapper = new CassandraAnnotationMapper(session);
     }
 

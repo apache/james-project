@@ -42,6 +42,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -59,8 +60,10 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider.Capabilities;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.Assume;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -93,6 +96,8 @@ public abstract class MessageMapperTest {
     protected MailboxMessage message6;
 
     protected abstract MapperProvider createMapperProvider();
+
+    protected abstract UpdatableTickingClock updatableTickingClock();
 
     @BeforeEach
     void setUp() throws Exception {
@@ -1218,6 +1223,97 @@ public abstract class MessageMapperTest {
 
         assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox).collectList().block())
             .containsOnly(message1.getUid(), message5.getUid());
+    }
+
+    @Nested
+    class SaveDateTests {
+        @Test
+        void addMessageShouldSetNewSaveDate() throws MailboxException {
+            MailboxMessage messageWithoutSaveDate = createMessage(Optional.empty());
+
+            MessageMetaData messageMetaData = messageMapper.add(benwaInboxMailbox, messageWithoutSaveDate);
+
+            assertThat(messageMetaData.getSaveDate()).isPresent();
+        }
+
+        @Test
+        void deleteMessageShouldReturnMetaDataContainsSaveDate() throws MailboxException {
+            MessageMetaData toBeDeletedMessage = messageMapper.add(benwaInboxMailbox, createMessage(Optional.empty()));
+
+            assertThat(messageMapper.deleteMessages(benwaInboxMailbox, List.of(toBeDeletedMessage.getUid()))
+                .values()
+                .stream()
+                .allMatch(messageMetaData -> messageMetaData.getSaveDate().equals(toBeDeletedMessage.getSaveDate())))
+                .isTrue();
+        }
+
+        @Test
+        void copyMessageShouldSetNewSaveDate() throws MailboxException {
+            MailboxMessage originalMessage = createMessage(Optional.of(new Date()));
+            MessageUid uid = messageMapper.add(benwaInboxMailbox, originalMessage).getUid();
+
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plusSeconds(1000));
+
+            MessageMetaData copiedMessageMetaData = messageMapper.copy(benwaInboxMailbox,
+                messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(uid), FetchType.METADATA, 1).next());
+
+            assertThat(copiedMessageMetaData.getSaveDate()).isNotEqualTo(originalMessage.getSaveDate());
+        }
+
+        @Test
+        void copyListOfMessagesShouldSetNewSaveDate() throws MailboxException {
+            MailboxMessage originalMessage = createMessage(Optional.of(new Date()));
+            MessageUid uid = messageMapper.add(benwaInboxMailbox, originalMessage).getUid();
+
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plusSeconds(1000));
+
+            List<MessageMetaData> copiedMessageMetaData = messageMapper.copy(benwaInboxMailbox,
+                List.of(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(uid), FetchType.METADATA, 1).next()));
+
+            assertThat(copiedMessageMetaData.get(0).getSaveDate()).isNotEqualTo(originalMessage.getSaveDate());
+        }
+
+        @Test
+        void moveMessageShouldSetNewSaveDate() throws MailboxException {
+            MailboxMessage originalMessage = createMessage(Optional.of(new Date()));
+            MessageUid uid = messageMapper.add(benwaInboxMailbox, originalMessage).getUid();
+
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plusSeconds(1000));
+
+            MessageMetaData movedMessageMetaData = messageMapper.move(benwaInboxMailbox,
+                messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(uid), FetchType.METADATA, 1).next());
+
+            assertThat(movedMessageMetaData.getSaveDate()).isNotEqualTo(originalMessage.getSaveDate());
+        }
+
+        @Test
+        void moveListOfMessagesShouldSetNewSaveDate() throws MailboxException {
+            MailboxMessage originalMessage = createMessage(Optional.of(new Date()));
+            MessageUid uid = messageMapper.add(benwaInboxMailbox, originalMessage).getUid();
+
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plusSeconds(1000));
+
+            List<MessageMetaData> movedMessageMetaData = messageMapper.move(benwaInboxMailbox,
+                List.of(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(uid), FetchType.METADATA, 1).next()));
+
+            assertThat(movedMessageMetaData.get(0).getSaveDate()).isNotEqualTo(originalMessage.getSaveDate());
+        }
+
+        private SimpleMailboxMessage createMessage(Optional<Date> saveDate) throws MailboxException {
+            Content content = new ByteContent("Subject: messagePropertiesShouldBeStoredWhenDuplicateEntries \n\nBody\n.\n".getBytes());
+            return SimpleMailboxMessage.builder()
+                .messageId(mapperProvider.generateMessageId())
+                .mailboxId(benwaInboxMailbox.getMailboxId())
+                .threadId(ThreadId.fromBaseMessageId(mapperProvider.generateMessageId()))
+                .internalDate(new Date())
+                .saveDate(saveDate)
+                .bodyStartOctet(16)
+                .size(content.size())
+                .content(content)
+                .flags(new Flags())
+                .properties(new PropertyBuilder())
+                .build();
+        }
     }
 
     private List<MessageUid> markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange range) throws MailboxException {

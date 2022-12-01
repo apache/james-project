@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,11 +55,13 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     protected final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
+    protected final Clock clock;
 
-    public AbstractMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
+    public AbstractMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, Clock clock) {
         this.mailboxSession = mailboxSession;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
+        this.clock = clock;
     }
     
     @Override

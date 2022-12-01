@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -52,9 +53,11 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.data.MapEntry;
 import org.junit.Assume;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -83,6 +86,8 @@ public abstract class MessageIdMapperTest {
     protected MapperProvider mapperProvider;
 
     protected abstract MapperProvider provideMapper();
+
+    protected abstract UpdatableTickingClock updatableTickingClock();
 
     @BeforeEach
     void setUp() throws MailboxException {
@@ -983,6 +988,52 @@ public abstract class MessageIdMapperTest {
                 .put(message1.getMessageId(), benwaWorkMailbox.getMailboxId())
                 .build());
     }
+
+    @Nested
+    class SaveDateTests {
+        @Test
+        void saveMessagesShouldSetNewSaveDate() throws MailboxException {
+            message1.setUid(mapperProvider.generateMessageUid());
+            message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+            message1.setFlags(new Flags(Flag.SEEN));
+
+            message2.setUid(mapperProvider.generateMessageUid());
+            message2.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+
+            sut.save(message1);
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plusSeconds(1000));
+            sut.save(message2);
+
+            MailboxMessage firstMessage = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.METADATA).get(0);
+            MailboxMessage secondMessage = sut.find(ImmutableList.of(message2.getMessageId()), FetchType.METADATA).get(0);
+
+            assertThat(firstMessage.getSaveDate()).isNotEqualTo(secondMessage.getSaveDate());
+        }
+
+        @Test
+        void copyInMailboxReactiveShouldSetNewSaveDate() throws MailboxException, InterruptedException {
+            message1.setUid(mapperProvider.generateMessageUid());
+            message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+            message1.setFlags(new Flags(Flag.SEEN));
+            sut.save(message1);
+
+            MailboxMessage copy = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.METADATA).get(0)
+                .copy(benwaWorkMailbox);
+            copy.setUid(mapperProvider.generateMessageUid());
+            copy.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
+
+            updatableTickingClock().setInstant(updatableTickingClock().instant().plus(8, ChronoUnit.DAYS));
+
+            sut.copyInMailboxReactive(copy, benwaWorkMailbox).block();
+
+            List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.METADATA);
+            MailboxMessage firstMessage = messages.get(0);
+            MailboxMessage secondMessage = messages.get(1);
+
+            assertThat(firstMessage.getSaveDate()).isNotEqualTo(secondMessage.getSaveDate());
+        }
+    }
+
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         return mailboxMapper.create(mailboxPath, UID_VALIDITY).block();
