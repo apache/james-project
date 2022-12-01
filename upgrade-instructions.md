@@ -23,6 +23,23 @@ Change list:
 - [SortOrder addition in Identity](#sortorder-addition-in-identity)
 - [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
 - [Blob Store AES upgraded to PBKDF2WithHmacSHA512](#blob-store-aes-upgraded-to-pbkdf2withhmacsha512)
+- [Adding saveDate column to messageIdTable and imapUidTable](#adding-savedate-column-to-messageidtable-and-imapuidtable)
+
+### Adding saveDate column to messageIdTable and imapUidTable
+
+Date 01/12/2022
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3754
+
+Concerned product: Distributed James, Cassandra James Server
+
+Add `save_date` column to `messageIdTable` and `imapUidTable` tables in order to store saveDate data as part of IMAP SAVEDATE extension.
+
+In order to add this `messageIdTable` column you need to run the following CQL commands:
+```
+ALTER TABLE james_keyspace.messageIdTable ADD save_date timestamp;
+ALTER TABLE james_keyspace.imapUidTable ADD save_date timestamp;
+```
 
 ### Blob Store AES upgraded to PBKDF2WithHmacSHA512
 
