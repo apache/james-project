@@ -202,7 +202,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         copy.setModSeq(message.getModSeq());
         getMembershipByUidForMailbox(mailbox).put(message.getUid(), copy);
 
-        return message.metaData();
+        return copy.metaData();
     }
 
     @Override
