@@ -236,11 +236,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             }
 
             @Override
-            protected ChannelInboundHandlerAdapter createProxyHandler() {
-                return new HAProxyMessageHandler();
-            }
-
-            @Override
             public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
@@ -250,7 +245,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
                 if (proxyRequired) {
                     pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
-                    pipeline.addLast("proxyInformationHandler", createProxyHandler());
+                    pipeline.addLast("proxyInformationHandler", new HAProxyMessageHandler());
                 }
 
                 // Add the text line decoder which limit the max line length,
@@ -298,11 +293,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .heartbeatInterval(heartbeatInterval)
             .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
             .build();
-    }
-
-    @Override
-    protected ChannelInboundHandlerAdapter createProxyHandler() {
-        return new HAProxyMessageHandler();
     }
 
     @Override

@@ -91,11 +91,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
-    protected ChannelInboundHandlerAdapter createProxyHandler() {
-        throw new NotImplementedException();
-    }
-
-    @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
 
         return new AbstractChannelPipelineFactory(createFrameHandlerFactory(), getExecutorGroup()) {
@@ -103,11 +98,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return createCoreHandler();
-            }
-
-            @Override
-            protected ChannelInboundHandlerAdapter createProxyHandler() {
-                throw new NotImplementedException();
             }
 
             @Override

@@ -21,6 +21,8 @@ package org.apache.james.protocols.netty;
 import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 
 import java.io.Closeable;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -33,6 +35,7 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
@@ -48,6 +51,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
+import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
 
 /**
@@ -145,12 +150,25 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     }
 
 
+    private static String retrieveIp(ChannelHandlerContext ctx) {
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
+        if (remoteAddress instanceof InetSocketAddress) {
+            InetSocketAddress address = (InetSocketAddress) remoteAddress;
+            return address.getAddress().getHostAddress();
+        }
+        return remoteAddress.toString();
+    }
+
     /**
      * Call the {@link LineHandler} 
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (msg instanceof HAProxyMessage) {
+            handleHAProxyMessage(ctx, (HAProxyMessage) msg);
+            return;
+        }
         ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
             override.channelRead(ctx, msg);
@@ -182,6 +200,33 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
             ((ByteBuf) msg).release();
             super.channelReadComplete(ctx);
         }
+    }
+
+    private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) throws Exception {
+        ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
+        if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
+
+            ProxyInformation proxyInformation = new ProxyInformation(
+                new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
+                new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
+            LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
+
+            if (pSession != null) {
+                pSession.setProxyInformation(proxyInformation);
+
+                // Refresh MDC info to account for proxying
+                MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
+                boundMDC.addToContext("proxy.source", proxyInformation.getSource().toString());
+                boundMDC.addToContext("proxy.destination", proxyInformation.getDestination().toString());
+                boundMDC.addToContext("proxy.ip", retrieveIp(ctx));
+                pSession.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
+            }
+        } else {
+            throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
+        }
+
+        haproxyMsg.release();
+        super.channelReadComplete(ctx);
     }
 
 

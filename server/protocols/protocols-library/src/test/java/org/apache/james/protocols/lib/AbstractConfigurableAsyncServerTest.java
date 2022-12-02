@@ -109,10 +109,6 @@ class AbstractConfigurableAsyncServerTest {
             return null;
         }
 
-        @Override
-        protected ChannelInboundHandlerAdapter createProxyHandler() {
-            throw new NotImplementedException();
-        }
 
         // test accessors
 

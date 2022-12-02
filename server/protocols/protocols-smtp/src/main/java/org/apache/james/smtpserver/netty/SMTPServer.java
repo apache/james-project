@@ -40,10 +40,8 @@ import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.HAProxyMessageHandler;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
-import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
@@ -388,11 +386,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         return new SMTPChannelInboundHandler(transport, getEncryption(), proxyRequired, smtpMetrics);
-    }
-
-    @Override
-    protected ChannelInboundHandlerAdapter createProxyHandler() {
-        return new HAProxyMessageHandler(transport, new SMTPMDCContextFactory());
     }
 
     @Override
