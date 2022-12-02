@@ -120,6 +120,7 @@ public class CassandraMessageDAOV3 {
     private final Cid.CidParser cidParser;
     private final DriverExecutionProfile lwtProfile;
     private final UserDefinedType attachmentsType;
+    private final TypeCodec<List<UdtValue>> attachmentCodec;
 
     @Inject
     public CassandraMessageDAOV3(CqlSession session, CassandraTypesProvider typesProvider, BlobStore blobStore,
@@ -135,6 +136,7 @@ public class CassandraMessageDAOV3 {
         this.listBlobs = prepareSelectBlobs(session);
         this.cidParser = Cid.parser().relaxed();
         this.attachmentsType = typesProvider.getDefinedUserType(ATTACHMENTS.asCql(true));
+        this.attachmentCodec = CodecRegistry.DEFAULT.codecFor(listOf(attachmentsType));
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -356,14 +358,14 @@ public class CassandraMessageDAOV3 {
 
     private Properties getProperties(Row row) {
         PropertyBuilder property = new PropertyBuilder();
-        property.setContentDescription(row.getString(CONTENT_DESCRIPTION));
-        property.setContentDispositionType(row.getString(CONTENT_DISPOSITION_TYPE));
-        property.setMediaType(row.getString(MEDIA_TYPE));
-        property.setSubType(row.getString(SUB_TYPE));
-        property.setContentID(row.getString(CONTENT_ID));
-        property.setContentMD5(row.getString(CONTENT_MD5));
-        property.setContentTransferEncoding(row.getString(CONTENT_TRANSFER_ENCODING));
-        property.setContentLocation(row.getString(CONTENT_LOCATION));
+        property.setContentDescription(row.get(CONTENT_DESCRIPTION, TypeCodecs.TEXT));
+        property.setContentDispositionType(row.get(CONTENT_DISPOSITION_TYPE, TypeCodecs.TEXT));
+        property.setMediaType(row.get(MEDIA_TYPE, TypeCodecs.TEXT));
+        property.setSubType(row.get(SUB_TYPE, TypeCodecs.TEXT));
+        property.setContentID(row.get(CONTENT_ID, TypeCodecs.TEXT));
+        property.setContentMD5(row.get(CONTENT_MD5, TypeCodecs.TEXT));
+        property.setContentTransferEncoding(row.get(CONTENT_TRANSFER_ENCODING, TypeCodecs.TEXT));
+        property.setContentLocation(row.get(CONTENT_LOCATION, TypeCodecs.TEXT));
         property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS_CODEC));
         property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRINGS_CODEC));
         property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRINGS_CODEC));
@@ -372,8 +374,9 @@ public class CassandraMessageDAOV3 {
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
-        List<UdtValue> udtValues = Optional.<List<UdtValue>>ofNullable(row.get(ATTACHMENTS, CodecRegistry.DEFAULT.codecFor(listOf(attachmentsType)))).orElse(List.of());
-        return attachmentByIds(udtValues);
+        return Optional.ofNullable(row.get(ATTACHMENTS, attachmentCodec))
+            .map(this::attachmentByIds)
+            .orElseGet(Stream::of);
     }
 
     private Stream<MessageAttachmentRepresentation> attachmentByIds(List<UdtValue> udtValues) {
@@ -383,9 +386,9 @@ public class CassandraMessageDAOV3 {
 
     private MessageAttachmentRepresentation messageAttachmentByIdFrom(UdtValue udtValue) {
         return MessageAttachmentRepresentation.builder()
-            .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
-            .name(udtValue.getString(Attachments.NAME))
-            .cid(cidParser.parse(udtValue.getString(Attachments.CID)))
+            .attachmentId(AttachmentId.from(udtValue.get(Attachments.ID, TypeCodecs.TEXT)))
+            .name(udtValue.get(Attachments.NAME, TypeCodecs.TEXT))
+            .cid(cidParser.parse(udtValue.get(Attachments.CID, TypeCodecs.TEXT)))
             .isInline(udtValue.getBoolean(Attachments.IS_INLINE))
             .build();
     }

@@ -295,7 +295,7 @@ public class CassandraMessageIdDAO {
 
     public Mono<Void> delete(CassandraId mailboxId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
-            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, uid.asLong()));
     }
 
@@ -313,7 +313,7 @@ public class CassandraMessageIdDAO {
             statementBuilder.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class);
         }
         return cassandraAsyncExecutor.executeVoid(statementBuilder
-            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .set(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, composedMessageId.getUid().asLong())
             .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
             .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
@@ -408,7 +408,7 @@ public class CassandraMessageIdDAO {
 
     private Mono<Row> selectOneRow(CassandraId mailboxId, MessageUid uid) {
         return cassandraAsyncExecutor.executeSingleRow(select.bind()
-            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, uid.asLong()));
     }
 
@@ -490,32 +490,32 @@ public class CassandraMessageIdDAO {
     private Flux<Row> selectAll(CassandraId mailboxId, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectAllLimited.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectAll.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())));
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)));
     }
 
     private Flux<Row> selectFrom(CassandraId mailboxId, MessageUid uid, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectUidGteLimited.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID, uid.asLong())
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectUidGte.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID, uid.asLong())));
     }
 
     private Flux<Row> selectRange(CassandraId mailboxId, MessageUid from, MessageUid to, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
             .map(limitAsInt -> selectUidRangeLimited.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())
                 .setInt(LIMIT, limitAsInt))
             .orElseGet(() -> selectUidRange.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())));
     }
@@ -525,7 +525,7 @@ public class CassandraMessageIdDAO {
         if (rowAsUuid == null) {
             // Out of order updates with concurrent deletes can result in the row being partially deleted
             // We filter out such records, and cleanup them.
-            delete(CassandraId.of(row.getUuid(MAILBOX_ID)),
+            delete(CassandraId.of(row.get(MAILBOX_ID, TypeCodecs.TIMEUUID)),
                 MessageUid.of(row.getLong(IMAP_UID)))
                 .subscribeOn(Schedulers.parallel())
                 .subscribe();
@@ -535,7 +535,7 @@ public class CassandraMessageIdDAO {
         return Optional.of(CassandraMessageMetadata.builder()
             .ids(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
-                    CassandraId.of(row.getUuid(MAILBOX_ID)),
+                    CassandraId.of(row.get(MAILBOX_ID, TypeCodecs.TIMEUUID)),
                     messageId,
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
@@ -543,16 +543,16 @@ public class CassandraMessageIdDAO {
                 .threadId(getThreadIdFromRow(row, messageId))
                 .build())
             .bodyStartOctet(row.get(BODY_START_OCTET, Integer.class))
-            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE))
+            .internalDate(Optional.ofNullable(row.get(INTERNAL_DATE, TypeCodecs.TIMESTAMP))
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
-            .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))
+            .headerContent(Optional.ofNullable(row.get(HEADER_CONTENT, TypeCodecs.TEXT))
                 .map(blobIdFactory::from))
             .build());
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.getUuid(THREAD_ID);
+        UUID threadIdUUID = row.get(THREAD_ID, TypeCodecs.TIMEUUID);
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }

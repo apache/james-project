@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenSetOf;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
@@ -42,11 +44,16 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
 public class CassandraThreadLookupDAO {
+    private static final TypeCodec<Set<String>> SET_OF_STRINGS_CODEC = CodecRegistry.DEFAULT.codecFor(frozenSetOf(TEXT));
+
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insert;
     private final PreparedStatement select;
@@ -75,24 +82,24 @@ public class CassandraThreadLookupDAO {
     public Mono<Void> insert(MessageId messageId, Username username, Set<MimeMessageId> mimeMessageIds) {
         Set<String> mimeMessageIdsString = mimeMessageIds.stream().map(MimeMessageId::getValue).collect(ImmutableSet.toImmutableSet());
         return executor.executeVoid(insert.bind()
-            .setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get())
-            .setString(USERNAME, username.asString())
-            .setSet(MIME_MESSAGE_IDS, mimeMessageIdsString, String.class));
+            .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
+            .set(USERNAME, username.asString(), TypeCodecs.TEXT)
+            .set(MIME_MESSAGE_IDS, mimeMessageIdsString, SET_OF_STRINGS_CODEC));
     }
 
     public Mono<ThreadTablePartitionKey> selectOneRow(MessageId messageId) {
         return executor.executeSingleRow(
-                select.bind().setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
+                select.bind().set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID))
             .map(this::readRow);
     }
 
     public Mono<Void> deleteOneRow(MessageId messageId) {
         return executor.executeVoid(delete.bind()
-            .setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get()));
+            .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID));
     }
 
     private ThreadTablePartitionKey readRow(Row row) {
-        Set<MimeMessageId> mimeMessageIds = row.getSet(MIME_MESSAGE_IDS, String.class)
+        Set<MimeMessageId> mimeMessageIds = row.get(MIME_MESSAGE_IDS, SET_OF_STRINGS_CODEC)
             .stream()
             .map(MimeMessageId::new)
             .collect(ImmutableSet.toImmutableSet());

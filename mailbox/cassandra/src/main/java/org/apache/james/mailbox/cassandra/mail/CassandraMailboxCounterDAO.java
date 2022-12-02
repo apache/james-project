@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.update.Assignment;
 
 import reactor.core.publisher.Mono;
@@ -208,6 +209,6 @@ public class CassandraMailboxCounterDAO {
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {
         return statement.bind()
-            .setUuid(MAILBOX_ID, mailboxId.asUuid());
+            .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID);
     }
 }

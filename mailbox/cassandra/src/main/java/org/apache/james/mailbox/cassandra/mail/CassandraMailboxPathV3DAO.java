@@ -53,6 +53,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -128,9 +129,9 @@ public class CassandraMailboxPathV3DAO {
 
     public Mono<Mailbox> retrieve(MailboxPath mailboxPath, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
         BoundStatement statement = select.bind()
-            .setString(NAMESPACE, mailboxPath.getNamespace())
-            .setString(USER, sanitizeUser(mailboxPath.getUser()))
-            .setString(MAILBOX_NAME, mailboxPath.getName());
+            .set(NAMESPACE, mailboxPath.getNamespace(), TypeCodecs.TEXT)
+            .set(USER, sanitizeUser(mailboxPath.getUser()), TypeCodecs.TEXT)
+            .set(MAILBOX_NAME, mailboxPath.getName(), TypeCodecs.TEXT);
 
         return cassandraAsyncExecutor.executeSingleRow(setExecutionProfileIfNeeded(statement, consistencyChoice))
             .map(row -> fromRow(row, mailboxPath.getUser(), mailboxPath.getNamespace(), mailboxPath.getName()))
@@ -140,8 +141,8 @@ public class CassandraMailboxPathV3DAO {
 
     public Flux<Mailbox> listUserMailboxes(String namespace, Username user, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
         BoundStatementBuilder statementBuilder = selectUser.boundStatementBuilder()
-            .setString(NAMESPACE, namespace)
-            .setString(USER, sanitizeUser(user));
+            .set(NAMESPACE, namespace, TypeCodecs.TEXT)
+            .set(USER, sanitizeUser(user), TypeCodecs.TEXT);
 
         if (consistencyChoice.equals(STRONG)) {
             statementBuilder.setExecutionProfile(lwtProfile);
@@ -194,11 +195,11 @@ public class CassandraMailboxPathV3DAO {
     }
 
     private Mailbox fromRowToCassandraIdAndPath(Row row) {
-        return fromRow(row, Username.of(row.getString(USER)), row.getString(NAMESPACE));
+        return fromRow(row, Username.of(row.get(USER, TypeCodecs.TEXT)), row.get(NAMESPACE, TypeCodecs.TEXT));
     }
 
     private Mailbox fromRow(Row row, Username username, String namespace) {
-        return fromRow(row, username, namespace, row.getString(MAILBOX_NAME));
+        return fromRow(row, username, namespace, row.get(MAILBOX_NAME, TypeCodecs.TEXT));
     }
 
     private Mailbox fromRow(Row row, Username username, String namespace, String name) {
@@ -207,7 +208,7 @@ public class CassandraMailboxPathV3DAO {
                 username,
                 name),
             UidValidity.of(row.getLong(UIDVALIDITY)),
-            CassandraId.of(row.getUuid(MAILBOX_ID)));
+            CassandraId.of(row.get(MAILBOX_ID, TypeCodecs.TIMEUUID)));
     }
 
     public Mono<Boolean> save(Mailbox mailbox) {

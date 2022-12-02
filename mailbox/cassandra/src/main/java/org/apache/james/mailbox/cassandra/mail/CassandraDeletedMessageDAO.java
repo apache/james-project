@@ -44,6 +44,7 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -186,12 +187,12 @@ public class CassandraDeletedMessageDAO {
 
     public Mono<Void> removeAll(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid()));
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID));
     }
 
     public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
         return retrieveResultSetOfDeletedMessage(cassandraId, range)
-            .map(row -> MessageUid.of(row.getLong(UID)));
+            .map(row -> MessageUid.of(row.getLong(0)));
     }
 
     private Flux<Row> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
@@ -212,7 +213,7 @@ public class CassandraDeletedMessageDAO {
     private Flux<Row> retrieveAllDeleted(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
             selectAllUidStatement.bind()
-                .setUuid(MAILBOX_ID, cassandraId.asUuid()));
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID));
     }
 
     private Flux<Row> retrieveOneDeleted(CassandraId cassandraId, MessageUid uid) {

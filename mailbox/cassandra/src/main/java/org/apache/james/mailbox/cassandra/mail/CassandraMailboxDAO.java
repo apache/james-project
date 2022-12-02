@@ -52,6 +52,9 @@ import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -67,6 +70,7 @@ public class CassandraMailboxDAO {
     private final PreparedStatement updateUidValidityStatement;
     private final CqlSession session;
     private final DriverExecutionProfile lwtProfile;
+    private final TypeCodec<UdtValue> mailboxBaseTypeCodec;
 
     @Inject
     public CassandraMailboxDAO(CqlSession session, CassandraTypesProvider typesProvider) {
@@ -80,6 +84,8 @@ public class CassandraMailboxDAO {
         this.listStatement = prepareList();
         this.readStatement = prepareRead();
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
+
+        this.mailboxBaseTypeCodec = CodecRegistry.DEFAULT.codecFor(typesProvider.getDefinedUserType(MAILBOX_BASE.asCql(true)));
     }
 
     private PreparedStatement prepareInsert() {
@@ -148,7 +154,7 @@ public class CassandraMailboxDAO {
 
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
-                .setUuid(ID, mailboxId.asUuid())
+                .set(ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setExecutionProfile(lwtProfile))
             .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
@@ -156,12 +162,12 @@ public class CassandraMailboxDAO {
     private Mono<Mailbox> mailboxFromRow(Row row, CassandraId cassandraId) {
         return sanitizeUidValidity(cassandraId, row.getLong(UIDVALIDITY))
             .map(uidValidity -> {
-                UdtValue mailboxBase = row.getUdtValue(MAILBOX_BASE);
+                UdtValue mailboxBase = row.get(MAILBOX_BASE, mailboxBaseTypeCodec);
                 return new Mailbox(
                     new MailboxPath(
-                        mailboxBase.getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
-                        Username.of(mailboxBase.getString(CassandraMailboxTable.MailboxBase.USER)),
-                        row.getString(NAME)),
+                        mailboxBase.get(CassandraMailboxTable.MailboxBase.NAMESPACE, TypeCodecs.TEXT),
+                        Username.of(mailboxBase.get(CassandraMailboxTable.MailboxBase.USER, TypeCodecs.TEXT)),
+                        row.get(NAME, TypeCodecs.TEXT)),
                     uidValidity,
                     cassandraId);
             });

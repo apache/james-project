@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -152,16 +153,16 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private Mono<Optional<ModSeq>> findHighestModSeq(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
                 select.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                     .setExecutionProfile(lwtProfile))
-            .map(maybeRow -> maybeRow.map(row -> ModSeq.of(row.getLong(NEXT_MODSEQ))));
+            .map(maybeRow -> maybeRow.map(row -> ModSeq.of(row.getLong(0))));
     }
 
     private Mono<ModSeq> tryInsertModSeq(CassandraId mailboxId, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
         return cassandraAsyncExecutor.executeReturnApplied(
                 insert.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                     .setLong(NEXT_MODSEQ, nextModSeq.asLong()))
             .map(success -> successToModSeq(nextModSeq, success))
             .handle(publishIfPresent());
@@ -171,7 +172,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         ModSeq nextModSeq = modSeq.next();
         return cassandraAsyncExecutor.executeReturnApplied(
                 update.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                     .setLong(NEXT_MODSEQ, nextModSeq.asLong())
                     .setLong(MOD_SEQ_CONDITION, modSeq.asLong()))
             .map(success -> successToModSeq(nextModSeq, success))

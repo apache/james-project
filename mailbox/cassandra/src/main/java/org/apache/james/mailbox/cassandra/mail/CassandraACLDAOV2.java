@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,7 +107,7 @@ public class CassandraACLDAOV2 {
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return executor.executeRows(
                 read.bind()
-                    .setUuid(CassandraACLTable.ID, cassandraId.asUuid()))
+                    .set(CassandraACLTable.ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
             .map(Throwing.function(row -> {
                 MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(row.getString(CassandraACLV2Table.KEY));
                 MailboxACL.Rfc4314Rights rights = row.getSet(CassandraACLV2Table.RIGHTS, String.class)
