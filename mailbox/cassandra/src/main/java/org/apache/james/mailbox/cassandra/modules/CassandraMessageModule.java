@@ -132,12 +132,12 @@ public interface CassandraMessageModule {
             .withColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS, frozenMapOf(TEXT, TEXT))
             .withColumn(CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS, frozenMapOf(TEXT, TEXT))
             .withColumn(CassandraMessageV3Table.ATTACHMENTS, listOf(SchemaBuilder.udt(CassandraMessageV3Table.ATTACHMENTS, true))))
-        .type(CassandraMessageV2Table.PROPERTIES)
+        .type(CassandraMessageV2Table.PROPERTIES.asCql(true))
         .statement(statement -> statement
             .withField(CassandraMessageV2Table.Properties.NAMESPACE, TEXT)
             .withField(CassandraMessageV2Table.Properties.NAME, TEXT)
             .withField(CassandraMessageV2Table.Properties.VALUE, TEXT))
-        .type(CassandraMessageV2Table.ATTACHMENTS)
+        .type(CassandraMessageV2Table.ATTACHMENTS.asCql(true))
         .statement(statement -> statement
             .withField(CassandraMessageV2Table.Attachments.ID, TEXT)
             .withField(CassandraMessageV2Table.Attachments.NAME, TEXT)

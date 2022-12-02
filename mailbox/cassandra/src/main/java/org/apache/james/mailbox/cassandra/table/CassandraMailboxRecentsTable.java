@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMailboxRecentsTable {
     String TABLE_NAME = "mailboxRecents";
-    String MAILBOX_ID = "mailboxId";
-    String RECENT_MESSAGE_UID = "recent_mesage_uid";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier RECENT_MESSAGE_UID = CqlIdentifier.fromCql("recent_mesage_uid");
 }

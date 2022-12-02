@@ -19,9 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMailboxCountersTable {
     String TABLE_NAME = "mailboxCounters";
-    String MAILBOX_ID = "mailboxId";
-    String COUNT = "count";
-    String UNSEEN = "unseen";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier COUNT = CqlIdentifier.fromCql("count");
+    CqlIdentifier UNSEEN = CqlIdentifier.fromCql("unseen");
 }

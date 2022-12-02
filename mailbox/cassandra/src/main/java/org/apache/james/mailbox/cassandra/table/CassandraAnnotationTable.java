@@ -19,15 +19,17 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraAnnotationTable {
     String TABLE_NAME = "annotation";
 
-    String MAILBOX_ID = "mailboxId";
-    String KEY = "key";
-    String VALUE = "value";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier KEY = CqlIdentifier.fromCql("key");
+    CqlIdentifier VALUE = CqlIdentifier.fromCql("value");
 
-    String GREATER_BIND_KEY = "greater_bind_key";
-    String LESSER_BIND_KEY = "lesser_bind_key";
+    CqlIdentifier GREATER_BIND_KEY = CqlIdentifier.fromCql("greater_bind_key");
+    CqlIdentifier LESSER_BIND_KEY = CqlIdentifier.fromCql("lesser_bind_key");
 
-    String[] SELECT_FIELDS = { KEY, VALUE };
+    CqlIdentifier[] SELECT_FIELDS = { KEY, VALUE };
 }

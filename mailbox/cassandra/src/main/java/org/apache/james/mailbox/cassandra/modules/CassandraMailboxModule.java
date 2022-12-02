@@ -32,7 +32,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 public interface CassandraMailboxModule {
     CassandraModule MODULE = CassandraModule.builder()
 
-        .type(CassandraMailboxTable.MAILBOX_BASE)
+        .type(CassandraMailboxTable.MAILBOX_BASE.asCql(true))
         .statement(statement -> statement
             .withField(CassandraMailboxTable.MailboxBase.NAMESPACE, TEXT)
             .withField(CassandraMailboxTable.MailboxBase.USER, TEXT))
@@ -44,7 +44,7 @@ public interface CassandraMailboxModule {
             .withLZ4Compression(8, 1))
         .statement(statement -> types -> statement
             .withPartitionKey(CassandraMailboxTable.ID, TIMEUUID)
-            .withColumn(CassandraMailboxTable.MAILBOX_BASE, types.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE))
+            .withColumn(CassandraMailboxTable.MAILBOX_BASE, types.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE.asCql(true)))
             .withColumn(CassandraMailboxTable.NAME, TEXT)
             .withColumn(CassandraMailboxTable.UIDVALIDITY, BIGINT))
 

@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMaxQuota {
     String TABLE_NAME = "maxQuota";
 
-    String QUOTA_ROOT = "quotaRoot";
-    String MESSAGE_COUNT = "maxMessageCount";
-    String STORAGE = "maxStorage";
+    CqlIdentifier QUOTA_ROOT = CqlIdentifier.fromCql("quotaRoot");
+    CqlIdentifier MESSAGE_COUNT = CqlIdentifier.fromCql("maxMessageCount");
+    CqlIdentifier STORAGE = CqlIdentifier.fromCql("maxStorage");
 }

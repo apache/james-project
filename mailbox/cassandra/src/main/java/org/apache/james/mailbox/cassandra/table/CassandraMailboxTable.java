@@ -19,17 +19,18 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraMailboxTable {
     String TABLE_NAME = "mailbox";
-    String ID = "id";
-    String MAILBOX_BASE = "mailboxbase";
-    String UIDVALIDITY = "uidvalidity";
-    String NAME = "name";
-    String[] FIELDS = { ID, MAILBOX_BASE, UIDVALIDITY, NAME };
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier MAILBOX_BASE = CqlIdentifier.fromCql("mailboxbase");
+    CqlIdentifier UIDVALIDITY = CqlIdentifier.fromCql("uidvalidity");
+    CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+    CqlIdentifier[] FIELDS = { ID, MAILBOX_BASE, UIDVALIDITY, NAME };
 
     interface MailboxBase {
-        String USER = "user";
-        String NAMESPACE = "namespace";
+        CqlIdentifier USER = CqlIdentifier.fromCql("user");
+        CqlIdentifier NAMESPACE = CqlIdentifier.fromCql("namespace");
     }
 }

@@ -69,6 +69,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
@@ -208,7 +209,7 @@ public class CassandraMessageDAO {
     }
 
     private UdtValue toUDT(MessageAttachmentMetadata messageAttachment) {
-        UdtValue result = typesProvider.getDefinedUserType(ATTACHMENTS)
+        UdtValue result = typesProvider.getDefinedUserType(ATTACHMENTS.asCql(true))
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
             .setBoolean(Attachments.IS_INLINE, messageAttachment.isInline());
@@ -228,7 +229,7 @@ public class CassandraMessageDAO {
         return message.getProperties()
             .toProperties()
             .stream()
-            .map(property -> typesProvider.getDefinedUserType(PROPERTIES)
+            .map(property -> typesProvider.getDefinedUserType(PROPERTIES.asCql(true))
                 .newValue()
                 .setString(Properties.NAMESPACE, property.getNamespace())
                 .setString(Properties.NAME, property.getLocalName())
@@ -346,7 +347,7 @@ public class CassandraMessageDAO {
         return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId, storagePolicy));
     }
 
-    private BlobId retrieveBlobId(String field, Row row) {
+    private BlobId retrieveBlobId(CqlIdentifier field, Row row) {
         return blobIdFactory.from(row.getString(field));
     }
 }

@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMessageModseqTable {
     String TABLE_NAME = "modseq";
-    String MAILBOX_ID = "mailboxId";
-    String NEXT_MODSEQ = "nextModseq";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier NEXT_MODSEQ = CqlIdentifier.fromCql("nextModseq");
 }

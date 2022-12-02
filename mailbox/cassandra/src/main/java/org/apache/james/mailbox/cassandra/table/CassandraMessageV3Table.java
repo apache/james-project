@@ -19,45 +19,38 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import java.util.Locale;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraMessageV3Table {
-
     String TABLE_NAME = "messageV3";
-    String INTERNAL_DATE = "internalDate";
-    String INTERNAL_DATE_LOWERCASE = INTERNAL_DATE.toLowerCase(Locale.US);
-    String BODY_START_OCTET = "bodyStartOctet";
-    String BODY_START_OCTET_LOWERCASE = BODY_START_OCTET.toLowerCase(Locale.US);
-    String FULL_CONTENT_OCTETS = "fullContentOctets";
-    String FULL_CONTENT_OCTETS_LOWERCASE = FULL_CONTENT_OCTETS.toLowerCase(Locale.US);
-    String BODY_OCTECTS = "bodyOctets";
-    String TEXTUAL_LINE_COUNT = "textualLineCount";
-    String TEXTUAL_LINE_COUNT_LOWERCASE = TEXTUAL_LINE_COUNT.toLowerCase(Locale.US);
-    String BODY_CONTENT = "bodyContent";
-    String BODY_CONTENT_LOWERCASE = BODY_CONTENT.toLowerCase(Locale.US);
-    String HEADER_CONTENT = "headerContent";
-    String HEADER_CONTENT_LOWERCASE = HEADER_CONTENT.toLowerCase(Locale.US);
-    String ATTACHMENTS = "attachments";
+
+    CqlIdentifier INTERNAL_DATE = CqlIdentifier.fromCql("internalDate");
+    CqlIdentifier BODY_START_OCTET = CqlIdentifier.fromCql("bodyStartOctet");
+    CqlIdentifier FULL_CONTENT_OCTETS = CqlIdentifier.fromCql("fullContentOctets");
+    CqlIdentifier BODY_OCTECTS = CqlIdentifier.fromCql("bodyOctets");
+    CqlIdentifier TEXTUAL_LINE_COUNT = CqlIdentifier.fromCql("textualLineCount");
+    CqlIdentifier BODY_CONTENT = CqlIdentifier.fromCql("bodyContent");
+    CqlIdentifier HEADER_CONTENT = CqlIdentifier.fromCql("headerContent");
+    CqlIdentifier ATTACHMENTS = CqlIdentifier.fromCql("attachments");
 
     interface Properties {
-        String MEDIA_TYPE = "mediaType";
-        String SUB_TYPE = "subType";
-        String CONTENT_ID = "contentId";
-        String CONTENT_LOCATION = "contentLocation";
-        String CONTENT_DESCRIPTION = "contentDescription";
-        String CONTENT_TRANSFER_ENCODING = "contentTransferEncoding";
-        String CONTENT_DISPOSITION_TYPE = "contentDispositionType";
-        String CONTENT_DISPOSITION_PARAMETERS = "contentDispositionParameters";
-        String CONTENT_TYPE_PARAMETERS = "contentTypeParameters";
-        String CONTENT_MD5 = "contentMd5";
-        String CONTENT_LANGUAGE = "contentLanguage";
+        CqlIdentifier MEDIA_TYPE = CqlIdentifier.fromCql("mediaType");
+        CqlIdentifier SUB_TYPE = CqlIdentifier.fromCql("subType");
+        CqlIdentifier CONTENT_ID = CqlIdentifier.fromCql("contentId");
+        CqlIdentifier CONTENT_LOCATION = CqlIdentifier.fromCql("contentLocation");
+        CqlIdentifier CONTENT_DESCRIPTION = CqlIdentifier.fromCql("contentDescription");
+        CqlIdentifier CONTENT_TRANSFER_ENCODING = CqlIdentifier.fromCql("contentTransferEncoding");
+        CqlIdentifier CONTENT_DISPOSITION_TYPE = CqlIdentifier.fromCql("contentDispositionType");
+        CqlIdentifier CONTENT_DISPOSITION_PARAMETERS = CqlIdentifier.fromCql("contentDispositionParameters");
+        CqlIdentifier CONTENT_TYPE_PARAMETERS = CqlIdentifier.fromCql("contentTypeParameters");
+        CqlIdentifier CONTENT_MD5 = CqlIdentifier.fromCql("contentMd5");
+        CqlIdentifier CONTENT_LANGUAGE = CqlIdentifier.fromCql("contentLanguage");
     }
 
     interface Attachments {
-        String ID = "id";
-        String NAME = "name";
-        String CID = "cid";
-        String IS_INLINE = "isInline";
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+        CqlIdentifier CID = CqlIdentifier.fromCql("cid");
+        CqlIdentifier IS_INLINE = CqlIdentifier.fromCql("isInline");
     }
-
 }

@@ -19,22 +19,13 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
-
-import java.util.Locale;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface MessageIdToImapUid {
 
     String TABLE_NAME = "imapUidTable";
 
-    String MOD_SEQ = "modSeq";
-    String MOD_SEQ_LOWERCASE = MOD_SEQ.toLowerCase(Locale.US);
+    CqlIdentifier MOD_SEQ = CqlIdentifier.fromCql("modSeq");
 
-    String THREAD_ID = "threadId";
-    String THREAD_ID_LOWERCASE = THREAD_ID.toLowerCase(Locale.US);
-
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, THREAD_ID, MOD_SEQ,
-            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };
+    CqlIdentifier THREAD_ID = CqlIdentifier.fromCql("threadId");
 }

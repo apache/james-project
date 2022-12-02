@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraApplicableFlagTable {
 
     String TABLE_NAME = "applicableFlag";
-    String MAILBOX_ID = "mailboxId";
-
-    String[] FIELDS = { MAILBOX_ID, Flag.USER_FLAGS };
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
 }

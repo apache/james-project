@@ -19,9 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraFirstUnseenTable {
     String TABLE_NAME = "firstUnseen";
 
-    String MAILBOX_ID = "mailboxId";
-    String UID = "uid";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier UID = CqlIdentifier.fromCql("uid");
 }

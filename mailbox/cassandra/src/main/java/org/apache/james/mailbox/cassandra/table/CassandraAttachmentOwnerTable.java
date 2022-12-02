@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraAttachmentOwnerTable {
 
     String TABLE_NAME = "attachmentOwners";
-    String ID = "id";
-    String OWNER = "owner";
-    String[] FIELDS = { ID, OWNER };
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier OWNER = CqlIdentifier.fromCql("owner");
 
 }

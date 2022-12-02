@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraACLTable {
     String TABLE_NAME = "acl";
 
-    String ID = "id";
-    String ACL = "acl";
-    String VERSION = "version";
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier ACL = CqlIdentifier.fromCql("acl");
+    CqlIdentifier VERSION = CqlIdentifier.fromCql("version");
 }
