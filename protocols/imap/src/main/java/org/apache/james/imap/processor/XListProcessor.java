@@ -64,7 +64,7 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
 
     @Override
     protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability,
-                                                 String name, char hierarchyDelimiter, MailboxType type) {
+                                                 String name, char hierarchyDelimiter, MailboxType type, boolean isSubscribed) {
         return new XListResponse(children, selectability, name, hierarchyDelimiter, type);
     }
 

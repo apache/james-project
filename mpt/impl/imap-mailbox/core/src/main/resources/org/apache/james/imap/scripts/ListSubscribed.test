@@ -62,6 +62,16 @@ S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
 }
 S: A13 OK LIST completed.
 
+C: A08 LIST "" "*" RETURN (SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+S: \* LIST \(\\HasNoChildren\) \"\.\" "INBOX"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "listtest.subfolder"
+S: \* LIST \(\\HasChildren\) \"\.\" "listtest1"
+S: \* LIST \(\\HasNoChildren\) \"\.\" "listtest1.subfolder1"
+}
+S: A08 OK LIST completed.
+
 C: A14 UNSUBSCRIBE listtest.subfolder
 S: A14 OK UNSUBSCRIBE completed.
 C: A15 UNSUBSCRIBE listtest
