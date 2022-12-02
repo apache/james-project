@@ -19,11 +19,13 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraCurrentQuota {
 
     String TABLE_NAME = "currentQuota";
 
-    String QUOTA_ROOT = "quotaRoot";
-    String MESSAGE_COUNT = "messageCount";
-    String STORAGE = "storage";
+    CqlIdentifier QUOTA_ROOT = CqlIdentifier.fromCql("quotaRoot");
+    CqlIdentifier MESSAGE_COUNT = CqlIdentifier.fromCql("messageCount");
+    CqlIdentifier STORAGE = CqlIdentifier.fromCql("storage");
 }

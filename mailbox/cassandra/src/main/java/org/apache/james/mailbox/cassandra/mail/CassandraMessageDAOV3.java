@@ -35,16 +35,11 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.ATTACHMENTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE;
@@ -58,7 +53,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.P
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.SUB_TYPE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT_LOWERCASE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,6 +85,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
@@ -100,6 +95,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -138,7 +134,7 @@ public class CassandraMessageDAOV3 {
         this.select = prepareSelect(session);
         this.listBlobs = prepareSelectBlobs(session);
         this.cidParser = Cid.parser().relaxed();
-        this.attachmentsType = typesProvider.getDefinedUserType(ATTACHMENTS);
+        this.attachmentsType = typesProvider.getDefinedUserType(ATTACHMENTS.asCql(true));
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -348,9 +344,9 @@ public class CassandraMessageDAOV3 {
             .map(content ->
                 new MessageRepresentation(
                     cassandraMessageId,
-                    Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE)).map(Date::from).orElse(null),
-                    row.getLong(FULL_CONTENT_OCTETS_LOWERCASE),
-                    row.getInt(BODY_START_OCTET_LOWERCASE),
+                    Optional.ofNullable(row.get(INTERNAL_DATE, TypeCodecs.TIMESTAMP)).map(Date::from).orElse(null),
+                    row.getLong(FULL_CONTENT_OCTETS),
+                    row.getInt(BODY_START_OCTET),
                     content,
                     getProperties(row),
                     getAttachments(row).collect(ImmutableList.toImmutableList()),
@@ -371,7 +367,7 @@ public class CassandraMessageDAOV3 {
         property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS_CODEC));
         property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRINGS_CODEC));
         property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRINGS_CODEC));
-        property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT_LOWERCASE));
+        property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property.build();
     }
 
@@ -422,14 +418,14 @@ public class CassandraMessageDAOV3 {
         return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId, storagePolicy));
     }
 
-    private BlobId retrieveBlobId(String field, Row row) {
-        return blobIdFactory.from(row.getString(field));
+    private BlobId retrieveBlobId(CqlIdentifier field, Row row) {
+        return blobIdFactory.from(row.get(field, TypeCodecs.TEXT));
     }
 
     Flux<BlobId> listBlobs() {
         return cassandraAsyncExecutor.executeRows(listBlobs.bind())
             .flatMapIterable(row -> ImmutableList.of(
-                blobIdFactory.from(row.getString(HEADER_CONTENT_LOWERCASE)),
-                blobIdFactory.from(row.getString(BODY_CONTENT_LOWERCASE))));
+                blobIdFactory.from(row.get(HEADER_CONTENT, TypeCodecs.TEXT)),
+                blobIdFactory.from(row.get(BODY_CONTENT, TypeCodecs.TEXT))));
     }
 }

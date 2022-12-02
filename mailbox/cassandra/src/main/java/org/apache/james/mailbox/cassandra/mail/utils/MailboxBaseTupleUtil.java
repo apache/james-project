@@ -33,7 +33,7 @@ public class MailboxBaseTupleUtil {
     }
 
     public UdtValue createMailboxBaseUDT(String namespace, Username user) {
-        return typesProvider.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE)
+        return typesProvider.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE.asCql(true))
             .newValue()
             .setString(CassandraMailboxTable.MailboxBase.NAMESPACE, namespace)
             .setString(CassandraMailboxTable.MailboxBase.USER, user.asString());

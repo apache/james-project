@@ -19,13 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.USERNAME;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraThreadLookupTable {
     String TABLE_NAME = "threadLookupTable";
 
-    String MIME_MESSAGE_IDS = "mimeMessageIds";
-
-    String[] FIELDS = {MESSAGE_ID, USERNAME, MIME_MESSAGE_IDS};
+    CqlIdentifier MIME_MESSAGE_IDS = CqlIdentifier.fromCql("mimeMessageIds");
 }

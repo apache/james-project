@@ -28,17 +28,11 @@ import static com.datastax.oss.driver.api.querybuilder.update.Assignment.setColu
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.Flag.ANSWERED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DELETED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DRAFT;
@@ -48,10 +42,8 @@ import static org.apache.james.mailbox.cassandra.table.Flag.SEEN;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
-import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID;
-import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID_LOWERCASE;
 
 import java.time.Duration;
 import java.util.Date;
@@ -226,7 +218,7 @@ public class CassandraMessageIdToImapUidDAO {
     private PreparedStatement prepareSelectAll() {
         return session.prepare(selectFrom(TABLE_NAME)
             .all()
-            .where(column(MESSAGE_ID_LOWERCASE).isEqualTo(bindMarker(MESSAGE_ID_LOWERCASE)))
+            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)))
             .build());
     }
 
@@ -237,8 +229,8 @@ public class CassandraMessageIdToImapUidDAO {
     private PreparedStatement prepareSelect() {
         return session.prepare(selectFrom(TABLE_NAME)
             .all()
-            .where(column(MESSAGE_ID_LOWERCASE).isEqualTo(bindMarker(MESSAGE_ID_LOWERCASE)),
-                column(MAILBOX_ID_LOWERCASE).isEqualTo(bindMarker(MAILBOX_ID_LOWERCASE)))
+            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
+                column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
             .build());
     }
 
@@ -391,28 +383,28 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private CassandraMessageMetadata toComposedMessageIdWithMetadata(Row row) {
-        final CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID_LOWERCASE));
+        final CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
         return CassandraMessageMetadata.builder()
             .ids(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
-                    CassandraId.of(row.getUuid(MAILBOX_ID_LOWERCASE)),
+                    CassandraId.of(row.getUuid(MAILBOX_ID)),
                     messageId,
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
                 .threadId(getThreadIdFromRow(row, messageId))
-                .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
+                .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
                 .build())
-            .bodyStartOctet(row.get(BODY_START_OCTET_LOWERCASE, Integer.class))
-            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE_LOWERCASE))
+            .bodyStartOctet(row.get(BODY_START_OCTET, Integer.class))
+            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE))
                 .map(Date::from))
-            .size(row.get(FULL_CONTENT_OCTETS_LOWERCASE, Long.class))
-            .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT_LOWERCASE))
+            .size(row.get(FULL_CONTENT_OCTETS, Long.class))
+            .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))
                 .map(blobIdFactory::from))
             .build();
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.getUuid(THREAD_ID_LOWERCASE);
+        UUID threadIdUUID = row.getUuid(THREAD_ID);
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }
@@ -422,9 +414,9 @@ public class CassandraMessageIdToImapUidDAO {
     private BoundStatement selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return mailboxId
             .map(cassandraId -> select.bind()
-                .setUuid(MESSAGE_ID_LOWERCASE, messageId.get())
-                .setUuid(MAILBOX_ID_LOWERCASE, cassandraId.asUuid()))
-            .orElseGet(() -> selectAll.bind().setUuid(MESSAGE_ID_LOWERCASE, messageId.get()));
+                .setUuid(MESSAGE_ID, messageId.get())
+                .setUuid(MAILBOX_ID, cassandraId.asUuid()))
+            .orElseGet(() -> selectAll.bind().setUuid(MESSAGE_ID, messageId.get()));
     }
 
     private BoundStatement setExecutionProfileIfNeeded(BoundStatement statement, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {

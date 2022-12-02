@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraAttachmentMessageIdTable {
 
     String TABLE_NAME = "attachmentMessageId";
-    String ATTACHMENT_ID_AS_UUID = "attachmentIdAsUUID";
-    String ATTACHMENT_ID = "attachmentId";
-    String MESSAGE_ID = "messageId";
-    String[] FIELDS = { ATTACHMENT_ID_AS_UUID, ATTACHMENT_ID, MESSAGE_ID };
+    CqlIdentifier ATTACHMENT_ID_AS_UUID = CqlIdentifier.fromCql("attachmentIdAsUUID");
+    CqlIdentifier ATTACHMENT_ID = CqlIdentifier.fromCql("attachmentId");
+    CqlIdentifier MESSAGE_ID = CqlIdentifier.fromCql("messageId");
+    CqlIdentifier[] FIELDS = { ATTACHMENT_ID_AS_UUID, ATTACHMENT_ID, MESSAGE_ID };
 
 }

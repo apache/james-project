@@ -18,41 +18,38 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.table;
 
-import java.util.Locale;
-
 import javax.mail.Flags;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.google.common.collect.ImmutableMap;
 
 public interface Flag {
+    CqlIdentifier ANSWERED = CqlIdentifier.fromCql("flagAnswered");
+    CqlIdentifier DELETED = CqlIdentifier.fromCql("flagDeleted");
+    CqlIdentifier DRAFT = CqlIdentifier.fromCql("flagDraft");
+    CqlIdentifier RECENT = CqlIdentifier.fromCql("flagRecent");
+    CqlIdentifier SEEN = CqlIdentifier.fromCql("flagSeen");
+    CqlIdentifier FLAGGED = CqlIdentifier.fromCql("flagFlagged");
+    CqlIdentifier USER = CqlIdentifier.fromCql("flagUser");
+    CqlIdentifier USER_FLAGS = CqlIdentifier.fromCql("userFlags");
 
-    String ANSWERED = "flagAnswered";
-    String DELETED = "flagDeleted";
-    String DRAFT = "flagDraft";
-    String RECENT = "flagRecent";
-    String SEEN = "flagSeen";
-    String FLAGGED = "flagFlagged";
-    String USER = "flagUser";
-    String USER_FLAGS = "userFlags";
-    String USER_FLAGS_LOWERCASE = USER_FLAGS.toLowerCase(Locale.US);
-
-    String[] ALL_LOWERCASE = {
-        ANSWERED.toLowerCase(Locale.US),
-        DELETED.toLowerCase(Locale.US),
-        DRAFT.toLowerCase(Locale.US),
-        RECENT.toLowerCase(Locale.US),
-        SEEN.toLowerCase(Locale.US),
-        FLAGGED.toLowerCase(Locale.US),
-        USER.toLowerCase(Locale.US)
+    CqlIdentifier[] ALL_LOWERCASE = {
+        ANSWERED,
+        DELETED,
+        DRAFT,
+        RECENT,
+        SEEN,
+        FLAGGED,
+        USER
     };
 
-    ImmutableMap<String, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<String, Flags.Flag>builder()
-        .put(ANSWERED.toLowerCase(Locale.US), Flags.Flag.ANSWERED)
-        .put(DELETED.toLowerCase(Locale.US), Flags.Flag.DELETED)
-        .put(DRAFT.toLowerCase(Locale.US), Flags.Flag.DRAFT)
-        .put(RECENT.toLowerCase(Locale.US), Flags.Flag.RECENT)
-        .put(SEEN.toLowerCase(Locale.US), Flags.Flag.SEEN)
-        .put(FLAGGED.toLowerCase(Locale.US), Flags.Flag.FLAGGED)
-        .put(USER.toLowerCase(Locale.US), Flags.Flag.USER)
+    ImmutableMap<CqlIdentifier, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<CqlIdentifier, Flags.Flag>builder()
+        .put(ANSWERED, Flags.Flag.ANSWERED)
+        .put(DELETED, Flags.Flag.DELETED)
+        .put(DRAFT, Flags.Flag.DRAFT)
+        .put(RECENT, Flags.Flag.RECENT)
+        .put(SEEN, Flags.Flag.SEEN)
+        .put(FLAGGED, Flags.Flag.FLAGGED)
+        .put(USER, Flags.Flag.USER)
         .build();
 }

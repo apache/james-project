@@ -19,13 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import java.util.Locale;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraMessageIds {
-
-    String MESSAGE_ID = "messageId";
-    String MESSAGE_ID_LOWERCASE = MESSAGE_ID.toLowerCase(Locale.US);
-    String MAILBOX_ID = "mailboxId";
-    String MAILBOX_ID_LOWERCASE = MAILBOX_ID.toLowerCase(Locale.US);
-    String IMAP_UID = "uid";
+    CqlIdentifier MESSAGE_ID = CqlIdentifier.fromCql("messageId");
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier IMAP_UID = CqlIdentifier.fromCql("uid");
 }

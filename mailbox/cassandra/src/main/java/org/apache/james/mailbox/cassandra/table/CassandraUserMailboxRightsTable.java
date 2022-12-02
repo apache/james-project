@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraUserMailboxRightsTable {
     String TABLE_NAME = "UserMailboxACL";
 
-    String USER_NAME = "userName";
-    String MAILBOX_ID = "mailboxid";
-    String RIGHTS = "rights";
+    CqlIdentifier USER_NAME = CqlIdentifier.fromCql("userName");
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxid");
+    CqlIdentifier RIGHTS = CqlIdentifier.fromCql("rights");
 }

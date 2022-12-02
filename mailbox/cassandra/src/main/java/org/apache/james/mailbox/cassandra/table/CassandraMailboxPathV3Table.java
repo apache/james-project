@@ -19,19 +19,21 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMailboxPathV3Table {
 
     String TABLE_NAME = "mailboxPathV3";
 
-    String NAMESPACE = "namespace";
+    CqlIdentifier NAMESPACE = CqlIdentifier.fromCql("namespace");
 
-    String USER = "user";
+    CqlIdentifier USER = CqlIdentifier.fromCql("user");
 
-    String MAILBOX_NAME = "mailboxName";
+    CqlIdentifier MAILBOX_NAME = CqlIdentifier.fromCql("mailboxName");
 
-    String MAILBOX_ID = "mailboxId";
-    String UIDVALIDITY = "uidvalidity";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier UIDVALIDITY = CqlIdentifier.fromCql("uidvalidity");
 
-    String[] FIELDS = { NAMESPACE, USER, MAILBOX_NAME, MAILBOX_ID, UIDVALIDITY};
+    CqlIdentifier[] FIELDS = { NAMESPACE, USER, MAILBOX_NAME, MAILBOX_ID, UIDVALIDITY};
 
 }

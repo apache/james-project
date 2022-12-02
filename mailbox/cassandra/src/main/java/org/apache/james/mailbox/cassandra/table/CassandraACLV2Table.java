@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraACLV2Table {
     String TABLE_NAME = "aclv2";
 
-    String ID = "id";
-    String KEY = "key";
-    String RIGHTS = "rights";
+    CqlIdentifier ID = CqlIdentifier.fromCql("id");
+    CqlIdentifier KEY = CqlIdentifier.fromCql("key");
+    CqlIdentifier RIGHTS = CqlIdentifier.fromCql("rights");
 }

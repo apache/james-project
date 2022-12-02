@@ -36,7 +36,6 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -122,7 +121,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData metadata = ComposedMessageIdWithMetaData.builder()
             .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
-            .flags(new Flags(Flag.ANSWERED))
+            .flags(new Flags(Flags.Flag.ANSWERED))
             .modSeq(ModSeq.of(2))
             .threadId(ThreadId.fromBaseMessageId(messageId))
             .build();
@@ -273,7 +272,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.ANSWERED))
+                .flags(new Flags(Flags.Flag.ANSWERED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -315,7 +314,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.DELETED))
+                .flags(new Flags(Flags.Flag.DELETED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -357,7 +356,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.DRAFT))
+                .flags(new Flags(Flags.Flag.DRAFT))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -399,7 +398,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.FLAGGED))
+                .flags(new Flags(Flags.Flag.FLAGGED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -441,7 +440,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.RECENT))
+                .flags(new Flags(Flags.Flag.RECENT))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -483,7 +482,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.SEEN))
+                .flags(new Flags(Flags.Flag.SEEN))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -525,7 +524,7 @@ class CassandraMessageIdDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.USER))
+                .flags(new Flags(Flags.Flag.USER))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();

@@ -23,7 +23,6 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
@@ -35,6 +34,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.table.Flag;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -58,7 +58,7 @@ public class CassandraApplicableFlagDAO {
 
     private PreparedStatement prepareSelect(CqlSession session) {
         return session.prepare(selectFrom(TABLE_NAME)
-            .columns(FIELDS)
+            .columns(Flag.USER_FLAGS)
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
             .build());
     }

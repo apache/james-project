@@ -19,18 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraMessageIdTable {
-
     String TABLE_NAME = "messageIdTable";
 
-    String MOD_SEQ = "modSeq";
+    CqlIdentifier MOD_SEQ = CqlIdentifier.fromCql("modSeq");
 
-    String THREAD_ID = "threadId";
-
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, THREAD_ID, MOD_SEQ,
-            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS};
+    CqlIdentifier THREAD_ID = CqlIdentifier.fromCql("threadId");
 }

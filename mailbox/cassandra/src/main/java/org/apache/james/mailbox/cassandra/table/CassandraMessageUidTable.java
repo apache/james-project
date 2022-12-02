@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMessageUidTable {
     String TABLE_NAME = "messageCounter";
-    String MAILBOX_ID = "mailboxId";
-    String NEXT_UID = "nextUid";
+    CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
+    CqlIdentifier NEXT_UID = CqlIdentifier.fromCql("nextUid");
 }

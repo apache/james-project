@@ -19,30 +19,32 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraMessageV2Table {
 
     String TABLE_NAME = "messageV2";
-    String INTERNAL_DATE = "internalDate";
-    String BODY_START_OCTET = "bodyStartOctet";
-    String FULL_CONTENT_OCTETS = "fullContentOctets";
-    String BODY_OCTECTS = "bodyOctets";
-    String TEXTUAL_LINE_COUNT = "textualLineCount";
-    String BODY_CONTENT = "bodyContent";
-    String HEADER_CONTENT = "headerContent";
-    String PROPERTIES = "properties";
-    String ATTACHMENTS = "attachments";
+    CqlIdentifier INTERNAL_DATE = CqlIdentifier.fromCql("internalDate");
+    CqlIdentifier BODY_START_OCTET = CqlIdentifier.fromCql("bodyStartOctet");
+    CqlIdentifier FULL_CONTENT_OCTETS = CqlIdentifier.fromCql("fullContentOctets");
+    CqlIdentifier BODY_OCTECTS = CqlIdentifier.fromCql("bodyOctets");
+    CqlIdentifier TEXTUAL_LINE_COUNT = CqlIdentifier.fromCql("textualLineCount");
+    CqlIdentifier BODY_CONTENT = CqlIdentifier.fromCql("bodyContent");
+    CqlIdentifier HEADER_CONTENT = CqlIdentifier.fromCql("headerContent");
+    CqlIdentifier PROPERTIES = CqlIdentifier.fromCql("properties");
+    CqlIdentifier ATTACHMENTS = CqlIdentifier.fromCql("attachments");
 
     interface Properties {
-        String NAMESPACE = "namespace";
-        String NAME = "name";
-        String VALUE = "value";
+        CqlIdentifier NAMESPACE = CqlIdentifier.fromCql("namespace");
+        CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+        CqlIdentifier VALUE = CqlIdentifier.fromCql("value");
     }
 
     interface Attachments {
-        String ID = "id";
-        String NAME = "name";
-        String CID = "cid";
-        String IS_INLINE = "isInline";
+        CqlIdentifier ID = CqlIdentifier.fromCql("id");
+        CqlIdentifier NAME = CqlIdentifier.fromCql("name");
+        CqlIdentifier CID = CqlIdentifier.fromCql("cid");
+        CqlIdentifier IS_INLINE = CqlIdentifier.fromCql("isInline");
     }
 
 }

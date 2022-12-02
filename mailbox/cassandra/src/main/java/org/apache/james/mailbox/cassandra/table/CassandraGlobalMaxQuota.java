@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+
 public interface CassandraGlobalMaxQuota {
     String TABLE_NAME = "defaultMaxQuota2";
 
-    String KEY = "key";
+    CqlIdentifier KEY = CqlIdentifier.fromCql("key");
     String VALUE = "value";
 
-    String MESSAGE = "message";
-    String STORAGE = "storage";
+    CqlIdentifier MESSAGE = CqlIdentifier.fromCql("message");
+    CqlIdentifier STORAGE = CqlIdentifier.fromCql("storage");
 }
