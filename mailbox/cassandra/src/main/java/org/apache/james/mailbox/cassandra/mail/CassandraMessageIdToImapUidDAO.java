@@ -75,6 +75,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
@@ -253,8 +254,8 @@ public class CassandraMessageIdToImapUidDAO {
         }
 
         return cassandraAsyncExecutor.executeVoid(statementBuilder
-            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .set(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get(), TypeCodecs.TIMEUUID)
+            .set(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, composedMessageId.getUid().asLong())
             .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
             .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
@@ -276,8 +277,8 @@ public class CassandraMessageIdToImapUidDAO {
         ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
         Flags flags = metadata.getComposedMessageId().getFlags();
         return cassandraAsyncExecutor.executeVoid(insertForced.bind()
-            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .set(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get(), TypeCodecs.TIMEUUID)
+            .set(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, composedMessageId.getUid().asLong())
             .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
             .setBoolean(ANSWERED, flags.contains(Flag.ANSWERED))
@@ -395,7 +396,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
                 .build())
             .bodyStartOctet(row.get(BODY_START_OCTET, Integer.class))
-            .internalDate(Optional.ofNullable(row.getInstant(INTERNAL_DATE))
+            .internalDate(Optional.ofNullable(row.get(INTERNAL_DATE, TypeCodecs.TIMESTAMP))
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))
@@ -404,7 +405,7 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.getUuid(THREAD_ID);
+        UUID threadIdUUID = row.get(THREAD_ID, TypeCodecs.TIMEUUID);
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }
@@ -441,8 +442,8 @@ public class CassandraMessageIdToImapUidDAO {
         }
 
         return cassandraAsyncExecutor.executeVoid(statementBuilder
-            .setUuid(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-            .setUuid(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .set(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get(), TypeCodecs.TIMEUUID)
+            .set(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid(), TypeCodecs.TIMEUUID)
             .setLong(IMAP_UID, composedMessageId.getUid().asLong())
             .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
             .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())

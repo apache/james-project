@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.mail.model.Subject;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 import reactor.core.publisher.Flux;
 
@@ -85,19 +86,19 @@ public class CassandraThreadDAO {
     public Flux<Void> insertSome(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
         return Flux.fromIterable(mimeMessageIds)
             .flatMap(mimeMessageId -> executor.executeVoid(insertOne.bind()
-                .setString(USERNAME, username.asString())
-                .setString(MIME_MESSAGE_ID, mimeMessageId.getValue())
-                .setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get())
-                .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
-                .setString(BASE_SUBJECT, baseSubject.map(Subject::getValue).orElse(null))), DEFAULT_CONCURRENCY);
+                .set(USERNAME, username.asString(), TypeCodecs.TEXT)
+                .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT)
+                .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
+                .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
+                .set(BASE_SUBJECT, baseSubject.map(Subject::getValue).orElse(null), TypeCodecs.TEXT)), DEFAULT_CONCURRENCY);
     }
 
     public Flux<Pair<Optional<Subject>, ThreadId>> selectSome(Username username, Set<MimeMessageId> mimeMessageIds) {
         return Flux.fromIterable(mimeMessageIds)
             .flatMap(mimeMessageId -> executor
                 .executeSingleRow(selectOne.bind()
-                    .setString(USERNAME, username.asString())
-                    .setString(MIME_MESSAGE_ID, mimeMessageId.getValue()))
+                    .set(USERNAME, username.asString(), TypeCodecs.TEXT)
+                    .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT))
                 .map(this::readRow), DEFAULT_CONCURRENCY)
             .distinct();
     }
@@ -105,8 +106,8 @@ public class CassandraThreadDAO {
     public Flux<Void> deleteSome(Username username, Set<MimeMessageId> mimeMessageIds) {
         return Flux.fromIterable(mimeMessageIds)
             .flatMap(mimeMessageId -> executor.executeVoid(deleteOne.bind()
-                .setString(USERNAME, username.asString())
-                .setString(MIME_MESSAGE_ID, mimeMessageId.getValue())));
+                .set(USERNAME, username.asString(), TypeCodecs.TEXT)
+                .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT)));
     }
 
     public Pair<Optional<Subject>, ThreadId> readRow(Row row) {

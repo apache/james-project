@@ -43,6 +43,7 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -177,8 +178,8 @@ public class CassandraFirstUnseenDAO {
     public Flux<MessageUid> listUnseen(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
                 listStatement.bind()
-                    .setUuid(MAILBOX_ID, cassandraId.asUuid()))
-            .map(row -> MessageUid.of(row.getLong(UID)));
+                    .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+            .map(row -> MessageUid.of(row.getLong(0)));
     }
 
 }

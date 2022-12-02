@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -165,9 +166,9 @@ public class CassandraUidProvider implements UidProvider {
     private Mono<MessageUid> findHighestUid(CassandraId mailboxId) {
         return executor.executeSingleRow(
                 selectStatement.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                     .setExecutionProfile(lwtProfile))
-            .map(row -> MessageUid.of(row.getLong(NEXT_UID)));
+            .map(row -> MessageUid.of(row.getLong(0)));
     }
 
     private Mono<MessageUid> tryUpdateUid(CassandraId mailboxId, MessageUid uid) {
@@ -178,7 +179,7 @@ public class CassandraUidProvider implements UidProvider {
         MessageUid nextUid = uid.next(count);
         return executor.executeReturnApplied(
                 updateStatement.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                     .setLong(CONDITION, uid.asLong())
                     .setLong(NEXT_UID, nextUid.asLong()))
             .map(success -> successToUid(nextUid, success))
