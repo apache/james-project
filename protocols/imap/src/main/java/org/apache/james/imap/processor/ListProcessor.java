@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.message.request.ListRequest.ListSelectOption.RECURSIVEMATCH;
+import static org.apache.james.imap.message.request.ListRequest.ListSelectOption.SPECIAL_USE;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
 import java.util.EnumSet;
@@ -195,7 +196,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         if (request.selectSubscribed()) {
             return processWithSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
-        } if (request.getReturnOptions().contains(ListRequest.ListReturnOption.SUBSCRIBED)) {
+        } else if (request.getReturnOptions().contains(ListRequest.ListReturnOption.SUBSCRIBED)) {
             return Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get())
                 .collect(ImmutableMap.toImmutableMap(path -> path, path -> path))
                 .flatMap(subscribed -> processWithoutSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery, subscribed::containsKey));
@@ -207,13 +208,18 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     private Mono<Void> processWithoutSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession,
                                                 boolean isRelative, MailboxQuery mailboxQuery, Predicate<MailboxPath> isSubscribed) {
         return getMailboxManager().search(mailboxQuery, Minimal, mailboxSession)
-            .doOnNext(metaData -> responder.respond(
-                createResponse(metaData.inferiors(),
-                    metaData.getSelectability(),
-                    mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
-                    metaData.getHierarchyDelimiter(),
-                    getMailboxType(request, session, metaData.getPath()),
-                    isSubscribed.test(metaData.getPath()))))
+            .doOnNext(metaData -> {
+                MailboxType mailboxType = getMailboxType(request, session, metaData.getPath());
+                if (!request.getSelectOptions().contains(SPECIAL_USE) || mailboxType.getRfc6154attributeName() != null) {
+                    responder.respond(
+                        createResponse(metaData.inferiors(),
+                            metaData.getSelectability(),
+                            mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
+                            metaData.getHierarchyDelimiter(),
+                            mailboxType,
+                            isSubscribed.test(metaData.getPath())));
+                }
+            })
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
             .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
@@ -243,6 +249,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
             .filter(mailboxQuery::isPathMatch)
             .map(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed))
+            .filter(pair -> !listRequest.getSelectOptions().contains(SPECIAL_USE) || mailboxTyper.getMailboxType(session, pair.getKey()).getRfc6154attributeName() != null)
             .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
 
         return responseBuilders.build();

@@ -52,3 +52,36 @@ S: \* LIST \(\\HasNoChildren \\Trash\) \"\.\" "Trash"
 S: \* LIST \(\\HasNoChildren \\Archive\) \"\.\" "Archive"
 }
 S: 10 OK LIST completed.
+
+C: 10 LIST (SPECIAL-USE) "" *
+SUB {
+S: \* LIST \(\\HasNoChildren \\Drafts\) \"\.\" "Drafts"
+S: \* LIST \(\\HasNoChildren \\Sent\) \"\.\" "Sent"
+S: \* LIST \(\\HasNoChildren \\Junk\) \"\.\" "Spam"
+S: \* LIST \(\\HasNoChildren \\Trash\) \"\.\" "Trash"
+S: \* LIST \(\\HasNoChildren \\Archive\) \"\.\" "Archive"
+}
+S: 10 OK LIST completed.
+
+C: A12 SUBSCRIBE Sent
+S: A12 OK SUBSCRIBE completed.
+C: A12 SUBSCRIBE Other
+S: A12 OK SUBSCRIBE completed.
+
+C: 10 LIST (SPECIAL-USE SUBSCRIBED) "" *
+SUB {
+S: \* LIST \(\\HasNoChildren \\Sent \\Subscribed\) \"\.\" "Sent"
+}
+S: 10 OK LIST completed.
+
+C: 10 LIST "" * RETURN (SPECIAL-USE SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" "INBOX"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "Other"
+S: \* LIST \(\\HasNoChildren \\Drafts\) \"\.\" "Drafts"
+S: \* LIST \(\\HasNoChildren \\Sent \\Subscribed\) \"\.\" "Sent"
+S: \* LIST \(\\HasNoChildren \\Junk\) \"\.\" "Spam"
+S: \* LIST \(\\HasNoChildren \\Trash\) \"\.\" "Trash"
+S: \* LIST \(\\HasNoChildren \\Archive\) \"\.\" "Archive"
+}
+S: 10 OK LIST completed.
