@@ -93,6 +93,9 @@ public class ListCommandParser extends AbstractUidCommandParser {
         if (listOptions.isEmpty() && listReturnOptions.getLeft().isEmpty()) {
             return createMessage(referenceName, mailboxPattern, tag);
         }
+        if (listOptions.contains(ListSelectOption.SPECIAL_USE)) {
+            listReturnOptions.getLeft().add(ListReturnOption.SPECIAL_USE);
+        }
         return new ListRequest(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, listOptions, listReturnOptions.getLeft(), listReturnOptions.getRight());
     }
 
@@ -123,10 +126,22 @@ public class ListCommandParser extends AbstractUidCommandParser {
             return readR(request);
         }
         if (c == 's' || c == 'S') {
-            return readSubscribed(request);
+            return readSelectS(request);
         }
         throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
             "Unknown select option: '" + request.consumeWord(ImapRequestLineReader.NoopCharValidator.INSTANCE) + "'");
+    }
+
+    private ListSelectOption readSelectS(ImapRequestLineReader request) throws DecodingException {
+        request.consume();
+        char c = request.nextChar();
+        if (c == 'u' || c == 'U') {
+            consumeSubscribed(request);
+            return ListSelectOption.SUBSCRIBED;
+        } else {
+            consumeSpecialUse(request);
+            return ListSelectOption.SPECIAL_USE;
+        }
     }
 
     private Pair<ListReturnOption, Optional<StatusDataItems>> readS(ImapRequestLineReader request) throws DecodingException {
@@ -152,6 +167,11 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     private ListReturnOption readSpecialUse(ImapRequestLineReader request) throws DecodingException {
+        consumeSpecialUse(request);
+        return ListReturnOption.SPECIAL_USE;
+    }
+
+    private void consumeSpecialUse(ImapRequestLineReader request) throws DecodingException {
         // 'S' is already consummed
         assertChar(request, 'P', 'p');
         assertChar(request, 'E', 'e');
@@ -163,12 +183,6 @@ public class ListCommandParser extends AbstractUidCommandParser {
         assertChar(request, 'U', 'u');
         assertChar(request, 'S', 's');
         assertChar(request, 'E', 'e');
-        return ListReturnOption.SPECIAL_USE;
-    }
-
-    private ListSelectOption readSubscribed(ImapRequestLineReader request) throws DecodingException {
-        consumeSubscribed(request);
-        return ListSelectOption.SUBSCRIBED;
     }
 
     private ListSelectOption readR(ImapRequestLineReader request) throws DecodingException {
@@ -283,7 +297,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     private void consumeSubscribed(ImapRequestLineReader request) throws DecodingException {
-        assertChar(request, 'S', 's');
+        // s is already consumed
         assertChar(request, 'U', 'u');
         assertChar(request, 'B', 'b');
         assertChar(request, 'S', 's');
