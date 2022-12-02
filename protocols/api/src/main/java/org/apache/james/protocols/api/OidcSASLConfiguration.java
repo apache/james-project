@@ -45,11 +45,6 @@ public class OidcSASLConfiguration {
         String introspectionUrl = configuration.getString("introspection.url", null);
         String userInfoUrl = configuration.getString("userinfo.url", null);
 
-        Preconditions.checkArgument(userInfoUrl == null
-                || userInfoUrl.startsWith("http://127.0.0.1")
-                || userInfoUrl.startsWith("https"),
-            "'userinfo.url'' MUST start with 'https'");
-
         return new OidcSASLConfiguration(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope, Optional.ofNullable(introspectionUrl)
             .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)),
             Optional.ofNullable(userInfoUrl).map(Throwing.function(URL::new)));
