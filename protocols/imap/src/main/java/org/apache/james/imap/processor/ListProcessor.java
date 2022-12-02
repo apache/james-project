@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,6 +64,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -136,8 +138,8 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name,
-                                                 char hierarchyDelimiter, MailboxType type) {
-        return new ListResponse(children, selectability, name, hierarchyDelimiter, !RETURN_SUBSCRIBED,
+                                                 char hierarchyDelimiter, MailboxType type, boolean isSubscribed) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter, isSubscribed,
             !RETURN_NON_EXISTENT, EnumSet.noneOf(ListResponse.ChildInfo.class), type);
     }
 
@@ -151,7 +153,8 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             MailboxMetaData.Selectability.NOSELECT,
             referenceRoot,
             mailboxSession.getPathDelimiter(),
-            MailboxType.OTHER));
+            MailboxType.OTHER,
+            !RETURN_SUBSCRIBED));
     }
 
     private String computeReferenceRoot(String referenceName, MailboxSession mailboxSession) {
@@ -192,19 +195,25 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         if (request.selectSubscribed()) {
             return processWithSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
+        } if (request.getReturnOptions().contains(ListRequest.ListReturnOption.SUBSCRIBED)) {
+            return Flux.from(Throwing.supplier(() -> subscriptionManager.subscriptionsReactive(mailboxSession)).get())
+                .collect(ImmutableMap.toImmutableMap(path -> path, path -> path))
+                .flatMap(subscribed -> processWithoutSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery, subscribed::containsKey));
         } else {
-            return processWithoutSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
+            return processWithoutSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery, any -> false);
         }
     }
 
-    private Mono<Void> processWithoutSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
+    private Mono<Void> processWithoutSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession,
+                                                boolean isRelative, MailboxQuery mailboxQuery, Predicate<MailboxPath> isSubscribed) {
         return getMailboxManager().search(mailboxQuery, Minimal, mailboxSession)
             .doOnNext(metaData -> responder.respond(
                 createResponse(metaData.inferiors(),
                     metaData.getSelectability(),
                     mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
                     metaData.getHierarchyDelimiter(),
-                    getMailboxType(request, session, metaData.getPath()))))
+                    getMailboxType(request, session, metaData.getPath()),
+                    isSubscribed.test(metaData.getPath()))))
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
             .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
