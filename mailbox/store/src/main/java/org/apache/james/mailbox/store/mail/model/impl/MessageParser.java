@@ -72,7 +72,7 @@ public class MessageParser {
         }
 
         public void dispose() {
-
+            dispose.run();
         }
     }
 
