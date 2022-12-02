@@ -8080,15 +8080,15 @@ trait MailboxSetMethodContract {
       .subscribeOn(Schedulers.boundedElastic())
       .subscribe()
 
-    Thread.sleep(200)
-    // change subscription
-    JmapRequests.subscribe(mailboxId.serialize())
-
     Awaitility.`with`
       .pollInterval(Duration.ofMillis(100))
       .atMost(Duration.ofSeconds(100))
       .await
       .untilAsserted { () =>
+        // change subscription
+        JmapRequests.subscribe(mailboxId.serialize())
+        Thread.sleep(200)
+
         assertThat(seq.asJava)
           .hasSize(1)
         assertThat(seq.head)
