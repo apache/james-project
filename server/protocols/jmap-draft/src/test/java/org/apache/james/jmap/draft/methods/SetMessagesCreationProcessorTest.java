@@ -374,20 +374,6 @@ public class SetMessagesCreationProcessorTest {
     }
 
     @Test
-    public void assertIsUserOwnerOfMailboxesShouldThrowWhenRetrievingMailboxPathFails() throws Exception {
-        InMemoryId mailboxId = InMemoryId.of(6789);
-        MessageManager mailbox = mock(MessageManager.class);
-        when(mockedMailboxManager.getMailbox(mailboxId, session))
-            .thenReturn(mailbox);
-        when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
-            .thenReturn(mailboxId);
-        when(mailbox.getMailboxPath())
-            .thenThrow(new MailboxException());
-
-        assertThatThrownBy(() -> sut.assertIsUserOwnerOfMailboxes(ImmutableList.of(mailboxId), session).block());
-    }
-
-    @Test
     public void assertIsUserOwnerOfMailboxesShouldThrowWhenUserIsNotTheOwnerOfTheMailbox() throws Exception {
         InMemoryId mailboxId = InMemoryId.of(6789);
         MessageManager mailbox = mock(MessageManager.class);
