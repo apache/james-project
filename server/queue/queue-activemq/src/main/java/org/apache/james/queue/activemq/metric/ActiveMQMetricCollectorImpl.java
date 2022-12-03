@@ -153,11 +153,19 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
             stats.updateMetrics((MapMessage)reply);
         } finally {
             if (producer != null) {
-                producer.close();
+                try {
+                    producer.close();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
 
             if (consumer != null) {
-                consumer.close();
+                try {
+                    consumer.close();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
 
             if (replyTo != null) {
@@ -165,15 +173,27 @@ public class ActiveMQMetricCollectorImpl implements ActiveMQMetricCollector {
                 // free up memory if thats not done and a pool is used
                 // its possible that we will register a new mbean in jmx for
                 // every TemporaryQueue which will never get unregistered
-                replyTo.delete();
+                try {
+                    replyTo.delete();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
 
             if (session != null) {
-                session.close();
+                try {
+                    session.close();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
 
             if (connection != null) {
-                connection.close();
+                try {
+                    connection.close();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
         }
         return null;
