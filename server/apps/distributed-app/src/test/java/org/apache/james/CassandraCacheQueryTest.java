@@ -141,7 +141,7 @@ class CassandraCacheQueryTest {
     @Test
     void cacheShouldBeRead() {
         assertThat(statementRecorder.listExecutedStatements(
-                StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blob_cache")))
+                StatementRecorder.Selector.preparedStatementStartingWith("SELECT data FROM blob_cache")))
             .isNotEmpty();
     }
 
