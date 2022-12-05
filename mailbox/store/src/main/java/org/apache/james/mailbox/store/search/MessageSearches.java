@@ -191,6 +191,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         } else if (criterion instanceof SearchQuery.ThreadIdCriterion) {
             SearchQuery.ThreadIdCriterion threadIdCriterion = (SearchQuery.ThreadIdCriterion) criterion;
             return matches(threadIdCriterion, message);
+        } else if (criterion instanceof SearchQuery.SaveDateCriterion) {
+            return matches((SearchQuery.SaveDateCriterion) criterion, message);
         } else {
             throw new UnsupportedSearchException();
         }
@@ -577,6 +579,11 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         return matchesInternalDate(operator, message);
     }
 
+    private boolean matches(SearchQuery.SaveDateCriterion criterion, MailboxMessage message) throws UnsupportedSearchException {
+        SearchQuery.DateOperator operator = criterion.getOperator();
+        return matchesSaveDate(operator, message);
+    }
+
     private boolean matches(SearchQuery.ThreadIdCriterion criterion, MailboxMessage message) {
         return message.getThreadId().equals(criterion.getThreadId());
     }
@@ -599,10 +606,32 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         }
     }
 
+    private boolean matchesSaveDate(SearchQuery.DateOperator operator, MailboxMessage message) throws UnsupportedSearchException {
+        Date date = operator.getDate();
+        DateResolution dateResultion = operator.getDateResultion();
+        Optional<Date> saveDate = message.getSaveDate();
+        SearchQuery.DateComparator type = operator.getType();
+        switch (type) {
+            case ON:
+                return on(saveDate, date, dateResultion);
+            case BEFORE:
+                return before(saveDate, date, dateResultion);
+            case AFTER:
+                return after(saveDate, date, dateResultion);
+            default:
+                throw new UnsupportedSearchException();
+        }
+    }
+
     private boolean on(Date date1, Date date2, DateResolution dateResolution) {
         String d1 = createDateString(date1, dateResolution);
         String d2 = createDateString(date2, dateResolution);
         return d1.compareTo(d2) == 0;
+    }
+
+    private boolean on(Optional<Date> thisDate, Date thatDate, DateResolution dateResolution) {
+        return thisDate.map(date -> on(date, thatDate, dateResolution))
+            .orElse(false);
     }
 
     private boolean before(Date date1, Date date2, DateResolution dateResolution) {
@@ -612,11 +641,21 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         return d1.compareTo(d2) < 0;
     }
 
+    private boolean before(Optional<Date> thisDate, Date thatDate, DateResolution dateResolution) {
+        return thisDate.map(date -> before(date, thatDate, dateResolution))
+            .orElse(false);
+    }
+
     private boolean after(Date date1, Date date2, DateResolution dateResolution) {
         String d1 = createDateString(date1, dateResolution);
         String d2 = createDateString(date2, dateResolution);
 
         return d1.compareTo(d2) > 0;
+    }
+
+    private boolean after(Optional<Date> thisDate, Date thatDate, DateResolution dateResolution) {
+        return thisDate.map(date -> after(date, thatDate, dateResolution))
+            .orElse(false);
     }
 
     private String createDateString(Date date, DateResolution dateResolution) {

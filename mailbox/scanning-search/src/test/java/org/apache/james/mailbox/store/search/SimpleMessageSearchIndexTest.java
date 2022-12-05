@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -29,8 +31,6 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
@@ -105,6 +105,16 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() {
+    }
+
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
+    @Override
+    public void saveDateBeforeShouldReturnMessagesBeforeAGivenDate() {
+    }
+
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
+    @Override
+    public void saveDateAfterShouldReturnMessagesAfterAGivenDate() {
     }
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
