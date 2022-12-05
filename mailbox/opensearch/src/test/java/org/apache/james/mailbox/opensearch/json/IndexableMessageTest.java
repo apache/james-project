@@ -26,13 +26,14 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -42,6 +43,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -418,5 +420,76 @@ class IndexableMessageTest {
 
         // Then
         assertThat(indexableMessage.getThreadId()).isEqualTo("42");
+    }
+
+    @Test
+    void shouldSerializeSaveDate() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        ZonedDateTime now = ZonedDateTime.parse("2015-10-30T14:12:00Z");
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getMessageId())
+            .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getThreadId())
+            .thenReturn(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42)));
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+        when(mailboxMessage.getSaveDate())
+            .thenReturn(Optional.of(Date.from(now.toInstant())));
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(new DefaultTextExtractor())
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.NO)
+            .build()
+            .block();
+
+        // Then
+        assertThat(indexableMessage.getSaveDate().get()).startsWith("2015-10-30");
+    }
+
+    @Test
+    void shouldAcceptEmptySaveDate() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getMessageId())
+            .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getThreadId())
+            .thenReturn(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42)));
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+        when(mailboxMessage.getSaveDate())
+            .thenReturn(Optional.empty());
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(new DefaultTextExtractor())
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.NO)
+            .build()
+            .block();
+
+        // Then
+        assertThat(indexableMessage.getSaveDate()).isEmpty();
     }
 }

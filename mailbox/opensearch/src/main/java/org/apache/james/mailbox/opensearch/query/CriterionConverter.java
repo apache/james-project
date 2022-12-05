@@ -83,6 +83,9 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.InternalDateCriterion.class,
             criterion -> dateRangeFilter(JsonMessageConstants.DATE, criterion.getOperator()));
 
+        registerCriterionConverter(SearchQuery.SaveDateCriterion.class,
+            criterion -> dateRangeFilter(JsonMessageConstants.SAVE_DATE, criterion.getOperator()));
+
         registerCriterionConverter(SearchQuery.AttachmentCriterion.class, this::convertAttachmentCriterion);
         registerCriterionConverter(SearchQuery.MimeMessageIDCriterion.class, this::convertMimeMessageIDCriterion);
         registerCriterionConverter(SearchQuery.ThreadIdCriterion.class, this::convertThreadIdCriterion);

@@ -121,6 +121,8 @@ public class IndexableMessage {
                     EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
                     EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
                     String sentDate = DATE_TIME_FORMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+                    Optional<String> saveDate = message.getSaveDate()
+                        .map(date -> DATE_TIME_FORMATTER.format(ZonedDateTime.ofInstant(date.toInstant(), zoneId)));
                     Optional<String> mimeMessageID = headerCollection.getMessageID();
 
                     long uid = message.getUid().asLong();
@@ -160,6 +162,7 @@ public class IndexableMessage {
                         threadId,
                         modSeq,
                         sentDate,
+                        saveDate,
                         size,
                         subjects,
                         subType,
@@ -205,6 +208,7 @@ public class IndexableMessage {
     private final String threadId;
     private final long modSeq;
     private final String sentDate;
+    private final Optional<String> saveDate;
     private final long size;
     private final Subjects subjects;
     private final String subType;
@@ -233,7 +237,7 @@ public class IndexableMessage {
                              String threadId,
                              ModSeq modSeq,
                              String sentDate,
-                             long size,
+                             Optional<String> saveDate, long size,
                              Subjects subjects,
                              String subType,
                              EMailers to,
@@ -261,6 +265,7 @@ public class IndexableMessage {
         this.threadId = threadId;
         this.modSeq = modSeq.asLong();
         this.sentDate = sentDate;
+        this.saveDate = saveDate;
         this.size = size;
         this.subjects = subjects;
         this.subType = subType;
@@ -343,6 +348,11 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.SENT_DATE)
     public String getSentDate() {
         return sentDate;
+    }
+
+    @JsonProperty(JsonMessageConstants.SAVE_DATE)
+    public Optional<String> getSaveDate() {
+        return saveDate;
     }
 
     @JsonProperty(JsonMessageConstants.SIZE)

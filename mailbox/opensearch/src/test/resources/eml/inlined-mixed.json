@@ -19,6 +19,7 @@
     "textBody": "Main test message...\n",
     "cc": [],
     "date": "2015-06-07T00:00:00+0200",
+    "saveDate": null,
     "from": [{
         "name": "Bob",
         "address": "bob@domain.tld",
