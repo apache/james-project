@@ -23,9 +23,10 @@ C: A01 LOGIN imapuser@domain password
 S: A01 OK LOGIN completed\.
 
 C: A02 CREATE selectTest
-S: A02 OK CREATE completed\.
+S: A02 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: A03 SELECT selectTest
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* \d+ EXISTS
 S: \* \d+ RECENT

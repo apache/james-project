@@ -23,7 +23,7 @@ C: a0000 LOGIN imapuser@domain password
 S: a0000 OK LOGIN completed.
 
 C: 10 CREATE appendexpunge
-S: 10 OK CREATE completed.
+S: 10 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a001 STATUS appendexpunge (MESSAGES)
 S: \* STATUS "appendexpunge" \(MESSAGES 0\)
@@ -73,6 +73,7 @@ S: \* STATUS "appendexpunge" \(MESSAGES 3\)
 S: A005 OK STATUS completed.
 
 C: A006 SELECT appendexpunge
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 3 EXISTS
 S: \* \d+ RECENT
@@ -116,9 +117,10 @@ S: \* NAMESPACE \(\((\"\"|\"#private\.\") \".\"\)\) NIL NIL
 S: A001 OK NAMESPACE completed.
 
 C: A2 CREATE testmailbox
-S: A2 OK CREATE completed\.
+S: A2 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
@@ -191,6 +193,7 @@ S: \* 5 RECENT
 S: A8 OK (\[.+\] )?APPEND completed\.
 
 C: A9 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 5 EXISTS
 S: \* 5 RECENT
@@ -332,6 +335,7 @@ C: A18 SELECT testmailbox
 S: A18 NO SELECT failed. No such mailbox\.
 
 C: A19 SELECT anothermailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 5 EXISTS
 S: \* 5 RECENT
@@ -380,9 +384,10 @@ S: A21 OK DELETE completed\.
 
 
 C: f CREATE anothermailbox
-S: f OK CREATE completed\.
+S: f OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: s0001 SELECT anothermailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
