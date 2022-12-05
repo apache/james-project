@@ -86,6 +86,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
@@ -140,7 +141,7 @@ class UserMailboxesRoutesTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesRoutesTest.class);
 
     public static MailboxMetaData testMetadata(MailboxPath path, MailboxId mailboxId, char delimiter) {
-        return new MailboxMetaData(path, mailboxId, delimiter, MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
+        return new MailboxMetaData(new Mailbox(path, UidValidity.of(45), mailboxId), delimiter, MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
             MailboxCounters.empty(mailboxId));
     }
 

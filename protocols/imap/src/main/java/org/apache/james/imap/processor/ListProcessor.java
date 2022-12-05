@@ -45,9 +45,11 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -221,8 +223,16 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 }
             })
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
-            .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(metaData.getPath(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
+            .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(retrieveMessageManager(metaData, mailboxSession), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
+    }
+
+    private MessageManager retrieveMessageManager(MailboxMetaData metaData, MailboxSession mailboxSession) {
+        try {
+            return getMailboxManager().getMailbox(metaData.getMailbox(), mailboxSession);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Mono<Void> processWithSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession, boolean isRelative, MailboxQuery mailboxQuery) {
@@ -233,8 +243,17 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
             .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
-            .flatMap(pathAndResponse -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(pathAndResponse.getLeft(), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
+            .flatMap(pathAndResponse -> sendStatusWhenSubscribed(session, request, responder, mailboxSession, pathAndResponse))
             .then();
+    }
+
+    private Mono<MailboxStatusResponse> sendStatusWhenSubscribed(ImapSession session, T request, Responder responder, MailboxSession mailboxSession,
+                                                                 Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>> pathAndResponse) {
+        return pathAndResponse.getRight()
+            .map(metaData -> retrieveMessageManager(metaData, mailboxSession))
+            .flatMap(messageManager -> request.getStatusDataItems()
+                .map(statusDataItems -> statusProcessor.sendStatus(messageManager, statusDataItems, responder, session, mailboxSession)))
+            .orElse(Mono.empty());
     }
 
     private List<Triple<MailboxPath, ListResponse, Optional<MailboxMetaData>>> getListResponseForSelectSubscribed(ImapSession session, Map<MailboxPath, MailboxMetaData> searchedResultMap, List<MailboxPath> allSubscribedSearch,
