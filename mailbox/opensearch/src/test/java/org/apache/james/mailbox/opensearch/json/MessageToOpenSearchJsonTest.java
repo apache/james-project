@@ -452,4 +452,29 @@ class MessageToOpenSearchJsonTest {
             .isString()
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/htmlContent.txt", StandardCharsets.UTF_8));
     }
+
+    @Test
+    void shouldExtractSaveDate() throws IOException {
+        Date saveDate = new Date(1433628000000L); // 2015/06/07 00:00:00 0200 (Paris time zone)
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+        MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
+            date,
+            SIZE,
+            BODY_START_OCTET,
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml"))),
+            new Flags(),
+            propertyBuilder.build(),
+            MAILBOX_ID);
+        mail.setUid(UID);
+        mail.setModSeq(MOD_SEQ);
+        mail.setSaveDate(saveDate);
+
+        assertThatJson(messageToOpenSearchJson.convertToJson(mail).block())
+            .inPath("saveDate")
+            .isString()
+            .isEqualTo("2015-06-07T00:00:00+0200");
+    }
 }

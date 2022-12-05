@@ -117,6 +117,11 @@ public class MailboxMappingFactory {
                             .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
                         .endObject()
 
+                        .startObject(JsonMessageConstants.SAVE_DATE)
+                            .field(TYPE, IndexCreationFactory.DATE)
+                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
+                        .endObject()
+
                         .startObject(JsonMessageConstants.USER_FLAGS)
                             .field(TYPE, KEYWORD)
                             .field(NORMALIZER, CASE_INSENSITIVE)

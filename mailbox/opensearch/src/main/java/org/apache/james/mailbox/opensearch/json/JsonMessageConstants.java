@@ -43,6 +43,7 @@ public interface JsonMessageConstants {
     String TEXT_BODY = "textBody";
     String HTML_BODY = "htmlBody";
     String SENT_DATE = "sentDate";
+    String SAVE_DATE = "saveDate";
     String ATTACHMENTS = "attachments";
     String TEXT = "text";
     String MIME_MESSAGE_ID = "mimeMessageID";

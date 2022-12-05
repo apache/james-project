@@ -13,6 +13,7 @@
   "textBody":"This mail have a non textual attachment !\r\n",
   "cc":[],
   "date":"2015-06-07T00:00:00+0200",
+  "saveDate": null,
   "from":[{
     "name":"Benoit Tellier",
     "address":"btellier@linagora.com",

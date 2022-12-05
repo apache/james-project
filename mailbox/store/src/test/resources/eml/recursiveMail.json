@@ -6,6 +6,7 @@
   "modSeq": 42,
   "size": 25,
   "date": "2015-06-07T00:00:00+02:00",
+  "saveDate": null,
   "mediaType": "plain",
   "subtype": "text",
   "userFlags": [

@@ -25,6 +25,31 @@ Change list:
 - [Blob Store AES upgraded to PBKDF2WithHmacSHA512](#blob-store-aes-upgraded-to-pbkdf2withhmacsha512)
 - [Adding saveDate column to messageIdTable and imapUidTable](#adding-savedate-column-to-messageidtable-and-imapuidtable)
 
+### Adding the saveDate to the OpenSearch index
+
+Date 05/12/2022
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3754
+
+Concerned product: Distributed James, Cassandra James
+
+Add `saveDate` to James mailbox index to enable saveDate searching as part of IMAP SAVEDATE extension.
+
+We already have this field as part of newly created mappings, but we need to explicitly add this field to existing indices by doing:
+```
+curl -X PUT \
+  http://ip:port/mailbox_v1/_mapping \
+  -H 'Content-Type: application/json' \
+  -d '{
+	"properties": {
+		"saveDate": {
+			"type": "date",
+			"format": "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX"
+		}
+	}
+}'
+```
+
 ### Adding saveDate column to messageIdTable and imapUidTable
 
 Date 01/12/2022
