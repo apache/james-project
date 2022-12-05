@@ -318,6 +318,24 @@ public class SearchQuery {
         return new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, date, dateResolution));
     }
 
+    public static Criterion saveDateAfter(Date date, DateResolution dateResolution) {
+        return new SaveDateCriterion(new DateOperator(DateComparator.AFTER, date, dateResolution));
+    }
+
+    public static Criterion saveDateOn(Date date, DateResolution dateResolution) {
+        return new SaveDateCriterion(new DateOperator(DateComparator.ON, date, dateResolution));
+    }
+
+    public static Criterion saveDateBefore(Date date, DateResolution dateResolution) {
+        return new SaveDateCriterion(new DateOperator(DateComparator.BEFORE, date, dateResolution));
+    }
+
+    // Matches all messages in the mailbox when the underlying storage of
+    // that mailbox supports the save date attribute. RF: https://www.rfc-editor.org/rfc/rfc8514.html#page-4
+    public static Criterion saveDateSupported() {
+        return AllCriterion.all();
+    }
+
     /**
      * Creates a filter matching messages with sent date after the given
      * date.
@@ -1262,6 +1280,49 @@ public class SearchQuery {
 
         @Override
         public boolean equals(Object obj) {
+            if (obj instanceof InternalDateCriterion) {
+                InternalDateCriterion that = (InternalDateCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
+        }
+    }
+
+    /**
+     * Filters on the save date.
+     */
+    public static class SaveDateCriterion extends Criterion {
+
+        private final DateOperator operator;
+
+        public SaveDateCriterion(DateOperator operator) {
+            this.operator = operator;
+        }
+
+        /**
+         * Gets the search operation and value to be evaluated.
+         *
+         * @return the <code>Operator</code>, not null
+         */
+        public DateOperator getOperator() {
+            return operator;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hashCode(operator);
+        }
+
+        @Override
+        public final boolean equals(Object obj) {
             if (obj instanceof InternalDateCriterion) {
                 InternalDateCriterion that = (InternalDateCriterion) obj;
 
