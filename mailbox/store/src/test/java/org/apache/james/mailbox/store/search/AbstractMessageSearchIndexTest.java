@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -74,6 +75,7 @@ import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,10 +135,12 @@ public abstract class AbstractMessageSearchIndexTest {
     private MessageMapper messageMapper;
     private MessageId newBasedMessageId;
     private MessageId otherBasedMessageId;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
     protected void setUp() throws Exception {
         initializeMailboxManager();
+        clock = (UpdatableTickingClock) storeMailboxManager.getClock();
 
         session = storeMailboxManager.createSystemSession(USERNAME);
         otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
@@ -166,6 +170,7 @@ public abstract class AbstractMessageSearchIndexTest {
         newBasedMessageId = initNewBasedMessageId();
         otherBasedMessageId = initOtherBasedMessageId();
 
+        clock.setInstant(new Date(1388617200000L).toInstant());
         m1 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"),
             new Date(1388617200000L),
@@ -174,6 +179,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.DELETED)).getId();
         // sentDate: Thu, 4 Jun 2015 09:23:37 +0000
         // Internal date : 2014/02/02 00:00:00.000
+        clock.setInstant(new Date(1391295600000L).toInstant());
         m2 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
             new Date(1391295600000L),
@@ -182,6 +188,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.ANSWERED)).getId();
         // sentDate: Thu, 4 Jun 2015 09:27:37 +0000
         // Internal date : 2014/03/02 00:00:00.000
+        clock.setInstant(new Date(1393714800000L).toInstant());
         m3 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail2.eml"),
             new Date(1393714800000L),
@@ -190,6 +197,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.DRAFT)).getId();
         // sentDate: Tue, 2 Jun 2015 08:16:19 +0000
         // Internal date : 2014/05/02 00:00:00.000
+        clock.setInstant(new Date(1398981600000L).toInstant());
         m4 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail3.eml"),
             new Date(1398981600000L),
@@ -198,6 +206,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.RECENT)).getId();
         // sentDate: Fri, 15 May 2015 06:35:59 +0000
         // Internal date : 2014/04/02 00:00:00.000
+        clock.setInstant(new Date(1396389600000L).toInstant());
         m5 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail4.eml"),
             new Date(1396389600000L),
@@ -206,6 +215,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.FLAGGED)).getId();
         // sentDate: Wed, 03 Jun 2015 19:14:32 +0000
         // Internal date : 2014/06/02 00:00:00.000
+        clock.setInstant(new Date(1401660000000L).toInstant());
         m6 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/pgpSignedMail.eml"),
             new Date(1401660000000L),
@@ -214,6 +224,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.SEEN)).getId();
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
         // Internal date : 2014/07/02 00:00:01.000
+        clock.setInstant(new Date(1404252001000L).toInstant());
         m7 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"),
             new Date(1404252001000L),
@@ -222,6 +233,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags()).getId();
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
+        clock.setInstant(new Date(1406930400000L).toInstant());
         m8 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
             new Date(1406930400000L),
@@ -236,6 +248,7 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             RECENT,
             new Flags(Flags.Flag.SEEN)).getId();
+        clock.setInstant(new Date(1409608800000L).toInstant());
         m9 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/frnog.eml"),
             new Date(1409608800000L),
@@ -866,6 +879,64 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m3.getUid());
+    }
+
+    @Test
+    protected void saveDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.saveDateAfter(
+            new Date(1404252000000L),
+            DateResolution.Day));
+        // Date : 2014/07/02 00:00:00.000 ( Paris time zone )
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m7.getUid(), m8.getUid(), m9.getUid());
+    }
+
+    @Test
+    protected void saveDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.saveDateBefore(
+            new Date(1391295600000L),
+            DateResolution.Day));
+        // Date : 2014/02/02 00:00:00.000 ( Paris time zone )
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m1.getUid(), m2.getUid());
+    }
+
+    @Test
+    void saveDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.saveDateOn(
+            new Date(1393714800000L),
+            DateResolution.Day));
+        // Date : 2014/03/02 00:00:00.000 ( Paris time zone )
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m3.getUid());
+    }
+
+    @Test
+    void saveDateSupportedShouldReturnAllMessagesOfAMailbox() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.saveDateSupported());
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid(), m6.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
+    }
+
+    @Test
+    protected void saveDateSearchShouldBeDifferentFromInternalDateSearch() throws Exception {
+        // set a message with internalDate in 2014 and saveDate is now
+        Date now = new Date();
+        clock.setInstant(now.toInstant());
+        ComposedMessageId message = quanInboxMessageManager.appendMessage(ClassLoader.getSystemResourceAsStream("eml/frnog.eml"), new Date(1391295600000L),
+            quanSession, RECENT, new Flags("Hello you")).getId();
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
+        // find message with saveDate between
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.saveDateAfter(Date.from(now.toInstant().minus(2, ChronoUnit.DAYS)), DateResolution.Day));
+
+        assertThat(messageSearchIndex.search(quanSession, quanMailbox, searchQuery).toStream())
+            .containsOnly(message.getUid());
     }
 
     @Test
