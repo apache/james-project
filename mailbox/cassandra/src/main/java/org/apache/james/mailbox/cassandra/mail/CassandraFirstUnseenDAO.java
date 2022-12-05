@@ -38,10 +38,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.ProtocolVersion;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
@@ -59,6 +61,7 @@ public class CassandraFirstUnseenDAO {
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement listStatement;
+    private final ProtocolVersion protocolVersion;
 
     @Inject
     public CassandraFirstUnseenDAO(CqlSession session) {
@@ -68,6 +71,7 @@ public class CassandraFirstUnseenDAO {
         this.deleteAllStatement = prepareDeleteAllStatement(session);
         this.readStatement = prepareReadStatement(session);
         this.listStatement = prepareListStatement(session);
+        this.protocolVersion = session.getContext().getProtocolVersion();
     }
 
     private PreparedStatement prepareReadStatement(CqlSession session) {
@@ -172,14 +176,17 @@ public class CassandraFirstUnseenDAO {
         return cassandraAsyncExecutor.executeSingleRow(
                 readStatement.bind()
                     .setUuid(MAILBOX_ID, cassandraId.asUuid()))
-            .map(row -> MessageUid.of(row.getLong(UID)));
+            .map(this::asMessageUid);
     }
 
     public Flux<MessageUid> listUnseen(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
                 listStatement.bind()
                     .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
-            .map(row -> MessageUid.of(row.getLong(0)));
+            .map(this::asMessageUid);
     }
 
+    private MessageUid asMessageUid(Row row) {
+        return MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(0), protocolVersion));
+    }
 }

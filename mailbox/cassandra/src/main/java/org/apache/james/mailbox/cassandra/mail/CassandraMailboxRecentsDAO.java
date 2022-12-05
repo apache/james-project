@@ -36,6 +36,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.ProtocolVersion;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
@@ -56,6 +57,7 @@ public class CassandraMailboxRecentsDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement addStatement;
+    private final ProtocolVersion protocolVersion;
 
     @Inject
     public CassandraMailboxRecentsDAO(CqlSession session) {
@@ -64,6 +66,7 @@ public class CassandraMailboxRecentsDAO {
         deleteStatement = createDeleteStatement(session);
         deleteAllStatement = createDeleteAllStatement(session);
         addStatement = createAddStatement(session);
+        protocolVersion = session.getContext().getProtocolVersion();
     }
 
     private PreparedStatement createReadStatement(CqlSession session) {
@@ -99,7 +102,7 @@ public class CassandraMailboxRecentsDAO {
 
     public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeRows(bindWithMailbox(mailboxId, readStatement))
-            .map(row -> row.getLong(0))
+            .map(row -> TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(0), protocolVersion))
             .map(MessageUid::of);
     }
 

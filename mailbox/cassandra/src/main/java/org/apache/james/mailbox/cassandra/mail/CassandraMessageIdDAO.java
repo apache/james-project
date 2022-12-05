@@ -50,6 +50,8 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -87,6 +89,20 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdDAO {
+    private static class MemoizedSupplier<T> {
+        private final AtomicReference<T> value = new AtomicReference<>();
+
+        T get(Supplier<T> initializer) {
+            T result = value.get();
+            if (result == null) {
+                T initialValue = initializer.get();
+                value.set(initialValue);
+                return initialValue;
+            }
+            return result;
+        }
+    }
+
     private static final String IMAP_UID_GTE = IMAP_UID + "_GTE";
     private static final String IMAP_UID_LTE = IMAP_UID + "_LTE";
     public static final String LIMIT = "LIMIT_BIND_MARKER";
@@ -443,12 +459,17 @@ public class CassandraMessageIdDAO {
     }
 
     public Flux<MessageUid> listNotDeletedUids(CassandraId mailboxId, MessageRange range) {
+        MemoizedSupplier<Integer> deletedPosition = new MemoizedSupplier<>();
+        MemoizedSupplier<Integer> uidPosition = new MemoizedSupplier<>();
+
         return cassandraAsyncExecutor.executeRows(selectNotDeletedRange.bind()
                 .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
                 .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
-            .filter(row -> !row.getBoolean(org.apache.james.mailbox.cassandra.table.Flag.DELETED))
-            .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
+            .filter(row -> !TypeCodecs.BOOLEAN.decodePrimitive(
+                row.getBytesUnsafe(deletedPosition.get(() -> row.getColumnDefinitions().firstIndexOf(DELETED))), protocolVersion))
+            .map(row -> MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(
+                row.getBytesUnsafe(uidPosition.get(() -> row.getColumnDefinitions().firstIndexOf(IMAP_UID))), protocolVersion)));
     }
 
     private Flux<MessageUid> doListUids(CassandraId mailboxId, MessageRange range) {
@@ -521,7 +542,7 @@ public class CassandraMessageIdDAO {
     }
 
     private Optional<CassandraMessageMetadata> fromRowToComposedMessageIdWithFlags(Row row) {
-        UUID rowAsUuid = row.getUuid(MESSAGE_ID);
+        UUID rowAsUuid = row.get(MESSAGE_ID, TypeCodecs.TIMEUUID);
         if (rowAsUuid == null) {
             // Out of order updates with concurrent deletes can result in the row being partially deleted
             // We filter out such records, and cleanup them.
