@@ -13,7 +13,8 @@ to get some examples and hints.
 | Property name | explanation
 
 | uri
-| the amqp URI pointing to RabbitMQ server. Details about amqp URI format is in https://www.rabbitmq.com/uri-spec.html[RabbitMQ URI Specification]
+| the amqp URI pointing to RabbitMQ server. If you use a vhost, specify it as well at the end of the URI.
+Details about amqp URI format is in https://www.rabbitmq.com/uri-spec.html[RabbitMQ URI Specification]
 
 | management.uri
 | the URI pointing to RabbitMQ Management Service. James need to retrieve some information about listing queues
@@ -101,8 +102,8 @@ A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
 | Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.
 
 | vhost
-| Optional string. The virtual host used by James to create queues and exchanges on Rabbitmq.
-If omitted, it will use the default Rabbitmq one "/".
+| Optional string. This parameter is only a workaround to support invalid URIs containing character like '_'.
+You still need to specify the vhost in the uri parameter.
 
 |===
 
