@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -133,7 +134,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
         if (session.getAttribute(SEARCH_MODSEQ) != null) {
             try {
-                return mailbox.getMetaDataReactive(IGNORE, msession, MailboxMetaData.FetchGroup.NO_COUNT)
+                return mailbox.getMetaDataReactive(IGNORE, msession, EnumSet.of(MailboxMetaData.Item.HighestModSeq))
                     .flatMap(metaData -> {
                         // Enable CONDSTORE as this is a CONDSTORE enabling command
                         condstoreEnablingCommand(session, responder,  metaData, true);

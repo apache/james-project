@@ -473,10 +473,14 @@ public interface MessageManager {
      *            describes which optional data should be returned
      * @return metadata view filtered for the session's user, not null
      */
-    MailboxMetaData getMetaData(RecentMode recentMode, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException;
+    default MailboxMetaData getMetaData(RecentMode recentMode, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
+        return getMetaData(recentMode, mailboxSession, fetchGroup.getItems());
+    }
 
-    default Mono<MailboxMetaData> getMetaDataReactive(RecentMode recentMode, MailboxSession mailboxSession, MailboxMetaData.FetchGroup fetchGroup) throws MailboxException {
-        return Mono.fromCallable(() -> getMetaData(recentMode, mailboxSession, fetchGroup));
+    MailboxMetaData getMetaData(RecentMode recentMode, MailboxSession mailboxSession, EnumSet<MailboxMetaData.Item> items) throws MailboxException;
+
+    default Mono<MailboxMetaData> getMetaDataReactive(RecentMode recentMode, MailboxSession mailboxSession, EnumSet<MailboxMetaData.Item> items) throws MailboxException {
+        return Mono.fromCallable(() -> getMetaData(recentMode, mailboxSession, items));
     }
 
     /**
@@ -488,6 +492,13 @@ public interface MessageManager {
             RESET,
             RETRIEVE,
             IGNORE
+        }
+
+        public enum Item {
+            MailboxCounters,
+            FirstUnseen,
+            HighestModSeq,
+            NextUid
         }
 
         /**
@@ -502,22 +513,32 @@ public interface MessageManager {
             /**
              * Only include the message and recent count
              */
-            NO_UNSEEN,
+            NO_UNSEEN(EnumSet.of(Item.MailboxCounters, Item.NextUid, Item.HighestModSeq)),
 
             /**
              * Only include the unseen message and recent count
              */
-            UNSEEN_COUNT,
+            UNSEEN_COUNT(EnumSet.of(Item.MailboxCounters, Item.NextUid, Item.HighestModSeq)),
 
             /**
              * Only include the first unseen and the recent count
              */
-            FIRST_UNSEEN,
+            FIRST_UNSEEN(EnumSet.of(Item.MailboxCounters, Item.NextUid, Item.HighestModSeq, Item.FirstUnseen)),
 
             /**
              * Only return the "always set" metadata as documented above
              */
-            NO_COUNT
+            NO_COUNT(EnumSet.of(Item.NextUid, Item.HighestModSeq));
+
+            private final EnumSet<Item> items;
+
+            FetchGroup(EnumSet<Item> items) {
+                this.items = items;
+            }
+
+            public EnumSet<Item> getItems() {
+                return items;
+            }
         }
 
         /**

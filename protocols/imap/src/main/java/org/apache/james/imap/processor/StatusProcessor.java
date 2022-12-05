@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -123,7 +124,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     }
 
     private Mono<MessageManager.MailboxMetaData> retrieveMetadata(MessageManager mailbox, StatusDataItems statusDataItems, MailboxSession mailboxSession) {
-        MessageManager.MailboxMetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
+        EnumSet<MessageManager.MailboxMetaData.Item> fetchGroup = computeFetchGroup(statusDataItems);
         RecentMode recentMode = computeRecentMode(statusDataItems);
 
         try {
@@ -164,12 +165,18 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
             });
     }
 
-    private MessageManager.MailboxMetaData.FetchGroup computeFetchGroup(StatusDataItems statusDataItems) {
-        if (statusDataItems.isUnseen()) {
-            return MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT;
-        } else {
-            return MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN;
+    private EnumSet<MessageManager.MailboxMetaData.Item> computeFetchGroup(StatusDataItems statusDataItems) {
+        EnumSet<MessageManager.MailboxMetaData.Item> result = EnumSet.noneOf(MessageManager.MailboxMetaData.Item.class);
+        if (statusDataItems.isUnseen() || statusDataItems.isMessages()) {
+            result.add(MessageManager.MailboxMetaData.Item.MailboxCounters);
         }
+        if (statusDataItems.isHighestModSeq()) {
+            result.add(MessageManager.MailboxMetaData.Item.HighestModSeq);
+        }
+        if (statusDataItems.isUidNext()) {
+            result.add(MessageManager.MailboxMetaData.Item.NextUid);
+        }
+        return result;
     }
 
     private Long unseen(StatusDataItems statusDataItems, MessageManager.MailboxMetaData metaData) {

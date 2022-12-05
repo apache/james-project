@@ -25,6 +25,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -55,7 +56,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -398,7 +398,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
-                    mailbox.getMetaDataReactive(recentMode(!openReadOnly), mailboxSession, FetchGroup.FIRST_UNSEEN)
+                    mailbox.getMetaDataReactive(recentMode(!openReadOnly), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
                         .doOnNext(next -> addRecent(next, sessionMailbox))))));
     }
 
@@ -460,7 +460,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     boolean send = true;
                     return getSelectedMailboxReactive(session,
                             Mono.error(() -> new EnableException("Unable to enable " + capability.asString(), new MailboxException("Session not in SELECTED state"))))
-                        .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(IGNORE, session.getMailboxSession(), FetchGroup.NO_COUNT)))
+                        .flatMap(Throwing.function(mailbox -> mailbox.getMetaDataReactive(IGNORE, session.getMailboxSession(), EnumSet.of(MailboxMetaData.Item.HighestModSeq))))
                         .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, send))
                         .then();
                 }

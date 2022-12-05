@@ -29,6 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
+
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -91,7 +93,7 @@ class GetACLProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaDataReactive(any(MailboxMetaData.RecentMode.class), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
+        when(messageManager.getMetaDataReactive(any(MailboxMetaData.RecentMode.class), any(MailboxSession.class), any(EnumSet.class)))
             .thenReturn(Mono.just(metaData));
         when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(Mono.just(messageManager));

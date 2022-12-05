@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -33,7 +34,7 @@ import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -97,7 +98,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                     no(request, responder, text);
                     return Mono.empty();
                 } else {
-                    return mailbox.getMetaDataReactive(IGNORE, mailboxSession, FetchGroup.NO_COUNT)
+                    return mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.noneOf(MessageManager.MailboxMetaData.Item.class))
                         .doOnNext(metaData -> {
                             ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                             responder.respond(aclResponse);

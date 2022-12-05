@@ -23,6 +23,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -95,7 +96,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
                 if (constoreCommand && !enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
                     // Enable CONDSTORE as this is a CONDSTORE enabling command
-                    return mailbox.getMetaDataReactive(IGNORE, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                    return mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.of(MailboxMetaData.Item.HighestModSeq))
                         .doOnNext(metaData -> condstoreEnablingCommand(session, responder, metaData, true))
                         .flatMap(Throwing.<MailboxMetaData, Mono<Void>>function(
                             any -> doFetch(selected, request, responder, fetch, mailboxSession, mailbox, session))

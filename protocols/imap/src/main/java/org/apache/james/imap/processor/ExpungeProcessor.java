@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -36,7 +37,6 @@ import org.apache.james.imap.message.request.ExpungeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -106,7 +106,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         //
         // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
         if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
-            return mailbox.getMetaDataReactive(IGNORE, mailboxSession, FetchGroup.NO_COUNT)
+            return mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.of(MessageManager.MailboxMetaData.Item.HighestModSeq))
                 .doOnNext(metaData -> okComplete(request, ResponseCode.highestModSeq(metaData.getHighestModSeq()), responder))
                 .then();
         } else {

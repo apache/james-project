@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.core.Username;
@@ -99,7 +100,7 @@ class ListRightsProcessorTest {
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaDataReactive(any(MailboxMetaData.RecentMode.class), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
+        when(messageManager.getMetaDataReactive(any(MailboxMetaData.RecentMode.class), any(MailboxSession.class), any(EnumSet.class)))
             .thenReturn(Mono.just(metaData));
         when(mailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(Mono.just(messageManager));
