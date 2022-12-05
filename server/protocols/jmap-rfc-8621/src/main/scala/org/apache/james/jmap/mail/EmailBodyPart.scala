@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.io.OutputStream
+
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
@@ -32,13 +34,12 @@ import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTE
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
-import org.apache.james.mime4j.dom.field.{ContentLanguageField, ContentTypeField, FieldName}
+import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
-import java.io.OutputStream
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -164,6 +165,12 @@ object Name {
           .map(DecoderUtil.decodeEncodedWords(_, DecodeMonitor.SILENT))
       case _ => None
     }.map(Name(_))
+    .orElse(Option(entity.getHeader.getField(FieldName.CONTENT_DISPOSITION))
+      .flatMap {
+        case contentDispositionField: ContentDispositionField => Option(contentDispositionField.getFilename)
+          .map(DecoderUtil.decodeEncodedWords(_, DecodeMonitor.SILENT))
+        case _ => None
+      }.map(Name(_)))
 }
 
 case class Name(value: String) extends AnyVal
