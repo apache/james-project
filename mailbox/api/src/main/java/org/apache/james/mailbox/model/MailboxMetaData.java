@@ -64,6 +64,7 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
         .<MailboxMetaData, Boolean>comparing(metadata -> metadata.getPath().isInbox()).reversed()
         .thenComparing(metadata -> metadata.getPath().getName());
 
+    private final Mailbox mailbox;
     private final MailboxPath path;
     private final char delimiter;
     private final Children inferiors;
@@ -72,9 +73,10 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
     private final MailboxACL resolvedAcls;
     private final MailboxCounters counters;
 
-    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability, MailboxACL resolvedAcls, MailboxCounters counters) {
-        this.path = path;
-        this.mailboxId = mailboxId;
+    public MailboxMetaData(Mailbox mailbox, char delimiter, Children inferiors, Selectability selectability, MailboxACL resolvedAcls, MailboxCounters counters) {
+        this.mailbox = mailbox;
+        this.mailboxId = mailbox.getMailboxId();
+        this.path = mailbox.generateAssociatedPath();
         this.delimiter = delimiter;
         this.inferiors = inferiors;
         this.selectability = selectability;
@@ -125,6 +127,10 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
 
     public MailboxId getId() {
         return mailboxId;
+    }
+
+    public Mailbox getMailbox() {
+        return mailbox;
     }
 
     @Override

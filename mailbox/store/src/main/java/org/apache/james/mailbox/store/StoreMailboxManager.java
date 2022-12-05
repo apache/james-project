@@ -284,20 +284,24 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mapper.findMailboxByPath(mailboxPath)
-            .map(Throwing.<Mailbox, MessageManager>function(mailboxRow -> {
-                if (!assertUserHasAccessTo(mailboxRow, session)) {
-                    LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
-                    throw new MailboxNotFoundException(mailboxPath);
-                }
-
-                LOGGER.debug("Loaded mailbox {}", mailboxPath);
-
-                return createMessageManager(mailboxRow, session);
-            }).sneakyThrow())
+            .map(Throwing.<Mailbox, MessageManager>function(mailboxRow -> getMailbox(mailboxRow, session)).sneakyThrow())
             .switchIfEmpty(Mono.fromCallable(() -> {
                 LOGGER.debug("Mailbox '{}' not found.", mailboxPath);
                 throw new MailboxNotFoundException(mailboxPath);
             }));
+    }
+
+    @Override
+    public MessageManager getMailbox(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
+        MailboxPath mailboxPath = mailboxRow.generateAssociatedPath();
+        if (!assertUserHasAccessTo(mailboxRow, session)) {
+            LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
+            throw new MailboxNotFoundException(mailboxPath);
+        }
+
+        LOGGER.debug("Loaded mailbox {}", mailboxPath);
+
+        return createMessageManager(mailboxRow, session);
     }
 
     @Override
@@ -837,8 +841,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private MailboxMetaData toMailboxMetadata(MailboxSession session, Map<MailboxPath, Boolean> parentMap, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
         return new MailboxMetaData(
-            mailbox.generateAssociatedPath(),
-            mailbox.getMailboxId(),
+            mailbox,
             getDelimiter(),
             computeChildren(parentMap, mailbox),
             Selectability.NONE,

@@ -107,17 +107,21 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
             .then();
     }
 
-    Mono<MailboxStatusResponse> sendStatus(MailboxPath mailboxPath, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
+    private Mono<MailboxStatusResponse> sendStatus(MailboxPath mailboxPath, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
         return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
-            .flatMap(mailbox -> retrieveMetadata(mailbox, statusDataItems, mailboxSession)
-                .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession)
-                    .doOnNext(response -> {
-                        // Enable CONDSTORE as this is a CONDSTORE enabling command
-                        if (response.getHighestModSeq() != null) {
-                            condstoreEnablingCommand(session, responder, metaData, false);
-                        }
-                        responder.respond(response);
-                    })));
+            .flatMap(mailbox -> sendStatus(mailbox, statusDataItems, responder, session, mailboxSession));
+    }
+
+    Mono<MailboxStatusResponse> sendStatus(MessageManager mailbox, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
+        return retrieveMetadata(mailbox, statusDataItems, mailboxSession)
+            .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession)
+                .doOnNext(response -> {
+                    // Enable CONDSTORE as this is a CONDSTORE enabling command
+                    if (response.getHighestModSeq() != null) {
+                        condstoreEnablingCommand(session, responder, metaData, false);
+                    }
+                    responder.respond(response);
+                }));
     }
 
     private Mono<Void> logInitialRequest(MailboxPath mailboxPath) {
