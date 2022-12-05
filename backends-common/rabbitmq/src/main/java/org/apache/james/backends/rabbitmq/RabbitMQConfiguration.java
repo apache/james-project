@@ -788,7 +788,16 @@ public class RabbitMQConfiguration {
     }
 
     public Optional<String> getVhost() {
-        return vhost;
+        return vhost.or(this::getVhostFromPath);
+    }
+
+    private Optional<String> getVhostFromPath() {
+        String vhostPath = uri.getPath();
+        if (vhostPath.startsWith("/")) {
+            return Optional.of(vhostPath.substring(1))
+                .filter(value -> !value.isEmpty());
+        }
+        return Optional.empty();
     }
 
     @Override
