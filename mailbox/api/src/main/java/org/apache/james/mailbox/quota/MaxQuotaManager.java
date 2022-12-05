@@ -128,7 +128,6 @@ public interface MaxQuotaManager {
 
     default Optional<QuotaSizeLimit> getMaxStorage(Map<Quota.Scope, QuotaSizeLimit> maxStorageDetails) {
         return Quota.allScopes()
-            .stream()
             .map(maxStorageDetails::get)
             .filter(Objects::nonNull)
             .findFirst();

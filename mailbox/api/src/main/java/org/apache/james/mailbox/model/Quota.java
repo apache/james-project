@@ -18,9 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.james.core.quota.QuotaLimitValue;
 import org.apache.james.core.quota.QuotaUsageValue;
@@ -37,8 +36,8 @@ public class Quota<T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>
         User
     }
 
-    public static List<Scope> allScopes() {
-        return Arrays.asList(Quota.Scope.User, Quota.Scope.Domain, Quota.Scope.Global);
+    public static Stream<Scope> allScopes() {
+        return Stream.of(Quota.Scope.User, Quota.Scope.Domain, Quota.Scope.Global);
     }
 
     public static <T extends QuotaLimitValue<T>,  U extends QuotaUsageValue<U, T>> Builder<T, U> builder() {
