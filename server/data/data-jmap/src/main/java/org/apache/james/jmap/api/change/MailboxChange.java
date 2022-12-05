@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
@@ -151,6 +152,54 @@ public class MailboxChange implements JmapChange {
                     .date(now)
                     .isCountChange(false)
                     .updated(ImmutableList.of(mailboxRenamed.getMailboxId()))
+                    .delegated()
+                    .build());
+
+            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                .collect(ImmutableList.toImmutableList());
+        }
+
+        public List<JmapChange> fromMailboxSubscribed(List<AccountId> sharees, MailboxEvents.MailboxSubscribedEvent mailboxSubscribedEvent,
+                                                      ZonedDateTime now) {
+            MailboxChange ownerChange = MailboxChange.builder()
+                .accountId(AccountId.fromUsername(mailboxSubscribedEvent.getUsername()))
+                .state(stateFactory.generate())
+                .date(now)
+                .isCountChange(false)
+                .updated(ImmutableList.of(mailboxSubscribedEvent.getMailboxId()))
+                .build();
+
+            Stream<MailboxChange> shareeChanges = sharees.stream()
+                .map(shareeId -> MailboxChange.builder()
+                    .accountId(shareeId)
+                    .state(stateFactory.generate())
+                    .date(now)
+                    .isCountChange(false)
+                    .updated(ImmutableList.of(mailboxSubscribedEvent.getMailboxId()))
+                    .delegated()
+                    .build());
+
+            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                .collect(ImmutableList.toImmutableList());
+        }
+
+        public List<JmapChange> fromMailboxUnSubscribed(List<AccountId> sharees, MailboxEvents.MailboxUnsubscribedEvent mailboxUnsubscribedEvent,
+                                                      ZonedDateTime now) {
+            MailboxChange ownerChange = MailboxChange.builder()
+                .accountId(AccountId.fromUsername(mailboxUnsubscribedEvent.getUsername()))
+                .state(stateFactory.generate())
+                .date(now)
+                .isCountChange(false)
+                .updated(ImmutableList.of(mailboxUnsubscribedEvent.getMailboxId()))
+                .build();
+
+            Stream<MailboxChange> shareeChanges = sharees.stream()
+                .map(shareeId -> MailboxChange.builder()
+                    .accountId(shareeId)
+                    .state(stateFactory.generate())
+                    .date(now)
+                    .isCountChange(false)
+                    .updated(ImmutableList.of(mailboxUnsubscribedEvent.getMailboxId()))
                     .delegated()
                     .build());
 

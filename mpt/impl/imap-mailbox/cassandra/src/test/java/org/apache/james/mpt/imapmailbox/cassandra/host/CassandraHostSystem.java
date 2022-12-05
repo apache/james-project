@@ -127,7 +127,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
         eventBus.register(quotaUpdater);
 
-        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
+        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
 
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),

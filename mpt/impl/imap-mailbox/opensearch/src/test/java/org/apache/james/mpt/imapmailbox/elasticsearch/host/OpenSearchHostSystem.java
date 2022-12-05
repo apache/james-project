@@ -114,7 +114,7 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
         ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
                 resources.getMailboxManager().getEventBus(),
-                new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
+                new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus()),
                 new NoQuotaManager(),
                 resources.getDefaultUserQuotaRootResolver(),
                 new DefaultMetricFactory());

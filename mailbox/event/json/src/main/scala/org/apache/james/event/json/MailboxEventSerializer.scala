@@ -31,7 +31,7 @@ import org.apache.james.event.json.DTOs._
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.events.MailboxEvents.{MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
@@ -116,6 +116,14 @@ private object DTO {
       updatedFlags.map(_.toJava).asJava,
       eventId)
   }
+
+  case class MailboxSubscribedEvent(eventId: EventId, mailboxPath: MailboxPath, mailboxId: MailboxId, user: Username, sessionId: SessionId) extends Event {
+    override def toJava: JavaEvent = new JavaMailboxSubscribedEvent(sessionId, user, mailboxPath.toJava, mailboxId, eventId)
+  }
+
+  case class MailboxUnSubscribedEvent(eventId: EventId, mailboxPath: MailboxPath, mailboxId: MailboxId, user: Username, sessionId: SessionId) extends Event {
+    override def toJava: JavaEvent = new JavaMailboxUnsubscribedEvent(sessionId, user, mailboxPath.toJava, mailboxId, eventId)
+  }
 }
 
 private object ScalaConverter {
@@ -193,6 +201,20 @@ private object ScalaConverter {
     mailboxId = event.getMailboxId,
     updatedFlags = event.getUpdatedFlags.asScala.toList.map(DTOs.UpdatedFlags.toUpdatedFlags))
 
+  private def toScala(event: JavaMailboxSubscribedEvent): DTO.MailboxSubscribedEvent = DTO.MailboxSubscribedEvent(
+    eventId = event.getEventId,
+    mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    user = event.getUsername,
+    sessionId = event.getSessionId)
+
+  private def toScala(event: JavaMailboxUnsubscribedEvent): DTO.MailboxUnSubscribedEvent = DTO.MailboxUnSubscribedEvent(
+    eventId = event.getEventId,
+    mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    user = event.getUsername,
+    sessionId = event.getSessionId)
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
     case e: JavaExpunged => toScala(e)
@@ -203,6 +225,8 @@ private object ScalaConverter {
     case e: JavaMailboxRenamed => toScala(e)
     case e: JavaMessageMoveEvent => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
+    case e: JavaMailboxSubscribedEvent => toScala(e)
+    case e: JavaMailboxUnsubscribedEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
 }

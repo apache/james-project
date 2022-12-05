@@ -48,6 +48,8 @@
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="memory-sessionMapperFactory"/>
+        <constructor-arg index="1" ref="memory-sessionMapperFactory"/>
+        <constructor-arg index="2" ref="event-bus"/>
     </bean>
 
     <bean id="memory-sessionMapperFactory" class="org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory" />

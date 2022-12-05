@@ -19,10 +19,6 @@
 
 package org.apache.james.jmap.change
 
-import java.time.{Clock, ZonedDateTime}
-import java.util
-
-import javax.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.events.{Event, EventBus, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
@@ -33,13 +29,17 @@ import org.apache.james.mailbox.MessageManager.{AppendCommand, AppendResult, Fla
 import org.apache.james.mailbox.fixture.MailboxFixture.{ALICE, BOB}
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageRange, TestId, TestMessageId}
-import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageManager}
+import org.apache.james.mailbox.store.StoreSubscriptionManager
+import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageManager, SubscriptionManager}
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
+import java.time.{Clock, ZonedDateTime}
+import java.util
+import javax.mail.Flags
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -58,6 +58,7 @@ class MailboxChangeListenerTest {
   var stateFactory: State.Factory = _
   var listener: MailboxChangeListener = _
   var clock: Clock = _
+  var subscriptionManager: SubscriptionManager = _
 
   @BeforeEach
   def setUp: Unit = {
@@ -84,6 +85,10 @@ class MailboxChangeListenerTest {
 
       override def reDeliver(group: Group, event: Event): Mono[Void] = Mono.empty()
     }
+
+    subscriptionManager = new StoreSubscriptionManager(resources.getMailboxManager.getMapperFactory,
+      resources.getMailboxManager.getMapperFactory,
+      resources.getEventBus)
     listener = MailboxChangeListener(eventBus, mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory, mailboxManager, clock)
     resources.getEventBus.register(listener)
   }
@@ -250,6 +255,36 @@ class MailboxChangeListenerTest {
       mailboxManager.deleteMailbox(inboxId, mailboxSession)
 
       assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getDestroyed)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def subscribeMailboxShouldStoreMailboxSubscribedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      subscriptionManager.subscribe(mailboxSession, path)
+      Thread.sleep(200)
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def unSubscribeMailboxShouldStoreMailboxUnSubscribedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      subscriptionManager.unsubscribe(mailboxSession, path)
+      Thread.sleep(200)
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
         .containsExactly(inboxId)
     }
   }

@@ -156,4 +156,62 @@ object JmapRequests {
       .statusCode(SC_OK)
       .contentType(JSON)
   }
+
+  def subscribe( mailboxId: String) : Unit = {
+    val request =
+      s"""
+         |{
+         |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |  "methodCalls": [[
+         |    "Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "$mailboxId": {
+         |          "isSubscribed": true
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}
+         |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+  }
+
+  def unSubscribe(mailboxId: String): Unit = {
+    val request =
+      s"""
+         |{
+         |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |  "methodCalls": [[
+         |    "Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "$mailboxId": {
+         |          "isSubscribed": false
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}
+         |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+  }
 }

@@ -25,12 +25,15 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
@@ -46,10 +49,16 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     private static final int INITIAL_SIZE = 32;
     
     protected SubscriptionMapperFactory mapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final EventBus eventBus;
 
     @Inject
-    public StoreSubscriptionManager(SubscriptionMapperFactory mapperFactory) {
+    public StoreSubscriptionManager(SubscriptionMapperFactory mapperFactory,
+                                    MailboxSessionMapperFactory mailboxSessionMapperFactory,
+                                    EventBus eventBus) {
         this.mapperFactory = mapperFactory;
+        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -63,6 +72,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }
+        dispatchSubscribedEvent(session, mailbox).block();
     }
 
     @Override
@@ -70,10 +80,22 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         try {
             SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
             Subscription newSubscription = new Subscription(session.getUser(), mailbox.asEscapedString());
-            return mapper.executeReactive(mapper.saveReactive(newSubscription));
+            return mapper.executeReactive(mapper.saveReactive(newSubscription))
+                .then(dispatchSubscribedEvent(session, mailbox));
         } catch (SubscriptionException e) {
             return Mono.error(e);
         }
+    }
+
+    private Mono<Void> dispatchSubscribedEvent(MailboxSession session, MailboxPath mailboxPath) {
+        return mailboxSessionMapperFactory.getMailboxMapper(session)
+            .findMailboxByPath(mailboxPath)
+            .flatMap(mailbox -> eventBus.dispatch(EventFactory.mailboxSubscribed()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(mailbox)
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId())));
     }
 
     @Override
@@ -86,7 +108,8 @@ public class StoreSubscriptionManager implements SubscriptionManager {
             return mapper.executeReactive(mapper.deleteReactive(oldSubscription))
                 .then(legacyOldSubscription
                     .map(subscription -> mapper.executeReactive(mapper.deleteReactive(subscription)))
-                    .orElse(Mono.empty()));
+                    .orElse(Mono.empty()))
+                .then(dispatchUnSubscribedEvent(session, mailbox));
         } catch (SubscriptionException e) {
             return Mono.error(e);
         }
@@ -122,6 +145,18 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }
+        dispatchUnSubscribedEvent(session, mailbox).block();
+    }
+
+    private Mono<Void> dispatchUnSubscribedEvent(MailboxSession session, MailboxPath mailboxPath) {
+        return mailboxSessionMapperFactory.getMailboxMapper(session)
+            .findMailboxByPath(mailboxPath)
+            .flatMap(mailbox -> eventBus.dispatch(EventFactory.mailboxUnSubscribed()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(mailbox)
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId())));
     }
 
     @Override

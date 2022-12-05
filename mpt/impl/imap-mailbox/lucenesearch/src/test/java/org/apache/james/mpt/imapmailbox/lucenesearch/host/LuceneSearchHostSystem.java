@@ -75,7 +75,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
         searchIndex = (LuceneMessageSearchIndex) resources.getSearchIndex();
         searchIndex.setEnableSuffixMatch(true);
-        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
+        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus());
 
         ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(

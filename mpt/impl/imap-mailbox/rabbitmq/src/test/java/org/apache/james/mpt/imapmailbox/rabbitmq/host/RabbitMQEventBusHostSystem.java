@@ -101,7 +101,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
             DefaultImapProcessorFactory.createDefaultProcessor(
                 resources.getMailboxManager(),
                 eventBus,
-                new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory()),
+                new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getEventBus()),
                 resources.getQuotaManager(),
                 resources.getDefaultUserQuotaRootResolver(),
                 new DefaultMetricFactory());

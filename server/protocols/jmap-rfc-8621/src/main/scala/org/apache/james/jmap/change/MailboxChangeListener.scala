@@ -20,7 +20,6 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
-
 import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
@@ -32,6 +31,7 @@ import org.apache.james.jmap.api.model.{AccountId, State, TypeName}
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.mailbox.MailboxManager
+import org.apache.james.mailbox.events.MailboxEvents
 import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
@@ -90,6 +90,12 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
         getSharees(mailboxId, username)
           .flatMapMany(sharees =>
             SFlux(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
+      case subscribed: MailboxEvents.MailboxSubscribedEvent =>
+        getSharees(mailboxId, username)
+          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxSubscribed(sharees.asJava, subscribed, now).asScala)
+      case unSubscribed: MailboxEvents.MailboxUnsubscribedEvent =>
+        getSharees(mailboxId, username)
+          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxUnSubscribed(sharees.asJava, unSubscribed, now).asScala)
     }
   }
 

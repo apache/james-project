@@ -52,7 +52,7 @@ public class DefaultMailboxesProvisionerTest {
         session = MailboxSessionUtil.create(USERNAME);
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
+        subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus());
         testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
     }
 
